@@ -1,0 +1,901 @@
+{
+  "courseId": "G73",
+  "gapGroupId": "TG24",
+  "title": "Hazardous-material survey limits and exposure-pathway planning",
+  "description": "Teach material/task distinctions, survey scope, source-pathway-person reasoning and exposure-data applicability.",
+  "purpose": "Teach material/task distinctions, survey scope, source-pathway-person reasoning and exposure-data applicability.",
+  "audience": [
+    "Hazardous-material task trainees in a theory role",
+    "Maintenance planners",
+    "Assigned exposure-control coordinators"
+  ],
+  "sources": [
+    {
+      "title": "OSHA construction asbestos",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1101"
+    },
+    {
+      "title": "OSHA construction respirable crystalline silica",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1153"
+    },
+    {
+      "title": "OSHA construction lead",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.62"
+    }
+  ],
+  "practicalBoundary": "This course grants no survey/sampling, abatement, industrial-hygiene or laboratory qualification. It authorizes no suspect-material disturbance, control-system design, respirator selection, cleanup or area release.",
+  "vendorEvidenceRequired": [
+    "Actual material/substance and survey scope/exclusions",
+    "Actual disturbance method, location and applicable regime",
+    "Competent exposure/control assessment and supporting data",
+    "Applicable role/work-class instruction, credentials and assessor scope",
+    "Waste, hygiene and completion/reoccupation basis where applicable"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual substance/method duties under qualified safe assessment",
+    "Demonstrated procedure use and contamination-boundary/hygiene handling",
+    "Applicable specialist assessment of exposure methods, records and abnormal conditions"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G73_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for hazardous-material survey limits and exposure-pathway planning. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no survey/sampling, abatement, industrial-hygiene or laboratory qualification. It authorizes no suspect-material disturbance, control-system design, respirator selection, cleanup or area release.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G73_lesson1",
+        "title": "1. Identify substance, material and disturbance as different facts",
+        "body": "A hazardous-material task is defined by more than the appearance of a surface. The substance, the material containing it, its condition and the proposed disturbance all matter. Silica-containing masonry, asbestos-containing insulation and lead-containing coating involve different hazards and requirements. A service description mentioning coatings or refractory work does not prove that every substance is present. Equally, a clean-looking material does not establish absence of hazardous constituents.\n\nUse a four-part task description: material/location, evidence about composition, proposed disturbance and potentially exposed people. Record composition as confirmed, presumed under the applicable program or unresolved, with the source of that status. Do not convert a contractor's informal recollection into a confirmed survey result. A building age can prompt a question but is not a laboratory result or a universal substance identification rule.\n\nDisturbance changes the exposure question. An intact material left undisturbed is not the same task as sanding, cutting, drilling, demolition or abrasive removal. The same product can generate different exposure conditions under different methods. This is why a prior survey and a current task exposure assessment answer different questions. The survey concerns material identification within its scope; exposure assessment concerns actual work and controls.\n\nPaper exercise: a maintenance request says repaint wall A. Its method includes scraping old coating and drilling anchors. The survey covers the outer coating but excludes the concealed substrate. Identify three relevant boundaries: the coating evidence, the uncharacterized substrate and the actual disturbance methods. The learner should not infer that a negative outer-coating result clears the hidden layer or that ordinary painting credentials cover specialist abatement.\n\nThe cited OSHA construction standards provide separate examples for asbestos, silica and lead. Their applicability depends on actual work and jurisdiction. This course teaches reasoning and planning, not asbestos survey accreditation, lead-abatement qualification, industrial-hygiene certification or permission to disturb suspect materials.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G73_lesson2",
+        "title": "2. Read survey scope and sampling evidence critically",
+        "body": "A material survey has a defined area, purpose, method and access limitation. Read those before reading the conclusion. A survey of accessible finishes cannot automatically characterize concealed pipe insulation, buried services or later modifications. A report saying no identified material in surveyed rooms is not a statement that no hazardous material exists anywhere in the facility. Preserve the exact surveyed boundary in the work pack.\n\nSampling evidence needs traceability. The sample identifier should connect the collection record, location description, material/layer and laboratory result. A chain-of-custody record tracks handling and transfer; it does not by itself establish that the sample represents every similar-looking material. The competent surveyor and analytical method determine the sampling and interpretation basis. This course does not teach collection from suspect material, cutting samples or field identification tests.\n\nRead negative results carefully. A result can mean that the specified analyte was not detected under the method and reporting conditions for that sample. It does not prove absolute absence in every material, location or layer. Detection/reporting limits and method scope may matter to the technical interpretation. A planner should ask the qualified survey or laboratory authority to explain relevance rather than treating every negative entry as unlimited clearance.\n\nChanges after the survey matter. Repairs, replacement products, flooding, fire or new construction can alter the material condition or add unsurveyed materials. Compare the current task location with the survey date, revision and exclusions. A historical report is useful evidence, but it is not a guarantee that the present work is identical.\n\nPaper exercise: sample S-3 is labelled north wall in a collection record, while the laboratory report says S-8 and the work order concerns the south wall. Record both the identity and location conflicts. Do not choose the most convenient match. Obtain controlled reconciliation and competent interpretation before using the result to support disturbance planning.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G73_lesson3",
+        "title": "3. Use source-pathway-person reasoning for exposure controls",
+        "body": "Exposure can be analyzed as a source, a pathway and a person. The source is material capable of releasing a hazardous substance. The pathway is how it reaches someone, such as airborne dust, contaminated surfaces or transferred debris. The person may be the worker doing the task, a nearby worker, a cleaner or someone carrying contamination beyond the work area. A plan that considers only the tool operator can miss important routes.\n\nTask methods influence release. Cutting or abrasion may create dust; movement of debris can spread contamination; contaminated clothing or tools can transfer material to clean areas. Visible dust is a warning observation, but absence of visible dust is not a measurement of respirable exposure. Small airborne particles can be important without being obvious. Do not use visibility or smell as a substitute for the actual exposure-assessment program.\n\nControl planning should address the source and pathway before relying only on personal protective equipment. A qualified plan may use appropriate methods to reduce generation, capture material, isolate the affected area and manage cleaning and waste. The specific design and operating requirements depend on the substance and task. This course does not prescribe an abatement enclosure, ventilation rate, respirator selection or removal sequence. Those require the actual competent technical arrangement.\n\nControl labels are not enough. A method saying use extraction does not identify whether the equipment, tool connection, filter, maintenance condition and actual work arrangement are appropriate. A plan saying use water does not establish compatibility with electrical equipment, waste handling or every material. The learner should identify these dependencies and ask for supported method details without inventing them.\n\nPaper exercise: a fictional cutting task lists a control for the operator but routes debris through an occupied corridor. Draw the source and two pathways: airborne release near cutting and transfer during debris movement. Identify the corridor occupants as potentially affected people. The correct planning question concerns the whole controlled work and transfer arrangement, not merely which mask the cutter wears.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G73_lesson4",
+        "title": "4. Interpret exposure data and method-specific control claims",
+        "body": "Exposure data must correspond to the actual question. Personal sampling describes exposure associated with the sampled person and period under stated conditions. Area sampling describes a location and arrangement. Material analysis describes composition of a sampled material. These evidence types are related but not interchangeable. A low area result cannot automatically replace an appropriate evaluation of the worker's task exposure; a positive material result does not by itself quantify airborne exposure.\n\nRead the task, duration, method, controls, environment and sampled role alongside results. Data from a different tool or material may not represent the proposed work. Objective or historical data require a competent determination of applicability. The relevant standard or exposure program defines how evidence can be used; a planner should not invent a universal equivalence rule or numerical threshold.\n\nCompare conditions explicitly. In a paper table, list the reference task and proposed task side by side: material, tool, work practice, enclosure/ventilation context, duration and control arrangement. Mark differences and unknowns. The table does not decide exposure; it shows the qualified assessor what needs evaluation. This prevents a report from another site being accepted merely because both jobs share a service name.\n\nControl effectiveness also requires evidence appropriate to its purpose. A fan running is not proof of a designed containment system's performance. A clean floor is not proof that all contamination has been removed. An equipment service sticker is not an exposure result. Each observation should be described precisely rather than promoted into a broader technical conclusion.\n\nPaper exercise: a vendor uses a previous low-exposure report for wet cutting of material X to justify dry abrasion of material Y indoors. The learner identifies changes in material, method and environment. The correct next step is competent exposure/control assessment for the actual task. The learner should not calculate a safe exposure from the old number or assume any dust-control device makes the tasks equivalent.\n\nAnother worked comparison concerns task timing. A sample collected during a brief cleanup does not automatically characterize a longer cutting period earlier in the shift. Make a paper timeline with the actual activities, sampled period, workers and control states. Shade only the time supported by the record. If the reports conclusion concerns the whole shift, ask the qualified assessor how unsampled activities and durations were addressed. Do not assume that remaining time had zero exposure or that a short high observation represents every hour. This exercise identifies the evidence question without calculating a regulatory average or inventing exposure values.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G73_lesson5",
+        "title": "5. Plan contamination boundaries, waste and completion evidence",
+        "body": "Hazardous-material work can continue to create exposure after the main disturbance stops. Debris, equipment, clothing, waste containers and work-area surfaces can carry material. The task plan should define controlled and clean interfaces, movement arrangements, hygiene expectations and responsible people. These are substance- and method-specific controls, not a universal cleanup recipe.\n\nWaste classification and disposal need an actual basis. A material's workplace hazard does not automatically determine every environmental waste category, and a bag labelled construction waste does not establish appropriate disposal. The responsible specialists must identify applicable requirements, container/label information, transport/disposal arrangements and records for the actual material. The planner preserves traceability without making a legal waste determination from a general course.\n\nCompletion should be defined before work begins. Physical removal, cleaning, inspection, analytical clearance where required and authorization for reoccupation may be separate outcomes. The relevant regime and actual work determine which apply. Do not invent a universal clearance sample requirement for every coating or dust task, but do not omit an applicable requirement because the surface looks clean. The qualified authority establishes the acceptance basis.\n\nUnexpected material changes the plan. If concealed insulation or a different coating is encountered, the original survey and method may not cover it. The correct knowledge skill is to identify the changed material/task boundary and preserve the controlled condition through the assigned process. This course does not teach how to remove the newly encountered material or rescue a contaminated worker.\n\nPaper exercise: a report says removal complete while the waste transfer record is pending and a required completion review has not occurred. Separate the physical work report from waste disposition and reoccupation acceptance. Name each remaining evidence item and decision owner. A single completed checkbox should not conceal three different states. The incoming team must know which areas, materials and authorizations remain conditional.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G73_lesson6",
+        "title": "6. Match qualifications and practical assessment to the substance and role",
+        "body": "Qualification follows actual duties and the applicable regime. Surveying, sampling, abatement, industrial-hygiene assessment, laboratory analysis, waste handling and routine maintenance are different roles. Some require specific credentials or approved training; practical capability may also be employer assessed. Do not assign an asbestos-abatement credential to every painter, and do not treat general dust awareness as qualification for asbestos removal when that task is actually assigned.\n\nIdentify the proposed worker, task, substance, method and jurisdiction. Then record the basis for required instruction, credential and assessment. A vendor company certificate may concern a management system or limited service scope; it does not automatically establish every person's capability. A worker's old course record may not address the current material, work class or method. The gap should state the missing capability specifically.\n\nA safe paper assessment can test the source-pathway-person model and report interpretation. Give the learner a fictional survey with exclusions, a method proposal and historical exposure data from a different task. Ask them to identify the unsupported assumptions, affected roles and qualified decision owners. Score the reasoning and specificity of the query. Do not ask them to collect a suspect sample or disturb material to demonstrate recognition.\n\nActual practical assessment must use qualified assessors and a safe approved arrangement appropriate to the assigned method. It should observe the applicable material identification process, procedure use, control/hygiene practices, contamination-boundary handling, recording and abnormal-condition response. The actual program defines the performance criteria. Respiratory protection, medical requirements and emergency capability remain separately applicable where the real duties require them.\n\nThe final handoff should distinguish known material status, surveyed exclusions, approved task controls, actual exposure evidence, waste disposition and completion/reoccupation authority. Course completion supplies only this bounded theory and planning component, retaining original quiz results and acknowledged remediation. It cannot issue specialist credentials, establish actual exposure, approve an abatement method or authorize reoccupation of a real work area.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G73_case1",
+        "title": "Worked fictional case 1: a negative coating result and an unsurveyed layer",
+        "body": "Fictional facts: Alder Maintenance plans to remove coating and drill fixings on wall A. A survey reports no detected analyte in sample C-2 from the outer finish, but excludes concealed layers. The proposed method includes scraping and drilling through the substrate. The vendor describes the whole job as ordinary repainting and submits a general dust-awareness course.\n\nThe planner first separates material evidence from task. The outer-finish result applies to its identified sample and analytical scope. It does not characterize the excluded substrate. The proposed disturbance crosses into that unsurveyed material. Calling the job repainting cannot remove the drilling and scraping activities from the exposure question.\n\nNext, the planner reviews identity. The sample location and material layer must correspond to the intended wall and finish. If those links are incomplete, even the outer-finish claim needs reconciliation. The planner does not collect a new sample or scratch the layer to identify it. A competent survey/assessment role must determine the necessary information and safe method.\n\nThe awareness course is retained as bounded background knowledge. It does not prove survey, abatement or exposure-assessment competence. Actual substance and method findings determine which specialist instruction, credentials and practical capability are required. The planner avoids both extremes: declaring every possible hazardous material present and declaring the task cleared by one negative result.\n\nIn the fictional resolution, the competent owner reviews the actual disturbance scope and arranges appropriate material characterization. The method is revised to reflect confirmed findings and applicable controls. Nearby occupants and debris movement are included in the source-pathway-person review. Real execution still requires the named qualified workers and approvals.\n\nFinal decision: initially the negative outer-layer result cannot support unrestricted disturbance of hidden material. Exact residuals are actual substrate characterization, task exposure/control assessment, applicable specialist qualification, observed method capability and site authorization. The learner demonstrates survey-boundary reasoning only; no hazardous material is disturbed in the exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G73_case2",
+        "title": "Worked fictional case 2: historical data borrowed for a different dust task",
+        "body": "Fictional facts: Granite Support proposes indoor dry abrasion of material Y. It attaches a low-exposure report from wet cutting of material X outdoors. The new method says use extraction but does not identify the arrangement. Debris is to pass through an occupied corridor. A supervisor asks to accept the old report because both jobs belong to the same maintenance category.\n\nThe reviewer compares actual conditions. Material, disturbance method, environment and control arrangements differ. The old data may be relevant background, but applicability to the proposed task has not been established. The reviewer lists each difference rather than calculating a new exposure value or inventing a universal safe threshold.\n\nThe source-pathway-person model identifies additional issues. Dust generation near the tool is one pathway; debris movement through the corridor is another. The operator and corridor occupants are different potentially affected groups. A method focused only on the operator's PPE does not explain how the transfer route will be controlled.\n\nThe extraction statement is treated as a proposed control label, not proof of effectiveness. The qualified owner must identify the actual tool/equipment arrangement, method and supporting evidence. The reviewer does not design ventilation, select a respirator or prescribe a cleanup sequence from this course.\n\nIn the fictional resolution, the task is referred for competent substance/method exposure assessment and a complete control plan. Completion and waste evidence are defined before work. Any final report distinguishes the actual work conditions and limitations from the historical comparison data. Reoccupation or area release follows its applicable qualified process.\n\nFinal decision: the old report cannot alone justify the different task. Exact residuals are applicability assessment, supported control method, contamination-transfer arrangements, actual personnel practical capability and final completion/area-release evidence where required. The paper learner's correct output is a precise comparison and evidence request. An online score cannot turn an unreviewed dry-abrasion method into an approved hazardous-material operation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G73_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G73_check1",
+        "prompt": "What defines a hazardous-material task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Material evidence, actual disturbance and potentially exposed people."
+          },
+          {
+            "id": "b",
+            "label": "Appearance alone."
+          },
+          {
+            "id": "c",
+            "label": "A service label alone."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G73_check2",
+        "prompt": "A survey excludes concealed layers. What does its negative outer-layer result establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Only its bounded sampled material result."
+          },
+          {
+            "id": "c",
+            "label": "Every hidden layer is clear."
+          },
+          {
+            "id": "d",
+            "label": "All future methods are safe."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G73_check3",
+        "prompt": "What are the three elements of exposure reasoning taught here?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Color, smell and guess."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Source, pathway and person."
+          },
+          {
+            "id": "d",
+            "label": "Price, schedule and logo."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G73_check4",
+        "prompt": "Can wet-cutting data automatically justify dry abrasion of another material?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, same maintenance label."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the old value is low."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; competent applicability review is needed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G73_check5",
+        "prompt": "Does removal complete establish waste and reoccupation closure automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; applicable outcomes need separate evidence."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every checkbox means all done."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if no dust is visible."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G73_check6",
+        "prompt": "Does general dust awareness qualify asbestos removal?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual role and applicable specialist requirements govern."
+          },
+          {
+            "id": "c",
+            "label": "Yes, all dust work is identical."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after any quiz."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G73_final1",
+        "prompt": "Does a coating service name prove lead or asbestos is present?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if old-looking."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual evidence or applicable presumption is needed."
+          },
+          {
+            "id": "d",
+            "label": "Yes, every coating contains both."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G73_final2",
+        "prompt": "Can clean appearance prove absence of hazardous constituents?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if shiny."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if odorless."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; appearance is not material characterization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G73_final3",
+        "prompt": "How should unresolved composition be recorded?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Explicitly unresolved with source and decision owner."
+          },
+          {
+            "id": "b",
+            "label": "As absent."
+          },
+          {
+            "id": "c",
+            "label": "As every substance present."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G73_final4",
+        "prompt": "Does a chain-of-custody form establish every similar material is represented?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; representativeness needs competent sampling interpretation."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every room is covered."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if signed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G73_final5",
+        "prompt": "A lab sample ID differs from collection records. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Erase one number."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Controlled identity reconciliation."
+          },
+          {
+            "id": "d",
+            "label": "Choose the convenient match."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G73_final6",
+        "prompt": "What can a not-detected result mean?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Absolute absence everywhere."
+          },
+          {
+            "id": "b",
+            "label": "Permission for every disturbance."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "A bounded analytical result under its method/reporting conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G73_final7",
+        "prompt": "Why review changes since a survey?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Materials, conditions or access scope may have changed."
+          },
+          {
+            "id": "b",
+            "label": "Old reports are always worthless."
+          },
+          {
+            "id": "c",
+            "label": "New paint proves all hazards absent."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G73_final8",
+        "prompt": "Is absence of visible dust an exposure measurement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; respirable exposure may not be visually apparent."
+          },
+          {
+            "id": "c",
+            "label": "Yes, it proves zero exposure."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if no odor."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G73_final9",
+        "prompt": "Who else may be affected beyond the tool operator?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the invoice clerk."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Nearby people and those exposed through contamination transfer."
+          },
+          {
+            "id": "d",
+            "label": "Nobody else."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G73_final10",
+        "prompt": "Does use extraction fully describe a supported control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, any fan suffices."
+          },
+          {
+            "id": "b",
+            "label": "Yes, no further method detail matters."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual arrangement and suitability evidence matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G73_final11",
+        "prompt": "Does use water make every task controlled?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; compatibility and actual method/interface review are needed."
+          },
+          {
+            "id": "b",
+            "label": "Yes, universally."
+          },
+          {
+            "id": "c",
+            "label": "Yes, electrical interfaces disappear."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G73_final12",
+        "prompt": "Can personal and area sampling be treated as identical?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; they address different locations/roles and conditions."
+          },
+          {
+            "id": "c",
+            "label": "Yes, any air number is equivalent."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if units match."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G73_final13",
+        "prompt": "Does positive material analysis quantify airborne exposure alone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, divide by room size."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; composition and actual exposure are distinct questions."
+          },
+          {
+            "id": "d",
+            "label": "Yes, it supplies the airborne value."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G73_final14",
+        "prompt": "What should a comparison table include?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only service category."
+          },
+          {
+            "id": "b",
+            "label": "Only vendor reputation."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Material, method, controls, environment, duration and role."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G73_final15",
+        "prompt": "Does a workplace hazard label determine every waste category?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual waste requirements need specialist determination."
+          },
+          {
+            "id": "b",
+            "label": "Yes, automatically."
+          },
+          {
+            "id": "c",
+            "label": "Yes, construction waste means unrestricted."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G73_final16",
+        "prompt": "In Alder, what crosses the survey boundary?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Drilling into the excluded substrate."
+          },
+          {
+            "id": "c",
+            "label": "Reading the report."
+          },
+          {
+            "id": "d",
+            "label": "Keeping the original result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G73_final17",
+        "prompt": "Should the learner scratch suspect material to identify it?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, after the case."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; use the competent survey/assessment process."
+          },
+          {
+            "id": "d",
+            "label": "Yes, for realism."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G73_final18",
+        "prompt": "In Granite, what additional pathway is identified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the operators hand position."
+          },
+          {
+            "id": "b",
+            "label": "No pathway beyond the tool."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Debris transfer through the occupied corridor."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G73_final19",
+        "prompt": "Does a clean floor prove complete contamination removal?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; applicable completion evidence and criteria govern."
+          },
+          {
+            "id": "b",
+            "label": "Yes, appearance is clearance."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after payment."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G73_final20",
+        "prompt": "What remains after this knowledge component?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Applicable specialist credentials, actual exposure/control evidence and observed methods."
+          },
+          {
+            "id": "c",
+            "label": "No practical residuals."
+          },
+          {
+            "id": "d",
+            "label": "Only a badge."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G73_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G73_lesson1",
+          "questionIds": [
+            "G73_check1"
+          ]
+        },
+        {
+          "lessonId": "G73_lesson2",
+          "questionIds": [
+            "G73_check2"
+          ]
+        },
+        {
+          "lessonId": "G73_lesson3",
+          "questionIds": [
+            "G73_check3"
+          ]
+        },
+        {
+          "lessonId": "G73_lesson4",
+          "questionIds": [
+            "G73_check4"
+          ]
+        },
+        {
+          "lessonId": "G73_lesson5",
+          "questionIds": [
+            "G73_check5"
+          ]
+        },
+        {
+          "lessonId": "G73_lesson6",
+          "questionIds": [
+            "G73_check6"
+          ]
+        },
+        {
+          "lessonId": "G73_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G73_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G73_final",
+          "questionIds": [
+            "G73_final1",
+            "G73_final2",
+            "G73_final3",
+            "G73_final4",
+            "G73_final5",
+            "G73_final6",
+            "G73_final7",
+            "G73_final8",
+            "G73_final9",
+            "G73_final10",
+            "G73_final11",
+            "G73_final12",
+            "G73_final13",
+            "G73_final14",
+            "G73_final15",
+            "G73_final16",
+            "G73_final17",
+            "G73_final18",
+            "G73_final19",
+            "G73_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G73_check1": "Composition and task conditions must be considered together.",
+        "G73_check2": "Survey exclusions remain outside the evidence.",
+        "G73_check3": "The model connects release, transfer and affected people.",
+        "G73_check4": "Material, method and environment differences matter.",
+        "G73_check5": "Physical work, disposition and release can be different states.",
+        "G73_check6": "Awareness is not specialist method capability.",
+        "G73_final1": "Do not invent substance presence from catalog wording.",
+        "G73_final2": "Substance identification requires the appropriate evidence.",
+        "G73_final3": "Explicit uncertainty supports correct technical follow-up.",
+        "G73_final4": "Handling traceability differs from sampling scope.",
+        "G73_final5": "Analytical evidence must connect to the actual sample/location.",
+        "G73_final6": "Negative results are constrained by sample and method scope.",
+        "G73_final7": "Historical evidence must be matched to present conditions.",
+        "G73_final8": "Visibility is not a substitute for exposure assessment.",
+        "G73_final9": "Pathways can extend beyond the immediate disturbance.",
+        "G73_final10": "A label is not proof of control effectiveness.",
+        "G73_final11": "Controls can have dependencies and limitations.",
+        "G73_final12": "Measurement purpose and sampling context matter.",
+        "G73_final13": "Task generation and conditions affect exposure.",
+        "G73_final14": "Specific conditions allow competent applicability review.",
+        "G73_final15": "Worker hazard and environmental disposition are related but distinct.",
+        "G73_final16": "Actual disturbance reaches material not characterized by the result.",
+        "G73_final17": "Paper training does not authorize hazardous sampling.",
+        "G73_final18": "Transfer can expose people beyond the work point.",
+        "G73_final19": "Visual observation cannot replace required technical clearance.",
+        "G73_final20": "Theory completion cannot establish field qualification or area release."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

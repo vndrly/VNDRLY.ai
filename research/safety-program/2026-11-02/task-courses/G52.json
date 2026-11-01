@@ -1,0 +1,898 @@
+{
+  "courseId": "G52",
+  "gapGroupId": "G03",
+  "title": "Process procedure use: interpret states, deviations and restart readiness",
+  "description": "interpret the actual operating phase, distinguish indications from safeguards and communicate a defensible deviation or handback",
+  "purpose": "interpret the actual operating phase, distinguish indications from safeguards and communicate a defensible deviation or handback",
+  "audience": [
+    "Process operators in preparation for plant instruction",
+    "Maintenance/operations coordinators",
+    "Shift handover personnel"
+  ],
+  "practicalBoundary": "No operating settings, switching sequence, bypass method or emergency intervention is authorized. This knowledge course cannot qualify plant operation, process engineering, maintenance or restart approval. Actual plant procedures, limits, safeguards, role instruction and observed routine/abnormal performance remain required.",
+  "vendorEvidenceRequired": [
+    "Employer determination of actual process and applicable safety regime",
+    "Current plant process information, approved phase-specific procedures and operating limits",
+    "Actual alarm/protective-function meanings and authorized abnormal-response instructions",
+    "Equipment integrity, isolation/handback and temporary-change records for the assigned work",
+    "Employee-specific plant instruction and observed task-competence record",
+    "Named operating, technical-change and restart decision authorities"
+  ],
+  "practicalAssessmentRequired": [
+    "Competent plant assessor observes correct procedure selection and actual routine/abnormal decisions using the approved simulator or controlled training arrangement",
+    "Authorized maintenance/operations assessor observes the equipment-specific handback and communication duties",
+    "Responsible operating/technical authority evaluates restart readiness against the actual plant requirements; live uncontrolled conditions are never created for testing"
+  ],
+  "sources": [
+    {
+      "title": "OSHA — Process safety management, applicability and required process systems",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119"
+    },
+    {
+      "title": "OSHA — Nonmandatory PSM compliance guidance",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119AppC"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G52_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Process procedure use: interpret states, deviations and restart readiness\n\nThis course teaches a bounded task: interpret the actual operating phase, distinguish indications from safeguards and communicate a defensible deviation or handback Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nNo operating settings, switching sequence, bypass method or emergency intervention is authorized. This knowledge course cannot qualify plant operation, process engineering, maintenance or restart approval. Actual plant procedures, limits, safeguards, role instruction and observed routine/abnormal performance remain required. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G52_lesson1",
+        "title": "1. Read a process as connected material, energy and information paths",
+        "body": "A process is a connected arrangement, so a local action can have consequences elsewhere. Begin with the actual process information supplied by the employer. Identify the material source, destination, important equipment, energy sources and the information operators use to understand the state. A piping or control drawing is useful only within its stated scope and revision. A simplified training sketch helps explain relationships but is not an approved operating drawing.\n\nTrace a fictional transfer on paper: source vessel A, connecting line, pump, receiving vessel B and the associated monitoring and protective arrangements. Ask where material could go if an intended path is unavailable, where pressure or heat could remain and which other activity shares the equipment. Do not turn this reasoning into a valve sequence. The authorized procedure and qualified plant instruction supply the actual operating method.\n\nSeparate physical state from information about it. A display value is an indication from a measurement and communication chain. It can be unavailable, stale, misidentified or otherwise unreliable. A drawing describes an intended or recorded configuration; the real equipment may be under maintenance or a temporary change. The operator needs the employer's method for verifying relevant state and responding to uncertainty, not an assumption that every screen or drawing is current.\n\nPay attention to boundaries between organizations. A contractor may know a pump but not the process it serves. A dispatcher may know a delivery schedule but not the receiving equipment's readiness. The role supplying one piece of information should state its scope. “Maintenance work order completed” does not describe every process condition required for restart. Ask the responsible operating role to connect the work to the actual process state.\n\nThe transferable skill is to ask a precise dependency question: “The proposed action affects pump P; which upstream, downstream and protective arrangements must the approved procedure address?” That question is more useful than declaring equipment safe from one local observation. Where the answer is absent or contradictory, preserve the affected operating hold and refer it to the plant authority. Do not discover the answer by operating equipment experimentally.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G52_lesson2",
+        "title": "2. Select the procedure for the actual phase and configuration",
+        "body": "A procedure must match what the plant is doing now. Normal operation, startup, shutdown, temporary operation, emergency operation and return after maintenance are different states. Steps appropriate to one state may assume prerequisites that are false in another. Read the procedure title, applicability, revision and entry conditions before using its action sequence. A familiar page is not necessarily the correct page for a changed configuration.\n\nEntry conditions connect instructions to reality. A fictional normal-transfer procedure may assume that receiving equipment is available, required safeguards are in service and maintenance is complete. If a receiving vessel is isolated or a protective function remains under review, those assumptions are not satisfied merely because the operator has used the same procedure before. The responsible authority must establish the correct plan; a worker cannot erase prerequisites to fit the schedule.\n\nUse steps as controlled instructions, not a memory aid for improvisation. Identify who performs each action, what information confirms completion and what happens when the expected condition is absent. If a step's equipment identifier does not match the installed identifier, do not choose the nearest-looking item. Stop the affected action under the plant process and resolve the discrepancy with the authorized role. Similar appearance does not prove equivalent function.\n\nAn interruption changes what must be re-established. After a shift change, alarm, maintenance intervention or aborted startup, the worker must know which steps were actually performed and the current state. A checkmark without a time or clear meaning may not establish whether an action occurred before or after the change. Use the approved pause, handover and resume arrangement rather than restarting from a convenient line.\n\nLearn to state the mismatch clearly: “Normal operation procedure revision F assumes safeguard S available; current temporary-state record says S unavailable; operating release unresolved.” This is a subject-specific decision about phase and safeguards, not merely a paperwork complaint. The actual operator training must then demonstrate how the plant's authorized procedure handles the condition. This course supplies the interpretation, while the plant supplies the safe method and observed performance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G52_lesson3",
+        "title": "3. Distinguish process values, limits, alarms and protective action",
+        "body": "A measured value, operating target, operating limit, alarm and protective function have different meanings. The measured value is information about the process. A target describes intended operation. A limit defines a boundary in the approved operating basis. An alarm calls attention to a condition and may require a specific operator response. A protective function acts or supports protection according to its design. Do not assume that one is an interchangeable version of another.\n\nThe actual plant documents define the relationship. This course provides no numerical limits or setpoints. Ask which instrument is involved, which units apply, whether the indication is valid, which operating phase is active and what approved response governs the condition. A normal-looking display cannot prove every protective function is available. Conversely, an alarm does not give an unassigned worker authority to change a setting or defeat the alarm.\n\nConsider a fictional trend that approaches an operating limit while an alarm has not yet occurred. Waiting for the alarm may be inconsistent with the actual procedure. The operator follows the phase-specific response and escalation rules, using their plant training. The lesson is to distinguish the roles of the information, not to teach an online generic reaction to rising pressure, temperature or level.\n\nA repeated or nuisance-looking alarm is still a condition requiring the plant's process for assessment. Familiarity does not establish that it is safe to ignore or disable. A maintenance request may identify the problem, but it is not permission to bypass a safeguard. The responsible technical and operating authorities determine the approved temporary state and compensating arrangements, if any.\n\nMake a deviation report with enough meaning for the next role: equipment/instrument identity, phase, observed value or condition with units if known, time, trend, related indications, actions actually taken under the procedure and uncertainties. Avoid an unsupported diagnosis such as sensor fault unless it has been established by the authorized technical process. Accurate information supports the qualified response; confident guessing can conceal a real process change.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G52_lesson4",
+        "title": "4. Protect mechanical integrity and the meaning of a temporary state",
+        "body": "Mechanical integrity concerns whether equipment needed for the process remains fit for its assigned function. A completed repair activity is not automatically evidence that the equipment is ready for every operating duty. Relevant inspection, testing, configuration, documentation and operating handback depend on the actual equipment and process. The learner should understand why these are connected without performing an unauthorized test.\n\nA replacement component must be evaluated within its actual function. Matching dimensions or a supplier's claim that it fits does not establish material compatibility, performance, rating or suitability for a protective role. The qualified technical process decides what evidence is needed. A storekeeper or operator can identify a mismatch and preserve traceability without choosing a substitute engineering basis.\n\nTemporary states deserve explicit ownership. Equipment out of service, altered alarm arrangements, temporary hoses or alternate communications can affect the operating assumptions. A temporary measure needs its actual approval, defined scope, conditions, communication and closure or review path. An expired work order or familiar workaround must not become permanent simply because production has continued without an obvious incident.\n\nMaintenance and operations need a mutual understanding of state. Maintenance may report that the assigned work is complete while operations still needs to verify process prerequisites. Operations should not infer from a clean work area that all isolation, testing and protective functions are in the required condition. Use the employer's actual handback system and retain any outstanding item with its owner. This course gives no isolation-removal or energization sequence.\n\nEvidence has several dimensions: identity, function, conditions, revision and acceptance. For a fictional report on component C-14, first verify that C-14 is the installed component involved in the task. Next ask which function was examined, whether the test conditions represent the intended use and which acceptance basis the qualified authority used. Then check whether a later modification could invalidate that result. A recent date answers none of those questions by itself. This method helps a worker recognize when a document is relevant without pretending to perform the technical evaluation. It also prevents a common handover error: attaching a genuine report for a different component and treating the attachment as a universal readiness certificate. The responsible technical person must resolve any mismatch before the operating role relies on that evidence. The worker records the limitation accurately and avoids adding a signature that would falsely claim engineering acceptance.\n\nObserve weak signals without overstating them. A recurring leak report, unusual vibration or discrepancy between equipment labels and drawings may require the plant's inspection or technical review. The worker records the condition and follows the actual procedure. They do not tighten, disconnect, test or restart equipment merely to see whether the symptom disappears. Protecting integrity includes knowing when the evidence is insufficient for the next action.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G52_lesson5",
+        "title": "5. Recognize a change before it becomes an unreviewed operating method",
+        "body": "A change can involve hardware, material, software, staffing, procedure or intended operating conditions. The important question is whether the actual approved basis and assumptions still hold. Replacing like-for-like equipment under a supported method is different from introducing a substitute with a different function. The responsible plant process determines the classification and required review; a worker does not settle it by calling the task small.\n\nDescribe the proposed change concretely. Identify what will differ, why, which equipment and people are affected and what documents or training may need updating. “Use another chemical for a week” omits the actual product, composition, compatibility and process effects. “Display change only” may omit how operators interpret alarms and trends. A useful change description allows the technical reviewers to assess the real difference.\n\nHuman understanding is part of readiness. If the operating sequence, display, response or hazard changes, affected people need the actual instruction before relying on the new arrangement. Sending a revised procedure to an inbox does not prove it is understood. The employer's plant-specific training process must establish the appropriate understanding and performance. An online knowledge course cannot supply familiarity with an unseen plant configuration.\n\nTemporary changes also require the actual review and restoration arrangements. A planned end date helps identify the intended duration but does not prove the original state has been restored. Record who verifies restoration, what evidence is needed and how affected personnel learn the actual state. If the temporary arrangement must continue, use the responsible review route rather than silently extending the date.\n\nThe transferable stop point is an unresolved assumption. If a proposed change affects a protective function or the procedure no longer matches the equipment, the affected action waits for the authorized decision. The learner can identify and communicate this without designing the change. Never use live operation as an informal trial to discover whether an unreviewed material, component or control behaves acceptably.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G52_lesson6",
+        "title": "6. Hand over the process state and separate work completion from restart",
+        "body": "A handover transfers actionable understanding of the current process. Identify equipment and phase, significant trends or deviations, safeguards unavailable or restricted, maintenance and temporary-state status, permits or boundaries relevant to the receiving role and the next authorized action. Prioritize what could change the next decision. A long list of routine tasks can still be a poor handover if it hides the one unresolved protective-function issue.\n\nUse read-back or another approved confirmation method for critical state information. The receiving person should be able to explain the current restriction and who can remove it. “You saw the email” is weak evidence when several revisions exist. Keep the actual current record available and identify what has been superseded. Oral discussion and written state records support each other rather than replacing one with the other.\n\nRestart is a separate decision from repairing equipment or completing administrative tasks. The responsible authority must establish the actual plant prerequisites, including the relevant mechanical, procedural, protective and human readiness. A test result covers the conditions and function it actually tested. It must not be stretched to prove every dependent system or operating phase ready.\n\nReview unexpected events and near misses for their process meaning. If an operator nearly follows the wrong phase procedure, investigate the selection and state communication rather than merely reminding them to pay attention. If a component's identity is unclear, examine procurement, installation and drawing controls. A specific improvement should be checked in the real workflow and reflected in the appropriate documents and instruction.\n\nFinish a handover with bounded language. “Repair completed; return-to-service checks pending; normal transfer remains held by operations” conveys three separate facts. It is more useful than “pump fixed” or “all clear.” This course trains the distinction and the quality of communication. Qualified plant assessment must still establish the worker's actual routine and abnormal decision capability and the physical skills required for their assigned role.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G52_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: normal procedure, abnormal entry conditions\n\nAt a fictional process facility, a transfer is planned after maintenance. The operator opens the familiar normal-transfer procedure revision F. Its entry conditions include receiving equipment available and safeguard S in service. The shift handover lists the receiving unit as unavailable for a separate inspection. A temporary-state log says safeguard S remains under technical review. The maintenance work order for the transfer pump says complete. A supervisor asks the operator to begin because the pump repair is finished.\n\nThe correct interpretation separates the pump work from process readiness. The maintenance completion establishes only its actual work scope. It does not satisfy the receiving-equipment or safeguard prerequisites. The normal procedure's entry conditions do not match the reported plant state. The operator holds the affected transfer under the actual process and communicates the two specific mismatches to the operating authority.\n\nNo learner supplies a substitute valve sequence, changes a setpoint or proposes bypassing S. Those decisions belong to the plant's authorized technical and operating process. The desk result names the active procedure revision, the two unmet prerequisites, the maintenance status and the owner of the operating decision. This allows independent repair documentation to close without falsely releasing the transfer.\n\nSuppose the receiving inspection is later completed. That resolves one prerequisite only. Safeguard S still needs its actual disposition, and the responsible authority must establish the correct phase/procedure and readiness before release. The original hold history remains traceable. A single favorable update is not proof that every condition changed.\n\nCase B: a temporary display change survives the shift\n\nA fictional plant introduces a temporary display arrangement while an instrument interface is repaired. The change record defines the affected display and a review date. The next shift receives an email saying the display looks normal. No one has confirmed restoration, and the incoming operator has not received the actual revised interpretation instruction. The review date has passed. Production has been stable.\n\nFirst distinguish appearance, operation and authorization. A normal-looking display does not prove the original configuration is restored. Stable production does not extend a temporary approval. An email also does not establish that the incoming operator understands the information now presented. These are separate technical-state, approval and human-readiness questions.\n\nThe incoming operator uses the actual plant process to preserve the affected restriction and request clarification. The handover identifies the temporary change reference, affected equipment, elapsed review condition, missing restoration evidence and instruction gap. The technical authority determines the actual configuration; operations determines the appropriate operating disposition; the employer supplies the actual instruction and understanding check.\n\nA useful final record might state that technical restoration was verified under a named work record, current display documentation was issued, affected operators completed the required briefing and the responsible authority released the specified operating phase. It must record only actions actually performed. The classroom does not assert those events occurred; it teaches which evidence answers which question. If any remains absent, the related item stays open rather than being converted to a global completion label.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G52_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G52_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced interpret the actual operating phase, distinguish indications from safeguards and communicate a defensible deviation or handback Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G52_check1",
+        "prompt": "A local pump action may affect what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Connected material, energy and protective arrangements."
+          },
+          {
+            "id": "b",
+            "label": "Only the pump paint."
+          },
+          {
+            "id": "c",
+            "label": "Only the work-order number."
+          },
+          {
+            "id": "d",
+            "label": "Nothing beyond the local display."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G52_check2",
+        "prompt": "A normal procedure assumes a safeguard available, but it is under review. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ignore the entry condition."
+          },
+          {
+            "id": "b",
+            "label": "Hold the affected action and resolve the phase/prerequisite mismatch with the operating authority."
+          },
+          {
+            "id": "c",
+            "label": "Choose the nearest familiar sequence."
+          },
+          {
+            "id": "d",
+            "label": "Erase the temporary-state log."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G52_check3",
+        "prompt": "An alarm has not occurred while a trend approaches a limit. What governs the operator?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A universal wait-for-alarm rule."
+          },
+          {
+            "id": "b",
+            "label": "Any remembered number."
+          },
+          {
+            "id": "c",
+            "label": "The actual phase-specific procedure and plant training."
+          },
+          {
+            "id": "d",
+            "label": "The least disruptive guess."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G52_check4",
+        "prompt": "A replacement component fits physically. What is still needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No further evidence."
+          },
+          {
+            "id": "b",
+            "label": "Only a matching color."
+          },
+          {
+            "id": "c",
+            "label": "A verbal promise from any visitor."
+          },
+          {
+            "id": "d",
+            "label": "Qualified confirmation of suitability for its actual function and service."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G52_check5",
+        "prompt": "A proposed temporary change is called small. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its actual difference and effect on approved assumptions."
+          },
+          {
+            "id": "b",
+            "label": "The adjective small."
+          },
+          {
+            "id": "c",
+            "label": "Whether the email is short."
+          },
+          {
+            "id": "d",
+            "label": "Whether production wants it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G52_check6",
+        "prompt": "The pump repair is complete but return-to-service checks remain. What is accurate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Everything is ready."
+          },
+          {
+            "id": "b",
+            "label": "Repair complete; operating release remains pending the actual prerequisites."
+          },
+          {
+            "id": "c",
+            "label": "The work order replaces restart authority."
+          },
+          {
+            "id": "d",
+            "label": "The operator can invent remaining checks."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G52_final1",
+        "prompt": "What does a simplified training sketch establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approved actual plant configuration."
+          },
+          {
+            "id": "b",
+            "label": "Every current valve position."
+          },
+          {
+            "id": "c",
+            "label": "Relationships within its stated teaching scope."
+          },
+          {
+            "id": "d",
+            "label": "Technical authorization to operate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G52_final2",
+        "prompt": "An indication may be stale. What should the worker avoid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Communicating uncertainty."
+          },
+          {
+            "id": "b",
+            "label": "Using the actual escalation route."
+          },
+          {
+            "id": "c",
+            "label": "Identifying the instrument."
+          },
+          {
+            "id": "d",
+            "label": "Treating it as verified current physical state without the approved basis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G52_final3",
+        "prompt": "A contractor knows the pump but not the receiving process. What should be clarified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual operating dependencies and role boundary."
+          },
+          {
+            "id": "b",
+            "label": "Only the contractor logo."
+          },
+          {
+            "id": "c",
+            "label": "A universal pump-start sequence."
+          },
+          {
+            "id": "d",
+            "label": "Whether the work order can hide the gap."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G52_final4",
+        "prompt": "A step names an equipment tag that differs from installation. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use a similar-looking item."
+          },
+          {
+            "id": "b",
+            "label": "Stop affected action and resolve the identity discrepancy."
+          },
+          {
+            "id": "c",
+            "label": "Remove the tag."
+          },
+          {
+            "id": "d",
+            "label": "Guess from location."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G52_final5",
+        "prompt": "After an interrupted startup, what must be established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That every earlier checkmark remains current."
+          },
+          {
+            "id": "b",
+            "label": "A convenient point to skip ahead."
+          },
+          {
+            "id": "c",
+            "label": "Actual completed actions and current state under the approved resume process."
+          },
+          {
+            "id": "d",
+            "label": "That interruptions reset all prerequisites automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G52_final6",
+        "prompt": "What is an operating target?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatically the protective trip setting."
+          },
+          {
+            "id": "b",
+            "label": "Always the legal maximum."
+          },
+          {
+            "id": "c",
+            "label": "A substitute for every alarm response."
+          },
+          {
+            "id": "d",
+            "label": "An intended operating condition defined in the actual basis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G52_final7",
+        "prompt": "A recurring alarm seems familiar. What should not be inferred?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That familiarity authorizes ignoring or disabling it."
+          },
+          {
+            "id": "b",
+            "label": "That it deserves the actual assessment process."
+          },
+          {
+            "id": "c",
+            "label": "That its identity matters."
+          },
+          {
+            "id": "d",
+            "label": "That the operating procedure applies."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G52_final8",
+        "prompt": "Which deviation report is most useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Sensor broken, without evidence."
+          },
+          {
+            "id": "b",
+            "label": "Instrument, phase, time, units, trend, actual actions and uncertainty."
+          },
+          {
+            "id": "c",
+            "label": "Everything strange."
+          },
+          {
+            "id": "d",
+            "label": "No problem because output continues."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G52_final9",
+        "prompt": "What does a completed repair test prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every dependent system ready."
+          },
+          {
+            "id": "b",
+            "label": "All future operating phases safe."
+          },
+          {
+            "id": "c",
+            "label": "The tested function and conditions within its actual scope."
+          },
+          {
+            "id": "d",
+            "label": "Operator competence for unrelated equipment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G52_final10",
+        "prompt": "A temporary workaround has expired but production is stable. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatic permanent approval."
+          },
+          {
+            "id": "b",
+            "label": "No record needed."
+          },
+          {
+            "id": "c",
+            "label": "Permission to change the date silently."
+          },
+          {
+            "id": "d",
+            "label": "The actual review/restoration or approved continuation decision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G52_final11",
+        "prompt": "Why distinguish maintenance and operating handback?",
+        "options": [
+          {
+            "id": "a",
+            "label": "They establish different work and process-state responsibilities."
+          },
+          {
+            "id": "b",
+            "label": "To let both roles assume the other checked everything."
+          },
+          {
+            "id": "c",
+            "label": "To remove restart prerequisites."
+          },
+          {
+            "id": "d",
+            "label": "To replace communication with signatures."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G52_final12",
+        "prompt": "A material substitution is proposed for one week. What description is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only one week."
+          },
+          {
+            "id": "b",
+            "label": "The actual product/difference, affected process and review basis."
+          },
+          {
+            "id": "c",
+            "label": "Only cheaper material."
+          },
+          {
+            "id": "d",
+            "label": "Only production urgent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G52_final13",
+        "prompt": "A revised procedure was emailed. What is not thereby established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That an email was sent."
+          },
+          {
+            "id": "b",
+            "label": "That a document exists."
+          },
+          {
+            "id": "c",
+            "label": "Affected worker understanding and practical readiness."
+          },
+          {
+            "id": "d",
+            "label": "That a revision was proposed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G52_final14",
+        "prompt": "What must verify a temporary change ended?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The planned end date alone."
+          },
+          {
+            "id": "b",
+            "label": "The absence of complaints."
+          },
+          {
+            "id": "c",
+            "label": "A normal-looking screen alone."
+          },
+          {
+            "id": "d",
+            "label": "Actual restoration evidence and the responsible review/communication process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G52_final15",
+        "prompt": "What should the receiving shift be able to explain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Current restrictions, actual state and who can authorize the next action."
+          },
+          {
+            "id": "b",
+            "label": "Only the previous shift's task count."
+          },
+          {
+            "id": "c",
+            "label": "Only the production target."
+          },
+          {
+            "id": "d",
+            "label": "Only the contractor invoice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G52_final16",
+        "prompt": "A near miss involves wrong phase-procedure selection. What review is useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only tell the operator to pay attention."
+          },
+          {
+            "id": "b",
+            "label": "Examine state communication and procedure selection controls."
+          },
+          {
+            "id": "c",
+            "label": "Delete the near-miss note."
+          },
+          {
+            "id": "d",
+            "label": "Assume no harm means no issue."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G52_final17",
+        "prompt": "Case A receiving equipment becomes available. What can still remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No prerequisite can remain."
+          },
+          {
+            "id": "b",
+            "label": "Automatic approval of every phase."
+          },
+          {
+            "id": "c",
+            "label": "Safeguard disposition and actual operating release."
+          },
+          {
+            "id": "d",
+            "label": "Authority to bypass S."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G52_final18",
+        "prompt": "Case A maintenance complete means what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The normal transfer is released."
+          },
+          {
+            "id": "b",
+            "label": "Receiving inspection is unnecessary."
+          },
+          {
+            "id": "c",
+            "label": "All safeguards are in service."
+          },
+          {
+            "id": "d",
+            "label": "Only the actual recorded maintenance scope is complete."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G52_final19",
+        "prompt": "Case B display looks normal. Which question remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether actual configuration, approval and operator understanding were established."
+          },
+          {
+            "id": "b",
+            "label": "Whether visual appearance alone grants approval."
+          },
+          {
+            "id": "c",
+            "label": "Whether stable output replaces training."
+          },
+          {
+            "id": "d",
+            "label": "Whether the old email can decide every issue."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G52_final20",
+        "prompt": "What does this course teach rather than authorize?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Live bypass implementation."
+          },
+          {
+            "id": "b",
+            "label": "Interpretation and communication of plant-state decisions within a bounded knowledge role."
+          },
+          {
+            "id": "c",
+            "label": "Universal process setpoints."
+          },
+          {
+            "id": "d",
+            "label": "Independent restart approval."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G52_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G52_lesson1",
+          "questionIds": [
+            "G52_check1"
+          ]
+        },
+        {
+          "lessonId": "G52_lesson2",
+          "questionIds": [
+            "G52_check2"
+          ]
+        },
+        {
+          "lessonId": "G52_lesson3",
+          "questionIds": [
+            "G52_check3"
+          ]
+        },
+        {
+          "lessonId": "G52_lesson4",
+          "questionIds": [
+            "G52_check4"
+          ]
+        },
+        {
+          "lessonId": "G52_lesson5",
+          "questionIds": [
+            "G52_check5"
+          ]
+        },
+        {
+          "lessonId": "G52_lesson6",
+          "questionIds": [
+            "G52_check6"
+          ]
+        },
+        {
+          "lessonId": "G52_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G52_final",
+          "questionIds": [
+            "G52_final1",
+            "G52_final2",
+            "G52_final3",
+            "G52_final4",
+            "G52_final5",
+            "G52_final6",
+            "G52_final7",
+            "G52_final8",
+            "G52_final9",
+            "G52_final10",
+            "G52_final11",
+            "G52_final12",
+            "G52_final13",
+            "G52_final14",
+            "G52_final15",
+            "G52_final16",
+            "G52_final17",
+            "G52_final18",
+            "G52_final19",
+            "G52_final20"
+          ]
+        },
+        {
+          "lessonId": "G52_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G52_check1": "Processes are connected; approved information and procedures must address actual dependencies.",
+        "G52_check2": "A procedure applies only when its actual prerequisites and configuration are satisfied.",
+        "G52_check3": "Targets, limits, alarms and protective actions have distinct roles defined by the actual plant.",
+        "G52_check4": "Dimensions alone do not establish rating, compatibility or protective function.",
+        "G52_check5": "Change review follows actual function and consequences rather than informal size labels.",
+        "G52_check6": "Work completion and operating readiness are separate decisions.",
+        "G52_final1": "A learning aid must not be substituted for current approved plant information.",
+        "G52_final2": "A displayed value is information from a chain, not an unconditional proof of physical state.",
+        "G52_final3": "Equipment familiarity does not establish complete process knowledge or operating authority.",
+        "G52_final4": "Equipment identifiers connect instructions to the actual system and must not be guessed.",
+        "G52_final5": "Resume decisions depend on real state and sequence, not memory alone.",
+        "G52_final6": "The plant defines each value and function; they are not interchangeable.",
+        "G52_final7": "Repetition is not a technical or operating approval.",
+        "G52_final8": "Factual context supports the qualified response without inventing a diagnosis.",
+        "G52_final9": "Evidence must not be extended beyond the function and conditions observed.",
+        "G52_final10": "Operating stability does not extend the authorization or prove restoration.",
+        "G52_final11": "The two functions must connect through an explicit actual-state handover.",
+        "G52_final12": "A useful change description reveals the technical and operating difference.",
+        "G52_final13": "Distribution is an activity; understanding and performance need actual evidence.",
+        "G52_final14": "A date describes intention, not the actual restored configuration.",
+        "G52_final15": "A handover must support the next real decision.",
+        "G52_final16": "Specific failed interfaces support practical improvements.",
+        "G52_final17": "Resolving one dependency does not resolve separate open conditions.",
+        "G52_final18": "Completion claims must be bounded by the evidence they actually cover.",
+        "G52_final19": "Technical state, authorization and human readiness are distinct evidence.",
+        "G52_final20": "Actual plant-specific instruction, observed skills and operating authority remain separate."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

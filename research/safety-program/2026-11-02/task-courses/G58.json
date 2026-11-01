@@ -1,0 +1,898 @@
+{
+  "courseId": "G58",
+  "gapGroupId": "G09",
+  "title": "Railway work preparation: track identity, protection and crew interfaces",
+  "description": "recognize actual on-track protection dependencies and communicate location, machinery and changing-work conditions",
+  "purpose": "recognize actual on-track protection dependencies and communicate location, machinery and changing-work conditions",
+  "audience": [
+    "Contractor roadway workers preparing for host-railroad instruction",
+    "Site coordinators",
+    "Assigned rail support personnel"
+  ],
+  "practicalBoundary": "This course grants no track authority, lookout/flagman/group-protection qualification or roadway-machine operating competence. It supplies no protection-establishment procedure, fouling distance, train warning interval or rail emergency maneuver. Actual jurisdiction, host railroad rules, role qualification and observed performance remain required.",
+  "vendorEvidenceRequired": [
+    "Actual railroad/jurisdiction and roadway-work scope",
+    "Host railroad on-track safety rules and current job-specific protection/briefing",
+    "Employer role-specific initial/recurrent training and qualification evidence",
+    "Actual track/location references, adjacent-track assessment and machinery arrangements",
+    "Communication, stop/change and emergency procedures",
+    "Machine-specific instruction/qualification where that duty applies"
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified railroad/employer assessor observes actual rule understanding and assigned role performance",
+    "Qualified on-track safety instructor assesses location/protection communication using safe controlled scenarios",
+    "Competent machine assessor observes actual assigned roadway-machine skills under the host program"
+  ],
+  "sources": [
+    {
+      "title": "FRA roadway-worker protection",
+      "url": "https://railroads.dot.gov/railroad-safety/divisions/roadway-worker-protection"
+    },
+    {
+      "title": "eCFR — 49 CFR Part 214 Subpart C",
+      "url": "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-II/part-214/subpart-C"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G58_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Railway work preparation: track identity, protection and crew interfaces\n\nThis course teaches a bounded task: recognize actual on-track protection dependencies and communicate location, machinery and changing-work conditions Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis course grants no track authority, lookout/flagman/group-protection qualification or roadway-machine operating competence. It supplies no protection-establishment procedure, fouling distance, train warning interval or rail emergency maneuver. Actual jurisdiction, host railroad rules, role qualification and observed performance remain required. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G58_lesson1",
+        "title": "1. Know whether the task is roadway work and who supplies protection",
+        "body": "Rail-related services include many distinct duties. A passenger, freight broker, train crew member and roadway worker do not have interchangeable responsibilities. Begin by identifying the actual activity, railroad, location and proximity to the track or roadway machinery. A maintenance or inspection task on or near track needs the actual employer/railroad determination of applicable on-track safety requirements. A broad service title does not establish the role.\n\nThe railroad has its own operating environment and safety program. Contractor employees cannot assume that road-traffic training or a general safety certificate teaches that system. The responsible employer must connect the worker's actual duties to the host railroad's applicable rules, instruction and qualification. FRA describes minimum training and qualification requirements; it does not issue a universal roadway-worker certificate that replaces the employer's program.\n\nDefine the person responsible for on-track safety and the limits of your own role. A worker may receive and understand protection without being authorized to establish it. A lookout, flagman, machine operator and person providing group protection need their actual role-specific competence. Do not assign a convenient colleague to a specialist function merely because that person can see a train or has a radio.\n\nDistinguish access permission from protection. A customer's permission to enter the property, a gate code or a work order authorizes only what its scope actually says. It is not proof that train or equipment movements are controlled for the planned task. Before affected work, the worker needs the actual briefing and confirmed protection under the railroad's program, not a reassuring assumption that someone must have arranged it.\n\nFor a desk exercise, write the job in concrete verbs: inspect a named asset, carry equipment to a specified work area or operate a particular maintenance machine. Identify the actual role and who provides its on-track safety. If that responsibility is unclear, hold the affected access/work through the employer's process. This course teaches the questions and communication; it does not establish working limits, grant track authority or qualify a worker to protect others.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G58_lesson2",
+        "title": "2. Identify tracks, locations and boundaries without guessing",
+        "body": "Rail locations must be identified in the language and references used by the actual railroad. Parallel tracks, crossovers, switches, curves and similar-looking structures can make visual assumptions unreliable. A drawing or map can help orient a worker but is not automatically the current authority for the track or work limits. The responsible qualified role must establish and communicate the actual location and protection.\n\nRead identifiers completely. Track names, numbers, direction references and boundary points must refer to the same place in the briefing and the worker's understanding. If a work order names track 2 while the briefing names track 3, do not choose the track closest to the parked vehicle. State the conflict and resolve it before entering the affected area. A correctly established arrangement on the wrong track cannot protect the intended job.\n\nPhysical space matters beyond the rails themselves. People, tools, materials, equipment or a machine's movement can intrude into a track's hazard area. The actual railroad program defines relevant boundaries and the controls for the task. This course gives no generic fouling distance, clearance formula or safe crossing technique. A learner must not measure a convenient distance and declare themselves outside all railway hazards.\n\nConsider the complete task envelope. A person may stand in one place while a carried tool, rotating part, boom or suspended load reaches elsewhere. A machine may need room to travel, swing or stop. The person providing protection and the responsible machinery roles must account for the real activity, not just the worker's boot position. General site familiarity does not establish the required clearance.\n\nUse a harmless map exercise with fictional tracks A and B, a crossover and a material staging point. Ask which identifiers conflict and which activity could affect another track. The correct result identifies questions for the qualified railroad role; it does not set protection by drawing a line. Practical qualification must use the actual railroad references and the employee's assigned task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G58_lesson3",
+        "title": "3. Understand protection as an established system, not a train schedule",
+        "body": "On-track safety depends on the protection method actually established under the railroad's program. A timetable, an empty-looking track, silence or a coworker's prediction does not supply that protection. Trains and roadway equipment can move under arrangements unfamiliar to a visiting contractor. Do not begin affected work because no movement is expected for a few minutes.\n\nThe qualified person providing protection must explain what arrangement applies, its actual scope and the worker's responsibilities. Different methods have different conditions and role requirements. This course does not teach how to obtain authority, place devices, act as a lookout or release working limits. It teaches the receiving worker to recognize that the actual method and briefing must be understood before relying on them.\n\nAdjacent tracks require explicit consideration. Protection for one track does not automatically cover another. A worker can be correctly assigned to a protected work area while machinery movement or distraction creates exposure to a neighboring track. The qualified railroad program determines the actual adjacent-track requirements and arrangements. Do not generalize a permit or a verbal statement beyond the tracks and activities it covers.\n\nWarning-based arrangements, where actually permitted and established, require qualified roles and the program's specific conditions. Hearing a horn by chance is not the same as a reliable established warning system. Personal headphones, noise, obstructions, weather and task concentration can affect perception. The worker follows the real briefing and raises any concern rather than inventing a personal watch-and-jump method.\n\nAsk a precise confirmation question: which track and activity are covered, what method applies, who controls it and what must I do if the expected condition changes? A useful answer comes from the assigned qualified role and actual rules. If the information is missing, contradictory or no longer matches the work, preserve the affected hold. The project's urgency cannot turn a schedule or a prediction into on-track safety.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G58_lesson4",
+        "title": "4. Recognize roadway-machine and equipment interfaces",
+        "body": "Roadway maintenance machines and hi-rail vehicles can create hazards different from an approaching train. They may move within a work group, have limited visibility, create pinch or crush points or move attachments beyond their base footprint. A stopped machine is not automatically safe to approach. The actual operator, equipment instruction and railroad work arrangements govern access and movement.\n\nBefore a task near machinery, know the assigned communication and the areas people must avoid under the actual procedure. Do not stand where the operator cannot confirm your location or assume eye contact means every motion is controlled. A person carrying tools can be distracted while crossing a machine route. The briefing must connect pedestrian work, equipment movement and the on-track safety arrangement.\n\nMachine operation requires its own relevant training and qualification. A highway vehicle license or general equipment experience does not establish competence on a particular roadway maintenance machine. Attachments, travel arrangements, braking, visibility and railroad interfaces can differ. This course gives no operating controls, spacing distances or machine movement sequence. The practical program must observe the actual assigned skills with the real equipment.\n\nMaterials and tools also need a controlled staging plan. A pile placed outside one track's immediate area can still obstruct an access route, affect another track or enter a machine's operating envelope. Do not move material into a convenient neighboring space without the responsible roles reviewing the actual arrangement. A clear work area must remain clear as the job progresses, not only at the start.\n\nReport defects and unexpected motion factually. Identify the machine, location, observation, time and people potentially affected. Do not climb into a mechanism or attempt an unfamiliar repair to prove the fault. The operator and qualified maintenance/railroad roles determine the response. A completed production task does not establish that a reported machine fault is resolved or that another worker may use it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G58_lesson5",
+        "title": "5. Use a job briefing to establish shared understanding",
+        "body": "A job briefing connects the actual work, hazards, on-track safety, machinery interfaces, communication and individual duties. It must be meaningful to the people performing the task. A signed attendance sheet cannot compensate for a worker who does not know which track is protected or which instruction applies. The qualified responsible person provides the actual railroad briefing; this course prepares the learner to understand and question it.\n\nListen for location, task boundaries, protection method, adjacent-track concerns, machine movements, warning/communication arrangements and the required response to a change. Ask about anything unclear before affected work. A good question repeats the actual identifier or condition: the work order names track A, but the briefing named track B; which is correct? This is more useful than nodding and asking another worker afterward.\n\nUse the railroad's actual terminology and confirmation process. A casual phrase such as all clear can mean different things to different people. This course does not invent universal rail signals or emergency radio words. Assigned qualified instruction must teach the real system. Workers should not substitute an informal chat group for a required operational communication channel.\n\nDifferent work groups can have related but distinct arrangements. A contractor who hears another group's briefing must not assume it covers their own employees or equipment. Confirm which people, tasks and locations the actual responsible role includes. If a worker leaves one group to assist another, the change must be handled through the host program rather than treated as an informal favor. This is particularly important when tools or machinery move with the worker. The worker's personal awareness does not extend the original group's protection to a new location. A useful fictional exercise gives each group a separate task card and asks the learner to identify where the cards overlap or conflict. The correct response is to raise those specific interfaces with the qualified responsible roles before work. It is not to draw a larger boundary or merge the groups administratively without the actual authority. The practical program must then demonstrate the real coordination and individual understanding in the host railroad's language. The resulting briefing should be clear enough that a new receiving supervisor can identify exactly which group owns the next action and which condition remains unresolved.\n\nLate arrivals and task changes need the actual required update. A new employee cannot rely on another worker's incomplete summary, and a crew moving to another location cannot assume the first briefing still applies. The responsible role determines the rebriefing and protection changes. Keep the actual state visible so no one acts on an obsolete assumption.\n\nPractice a safe read-back with fictional information. The learner states the track, task, role and unresolved question; the responsible instructor resolves the intended scenario. No one approaches a live track to demonstrate understanding. The later practical assessment must observe actual rule application, communication and assigned role performance through the qualified railroad/employer program.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G58_lesson6",
+        "title": "6. Respond to changed conditions and hand back without releasing others",
+        "body": "Conditions can change during railway work. A work area moves, equipment arrives, communication fails, weather affects visibility or a protection arrangement changes. The worker must recognize that the original briefing may no longer describe the actual job. Follow the railroad's real stop, communication and reassessment procedure rather than personally deciding that the difference is minor.\n\nA missing essential communication link is not proof that everything remains normal. Report through the actual approved route and remain within the established safe arrangement. This course gives no universal movement or evacuation maneuver; the actual program must teach the worker's specific response. Do not enter a track to investigate a lost radio call or send an unqualified person to inspect a warning arrangement.\n\nAn emergency report should be concise and factual: actual location, track or equipment identity if known, observed event, people involved and actions already taken within the assigned role. Do not delay the designated emergency contact to complete every administrative field. The receiving railroad/emergency authority needs accurate information and uncertainty, not a guessed diagnosis or an unauthorized direction to move equipment.\n\nAt task completion, distinguish your work from release of protection. A contractor finishing an inspection does not automatically have authority to release working limits or declare every person clear. The assigned qualified role must account for actual people, equipment and materials and use the railroad's release process. Report your own status accurately and do not sign for checks you did not perform.\n\nThe next crew needs current state, remaining defects, restrictions and responsible contacts. A repair may be complete while equipment remains held. A track task may be finished while material removal or another work group remains unresolved. Preserve those separate facts. Knowledge completion in this course cannot supply the actual railroad qualification, observed machinery skill or authority to protect others; each remains a specifically identified requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G58_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: the work order and the briefing name different tracks\n\nA fictional contractor is asked to inspect a component on track A. The crew receives a briefing describing protection on track B. Parallel tracks look similar from the staging area. A supervisor points to the nearest rail and says the paperwork probably uses different names for the same place. No learner enters a real track in this exercise.\n\nThe first decision is identity, not schedule. The two named tracks may be different. Neither proximity nor a supervisor's guess establishes that the protection covers the intended task. The worker reports the exact mismatch to the assigned qualified person and holds the affected access/work under the actual program. The worker does not choose the track with no visible train.\n\nThe responsible role must establish the actual location using the railroad's references and confirm the correct protection and briefing. If the work order was wrong, its correction must remain traceable. If protection was established for another task, it cannot simply be described as covering both. Adjacent-track exposure and the real equipment/work envelope still need their actual assessment.\n\nSuppose track A is confirmed and the crew receives the appropriate updated briefing. That resolves only the specific location/protection question supported by the actual process. Machine movements, individual roles and task-specific qualifications remain independent. The worked output names the corrected location, current briefing and remaining prerequisites rather than claiming that a general course certified the crew for all railway duties.\n\nCase B: inspection complete, but a neighboring crew and machine remain\n\nA fictional inspection team finishes its assigned measurements. Another work group remains nearby, and a roadway machine still has tools staged within its planned movement area. The inspector is asked to send all clear so a manager can close the job. The inspector is not the qualified person who controls protection. A radio exchange about the machine's status is incomplete.\n\nSeparate work completion, accountability and protection release. The inspector can report that their own measurements are complete and their own actual location/status. They cannot certify another group's position, machine readiness or removal of all materials without evidence and authority. The incomplete communication is a real unresolved condition, not a reason to assume the machine is clear.\n\nThe correct handover states the completed inspection scope and the known remaining group, staged tools and communication gap. It routes the release decision to the assigned qualified role under the railroad's actual process. The inspector does not move a machine, retrieve tools from an uncertain operating area or send an unqualified coworker to investigate.\n\nIf the machine operator later confirms one item, that confirmation must be understood within its scope. It does not automatically account for the separate work group. The responsible release process integrates the actual people, equipment and material state. An administrative completion screen cannot replace that work.\n\nThe practical assessment can simulate conflicting status messages with harmless cards and then observe the actual employee's assigned railroad communication skills through the qualified program. It does not need a live approaching train or unexpected machine motion. The worked result is an honest bounded handover that allows completed work to be recorded while preserving every unresolved operating prerequisite.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G58_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G58_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced recognize actual on-track protection dependencies and communicate location, machinery and changing-work conditions Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G58_check1",
+        "prompt": "What defines a roadway-work assignment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual activity, railroad, location and role."
+          },
+          {
+            "id": "b",
+            "label": "The invoice title alone."
+          },
+          {
+            "id": "c",
+            "label": "Any person on a train."
+          },
+          {
+            "id": "d",
+            "label": "A generic traffic certificate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G58_check2",
+        "prompt": "Work order says track A; briefing says B. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choose the closest track."
+          },
+          {
+            "id": "b",
+            "label": "Hold affected access and resolve the identity with the qualified role."
+          },
+          {
+            "id": "c",
+            "label": "Choose the empty-looking track."
+          },
+          {
+            "id": "d",
+            "label": "Assume names are interchangeable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G58_check3",
+        "prompt": "No train is scheduled soon. What does that establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permission to start."
+          },
+          {
+            "id": "b",
+            "label": "A working limit."
+          },
+          {
+            "id": "c",
+            "label": "No actual on-track protection by itself."
+          },
+          {
+            "id": "d",
+            "label": "A lookout qualification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G58_check4",
+        "prompt": "A roadway machine is stopped. What should not be inferred?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its identity can be reported."
+          },
+          {
+            "id": "b",
+            "label": "The actual procedure applies."
+          },
+          {
+            "id": "c",
+            "label": "Assigned roles matter."
+          },
+          {
+            "id": "d",
+            "label": "It is safe for anyone to approach."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G58_check5",
+        "prompt": "A worker signs a briefing but cannot name the track. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual understanding must be established before affected work."
+          },
+          {
+            "id": "b",
+            "label": "The signature resolves it."
+          },
+          {
+            "id": "c",
+            "label": "A coworker may guess."
+          },
+          {
+            "id": "d",
+            "label": "The certificate overrides the mismatch."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G58_check6",
+        "prompt": "An inspector finishes but does not control protection. What may they report?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every crew clear."
+          },
+          {
+            "id": "b",
+            "label": "Their actual completed scope and status, leaving release to the qualified role."
+          },
+          {
+            "id": "c",
+            "label": "All limits released."
+          },
+          {
+            "id": "d",
+            "label": "Every machine ready."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G58_final1",
+        "prompt": "Does FRA issue a universal roadway-worker certificate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, this course issues it."
+          },
+          {
+            "id": "b",
+            "label": "Yes, one certificate covers every role."
+          },
+          {
+            "id": "c",
+            "label": "No; the applicable employer/railroad training and qualification system matters."
+          },
+          {
+            "id": "d",
+            "label": "Yes, traffic training automatically becomes it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G58_final2",
+        "prompt": "A contractor has a gate code. What is still needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing."
+          },
+          {
+            "id": "b",
+            "label": "Only a reflective shirt."
+          },
+          {
+            "id": "c",
+            "label": "Only the client invoice."
+          },
+          {
+            "id": "d",
+            "label": "Actual relevant on-track safety and task authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G58_final3",
+        "prompt": "Can any worker become a lookout because they see the rails?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual role-specific qualification and program conditions apply."
+          },
+          {
+            "id": "b",
+            "label": "Yes, visibility is qualification."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if senior."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if carrying a radio."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G58_final4",
+        "prompt": "Why read full track identifiers?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To replace briefing."
+          },
+          {
+            "id": "b",
+            "label": "Similar tracks can be confused and protection is location-specific."
+          },
+          {
+            "id": "c",
+            "label": "To create authority."
+          },
+          {
+            "id": "d",
+            "label": "To avoid machine instruction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G58_final5",
+        "prompt": "What does this course supply for fouling distance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A universal distance."
+          },
+          {
+            "id": "b",
+            "label": "Permission to choose a convenient gap."
+          },
+          {
+            "id": "c",
+            "label": "No generic clearance; the actual railroad program governs."
+          },
+          {
+            "id": "d",
+            "label": "A visual estimate as approval."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G58_final6",
+        "prompt": "A tool extends beyond a worker's position. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only boot location."
+          },
+          {
+            "id": "b",
+            "label": "Only where the toolbox started."
+          },
+          {
+            "id": "c",
+            "label": "Only the work-order title."
+          },
+          {
+            "id": "d",
+            "label": "The full task/equipment envelope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G58_final7",
+        "prompt": "Protection covers one track. What follows for an adjacent track?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its actual exposure/protection requirements must be addressed separately."
+          },
+          {
+            "id": "b",
+            "label": "Automatically covered."
+          },
+          {
+            "id": "c",
+            "label": "Always irrelevant."
+          },
+          {
+            "id": "d",
+            "label": "Protected if empty-looking."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G58_final8",
+        "prompt": "Hearing a horn by chance equals what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Universal protection."
+          },
+          {
+            "id": "b",
+            "label": "Not an established qualified warning arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Permission to work alone."
+          },
+          {
+            "id": "d",
+            "label": "Proof every machine stopped."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G58_final9",
+        "prompt": "A highway license proves which railway machine skill?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every roadway machine."
+          },
+          {
+            "id": "b",
+            "label": "Every attachment."
+          },
+          {
+            "id": "c",
+            "label": "No automatic proof of the actual machine-specific role."
+          },
+          {
+            "id": "d",
+            "label": "Every protection role."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G58_final10",
+        "prompt": "Tools are staged in a convenient neighboring space. What must be checked?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only whether the pile looks neat."
+          },
+          {
+            "id": "b",
+            "label": "Only the tool color."
+          },
+          {
+            "id": "c",
+            "label": "Only the invoice quantity."
+          },
+          {
+            "id": "d",
+            "label": "Actual tracks, access and machine envelopes affected."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G58_final11",
+        "prompt": "A machine fault is observed. Which report helps?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Machine, location, observation, time and actual actions."
+          },
+          {
+            "id": "b",
+            "label": "It is definitely a failed brake without assessment."
+          },
+          {
+            "id": "c",
+            "label": "All equipment unsafe forever."
+          },
+          {
+            "id": "d",
+            "label": "No issue because production continues."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G58_final12",
+        "prompt": "Which briefing question is useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Can the signature replace understanding?"
+          },
+          {
+            "id": "b",
+            "label": "Which track, method and role apply to this actual task?"
+          },
+          {
+            "id": "c",
+            "label": "May I invent a signal?"
+          },
+          {
+            "id": "d",
+            "label": "Can I skip the location?"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G58_final13",
+        "prompt": "A new crew member arrives late. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signature without instruction."
+          },
+          {
+            "id": "b",
+            "label": "Any colleague's guess."
+          },
+          {
+            "id": "c",
+            "label": "The actual required briefing/update before affected duties."
+          },
+          {
+            "id": "d",
+            "label": "Only the original headcount."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G58_final14",
+        "prompt": "Should an informal chat replace required operational communications?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes if convenient."
+          },
+          {
+            "id": "b",
+            "label": "Yes if messages are short."
+          },
+          {
+            "id": "c",
+            "label": "Yes if a visitor creates it."
+          },
+          {
+            "id": "d",
+            "label": "No; follow the actual railroad system and rules."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G58_final15",
+        "prompt": "A work area moves. What happens to original assumptions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reassess affected protection/briefing through the actual process."
+          },
+          {
+            "id": "b",
+            "label": "They apply everywhere."
+          },
+          {
+            "id": "c",
+            "label": "They extend automatically."
+          },
+          {
+            "id": "d",
+            "label": "They need no owner."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G58_final16",
+        "prompt": "A required radio link fails. What should a worker avoid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reporting via the approved route."
+          },
+          {
+            "id": "b",
+            "label": "Assuming silence means conditions remain normal."
+          },
+          {
+            "id": "c",
+            "label": "Keeping within the actual boundary."
+          },
+          {
+            "id": "d",
+            "label": "Following the actual procedure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G58_final17",
+        "prompt": "An emergency report should prioritize what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Completing every form before calling."
+          },
+          {
+            "id": "b",
+            "label": "A guessed diagnosis."
+          },
+          {
+            "id": "c",
+            "label": "Accurate location, event, people and actual actions through the designated route."
+          },
+          {
+            "id": "d",
+            "label": "An unauthorized order to move a train."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G58_final18",
+        "prompt": "Case A supervisor says both names mean the same track. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the guess."
+          },
+          {
+            "id": "b",
+            "label": "Choose the nearest rail."
+          },
+          {
+            "id": "c",
+            "label": "Follow a passerby."
+          },
+          {
+            "id": "d",
+            "label": "Qualified resolution using actual railroad references."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G58_final19",
+        "prompt": "Case B machine operator confirms tools clear. What can remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The separate work-group accountability and actual release decision."
+          },
+          {
+            "id": "b",
+            "label": "Nothing."
+          },
+          {
+            "id": "c",
+            "label": "All tracks released."
+          },
+          {
+            "id": "d",
+            "label": "Every inspector qualified to protect others."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G58_final20",
+        "prompt": "What does passing this course establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Track authority."
+          },
+          {
+            "id": "b",
+            "label": "Bounded knowledge, with actual railroad role qualification and practical skills separate."
+          },
+          {
+            "id": "c",
+            "label": "Lookout qualification for all railroads."
+          },
+          {
+            "id": "d",
+            "label": "Roadway-machine license."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G58_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G58_lesson1",
+          "questionIds": [
+            "G58_check1"
+          ]
+        },
+        {
+          "lessonId": "G58_lesson2",
+          "questionIds": [
+            "G58_check2"
+          ]
+        },
+        {
+          "lessonId": "G58_lesson3",
+          "questionIds": [
+            "G58_check3"
+          ]
+        },
+        {
+          "lessonId": "G58_lesson4",
+          "questionIds": [
+            "G58_check4"
+          ]
+        },
+        {
+          "lessonId": "G58_lesson5",
+          "questionIds": [
+            "G58_check5"
+          ]
+        },
+        {
+          "lessonId": "G58_lesson6",
+          "questionIds": [
+            "G58_check6"
+          ]
+        },
+        {
+          "lessonId": "G58_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G58_final",
+          "questionIds": [
+            "G58_final1",
+            "G58_final2",
+            "G58_final3",
+            "G58_final4",
+            "G58_final5",
+            "G58_final6",
+            "G58_final7",
+            "G58_final8",
+            "G58_final9",
+            "G58_final10",
+            "G58_final11",
+            "G58_final12",
+            "G58_final13",
+            "G58_final14",
+            "G58_final15",
+            "G58_final16",
+            "G58_final17",
+            "G58_final18",
+            "G58_final19",
+            "G58_final20"
+          ]
+        },
+        {
+          "lessonId": "G58_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G58_check1": "Rail-related jobs have distinct duties and applicability.",
+        "G58_check2": "Protection on the wrong track cannot establish the intended job safety.",
+        "G58_check3": "Predictions and schedules are not established protection.",
+        "G58_check4": "Stopped status is not a complete control of movement and equipment hazards.",
+        "G58_check5": "Attendance does not prove understanding.",
+        "G58_check6": "Work completion and protection release are separate authority/evidence.",
+        "G58_final1": "FRA explains role-specific training/qualification rather than universal worker certification.",
+        "G58_final2": "Property access is not track protection.",
+        "G58_final3": "Specialist protection duties require their actual competence.",
+        "G58_final4": "Identity connects the actual task and protection.",
+        "G58_final5": "Generic online geometry cannot replace actual rules and assessment.",
+        "G58_final6": "Tools and attachments can create exposure beyond the standing point.",
+        "G58_final7": "Scope cannot be silently extended to another track.",
+        "G58_final8": "Reliable warning methods have actual conditions and roles.",
+        "G58_final9": "Qualifications must match equipment and duty.",
+        "G58_final10": "Staging can create new interfaces beyond the original work point.",
+        "G58_final11": "Facts support qualified response without inventing a diagnosis.",
+        "G58_final12": "Specific questions expose real misunderstandings.",
+        "G58_final13": "Current understanding must include actual participants.",
+        "G58_final14": "Communication methods are part of the established protection system.",
+        "G58_final15": "Changed work can invalidate location-specific arrangements.",
+        "G58_final16": "Communication loss is an unresolved operational condition.",
+        "G58_final17": "Useful factual information supports the responsible emergency authority.",
+        "G58_final18": "Informal reassurance is not location verification.",
+        "G58_final19": "One confirmation must not be extended to independent open items.",
+        "G58_final20": "Online knowledge cannot grant unobserved specialist competence or operating authority."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

@@ -1,0 +1,906 @@
+{
+  "courseId": "G91",
+  "gapGroupId": "TG42",
+  "title": "Research-method and experimental protocol competence",
+  "description": "Six subject-specific lessons, two worked fictional cases and twenty-six explained decisions. Actual employer methods and qualified practical performance remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for research-method and experimental protocol competence.",
+  "audience": [
+    "Research method leads and project researchers",
+    "Computational data analysts",
+    "Laboratory and field research coordinators",
+    "Technical protocol and research-handover reviewers"
+  ],
+  "practicalBoundary": "Geology, IT or petroleum R&D may be desk-only; do not infer a laboratory or field experiment from the research label. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual research scope statement separating computational, laboratory and field activities, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual protocol approval record linking method version and actual equipment or dataset, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual protocol hazard review linked to actual materials and equipment, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual data lineage record linking raw inputs, transformations and reported result, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual protocol change log identifying changed assumption and review disposition, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual research handover distinguishing findings, limitations and proposed applications, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who defines the actual research question and distinguishes desk analysis from laboratory or field intervention; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who reconciles protocol, worksheet and analysis versions and explains a methodological deviation; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who identifies actual material/equipment substitutions for competent technical and hazard review; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who traces data origin, transformations and exclusions while distinguishing observations from estimates; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who uses the approved change route for unexpected results without unauthorized expansion; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who hands over demonstrated findings, uncertainty and limits on operational application; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Actual hazardous experiment, pipeline operation, equipment inspection/repair, driving, coupling, loading or recovery requires its own method-specific instruction and qualified safe practical assessment where assigned. This online result does not satisfy those requirements."
+  ],
+  "sources": [
+    {
+      "title": "OSHA laboratory chemical exposure",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450",
+      "scopeLimit": "Defined laboratory-use scope; not universal certification of analytical methods."
+    },
+    {
+      "title": "OSHA recommended safety-program education and training",
+      "url": "https://www.osha.gov/safety-management/education-training",
+      "scopeLimit": "General role- and hazard-specific training guidance; not a trade license or universal legal mandate."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G91_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Research competence connects a question, a method and evidence that can support a defensible conclusion. Petroleum, geology and technology research may be computational, laboratory or field based. This course teaches protocol interpretation, methodological boundaries, material/equipment review, data provenance, controlled change and honest application of results. It does not provide hazardous experimental procedures or qualify a learner to operate a laboratory or field asset.\n\nAll examples are fictional desk exercises. Complete twenty-six questions, retain original answers and acknowledge explained remediation. Technical method assessment, actual laboratory or field skills and any professional authority remain separate from this knowledge result.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G91_lesson1",
+        "title": "Lesson 1 — Classify the research method",
+        "body": "Begin with the research question rather than the technique someone wants to use. A question about historical relationships may be addressed by reviewing data. A question about physical behavior may require a different method and separate authorization. The label research does not establish permission to experiment with equipment, materials or people. Define the claim the project hopes to support and the evidence needed to test it.\n\nClassify the actual work environment. Computational analysis can involve data quality, access, software and interpretation risks without involving chemicals. Laboratory work introduces actual materials, equipment and exposure questions. Field work can add operational, location and environmental interfaces. A project can combine these modes, but the assessment should not infer all of them from a broad research-service name.\n\nDistinguish observation from intervention. An authorized review of historical measurements does not necessarily authorize changing a process to obtain new measurements. A simulation can explore an assumption without proving physical behavior outside its tested basis. A literature review can identify a method without approving its local reproduction. These distinctions prevent a reasonable research question from silently expanding into an unreviewed task.\n\nSpecify roles. The principal investigator or method lead may direct research while another authority approves site work, equipment change or laboratory safety. Data access may belong to another owner. A technically knowledgeable researcher does not automatically hold each authority. The protocol should identify those interfaces before the team relies on them.\n\nIn the fictional exercise, a project compares two models using historical production data. A later suggestion proposes testing the preferred model on an operating asset. The original desk analysis remains a valid scope, but the proposed field intervention is a new activity. The worked answer records the new question and routes the method, operational and safety implications for the appropriate review rather than treating the research budget as operating permission.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G91_lesson2",
+        "title": "Lesson 2 — Trace protocol and technical approval",
+        "body": "A protocol is a controlled account of the research method and its boundaries. It should connect the question, inputs, analysis or experimental approach, responsibilities and decision criteria. A detailed method can still be unsuitable if it answers the wrong question. A broad objective can still be unworkable if the actual procedure and required evidence are undefined.\n\nRead version relationships carefully. The approved protocol, attached worksheet, software configuration and reported analysis should correspond. A changed exclusion rule or data transformation can alter a conclusion even when no physical hazard changes. Treat methodological changes as real changes, not automatically harmless formatting. The appropriate technical reviewer determines what needs approval and how it affects prior results.\n\nPublished methods require interpretation. A paper describes work in a particular context with materials, equipment and assumptions that may differ from the local project. Publication is not local authorization. The research team must establish whether the method is suitable and which approvals or controls apply to its actual implementation. This course provides no recipe for reproducing hazardous experiments.\n\nSeparate technical review from other required reviews. Scientific validity, occupational safety, data authority and any ethical or environmental obligations ask different questions. One approval should not be represented as proof that all categories are satisfied. The actual project and jurisdiction determine what is required; the learner's task is to keep the categories and evidence visible.\n\nFor the desk exercise, protocol R5 names dataset D1 and method M2, while the worksheet omits a subset of observations using an unreviewed rule. The worked response preserves the original worksheet, identifies the changed assumption and asks the method authority to assess it. A clean rerun with the same undocumented exclusion would not resolve the problem. The review must address why the result changed and what claim remains supportable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G91_lesson3",
+        "title": "Lesson 3 — Assess chemical and equipment interfaces on paper",
+        "body": "Materials and equipment must be reviewed as actually proposed, not only by familiar names. A substitution can affect both scientific behavior and hazard assumptions. The competent research and safety roles need the relevant identities, properties and equipment relationships. A similar product name does not establish equivalence, and a smaller scale does not automatically eliminate exposure or other hazards.\n\nThe cited laboratory chemical standard has a defined scope. It does not certify every analytical method or make all research a laboratory activity. The employer determines actual applicability and the appropriate program. Where laboratory chemical work is present, workers need the actual procedures, hazard information, supervision and protective arrangements required for their tasks. An online method-review course cannot supply practical chemical handling skill.\n\nEquipment capability is also task specific. A device may be available but not accepted for the proposed use. Manufacturer limits, maintenance status, configuration and the research objective all matter. Qualified people determine technical suitability and controls. The desk learner can recognize missing information without energizing equipment, mixing materials or conducting a trial to see whether it works.\n\nMap interfaces with other work. A research setup in an operational area may affect access, utilities, process conditions or personnel outside the research team. The site authority needs accurate information and a defined review route. A supervisor's interest in the project does not by itself authorize a production change or override the equipment owner's restrictions.\n\nIn the exercise, a proposed laboratory variation substitutes material B for A. The existing hazard and method review addressed A only. The worked answer identifies both scientific equivalence and hazard assumptions as open questions for competent review. It does not choose a mixing ratio or decide that the substitution is safe because the container is small. Preserving the actual material identity is the first useful contribution a task worker can make.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G91_lesson4",
+        "title": "Lesson 4 — Preserve data provenance and limitations",
+        "body": "Data provenance describes how information moves from its origin to a reported conclusion. Identify the raw source, collection or generation context, transformations, exclusions and analysis version. Another authorized reviewer should be able to understand how the result arose without relying on the researcher's memory. A polished graph cannot replace that chain.\n\nKeep measured observations, modeled estimates and assumed inputs distinguishable. A simulation can be realistic while remaining a prediction. If a chart combines different evidence types, labels and explanation should preserve the distinction. Otherwise a later reader may treat a modeled value as field confirmation and make an operational decision beyond the research evidence.\n\nPreserve original data and document working changes. Cleaning data can be legitimate, but the rules and reasons need to be traceable. Do not silently remove inconvenient values because they weaken the expected result. An outlier may reflect error, a different condition or a real phenomenon. The appropriate method review determines its treatment, and the report should explain material exclusions.\n\nUncertainty is part of the result. Missing metadata, limited coverage and measurement or model limitations can affect what a conclusion supports. Do not fill gaps with guessed values and present them as observed. A qualified reviewer may permit an estimate for a defined purpose, but the estimate and its basis must remain labeled. Restricted operational or personal data also need the approved access and handling route.\n\nFor the desk exercise, the final chart labels all points field measurements, but part of the series was produced by a model. The worked correction identifies each evidence type and revises any conclusion that depended on the false equivalence. It keeps valid modeling work useful while preventing an unsupported field-validation claim. The raw data and analysis history remain available so the reviewer can follow the reasoning.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G91_lesson5",
+        "title": "Lesson 5 — Review change and stopping criteria",
+        "body": "Unexpected results are a reason for inquiry, not automatic authorization to expand an experiment. The protocol should identify how the team reports deviations, unexpected conditions and proposed changes. Qualified reviewers establish the actual operating boundaries and stopping criteria. This course supplies no experimental thresholds, pressure settings, chemical conditions or equipment sequences.\n\nIdentify the assumption that changed. A different dataset, substituted material, altered apparatus or expanded range can affect method validity and safety in different ways. Record the proposed change and the existing evidence basis. Some prior evidence may remain useful, but conclusions depending on the changed assumption need review. A fresh signature without examination of that relationship is not meaningful change control.\n\nSeparate an observation from a response. The researcher can document a surprising reading accurately without adjusting the apparatus to reproduce it immediately. The approved procedure and responsible authority determine what action is allowed. Production equipment or field assets introduce additional operating authorities that the research lead may not hold.\n\nDo not rewrite the original protocol after the event to make a deviation disappear. Preserve the actual sequence: approved plan, observed condition, proposed change, review and authorized outcome. This supports both scientific reproducibility and organizational learning. A deviation can be honestly evaluated without assuming misconduct or declaring the whole project worthless.\n\nIn the exercise, a model result suggests exploring conditions outside the protocol's approved range. The worked answer records the new question and seeks the required method and safety review before that expansion. The initial result can remain a legitimate finding within its tested scope. It becomes misleading only if the team presents untested conditions as established or treats scientific interest as permission to change the actual work.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G91_lesson6",
+        "title": "Lesson 6 — Separate scientific review from work authorization",
+        "body": "Research handover should state what was demonstrated, how and with what limitations. A useful conclusion is specific enough that another person can judge whether it applies to their decision. The result may support further study without supporting immediate operational adoption. Technical interest, peer review and commercial enthusiasm do not themselves authorize a process or asset change.\n\nDistinguish internal consistency, reproducibility and external applicability. An analysis may reproduce its own result from the same inputs yet fail to represent another site or future conditions. Independent review can improve confidence while still leaving scope limitations. The responsible technical organization decides what further validation or engineering review is needed for a proposed application.\n\nExplain negative or inconclusive results as well as successful ones. A report that hides limitations can encourage later users to overgeneralize. Document what was not tested and which assumptions remain uncertain. If the work uses a model, identify the observed domain and the role of assumptions. Avoid promising reliable performance where the study supplied no relevant evidence.\n\nThe handover should identify ownership of follow-up decisions. A researcher may recommend a field validation, while the site and engineering authorities approve its actual design and execution. A data specialist may supply analysis without professional authority to certify a safety function. Qualification and approval must follow the real duty.\n\nIn the desk exercise, a model reproduces a limited historical dataset. The draft recommendation says validated for all future operating conditions. The worked answer retains the useful result and narrows the claim to the demonstrated basis. It routes the proposed operational application through the appropriate validation, technical and change processes. This is not an arbitrary caution: it preserves the difference between the evidence actually obtained and the broader performance claim someone wants to make.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G91_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek commissions a desk study comparing two models of equipment performance. The approved protocol uses historical dataset D1 and a documented exclusion rule. A researcher changes the exclusion rule because several observations make the preferred model look less accurate. The final graph mixes measured values and estimates but labels every point as a field measurement. A manager proposes immediate use of the model for production decisions.\n\nThe method reviewer starts with the research question and approved scope. The project was a historical comparison, not an operating trial. The changed exclusion is a methodological deviation even though no machine was touched. The original data, worksheet and protocol are preserved. The researcher is asked to explain the actual rule and rationale rather than replace the worksheet with a cleaner version that hides the change.\n\nThe team examines whether the excluded observations reflect error, different conditions or meaningful behavior. That analysis belongs to the appropriate technical method review. The case does not assume the exclusions are always forbidden; it requires a defensible basis and transparent effect on the conclusion. The result is rerun or qualified as the authorized review determines, with the analysis history retained.\n\nNext, the graph is corrected to distinguish observations from estimates. The modeled points remain useful predictions, but they cannot be counted as independent field confirmation. Any reported agreement that relied on that false equivalence must be reconsidered. A realistic visual appearance is not an evidence category.\n\nFinally, the manager's production proposal is separated from the study finding. A model comparison within a limited historical domain does not authorize a live process change. The responsible technical and operating authorities determine the validation and change work required. The research team supplies the method, limitations and actual results rather than claiming universal applicability.\n\nThe worked outcome is a more credible study, not automatic rejection of modeling. It preserves valid data and analysis while correcting unsupported claims. The researcher demonstrates method competence by explaining choices and uncertainty. The reviewer demonstrates sound judgment by testing the relationship between evidence and conclusion instead of judging the graph by whether it supports the desired commercial outcome.\n\nNo field experiment is performed in this exercise. If one is later proposed, its protocol, site interfaces and hazardous skills need their own approval and assessment. The original desk authorization does not silently expand into operating permission.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G91_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: a laboratory research team proposes repeating a published method with a substituted material and different equipment. The paper is credible, but the local protocol names the original material and apparatus. A trial result from earlier approved work is surprising. The team wants to expand the experimental range immediately and describes the change as minor research flexibility.\n\nThe principal investigator separates scientific interest from authorization. The published paper can inform technical review, but it does not approve the local substitution. The actual identities and equipment configuration are recorded for the method and hazard reviewers. Similar names and smaller quantities do not prove equivalent behavior or unchanged exposure conditions.\n\nThe surprising result is preserved with its context and uncertainty. It may justify another research question. It does not establish that the team may exceed the approved boundaries to reproduce it. Qualified reviewers determine the actual change process and any new controls or assessment needed. The fictional exercise contains no recipe, settings or physical experiment.\n\nThe review also identifies an operational interface: the proposed equipment would use a utility controlled by another department. The research team's technical competence does not grant authority over that utility. The site owner must review the actual effect and arrangement. A supportive email from a project sponsor is not a substitute for that technical and operating decision.\n\nThe resulting protocol revision, if authorized, identifies what changed, why and what evidence supports the new method. The original version and result remain in the history. Personnel receive actual instruction and qualified assessment for any new hazardous skill. A desk review of the plan is not recorded as practical laboratory competence.\n\nAt handover, the report distinguishes the approved original finding, the proposed extension and any later separately authorized results. It states which conditions were not tested. A reader can therefore use the research without assuming every possibility in the paper was reproduced locally.\n\nThe case teaches disciplined experimentation rather than passive paperwork. The researcher must formulate a meaningful question, recognize the technical effect of substitutions, preserve evidence and communicate limitations. Those are real method skills. They work alongside qualified practical capability and local authority; they do not replace either or turn a published method into permission for uncontrolled execution.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G91_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Use the final decisions to evaluate actual method scope, protocol integrity, material/equipment changes, data lineage, unexpected results and application limits. Retain first responses and explicitly acknowledge explained remediation.\n\nLaboratory, field, equipment, engineering and other hazardous skills require actual instruction and qualified practical evaluation when assigned. This course does not authorize experimentation or operational application of a research result.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G91_check1",
+        "prompt": "During classify the research method, a desk modeling assignment is treated as approval to run a field experiment. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Restrict the assignment to its approved method and route the proposed experiment for review."
+          },
+          {
+            "id": "b",
+            "label": "Research authorization permits any experimental method."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G91_check2",
+        "prompt": "During trace protocol and technical approval, the approved protocol differs from the procedure attached to the work request. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Publication of a method proves it is approved for local use."
+          },
+          {
+            "id": "b",
+            "label": "Reconcile versions and obtain the responsible review before the changed method."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G91_check3",
+        "prompt": "During assess chemical and equipment interfaces on paper, a substitute material is introduced without reviewing the original hazard assumptions. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A similar material name proves unchanged experimental hazards."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Refer the substitution for competent technical and safety review."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G91_check4",
+        "prompt": "During preserve data provenance and limitations, a modeled value is presented as an observed field measurement. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A realistic simulation output counts as a field measurement."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Relabel the evidence correctly and revise conclusions that depend on the distinction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G91_check5",
+        "prompt": "During review change and stopping criteria, an unexpected result prompts an unapproved expansion of experimental conditions. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the proposed expansion and obtain the required method and safety review."
+          },
+          {
+            "id": "b",
+            "label": "Unexpected results authorize immediate expansion of the experiment."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G91_check6",
+        "prompt": "During separate scientific review from work authorization, a successful model is used as sole authorization for a production change. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A successful model authorizes production modification."
+          },
+          {
+            "id": "b",
+            "label": "Retain the finding and route operational application through the required technical and change review."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G91_final1",
+        "prompt": "Which evidence is most directly relevant to classify the research method?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Research scope statement separating computational, laboratory and field activities."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G91_final2",
+        "prompt": "Which evidence is most directly relevant to trace protocol and technical approval?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Protocol approval record linking method version and actual equipment or dataset."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G91_final3",
+        "prompt": "Which evidence is most directly relevant to assess chemical and equipment interfaces on paper?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Protocol hazard review linked to actual materials and equipment."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G91_final4",
+        "prompt": "Which evidence is most directly relevant to preserve data provenance and limitations?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Data lineage record linking raw inputs, transformations and reported result."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G91_final5",
+        "prompt": "Which evidence is most directly relevant to review change and stopping criteria?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Protocol change log identifying changed assumption and review disposition."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G91_final6",
+        "prompt": "Which evidence is most directly relevant to separate scientific review from work authorization?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Research handover distinguishing findings, limitations and proposed applications."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G91_final7",
+        "prompt": "A colleague argues: “Research authorization permits any experimental method.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; restrict the assignment to its approved method and route the proposed experiment for review."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G91_final8",
+        "prompt": "A colleague argues: “Publication of a method proves it is approved for local use.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; reconcile versions and obtain the responsible review before the changed method."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G91_final9",
+        "prompt": "A colleague argues: “A similar material name proves unchanged experimental hazards.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; refer the substitution for competent technical and safety review."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G91_final10",
+        "prompt": "A colleague argues: “A realistic simulation output counts as a field measurement.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; relabel the evidence correctly and revise conclusions that depend on the distinction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G91_final11",
+        "prompt": "A colleague argues: “Unexpected results authorize immediate expansion of the experiment.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; hold the proposed expansion and obtain the required method and safety review."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G91_final12",
+        "prompt": "A colleague argues: “A successful model authorizes production modification.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; retain the finding and route operational application through the required technical and change review."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G91_final13",
+        "prompt": "A desk study later proposes changing a field asset. What is the change?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A harmless filename change."
+          },
+          {
+            "id": "b",
+            "label": "Automatic permission under the research budget."
+          },
+          {
+            "id": "c",
+            "label": "A new intervention scope requiring the actual method, operational and safety review."
+          },
+          {
+            "id": "d",
+            "label": "Proof every laboratory credential is required for desk analysis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G91_final14",
+        "prompt": "The worksheet uses a different exclusion rule than the approved protocol. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only whether the graph looks smoother."
+          },
+          {
+            "id": "b",
+            "label": "The original worksheet should be erased."
+          },
+          {
+            "id": "c",
+            "label": "Any exclusion is automatically scientifically forbidden."
+          },
+          {
+            "id": "d",
+            "label": "The changed methodological assumption and its effect on the result need transparent review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G91_final15",
+        "prompt": "A material is substituted in a laboratory protocol. Which relationship needs review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Both scientific equivalence and actual hazard assumptions for the proposed material and equipment."
+          },
+          {
+            "id": "b",
+            "label": "Only whether the names sound similar."
+          },
+          {
+            "id": "c",
+            "label": "Only whether the container is smaller."
+          },
+          {
+            "id": "d",
+            "label": "Whether publication removes local approval requirements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G91_final16",
+        "prompt": "A graph combines modeled and observed points. What should the report preserve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "One label calling every point measured."
+          },
+          {
+            "id": "b",
+            "label": "The distinction between estimates and measurements and the conclusions each can support."
+          },
+          {
+            "id": "c",
+            "label": "Only the preferred model’s color."
+          },
+          {
+            "id": "d",
+            "label": "An assumption that realism equals field validation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G91_final17",
+        "prompt": "An unexpected result suggests a wider experimental range. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Expand immediately to preserve momentum."
+          },
+          {
+            "id": "b",
+            "label": "Rewrite the protocol afterward as if it always covered the range."
+          },
+          {
+            "id": "c",
+            "label": "Record the new question and obtain required review before expanding beyond the approved scope."
+          },
+          {
+            "id": "d",
+            "label": "Delete the unexpected result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G91_final18",
+        "prompt": "A model reproduces one historical dataset. What does that alone establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Performance in every future condition."
+          },
+          {
+            "id": "b",
+            "label": "Authority to modify production."
+          },
+          {
+            "id": "c",
+            "label": "A universal engineering certification."
+          },
+          {
+            "id": "d",
+            "label": "A bounded result under the demonstrated basis, with broader application requiring appropriate review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G91_final19",
+        "prompt": "The research graph is corrected to distinguish modeled estimates from field measurements. What methodological issue can still require review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The changed exclusion rule and its effect on the model comparison and conclusions."
+          },
+          {
+            "id": "b",
+            "label": "No issue; correct labels automatically validate every data-selection choice."
+          },
+          {
+            "id": "c",
+            "label": "A requirement to discard every model estimate as scientifically worthless."
+          },
+          {
+            "id": "d",
+            "label": "Permission to apply the model immediately to production without further authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G91_final20",
+        "prompt": "A laboratory team has a credible published method but proposes a different material, equipment and a utility owned by another department. What establishes local permission?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Publication alone, regardless of local changes."
+          },
+          {
+            "id": "b",
+            "label": "Actual protocol, technical/hazard and site-interface review by the appropriate responsible authorities."
+          },
+          {
+            "id": "c",
+            "label": "The sponsor's enthusiasm and the small container size."
+          },
+          {
+            "id": "d",
+            "label": "An immediate trial outside the approved range to see whether hazards changed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G91_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G91_lesson1",
+          "questionIds": [
+            "G91_check1"
+          ]
+        },
+        {
+          "lessonId": "G91_lesson2",
+          "questionIds": [
+            "G91_check2"
+          ]
+        },
+        {
+          "lessonId": "G91_lesson3",
+          "questionIds": [
+            "G91_check3"
+          ]
+        },
+        {
+          "lessonId": "G91_lesson4",
+          "questionIds": [
+            "G91_check4"
+          ]
+        },
+        {
+          "lessonId": "G91_lesson5",
+          "questionIds": [
+            "G91_check5"
+          ]
+        },
+        {
+          "lessonId": "G91_lesson6",
+          "questionIds": [
+            "G91_check6"
+          ]
+        },
+        {
+          "lessonId": "G91_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G91_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G91_final",
+          "questionIds": [
+            "G91_final1",
+            "G91_final2",
+            "G91_final3",
+            "G91_final4",
+            "G91_final5",
+            "G91_final6",
+            "G91_final7",
+            "G91_final8",
+            "G91_final9",
+            "G91_final10",
+            "G91_final11",
+            "G91_final12",
+            "G91_final13",
+            "G91_final14",
+            "G91_final15",
+            "G91_final16",
+            "G91_final17",
+            "G91_final18",
+            "G91_final19",
+            "G91_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G91_check1": "The correct decision is to restrict the assignment to its approved method and route the proposed experiment for review. Research may be computational, laboratory or field based. A petroleum or geology research label does not prove hazardous experimentation. Define the actual question, method, environment and people involved before selecting safeguards and qualifications. A literature review has different controls from changing a pilot plant. The desk learner prepares a protocol review, not an experiment, and must not create live exposures to supply missing evidence. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G91_check2": "The correct decision is to reconcile versions and obtain the responsible review before the changed method. A controlled protocol explains the question, materials or datasets, method boundary and approval. The version reviewed must be the version proposed for use. Technical review, safety review and ethical or other required review address different questions. A published paper is evidence about a method, not local permission to reproduce it with different equipment or materials. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G91_check3": "The correct decision is to refer the substitution for competent technical and safety review. Laboratory work needs method-specific hazard information and the applicable laboratory or other employer program. Chemical hygiene guidance has a defined scope; it is not universal certification for every research service. Identify materials, equipment and technical controls in the approved protocol, then check whether their identities and restrictions match the proposal. Qualified specialists select controls and evaluate hazardous interactions. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G91_check4": "The correct decision is to relabel the evidence correctly and revise conclusions that depend on the distinction. Research conclusions depend on where data came from, transformations, exclusions and uncertainty. Preserve raw data and document analysis choices so another authorized reviewer can understand the result. A simulation output is not a field measurement. Missing metadata cannot be repaired by guessing. Restricted operational or personal data must remain within approved access and handling arrangements throughout review. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G91_check5": "The correct decision is to hold the proposed expansion and obtain the required method and safety review. A protocol needs defined boundaries and a route for unexpected results, equipment differences or new hazards. A surprising result is information for review, not permission to increase an experiment beyond the approved scope. Qualified reviewers establish applicable limits and stopping criteria; this course supplies no operating thresholds. Record the changed assumption and the decision authority rather than changing a notebook after the fact. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G91_check6": "The correct decision is to retain the finding and route operational application through the required technical and change review. A technically interesting result can remain unsuitable for operational application. The handover should identify method, uncertainty, reproducibility limits and what was not tested. Peer review does not grant operating authority or engineering approval. The responsible organization determines whether further validation, design review or qualification is needed before applying the finding to real assets or people. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G91_final1": "A research scope statement separating computational, laboratory and field activities addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Research may be computational, laboratory or field based. A petroleum or geology research label does not prove hazardous experimentation. Define the actual question, method, environment and people involved before selecting safeguards and qualifications. A literature review has different controls from changing a pilot plant. The desk learner prepares a protocol review, not an experiment, and must not create live exposures to supply missing evidence.",
+        "G91_final2": "A protocol approval record linking method version and actual equipment or dataset addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A controlled protocol explains the question, materials or datasets, method boundary and approval. The version reviewed must be the version proposed for use. Technical review, safety review and ethical or other required review address different questions. A published paper is evidence about a method, not local permission to reproduce it with different equipment or materials.",
+        "G91_final3": "A protocol hazard review linked to actual materials and equipment addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Laboratory work needs method-specific hazard information and the applicable laboratory or other employer program. Chemical hygiene guidance has a defined scope; it is not universal certification for every research service. Identify materials, equipment and technical controls in the approved protocol, then check whether their identities and restrictions match the proposal. Qualified specialists select controls and evaluate hazardous interactions.",
+        "G91_final4": "A data lineage record linking raw inputs, transformations and reported result addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Research conclusions depend on where data came from, transformations, exclusions and uncertainty. Preserve raw data and document analysis choices so another authorized reviewer can understand the result. A simulation output is not a field measurement. Missing metadata cannot be repaired by guessing. Restricted operational or personal data must remain within approved access and handling arrangements throughout review.",
+        "G91_final5": "A protocol change log identifying changed assumption and review disposition addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A protocol needs defined boundaries and a route for unexpected results, equipment differences or new hazards. A surprising result is information for review, not permission to increase an experiment beyond the approved scope. Qualified reviewers establish applicable limits and stopping criteria; this course supplies no operating thresholds. Record the changed assumption and the decision authority rather than changing a notebook after the fact.",
+        "G91_final6": "A research handover distinguishing findings, limitations and proposed applications addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A technically interesting result can remain unsuitable for operational application. The handover should identify method, uncertainty, reproducibility limits and what was not tested. Peer review does not grant operating authority or engineering approval. The responsible organization determines whether further validation, design review or qualification is needed before applying the finding to real assets or people.",
+        "G91_final7": "That inference exceeds the evidence. Research may be computational, laboratory or field based. A petroleum or geology research label does not prove hazardous experimentation. Define the actual question, method, environment and people involved before selecting safeguards and qualifications. A literature review has different controls from changing a pilot plant. The desk learner prepares a protocol review, not an experiment, and must not create live exposures to supply missing evidence. The appropriate task disposition remains to restrict the assignment to its approved method and route the proposed experiment for review.",
+        "G91_final8": "That inference exceeds the evidence. A controlled protocol explains the question, materials or datasets, method boundary and approval. The version reviewed must be the version proposed for use. Technical review, safety review and ethical or other required review address different questions. A published paper is evidence about a method, not local permission to reproduce it with different equipment or materials. The appropriate task disposition remains to reconcile versions and obtain the responsible review before the changed method.",
+        "G91_final9": "That inference exceeds the evidence. Laboratory work needs method-specific hazard information and the applicable laboratory or other employer program. Chemical hygiene guidance has a defined scope; it is not universal certification for every research service. Identify materials, equipment and technical controls in the approved protocol, then check whether their identities and restrictions match the proposal. Qualified specialists select controls and evaluate hazardous interactions. The appropriate task disposition remains to refer the substitution for competent technical and safety review.",
+        "G91_final10": "That inference exceeds the evidence. Research conclusions depend on where data came from, transformations, exclusions and uncertainty. Preserve raw data and document analysis choices so another authorized reviewer can understand the result. A simulation output is not a field measurement. Missing metadata cannot be repaired by guessing. Restricted operational or personal data must remain within approved access and handling arrangements throughout review. The appropriate task disposition remains to relabel the evidence correctly and revise conclusions that depend on the distinction.",
+        "G91_final11": "That inference exceeds the evidence. A protocol needs defined boundaries and a route for unexpected results, equipment differences or new hazards. A surprising result is information for review, not permission to increase an experiment beyond the approved scope. Qualified reviewers establish applicable limits and stopping criteria; this course supplies no operating thresholds. Record the changed assumption and the decision authority rather than changing a notebook after the fact. The appropriate task disposition remains to hold the proposed expansion and obtain the required method and safety review.",
+        "G91_final12": "That inference exceeds the evidence. A technically interesting result can remain unsuitable for operational application. The handover should identify method, uncertainty, reproducibility limits and what was not tested. Peer review does not grant operating authority or engineering approval. The responsible organization determines whether further validation, design review or qualification is needed before applying the finding to real assets or people. The appropriate task disposition remains to retain the finding and route operational application through the required technical and change review.",
+        "G91_final13": "A new intervention scope requiring the actual method, operational and safety review. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G91_final14": "The changed methodological assumption and its effect on the result need transparent review. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G91_final15": "Both scientific equivalence and actual hazard assumptions for the proposed material and equipment. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G91_final16": "The distinction between estimates and measurements and the conclusions each can support. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G91_final17": "Record the new question and obtain required review before expanding beyond the approved scope. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G91_final18": "A bounded result under the demonstrated basis, with broader application requiring appropriate review. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G91_final19": "Correct evidence labels fix that distinction only. The altered exclusion still needs transparent technical review, and operational application remains a separate validation/change decision.",
+        "G91_final20": "Publication informs method review but does not authorize local substitutions or use of another owner's utility. Actual identities, assumptions and permissions must be reviewed before the changed work, without an improvised experiment."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

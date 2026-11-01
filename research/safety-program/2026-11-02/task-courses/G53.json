@@ -1,0 +1,913 @@
+{
+  "courseId": "G53",
+  "gapGroupId": "G04",
+  "title": "Blood exposure prevention: clean-to-dirty work and immediate exposure actions",
+  "description": "interrupt contact pathways during assigned support work and carry out the immediate wash, report and medical-evaluation handoff after a possible exposure",
+  "purpose": "interrupt contact pathways during assigned support work and carry out the immediate wash, report and medical-evaluation handoff after a possible exposure",
+  "audience": [
+    "Assigned first-aid support workers",
+    "Housekeeping and laundry personnel with anticipated exposure",
+    "Supervisors coordinating exposure follow-up"
+  ],
+  "practicalBoundary": "This course is not clinical licensing, vaccination, medical clearance, infection diagnosis, sharps-device qualification or a substitute for the employer exposure-control plan, interactive training and observed task skills. Medical professionals determine exposure risk and treatment; workers do not prescribe prophylaxis from this course.",
+  "vendorEvidenceRequired": [
+    "Employer exposure determination identifying actual occupational blood/OPIM tasks",
+    "Accessible current exposure-control plan, assigned task instructions and interactive question route",
+    "Task-specific engineering controls, supplies, PPE, sharps and contaminated-laundry arrangements",
+    "Confidential immediate evaluation/follow-up and hepatitis-B vaccination arrangements where applicable",
+    "Observed skill record for the actual task and any separately required clinical authorization"
+  ],
+  "practicalAssessmentRequired": [
+    "Competent exposure-control instructor observes clean/dirty separation, hygiene and assigned PPE use with harmless simulation materials",
+    "Qualified task assessor observes safe handling of the actual laundry/waste/sharps interface using safe props and the approved method",
+    "Supervisor exercises immediate reporting and confidential medical handoff; qualified clinicians handle risk assessment and treatment"
+  ],
+  "sources": [
+    {
+      "title": "OSHA — Bloodborne pathogens standard",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030"
+    },
+    {
+      "title": "OSHA — Bloodborne pathogens standards and state-plan context",
+      "url": "https://www.osha.gov/bloodborne-pathogens/standards"
+    },
+    {
+      "title": "CDC/NIOSH — Bloodborne infectious disease risk factors",
+      "url": "https://www.cdc.gov/niosh/healthcare/risk-factors/bloodborne-infectious-diseases.html"
+    },
+    {
+      "title": "CDC — Occupational exposure to blood",
+      "url": "https://www.cdc.gov/dental-infection-control/hcp/dental-ipc-faqs/occupational-exposure.html"
+    },
+    {
+      "title": "CDC — Standard precautions",
+      "url": "https://www.cdc.gov/infection-control/hcp/isolation-precautions/precautions.html"
+    },
+    {
+      "title": "CDC — HBV exposure response; clinical context",
+      "url": "https://www.cdc.gov/hepatitis-b/hcp/infection-control/index.html"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G53_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Blood exposure prevention: clean-to-dirty work and immediate exposure actions\n\nThis course teaches a bounded task: interrupt contact pathways during assigned support work and carry out the immediate wash, report and medical-evaluation handoff after a possible exposure Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis course is not clinical licensing, vaccination, medical clearance, infection diagnosis, sharps-device qualification or a substitute for the employer exposure-control plan, interactive training and observed task skills. Medical professionals determine exposure risk and treatment; workers do not prescribe prophylaxis from this course. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.\n\nPrimary-source reading: [OSHA — Bloodborne pathogens standard](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030); [OSHA — Bloodborne pathogens standards and state-plan context](https://www.osha.gov/bloodborne-pathogens/standards); [CDC/NIOSH — Bloodborne infectious disease risk factors](https://www.cdc.gov/niosh/healthcare/risk-factors/bloodborne-infectious-diseases.html); [CDC — Occupational exposure to blood](https://www.cdc.gov/dental-infection-control/hcp/dental-ipc-faqs/occupational-exposure.html); [CDC — Standard precautions](https://www.cdc.gov/infection-control/hcp/isolation-precautions/precautions.html); [CDC — HBV exposure response; clinical context](https://www.cdc.gov/hepatitis-b/hcp/infection-control/index.html). Read the scope and task guidance together with the actual employer procedure. These references do not issue this course's learner any license or work authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G53_lesson1",
+        "title": "1. Trace the contact pathway before beginning the task",
+        "body": "Exposure prevention starts by tracing how material could reach a person. Think in three parts: source, transfer and point of contact. The source may be a visibly blood-contaminated item or a material treated as potentially infectious under the actual task and plan. Transfer might occur through a puncture, splash, contaminated hand or contaminated equipment. Relevant contact can include eyes, nose, mouth or broken skin. This reasoning helps a worker choose where a barrier belongs instead of treating gloves as a complete solution.\n\nMap an ordinary support task in order. For example, collecting a bag, moving it to a cart, using a door handle and handing the cart to another worker involves several contacts. If the outside of the bag or the collector's gloves are contaminated, the cart handle and door can become transfer points. The next worker may believe they are touching a clean surface. Preventing that transfer requires an agreed clean/dirty workflow and actual supplies at the point of work.\n\nDo not determine risk by a person's appearance, social history or assumed diagnosis. Follow the exposure-control plan for the task and material. A small stain is not a reliable measure of risk, and absence of a visible stain does not authorize handling a sharp carelessly. The worker's role is to prevent contact and report a possible exposure, not decide that a person is infectious or harmless.\n\nSeparate bloodborne exposure from other hazards that may coexist. A cleaning product can irritate skin, a wet floor can cause a fall and a laundry cart can create a manual-handling problem. The bloodborne plan does not replace those controls. Equally, choosing a chemical-resistant glove does not automatically show it is appropriate for the blood-contact task or resistant to puncture.\n\nBefore starting, identify the actual task boundary and available controls. Know where handwashing is available, who owns contaminated-item handling, where the correct container is located and how to contact the supervisor and immediate medical route. If the work requires a control that is absent, pause that part of the task and obtain the approved arrangement. Do not begin a sequence that leaves no safe way to complete it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G53_lesson2",
+        "title": "2. Arrange clean and contaminated work so barriers can work",
+        "body": "Plan the movement of people, materials and tools before making contact. Identify a clean supply area and the place contaminated items will be controlled under the employer's procedure. Keep personal belongings, food, drink and shared communication devices away from the contaminated work interface. A clean glove taken from a box becomes part of the task as soon as it touches a contaminated surface; the box and spare supplies must not become the next transfer point.\n\nUse engineering and work-practice controls before relying only on PPE. In an actual clinical task, safety-engineered equipment and suitable sharps containers can reduce injury opportunities. In support work, preventing hand entry into an unknown bag and using the approved collection system can remove unnecessary contact. The exact device, container and method require task instruction and observed proficiency. This course does not teach a clinical instrument technique or a universal sharp-retrieval method.\n\nLay out a fictional harmless practice station: clean supply card, simulated contaminated-item card, waste route card and communication card. Walk through the order without touching real contaminated materials. Ask what each hand or tool would touch next. If a worker would need to pick up a phone with contaminated gloves, the plan needs a clean communication arrangement or the employer's approved changeover method. Do not normalize contamination of a shared phone as unavoidable.\n\nConsider the end of the job before the beginning. Where will used items go? How will reusable equipment be managed? What surface will be ready for the next worker, and who confirms that state? A sequence that protects the first worker but leaves an unmarked contaminated cart for the next shift is incomplete. Handovers must state the condition of the item and the handling boundary.\n\nA task instruction is usable only if its controls can actually be implemented. A written instruction requiring immediate handwashing is not enough if the worker cannot access the designated facility. Report the practical obstacle to the supervisor and obtain a supported solution. Do not improvise a product, dilution or cleaning method because a document lists no accessible alternative.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G53_lesson3",
+        "title": "3. Use PPE as a controlled barrier rather than a clean-state label",
+        "body": "PPE is chosen for the anticipated contact and task. Gloves can reduce hand contact, while appropriate eye, face or clothing protection may be needed when the actual work presents splash or soiling risk. The employer's task assessment and instruction determine the selection. One glove material, gown or face covering does not automatically suit every task, and ordinary gloves do not establish protection against a sharp.\n\nBefore use, check that the assigned equipment is available, suitable for you and in usable condition under the instruction. If the size or condition prevents the assigned work from being performed safely, obtain the correct item. Do not treat an uncomfortable or damaged barrier as adequate because a supervisor needs the task finished. Practical assessment should include recognizing that a barrier is unsuitable and obtaining the proper replacement.\n\nWhile working, keep contaminated gloves away from clean controls, personal items and your face. If the task changes from handling a contaminated item to clean documentation, follow the actual changeover and hygiene procedure. Putting on another glove does not decontaminate a phone or pen already touched. The surface and the worker's hands are different parts of the pathway and may each need the approved response.\n\nRemoval is itself a task with potential transfer. Learn and demonstrate the employer's actual removal sequence using harmless practice material and a competent assessor. Avoid touching contaminated outer surfaces with bare skin, and complete the required hand hygiene. This course explains the objective but does not replace an observed demonstration of the exact equipment being used.\n\nIf a barrier is torn, displaced or visibly compromised, stop the affected contact safely and follow the employer's replacement and exposure procedure. Do not wait to see a symptom before reporting a possible exposure. PPE use, exposure reporting and medical evaluation answer different questions: a glove may have been worn, an exposure may still have occurred and a qualified clinician may need to assess it. Record the facts without using PPE attendance as proof that no contact was possible.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G53_lesson4",
+        "title": "4. Keep sharps, laundry and waste in their assigned handling systems",
+        "body": "Sharps create a puncture pathway that ordinary surface cleaning does not remove. Do not reach blindly into a bag, pocket, bin or pile to find an object. Do not compress a container by hand to make more space. If a sharp is suspected in an item outside its assigned system, stop the affected handling and notify the designated role. The approved method and competent person must determine how it is controlled; this lesson does not authorize picking it up.\n\nA sharps container must be the appropriate assigned container, at the correct point of use and managed according to its actual limits and procedure. A convenient ordinary waste bag is not an equivalent substitute. If the required container is absent or the available one has reached its permitted fill condition, hold the affected work and obtain the approved replacement. Do not force contents down or transfer sharps by hand to create room.\n\nContaminated laundry should remain within the employer's handling system. Do not sort or shake potentially contaminated items in a way that creates avoidable contact. Keep the collection, bagging, movement and receiving interfaces connected so a receiving worker knows the relevant condition. A bag's color alone may be insufficient if the receiving organization uses a different system; the actual agreed identification and handling instructions matter.\n\nWaste classification and final disposal are also actual program decisions. Do not assume every tissue is regulated waste, and do not assume every sealed bag can enter ordinary refuse. The assigned person follows the exposure-control and waste procedure for the material and jurisdiction. If identity or container status is unclear, obtain the responsible decision rather than invent a rule from a training example.\n\nAt handover, describe the actual item, its condition, the container or identification used and any restriction. “Laundry batch L-7 held; suspected sharp reported; receiving handling pending designated review” is useful. “Bag safe” is an unsupported assurance if no one established that conclusion. A clean exterior does not prove the contents can be searched by hand. The next worker must not discover the unresolved hazard only after opening the system.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G53_lesson5",
+        "title": "5. Act promptly after possible exposure, then use qualified care",
+        "body": "After a needlestick, cut or splash to a relevant contact area, stop the task safely and begin the immediate first-aid actions taught by the employer and public-health guidance. Wash punctures and cuts with soap and water. Flush splashes to the nose, mouth or skin with water, and irrigate eyes with clean water, saline or an appropriate sterile irrigant. Report immediately and seek immediate medical evaluation through the established route. These actions should not be postponed to finish the job or complete a form.\n\nThe action sequence has a purpose: limit continuing contact, communicate the incident and obtain qualified assessment promptly. Do not squeeze, cut or chemically treat a wound using an improvised method. Do not use surface disinfectant or another harsh chemical in the eyes or on an injury. A cleaning product intended for equipment is not automatically a first-aid product. The actual emergency procedure and qualified medical direction govern additional actions.\n\nGive the medical route the relevant facts available without delaying contact: time, task, material and source information if known, route of contact, body area, PPE involved and immediate action taken. Say what is unknown. Do not handle or retrieve the implicated sharp to prove the event happened, and do not pressure the source person for private medical information. The employer's authorized clinical and source-information process handles those matters.\n\nA possible exposure is not a diagnosis. Infection risk, testing, vaccination review and any post-exposure treatment require qualified medical assessment. The worker should neither conclude “I am infected” nor “I feel fine, so nothing happened.” Different pathogens and circumstances can require different follow-up; this course gives no medication, timing regimen or self-clearance rule.\n\nPractice the communication with harmless scenarios. State: “Possible eye splash during task C at approximately 09:20; immediate irrigation started; supervisor notified; medical evaluation requested; source details available through the authorized route.” This is concise and actionable. If the first contact cannot be reached, follow the established alternate emergency route rather than waiting indefinitely for one named individual. The employer must make the real route known before the task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G53_lesson6",
+        "title": "6. Preserve confidentiality while improving the actual task",
+        "body": "An exposure event produces different records for different purposes. The operational record needs the task, relevant hazard, immediate action, work restriction and responsible follow-up route. The medical record contains confidential assessment and treatment information controlled by the authorized process. Do not paste diagnoses, laboratory results or personal health history into general work comments, public incident boards or group chats.\n\nA supervisor can communicate a useful work status without clinical detail: “Employee referred for immediate evaluation; reassignment status pending authorized occupational-health determination.” That statement does not diagnose the employee or promise clearance. If the job cannot proceed without the employee, address staffing through the employer's process rather than asking the worker to declare themselves fit to avoid delay.\n\nReview the task system after the urgent response. Ask where the contact pathway opened: unavailable container, damaged PPE, poor station layout, unclear handling boundary, unexpected sharp or a communication interruption. Describe conditions rather than blaming a person for “not being careful.” A specific failed interface gives the employer something to correct and a practical assessor something to observe in the revised method.\n\nVerify the correction in the actual workflow. Moving a sharps container on a diagram is not enough if workers still cannot reach it at the point of use. Buying PPE does not prove the right sizes and instruction are available. Updating a procedure does not prove the receiving contractor understands a changed laundry identification. Use a safe demonstration and a real handover check to establish whether the revised arrangement works.\n\nCourse completion records should be equally honest. Retain the original answers, the explanation studied and the corrected result. Do not convert a corrected quiz into a statement that a clinical skill was performed or a vaccination was provided. The remaining evidence is named with this course: exposure determination, plan, interactive instruction, real controls, confidential follow-up and observed actual skills. Each belongs with the person authorized to supply or assess it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G53_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: the laundry shortcut creates a puncture opportunity\n\nA fictional support worker receives a bag of laundry from a first-aid room. A note says “possibly blood contaminated.” The assigned laundry procedure uses a designated collection system and prohibits blind hand sorting. The receiving worker sees a rigid outline near the bag opening. A colleague suggests pressing the bag down, then reaching in to remove whatever is protruding. The required receiving supervisor is temporarily elsewhere.\n\nTrace the pathway. A potentially sharp object could puncture a hand during pressing or blind searching. Gloves do not turn that contact into a safe technique. The material's actual identity is unresolved, but uncertainty is a reason to preserve the boundary, not a reason to experiment. The worker should hold the affected handling under the approved procedure and notify the designated role through the available route.\n\nThe handover should describe the bag identifier, source, note and reported rigid outline without declaring that a needle was found. The worker does not open, shake, compress or retrieve an object for the exercise. The responsible role arranges the approved assessment and disposition. If another clean laundry batch can proceed under a clearly separated authorized workflow, that is a separate supervisor decision; it must not obscure the held batch.\n\nSuppose the practical review later finds that the receiving station's approved container is missing. The correction is not simply “remind workers to be careful.” The employer must restore the actual collection arrangement, communicate how to obtain a replacement and observe the revised handling sequence with harmless props. The assessor records whether the worker recognizes an unexpected object, preserves the boundary and reports accurately. No live sharp is needed to test the decision.\n\nThe worked result is a controlled hold, accurate handoff and a specific station-readiness correction. It does not claim that the worker identified the object, made the bag safe or performed a clinical procedure.\n\nCase B: an eye splash during a rushed cleanup\n\nIn a fictional assigned cleanup, a worker reports that a droplet from a blood-contaminated item entered one eye. The worker says the eye does not hurt and asks whether the incident can wait until after lunch. A coworker offers a surface disinfectant because it is used to kill germs on equipment. The supervisor has a general incident form open on a shared screen.\n\nThe immediate priorities are first aid, prompt reporting and immediate qualified medical evaluation. The affected eye is irrigated using the appropriate clean water, saline or sterile irrigant according to the established procedure. Surface disinfectant is not used in the eye. Lack of pain is not proof that no relevant exposure occurred. The worker should not finish cleanup before accessing the medical route.\n\nThe report states approximate time, task, reported eye contact, known material information, protective equipment involved and immediate irrigation. Unknown details remain marked unknown. The supervisor does not delay the medical contact while completing every field and does not ask the worker to collect a contaminated sample. The authorized clinical process determines risk, any source-information needs and follow-up.\n\nThe shared operational screen records the incident and appropriate work status without displaying private medical findings. Later clinical information stays in the confidential route. If a coworker asks whether the exposed worker now has an infection, the supervisor does not speculate or disclose private results.\n\nThe task review examines why a splash pathway existed: actual work method, barrier selection, station layout and available instruction. Any change must be supported and demonstrated using harmless simulation. A passing knowledge score can show that the worker now recognizes the immediate action sequence, but it cannot certify PPE-removal skill, provide vaccination or issue medical clearance. Those remain separately assessed or provided by the named qualified roles.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G53_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G53_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced interrupt contact pathways during assigned support work and carry out the immediate wash, report and medical-evaluation handoff after a possible exposure Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G53_check1",
+        "prompt": "A worker wears gloves but touches a clean phone after contaminated laundry. What happened?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A transfer pathway may have contaminated the phone despite the gloves."
+          },
+          {
+            "id": "b",
+            "label": "Gloves made the phone permanently clean."
+          },
+          {
+            "id": "c",
+            "label": "Only the laundry can ever be contaminated."
+          },
+          {
+            "id": "d",
+            "label": "The phone becomes a protective barrier for the next worker."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G53_check2",
+        "prompt": "A station lacks the required collection container. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use an ordinary bag as an automatic equivalent."
+          },
+          {
+            "id": "b",
+            "label": "Hold the affected handling and obtain the approved arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Start and solve disposal later."
+          },
+          {
+            "id": "d",
+            "label": "Ask the receiving driver to invent a replacement containment method."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G53_check3",
+        "prompt": "A glove tears during the task. Which conclusion is sound?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No exposure is possible because a glove was initially worn."
+          },
+          {
+            "id": "b",
+            "label": "Keep working until a symptom appears."
+          },
+          {
+            "id": "c",
+            "label": "Stop affected contact safely and use the replacement/exposure procedure."
+          },
+          {
+            "id": "d",
+            "label": "Cover the tear with any tape and continue without review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G53_check4",
+        "prompt": "A rigid object is felt through a laundry bag. What should an unassigned worker do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reach inside carefully."
+          },
+          {
+            "id": "b",
+            "label": "Compress the bag by hand."
+          },
+          {
+            "id": "c",
+            "label": "Shake the bag until the object falls into an ordinary bin."
+          },
+          {
+            "id": "d",
+            "label": "Stop affected handling and notify the designated role without blind searching."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G53_check5",
+        "prompt": "Blood-contaminated material splashes into an eye. What is the immediate course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Irrigate appropriately, report promptly and seek immediate qualified medical evaluation."
+          },
+          {
+            "id": "b",
+            "label": "Use surface disinfectant in the eye."
+          },
+          {
+            "id": "c",
+            "label": "Wait for pain before reporting."
+          },
+          {
+            "id": "d",
+            "label": "Complete the cleanup before seeking advice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G53_check6",
+        "prompt": "What belongs on a general shared task screen after exposure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Private laboratory results and diagnosis."
+          },
+          {
+            "id": "b",
+            "label": "Necessary incident/work status and the authorized follow-up route."
+          },
+          {
+            "id": "c",
+            "label": "The worker's full medical history."
+          },
+          {
+            "id": "d",
+            "label": "A coworker's guess about infection status."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G53_final1",
+        "prompt": "What are the three pathway elements taught?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Job title, invoice and attendance."
+          },
+          {
+            "id": "b",
+            "label": "Appearance, reputation and guess."
+          },
+          {
+            "id": "c",
+            "label": "Source, transfer and point of contact."
+          },
+          {
+            "id": "d",
+            "label": "Invoice, attendance and signed completion."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G53_final2",
+        "prompt": "Should a worker decide precautions by a person's appearance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, healthy appearance proves no risk."
+          },
+          {
+            "id": "b",
+            "label": "Yes, familiar people need no precautions."
+          },
+          {
+            "id": "c",
+            "label": "Yes, a familiar uniform proves there is no exposure pathway."
+          },
+          {
+            "id": "d",
+            "label": "No; follow the actual task/material exposure-control plan."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G53_final3",
+        "prompt": "A chemical-resistant glove is available. What still needs establishing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Suitability for the actual blood-contact task and other hazards."
+          },
+          {
+            "id": "b",
+            "label": "That it resists every sharp."
+          },
+          {
+            "id": "c",
+            "label": "That it replaces every other barrier."
+          },
+          {
+            "id": "d",
+            "label": "That one glove makes eye protection unnecessary for every splash task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G53_final4",
+        "prompt": "Why plan the clean supply location?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To avoid hand hygiene."
+          },
+          {
+            "id": "b",
+            "label": "To avoid transferring contamination to spare equipment and the next worker."
+          },
+          {
+            "id": "c",
+            "label": "To prove all tools sterile."
+          },
+          {
+            "id": "d",
+            "label": "To turn every clean surface into a waste collection point."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G53_final5",
+        "prompt": "What should a safe practice exercise use?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Real contaminated sharps."
+          },
+          {
+            "id": "b",
+            "label": "Live exposure to test courage."
+          },
+          {
+            "id": "c",
+            "label": "Harmless props that reveal contact sequence and communication gaps."
+          },
+          {
+            "id": "d",
+            "label": "An uncontrolled encounter with an actual injured person."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G53_final6",
+        "prompt": "What is the PPE-removal learning boundary?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Quiz completion alone proves physical proficiency."
+          },
+          {
+            "id": "b",
+            "label": "Every equipment design has an identical sequence."
+          },
+          {
+            "id": "c",
+            "label": "A generic poster authorizes every clinical device technique."
+          },
+          {
+            "id": "d",
+            "label": "Learn and demonstrate the actual sequence with competent observation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G53_final7",
+        "prompt": "What does putting on a new glove do to an already contaminated phone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing by itself; the surface needs its own approved handling response."
+          },
+          {
+            "id": "b",
+            "label": "Automatically decontaminates it."
+          },
+          {
+            "id": "c",
+            "label": "Makes touching the face safe."
+          },
+          {
+            "id": "d",
+            "label": "It decontaminates all surfaces touched during the earlier task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G53_final8",
+        "prompt": "A sharps container has reached its permitted fill condition. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Force material down."
+          },
+          {
+            "id": "b",
+            "label": "Obtain the approved replacement and hold affected disposal as necessary."
+          },
+          {
+            "id": "c",
+            "label": "Move sharps by hand to an ordinary bag."
+          },
+          {
+            "id": "d",
+            "label": "Push the contents down with a gloved hand."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G53_final9",
+        "prompt": "A laundry receiving contractor uses another identification system. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume a color means the same everywhere."
+          },
+          {
+            "id": "b",
+            "label": "Remove all identification."
+          },
+          {
+            "id": "c",
+            "label": "Confirm the agreed identification and handling handoff."
+          },
+          {
+            "id": "d",
+            "label": "Use an unmarked container so no one is concerned."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G53_final10",
+        "prompt": "Does every tissue automatically belong to one regulated-waste category?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, everywhere."
+          },
+          {
+            "id": "b",
+            "label": "No waste ever needs special handling."
+          },
+          {
+            "id": "c",
+            "label": "Every sealed bag may enter ordinary refuse anywhere."
+          },
+          {
+            "id": "d",
+            "label": "No; follow the actual material, program and jurisdiction determination."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G53_final11",
+        "prompt": "A worker has a puncture from a potentially contaminated sharp. What first aid is taught?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wash the wound with soap and water, report and obtain immediate evaluation."
+          },
+          {
+            "id": "b",
+            "label": "Cut the wound wider."
+          },
+          {
+            "id": "c",
+            "label": "Apply a surface-cleaning chemical inside it."
+          },
+          {
+            "id": "d",
+            "label": "Wait for an infection symptom before washing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G53_final12",
+        "prompt": "What should not delay medical contact?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Providing available factual information."
+          },
+          {
+            "id": "b",
+            "label": "Finishing every form field."
+          },
+          {
+            "id": "c",
+            "label": "Following the immediate care procedure."
+          },
+          {
+            "id": "d",
+            "label": "Finishing the current batch of laundry before notification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G53_final13",
+        "prompt": "Who determines infection risk and treatment after a possible exposure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The exposed worker from lack of symptoms."
+          },
+          {
+            "id": "b",
+            "label": "A course administrator from the quiz score."
+          },
+          {
+            "id": "c",
+            "label": "Qualified medical professionals through the authorized route."
+          },
+          {
+            "id": "d",
+            "label": "The person who keeps the general work calendar."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G53_final14",
+        "prompt": "Should the worker retrieve the implicated sharp for proof?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, carry it loose to the supervisor."
+          },
+          {
+            "id": "b",
+            "label": "Yes, place it in a pocket."
+          },
+          {
+            "id": "c",
+            "label": "Yes, put it on the shared desk for inspection."
+          },
+          {
+            "id": "d",
+            "label": "No; use the authorized reporting/source-information process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G53_final15",
+        "prompt": "The first named supervisor is unavailable. What should the worker use?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The established alternate immediate reporting/medical route."
+          },
+          {
+            "id": "b",
+            "label": "Wait indefinitely."
+          },
+          {
+            "id": "c",
+            "label": "Skip evaluation entirely."
+          },
+          {
+            "id": "d",
+            "label": "Wait until the next scheduled training refresher."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G53_final16",
+        "prompt": "Which corrective action is more useful after a missing container?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only write be careful."
+          },
+          {
+            "id": "b",
+            "label": "Restore the actual station arrangement and observe the revised safe sequence."
+          },
+          {
+            "id": "c",
+            "label": "Change the incident date."
+          },
+          {
+            "id": "d",
+            "label": "Move the missing-container problem into an unread document."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G53_final17",
+        "prompt": "What should a supervisor tell the shift about an employee under evaluation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A guessed diagnosis."
+          },
+          {
+            "id": "b",
+            "label": "All confidential clinical details."
+          },
+          {
+            "id": "c",
+            "label": "Only necessary work status through the authorized process."
+          },
+          {
+            "id": "d",
+            "label": "Tell everyone the worker is definitely infected."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G53_final18",
+        "prompt": "Case A has a rigid outline in a bag. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A needle was definitely identified."
+          },
+          {
+            "id": "b",
+            "label": "The bag is safe to search."
+          },
+          {
+            "id": "c",
+            "label": "The object can be removed because its outline is visible."
+          },
+          {
+            "id": "d",
+            "label": "A reported observation requiring the approved boundary; object identity is unconfirmed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G53_final19",
+        "prompt": "Case B worker feels no eye pain. What does that establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It does not remove the need for prompt exposure evaluation."
+          },
+          {
+            "id": "b",
+            "label": "No relevant contact occurred."
+          },
+          {
+            "id": "c",
+            "label": "Medical follow-up is unnecessary."
+          },
+          {
+            "id": "d",
+            "label": "An online pass can replace immediate evaluation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G53_final20",
+        "prompt": "What can this course completion establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Vaccination provided."
+          },
+          {
+            "id": "b",
+            "label": "Knowledge and explicit remediation, separate from observed skills and medical services."
+          },
+          {
+            "id": "c",
+            "label": "Clinical license issued."
+          },
+          {
+            "id": "d",
+            "label": "Authority to prescribe exposure medications."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G53_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G53_lesson1",
+          "questionIds": [
+            "G53_check1"
+          ]
+        },
+        {
+          "lessonId": "G53_lesson2",
+          "questionIds": [
+            "G53_check2"
+          ]
+        },
+        {
+          "lessonId": "G53_lesson3",
+          "questionIds": [
+            "G53_check3"
+          ]
+        },
+        {
+          "lessonId": "G53_lesson4",
+          "questionIds": [
+            "G53_check4"
+          ]
+        },
+        {
+          "lessonId": "G53_lesson5",
+          "questionIds": [
+            "G53_check5"
+          ]
+        },
+        {
+          "lessonId": "G53_lesson6",
+          "questionIds": [
+            "G53_check6"
+          ]
+        },
+        {
+          "lessonId": "G53_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G53_final",
+          "questionIds": [
+            "G53_final1",
+            "G53_final2",
+            "G53_final3",
+            "G53_final4",
+            "G53_final5",
+            "G53_final6",
+            "G53_final7",
+            "G53_final8",
+            "G53_final9",
+            "G53_final10",
+            "G53_final11",
+            "G53_final12",
+            "G53_final13",
+            "G53_final14",
+            "G53_final15",
+            "G53_final16",
+            "G53_final17",
+            "G53_final18",
+            "G53_final19",
+            "G53_final20"
+          ]
+        },
+        {
+          "lessonId": "G53_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G53_check1": "A barrier can carry contamination to another surface; gloves do not create a clean-state label.",
+        "G53_check2": "The planned method must be practically available before the worker begins the affected sequence.",
+        "G53_check3": "Barrier failure needs actual action and exposure review, not reassurance from previous PPE use.",
+        "G53_check4": "A suspected sharp requires the approved handling system rather than improvisation.",
+        "G53_check5": "First aid and prompt evaluation should not be delayed by symptoms or paperwork.",
+        "G53_check6": "The operational record can coordinate work while clinical information remains confidential.",
+        "G53_final1": "Pathway reasoning shows where actual controls need to interrupt contact.",
+        "G53_final2": "Appearance is not a defensible exposure-control decision.",
+        "G53_final3": "PPE properties and task suitability must not be assumed across hazards.",
+        "G53_final4": "Supplies can become transfer points if the work layout is uncontrolled.",
+        "G53_final5": "Observed learning does not require creating the hazard.",
+        "G53_final6": "The objective can be taught online while the actual skill still needs observation.",
+        "G53_final7": "Hand/barrier changes and surface contamination are different parts of the pathway.",
+        "G53_final8": "Creating space by contact defeats the containment and injury-prevention system.",
+        "G53_final9": "The next worker needs the actual condition and appropriate handling information.",
+        "G53_final10": "Waste decisions must follow actual applicability rather than blanket labels.",
+        "G53_final11": "Simple immediate care leads to qualified assessment; improvised injury treatment is unsafe.",
+        "G53_final12": "Documentation supports the response but must not postpone prompt evaluation.",
+        "G53_final13": "A possible exposure is not a diagnosis or self-clearance decision.",
+        "G53_final14": "Evidence collection must not create another sharps exposure.",
+        "G53_final15": "The actual program needs a usable route when one individual cannot be reached.",
+        "G53_final16": "A specific failed interface needs a functioning practical correction.",
+        "G53_final17": "Work coordination does not require public disclosure of medical information.",
+        "G53_final18": "Accurate observation and uncertainty prevent an invented conclusion.",
+        "G53_final19": "Symptoms are not a reliable self-clearance criterion after the described contact.",
+        "G53_final20": "A learning record must not claim actions or qualifications it did not provide."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

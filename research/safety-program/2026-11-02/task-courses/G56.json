@@ -1,0 +1,910 @@
+{
+  "courseId": "G56",
+  "gapGroupId": "G07",
+  "title": "Commercial dive preparation: understand the team, interfaces and unresolved hazards",
+  "description": "prepare for a commercial diving briefing by identifying the actual mode, underwater energy interfaces, communication dependencies and emergency-readiness questions",
+  "purpose": "prepare for a commercial diving briefing by identifying the actual mode, underwater energy interfaces, communication dependencies and emergency-readiness questions",
+  "audience": [
+    "Dive-project support coordinators",
+    "Client operations contacts",
+    "Assigned surface support personnel preparing for qualified instruction"
+  ],
+  "practicalBoundary": "This is preparatory knowledge only. It qualifies no diver, tender, supervisor, chamber operator or rescuer. It supplies no breathing-gas plan, decompression schedule, depth/time limits, isolation design or underwater procedure. Actual jurisdiction/mode-specific team qualification, medical fitness, equipment proficiency and supervised practical assessment remain separate.",
+  "vendorEvidenceRequired": [
+    "Confirmed human-diving versus ROV-only scope and applicable jurisdiction",
+    "Mode-specific employer safe-practices manual and actual project/dive plan",
+    "Team role, experience/training, fitness and first-aid/CPR evidence applicable to the actual program",
+    "Site-specific differential-pressure/energy assessment and authorized verified control arrangements",
+    "Actual equipment, breathing-gas/reserve, communications and inspection evidence",
+    "Operational emergency support, competent medical/chamber/transport arrangements and practiced response plan"
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified commercial-diving program assessor observes the actual assigned mode/team role and equipment skills under controlled supervised conditions",
+    "Competent diving supervisor and client energy authority review the actual site hazards, verified controls and simultaneous-operation interfaces",
+    "Qualified program conducts role-appropriate communication and emergency exercises using safe simulation; diving medical professionals determine fitness/treatment"
+  ],
+  "sources": [
+    {
+      "title": "OSHA dive-team qualifications",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.410"
+    },
+    {
+      "title": "OSHA — Pre-dive procedures",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.421"
+    },
+    {
+      "title": "OSHA — Safe practices manual",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.420"
+    },
+    {
+      "title": "HSE — Differential pressure hazards in diving",
+      "url": "https://www.hse.gov.uk/pubns/dvis13.pdf"
+    },
+    {
+      "title": "HSE — Diving jurisdiction, training and medical context",
+      "url": "https://www.hse.gov.uk/diving/"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G56_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Commercial dive preparation: understand the team, interfaces and unresolved hazards\n\nThis course teaches a bounded task: prepare for a commercial diving briefing by identifying the actual mode, underwater energy interfaces, communication dependencies and emergency-readiness questions Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis is preparatory knowledge only. It qualifies no diver, tender, supervisor, chamber operator or rescuer. It supplies no breathing-gas plan, decompression schedule, depth/time limits, isolation design or underwater procedure. Actual jurisdiction/mode-specific team qualification, medical fitness, equipment proficiency and supervised practical assessment remain separate. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G56_lesson1",
+        "title": "1. Resolve whether people will dive and which team roles actually exist",
+        "body": "Subsea work is not one method. A remotely operated vehicle can inspect underwater equipment without putting a person in the water. A human-diving operation exposes people to a different set of physiological, equipment and rescue dependencies. A contract labeled Diving/ROV leaves the actual method unresolved. The first planning task is to identify which method will perform each activity and what happens if the preferred method cannot complete it.\n\nDo not treat a contingency sentence as a qualified plan. “Send a diver if the camera fails” introduces human diving; it does not make the ROV crew a dive team. The employer and project authority must establish the actual operation, jurisdiction, team and method before that option can be assigned. A worker should identify the scope change rather than promise that someone can improvise it at the dock.\n\nTeam roles are functional responsibilities. The person directing the dive, the person performing an underwater task, surface support and other specialist functions need the competence required for their actual assignments. A commercial diver's experience in one mode or task is not automatic evidence for every other mode, tool or environment. The relevant program must connect experience, instruction, supervised work and observed proficiency to the assigned role.\n\nA client operations contact has a different but important duty: provide accurate information about the facility and control interfaces without pretending to direct diving technique. The diving team needs to understand nearby systems, vessel activity and planned changes. The client needs to understand what activities could interfere with the dive. Neither side can solve the interface by assuming the other knows everything.\n\nFor a safe desk exercise, list each proposed activity, its method, the accountable role and the qualification evidence still needed. Mark ROV-only tasks distinctly from human-diving tasks. If the method changes, revisit the affected plan rather than attaching the same course certificate to a new role. This course can teach that planning discipline; only the qualified program can establish actual diver and team capability.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G56_lesson2",
+        "title": "2. Recognize pressure-differential and underwater energy pathways",
+        "body": "Water that looks calm can coexist with a severe local hazard. A pressure difference across an opening or between spaces can drive flow and create forces that trap a diver or move equipment. Intakes, outlets, pumps, gates, connected vessels and enclosed voids are examples requiring competent site assessment. The absence of visible surface disturbance does not prove there is no pressure-differential hazard below.\n\nThe planning task is to identify potential connections and state changes before anyone enters the water. Read the current site information with the responsible facility and diving specialists. Ask which systems can move water or material, which spaces may have a different pressure and which automatic or remote actions could change conditions. Do not open a fitting, operate a valve or send a diver closer to test whether suction exists.\n\nControl requires the actual engineered and operational arrangements, established and verified by competent authorities. A statement that a pump is switched off does not by itself prove isolation from every possible flow path, restart source or stored condition. This course supplies no isolation sequence or exclusion distance. It teaches the need to identify the full interface and obtain the specific verified control evidence for the dive plan.\n\nOther underwater energy can include moving equipment, vessel propulsors, lifting, electrical tools and pressurized systems. Each must be assessed for the actual task and environment. A tool that is familiar on land may require different equipment, instruction and support underwater. Do not infer underwater competence from a generic mechanical or electrical qualification.\n\nRecord unresolved hazards as specific questions: “Connection between chamber C and line L not established,” or “Remote restart authority for pump P not identified.” This is more useful than a general warning to stay away from intakes. The qualified team must resolve the actual hazard and control boundary. An unqualified support worker must not independently decide that a small opening, shallow location or short exposure makes an unresolved energy pathway acceptable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G56_lesson3",
+        "title": "3. Coordinate surface and underwater work as one project",
+        "body": "A dive can be affected by work that appears unrelated from the surface. Vessel movement, lifting, discharge, intake operation, maintenance, nearby traffic and changing environmental conditions can interfere with the team. The planning interface must identify who knows about these activities, who can hold them and how changes reach the diving supervisor. A permit posted in one office is not automatically understood by every operator involved.\n\nMap simultaneous activities by their effect rather than only their distance. A remote control room can operate a connected system. A vessel outside the immediate deck area can affect water movement or access. A crane task can introduce a suspended-load or dropped-object interface. The relevant qualified authorities decide the actual separation and controls; this course does not prescribe distances or vessel maneuvers.\n\nDefine communication ownership. The client contact must relay an actual operational change to the appropriate dive authority, and the dive team must have the approved means of communicating restrictions back to the site. Avoid informal chains such as a visitor telling a deckhand who assumes the control room heard. Use the actual project channels and confirmation method, particularly where a change could alter the underwater hazard.\n\nA project interface has three states that must not be confused: a proposed restriction, an implemented restriction and a restriction verified for the actual operation. A coordinator may circulate the proposed wording, but only the designated competent roles can establish implementation and verification. Consider a fictional lifting activity moved to another deck location after the initial briefing. The new location may affect access, suspended-load interfaces or equipment routing. Its name on the schedule is not the control. The relevant authorities must review the actual arrangement and confirm what the affected people understand. If the person who can control a connected activity is unknown or absent, keep that dependency visible rather than accepting an informal assurance from someone without the assigned authority. This is a coordination skill that supports the qualified team without designing its technical protections.\n\nEnvironmental information also needs an owner and an update process. Current, visibility, temperature, weather and access conditions can differ from the assumptions used in initial planning. A favorable forecast is not an observation of the actual worksite. The diving supervisor and qualified team assess suitability under the actual plan; support personnel provide accurate observations and do not pressure the team to continue because mobilization was expensive.\n\nA useful briefing exercise introduces a fictional change: a facility requests an intake test while a dive is planned nearby. The support coordinator does not decide a safe pump setting. They identify the conflict, preserve the existing restriction and route the proposed change to the designated facility and diving authorities. The exercise succeeds when the correct interface is engaged before the change, not when a learner invents a technical workaround.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G56_lesson4",
+        "title": "4. Understand equipment and physiological dependencies without inventing a dive plan",
+        "body": "A diver depends on equipment and support arrangements that cannot be replaced by an online description. The actual mode determines the relevant life-support systems, breathing-gas arrangements, reserves, thermal protection, communication and other equipment. The qualified program must establish suitability, condition, inspection and operation for the assigned task. An equipment list proves only that items are listed, not that the assembled system is ready.\n\nPressure exposure affects people as well as hardware. Diving-related physiology, repetitive exposure, decompression and treatment require mode-specific qualified instruction and competent planning. This course intentionally supplies no depth/time schedule, gas-mixture recipe or calculation that could be used to execute a dive. A desk coordinator must recognize that these specialist decisions exist and know who owns them, without attempting to calculate around a missing expert.\n\nFitness is a current readiness question under the actual program. Prior qualification does not prove a person is fit for today's assigned exposure or unaffected by a reported problem. The worker needs a known route for reporting physical concerns during and after the operation. Authorized medical professionals and the applicable program determine medical requirements; a supervisor should not obtain or disclose unnecessary diagnoses in a general project file.\n\nEquipment changes must be evaluated before use. Substituting a component, tool, communication system or reserve arrangement can alter compatibility and the plan. Familiar branding or an apparently matching connector is not proof of suitability. The responsible diving technical authority determines the evidence and testing required. No learner should assemble or test live life-support equipment to complete this course.\n\nIn the briefing packet, distinguish three states: equipment identified, relevant inspections/verification completed, and accepted for the actual planned operation by the authorized role. These are not interchangeable. If the plan relies on a resource whose actual availability is unconfirmed, preserve that dependency as open. A neat manifest cannot supply missing life-support readiness or the team's demonstrated ability to use the system.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G56_lesson5",
+        "title": "5. Make the briefing and communications test understanding, not attendance",
+        "body": "A briefing should connect the actual tasks, hazards, mode, roles, procedure changes and stop conditions. Attendance alone does not establish shared understanding. Each assigned person should know their own duty, the boundaries of that duty, the communication route and what to do when expected information or conditions are absent. The qualified diving supervisor directs the actual briefing and operational decisions.\n\nUse the actual team's agreed terminology and communication arrangements. This course does not invent universal diver signals or emergency phrases. A support coordinator can ask whether everyone understands the current project restriction and who confirms a change. They must not replace the trained team's communication system with a convenient personal chat group. Loss, ambiguity or failure of communications must be handled through the actual dive procedures.\n\nRead-back is useful for critical interface information. If the facility contact states that system P is under a particular verified restriction, the receiving role repeats the system identity and scope, and any mismatch is resolved before the operation relies on it. This does not replace the technical verification. It helps prevent a correct control on the wrong system from being misunderstood as the required protection.\n\nRecord changes and unresolved items honestly. A person arriving after the briefing needs the actual required update before performing a role affected by the information. A plan changed at the last minute should not continue under an obsolete briefing merely because every name was previously signed. The relevant authority determines what must be rebriefed and reassessed.\n\nPractice with a fictional communication failure at the desk. The correct answer is to identify the actual response owner and applicable procedure, maintain the assigned boundary and communicate through the approved alternate route if one exists. It is not to send another unqualified person into the water or continue on the assumption that silence means everything is normal. The practical program must demonstrate the actual team's equipment and response skills in a suitable controlled setting.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G56_lesson6",
+        "title": "6. Evaluate emergency readiness and the post-dive information handoff",
+        "body": "Emergency readiness is a connected capability, not a phone-number list alone. The actual plan must address relevant failure and illness scenarios, available competent people, suitable resources, communication and transport to appropriate care. A resource named on paper may be unavailable, inaccessible or unsuitable for the planned operation. The qualified program must establish the actual arrangements before relying on them.\n\nSupport personnel should understand their assigned reporting and access duties. They may need to provide a precise location, maintain an access route, communicate existing plan information or coordinate the designated transport contact. These are important functions, but they do not make the worker a diver rescuer, chamber operator or clinician. A medical concern after a dive must be routed promptly through the qualified emergency/medical process rather than self-diagnosed from a course.\n\nA practiced response should reveal dependencies. Who initiates the call? Can the location be communicated clearly? Can the intended transport reach the actual site? Who maintains team accountability? Which role holds the necessary equipment and competence? Safe simulation can test those interfaces without creating a real casualty or requiring an unqualified person to perform underwater recovery.\n\nPost-dive handover also matters. Relevant exposure and operational information, equipment concerns, symptoms reported through the proper route and restrictions on further duties belong in the actual program's records and communication. Do not reduce the outcome to “everyone surfaced.” The absence of an obvious immediate problem does not authorize ignoring a reported concern or declaring medical fitness for another exposure.\n\nClose only the evidence actually established. A communication exercise can verify its observed communication tasks; it cannot prove a chamber is operational or a diver medically fit. A qualification record can establish its stated scope; it cannot prove today's system checks occurred. This preparatory course ends with those distinctions intact. Actual commercial-diving execution remains with the qualified team, approved method, applicable program and observed practical capability.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G56_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: ROV scope becomes a proposed human dive\n\nA fictional service order requests an ROV camera inspection of an underwater structure. The assigned team has ROV equipment and operating experience. When a camera fault occurs, the client asks whether one employee who enjoys recreational diving can enter the water and finish the inspection. The structure is connected to a facility intake, and the facility's operating status has not been reviewed for diving.\n\nThe correct interpretation is a method and qualification change. Recreational experience does not establish commercial-diving team capability, the relevant mode, equipment, fitness, supervision or emergency readiness. The ROV plan does not automatically cover a person entering the water. The coordinator must not turn the suggestion into an assignment because it appears quick or shallow.\n\nThe intake connection is a separate unresolved site hazard. Calm water and a statement that the visible pump is off do not establish every pressure or flow condition. The competent facility and diving authorities need the actual site assessment and verified controls. No learner sends a person closer to test flow or proposes an isolation design from this exercise.\n\nThe affected work remains within the approved ROV scope or is held while the responsible project authority decides the next method. If human diving is proposed, a genuine qualified plan and team must be established under the actual applicable program. The worked output identifies the missing method, team, site-energy and emergency evidence specifically. It does not claim that the online course closes any of those execution requirements.\n\nCase B: emergency arrangements exist on paper but not at the site\n\nA fictional dive briefing packet lists a medical contact, a specialist support resource and a transport route. During a desk exercise, the coordinator discovers that the listed transport cannot reach the current worksite because the access road is closed. The packet also references a communication device no longer supplied with the project. Team qualification records exist, but the day's equipment verification has not been completed. A manager asks the team to begin because all certificates are current.\n\nSeparate the evidence. The team records may support their stated qualifications. They do not establish current equipment readiness, a working communication route or usable emergency transport. The access and device changes affect the actual plan, not merely the formatting of its appendix.\n\nThe coordinator reports the specific unavailable resources through the designated project and diving authority. The qualified team determines the acceptable revised arrangements and what rebriefing or verification is needed. The learner does not choose a substitute life-support component or declare a different medical resource suitable. Actual operational availability and competence must be established by the responsible roles.\n\nA safe exercise can then test whether the revised contact route communicates the correct site location and reaches the intended support role, without generating a false emergency call or practicing medical treatment on a person. The actual program determines how such checks are arranged. The equipment specialist completes and records the relevant verification under the real method.\n\nThe final status remains bounded: communication interface exercised to its actual scope; transport access resolved only when supported; equipment readiness recorded only after the real checks; operational release retained by the qualified diving authority. A project with perfect certificates but unusable emergency logistics is not made ready by an administrative completion label.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G56_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G56_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced prepare for a commercial diving briefing by identifying the actual mode, underwater energy interfaces, communication dependencies and emergency-readiness questions Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G56_check1",
+        "prompt": "An ROV inspection is changed to human diving. What is the key decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Establish the new qualified method, team and actual plan before assignment."
+          },
+          {
+            "id": "b",
+            "label": "Use any recreational diver."
+          },
+          {
+            "id": "c",
+            "label": "Reuse the ROV plan unchanged."
+          },
+          {
+            "id": "d",
+            "label": "Treat shallow work as qualification-free."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G56_check2",
+        "prompt": "Calm surface water is observed near an intake. What can be concluded?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every connection is safe."
+          },
+          {
+            "id": "b",
+            "label": "It does not establish absence of underwater pressure-differential hazards."
+          },
+          {
+            "id": "c",
+            "label": "A diver can test suction by approach."
+          },
+          {
+            "id": "d",
+            "label": "Pump identity does not matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G56_check3",
+        "prompt": "A facility requests an intake test during a planned dive. What should support do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choose a low pump setting."
+          },
+          {
+            "id": "b",
+            "label": "Assume distance makes it harmless."
+          },
+          {
+            "id": "c",
+            "label": "Preserve the restriction and coordinate with designated facility/diving authorities before any change."
+          },
+          {
+            "id": "d",
+            "label": "Let the visitor authorize it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G56_check4",
+        "prompt": "A component fits a life-support connector. What does that prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Universal compatibility."
+          },
+          {
+            "id": "b",
+            "label": "Medical fitness."
+          },
+          {
+            "id": "c",
+            "label": "Every inspection complete."
+          },
+          {
+            "id": "d",
+            "label": "Only physical fit, not actual system suitability or readiness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G56_check5",
+        "prompt": "A worker arrives after a changed briefing. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Required actual update and understanding before affected duties."
+          },
+          {
+            "id": "b",
+            "label": "Their name can be added without instruction."
+          },
+          {
+            "id": "c",
+            "label": "Old attendance covers every change."
+          },
+          {
+            "id": "d",
+            "label": "Only whether they have boots."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G56_check6",
+        "prompt": "The listed transport cannot reach the site. What is the implication?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Current certificates resolve it."
+          },
+          {
+            "id": "b",
+            "label": "Emergency logistics remain unresolved under the actual qualified plan."
+          },
+          {
+            "id": "c",
+            "label": "Start and find transport later."
+          },
+          {
+            "id": "d",
+            "label": "A phone list proves access."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G56_final1",
+        "prompt": "A contract says Diving/ROV. What must be clarified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the invoice category."
+          },
+          {
+            "id": "b",
+            "label": "That every employee is a diver."
+          },
+          {
+            "id": "c",
+            "label": "The actual method for each activity and contingency."
+          },
+          {
+            "id": "d",
+            "label": "That a camera always removes every hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G56_final2",
+        "prompt": "Does commercial-diving experience in one mode prove every other mode?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every mode is identical."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the person is senior."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the water looks clear."
+          },
+          {
+            "id": "d",
+            "label": "No; the actual assigned mode, tools and role require relevant evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G56_final3",
+        "prompt": "What is the client operations contact's useful contribution?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accurate facility-state and control-interface information through designated coordination."
+          },
+          {
+            "id": "b",
+            "label": "Unilaterally directing diving technique."
+          },
+          {
+            "id": "c",
+            "label": "Inventing decompression values."
+          },
+          {
+            "id": "d",
+            "label": "Replacing the diving supervisor."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G56_final4",
+        "prompt": "Which issue is a specific pressure-interface question?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether the water looks pleasant."
+          },
+          {
+            "id": "b",
+            "label": "Whether chamber C is connected to line L and can change state."
+          },
+          {
+            "id": "c",
+            "label": "Whether the contract is short."
+          },
+          {
+            "id": "d",
+            "label": "Whether the crew is confident."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G56_final5",
+        "prompt": "A pump is switched off. What remains unproven?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That its switch exists."
+          },
+          {
+            "id": "b",
+            "label": "That a person made a statement."
+          },
+          {
+            "id": "c",
+            "label": "The full verified control of relevant flow, restart and stored-condition pathways."
+          },
+          {
+            "id": "d",
+            "label": "That the worksite is underwater."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G56_final6",
+        "prompt": "Should an unqualified worker test flow by opening a fitting?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, briefly."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if no one watches."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the opening is small."
+          },
+          {
+            "id": "d",
+            "label": "No; the actual assessment/control process must establish the hazard without improvised exposure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G56_final7",
+        "prompt": "A tool is familiar on land. What is still required underwater?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual mode/tool instruction, suitability and relevant practical capability."
+          },
+          {
+            "id": "b",
+            "label": "No additional evidence."
+          },
+          {
+            "id": "c",
+            "label": "Only a new label."
+          },
+          {
+            "id": "d",
+            "label": "A general invoice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G56_final8",
+        "prompt": "Why map remote operations as well as nearby activity?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only visible workers can affect diving."
+          },
+          {
+            "id": "b",
+            "label": "A distant control can affect a connected underwater system."
+          },
+          {
+            "id": "c",
+            "label": "Remote systems are automatically isolated."
+          },
+          {
+            "id": "d",
+            "label": "Distance proves no interference."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G56_final9",
+        "prompt": "A forecast was favorable. What still matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the earlier forecast."
+          },
+          {
+            "id": "b",
+            "label": "Only mobilization cost."
+          },
+          {
+            "id": "c",
+            "label": "Actual site conditions and qualified suitability decisions under the plan."
+          },
+          {
+            "id": "d",
+            "label": "Only the planned finish time."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G56_final10",
+        "prompt": "What does an equipment manifest establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That the assembled system is ready."
+          },
+          {
+            "id": "b",
+            "label": "That every diver is fit."
+          },
+          {
+            "id": "c",
+            "label": "That all emergency resources are available."
+          },
+          {
+            "id": "d",
+            "label": "Which items are listed, within its actual scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G56_final11",
+        "prompt": "Who determines a dive medical concern?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Qualified medical professionals through the applicable program."
+          },
+          {
+            "id": "b",
+            "label": "The course score."
+          },
+          {
+            "id": "c",
+            "label": "A client scheduler."
+          },
+          {
+            "id": "d",
+            "label": "A coworker's confidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G56_final12",
+        "prompt": "What must not be taken from this course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Recognition that specialist planning is needed."
+          },
+          {
+            "id": "b",
+            "label": "A breathing-gas recipe or decompression schedule."
+          },
+          {
+            "id": "c",
+            "label": "Knowledge of role boundaries."
+          },
+          {
+            "id": "d",
+            "label": "Awareness of communication dependencies."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G56_final13",
+        "prompt": "Does a normal-looking communication display prove the whole team link works?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every person heard it."
+          },
+          {
+            "id": "b",
+            "label": "Yes, no briefing is needed."
+          },
+          {
+            "id": "c",
+            "label": "No; actual system verification and procedures apply."
+          },
+          {
+            "id": "d",
+            "label": "Yes, silence proves agreement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G56_final14",
+        "prompt": "What does read-back support?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Replacement of technical verification."
+          },
+          {
+            "id": "b",
+            "label": "Automatic isolation design."
+          },
+          {
+            "id": "c",
+            "label": "Medical clearance."
+          },
+          {
+            "id": "d",
+            "label": "Confirmation of critical identity and scope information between roles."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G56_final15",
+        "prompt": "What should a safe emergency exercise test?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assigned communication, accountability and actual logistics using controlled simulation."
+          },
+          {
+            "id": "b",
+            "label": "Unqualified underwater rescue."
+          },
+          {
+            "id": "c",
+            "label": "Live loss of life support."
+          },
+          {
+            "id": "d",
+            "label": "A real uncontrolled casualty."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G56_final16",
+        "prompt": "Everyone surfaces. What should not be inferred?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That the event can be recorded."
+          },
+          {
+            "id": "b",
+            "label": "That every reported post-dive concern or further-duty restriction is resolved."
+          },
+          {
+            "id": "c",
+            "label": "That the team can report symptoms."
+          },
+          {
+            "id": "d",
+            "label": "That the program has a medical route."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G56_final17",
+        "prompt": "Case A recreational experience supplies which commercial evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every required team role."
+          },
+          {
+            "id": "b",
+            "label": "Verified intake isolation."
+          },
+          {
+            "id": "c",
+            "label": "No automatic proof of the actual commercial-diving role or team capability."
+          },
+          {
+            "id": "d",
+            "label": "Emergency chamber readiness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G56_final18",
+        "prompt": "Case A may continue by what decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "By naming the same plan human diving."
+          },
+          {
+            "id": "b",
+            "label": "By borrowing a mask."
+          },
+          {
+            "id": "c",
+            "label": "By promising a short dive."
+          },
+          {
+            "id": "d",
+            "label": "Only within an actually approved method/scope or after a genuine qualified change."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G56_final19",
+        "prompt": "Case B team certificates are current. Which items remain independent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Current equipment verification, working communications and usable emergency logistics."
+          },
+          {
+            "id": "b",
+            "label": "Only document font."
+          },
+          {
+            "id": "c",
+            "label": "Only vehicle color."
+          },
+          {
+            "id": "d",
+            "label": "Nothing else."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G56_final20",
+        "prompt": "What is the final release authority taught here?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The online learner may approve any dive."
+          },
+          {
+            "id": "b",
+            "label": "The actual qualified diving/project program retains operational decisions."
+          },
+          {
+            "id": "c",
+            "label": "The scheduler overrides every hazard."
+          },
+          {
+            "id": "d",
+            "label": "The course author approves each site."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G56_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G56_lesson1",
+          "questionIds": [
+            "G56_check1"
+          ]
+        },
+        {
+          "lessonId": "G56_lesson2",
+          "questionIds": [
+            "G56_check2"
+          ]
+        },
+        {
+          "lessonId": "G56_lesson3",
+          "questionIds": [
+            "G56_check3"
+          ]
+        },
+        {
+          "lessonId": "G56_lesson4",
+          "questionIds": [
+            "G56_check4"
+          ]
+        },
+        {
+          "lessonId": "G56_lesson5",
+          "questionIds": [
+            "G56_check5"
+          ]
+        },
+        {
+          "lessonId": "G56_lesson6",
+          "questionIds": [
+            "G56_check6"
+          ]
+        },
+        {
+          "lessonId": "G56_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G56_final",
+          "questionIds": [
+            "G56_final1",
+            "G56_final2",
+            "G56_final3",
+            "G56_final4",
+            "G56_final5",
+            "G56_final6",
+            "G56_final7",
+            "G56_final8",
+            "G56_final9",
+            "G56_final10",
+            "G56_final11",
+            "G56_final12",
+            "G56_final13",
+            "G56_final14",
+            "G56_final15",
+            "G56_final16",
+            "G56_final17",
+            "G56_final18",
+            "G56_final19",
+            "G56_final20"
+          ]
+        },
+        {
+          "lessonId": "G56_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G56_check1": "Human entry changes exposure and team dependencies; ROV experience is not diver qualification.",
+        "G56_check2": "Local underwater forces may exist without obvious surface disturbance.",
+        "G56_check3": "Simultaneous operations require the actual qualified interface decision.",
+        "G56_check4": "Life-support compatibility and verification require the responsible technical process.",
+        "G56_check5": "Briefing must match current task, hazards and role.",
+        "G56_check6": "Emergency readiness includes usable resources and access, not names alone.",
+        "G56_final1": "Combined service labels do not establish actual human exposure or qualifications.",
+        "G56_final2": "Qualification must match actual task and equipment.",
+        "G56_final3": "Client and diving responsibilities must connect without being conflated.",
+        "G56_final4": "Concrete connections and state changes support competent hazard assessment.",
+        "G56_final5": "Off status alone is not a complete isolation or pressure-state basis.",
+        "G56_final6": "A test action can itself expose people or change the hazard.",
+        "G56_final7": "The underwater environment and support dependencies change the task.",
+        "G56_final8": "Functional connections matter as well as physical proximity.",
+        "G56_final9": "Conditions may differ from initial assumptions and require current assessment.",
+        "G56_final10": "Listing equipment is different from verifying and accepting the actual system.",
+        "G56_final11": "Medical fitness and treatment are specialist decisions.",
+        "G56_final12": "The course intentionally teaches preparation without execution parameters.",
+        "G56_final13": "Appearance does not establish functional communication or understanding.",
+        "G56_final14": "Read-back catches communication mismatch while leaving technical evidence separate.",
+        "G56_final15": "Practice should reveal dependencies without creating hazardous exposure.",
+        "G56_final16": "Immediate appearance does not replace qualified follow-up.",
+        "G56_final17": "Experience must be assessed for its actual scope and relevance.",
+        "G56_final18": "A label change cannot supply missing controls and competence.",
+        "G56_final19": "Qualification and operation-specific readiness are distinct evidence.",
+        "G56_final20": "Preparatory knowledge cannot replace actual qualified execution authority."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

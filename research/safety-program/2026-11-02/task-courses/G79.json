@@ -1,0 +1,897 @@
+{
+  "courseId": "G79",
+  "gapGroupId": "TG30",
+  "title": "Security post boundaries, factual observation and nonphysical conflict communication",
+  "description": "Teach respectful boundary statements, behavior-based records, assistance-interface reasoning and accurate post handovers.",
+  "purpose": "Teach respectful boundary statements, behavior-based records, assistance-interface reasoning and accurate post handovers.",
+  "audience": [
+    "Assigned security-post trainees",
+    "Access coordinators",
+    "Security supervisors reviewing post readiness"
+  ],
+  "sources": [
+    {
+      "title": "OSHA workplace violence prevention overview",
+      "url": "https://www.osha.gov/workplace-violence"
+    },
+    {
+      "title": "Texas DPS private security regulator example",
+      "url": "https://www.dps.texas.gov/section/private-security"
+    }
+  ],
+  "practicalBoundary": "This course is not a security license or legal opinion. It grants no search, detention, force, weapons, law-enforcement, public traffic-control, rescue or clinical authority.",
+  "vendorEvidenceRequired": [
+    "Actual post orders, duties and jurisdiction",
+    "Applicable legal/credential basis verified for actual role",
+    "Approved access/exception and nonphysical response procedures",
+    "Effective assistance/emergency and location-identity arrangements",
+    "Privacy/evidence handling and shift-handover requirements"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed safe scripted communication and actual post-order application",
+    "Practical use of approved communication/location-reporting and record systems",
+    "Separate authorized program assessment for any additional armed/physical/traffic duty; none taught here"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G79_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for security post boundaries, factual observation and nonphysical conflict communication. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course is not a security license or legal opinion. It grants no search, detention, force, weapons, law-enforcement, public traffic-control, rescue or clinical authority.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G79_lesson1",
+        "title": "1. Read post orders as a boundary of duty",
+        "body": "Security work begins with the actual post and lawful authority, not a uniform or a broad service label. Access coordination, observation, alarm reporting, public traffic control and security-system installation are different duties. This module teaches nonphysical communication and post-order reasoning. It grants no authority to detain, search, use force, carry weapons, direct public traffic or act as law enforcement.\n\nRead the post orders for location, purpose, assigned tasks, prohibited actions, communication contacts and emergency interfaces. Identify who owns access decisions and exceptions. A security worker may be assigned to verify a condition and contact an approver without having authority to invent an exception. A familiar visitor or urgent delivery does not change the assigned decision route. The worker should communicate the actual requirement clearly and preserve a safe interaction.\n\nLegal and credential requirements depend on jurisdiction and duty. Texas DPS's private-security program is an example of a regulator with licensing/registration arrangements; it does not establish every requirement in every jurisdiction. The employer must identify the actual applicable role and current requirements. A general safety course does not create a guard license, and a guard credential does not automatically cover unrelated traffic or technical work.\n\nCreate a paper authority table. For each situation, list what the worker observes, what they may decide, what requires an authorized contact and which actions are outside scope. A delivery lacking approval may require a hold and contact, not physical confrontation. A suspected crime may require factual reporting through the designated emergency process, not independent investigation.\n\nPaper exercise: the post order permits checking appointment status and contacting the site host. A supervisor informally asks the worker to search bags. Mark the new requested duty and its unresolved legal/employer authority. Do not infer permission from seniority or the worker's confidence. The actual employer/legal review must establish any such role before training or practice is assigned.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G79_lesson2",
+        "title": "2. Separate observable behavior from assumptions and bias",
+        "body": "Security observations should describe behavior and conditions rather than diagnose a person's motives, health or character. Someone speaking loudly may be frustrated, unable to hear, distressed or threatening; volume alone does not establish which explanation applies. A reliable report records what was seen or heard, relevant context and uncertainty. Decisions should use the actual post criteria and safety information, not stereotypes about appearance or group membership.\n\nDistinguish facts, interpretations and reported information. I saw the visitor strike the counter is an observation if directly witnessed. The visitor was dangerous is an interpretation. A coworker told me the visitor threatened them is reported information. All may be important, but the record must identify their basis. Quoted words should be accurate and necessary; do not embellish a statement to make the incident sound more serious.\n\nUse a behavior timeline. Record the sequence of relevant events, who was present, what request or information was given and what changed. This helps the responsible team assess escalation and response without relying on a dramatic final label. Do not collect unnecessary personal details or share incident material beyond the approved process. Privacy and evidence handling requirements belong to the actual employer/jurisdiction arrangement.\n\nPaper exercise: replace suspicious-looking man became crazy with a factual account: the visitor raised their voice after being told the host was unavailable, stepped toward the counter and said specified words if actually recorded. Include uncertainty where the learner lacks a direct observation. The exercise does not decide a diagnosis or legal offense.\n\nObservation is not permission to remain exposed. If behavior presents immediate danger, the worker follows the actual emergency/safe-position arrangements and summons appropriate help. Accurate reporting supports response; it does not require approaching a person or delaying protective action to gather a better description.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G79_lesson3",
+        "title": "3. Use calm, clear verbal boundaries without promising an outcome",
+        "body": "Nonphysical conflict management aims to communicate clearly while preserving safety and role boundaries. Use a calm, respectful tone and short statements about the actual issue. Acknowledge the person's expressed concern without agreeing to an unsupported claim or promising an exception. I understand the delay affects your delivery describes the concern; I guarantee entry in five minutes creates a commitment the worker may not control.\n\nAsk one practical question at a time and allow a response. Competing instructions from several staff can increase confusion. Where the situation and actual plan permit, one assigned communicator can help maintain a clear exchange while others perform their roles. This is a communication principle, not a tactical formation or a guarantee of de-escalation. The worker must not continue talking when the approved response calls for disengagement or emergency assistance.\n\nState a boundary and a legitimate next option. For example: the appointment approval is not confirmed; I can contact the site host through our approved route. Avoid blame, sarcasm, humiliation or arguments about authority. Do not threaten consequences outside the worker's actual role. A lawful site requirement should be explained consistently rather than presented as a personal contest.\n\nUse teach-back for instructions that affect movement or waiting arrangements, when safe and appropriate. Ask the person to confirm the agreed next step in their own words. This identifies misunderstanding without treating them as incapable. Language, hearing or accessibility needs may require the employer's approved assistance arrangement. Raising volume alone is not a substitute for accessible communication.\n\nPaper exercise: a fictional driver says the delay will cost them a job. Draft a response acknowledging the concern, explaining the actual approval status and offering the authorized contact route. Do not promise entry, diagnose the driver or invent a threat. Then identify the conditions under which the worker would follow the local emergency/disengagement process rather than continue the conversation.\n\nWorked wording comparison: you cannot come in because I said so makes the issue personal and gives no useful next step. The approval is not confirmed in the system; I can contact the listed host explains a factual condition and an authorized option. I will get you in shortly adds an unsupported promise and may increase frustration if the host declines. The learner should choose the second statement and explain its limits. It does not guarantee a calm response and does not require continuing an unsafe interaction. If the person reports a language or hearing difficulty, use the approved accessible assistance route rather than repeating the same sentence louder. If the host responds, communicate the actual decision without adding personal conditions. The skill is precise, respectful role-bound communication, not persuasion at any cost.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G79_lesson4",
+        "title": "4. Plan lone-work, communication and emergency interfaces",
+        "body": "A post can have risk factors related to isolation, time, public contact, money or other actual conditions. OSHA's workplace-violence guidance supports site-specific prevention planning rather than relying only on individual confidence. The employer must assess the actual post and provide appropriate arrangements. A worker should know the relevant communication contacts, assistance process and what to do if the normal channel is unavailable.\n\nRead the communications plan as a practical dependency. Who receives a request for help? What location identifier should be given? Who covers the post if the worker must leave under the approved plan? How are missed check-ins or communication failures handled? The course does not set a universal check-in interval or emergency code. Those details must come from the actual site arrangement and tested capability.\n\nEmergency reporting should be concise and factual. Identify location, nature of the observed concern, people potentially affected and immediate known conditions. State uncertainty. Do not delay an urgent call to complete a perfect written report. Conversely, do not label a routine access discrepancy as a violent emergency simply to get faster approval. Appropriate routing depends on the actual facts and employer plan.\n\nSecurity can interface with fire, medical, industrial or traffic events. The worker's role may be to summon help, provide information or manage a designated access point under the plan. It is not automatically rescue, firefighting, medical treatment or public traffic direction. Those duties require separate actual training and authority. A uniform does not supply them.\n\nPaper exercise: a lone night post has a radio but no identified responder for radio calls, and the location name differs from the emergency map. Record two readiness gaps: response ownership and location identity. A working radio alone does not establish effective assistance. The employer/site owners must resolve and safely verify the arrangement before it is relied on.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G79_lesson5",
+        "title": "5. Preserve incident records and useful shift handovers",
+        "body": "An incident record should allow an authorized reviewer to reconstruct the relevant event. Include date/time basis, location, people/roles as needed, direct observations, reported information, actions taken, contacts made and unresolved issues. Separate exact quotations from paraphrases and distinguish estimates from confirmed facts. Do not add a motive or diagnosis because it makes the narrative feel complete.\n\nRecord action and result separately. Contacted the host is an action; host approved entry under the actual process is a result only if confirmed. A voicemail is not an approval. A radio transmission is not proof it was received. Closed-loop confirmation is especially useful where the next step depends on a specific authorized decision. Preserve who gave the decision and its scope through the approved record process.\n\nEvidence handling must follow the actual authorized system. Video, photographs and personal data can have privacy, retention and access rules. This course grants no permission to access cameras, copy footage to a personal device, search someone's belongings or publish incident details. A worker can report that relevant evidence may exist and route preservation needs to the responsible role.\n\nA handover should tell the incoming worker the current state, not merely the event's drama. Identify outstanding access decisions, changed site conditions, communication issues, relevant restrictions and responsible contacts. Do not pass unverified rumors as a warning label attached to a person. If an ongoing concern requires special handling, use the employer's approved documented instructions and factual basis.\n\nPaper exercise: the outgoing log says difficult driver, all sorted. The actual record shows host contact pending and the driver still waiting under a designated arrangement. Rewrite the handover to preserve the pending decision and current status. The incoming worker should not infer approval from the word sorted or repeat a character judgment in place of useful operational information.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G79_lesson6",
+        "title": "6. Assess actual post skills without manufacturing confrontation",
+        "body": "Post-specific competence includes understanding lawful duties, applying actual access criteria, communicating respectfully, recognizing changing conditions and reporting accurately. Credentials where required and practical performance remain separate evidence. A license or registration does not automatically establish skill at this site's systems and post orders. An online conflict-management score does not establish lawful authority for physical intervention.\n\nA safe desk role-play uses fictional visitors and scripted information without threats or surprise physical behavior. Give the learner a post order, an approval discrepancy and a person expressing frustration. Assess whether they explain the actual status, offer an authorized option, avoid unsupported promises and identify when to use the site's assistance route. The actor must not create an uncontrolled confrontation to test bravery.\n\nPractical assessment should be planned by a competent assessor for the actual duties. It can observe approved communication equipment, location reporting, accessible instructions, record completion and post handover under safe conditions. Any separately assigned physical, armed, traffic or emergency role needs its own applicable program and authority. This course teaches none of those techniques.\n\nFeedback should identify the decision or communication behavior, not label the learner's personality. You promised approval you did not control is actionable. You are not assertive enough can encourage unsafe escalation without explaining the task. Retain the original assessment result, coaching and reassessment so that improved performance does not erase the initial limitation.\n\nThe final capability handoff should name the post, duties, applicable legal/credential basis, approved orders, practical observations, assessor scope and remaining limitations. Employer/site assignment is a separate decision. Course completion closes only the bounded nonphysical knowledge taught here after correct responses or acknowledged remediation. It cannot issue a security license, authorize searches or detention, qualify weapons/force use or grant public traffic-control powers.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G79_case1",
+        "title": "Worked fictional case 1: a frustrated delivery and an unauthorized promise",
+        "body": "Fictional facts: Elm Gate receives a driver whose appointment approval is not confirmed. The driver says the delay may cost them work and speaks loudly. The post order permits appointment checks and host contact. A colleague tells the guard to promise entry shortly and search the driver's bag to show authority. No physical danger is described in the supplied facts.\n\nThe learner first identifies actual duty. The guard can check status and contact the authorized host. Neither entry approval nor a search is established by the post order. The colleague's suggestion cannot supply missing legal/employer authority. The learner records the proposed additional duty as outside the established scope rather than trying to perform it confidently.\n\nThe response is drafted calmly: acknowledge the driver's stated concern, explain that approval is not confirmed and offer the authorized host-contact route. The learner avoids promising a time or outcome they do not control. They do not diagnose the driver or describe loud speech alone as proof of violence. The actual emergency/disengagement plan remains available if conditions change.\n\nThe incident note distinguishes observation from interpretation. It records the expressed concern, raised voice, approval status and contacts made. It does not say the driver was crazy or dangerous without factual basis. A host voicemail is recorded as a contact attempt, not approval.\n\nIn the fictional resolution, the responsible host responds through the approved route and the guard records the actual decision and scope. The handover states current status and any remaining conditions. No search, detention or physical confrontation occurs in the exercise.\n\nFinal decision: the useful skill is respectful, accurate boundary communication and correct decision routing. Exact residuals are actual jurisdiction/post authority, applicable credentials, site-system instruction and observed practical post performance. A course pass cannot create search powers or turn a colleague's informal request into lawful duty.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G79_case2",
+        "title": "Worked fictional case 2: a lone post with an incomplete assistance plan",
+        "body": "Fictional facts: Cedar Security assigns a lone evening post. A radio check produces sound, but no responder is named for assistance calls. The emergency map calls the location West Access while the roster says Yard Two. The outgoing log says difficult visitor, sorted, but a host decision remains pending and the visitor is still waiting.\n\nThe learner separates equipment function from response capability. A working radio demonstrates a limited technical observation; it does not establish who will receive and act on a call. The employer/site owners must identify the assistance arrangement and safely verify it. The location-name conflict also needs reconciliation so that a factual emergency report can be understood.\n\nNext, the handover is corrected. The incoming worker needs the pending approval, current waiting arrangement and responsible host contact. The word sorted is misleading because the decision is unresolved. The label difficult visitor is not a useful substitute for behavior and status facts. The learner preserves the original record and supplies a factual clarification rather than inventing a favorable outcome.\n\nThe practical assessment is planned safely. A scripted desk exercise can test location reporting, contact routing and handover. It should not stage a surprise confrontation or send the learner into an isolated incident to test confidence. Any real emergency would follow the actual established response process.\n\nIn the fictional resolution, the site reconciles location identifiers, names the response roles and provides approved instructions. The learner completes a safe observed communication/handover assessment. The employer separately determines actual assignment readiness and any applicable credential requirements.\n\nFinal decision: initial readiness is not established by radio sound or an optimistic log. Exact residuals are an effective assistance interface, correct location identity, post-specific practical capability and actual employer/site authorization. This theory record grants no physical intervention, armed security, medical or public traffic-control authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G79_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G79_check1",
+        "prompt": "Does a uniform establish authority to search or detain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual lawful/employer duty must be established separately."
+          },
+          {
+            "id": "b",
+            "label": "Yes, automatically."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after this course."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G79_check2",
+        "prompt": "Which is a factual observation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "The visitor struck the counter, if directly witnessed."
+          },
+          {
+            "id": "c",
+            "label": "The visitor was crazy."
+          },
+          {
+            "id": "d",
+            "label": "The visitor had criminal motives."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G79_check3",
+        "prompt": "Which response preserves a lawful task boundary?",
+        "options": [
+          {
+            "id": "a",
+            "label": "You must obey because I say so."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Approval is unconfirmed; I can contact the listed host."
+          },
+          {
+            "id": "d",
+            "label": "I guarantee entry shortly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G79_check4",
+        "prompt": "Does radio sound establish assistance response capability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, sound proves everything."
+          },
+          {
+            "id": "b",
+            "label": "Yes, no contact role is needed."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; responder, location and process must be established."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G79_check5",
+        "prompt": "A host voicemail is left. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A contact attempt, not an approval."
+          },
+          {
+            "id": "b",
+            "label": "Confirmed entry approval."
+          },
+          {
+            "id": "c",
+            "label": "All issues resolved."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G79_check6",
+        "prompt": "Can practical assessment use a surprise uncontrolled confrontation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; use planned safe role-play and appropriate assessors."
+          },
+          {
+            "id": "c",
+            "label": "Yes, bravery is the goal."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after a quiz."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G79_final1",
+        "prompt": "Does guarding automatically include public traffic control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if wearing reflective clothing."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual duties and authority differ."
+          },
+          {
+            "id": "d",
+            "label": "Yes, all security covers roads."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G79_final2",
+        "prompt": "What belongs in an authority table?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a company slogan."
+          },
+          {
+            "id": "b",
+            "label": "Every power the worker would like."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Observed facts, permitted decisions, approval route and limits."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G79_final3",
+        "prompt": "Does Texas DPS guidance establish all jurisdictions rules?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; it is a jurisdiction-specific regulator example."
+          },
+          {
+            "id": "b",
+            "label": "Yes, everywhere."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every vendor is Texas-based."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G79_final4",
+        "prompt": "Does loud speech alone establish a violent diagnosis?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; record behavior/context and follow actual safety arrangements."
+          },
+          {
+            "id": "c",
+            "label": "Yes, always."
+          },
+          {
+            "id": "d",
+            "label": "Yes, diagnose the person."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G79_final5",
+        "prompt": "How should secondhand information be recorded?",
+        "options": [
+          {
+            "id": "a",
+            "label": "As proven motive."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "As reported information with its source identified appropriately."
+          },
+          {
+            "id": "d",
+            "label": "As direct observation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G79_final6",
+        "prompt": "What should a behavior timeline preserve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a dramatic final label."
+          },
+          {
+            "id": "b",
+            "label": "Unnecessary personal details."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Relevant sequence, actions, contacts and changes with uncertainty."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G79_final7",
+        "prompt": "Does factual reporting require staying exposed to danger?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual emergency/safe-position arrangements govern."
+          },
+          {
+            "id": "b",
+            "label": "Yes, gather a perfect description first."
+          },
+          {
+            "id": "c",
+            "label": "Yes, approach for details."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G79_final8",
+        "prompt": "What is acknowledgment of concern?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Recognizing the expressed problem without promising an uncontrolled outcome."
+          },
+          {
+            "id": "c",
+            "label": "Agreeing to every claim."
+          },
+          {
+            "id": "d",
+            "label": "Guaranteeing an exception."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G79_final9",
+        "prompt": "Why ask one practical question at a time?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To interrogate indefinitely."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "To reduce confusion and allow a clear response where safe."
+          },
+          {
+            "id": "d",
+            "label": "To guarantee compliance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G79_final10",
+        "prompt": "Is louder repetition always accessible communication?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, volume solves all needs."
+          },
+          {
+            "id": "b",
+            "label": "Yes, ignore the concern."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual language/hearing assistance may be needed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G79_final11",
+        "prompt": "What should emergency reporting prioritize?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Location, observed concern, affected people and known conditions."
+          },
+          {
+            "id": "b",
+            "label": "A diagnosis invented for urgency."
+          },
+          {
+            "id": "c",
+            "label": "A perfect narrative before calling."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G79_final12",
+        "prompt": "Does a security post automatically assign rescue or medical treatment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; those actual duties need separate training/authority."
+          },
+          {
+            "id": "c",
+            "label": "Yes, any uniformed worker."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after this quiz."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G79_final13",
+        "prompt": "Can this course authorize copying video to a personal device?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, for convenience."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual evidence/privacy procedures govern."
+          },
+          {
+            "id": "d",
+            "label": "Yes, any evidence may be copied."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G79_final14",
+        "prompt": "What should an incoming shift receive?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only difficult visitor."
+          },
+          {
+            "id": "b",
+            "label": "Only all sorted."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Current status, pending decisions, changed conditions and contacts."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G79_final15",
+        "prompt": "What is actionable assessment feedback?",
+        "options": [
+          {
+            "id": "a",
+            "label": "You promised an approval you did not control."
+          },
+          {
+            "id": "b",
+            "label": "You lack the right personality."
+          },
+          {
+            "id": "c",
+            "label": "Be more aggressive."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G79_final16",
+        "prompt": "In Elm Gate, what is the guards established option?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Check status and contact the host."
+          },
+          {
+            "id": "c",
+            "label": "Search bags to show authority."
+          },
+          {
+            "id": "d",
+            "label": "Promise immediate entry."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G79_final17",
+        "prompt": "In Elm Gate, does the colleagues request supply search authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, confidence suffices."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual legal/employer scope remains unresolved."
+          },
+          {
+            "id": "d",
+            "label": "Yes, seniority suffices."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G79_final18",
+        "prompt": "In Cedar, what does sorted conceal?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A proven completed approval."
+          },
+          {
+            "id": "b",
+            "label": "No operational information."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "A pending host decision and current waiting status."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G79_final19",
+        "prompt": "Should original assessment errors remain after coaching?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; retain result, coaching and reassessment history."
+          },
+          {
+            "id": "b",
+            "label": "No, erase them."
+          },
+          {
+            "id": "c",
+            "label": "Only final badge matters."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G79_final20",
+        "prompt": "What remains after course completion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Applicable credentials, actual post instruction, observed skills and assignment authorization."
+          },
+          {
+            "id": "c",
+            "label": "Search/detention powers."
+          },
+          {
+            "id": "d",
+            "label": "All security qualifications."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G79_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G79_lesson1",
+          "questionIds": [
+            "G79_check1"
+          ]
+        },
+        {
+          "lessonId": "G79_lesson2",
+          "questionIds": [
+            "G79_check2"
+          ]
+        },
+        {
+          "lessonId": "G79_lesson3",
+          "questionIds": [
+            "G79_check3"
+          ]
+        },
+        {
+          "lessonId": "G79_lesson4",
+          "questionIds": [
+            "G79_check4"
+          ]
+        },
+        {
+          "lessonId": "G79_lesson5",
+          "questionIds": [
+            "G79_check5"
+          ]
+        },
+        {
+          "lessonId": "G79_lesson6",
+          "questionIds": [
+            "G79_check6"
+          ]
+        },
+        {
+          "lessonId": "G79_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G79_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G79_final",
+          "questionIds": [
+            "G79_final1",
+            "G79_final2",
+            "G79_final3",
+            "G79_final4",
+            "G79_final5",
+            "G79_final6",
+            "G79_final7",
+            "G79_final8",
+            "G79_final9",
+            "G79_final10",
+            "G79_final11",
+            "G79_final12",
+            "G79_final13",
+            "G79_final14",
+            "G79_final15",
+            "G79_final16",
+            "G79_final17",
+            "G79_final18",
+            "G79_final19",
+            "G79_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G79_check1": "Appearance and theory scores do not confer legal powers.",
+        "G79_check2": "Behavior should be separated from diagnosis and motive.",
+        "G79_check3": "Explain actual status and authorized next steps without unsupported promises.",
+        "G79_check4": "Equipment function differs from an effective response interface.",
+        "G79_check5": "Action and confirmed result must remain distinct.",
+        "G79_check6": "Assessment cannot manufacture uncontrolled exposure.",
+        "G79_final1": "Separate roles need actual applicability review.",
+        "G79_final2": "The table makes actual post boundaries explicit.",
+        "G79_final3": "Credential requirements must match actual location and duty.",
+        "G79_final4": "Observation should not be inflated into unsupported interpretation.",
+        "G79_final5": "Evidence basis matters to incident review.",
+        "G79_final6": "Sequence supports factual assessment and response.",
+        "G79_final7": "Reporting must not delay protective action under the plan.",
+        "G79_final8": "Empathy and unauthorized commitment differ.",
+        "G79_final9": "Clear communication is useful but not a safety guarantee.",
+        "G79_final10": "Accessibility requires an appropriate approved route.",
+        "G79_final11": "Concise facts support appropriate response.",
+        "G79_final12": "Emergency interfaces do not collapse specialist roles.",
+        "G79_final13": "Reporting possible evidence is distinct from accessing or distributing it.",
+        "G79_final14": "A useful handover supports the next actual decision.",
+        "G79_final15": "Feedback should identify task behavior and reasoning.",
+        "G79_final16": "The supplied post order defines the actual duty.",
+        "G79_final17": "Informal pressure cannot create lawful powers.",
+        "G79_final18": "Optimistic shorthand can misstate the real state.",
+        "G79_final19": "Improvement should not rewrite original performance.",
+        "G79_final20": "This module closes bounded nonphysical knowledge only."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

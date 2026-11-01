@@ -1,0 +1,910 @@
+{
+  "courseId": "G61",
+  "gapGroupId": "G12",
+  "title": "Marine work interfaces: access, deck energy and vessel handover",
+  "description": "recognize vessel-specific access, deck and transfer dependencies and communicate a bounded marine work handover",
+  "purpose": "recognize vessel-specific access, deck and transfer dependencies and communicate a bounded marine work handover",
+  "audience": [
+    "Visiting marine contractors and surveyors",
+    "Vessel/shore project coordinators",
+    "Personnel preparing for actual deck/support instruction"
+  ],
+  "practicalBoundary": "This course grants no seamanship, navigation, mooring, transfer, rescue or sea-survival qualification. It supplies no vessel maneuver, line-handling sequence, transfer setting or survival technique. Actual vessel/task familiarization, applicable credentials and observed specialist skills remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual vessel/flag/jurisdiction and assigned passenger/visitor/crew duty",
+    "Vessel-specific familiarization, alarms, muster and responsible contacts",
+    "Actual access/personnel-transfer equipment and procedures",
+    "Deck/mooring/machinery task instruction and competence where assigned",
+    "Ship-shore transfer procedure, communication and emergency arrangements where assigned",
+    "Applicable maritime credentials/medical status and role-specific practical evidence"
+  ],
+  "practicalAssessmentRequired": [
+    "Competent vessel/task assessor observes actual access and assigned deck/transfer skills safely",
+    "Qualified maritime instructor assesses relevant survival/emergency duties through the applicable program",
+    "Master/designated competent roles verify actual vessel familiarization, work interfaces and release authority"
+  ],
+  "sources": [
+    {
+      "title": "USCG National Maritime Center credentials",
+      "url": "https://www.dco.uscg.mil/national_maritime_center/licenses_credentials/"
+    },
+    {
+      "title": "MCA — Code of safe working practices, 2026 edition; UK context",
+      "url": "https://www.gov.uk/government/publications/code-of-safe-working-practices-for-merchant-seafarers-2026-edition"
+    },
+    {
+      "title": "HSE — Access to vessels",
+      "url": "https://www.hse.gov.uk/ports/access-to-vessels.htm"
+    },
+    {
+      "title": "MCA — MGN 533 Amendment 3, means of access",
+      "url": "https://www.gov.uk/government/publications/mgn-533-m-amendment-3-means-of-access/mgn-533-m-amendment-3-means-of-access"
+    },
+    {
+      "title": "MCA — MGN 592 Amendment 2, mooring/towing/hauling equipment",
+      "url": "https://www.gov.uk/government/publications/mgn-592-mf-anchoring-mooring-towing-or-hauling-equipment/mgn-592-mf-amendment-2-anchoring-mooring-towing-or-hauling-equipment-on-all-vessels"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G61_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Marine work interfaces: access, deck energy and vessel handover\n\nThis course teaches a bounded task: recognize vessel-specific access, deck and transfer dependencies and communicate a bounded marine work handover Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis course grants no seamanship, navigation, mooring, transfer, rescue or sea-survival qualification. It supplies no vessel maneuver, line-handling sequence, transfer setting or survival technique. Actual vessel/task familiarization, applicable credentials and observed specialist skills remain separate. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G61_lesson1",
+        "title": "1. Know your vessel role and obtain real familiarization",
+        "body": "A marine service label does not define a person's duties. A passenger, visiting surveyor, deck worker, engineer and master have different responsibilities and qualification needs. Identify the actual vessel, flag/jurisdiction, voyage or port setting and task before assigning requirements. A shore consultant does not automatically need every seafarer credential, while a person performing a regulated vessel duty cannot replace it with general marine awareness.\n\nVessel familiarization connects a person to the actual environment. Before the assigned work, know the authorized access route, relevant restricted areas, alarms and reporting arrangements, muster information and the people responsible for your task. A diagram sent before travel can prepare you but cannot prove you understand the current vessel layout and conditions. Obtain the actual briefing through the vessel's responsible role.\n\nSeparate professional expertise from vessel authority. A surveyor may be highly competent in their technical discipline without authority to operate deck machinery or direct navigation. A client project manager may control the commercial scope but not override the master's safety responsibilities. The actual safety-management and work arrangements must connect the visiting task to vessel operations.\n\nFamiliarization must also match the duration and movement of the assignment. A technician who boards alongside may remain onboard when a planned activity changes access or vessel state. The technician must not assume that a shore escape route remains available or that a visitor arrangement permits travel with the vessel. The responsible onboard role must know the actual people present and their assigned status. Tell that role when the task or intended departure changes. A name entered at the gangway is useful only within the actual accountability system; it must not become a substitute for reporting a later movement or an unexpected person remaining onboard.\n\nFor planning, distinguish access, task permission and permission to remain aboard for a different operation. Those are related but separate decisions. A customer may authorize an inspection without establishing the conditions for the inspector to accompany a voyage. A vessel briefing may explain muster without qualifying the person for deck work. A technical work permit may cover one compartment without authorizing entry into another. Identify the exact boundary rather than asking whether the person is marine approved. This makes a change actionable: the responsible role can confirm or decline the actual request using the vessel's program. The online learner should preserve that distinction in the handover and avoid creating an unsupported broad claim from several narrow permissions.\n\nCredentials are specific evidence. Their relevance can depend on the duty, vessel and jurisdiction. The employer must verify the actual applicable credential, training, medical and practical requirements rather than requesting an invented universal marine certificate. UK MCA guidance and U.S. credential sources cited here illustrate bounded regimes; neither automatically governs every vessel in the catalog.\n\nMake a harmless role exercise with three assignments: passenger transfer to a worksite, inspection while alongside and a deck operational duty. Identify the common need for actual familiarization and the distinct specialist responsibilities. The correct result is not one identical bundle. It is an explicit role and task boundary with named evidence and a qualified person responsible for the actual practical skills.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G61_lesson2",
+        "title": "2. Treat boarding and transfer as changing access conditions",
+        "body": "Safe access between shore and vessel depends on the actual equipment, positions and conditions. Tide, vessel movement, loading, weather and other operations can change the relative positions of the surfaces. A route used safely earlier may no longer be suitable. Use only the actual designated access arrangement and report a concern before attempting an improvised alternative.\n\nLook at the full route as an interface, not merely a gangway object. The landings, lighting, obstructions, surface condition and safe onward route matter. An access device can be present while one end leads to an obstructed or unsafe place. The responsible ship/shore roles must maintain the appropriate arrangement and coordinate changes. This course gives no design angle, loading limit, ladder setup or transfer maneuver.\n\nDo not jump a gap, climb an unapproved route or use a cargo arrangement as passenger access. A coworker's ability to cross does not establish suitability for another person, equipment or condition. If the designated route is unavailable, pause boarding and contact the responsible vessel/shore role. Schedule pressure and a waiting vehicle do not create a safe crossing method.\n\nCarrying equipment can reduce a person's ability to use the access arrangement as intended. The actual plan must establish how people and tools move without an improvised simultaneous burden. Mechanical lifting, vessel-to-vessel transfers and offshore personnel transfer can require additional specialist equipment, procedures and competence. General gangway knowledge does not qualify those methods.\n\nFor a desk exercise, compare a pre-arrival photograph with a report that the landing has shifted and lighting is unavailable. The photograph proves only its earlier visible condition. The current access must be assessed and restored or replaced through the actual responsible process. The learner does not choose a ladder or calculate a permissible gap. Practical assessment later uses the actual approved arrangement with a competent assessor and controlled conditions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G61_lesson3",
+        "title": "3. Recognize mooring, towing and deck machinery danger areas",
+        "body": "Mooring, towing and hauling arrangements can store substantial energy. Lines under tension can move or recoil if a component fails or the system changes. Loops and moving lines can trap or draw in a person. A line that appears quiet is not automatically safe to step over, handle or stand beside. The actual deck operation needs trained personnel, supervision and a vessel-specific safe arrangement.\n\nDo not treat painted deck markings as a universal map of every recoil hazard. The actual line material, lead, fittings and operating condition can affect the danger area. A changed lead or attachment can change the assessment. The responsible competent deck team establishes the real precautions. This course supplies no line-handling sequence, tension setting, knot instruction or mooring design.\n\nKeep nonessential people outside the operation's actual controlled area and use designated routes. A visitor should not cross a mooring station because it is the shortest path to the inspection site. A support worker noticing a conflict reports it to the responsible deck role rather than moving a line or entering the area to direct the team. Communication must use the vessel's established method.\n\nWinches, rotating equipment and moving loads add pinch, crush and entanglement hazards. Hands, clothing and carried items can enter a moving system even when the person's feet appear clear. Guarding and an operator's presence are not permission for a visitor to approach. The actual equipment procedure and qualification govern operation, maintenance and safe access.\n\nIn a fictional deck diagram, identify a visitor route crossing an active line-handling area and a tool-staging point near machinery. The correct planning action is to coordinate a suitable route and staging arrangement with the responsible deck personnel before work. The learner does not draw a generic safe distance or move equipment to make space. The actual practical program must observe the assigned seafarer's vessel/equipment skills.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G61_lesson4",
+        "title": "4. Coordinate ship-shore transfers without assuming either side controls all",
+        "body": "A cargo, fuel or other material transfer connects two systems and organizations. The vessel and shore side each need accurate identity, readiness, responsibilities and communication. A commercial delivery order does not prove the receiving arrangement is ready. The actual transfer procedure establishes the relevant compatibility, connections, monitoring, limits and emergency actions; this course gives no pump or valve sequence.\n\nStart with the actual material and destination. A product name, compartment or connection identifier must be consistent between the responsible sides. If shore paperwork names receiving point A while the vessel briefing names B, resolve that discrepancy before the affected step. A familiar hose or matching coupling is not proof that the contents, route or equipment are appropriate.\n\nAgree who performs and controls each assigned function, who monitors the relevant conditions and how a stop or abnormal report is communicated. The real procedure may involve designated persons with specific qualifications. A driver or visitor must not be assigned every function simply because they are nearby. Test the actual communication arrangement through the approved process before relying on it.\n\nSimultaneous work can alter the transfer interface. Mooring changes, traffic, lifting, maintenance, weather or movement can affect access and equipment. The relevant vessel/shore authorities must coordinate the actual conditions. A transfer plan prepared before a new activity begins may need review. Do not use normal production pressure to treat an unreviewed change as harmless.\n\nEnvironmental and emergency arrangements belong to the real method. The learner should know how to report suspected loss of containment and preserve their assigned boundary, but must not improvise leak repair, hose disconnection, neutralization or cleanup. After an abnormal event, transfer restart requires the actual qualified disposition. Stopping visible leakage does not by itself prove the connection, material identity and receiving conditions suitable for resumed operation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G61_lesson5",
+        "title": "5. Understand alarms, muster and survival as vessel-specific skills",
+        "body": "A person onboard must understand the actual alarm/reporting and muster arrangements relevant to their role. An alarm's meaning, assembly location and assigned duties come from vessel familiarization and instruction. A generic course cannot safely replace those details with a universal signal or route. If you do not know the current instructions, ask the responsible onboard role before beginning the task.\n\nMuster supports accountability and coordinated response. Report as instructed and do not leave an assigned location to search for a colleague without authority and training. A visitor who decides to help near the incident can obstruct access or become another casualty. Accurate information about a missing person or observed condition belongs with the designated response leadership.\n\nPersonal flotation and other survival equipment need actual selection, fitting, condition checks and practical instruction. A device merely being onboard does not prove every person can locate and use it. Different equipment and work situations can require different arrangements. This course teaches no water-entry, abandonment, recovery or life-raft operation. Qualified practical training must establish the relevant physical skills.\n\nFire, man-overboard, flooding and medical situations have different actual procedures. An untrained person should not operate unfamiliar firefighting equipment, enter an enclosed space or jump into the water to attempt rescue. Follow the assigned reporting and protective actions. Promptly provide the known location and observation through the vessel's emergency route without delaying for a complete administrative record.\n\nDrills should test the real dependencies safely: can people hear and understand the instruction, reach the assigned location by the approved route and be accounted for? Are the responsible roles and resources actually available? The qualified program determines the drill and practical criteria. Attendance alone cannot prove seamanship, sea survival or medical competence. Keep the observed result and limitations distinct from a general course completion.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G61_lesson6",
+        "title": "6. Preserve navigation, work release and shore-vessel handover boundaries",
+        "body": "Navigation and vessel control require the actual qualified roles and operating arrangements. A survey display, positioning image or weather app can provide task information without being the approved navigational basis. A visiting technician must not direct a maneuver or alter bridge equipment because the project requires a better view. The master and designated officers retain their actual responsibilities under the applicable regime.\n\nChanges to vessel position or operating state can affect work elsewhere. Deck access, mooring loads, transfer connections, lifting and underwater work may depend on the state assumed in the plan. The responsible roles must coordinate a proposed change before affected work continues. A technical contractor should report the dependency rather than independently deciding a maneuver is small enough to ignore.\n\nHand over the actual task state at completion. Inspection finished does not mean access equipment is restored, a transfer connection is released or all people are ashore. State which people, tools and work remain and who owns the next action. A signed visitor log records its actual entries; it does not automatically prove every person left or every restricted area is clear.\n\nDefects need bounded reporting. Identify the equipment, location, observation, time and actual action taken. A photograph can support a visible defect but cannot prove the internal integrity of a line or the operation of a safety system. The competent vessel/technical role determines assessment and release. Do not turn a report into an unauthorized repair or test.\n\nThe final qualification record should remain equally specific. A person who passes this knowledge course can demonstrate understanding of marine interfaces. They still need actual vessel familiarization, assigned-role instruction, applicable credentials and observed access, deck, transfer or survival skills. Diving, engineered lifting and specialist offshore tasks remain additional scopes. A project status must name the remaining requirement rather than treating all marine work as closed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G61_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: the access photo is no longer the current route\n\nA fictional surveyor arrives at a vessel alongside a quay. A pre-arrival photograph showed an unobstructed gangway. The current landing has shifted, lighting is unavailable and the onward route crosses an active mooring station. The client says the survey must begin immediately and points to a nearby ladder as an alternative. The surveyor has general marine awareness but no assigned deck-operation role.\n\nCompare the actual conditions with the earlier information. The photograph supports only its visible earlier state. Tide or vessel movement, poor lighting and active deck work create current questions. A convenient ladder is not automatically an approved route. The surveyor does not jump the gap, select access equipment or cross active line-handling work.\n\nThe correct action is to hold boarding and contact the responsible vessel/shore roles. They establish the actual suitable access and coordinate the route with deck operations. The surveyor reports the landing, lighting and mooring interface separately so restoring one does not hide another. A repaired light would not by itself make the shifted landing suitable.\n\nSuppose a responsible person later confirms an approved access arrangement. The surveyor still needs the actual vessel briefing, role boundary and emergency/muster information. Survey expertise does not establish line-handling or personnel-transfer skill. The worked output is a clear access decision and current familiarization need, not a universal marine qualification.\n\nCase B: transfer complete does not mean everyone or everything released\n\nA fictional shore-vessel transfer reaches its planned material quantity. The shore lead records transfer complete. A maintenance worker remains onboard, a tool box is staged near a deck machinery area and the vessel is considering a position change. The receiving contact has not confirmed the actual equipment handback. A project manager asks for one all-clear message to close every work item.\n\nSeparate the states. Reaching the planned quantity addresses the commercial/transfer stage only within its actual scope. It does not prove the transfer system is in the required handback condition, the maintenance worker is accounted for, tools are safely stowed or a position change is coordinated. Each dependency has its own responsible role.\n\nThe support coordinator reports the actual remaining person, equipment and handback gap through the designated vessel/shore channels. They do not disconnect equipment, move a line or direct a vessel maneuver. The qualified responsible roles complete the real transfer disposition and coordinate any state change with affected activities. A survey or contractor completion cannot release navigation or deck operations.\n\nIf the maintenance worker later reports ashore, that resolves only the supported personal-status item. The tool and transfer-equipment questions remain until their actual owners establish the disposition. The final handover may honestly contain completed and open items. Forcing a single green status would conceal what the next shift needs to know.\n\nAn assessor can test these decisions with a harmless vessel diagram and status cards, then observe actual access, communication and role-specific skills in a qualified controlled program. No live mooring-line failure, uncontrolled transfer or real emergency is needed. The outcome is an accurate bounded handover that preserves vessel authority, accountability and the independent requirements for actual work release.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G61_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G61_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced recognize vessel-specific access, deck and transfer dependencies and communicate a bounded marine work handover Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G61_check1",
+        "prompt": "Does a marine service title define every worker duty?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual vessel, jurisdiction and role must be established."
+          },
+          {
+            "id": "b",
+            "label": "Yes, all are masters."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every visitor is deck crew."
+          },
+          {
+            "id": "d",
+            "label": "Only the invoice matters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G61_check2",
+        "prompt": "A pre-arrival gangway photo looks good. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The route stays safe forever."
+          },
+          {
+            "id": "b",
+            "label": "Current access and onward-route conditions must be established."
+          },
+          {
+            "id": "c",
+            "label": "Any ladder is equivalent."
+          },
+          {
+            "id": "d",
+            "label": "Jumping a gap is approved."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G61_check3",
+        "prompt": "A mooring line looks quiet. What should not be inferred?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It has an identifiable location."
+          },
+          {
+            "id": "b",
+            "label": "The deck procedure applies."
+          },
+          {
+            "id": "c",
+            "label": "Anyone may step over or handle it safely."
+          },
+          {
+            "id": "d",
+            "label": "Qualified roles matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G61_check4",
+        "prompt": "Transfer documents name different receiving points. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the nearest coupling."
+          },
+          {
+            "id": "b",
+            "label": "Guess from hose color."
+          },
+          {
+            "id": "c",
+            "label": "Continue because quantity is small."
+          },
+          {
+            "id": "d",
+            "label": "Resolve actual material/route identity before the affected step."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G61_check5",
+        "prompt": "A visitor does not know the muster instruction. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual vessel familiarization before the assigned work."
+          },
+          {
+            "id": "b",
+            "label": "A guessed universal signal."
+          },
+          {
+            "id": "c",
+            "label": "Another visitor's memory."
+          },
+          {
+            "id": "d",
+            "label": "A generic certificate as replacement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G61_check6",
+        "prompt": "Inspection is finished. What does that not prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The inspection can be recorded."
+          },
+          {
+            "id": "b",
+            "label": "Every person, tool and vessel interface is released."
+          },
+          {
+            "id": "c",
+            "label": "The worker can report status."
+          },
+          {
+            "id": "d",
+            "label": "A handover is useful."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G61_final1",
+        "prompt": "A surveyor's expertise automatically grants what deck authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All machinery control."
+          },
+          {
+            "id": "b",
+            "label": "All mooring duties."
+          },
+          {
+            "id": "c",
+            "label": "None beyond the actual assigned role."
+          },
+          {
+            "id": "d",
+            "label": "Navigation command."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G61_final2",
+        "prompt": "Do all passengers need every seafarer credential?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes universally."
+          },
+          {
+            "id": "b",
+            "label": "No marine worker ever needs credentials."
+          },
+          {
+            "id": "c",
+            "label": "The course creates every license."
+          },
+          {
+            "id": "d",
+            "label": "No; actual duty, vessel and jurisdiction determine requirements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G61_final3",
+        "prompt": "Which access condition matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Both landings and the safe onward route, not just the device."
+          },
+          {
+            "id": "b",
+            "label": "Only gangway color."
+          },
+          {
+            "id": "c",
+            "label": "Only the photograph date."
+          },
+          {
+            "id": "d",
+            "label": "Only the invoice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G61_final4",
+        "prompt": "The designated route is unavailable. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Jump the gap."
+          },
+          {
+            "id": "b",
+            "label": "Pause and obtain the responsible approved arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Use cargo gear as passenger access."
+          },
+          {
+            "id": "d",
+            "label": "Follow whoever crosses first."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G61_final5",
+        "prompt": "Carrying a bulky tool during access creates what question?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatic permission to ignore handholds."
+          },
+          {
+            "id": "b",
+            "label": "Only a billing issue."
+          },
+          {
+            "id": "c",
+            "label": "How the actual plan moves people and equipment safely."
+          },
+          {
+            "id": "d",
+            "label": "No new interface."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G61_final6",
+        "prompt": "General gangway knowledge qualifies which offshore transfer?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every crane transfer."
+          },
+          {
+            "id": "b",
+            "label": "Every vessel-to-vessel maneuver."
+          },
+          {
+            "id": "c",
+            "label": "Every survival task."
+          },
+          {
+            "id": "d",
+            "label": "None automatically; actual specialist method competence remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G61_final7",
+        "prompt": "Painted recoil markings establish what universally?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No complete map for every line/lead/configuration."
+          },
+          {
+            "id": "b",
+            "label": "Every possible danger area."
+          },
+          {
+            "id": "c",
+            "label": "Safe standing anywhere outside paint."
+          },
+          {
+            "id": "d",
+            "label": "Permission to handle lines."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G61_final8",
+        "prompt": "A visitor route crosses active line work. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Move the line."
+          },
+          {
+            "id": "b",
+            "label": "Coordinate a suitable route with responsible deck personnel before access."
+          },
+          {
+            "id": "c",
+            "label": "Choose a generic distance."
+          },
+          {
+            "id": "d",
+            "label": "Cross quickly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G61_final9",
+        "prompt": "A winch is guarded. What does that authorize a visitor to do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Operate freely."
+          },
+          {
+            "id": "b",
+            "label": "Repair live."
+          },
+          {
+            "id": "c",
+            "label": "Only the actual permitted access, not operation or approach to hazards."
+          },
+          {
+            "id": "d",
+            "label": "Reach near moving parts."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G61_final10",
+        "prompt": "Who owns ship-shore transfer readiness?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the commercial order."
+          },
+          {
+            "id": "b",
+            "label": "Any nearby driver."
+          },
+          {
+            "id": "c",
+            "label": "Only the client photographer."
+          },
+          {
+            "id": "d",
+            "label": "The actual designated roles on both sides under the real procedure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G61_final11",
+        "prompt": "A new lifting task starts near transfer equipment. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual simultaneous-operation review and coordination."
+          },
+          {
+            "id": "b",
+            "label": "Only that it is another contractor."
+          },
+          {
+            "id": "c",
+            "label": "No effect by definition."
+          },
+          {
+            "id": "d",
+            "label": "The old plan applies automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G61_final12",
+        "prompt": "Leakage is reported. What should unassigned support avoid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accurate reporting."
+          },
+          {
+            "id": "b",
+            "label": "Improvised repair, disconnection or cleanup."
+          },
+          {
+            "id": "c",
+            "label": "Maintaining assigned separation."
+          },
+          {
+            "id": "d",
+            "label": "Using the designated route."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G61_final13",
+        "prompt": "At muster, a coworker is missing. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leave to search alone."
+          },
+          {
+            "id": "b",
+            "label": "Enter an enclosed space."
+          },
+          {
+            "id": "c",
+            "label": "Report to designated leadership; do not conduct unauthorized search."
+          },
+          {
+            "id": "d",
+            "label": "Assume they are ashore."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G61_final14",
+        "prompt": "A flotation device is onboard. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every person automatically competent."
+          },
+          {
+            "id": "b",
+            "label": "Every transfer approved."
+          },
+          {
+            "id": "c",
+            "label": "No familiarization needed."
+          },
+          {
+            "id": "d",
+            "label": "Actual suitability, fitting, condition and practical instruction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G61_final15",
+        "prompt": "A person falls overboard. What does this course authorize?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assigned reporting/protective actions under the actual plan, not an untrained water rescue."
+          },
+          {
+            "id": "b",
+            "label": "Jumping in automatically."
+          },
+          {
+            "id": "c",
+            "label": "Operating unfamiliar recovery gear."
+          },
+          {
+            "id": "d",
+            "label": "Inventing a maneuver."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G61_final16",
+        "prompt": "A survey positioning image is what navigation authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The master's replacement."
+          },
+          {
+            "id": "b",
+            "label": "None automatically; actual qualified navigation arrangements govern."
+          },
+          {
+            "id": "c",
+            "label": "Permission to move the vessel."
+          },
+          {
+            "id": "d",
+            "label": "Universal bridge instruction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G61_final17",
+        "prompt": "A vessel position change is proposed. What must be considered?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the desired image."
+          },
+          {
+            "id": "b",
+            "label": "Only customer timing."
+          },
+          {
+            "id": "c",
+            "label": "Affected deck, transfer, access and other actual work dependencies."
+          },
+          {
+            "id": "d",
+            "label": "No other operation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G61_final18",
+        "prompt": "Case A lighting is repaired. What may remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing."
+          },
+          {
+            "id": "b",
+            "label": "Universal ladder approval."
+          },
+          {
+            "id": "c",
+            "label": "All familiarization complete."
+          },
+          {
+            "id": "d",
+            "label": "Landing suitability and the mooring-route interface."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G61_final19",
+        "prompt": "Case B worker is confirmed ashore. What remains independent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tools, transfer-equipment handback and actual vessel release."
+          },
+          {
+            "id": "b",
+            "label": "Everything released."
+          },
+          {
+            "id": "c",
+            "label": "Navigation authority transferred."
+          },
+          {
+            "id": "d",
+            "label": "All equipment safe."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G61_final20",
+        "prompt": "What does this course establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Seamanship qualification."
+          },
+          {
+            "id": "b",
+            "label": "Marine-interface knowledge with actual vessel/role practical requirements separate."
+          },
+          {
+            "id": "c",
+            "label": "Sea-survival proficiency."
+          },
+          {
+            "id": "d",
+            "label": "Master credential."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G61_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G61_lesson1",
+          "questionIds": [
+            "G61_check1"
+          ]
+        },
+        {
+          "lessonId": "G61_lesson2",
+          "questionIds": [
+            "G61_check2"
+          ]
+        },
+        {
+          "lessonId": "G61_lesson3",
+          "questionIds": [
+            "G61_check3"
+          ]
+        },
+        {
+          "lessonId": "G61_lesson4",
+          "questionIds": [
+            "G61_check4"
+          ]
+        },
+        {
+          "lessonId": "G61_lesson5",
+          "questionIds": [
+            "G61_check5"
+          ]
+        },
+        {
+          "lessonId": "G61_lesson6",
+          "questionIds": [
+            "G61_check6"
+          ]
+        },
+        {
+          "lessonId": "G61_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G61_final",
+          "questionIds": [
+            "G61_final1",
+            "G61_final2",
+            "G61_final3",
+            "G61_final4",
+            "G61_final5",
+            "G61_final6",
+            "G61_final7",
+            "G61_final8",
+            "G61_final9",
+            "G61_final10",
+            "G61_final11",
+            "G61_final12",
+            "G61_final13",
+            "G61_final14",
+            "G61_final15",
+            "G61_final16",
+            "G61_final17",
+            "G61_final18",
+            "G61_final19",
+            "G61_final20"
+          ]
+        },
+        {
+          "lessonId": "G61_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G61_check1": "Marine roles have different qualification and authority.",
+        "G61_check2": "Access changes with real vessel and shore conditions.",
+        "G61_check3": "Stored energy and movement hazards need the actual controlled operation.",
+        "G61_check4": "A matching physical connection is not proof of correct transfer route.",
+        "G61_check5": "Emergency instructions must match the actual vessel.",
+        "G61_check6": "Task completion and overall operating release differ.",
+        "G61_final1": "Professional expertise must not be extended to unrelated vessel operations.",
+        "G61_final2": "Requirements must be specific rather than invented as a universal bundle.",
+        "G61_final3": "Access is a connected route with changing conditions.",
+        "G61_final4": "Convenience is not a safe transfer method.",
+        "G61_final5": "Equipment can interfere with intended access use.",
+        "G61_final6": "Different methods require their actual equipment and skills.",
+        "G61_final7": "Actual line arrangements and conditions matter.",
+        "G61_final8": "Visitors must respect the actual controlled deck operation.",
+        "G61_final9": "Guarding does not grant equipment competence or unrestricted access.",
+        "G61_final10": "Connected systems need coordinated assigned responsibilities.",
+        "G61_final11": "Other work can alter the transfer interface.",
+        "G61_final12": "Intervention needs actual method-specific capability.",
+        "G61_final13": "Accountability and rescue require coordinated qualified response.",
+        "G61_final14": "Equipment presence is different from readiness and skill.",
+        "G61_final15": "Emergency duties require actual trained capabilities.",
+        "G61_final16": "Task displays are not automatically the approved navigational basis.",
+        "G61_final17": "State changes can alter several connected work assumptions.",
+        "G61_final18": "One correction does not resolve separate access hazards.",
+        "G61_final19": "Individual status must not be extended to unrelated prerequisites.",
+        "G61_final20": "Online completion cannot supply unobserved vessel skills or statutory authority."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

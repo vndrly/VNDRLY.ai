@@ -1,0 +1,910 @@
+{
+  "courseId": "G57",
+  "gapGroupId": "G08",
+  "title": "UAS mission preparation: permissions, aircraft and ground interfaces",
+  "description": "prepare a specific UAS mission by distinguishing pilot authority, airspace permission, aircraft readiness and ground coordination",
+  "purpose": "prepare a specific UAS mission by distinguishing pilot authority, airspace permission, aircraft readiness and ground coordination",
+  "audience": [
+    "UAS project coordinators",
+    "Assigned visual observers and site support",
+    "Remote pilots supplementing aircraft-specific instruction"
+  ],
+  "practicalBoundary": "This course issues no pilot certificate, recurrent-training credit, airspace authorization or waiver. It gives no aircraft control sequence, tuning or emergency maneuver. Actual jurisdiction/category permissions, pilot authority, manufacturer instruction and observed aircraft/task proficiency remain separate.",
+  "vendorEvidenceRequired": [
+    "Confirmed operating regime, jurisdiction and remote-pilot-in-command designation",
+    "Actual pilot authority/recency and applicable waiver/authorization conditions",
+    "Current mission airspace/restrictions and site-access permissions",
+    "Aircraft identity, registration and Remote ID applicability/compliance",
+    "Manufacturer limits, maintenance/preflight evidence and actual emergency/lost-link procedures",
+    "Ground/people/vehicle plan, weather assessment, crew briefing and observed role competence"
+  ],
+  "practicalAssessmentRequired": [
+    "Competent UAS assessor observes actual aircraft-specific preparation, normal control and emergency decisions in an authorized controlled setting",
+    "Qualified remote pilot assesses observer/support communication and hazard reporting",
+    "Responsible operation lead verifies actual permission conditions and aircraft/payload capability"
+  ],
+  "sources": [
+    {
+      "title": "FAA certificated remote pilots and commercial operators",
+      "url": "https://www.faa.gov/uas/commercial_operators"
+    },
+    {
+      "title": "FAA — Become a certificated remote pilot",
+      "url": "https://www.faa.gov/uas/commercial_operators/become_a_drone_pilot"
+    },
+    {
+      "title": "FAA — Part 107 airspace authorizations",
+      "url": "https://www.faa.gov/uas/commercial_operators/part_107_airspace_authorizations"
+    },
+    {
+      "title": "FAA — Part 107 waivers",
+      "url": "https://www.faa.gov/uas/commercial_operators/part_107_waivers"
+    },
+    {
+      "title": "FAA — Remote identification",
+      "url": "https://www.faa.gov/uas/getting_started/remote_id"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G57_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "UAS mission preparation: permissions, aircraft and ground interfaces\n\nThis course teaches a bounded task: prepare a specific UAS mission by distinguishing pilot authority, airspace permission, aircraft readiness and ground coordination Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis course issues no pilot certificate, recurrent-training credit, airspace authorization or waiver. It gives no aircraft control sequence, tuning or emergency maneuver. Actual jurisdiction/category permissions, pilot authority, manufacturer instruction and observed aircraft/task proficiency remain separate. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G57_lesson1",
+        "title": "1. Define the mission and assign the flight responsibility",
+        "body": "Begin with the requested deliverable, location and timing. Survey imagery, an inspection video or a photogrammetry product does not automatically require flight; some tasks can be done from the ground. If a UAS is proposed, describe what it must observe, the intended area, the site activities and the people who will receive the result. A clear mission prevents a crew from expanding the flight because another attractive view appears nearby.\n\nIdentify the actual operating regime and the remote pilot in command. This course uses U.S. Part 107 examples where applicable, but actual aircraft, purpose, jurisdiction and operation determine the relevant rules. A service listing or camera operator's experience does not establish pilot authority. Support personnel must know their own role without being presented as pilots simply because they attend the briefing.\n\nSeparate the customer's objective from the pilot's lawful and safe operation. A request for an overhead picture of a busy yard is not permission to fly over people or vehicles. A site manager may control access to the property, but cannot issue an aviation regulator's approval. The mission must fit the actual conditions of all applicable permissions as well as the aircraft and crew capability.\n\nWrite the planning boundary: intended location, time window, aircraft/payload, responsible pilot, support roles, deliverable and conditions requiring review. This record is a planning aid, not flight authorization. A changed route, later time, unfamiliar payload or new launch location can affect multiple prerequisites. Do not treat a commercial request as a change automatically accepted by the pilot.\n\nAlternatives can preserve the project objective. The responsible team may consider another vantage point, timing or ground-based method when the requested flight cannot be supported. The learner must not promise that a small aircraft, automated route or brief duration removes the actual rules. A held or revised mission can be a successful planning result when it prevents unsupported operation. Actual flight decisions remain with the designated qualified role under the governing regime.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G57_lesson2",
+        "title": "2. Distinguish certificates, site permission, airspace approval and waivers",
+        "body": "Several forms of authority can apply to one mission. A pilot certificate establishes defined personal authority and knowledge status. Site permission concerns access or use of the relevant property. An airspace authorization concerns the stated operation in the relevant airspace. An operational waiver, where required and issued, permits a specified deviation under its conditions. These records answer different questions and cannot be added together as interchangeable green checks.\n\nRead each actual approval for scope. Identify its location, timing, operation and other conditions. The pilot must compare those conditions with the proposed flight using current applicable rules. This course gives no universal numerical altitude or distance allowance. A permission for another day, area or type of operation must not be copied into the new mission because the map appears similar.\n\nA submitted application is not an issued authorization. A planning map or facility-map value can support assessment but is not automatically approval to launch. Use the current official process and retain the actual result and conditions. Do not assume that a request becomes approved because the deadline is near or processing has taken longer than expected.\n\nSpecial circumstances need their real regulatory pathway. Night operations or operations involving people and moving vehicles are not governed by a simplistic claim that every case always needs a waiver or that no case does. FAA guidance describes pathways with specific conditions. The responsible pilot determines the actual applicable category, requirements and evidence. The support worker does not invent an exception from an internet summary.\n\nFor a harmless desk exercise, compare three cards: site access granted, pilot certificate current and required airspace authorization pending. The correct disposition remains pending for the affected flight. Good evidence in two domains cannot manufacture the third. Aircraft readiness, weather, current restrictions and ground conditions also remain independent questions. Mission review must preserve each actual prerequisite instead of collapsing them into a general phrase such as paperwork complete.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G57_lesson3",
+        "title": "3. Assess changing ground and air interfaces",
+        "body": "A flight area has ground and air interfaces. Ground conditions include people, vehicles, active operations, obstacles, launch/recovery access and communication. Airspace assessment uses current official information, applicable requirements and actual aircraft activity. A clear camera view does not establish that either domain is safe or authorized. The responsible pilot integrates the relevant information into the real mission decision.\n\nLocation information deserves its own check. A client may provide a street address, a map pin and a boundary drawing that do not describe the same place. The pilot must establish the actual intended mission location before relying on airspace information or an authorization. A misplaced pin cannot be corrected by assuming the address is close enough. Record the source of the location and resolve contradictions through the responsible project contact. Similarly, distinguish the intended image target from the planned launch point and flight area. These may be different places with different access or operational interfaces. The desk learner can compare the supplied records and identify the mismatch without publishing a real flight plan. The qualified pilot then evaluates the actual geographical scope using the appropriate current information and permission conditions. Accurate location is a prerequisite for meaningful planning, not a minor administrative preference.\n\nA normally empty yard can change quickly. A delivery arrives, a barrier moves, shift-change pedestrians appear or another contractor begins work. The crew needs a known way to report these changes and a pilot decision process that does not depend on the customer guessing whether they matter. This course does not prescribe exclusion distances or authorize support staff to direct traffic beyond their actual role.\n\nWeather information must fit the location and mission period. A distant forecast or an earlier launch check may not represent later conditions. Wind, visibility, precipitation and other relevant factors can affect performance, observation and recovery. The pilot compares actual and expected conditions with applicable rules, manufacturer limits and the mission plan. A support worker reports observations accurately rather than inventing a safe wind threshold.\n\nObstacles can change the ability to observe the aircraft and coordinate the operation. Wires, structures, terrain and parked equipment may affect the planned route or a crew member's sightline. A video feed provides useful imagery but does not automatically satisfy the actual visual-line-of-sight or observer requirements. Those duties must be established under the actual regime and plan.\n\nAsk what happens if an assumption fails: the gate opens, a vehicle blocks the observer or the receiving site moves the work area. A sound answer identifies the report, responsible pilot decision and affected control. It does not prescribe a universal maneuver. If the plan requires an area to remain clear, the relevant person must have the actual assignment and ability to maintain that condition. An unowned assumption is not a ground-risk control.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G57_lesson4",
+        "title": "4. Connect aircraft identity, payload and readiness",
+        "body": "Identify the individual aircraft and its configuration. Model, registration or other identity, payload, energy system and relevant software/configuration can affect the operating basis. Two aircraft that look alike do not automatically share registration, maintenance status or compliance evidence. The actual aircraft used must match the records and instructions relied on for the mission.\n\nRemote ID, where required under the applicable rule, provides identification and location information through a broadcast function. It is not an airspace approval, collision-avoidance guarantee or universal readiness certificate. The FAA describes different compliance arrangements with their conditions. The responsible pilot establishes the applicable arrangement for the actual aircraft; a support worker must not disable a function or borrow an unmatched record to remove a warning.\n\nPreflight and maintenance are equipment-specific tasks. Use manufacturer instructions and the employer's approved arrangements for condition, configuration and functional checks. A charged battery, connected controller or normal-looking display establishes only its actual observation. Damage, an unresolved fault, a changed component or an unfamiliar payload can require a different decision by the qualified person. No learner operates equipment to complete this desk course.\n\nPayload changes matter even when the attachment physically fits. A different camera, added light or other equipment may affect performance and the regulatory or manufacturer basis. The responsible technical and operating roles establish suitability. This lesson gives no loading calculation, mounting recipe, control setting or flight-control adjustment. A customer cannot approve compatibility simply by requesting the new image.\n\nEmergency and lost-link behavior also depend on the actual aircraft, configuration and site. A generic return function is not a guarantee that every route or recovery area is appropriate. The pilot must understand and demonstrate the relevant actual procedures. Support personnel need their own communication and ground duties. Do not induce an uncontrolled link loss above a working site to learn what the aircraft does; use qualified instruction and an authorized controlled assessment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G57_lesson5",
+        "title": "5. Make crew communication support the pilot decision",
+        "body": "Crew roles may include the remote pilot, personnel manipulating controls under the applicable arrangement, visual observers and site support. Actual duties depend on the operation and governing regime. Each person must know what to observe, what to communicate, which actions are outside their role and who makes the relevant decision. Presence at the site does not itself establish observer, pilot or traffic-control qualification.\n\nBrief the actual mission, aircraft, conditions, communication method and applicable abnormal/stop procedures. The customer should not give an observer a conflicting instruction to continue for another photograph. The support person who notices changed ground conditions reports them through the agreed route. This course does not invent emergency phrases or flight commands; actual terminology must be consistent with the trained crew and equipment.\n\nState observations precisely. Delivery vehicle entering the agreed area from the east gate is more useful than something moving. Include uncertainty rather than guessing that the vehicle will stop. The pilot interprets the report through the real operating procedure. The support worker should not conceal a concern because the requested image is nearly complete or because a previous vehicle caused no problem.\n\nVerify the communication link before relying on it. A powered radio is not proof that the intended roles can hear and understand one another in the actual environment. Noise, obstructions, competing channels and equipment condition can matter. Use the approved check and alternate/failure arrangement. If essential communication is unavailable, the pilot reassesses the operation; silence must not be assumed to mean no hazard.\n\nChanges after briefing require a deliberate update. Moving a launch point may affect site access, sightlines, permission scope and emergency arrangements. Replacing an observer may require task instruction and confirmation. A practical assessor should observe how the crew recognizes and manages such changes safely with the real equipment. Counting signatures on an obsolete briefing cannot establish that the current operation is understood.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G57_lesson6",
+        "title": "6. Integrate go/no-go and preserve the postflight state",
+        "body": "A go/no-go decision brings independent prerequisites together: lawful operating authority, permission conditions, aircraft readiness, environment, ground interfaces and competent crew. One strong domain cannot cancel a missing prerequisite in another. An experienced pilot still needs the required mission approval, and an issued approval does not make a damaged aircraft suitable. Readiness is not an average score.\n\nName unresolved items and their owners. Required airspace authorization pending differs from maintenance fault unresolved and from ground-area control unavailable. These descriptions tell the responsible roles what must change. A vague label such as administration pending invites someone to dismiss a real operating boundary as optional paperwork. Keep the actual issue and disposition traceable to the mission.\n\nAbnormal reporting should state aircraft, mission stage, observation, time, actions actually taken under the trained procedure and uncertainty. A warning is not automatically a diagnosis. Use the employer's incident process and any actual regulatory reporting requirements established by the responsible pilot. This course supplies no invented universal reporting deadline or threshold. The learner's job is accurate communication within the assigned role.\n\nPostflight inspection and maintenance disposition are separate from delivering images. A suspected strike or unresolved fault follows the actual inspection and release process before another flight. Successful video does not prove the aircraft escaped damage. Data handling and client delivery also have their own authorized process; useful imagery is not a substitute for a sound aircraft record.\n\nThe completed desk exercise provides knowledge evidence. Learners should explain why site access, personal pilot authority, airspace approval, aircraft compliance and current site conditions answer different questions. Actual aircraft control and emergency performance require qualified instruction and observed proficiency. A corrected quiz score preserves learning but cannot issue regulator permission or manufacture a physical skill. An honest hold before launch may be the most competent outcome when a prerequisite cannot be established.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G57_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: access granted but required approval pending\n\nA fictional client grants access to a launch area and asks for inspection photographs before a contractor leaves. The remote pilot has current authority under the actual operating regime. The operation requires airspace authorization, but the crew holds only an application acknowledgment. The site manager says the company owns the land, so the flight should proceed. Aircraft checks completed so far are satisfactory within their actual scope.\n\nSeparate the domains. Property access does not issue airspace permission. The pilot's personal qualification does not replace a required mission authorization. Satisfactory equipment checks do not turn a pending application into approval. An acknowledgment supports only the fact that the request exists. A deadline does not change those meanings.\n\nThe affected flight remains held pending the actual required approval and every other applicable prerequisite. The pilot may consider a different lawful mission or ground-based method through the responsible process. The learner does not invent a short-flight exception or submit a regulator application as part of this exercise. The desk product identifies the exact missing permission rather than reporting that all flight planning failed.\n\nSuppose an authorization later arrives. The pilot compares its actual location, time and conditions with the current proposed mission. A changed launch point or later flight may not fit the permission merely because the email says approved. Current restrictions, weather, ground conditions and aircraft/crew readiness remain independent checks. The final statement must say what the actual approval covers and which remaining items are unresolved. This is how a review remains useful when the schedule changes.\n\nCase B: new payload, blocked sightline and a warning\n\nA fictional survey team briefs aircraft A with its standard camera. The client then asks for an added light and a route closer to an active vehicle lane. Parked equipment blocks the observer's planned position. A controller warning appears, although the aircraft still connects. The client says the desired footage will take only two minutes.\n\nIdentify four separate matters: payload compatibility/performance, route and ground interface, observer sightline and an unresolved equipment warning. A brief duration resolves none automatically. The pilot holds the affected operation while the actual technical and operating questions are assessed. Support personnel report the lane activity and obstruction instead of choosing an improvised safe distance or aircraft maneuver.\n\nThe qualified person establishes payload suitability under the actual aircraft basis. The pilot reassesses the lawful mission and ground controls. The observer arrangement is restored or revised under the real requirements, with the necessary instruction. The warning follows the actual equipment fault process. No learner adjusts controls, attaches equipment or creates a live warning for this course.\n\nA safe desk exercise can test communication: each role states the changed fact, the owner of its decision and the evidence needed before launch. The later practical assessment observes real preparation and required skills in an authorized controlled setting. If the mission is revised, the current briefing and checks must match the actual route and configuration. If the warning remains unresolved, the aircraft remains restricted under its procedure even if all permission documents are valid.\n\nThe worked result demonstrates why readiness is a conjunction of prerequisites. Correct documentation in one area cannot offset missing performance evidence elsewhere. Nor should the team erase the first plan or pretend that its assumptions always matched the changed job. Preserve the actual change and bounded final disposition so a subsequent crew can understand what was assessed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G57_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G57_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced prepare a specific UAS mission by distinguishing pilot authority, airspace permission, aircraft readiness and ground coordination Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G57_check1",
+        "prompt": "What should be clarified before assigning a survey flight?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual deliverable, method and mission scope."
+          },
+          {
+            "id": "b",
+            "label": "Every survey requires a drone."
+          },
+          {
+            "id": "c",
+            "label": "Camera experience grants pilot authority."
+          },
+          {
+            "id": "d",
+            "label": "All locations share one rule."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G57_check2",
+        "prompt": "Site access is granted but required airspace approval is pending. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Land ownership supplies approval."
+          },
+          {
+            "id": "b",
+            "label": "The affected flight remains pending the actual approval and other prerequisites."
+          },
+          {
+            "id": "c",
+            "label": "A certificate replaces it."
+          },
+          {
+            "id": "d",
+            "label": "Short flights are automatically exempt."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G57_check3",
+        "prompt": "An unexpected truck enters the relevant ground area. What should support do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Invent a maneuver."
+          },
+          {
+            "id": "b",
+            "label": "Assume the original empty-yard state remains."
+          },
+          {
+            "id": "c",
+            "label": "Report the change through the agreed route for the pilot decision."
+          },
+          {
+            "id": "d",
+            "label": "Declare universal aircraft priority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G57_check4",
+        "prompt": "Remote ID works. What is not thereby established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An identification function may operate."
+          },
+          {
+            "id": "b",
+            "label": "Its actual status can be checked."
+          },
+          {
+            "id": "c",
+            "label": "An applicable rule exists."
+          },
+          {
+            "id": "d",
+            "label": "Airspace approval or overall readiness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G57_check5",
+        "prompt": "A radio has power. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify actual communication and understanding under the approved check."
+          },
+          {
+            "id": "b",
+            "label": "Everyone necessarily heard."
+          },
+          {
+            "id": "c",
+            "label": "Silence proves no hazard."
+          },
+          {
+            "id": "d",
+            "label": "No briefing is needed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G57_check6",
+        "prompt": "Permission is valid but a fault is unresolved. What is correct?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permission overrides faults."
+          },
+          {
+            "id": "b",
+            "label": "The fault remains an independent readiness issue."
+          },
+          {
+            "id": "c",
+            "label": "The customer waives technical concerns."
+          },
+          {
+            "id": "d",
+            "label": "Good imagery proves readiness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G57_final1",
+        "prompt": "Who holds the assigned flight decisions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any customer."
+          },
+          {
+            "id": "b",
+            "label": "The newest visitor."
+          },
+          {
+            "id": "c",
+            "label": "The designated remote pilot in command under the actual regime."
+          },
+          {
+            "id": "d",
+            "label": "The course author for every site."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G57_final2",
+        "prompt": "Which change deserves mission reassessment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the file name."
+          },
+          {
+            "id": "b",
+            "label": "Only shirt color."
+          },
+          {
+            "id": "c",
+            "label": "Only invoice format."
+          },
+          {
+            "id": "d",
+            "label": "A changed route, time, aircraft or payload affecting the plan."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G57_final3",
+        "prompt": "What does an application acknowledgment establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A request was received within its scope."
+          },
+          {
+            "id": "b",
+            "label": "Permission issued."
+          },
+          {
+            "id": "c",
+            "label": "Every requested altitude approved."
+          },
+          {
+            "id": "d",
+            "label": "Every future location included."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G57_final4",
+        "prompt": "A facility-map value is displayed. What must not be inferred?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It may support planning."
+          },
+          {
+            "id": "b",
+            "label": "The display alone is an issued authorization."
+          },
+          {
+            "id": "c",
+            "label": "Official process matters."
+          },
+          {
+            "id": "d",
+            "label": "Current information is relevant."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G57_final5",
+        "prompt": "Does every night operation need the same waiver?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes in every country."
+          },
+          {
+            "id": "b",
+            "label": "No night flight ever has requirements."
+          },
+          {
+            "id": "c",
+            "label": "No; determine the actual pathway and conditions."
+          },
+          {
+            "id": "d",
+            "label": "The site manager decides aviation rules."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G57_final6",
+        "prompt": "Does a certificate permit every flight over people?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes everywhere."
+          },
+          {
+            "id": "b",
+            "label": "Yes on client request."
+          },
+          {
+            "id": "c",
+            "label": "Yes if imagery is useful."
+          },
+          {
+            "id": "d",
+            "label": "No; operation-specific conditions and authority still apply."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G57_final7",
+        "prompt": "A forecast is favorable. What still matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual/expected conditions against applicable rules and aircraft limits."
+          },
+          {
+            "id": "b",
+            "label": "Only its date."
+          },
+          {
+            "id": "c",
+            "label": "Only the deadline."
+          },
+          {
+            "id": "d",
+            "label": "Only previous weather."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G57_final8",
+        "prompt": "A vehicle blocks the observer. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Video replaces every requirement."
+          },
+          {
+            "id": "b",
+            "label": "Report and reassess the actual observation arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Ignore a short obstruction."
+          },
+          {
+            "id": "d",
+            "label": "Use an unbriefed visitor silently."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G57_final9",
+        "prompt": "Two aircraft look identical. What remains specific?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing."
+          },
+          {
+            "id": "b",
+            "label": "Only paint."
+          },
+          {
+            "id": "c",
+            "label": "Individual identity, records, configuration and compliance."
+          },
+          {
+            "id": "d",
+            "label": "Only the case."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G57_final10",
+        "prompt": "An added light fits. What remains to establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No review needed."
+          },
+          {
+            "id": "b",
+            "label": "Physical fit proves safety."
+          },
+          {
+            "id": "c",
+            "label": "Only client preference."
+          },
+          {
+            "id": "d",
+            "label": "Actual suitability, performance and operating effects."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G57_final11",
+        "prompt": "Should a crew induce uncontrolled lost link at an active site?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; use qualified controlled instruction and assessment."
+          },
+          {
+            "id": "b",
+            "label": "Yes for realism."
+          },
+          {
+            "id": "c",
+            "label": "Yes over workers."
+          },
+          {
+            "id": "d",
+            "label": "Yes without procedures."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G57_final12",
+        "prompt": "Which observation is useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Something, probably fine."
+          },
+          {
+            "id": "b",
+            "label": "Delivery vehicle entering the agreed area from the east gate."
+          },
+          {
+            "id": "c",
+            "label": "All safe forever."
+          },
+          {
+            "id": "d",
+            "label": "Ignore it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G57_final13",
+        "prompt": "A customer tells the observer to continue. What governs?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The latest client demand."
+          },
+          {
+            "id": "b",
+            "label": "Image quality alone."
+          },
+          {
+            "id": "c",
+            "label": "Actual crew duties and the pilot decision authority."
+          },
+          {
+            "id": "d",
+            "label": "Observer overrides all pilot decisions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G57_final14",
+        "prompt": "The launch point changes. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reuse all assumptions."
+          },
+          {
+            "id": "b",
+            "label": "Only move the app marker."
+          },
+          {
+            "id": "c",
+            "label": "Delete the old plan."
+          },
+          {
+            "id": "d",
+            "label": "Review affected access, sightlines, permission and understanding."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G57_final15",
+        "prompt": "What should an abnormal report avoid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An unsupported diagnosis from a warning alone."
+          },
+          {
+            "id": "b",
+            "label": "Recording the warning."
+          },
+          {
+            "id": "c",
+            "label": "Naming aircraft and time."
+          },
+          {
+            "id": "d",
+            "label": "Stating uncertainty."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G57_final16",
+        "prompt": "Images were obtained after a suspected strike. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatic next-flight approval."
+          },
+          {
+            "id": "b",
+            "label": "Actual inspection and disposition before another flight."
+          },
+          {
+            "id": "c",
+            "label": "No concern remains."
+          },
+          {
+            "id": "d",
+            "label": "Good images prove no damage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G57_final17",
+        "prompt": "Can a held flight be successful planning?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No, every mission must launch."
+          },
+          {
+            "id": "b",
+            "label": "No, certificates guarantee launch."
+          },
+          {
+            "id": "c",
+            "label": "Yes, when it prevents unsupported operation."
+          },
+          {
+            "id": "d",
+            "label": "No, customers erase holds."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G57_final18",
+        "prompt": "Case A approval arrives. What must be checked?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the approved email title."
+          },
+          {
+            "id": "b",
+            "label": "Only document length."
+          },
+          {
+            "id": "c",
+            "label": "Nothing."
+          },
+          {
+            "id": "d",
+            "label": "Its actual conditions against the current mission and other prerequisites."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G57_final19",
+        "prompt": "Case B two-minute duration resolves what automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "None of the payload, ground, sightline or warning issues."
+          },
+          {
+            "id": "b",
+            "label": "Every fault."
+          },
+          {
+            "id": "c",
+            "label": "Every ground risk."
+          },
+          {
+            "id": "d",
+            "label": "Every permission condition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G57_final20",
+        "prompt": "What does passing provide?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A remote-pilot certificate."
+          },
+          {
+            "id": "b",
+            "label": "Bounded knowledge evidence separate from actual authority and practical skill."
+          },
+          {
+            "id": "c",
+            "label": "An issued waiver."
+          },
+          {
+            "id": "d",
+            "label": "Aircraft emergency proficiency."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G57_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G57_lesson1",
+          "questionIds": [
+            "G57_check1"
+          ]
+        },
+        {
+          "lessonId": "G57_lesson2",
+          "questionIds": [
+            "G57_check2"
+          ]
+        },
+        {
+          "lessonId": "G57_lesson3",
+          "questionIds": [
+            "G57_check3"
+          ]
+        },
+        {
+          "lessonId": "G57_lesson4",
+          "questionIds": [
+            "G57_check4"
+          ]
+        },
+        {
+          "lessonId": "G57_lesson5",
+          "questionIds": [
+            "G57_check5"
+          ]
+        },
+        {
+          "lessonId": "G57_lesson6",
+          "questionIds": [
+            "G57_check6"
+          ]
+        },
+        {
+          "lessonId": "G57_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G57_final",
+          "questionIds": [
+            "G57_final1",
+            "G57_final2",
+            "G57_final3",
+            "G57_final4",
+            "G57_final5",
+            "G57_final6",
+            "G57_final7",
+            "G57_final8",
+            "G57_final9",
+            "G57_final10",
+            "G57_final11",
+            "G57_final12",
+            "G57_final13",
+            "G57_final14",
+            "G57_final15",
+            "G57_final16",
+            "G57_final17",
+            "G57_final18",
+            "G57_final19",
+            "G57_final20"
+          ]
+        },
+        {
+          "lessonId": "G57_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G57_check1": "The actual objective and method define the flight task.",
+        "G57_check2": "Permission domains are distinct.",
+        "G57_check3": "Actual ground changes can invalidate mission assumptions.",
+        "G57_check4": "Identification is one compliance domain, not clearance for every mission.",
+        "G57_check5": "Power is not an effective crew link.",
+        "G57_check6": "All applicable prerequisites must be established.",
+        "G57_final1": "Preserve actual operating authority.",
+        "G57_final2": "Changes can affect permission, performance and ground interfaces.",
+        "G57_final3": "Application and approval are different states.",
+        "G57_final4": "Planning information is not automatically permission.",
+        "G57_final5": "Avoid blanket claims; actual FAA pathways have conditions.",
+        "G57_final6": "Personal qualification does not replace mission conditions.",
+        "G57_final7": "Current mission assessment is required.",
+        "G57_final8": "Observation duties must remain achievable.",
+        "G57_final9": "Evidence must match the actual aircraft.",
+        "G57_final10": "Mounting is not an operating basis.",
+        "G57_final11": "Practice must not create uncontrolled exposure.",
+        "G57_final12": "Specific location and change support the pilot decision.",
+        "G57_final13": "Customer objectives do not replace operating authority.",
+        "G57_final14": "Location changes can affect several prerequisites.",
+        "G57_final15": "Facts support qualified assessment.",
+        "G57_final16": "Deliverable success is not physical readiness.",
+        "G57_final17": "An honest hold is a valid competent decision.",
+        "G57_final18": "Approval has bounded scope.",
+        "G57_final19": "Duration cannot supply missing evidence.",
+        "G57_final20": "A learning record cannot issue permissions or prove unobserved skills."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

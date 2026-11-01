@@ -1,0 +1,901 @@
+{
+  "courseId": "G75",
+  "gapGroupId": "TG26",
+  "title": "Lifting geometry, conditional capacity and role planning",
+  "description": "Teach load-distribution concepts, conditional chart reading, complete load-path reasoning and machine/role boundaries.",
+  "purpose": "Teach load-distribution concepts, conditional chart reading, complete load-path reasoning and machine/role boundaries.",
+  "audience": [
+    "Lifting and mobile-equipment trainees in a theory module",
+    "Lift coordinators",
+    "Equipment service planners"
+  ],
+  "sources": [
+    {
+      "title": "OSHA construction crane qualification",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427"
+    },
+    {
+      "title": "OSHA crane operation/manufacturer procedures",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1417"
+    },
+    {
+      "title": "OSHA powered industrial trucks",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178"
+    }
+  ],
+  "practicalBoundary": "This course grants no operator, rigger, signal-person, inspector or lift-engineer qualification. It provides no actual rigging design, capacity rating, support calculation, clearance or operating maneuver.",
+  "vendorEvidenceRequired": [
+    "Actual machine/configuration/attachment and applicable framework",
+    "Verified actual load, contents, distribution and lifting-point basis",
+    "Applicable manufacturer capacity information and full load path",
+    "Named qualified operator/rigger/signal/planning roles",
+    "Actual support, route, exclusion and communication plan"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed machine/task-specific operation under the applicable qualified program",
+    "Separate rigging and signal practical skills where assigned",
+    "Qualified plan/inspection capability and actual workplace evaluation within role"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G75_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for lifting geometry, conditional capacity and role planning. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no operator, rigger, signal-person, inspector or lift-engineer qualification. It provides no actual rigging design, capacity rating, support calculation, clearance or operating maneuver.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G75_lesson1",
+        "title": "1. Identify machine, configuration and actual lifting role",
+        "body": "Lifting and mobile-equipment work contains different roles: machine operator, rigger, signal person, lift planner, equipment inspector and technical engineer. A person qualified for one is not automatically qualified for the others. Equipment rental without an operator does not supply operating capability. A forklift qualification does not qualify grader operation, and a crane operator credential does not make its holder the engineer for every complex lift.\n\nStart with the actual machine and task. Record model/identifier, intended movement, attachment/configuration, load or material, site conditions and assigned roles. A service description such as material handling is too broad to choose training. The applicable framework also differs by equipment and sector. OSHA's construction crane provisions and powered-industrial-truck requirements are separate examples; the latter does not cover every earth-moving or highway vehicle.\n\nConfiguration is part of identity. The same base machine can have different capacities or operating conditions with different attachments, support arrangements or configurations. A generic brochure's maximum capacity is not the capacity for every position and task. The actual manufacturer information and qualified plan establish the relevant conditions. This course teaches how to recognize that dependency, not how to set up or operate the machine.\n\nBuild a paper role matrix. For each action, identify who supplies load information, who confirms machine/configuration suitability, who handles rigging, who communicates signals and who authorizes the work arrangement. Mark unresolved responsibilities rather than assigning them to whoever is nearest. One person may hold multiple roles only when competence and authorization for each are established.\n\nPaper exercise: a rental order supplies a crane and a driver, while the job requires rigging and blind-area signaling. The order does not yet establish those additional duties. Request named role coverage and evidence. The correct result is a bounded allocation of work, not a blanket assumption that the equipment supplier has supplied every lift-related service.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G75_lesson2",
+        "title": "2. Understand center of gravity and load information",
+        "body": "A load's center of gravity is the point through which its weight can be represented for balance reasoning. It is not necessarily at the geometric center. An assembly with a heavy motor at one end can look symmetrical while having unequal weight distribution. If lifting support is not arranged consistently with the actual load properties, the load may rotate or redistribute forces. The qualified lift method must address those properties.\n\nMass information needs a basis. A drawing, manufacturer record or competent determination may provide it, but the source must match the actual configuration and contents. An empty-equipment mass does not automatically include retained material, attachments or packaging. A shipping estimate may serve a different purpose from lift planning. Mark uncertain contents and configuration explicitly; do not add a universal safety percentage from this course.\n\nUse a safe paper balance illustration. Draw a beam with two marked items of equal mass at equal distances on either side of a center point. Their opposing turning effects balance in that idealized diagram. Move one item farther away while keeping its mass unchanged; the balance changes. This teaches why distance and distribution matter. It does not approve real lifting points or calculate forces for equipment selection.\n\nLifting points also need their actual design and condition basis. A convenient hole, handle or transport feature is not automatically a rated lifting point. The machine's capacity does not establish the load's structural integrity or lifting-point suitability. The qualified owner must identify the intended points, restrictions and evidence. A rigger should not infer a new point from visual convenience or a previous unrelated lift.\n\nPaper exercise: a skid record gives empty mass, while a work note says a vessel remains partly filled. The learner records that the actual load and distribution are not established. The technical owner must resolve contents and load properties before the plan can claim suitability. The exercise requires no trial lift or physical balance test.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G75_lesson3",
+        "title": "3. Read capacity information as a conditional statement",
+        "body": "Rated capacity information describes defined conditions. A crane chart can depend on configuration, position and other manufacturer-specified factors. A powered truck's capacity plate may depend on attachment and load-center conditions. The important skill is to read the headings, notes and configuration together rather than select the largest number on the page. A number without its conditions is not a usable capacity claim.\n\nThis course uses a fictional chart solely to teach interpretation. Suppose a paper table has two columns labelled configuration A and configuration B, and separate rows for condition X and condition Y. If the task states configuration B and condition Y, only that matching entry is relevant to the exercise. A higher entry from A/X cannot be borrowed because it is convenient. If B/Y is blank, capacity is not established by the table; the learner must not interpolate or invent an entry unless the actual approved instructions explicitly provide a method.\n\nReal charts can also define what is included in a capacity figure and what must be accounted for separately. Read the actual manufacturer's notes and the qualified plan. Rigging, attachments or other components may affect the relevant calculation, but the treatment is equipment specific. This content does not provide a universal deduction formula or a lift-sizing recipe.\n\nFor mobile equipment, capacity and stability are linked to actual conditions and use. A changed attachment, uneven support, travel condition or load distribution can invalidate assumptions. The fact that an item was lifted successfully once is not proof of rated suitability. Trial-and-error operation is not an acceptable substitute for the required manufacturer information and competent planning.\n\nPaper exercise: a work pack quotes brochure maximum capacity but supplies no chart for the identified configuration. Write that the relevant capacity basis is missing, even if the quoted maximum exceeds the stated load. The correct next step is an applicable documented determination by the qualified responsible roles, not a guessed reduction factor.\n\nWorked table-reading exercise: a fictional training sheet lists configuration A with condition X as 80 tokens, A with Y as 60 tokens, B with X as 50 tokens and B with Y as 30 tokens. The exercise task explicitly states B and Y and a load of 35 tokens. The matching entry is 30 tokens, so the proposed 35 token comparison does not satisfy this supplied exercise criterion. Choosing 80 because it is the largest entry would answer a different question. These tokens have no physical units and the table represents no real machine. Its only purpose is to test whether the learner preserves conditional labels. If the task condition changes to B and Z, the table supplies no matching entry at all. State that missing basis rather than extending a line or averaging neighboring cells. The actual manufacturer and qualified plan determine how real charts may be used.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G75_lesson4",
+        "title": "4. Recognize rigging geometry and system weakest-link reasoning",
+        "body": "Rigging is a system of components interacting with the load and lifting equipment. A component rating cannot be considered in isolation from its actual use, connection, geometry and condition. The complete arrangement must be suitable under the approved method. The capacity of one large component does not compensate automatically for another unsuitable component or an unverified lifting point.\n\nGeometry changes forces. In an idealized symmetric two-leg illustration, each leg contributes a vertical component supporting the load and a horizontal component related to its angle. As legs become more horizontal, a larger leg force is needed to provide the same vertical support. This conceptual relationship explains why sling angle matters. The lesson deliberately provides no operating angle, component selection formula or rigging design instruction; actual equipment ratings and qualified planning govern.\n\nDraw the concept on paper using arrows. Compare a near-vertical pair with a flatter pair supporting the same drawn load. Mark vertical support and inward components. Describe the difference verbally. Do not use the diagram to select a real sling or attachment. Unequal load distribution, geometry, friction and actual connections can make real systems more complex than a simple symmetric sketch.\n\nIdentification and condition matter as well as rating. A component with illegible identity or unknown history may not have an established suitability basis. Damage significance must be assessed under the actual inspection criteria by the competent role. This course does not prescribe discard thresholds or repairs. A worker should report specific observations and preserve the equipment's status under the employer's process rather than making an improvised repair.\n\nPaper exercise: a plan identifies two slings but no connection hardware or lifting-point evidence. The learner marks the incomplete system, not merely the listed sling capacities. Ask the qualified planner/rigger to provide the full arrangement and applicable evidence. A single strong item cannot establish the whole load path.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G75_lesson5",
+        "title": "5. Plan communication, support and movement interfaces",
+        "body": "A movement plan should consider where the machine and load will be throughout the task, not only at the start. Access routes, support conditions, overhead/underground interfaces, nearby activity and occupied areas can change the risk. The actual qualified roles determine controls and exclusion arrangements. This course supplies no universal clearance distance, ground-bearing calculation or operating maneuver.\n\nSupport is a technical issue. Ground that looks level may conceal voids, buried structures, recent fill or other conditions relevant to the machine. A pavement's appearance does not establish its capacity for the proposed support arrangement. The planner must identify the actual support-information basis and responsible assessment. Do not infer adequacy from the machine having stood there before.\n\nCommunication roles must be clear. The operator needs the approved signaling/communication arrangement for the actual task, including blind areas and loss of communication. A general worker should not improvise a private signal because it seems intuitive. This course teaches closed-loop understanding of assigned roles and uncertainty, not crane hand signals or radio operating instructions. Actual signal competence and site coordination require their own training and assessment.\n\nMovement interfaces can affect others: pedestrians, vehicles, simultaneous work and receiving crews. The plan should identify who controls access, who communicates changes and who receives the load or machine at the destination. A barricade drawn on an old sketch does not establish current field control. Changes in route, load, configuration or conditions need the responsible review before the existing plan is reused.\n\nPaper exercise: a delivery plan ends at lift-off, while the destination lies beyond the operator's direct view and a vehicle route crosses the proposed path. Identify the missing travel/destination and signaling arrangements. The learner should not volunteer to stand wherever visible or tell a driver to improvise. The actual competent team must plan and authorize the complete movement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G75_lesson6",
+        "title": "6. Distinguish certification, evaluation and job authorization",
+        "body": "The evidence needed for a lifting role depends on the actual equipment, duty and applicable regime. A credential can be required for a covered task, while employer evaluation and practical competence remain separate. OSHA's construction crane rule explicitly addresses training, certification/licensing and evaluation in its scope. Powered-industrial-truck instruction has its own equipment/workplace context. Neither source grants a universal mobile-equipment badge.\n\nAsk what the person has actually demonstrated. Relevant evidence should identify the machine/type, configuration or tasks, assessor scope, conditions, criteria, outcome and limitations. An operator skilled on one machine may need additional instruction or assessment for another. A signal person or rigger has different performance criteria from an operator or lift engineer. Do not close a missing role because another team member has an impressive but unrelated credential.\n\nA safe desk assessment tests interpretation. Supply fictional load records, a conditional capacity table, an incomplete rigging sketch and a role matrix. Ask the learner to identify unsupported claims and route each to the appropriate qualified owner. The exercise can demonstrate understanding of geometry and scope without suspending a load or operating equipment.\n\nActual practical assessment must be arranged by qualified people under a safe approved program. It should observe assigned machine/rigging/signal skills with the actual applicable procedures and workplace conditions. This content does not authorize an unsupervised trial lift or hazardous demonstration. A learner's confidence is not evidence that the assessment arrangement is safe.\n\nThe final handoff should identify the actual machine/configuration, load basis, complete load path, support/route arrangements, role coverage, applicable capacity evidence and unresolved conditions. Preserve practical limitations and work authorization separately from the course score. Knowledge completion closes this bounded theory component only. Actual role-specific qualification, observed performance, equipment suitability and lift/site approval remain residuals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G75_case1",
+        "title": "Worked fictional case 1: the brochure maximum and the loaded skid",
+        "body": "Fictional facts: Cedar Lift receives a skid move. A drawing gives empty mass, but the site note says one vessel retains material. The rental proposal quotes the machine's brochure maximum and names a driver. No configuration chart, lifting-point basis or rigger/signal role is supplied. The customer wants to proceed because the quoted maximum looks much larger than the empty mass.\n\nThe planner first identifies the load-information gap. Empty mass does not establish actual load with retained contents, and the distribution may also differ. The responsible owner must resolve the contents and relevant load properties. The planner does not add a guessed percentage or propose a trial lift to find out.\n\nSecond, the capacity claim is read conditionally. A brochure maximum does not establish capacity for the actual configuration and position. The planner requests applicable manufacturer information and the qualified determination for the proposed task. A higher unrelated chart entry is not a substitute.\n\nThird, the load path is reviewed. Lifting points, rigging components and connections need a complete suitability basis. The machine's maximum does not establish the skid's structural capacity. Missing rigging/signal roles are recorded separately from the driver's supplied role. Rental wording does not automatically cover every activity.\n\nIn the fictional resolution, the actual load is established, the machine/configuration evidence is provided and competent personnel approve the complete arrangement. Named role coverage and practical qualifications are verified through the applicable program. Support and route conditions are reviewed for the actual location. No movement has occurred merely because these documents exist.\n\nFinal decision: the initial proposal cannot support a ready-to-lift claim. Exact residuals are actual equipment/role practical capability, applicable technical plan, current field conditions and site authorization. The learner demonstrates load/capacity/role reasoning only, not a rigging design or operating qualification.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G75_case2",
+        "title": "Worked fictional case 2: a changed attachment and an incomplete route",
+        "body": "Fictional facts: West Stores assigns a powered truck to move an unusual load using a changed attachment. The available capacity plate describes the previous arrangement. A route sketch ends at the warehouse door, while the receiving location is behind a blind corner. The operator has evidence for earlier work on the base truck. A supervisor asks the coordinator to accept it as the same job.\n\nThe coordinator identifies the configuration change. Base-truck familiarity does not establish capacity or safe-operation evidence for a different attachment. Applicable manufacturer approval/information and capacity identification must be resolved under the actual requirements. The coordinator does not create a derated plate or use the previous rating with an invented reduction.\n\nNext, the coordinator maps the whole movement. The door is not the destination. The blind corner and receiving arrangement introduce communication and pedestrian/vehicle interfaces not addressed in the sketch. The actual competent team must establish the approved route and controls. A volunteer waving informally around the corner is not a planned signaling arrangement.\n\nPersonnel evidence is then bounded. Earlier base-truck performance is relevant background but does not prove the new attachment/task skills. The applicable employer program determines additional instruction and evaluation. A general crane or forklift theory badge cannot supply observed performance on the changed arrangement.\n\nIn the fictional resolution, the equipment owner provides the required attachment/capacity evidence and the employer arranges appropriate task-specific instruction/evaluation. The route plan is completed through the receiving position with assigned communication and access roles. The coordinator records the remaining actual-job conditions before authorization.\n\nFinal decision: the changed configuration and incomplete route are distinct unresolved items. Exact residuals are equipment suitability/marking, actual practical capability, complete movement controls and employer/site release. The paper learner's successful reasoning does not authorize the truck's operation or create a new capacity rating.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G75_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G75_check1",
+        "prompt": "Does equipment rental automatically supply every lifting role?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual operator, rigging, signaling and planning duties must be allocated."
+          },
+          {
+            "id": "b",
+            "label": "Yes, all roles are included."
+          },
+          {
+            "id": "c",
+            "label": "Yes, the driver does everything."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G75_check2",
+        "prompt": "Does an empty mass establish a partly filled skids load?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual contents and configuration need resolution."
+          },
+          {
+            "id": "c",
+            "label": "Yes, use it unchanged."
+          },
+          {
+            "id": "d",
+            "label": "Yes, add a guessed percentage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G75_check3",
+        "prompt": "Which capacity entry applies in the fictional table?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any convenient row."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "The entry matching the stated configuration and condition."
+          },
+          {
+            "id": "d",
+            "label": "The largest number anywhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G75_check4",
+        "prompt": "What happens conceptually as two symmetric sling legs become flatter?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leg force automatically disappears."
+          },
+          {
+            "id": "b",
+            "label": "Geometry cannot matter."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Greater leg force is needed for the same vertical support."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G75_check5",
+        "prompt": "Does level-looking ground establish machine support suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual support evidence and competent assessment matter."
+          },
+          {
+            "id": "b",
+            "label": "Yes, appearance is enough."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if used once."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G75_check6",
+        "prompt": "Does a credential alone replace employer practical evaluation where required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; applicable qualification elements remain distinct."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every badge covers all machines."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after payment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G75_final1",
+        "prompt": "Does forklift evidence qualify grader operation automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if outdoors."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual equipment/task competence is needed."
+          },
+          {
+            "id": "d",
+            "label": "Yes, all wheels are alike."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G75_final2",
+        "prompt": "What belongs in the machine description?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only company name."
+          },
+          {
+            "id": "b",
+            "label": "Only maximum brochure capacity."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Model/identity, configuration, attachment and actual task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G75_final3",
+        "prompt": "Where is center of gravity necessarily located?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Not necessarily at the geometric center."
+          },
+          {
+            "id": "b",
+            "label": "Always at the visible center."
+          },
+          {
+            "id": "c",
+            "label": "Always under the label."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G75_final4",
+        "prompt": "What does moving equal mass farther from a reference point change?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Its turning effect in the idealized paper model."
+          },
+          {
+            "id": "c",
+            "label": "Its mass automatically."
+          },
+          {
+            "id": "d",
+            "label": "Nothing relevant."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G75_final5",
+        "prompt": "Is a convenient handle automatically a lifting point?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if metal."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; intended design and condition evidence are needed."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if reachable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G75_final6",
+        "prompt": "A matching capacity-table cell is blank. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use a neighboring higher value."
+          },
+          {
+            "id": "b",
+            "label": "Invent interpolation."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No capacity from that table for the stated exercise condition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G75_final7",
+        "prompt": "Does one successful previous lift prove rated suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual conditions and applicable information govern."
+          },
+          {
+            "id": "b",
+            "label": "Yes, success is certification."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if recent."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G75_final8",
+        "prompt": "Can this course supply a universal rigging deduction formula?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual equipment notes and qualified plan govern."
+          },
+          {
+            "id": "c",
+            "label": "Yes, one formula fits all."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after a sketch."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G75_final9",
+        "prompt": "Does one strong component validate the whole rigging system?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if new."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; the complete load path and every relevant component matter."
+          },
+          {
+            "id": "d",
+            "label": "Yes, strongest item controls everything."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G75_final10",
+        "prompt": "What should be done with illegible rigging identity?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Guess the rating."
+          },
+          {
+            "id": "b",
+            "label": "Make a new label from memory."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Preserve status and obtain competent disposition under the actual criteria."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G75_final11",
+        "prompt": "Does this course teach actual crane hand signals?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual role instruction and practical assessment are separate."
+          },
+          {
+            "id": "b",
+            "label": "Yes, improvise any gesture."
+          },
+          {
+            "id": "c",
+            "label": "Yes, all waving is equivalent."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G75_final12",
+        "prompt": "What must a movement plan cover?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "The entire movement and destination with affected interfaces."
+          },
+          {
+            "id": "c",
+            "label": "Only lift-off."
+          },
+          {
+            "id": "d",
+            "label": "Only the invoice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G75_final13",
+        "prompt": "What does a changed attachment potentially affect?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing if it fits."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Capacity and safe-operation conditions."
+          },
+          {
+            "id": "d",
+            "label": "Only paint color."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G75_final14",
+        "prompt": "Should an online learner perform an unsupervised trial lift?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, for confidence."
+          },
+          {
+            "id": "b",
+            "label": "Yes, with an empty checklist."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; practical assessment needs a qualified safe arrangement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G75_final15",
+        "prompt": "What should role evidence identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual task/machine, assessor scope, conditions, criteria and limitations."
+          },
+          {
+            "id": "b",
+            "label": "Only a badge title."
+          },
+          {
+            "id": "c",
+            "label": "Only company reputation."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G75_final16",
+        "prompt": "In Cedar Lift, what is wrong with brochure maximum versus empty mass?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Neither necessarily matches actual load and machine conditions."
+          },
+          {
+            "id": "c",
+            "label": "Both prove readiness."
+          },
+          {
+            "id": "d",
+            "label": "Only the font is wrong."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G75_final17",
+        "prompt": "In Cedar Lift, does a driver prove rigger/signal coverage?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if familiar."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; those duties and skills need explicit allocation."
+          },
+          {
+            "id": "d",
+            "label": "Yes, automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G75_final18",
+        "prompt": "In West Stores, can the coordinator create a derated plate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, choose a safe-looking number."
+          },
+          {
+            "id": "b",
+            "label": "Yes, use half the old rating."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual approved manufacturer/technical requirements govern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G75_final19",
+        "prompt": "Does prior base-truck performance establish every new attachment skill?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; task-specific instruction/evaluation may be needed."
+          },
+          {
+            "id": "b",
+            "label": "Yes, automatically."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after a theory score."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G75_final20",
+        "prompt": "What remains after this module?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Actual role performance, equipment suitability and job/site authorization."
+          },
+          {
+            "id": "c",
+            "label": "No lifting residuals."
+          },
+          {
+            "id": "d",
+            "label": "Only a new badge."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G75_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G75_lesson1",
+          "questionIds": [
+            "G75_check1"
+          ]
+        },
+        {
+          "lessonId": "G75_lesson2",
+          "questionIds": [
+            "G75_check2"
+          ]
+        },
+        {
+          "lessonId": "G75_lesson3",
+          "questionIds": [
+            "G75_check3"
+          ]
+        },
+        {
+          "lessonId": "G75_lesson4",
+          "questionIds": [
+            "G75_check4"
+          ]
+        },
+        {
+          "lessonId": "G75_lesson5",
+          "questionIds": [
+            "G75_check5"
+          ]
+        },
+        {
+          "lessonId": "G75_lesson6",
+          "questionIds": [
+            "G75_check6"
+          ]
+        },
+        {
+          "lessonId": "G75_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G75_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G75_final",
+          "questionIds": [
+            "G75_final1",
+            "G75_final2",
+            "G75_final3",
+            "G75_final4",
+            "G75_final5",
+            "G75_final6",
+            "G75_final7",
+            "G75_final8",
+            "G75_final9",
+            "G75_final10",
+            "G75_final11",
+            "G75_final12",
+            "G75_final13",
+            "G75_final14",
+            "G75_final15",
+            "G75_final16",
+            "G75_final17",
+            "G75_final18",
+            "G75_final19",
+            "G75_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G75_check1": "Role scope follows the actual agreement and competence evidence.",
+        "G75_check2": "The load-information basis must match the actual item.",
+        "G75_check3": "Capacity information is conditional.",
+        "G75_check4": "Vertical support is a component of the leg force; this is theory, not selection instruction.",
+        "G75_check5": "Hidden conditions can affect support.",
+        "G75_check6": "Credential, demonstrated performance and authorization differ.",
+        "G75_final1": "Different equipment retains its own methods and skills.",
+        "G75_final2": "Configuration and duty determine relevant evidence.",
+        "G75_final3": "Weight distribution can be asymmetric.",
+        "G75_final4": "Distance matters to balance reasoning.",
+        "G75_final5": "Convenience cannot establish rated suitability.",
+        "G75_final6": "Missing data cannot be supplied by unsupported assumptions.",
+        "G75_final7": "Trial success is not a capacity basis.",
+        "G75_final8": "Manufacturer definitions and system details differ.",
+        "G75_final9": "Unsuitable connections or points cannot be compensated by one rating.",
+        "G75_final10": "Suitability requires appropriate identity and condition evidence.",
+        "G75_final11": "Communication concepts do not replace signal competence.",
+        "G75_final12": "Risk and communication change along the path.",
+        "G75_final13": "Configuration changes can alter the relevant machine basis.",
+        "G75_final14": "Theory completion cannot authorize hazardous demonstration.",
+        "G75_final15": "Specific evidence supports a bounded competence conclusion.",
+        "G75_final16": "The case contains separate load and capacity-scope gaps.",
+        "G75_final17": "One supplied role does not establish all roles.",
+        "G75_final18": "This course cannot create a new equipment capacity basis.",
+        "G75_final19": "Related experience is background, not proof of changed-task capability.",
+        "G75_final20": "Knowledge completion is not operational qualification or lift approval."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

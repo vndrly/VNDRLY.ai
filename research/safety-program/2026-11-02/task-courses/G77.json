@@ -1,0 +1,901 @@
+{
+  "courseId": "G77",
+  "gapGroupId": "TG28",
+  "title": "Pressure-test evidence, stored-energy concepts and live-intervention boundaries",
+  "description": "Teach pressure-work distinctions, complete system-boundary reasoning, result interpretation and specialist live-leak assurance.",
+  "purpose": "Teach pressure-work distinctions, complete system-boundary reasoning, result interpretation and specialist live-leak assurance.",
+  "audience": [
+    "Pressure-work trainees in a theory module",
+    "Test planners",
+    "Process/technical acceptance coordinators"
+  ],
+  "sources": [
+    {
+      "title": "HSE GS4 pressure-testing guidance",
+      "url": "https://www.hse.gov.uk/pubns/gs4.pdf"
+    },
+    {
+      "title": "OSHA process safety management and applicability",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119"
+    },
+    {
+      "title": "OSHA hazardous-energy control and scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147"
+    }
+  ],
+  "practicalBoundary": "This course grants no pressure-test engineering/execution, live-leak sealing or technical release authority. It gives no test pressure, hold time, temperature limit, exclusion radius, pressurization sequence or intervention recipe.",
+  "vendorEvidenceRequired": [
+    "Actual system/design envelope, medium and test purpose",
+    "Approved boundary and complete temporary/permanent component basis",
+    "Qualified engineered method and acceptance source",
+    "Actual personnel test/live-intervention scope and practical evidence",
+    "Safeguards, observation, abnormal response, restoration and operating release roles"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual pressure-test role skills through a qualified safe program",
+    "Qualified technical result evaluation within actual duty",
+    "Separate specialist live-intervention capability where supplied; no uncontrolled live-leak exercise"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G77_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for pressure-test evidence, stored-energy concepts and live-intervention boundaries. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no pressure-test engineering/execution, live-leak sealing or technical release authority. It gives no test pressure, hold time, temperature limit, exclusion radius, pressurization sequence or intervention recipe.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G77_lesson1",
+        "title": "1. Distinguish test purpose, operating service and live intervention",
+        "body": "Pressure work is not one activity. A strength test, leak test, functional test, routine depressurized repair and specialist live-leak intervention answer different questions and need different methods. Begin with the actual system, condition, medium, purpose and proposed conclusion. A work order saying test line cannot establish the technical basis for pressure, temperature, duration or acceptance. Those must come from the actual governing design/code and qualified procedure.\n\nSeparate design information, operating conditions and test requirements. A normal operating pressure is not automatically a test pressure. A component's marked rating under stated conditions is not permission to expose the entire assembly to that number. An old test result is historical evidence, not an unlimited guarantee of current integrity after service or modification. The qualified owner must establish the actual applicable envelope and test basis.\n\nLive-process leak sealing is a specialist variant. The system remains subject to actual process energy, fluid, temperature and condition while an intervention is proposed. A method for depressurized line opening or ordinary gasket replacement does not authorize it. This course teaches recognition of the distinct engineering question and evidence requirements, never a sealing, drilling, clamping or injection recipe.\n\nPaper exercise: a vendor submits a successful workshop test report for a removed component as evidence for a proposed live steam intervention on an installed system. Identify the differences in task, process state, system boundary and failure consequences. Preserve the report as bounded workshop evidence while requesting the actual specialist engineered method and personnel capability for the live task.\n\nHSE GS4 provides pressure-test safety guidance, while OSHA process-safety requirements have defined coverage and exclusions. Neither source makes this course a pressure-test qualification or universally applicable legal determination. A learner must retain actual equipment, jurisdiction and role scope before selecting practical assessment.\n\nUse precise status language in a paper register: planned means a method is proposed; approved means its defined authority has accepted it; performed means actual execution evidence exists; evaluated means the results have received the required technical review. Restored and released require their own evidence. A dispatcher can schedule an approved test without marking it performed. This simple state model prevents a prepared work pack from being mistaken for a successful pressure event.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G77_lesson2",
+        "title": "2. Understand stored energy and medium-related differences",
+        "body": "Pressure represents a condition capable of producing force and releasing energy. The consequences depend on the assembly, medium, volume, temperature, geometry and failure mechanism. A small fitting can become a projected component; a failed flexible connection can move; escaping fluid can injure. The absence of a dramatic vessel rupture does not mean a failure is harmless. This conceptual understanding explains why the whole test assembly matters.\n\nCompressible gas and liquid do not behave identically. A compressed gas can expand substantially when released, while a liquid system can still contain hazardous energy and create dangerous jets or component movement. Entrained gas, flexible parts and other features can affect an actual arrangement. Do not convert this distinction into a claim that every liquid test is safe or that this course provides a stored-energy calculation. The qualified test design must assess the real system.\n\nTemperature and fluid properties add separate consequences. A medium may be hot, cold, chemically hazardous or incompatible with equipment/materials. A test-medium choice can affect product cleanliness, corrosion, disposal or future service. The learner should identify these questions and source the actual technical basis rather than selecting a substitute because it is readily available.\n\nUse a paper energy-path sketch. Mark the test object, connectors, temporary lines, instruments and possible paths from an unintended release to people. The drawing is not a blast-radius calculation or safeguard design. Its purpose is to recognize that the test object and temporary equipment form one system and that people can be affected beyond a visible leak point.\n\nPaper exercise: the plan describes the vessel's rating but provides no temporary-connector identity or medium compatibility evidence. Record the incomplete assembly basis. A high vessel rating cannot establish the suitability of every connected item. The responsible qualified team must provide the full technical arrangement and protective method before execution can be considered.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G77_lesson3",
+        "title": "3. Define the test boundary and complete component chain",
+        "body": "A test boundary identifies exactly what is under test and what is excluded. Use an approved schematic or drawing to trace the intended assembly, branches, interfaces and temporary equipment. Mark this as a review copy; it does not authorize isolation or valve manipulation. Similar line names can represent different circuits, and a valve symbol does not by itself establish the actual isolation method or current state.\n\nFor each included component, identify the applicable suitability basis for the actual test conditions. This can involve material, pressure/temperature conditions, connection compatibility and intended function under the qualified method. Do not assume the lowest-looking number alone is a complete engineering determination. Different ratings may have different bases or conditions. The technical authority establishes the system limit and procedure.\n\nTemporary components require the same disciplined identity as permanent equipment. An unmarked adapter, reused closure or hose assembly with uncertain history cannot be justified because it fits. Condition and repeated use may matter. Actual inspection criteria and maintenance controls belong to the competent program; the learner reports the specific evidence gap without inventing discard thresholds or repair methods.\n\nBoundary changes can alter the test. Removing an instrument, adding a branch or substituting a closure changes what is examined and possibly how energy is contained. The actual plan must determine whether the change requires revised engineering review, instructions, safeguards or acceptance. A previous test on the unmodified assembly does not automatically cover the new configuration.\n\nPaper exercise: an approved drawing excludes a sensor branch, but the proposed test sketch includes it and provides no branch-component basis. The learner identifies the scope difference and asks the technical owner to reconcile it. The correct result is not to cross out the branch or infer that it can withstand the same conditions as the main pipe. The qualified method must establish the actual boundary.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G77_lesson4",
+        "title": "4. Interpret instruments, trends and acceptance evidence",
+        "body": "Pressure readings need identity, units, reference basis, location, instrument scope and conditions. Gauge pressure and absolute pressure are different definitions; a number without its basis can be ambiguous. The indicated value is not automatically the pressure at every point in a complex system under every condition. The actual method determines relevant measurement locations and how results support the intended conclusion.\n\nInstrument calibration evidence is necessary only to the extent required by the actual method, but a sticker alone does not validate the complete test. Review the identified function/range, relevant calibration record, condition and method use. A suitable gauge used at an unintended location or in an unsupported configuration can still yield an inadequate test record. This course does not teach connecting gauges or selecting operating ranges.\n\nA pressure change is an observation, not automatically a leak diagnosis. Temperature changes, system behavior, measurement effects and other factors may be relevant to qualified interpretation. Likewise, a stable indication does not establish every possible integrity or functional claim. The approved acceptance criteria define what evidence is required for the stated purpose. A learner should not invent a leak rate, allowable drop or hold duration.\n\nPaper trend exercise: the fictional record contains time, pressure indication and temperature columns. Pressure changes while temperature also changes, and the report labels the assembly leaking without an identified evaluation basis. State the observed changes separately from the unconfirmed interpretation. Ask the competent test authority to apply the approved method. Do not calculate a correction from a simplified gas equation and declare the actual system accepted.\n\nThe original test data, configuration, conditions, procedure revision and deviations should remain traceable. A pass summary without these links may not support the intended technical decision. If a result is repeated, retain both events and their context. A later favorable reading cannot silently erase an earlier abnormal observation.\n\nA useful report-reading exercise creates three separate statements from one chart. Statement one: the indicated pressure changed during the recorded period. Statement two: the temperature column also changed. Statement three: the available record does not identify the approved evaluation linking those observations to leak acceptance. The first two are observations; the third describes an evidence limitation. None asserts a certain leak or a certain absence of leakage. This disciplined wording lets the technical evaluator use the original data without first undoing an exaggerated summary. If the method later supplies a supported interpretation, record that evaluation as a linked decision rather than rewriting the observations. The exercise is deliberately qualitative: no fictional chart in this course defines a real allowable pressure drop or a correction method.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G77_lesson5",
+        "title": "5. Review safeguards, abnormal conditions and restoration as separate outcomes",
+        "body": "A test plan must establish a safe arrangement for people during energization, observation and return to a safe state. The qualified method determines appropriate segregation, protection, control locations, supervision and emergency interfaces. This course does not provide an exclusion distance, enclosure design, pressure sequence or depressurization instruction. The learner's role is to recognize whether the actual plan supplies these arrangements and accountable people.\n\nLeak identification is itself a task with exposure consequences. A request to approach an energized assembly for a closer look is not automatically covered by a general test permit. The approved method must address observation and any necessary intervention. This course never authorizes touching a suspected leak, tightening a pressurized connection or searching with a hand. A field worker follows the actual safe response and competent direction rather than improvising a diagnostic action.\n\nUnexpected conditions need a planned disposition route. The procedure should identify how responsible personnel manage instrument failure, changed configuration, abnormal response or inability to follow the method. A sentence saying continue carefully does not establish a technical basis. The actual qualified team decides safe action and whether evidence remains valid; the course does not teach a universal emergency manipulation sequence.\n\nRestoration is distinct from test acceptance. After the approved work, the system may need its normal configuration, protective devices, instruments or temporary equipment disposition verified. A passed test does not prove that every temporary arrangement has been removed or that operating release conditions are satisfied. The operating owner retains the actual release decision.\n\nPaper exercise: a report shows test acceptance but a temporary-configuration log remains open. State both facts. Ask the responsible owner for the approved final configuration and verification evidence. Do not infer readiness from a signature or tell a learner to reconnect equipment. The final record should distinguish test completed, technically accepted, restored and authorized for service.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G77_lesson6",
+        "title": "6. Assess pressure-test and live-intervention capability separately",
+        "body": "Actual capability must match the supplied service. Pressure-test planning, test execution, technical evaluation and specialist live-leak intervention are different duties. Identify which the vendor and named people will perform. A person experienced in workshop testing may need different instruction and assessment for installed process systems. A generic energy-awareness course cannot demonstrate any of those practical skills.\n\nRequest the actual engineered/procedure basis, equipment scope, personnel training and observed performance evidence. Where a credential is applicable, verify the exact legal or contractual basis rather than inventing a universal pressure-tester license. The assessor must have relevant technical and assessment competence for the duty. Company marketing and unrelated certificates cannot replace that evidence.\n\nA safe desk assessment uses fictional schematics, component records and trends. Ask the learner to identify an omitted branch, distinguish normal operating information from test requirements, preserve a temperature-related interpretation question and separate workshop evidence from live intervention. Require a bounded conclusion with source references and named decision owners. This assesses technical reasoning without pressurizing anything.\n\nPractical assessment must use a qualified safe arrangement under the actual program. It should observe the assigned method skills, equipment identity, approved procedure use, faithful records, abnormal-condition recognition and restoration/handover. This course supplies no hazardous test or live-leak assessment recipe. A real operating leak must not become an improvised training scenario.\n\nThe final handoff should state the system boundary, medium and conditions, approved technical basis, actual configuration, personnel scope, original results, acceptance source, deviations, restoration and operating release status. Preserve unsupported limits and unresolved questions explicitly. Knowledge completion records the bounded theory after correct answers or acknowledged remediation while retaining original scores. It cannot establish pressure/temperature limits, approve an engineered intervention or authorize work on a live process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G77_case1",
+        "title": "Worked fictional case 1: the unreviewed branch and a stable reading",
+        "body": "Fictional facts: West Test proposes a pressure test on assembly A-3. The approved boundary drawing excludes a sensor branch, but the test sketch includes it. The vessel rating is supplied, while temporary-connector identity is absent. A report from an earlier configuration shows stable pressure and is offered as proof that the current arrangement is ready.\n\nThe reviewer first records the boundary mismatch. The branch is included in one source and excluded in another. The competent technical owner must reconcile the intended test object and suitability basis. The reviewer does not remove the branch from the sketch or decide it can withstand the same conditions as the main assembly.\n\nNext, the complete component chain is examined. Vessel information does not establish temporary-connector suitability. The missing identity and actual duty evidence are recorded separately. A connector's physical fit is not an approved pressure/temperature/material basis. The actual program must provide qualified selection and condition evidence.\n\nThe earlier stable reading is bounded historical evidence. It concerns a different configuration and cannot validate the changed assembly automatically. Even within its original scope, a stable pressure indication supports only the conclusion defined by its method and conditions. It is not a universal asset-integrity guarantee.\n\nIn the fictional resolution, the qualified owner issues a reconciled boundary and supported test arrangement. Relevant personnel and safeguards are established through the actual program. The next test will require original data, qualified evaluation and restoration evidence. None is supplied merely by approving the revised pack.\n\nFinal decision: initial readiness is unsupported by distinct boundary, component and evidence-scope gaps. Exact residuals are approved method, actual practical execution capability, current test data, technical acceptance, restoration and site release. The learner demonstrates pressure-work reasoning only, not test-operation qualification.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G77_case2",
+        "title": "Worked fictional case 2: workshop repair evidence offered for a live steam leak",
+        "body": "Fictional facts: a vendor proposes intervention on an installed steam system while it remains live. It supplies a workshop component leak-test report, a general line-opening course and a statement that the method is routine. The site has no identified engineered live-intervention method or named specialist practical assessor. Production wants the leak addressed without delay.\n\nThe planner first identifies the actual task variant. A live-process intervention is not routine depressurized line opening. Process energy, temperature, fluid, installed condition and failure consequences are part of the technical question. The workshop report may be valid for its component and conditions, but cannot prove suitability for this different installed intervention.\n\nThe planner requests the actual specialist engineered method and design/condition basis from the responsible technical owners. The course learner does not select a clamp, drill a fitting, inject material or choose pressure/temperature limits. Calling a method routine cannot supply missing engineering or practical capability.\n\nPersonnel evidence is then separated. General line-opening knowledge supports only its taught scope. The vendor must identify actual specialist instruction, supervised experience and relevant observed practical capability under the applicable program. Any credential requirement needs its actual basis. Production urgency does not turn unrelated experience into demonstrated live-intervention skill.\n\nThe handover states the live condition and unresolved engineering, personnel and authorization elements. The operating/site owners determine the actual safe response through their established process. No live leak is used as a training demonstration, and no action is prescribed by this paper case.\n\nFinal decision: the initial evidence does not support the proposed intervention. Exact residuals are the supported specialist method, actual system-condition assessment, qualified personnel/practical capability, safeguards/emergency arrangements and operating authorization. This course teaches the distinction and planning questions; it cannot approve or execute live-leak sealing.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G77_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G77_check1",
+        "prompt": "Is a live-process intervention equivalent to depressurized line opening?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; it is a distinct specialist engineered task."
+          },
+          {
+            "id": "b",
+            "label": "Yes, the same course covers both."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if called routine."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G77_check2",
+        "prompt": "Is a liquid pressure test harmless by definition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; stored energy, jets and component movement can remain hazardous."
+          },
+          {
+            "id": "c",
+            "label": "Yes, liquids remove every risk."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if clear."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G77_check3",
+        "prompt": "Does a vessel rating establish every temporary connector suitable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if connectors fit."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; the whole component chain needs the actual basis."
+          },
+          {
+            "id": "d",
+            "label": "Yes, the largest item governs all."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G77_check4",
+        "prompt": "Can a pressure change alone prove a leak?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, always."
+          },
+          {
+            "id": "b",
+            "label": "No, never."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Not automatically; approved interpretation and conditions matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G77_check5",
+        "prompt": "Does test acceptance establish restored normal configuration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; restoration and operating release need their own evidence."
+          },
+          {
+            "id": "b",
+            "label": "Yes, all temporary items disappear."
+          },
+          {
+            "id": "c",
+            "label": "Yes, a pass mark covers everything."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G77_check6",
+        "prompt": "Does workshop experience automatically qualify live-leak sealing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual specialist method capability is separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes, all pressure work is equivalent."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after a theory quiz."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G77_final1",
+        "prompt": "Is normal operating pressure automatically the test requirement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, multiply by a guessed factor."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual governing design/code and procedure establish it."
+          },
+          {
+            "id": "d",
+            "label": "Yes, use the same number."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G77_final2",
+        "prompt": "What does an old test after later modification establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Unlimited current integrity."
+          },
+          {
+            "id": "b",
+            "label": "Every new branchs suitability."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Historical evidence within its original configuration."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G77_final3",
+        "prompt": "Why identify the test medium?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its physical, thermal, chemical and compatibility consequences matter."
+          },
+          {
+            "id": "b",
+            "label": "Only its color matters."
+          },
+          {
+            "id": "c",
+            "label": "Any available fluid is interchangeable."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G77_final4",
+        "prompt": "What is an energy-path sketch for?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Recognizing release paths and affected people conceptually."
+          },
+          {
+            "id": "c",
+            "label": "Calculating a universal blast radius."
+          },
+          {
+            "id": "d",
+            "label": "Approving an enclosure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G77_final5",
+        "prompt": "Can gauge and absolute pressure be treated as identical labels?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, remove the label."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; their reference definitions differ."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if numbers match."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G77_final6",
+        "prompt": "Does a calibration sticker validate a complete test?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every result is valid."
+          },
+          {
+            "id": "b",
+            "label": "Yes, any range suffices."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; location, method, configuration and coverage also matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G77_final7",
+        "prompt": "What should happen to an earlier abnormal result after a later favorable one?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Retain both with conditions and qualified evaluation."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier result."
+          },
+          {
+            "id": "c",
+            "label": "Average them without a method."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G77_final8",
+        "prompt": "Does this course authorize approaching an energized assembly to inspect a leak?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; the actual approved observation/intervention method governs."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if careful."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after a quiz."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G77_final9",
+        "prompt": "Should a learner tighten a pressurized connection as a test exercise?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if a small leak."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; no such practical action is authorized here."
+          },
+          {
+            "id": "d",
+            "label": "Yes, for realism."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G77_final10",
+        "prompt": "What should abnormal-condition planning identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue carefully regardless."
+          },
+          {
+            "id": "b",
+            "label": "A promise no failures occur."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Responsible safe disposition when assumptions or method fail."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G77_final11",
+        "prompt": "A branch differs between drawing and sketch. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Qualified reconciliation of the actual test boundary."
+          },
+          {
+            "id": "b",
+            "label": "Cross it out silently."
+          },
+          {
+            "id": "c",
+            "label": "Assume all branches included."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G77_final12",
+        "prompt": "Can an unmarked adapter be justified by physical fit?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; identity, condition and actual duty evidence are needed."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if it screws in."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if used before."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G77_final13",
+        "prompt": "Does PSM automatically cover every well-service task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, any pressure system."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual coverage and explicit exclusions must be reviewed."
+          },
+          {
+            "id": "d",
+            "label": "Yes, every oilfield task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G77_final14",
+        "prompt": "What can a stable indication establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every integrity and functional claim."
+          },
+          {
+            "id": "b",
+            "label": "Permanent leak-free service."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Only the conclusion supported by the actual method and conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G77_final15",
+        "prompt": "Who establishes actual pressure/temperature limits?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The qualified technical basis and governing procedure."
+          },
+          {
+            "id": "b",
+            "label": "Any course graduate."
+          },
+          {
+            "id": "c",
+            "label": "A generic worksheet guess."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G77_final16",
+        "prompt": "In West Test, why is the earlier report insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "It concerns a different configuration and cannot validate new scope automatically."
+          },
+          {
+            "id": "c",
+            "label": "Historical evidence is always false."
+          },
+          {
+            "id": "d",
+            "label": "It lacks a colorful stamp."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G77_final17",
+        "prompt": "In West Test, does an approved revised pack prove execution?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if scheduled."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual work, data and acceptance remain separate."
+          },
+          {
+            "id": "d",
+            "label": "Yes, approval performs the test."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G77_final18",
+        "prompt": "In the steam case, what is missing beyond a workshop report?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a new title."
+          },
+          {
+            "id": "b",
+            "label": "Only a faster invoice."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Actual specialist engineered method and relevant personnel capability."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G77_final19",
+        "prompt": "Should a real operating leak become an improvised assessment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; qualified safe assessment conditions are required."
+          },
+          {
+            "id": "b",
+            "label": "Yes, it is realistic."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if urgent."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G77_final20",
+        "prompt": "What remains after knowledge completion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Approved method, observed actual capability, technical evidence and job release."
+          },
+          {
+            "id": "c",
+            "label": "All pressure authority is granted."
+          },
+          {
+            "id": "d",
+            "label": "Only certificate printing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G77_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G77_lesson1",
+          "questionIds": [
+            "G77_check1"
+          ]
+        },
+        {
+          "lessonId": "G77_lesson2",
+          "questionIds": [
+            "G77_check2"
+          ]
+        },
+        {
+          "lessonId": "G77_lesson3",
+          "questionIds": [
+            "G77_check3"
+          ]
+        },
+        {
+          "lessonId": "G77_lesson4",
+          "questionIds": [
+            "G77_check4"
+          ]
+        },
+        {
+          "lessonId": "G77_lesson5",
+          "questionIds": [
+            "G77_check5"
+          ]
+        },
+        {
+          "lessonId": "G77_lesson6",
+          "questionIds": [
+            "G77_check6"
+          ]
+        },
+        {
+          "lessonId": "G77_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G77_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G77_final",
+          "questionIds": [
+            "G77_final1",
+            "G77_final2",
+            "G77_final3",
+            "G77_final4",
+            "G77_final5",
+            "G77_final6",
+            "G77_final7",
+            "G77_final8",
+            "G77_final9",
+            "G77_final10",
+            "G77_final11",
+            "G77_final12",
+            "G77_final13",
+            "G77_final14",
+            "G77_final15",
+            "G77_final16",
+            "G77_final17",
+            "G77_final18",
+            "G77_final19",
+            "G77_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G77_check1": "Actual process state changes the method and qualification question.",
+        "G77_check2": "Medium differences do not eliminate system hazards.",
+        "G77_check3": "Permanent and temporary equipment form the test assembly.",
+        "G77_check4": "Observation and qualified interpretation differ.",
+        "G77_check5": "Test conclusion and readiness are separate outcomes.",
+        "G77_check6": "A different task requires relevant demonstrated scope.",
+        "G77_final1": "This course supplies no test limits or formulas.",
+        "G77_final2": "Changes can invalidate assumptions of prior evidence.",
+        "G77_final3": "Medium choice is part of the qualified technical method.",
+        "G77_final4": "A paper model reveals questions without engineering authorization.",
+        "G77_final5": "A pressure value needs its reference basis.",
+        "G77_final6": "Instrument assurance is one evidence link.",
+        "G77_final7": "Original evidence can matter to technical interpretation.",
+        "G77_final8": "Leak identification can itself create hazardous exposure.",
+        "G77_final9": "Training cannot justify improvised live pressure work.",
+        "G77_final10": "A meaningful procedure addresses uncertainty and authority.",
+        "G77_final11": "Boundary changes affect scope and suitability.",
+        "G77_final12": "Fit cannot establish pressure-system suitability.",
+        "G77_final13": "The cited standard has a specific applicability boundary.",
+        "G77_final14": "Test evidence must remain bounded.",
+        "G77_final15": "This module supplies no operating or test limits.",
+        "G77_final16": "Useful evidence remains limited to its actual boundary.",
+        "G77_final17": "Preparation is not completed field performance.",
+        "G77_final18": "Live installed work needs its actual supported basis.",
+        "G77_final19": "Practical training must not create uncontrolled intervention.",
+        "G77_final20": "Theory cannot validate an engineered intervention or authorize execution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

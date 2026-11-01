@@ -1,0 +1,914 @@
+{
+  "courseId": "G64",
+  "gapGroupId": "G15",
+  "title": "Pesticide task preparation: labeling, exposure pathways and entry handover",
+  "description": "translate actual product/site information into exposure, environmental and access-control decisions",
+  "purpose": "translate actual product/site information into exposure, environmental and access-control decisions",
+  "audience": [
+    "Pesticide job coordinators",
+    "Handlers preparing for approved product/equipment instruction",
+    "Maintenance and receiving personnel at pesticide interfaces"
+  ],
+  "practicalBoundary": "This course issues no approved WPS training credit, applicator license, respiratory clearance or application qualification. It gives no mixing/application rate, equipment setting or universal entry interval. Actual product labeling, jurisdiction/category authorization, equipment instruction and observed practical skills remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual product/formulation labeling and intended site/method applicability",
+    "Jurisdiction/category applicator authorization and approved WPS training where actually required",
+    "Product/task PPE, hygiene and respiratory program readiness as applicable",
+    "Actual equipment, bystander/environmental and application/entry procedures",
+    "Storage/container/waste disposition and contaminated-item handover",
+    "Usable product first-aid, emergency and confidential medical routes"
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified applicator/task assessor observes actual label interpretation and approved equipment/application skills safely",
+    "Competent PPE/respiratory program personnel assess the actual required protection and use",
+    "Qualified site/applicator assessor observes bystander, treated-area entry and contaminated-item handoff using controlled scenarios"
+  ],
+  "sources": [
+    {
+      "title": "EPA — Pesticide label scope and legal use information",
+      "url": "https://www.epa.gov/pesticide-labels/introduction-pesticide-labels"
+    },
+    {
+      "title": "EPA — Agricultural Worker Protection Standard and scope",
+      "url": "https://www.epa.gov/pesticide-worker-safety/agricultural-worker-protection-standard-wps"
+    },
+    {
+      "title": "EPA — WPS approved training and trainer requirements",
+      "url": "https://www.epa.gov/pesticide-worker-safety/worker-protection-standard-training-programs-submission-process-and"
+    },
+    {
+      "title": "EPA — Applicator certification and state/tribal requirements",
+      "url": "https://www.epa.gov/pesticide-worker-safety/how-get-certified-pesticide-applicator"
+    },
+    {
+      "title": "Texas Department of Agriculture — Structural Pest Control Service",
+      "url": "https://texasagriculture.gov/Regulatory-Programs/Pesticides/Structural-Pest-Control-Service"
+    },
+    {
+      "title": "EPA — Product-label and emergency exposure-response information",
+      "url": "https://www.epa.gov/pesticide-incidents/first-aid-case-pesticide-exposure"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G64_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Pesticide task preparation: labeling, exposure pathways and entry handover\n\nThis course teaches a bounded task: translate actual product/site information into exposure, environmental and access-control decisions Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis course issues no approved WPS training credit, applicator license, respiratory clearance or application qualification. It gives no mixing/application rate, equipment setting or universal entry interval. Actual product labeling, jurisdiction/category authorization, equipment instruction and observed practical skills remain separate. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G64_lesson1",
+        "title": "1. Match the pest problem, site and actual product",
+        "body": "Pesticide work begins with the problem and location, not a familiar container. Identify the pest or intended purpose, the actual treatment site and the method proposed. Agricultural production, structural pest control, industrial use and nonchemical grounds work can involve different rules and duties. A worker assigned to mow vegetation is not automatically authorized to apply a herbicide when the mowing is inconvenient.\n\nUse the actual product identity. Trade name, formulation and relevant registration/label information must refer to the container and use being planned. Two products with similar names or the same broad active ingredient can have different directions and precautions. A supplier's verbal statement that the replacement works the same does not establish that its actual label supports the intended site and method.\n\nIn the U.S. context, pesticide labeling contains enforceable use conditions. It is more than marketing information. The actual label and applicable jurisdiction determine the permitted use, precautions and restrictions. The safety data sheet supports hazard information but is not a substitute for product-specific use directions. Read both within their actual purposes rather than choosing whichever document appears less restrictive.\n\nDo not confuse worker instruction with applicator authorization. Restricted-use and commercial application requirements depend on the actual jurisdiction and category. Agricultural WPS duties apply within their actual scope and do not automatically govern every structural or industrial job. The responsible employer must determine the real requirement and verify the relevant approved training or credential.\n\nMake a task statement with actual facts: product identity, treatment site, purpose, proposed method, assigned person and responsible applicator/authority. Missing product or site information is a reason to hold the affected application planning, not to borrow a previous job's instructions. A desk exercise can compare these fields without opening a container or operating equipment.\n\nThe transferable skill is recognizing that legal use, worker protection and practical capability are separate prerequisites. A correct product for the pest may still be unsuitable for the site or method. An authorized applicator may still need instruction on an unfamiliar product/equipment arrangement. A completed online course proves neither. Keep the actual limitation specific so the responsible person can resolve it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G64_lesson2",
+        "title": "2. Turn label sections into practical work controls",
+        "body": "Read the entire actual labeling needed for the task, including material accompanying or referenced by the product where applicable. Find identity, use directions, precautionary information, required PPE, first aid, environmental conditions, entry restrictions and storage/disposal instructions. The worker needs a usable current copy at the point the employer's process requires it. A cropped photograph of only the front panel is not the whole instruction.\n\nTranslate each relevant direction into a task control with an owner. If a use requires particular protective equipment, confirm the actual suitable items and trained worker. If entry is restricted, identify who controls and communicates access. If the product has environmental restrictions, identify the relevant nearby receptors and conditions. This is interpretation, not permission to invent a substitute for a requirement.\n\nDistinguish product approval from site readiness. A label permitting a site does not establish that people, animals, neighboring work, water features or equipment are currently controlled. A site map can help identify interfaces but may omit a new drainage route or occupied area. The responsible applicator must assess the actual conditions through the approved method before work.\n\nUse exact units and terms. Application amount, concentration, frequency and area are different quantities. This course gives no mixing ratio, application rate or equipment setting. A worker must not convert uncertainty into a recipe by copying numbers from another formulation. The actual approved method and qualified applicator establish any required calculation and equipment operation.\n\nConflicting or unreadable information requires resolution. Stop the affected preparation and ask the responsible product/applicator authority for the actual labeling and applicability decision. Do not use an internet label for a similar product without confirming it applies to the actual container and use. Do not silently select the instruction that makes the job easiest.\n\nFor a harmless label exercise, use fictional cards rather than real application directions. One card says outdoor use at a named site; another proposed task is inside an occupied room. The learner identifies the site/method mismatch and holds that proposed use. The exercise does not recommend a chemical alternative. The qualified person must establish the actual lawful supported method.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G64_lesson3",
+        "title": "3. Interrupt exposure during handling, equipment work and cleanup",
+        "body": "Exposure can occur before, during and after application. Opening or handling product, working with application equipment, contacting treated surfaces and managing contaminated PPE can create different pathways. Skin/eye contact, inhalation and ingestion through contaminated hands or personal items are distinct concerns. The actual product and task instructions select the controls for each stage.\n\nArrange clean and contaminated work deliberately. Keep personal food, drink, phones and clean supplies away from the product-handling interface. A contaminated glove can transfer residue to a vehicle control or clean equipment. Changing gloves does not decontaminate a surface already touched. Follow the actual hygiene and cleanup procedure for hands, reusable items and the work area.\n\nPPE must match the label and actual task. A glove described generally as work protection is not automatically chemically suitable. A respirator requirement involves a real program, selection, medical and fit arrangements as applicable; wearing an unfamiliar mask is not an acceptable improvised substitute. This course does not certify PPE selection or fit, and it does not provide a donning/removal sequence for every design.\n\nEquipment cleaning or repair can involve pesticide handling even when no application is planned. A maintenance worker must know the actual contamination status and method before opening or servicing equipment. A clean exterior does not prove the inside is free of residue or physical energy. Product controls and equipment energy-control requirements may both apply; neither replaces the other.\n\nDo not take contaminated items into an uncontrolled clean area. The employer must provide the actual route for PPE, laundry, tools and waste. A bag labeled used does not tell a receiving worker what handling is needed. Communicate the product/task information through the approved system without making a broad claim that sealed means safe.\n\nA practical assessor can use harmless simulation to observe clean/dirty transitions, appropriate barrier selection, hand hygiene and the receiving handoff. The assessment should include a change of task, because exposure can occur when a worker returns from a phone call or moves from equipment work to clean documentation. The online learner must still demonstrate the actual product/equipment skills through the qualified program.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G64_lesson4",
+        "title": "4. Protect bystanders, water and neighboring work",
+        "body": "A pesticide task can affect people and places outside the immediate target. Drift is movement through air away from the intended application area; runoff can carry material with water. These are different pathways and need the actual product/site controls. A low-odor product is not automatically harmless, and a calm-looking moment does not establish every relevant environmental condition.\n\nIdentify actual receptors and activities before work. Consider occupied areas, access routes, animals, sensitive plants, water and drainage features, food-related activities and neighboring operations relevant to the label and method. The responsible applicator determines the actual assessment and controls. This course gives no universal wind speed, buffer distance or spray-droplet setting.\n\nPeople can enter an area unexpectedly. The actual access/notification system must reach workers, visitors and other organizations who could be affected. A notice sent only to one supervisor may not reach a cleaning crew or delivery driver. Confirm who owns entry control and how a change is reported. General site permission cannot override an active product or program restriction.\n\nAgricultural WPS includes particular worker/handler protections and application-related arrangements where applicable. Those must be determined from the actual current rule and task, not applied as a universal industrial-site formula. Structural pest work can have different jurisdictional requirements. The employer must preserve those distinctions rather than using one generic exclusion number everywhere.\n\nConditions can change after planning. Rain, wind, an opened drain, a new worker activity or a shifted treatment area can invalidate assumptions. The worker reports the actual change and follows the approved hold/reassessment procedure. They must not alter concentration, equipment or location on their own to work around the problem.\n\nUse a fictional site map to practice pathway reasoning. A proposed treatment area drains toward a water feature, and a planned meal delivery crosses its access route. The learner identifies the runoff and people interfaces and names the responsible decisions. They do not invent a protective distance or recommend a chemical. The real applicator/site authorities must establish a lawful supported arrangement before the affected work.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G64_lesson5",
+        "title": "5. Preserve treatment history, entry restrictions and material identity",
+        "body": "Application completion and unrestricted entry are different states. The actual product and applicable program can impose conditions that continue after equipment stops. A dry-looking surface, absent odor or contractor departure does not by itself establish that people may enter or use the area. The responsible person must interpret and communicate the actual entry and use restrictions.\n\nKeep the treatment record tied to the real location and time. Identify the product, area, actual completion information required by the program, restriction basis and responsible contact. A wrong area name or uncertain completion time can make an otherwise correct instruction unusable. Do not reconstruct an unknown time by choosing the earliest convenient value.\n\nTime arithmetic supports the record but does not create a legal restriction. In a fictional exercise, a supplied training card states that a named area cannot reopen before 14:00 the next day. At 13:30, thirty minutes remain before that stated time, but any other conditions on the card still need to be satisfied. This arithmetic is not a real product allowance or a universal entry interval.\n\nStorage and disposal preserve identity too. Follow the actual label and program for containers, residues, equipment and waste. Do not place pesticide into a food/drink container, remove its identity or combine leftovers to reduce container count. An empty-looking container may still have residue and must follow the actual disposal instructions. This course gives no rinse, neutralization or disposal recipe.\n\nReceiving workers need actionable status. A maintenance or cleaning crew should know the actual treated location, restriction and who can authorize the next task. A message saying pesticide done may be mistaken for access released. Keep the application stage and entry stage distinct, and communicate any change through the actual designated route.\n\nAt handover, preserve unresolved items explicitly: product identity unavailable, completion time unconfirmed, entry condition pending or waste disposition open. Those statements help the next shift act safely. A green course-completion screen must not be used to erase a real product or site restriction. The practical assessment must demonstrate the actual record, access and material-handling process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G64_lesson6",
+        "title": "6. Respond to possible exposure without improvising treatment",
+        "body": "Possible pesticide exposure needs prompt action through the actual product first-aid and emergency arrangements. Know the route before the job. EPA advises calling emergency services for unconsciousness, breathing difficulty or convulsions, using product-specific first-aid information and contacting Poison Control for guidance. In the U.S., Poison Control is 800-222-1222. The actual emergency situation and qualified advice govern care.\n\nDo not delay the medical/emergency contact to finish the application or complete every form field. Provide available product identity and label information, route of exposure, time, symptoms observed and actions already taken. State unknown details as unknown. A trade name guessed from container color can misdirect care; obtain the actual information from safe existing sources without creating another exposure.\n\nDo not induce vomiting or administer a home remedy unless the actual label or qualified emergency guidance directs it. Do not use surface-cleaning chemicals on a person or in eye-wash water. Do not enter a contaminated atmosphere without the actual trained and equipped response capability. This course is not a clinical treatment protocol or a rescue qualification.\n\nProtect others from secondary contact through the actual plan. Contaminated clothing, equipment or a vehicle can carry material beyond the initial area. The responsible trained roles determine the appropriate handling and cleanup. A support worker should report the known condition and preserve the assigned boundary, not improvise a decontamination chemical or move suspect items into an office.\n\nKeep medical details confidential. The general task record needs the event, relevant product/task facts, work status and authorized follow-up route. Diagnoses and private clinical findings remain with the proper medical process. Feeling well later does not establish that no exposure occurred or authorize return to a restricted task.\n\nAfter the immediate event, review the actual failed pathway: wrong product, missing label, unsuitable barrier, uncontrolled entry, equipment contamination or an unclear handover. Correct the real process and demonstrate it safely. Knowledge remediation can show that a worker now understands the decision, but actual application, equipment and PPE skills still need competent observed assessment and any required jurisdictional authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G64_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: replacement product and a changed treatment location\n\nA fictional contractor plans an outdoor grounds task. The usual product is unavailable, and a replacement arrives with a similar trade name but different formulation. The site manager asks the worker to use it inside an occupied storage building instead, because rain is approaching. The worker has a general hazard-communication course but no confirmed applicator category for the actual proposed use.\n\nSeparate product, site, method and authorization. Similar naming does not establish identical labeling. Outdoor grounds work does not automatically authorize indoor structural use. Rain pressure does not justify moving the application to another site or guessing a new method. The general course also does not establish the relevant applicator authority or product/equipment skill.\n\nThe affected use is held while the responsible applicator obtains the actual labeling and jurisdiction/category determination. The worker does not open the product, select a rate or use an internet label for a similar container. The current occupied area introduces bystander and access questions that require the actual site plan.\n\nSuppose the label review later establishes that the proposed indoor use is not supported. The correct outcome is not to reduce an invented amount or open a window as a workaround. The responsible person must establish another lawful supported method or decline the task. The learner's output names the exact product/site/method mismatch and competence gap.\n\nThe practical program can assess identification and label interpretation with harmless containers and records, then separately observe actual authorized equipment/PPE skills. No real pesticide application is needed to demonstrate the classroom decision. The case teaches that accurate refusal or revision can be a complete professional result when the proposed use is unsupported.\n\nCase B: application finished but entry time and contamination remain\n\nA fictional treatment record identifies area B and supplies an explicit training-card entry condition: do not reopen before 14:00 the following day, with the additional stated site conditions verified. At 13:30, a cleaning crew arrives. A message says pesticide done, but the actual completion record is under review because one copy names area D. A reusable tool also has unresolved contamination status. The applicator has left the site.\n\nArithmetic alone says thirty minutes remain before the supplied 14:00 time. It does not resolve the area mismatch, additional entry conditions or tool handling. Nor is the fictional card a real product interval. A dry surface and absence of odor do not establish unrestricted access. The cleaning crew must use the actual hold/clarification route rather than assume contractor departure equals release.\n\nThe responsible applicator/site roles establish the true treated area and actual restriction basis, correct the record traceably and communicate the current conditions to the receiving crew. The tool remains under its actual contamination-handling process. A corrected area identifier does not automatically make the tool suitable for ordinary cleaning or disposal.\n\nIf someone reports possible contact while attempting to use the tool, the immediate product/emergency/medical route takes priority over finishing the paperwork. Available product identity and exposure facts are supplied promptly, without collecting a contaminated sample or guessing treatment. Clinical information stays confidential.\n\nThe final handover states the actual area and entry decision only when supported, preserves any tool/waste restriction and identifies remaining follow-up owners. The practical assessor can test this complete application-to-entry interface with harmless cards and real procedures. Course completion records the learner's understanding; it does not certify an actual applicator, issue medical clearance or release a real treated site.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G64_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G64_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced translate actual product/site information into exposure, environmental and access-control decisions Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G64_check1",
+        "prompt": "A grounds worker is asked to apply pesticide instead of mowing. What comes first?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Establish actual product, site, method and role requirements."
+          },
+          {
+            "id": "b",
+            "label": "Use the mowing assignment as authorization."
+          },
+          {
+            "id": "c",
+            "label": "Choose a familiar container."
+          },
+          {
+            "id": "d",
+            "label": "Only update price."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G64_check2",
+        "prompt": "A cropped front-label photo is available. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every use direction known."
+          },
+          {
+            "id": "b",
+            "label": "Actual complete applicable labeling for the task."
+          },
+          {
+            "id": "c",
+            "label": "A universal recipe."
+          },
+          {
+            "id": "d",
+            "label": "Every site approved."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G64_check3",
+        "prompt": "Contaminated gloves touch a clean phone. What happened?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The phone is protected."
+          },
+          {
+            "id": "b",
+            "label": "Gloves clean every surface."
+          },
+          {
+            "id": "c",
+            "label": "A possible transfer pathway to the phone."
+          },
+          {
+            "id": "d",
+            "label": "Only bare hands transfer residue."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G64_check4",
+        "prompt": "A new drain opens near planned treatment. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the old map controls reality."
+          },
+          {
+            "id": "b",
+            "label": "Increase concentration."
+          },
+          {
+            "id": "c",
+            "label": "Ignore another contractor."
+          },
+          {
+            "id": "d",
+            "label": "Report/reassess the actual runoff interface under the approved method."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G64_check5",
+        "prompt": "Application ends. What about entry?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual product/program entry conditions remain a separate decision."
+          },
+          {
+            "id": "b",
+            "label": "Automatically unrestricted."
+          },
+          {
+            "id": "c",
+            "label": "Safe if no odor."
+          },
+          {
+            "id": "d",
+            "label": "Safe when contractor leaves."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G64_check6",
+        "prompt": "Possible exposure occurs. What should not wait?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Finishing paperwork first."
+          },
+          {
+            "id": "b",
+            "label": "The actual first-aid/emergency/medical route."
+          },
+          {
+            "id": "c",
+            "label": "Completing the application first."
+          },
+          {
+            "id": "d",
+            "label": "Finding a perfect diagnosis first."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G64_final1",
+        "prompt": "Two products share a similar name. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Same label."
+          },
+          {
+            "id": "b",
+            "label": "Same rate."
+          },
+          {
+            "id": "c",
+            "label": "No automatic identity of formulation or directions."
+          },
+          {
+            "id": "d",
+            "label": "Same PPE."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G64_final2",
+        "prompt": "Does an SDS replace pesticide-use directions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes universally."
+          },
+          {
+            "id": "b",
+            "label": "Only the least restrictive document matters."
+          },
+          {
+            "id": "c",
+            "label": "The invoice replaces both."
+          },
+          {
+            "id": "d",
+            "label": "No; each document has its actual purpose."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G64_final3",
+        "prompt": "Does agricultural WPS apply to every industrial/structural job?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual scope and jurisdiction must be determined."
+          },
+          {
+            "id": "b",
+            "label": "Yes universally."
+          },
+          {
+            "id": "c",
+            "label": "No pesticide job has rules."
+          },
+          {
+            "id": "d",
+            "label": "A generic certificate decides."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G64_final4",
+        "prompt": "Applicator authority depends on what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a job title."
+          },
+          {
+            "id": "b",
+            "label": "Actual jurisdiction, category and duty/product requirements."
+          },
+          {
+            "id": "c",
+            "label": "Only a safety vest."
+          },
+          {
+            "id": "d",
+            "label": "Only past mowing experience."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G64_final5",
+        "prompt": "An actual label does not support the proposed site. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use less product by guess."
+          },
+          {
+            "id": "b",
+            "label": "Open a window automatically."
+          },
+          {
+            "id": "c",
+            "label": "Do not perform that unsupported use; obtain a lawful supported decision."
+          },
+          {
+            "id": "d",
+            "label": "Copy another label."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G64_final6",
+        "prompt": "What mixing ratio does this course teach?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A universal dilution."
+          },
+          {
+            "id": "b",
+            "label": "A rate from similar formulation."
+          },
+          {
+            "id": "c",
+            "label": "Whatever fits the tank."
+          },
+          {
+            "id": "d",
+            "label": "None; actual label/method and qualified instruction govern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G64_final7",
+        "prompt": "A work glove is available. What must be established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual chemical/task suitability and required protection."
+          },
+          {
+            "id": "b",
+            "label": "All gloves equivalent."
+          },
+          {
+            "id": "c",
+            "label": "Thicker always enough."
+          },
+          {
+            "id": "d",
+            "label": "New means suitable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G64_final8",
+        "prompt": "A respirator is required but the program is absent. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Borrow an unfamiliar mask."
+          },
+          {
+            "id": "b",
+            "label": "Hold affected work and establish the actual required program/readiness."
+          },
+          {
+            "id": "c",
+            "label": "Work faster."
+          },
+          {
+            "id": "d",
+            "label": "Ignore the label."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G64_final9",
+        "prompt": "Equipment is being repaired, not used for application. What can remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No pesticide exposure possible."
+          },
+          {
+            "id": "b",
+            "label": "Only billing concerns."
+          },
+          {
+            "id": "c",
+            "label": "Pesticide residue/handling and physical-energy hazards."
+          },
+          {
+            "id": "d",
+            "label": "Automatic clean state."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G64_final10",
+        "prompt": "Drift and runoff are what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The same as label identity."
+          },
+          {
+            "id": "b",
+            "label": "Always harmless."
+          },
+          {
+            "id": "c",
+            "label": "Proof application succeeded."
+          },
+          {
+            "id": "d",
+            "label": "Different air and water movement pathways."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G64_final11",
+        "prompt": "A low-odor product proves what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No automatic absence of hazard or entry restriction."
+          },
+          {
+            "id": "b",
+            "label": "Safe for everyone."
+          },
+          {
+            "id": "c",
+            "label": "No PPE needed."
+          },
+          {
+            "id": "d",
+            "label": "No labeling needed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G64_final12",
+        "prompt": "An access notice reaches only one supervisor. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Everyone automatically informed."
+          },
+          {
+            "id": "b",
+            "label": "Confirm the actual affected people/organizations and control owners are covered."
+          },
+          {
+            "id": "c",
+            "label": "All visitors excluded."
+          },
+          {
+            "id": "d",
+            "label": "Every rule satisfied."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G64_final13",
+        "prompt": "A required time is uncertain. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choose the earliest convenient time."
+          },
+          {
+            "id": "b",
+            "label": "Restart the clock silently."
+          },
+          {
+            "id": "c",
+            "label": "Resolve the actual record through the responsible process."
+          },
+          {
+            "id": "d",
+            "label": "Infer from a dry surface."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G64_final14",
+        "prompt": "A fictional card says not before 14:00; current time is 13:30. What is arithmetic?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Universal thirty-minute rule."
+          },
+          {
+            "id": "b",
+            "label": "Immediate release."
+          },
+          {
+            "id": "c",
+            "label": "Real label approval."
+          },
+          {
+            "id": "d",
+            "label": "Thirty minutes remain, with other conditions still unresolved as applicable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G64_final15",
+        "prompt": "An empty-looking pesticide container is what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Still subject to actual residue/disposal instructions."
+          },
+          {
+            "id": "b",
+            "label": "Always ordinary refuse."
+          },
+          {
+            "id": "c",
+            "label": "A drinking bottle."
+          },
+          {
+            "id": "d",
+            "label": "Universally reusable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G64_final16",
+        "prompt": "Someone is unconscious or has breathing difficulty after possible exposure. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Finish treatment work."
+          },
+          {
+            "id": "b",
+            "label": "Contact emergency services and use actual product/qualified guidance."
+          },
+          {
+            "id": "c",
+            "label": "Give a home remedy."
+          },
+          {
+            "id": "d",
+            "label": "Wait for a supervisor form."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G64_final17",
+        "prompt": "Should vomiting be induced automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes for every pesticide."
+          },
+          {
+            "id": "b",
+            "label": "Yes if the person looks well."
+          },
+          {
+            "id": "c",
+            "label": "No; only actual label or qualified emergency direction can support it."
+          },
+          {
+            "id": "d",
+            "label": "Yes from coworker memory."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G64_final18",
+        "prompt": "Case A replacement label differs. What can remain even if product is identified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing."
+          },
+          {
+            "id": "b",
+            "label": "All indoor use approved."
+          },
+          {
+            "id": "c",
+            "label": "Every worker qualified."
+          },
+          {
+            "id": "d",
+            "label": "Site/method suitability and actual applicator readiness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G64_final19",
+        "prompt": "Case B area identifier is corrected. What may remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Entry conditions and tool contamination disposition."
+          },
+          {
+            "id": "b",
+            "label": "Everything released."
+          },
+          {
+            "id": "c",
+            "label": "Tool safe for any cleaning."
+          },
+          {
+            "id": "d",
+            "label": "All medical follow-up closed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G64_final20",
+        "prompt": "What does passing establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Applicator certification."
+          },
+          {
+            "id": "b",
+            "label": "Task knowledge with actual authorization and observed skills separate."
+          },
+          {
+            "id": "c",
+            "label": "Respirator fit."
+          },
+          {
+            "id": "d",
+            "label": "Release of a real treated area."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G64_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G64_lesson1",
+          "questionIds": [
+            "G64_check1"
+          ]
+        },
+        {
+          "lessonId": "G64_lesson2",
+          "questionIds": [
+            "G64_check2"
+          ]
+        },
+        {
+          "lessonId": "G64_lesson3",
+          "questionIds": [
+            "G64_check3"
+          ]
+        },
+        {
+          "lessonId": "G64_lesson4",
+          "questionIds": [
+            "G64_check4"
+          ]
+        },
+        {
+          "lessonId": "G64_lesson5",
+          "questionIds": [
+            "G64_check5"
+          ]
+        },
+        {
+          "lessonId": "G64_lesson6",
+          "questionIds": [
+            "G64_check6"
+          ]
+        },
+        {
+          "lessonId": "G64_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G64_final",
+          "questionIds": [
+            "G64_final1",
+            "G64_final2",
+            "G64_final3",
+            "G64_final4",
+            "G64_final5",
+            "G64_final6",
+            "G64_final7",
+            "G64_final8",
+            "G64_final9",
+            "G64_final10",
+            "G64_final11",
+            "G64_final12",
+            "G64_final13",
+            "G64_final14",
+            "G64_final15",
+            "G64_final16",
+            "G64_final17",
+            "G64_final18",
+            "G64_final19",
+            "G64_final20"
+          ]
+        },
+        {
+          "lessonId": "G64_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G64_check1": "A task change introduces different duties and controls.",
+        "G64_check2": "Label interpretation needs the relevant full instruction.",
+        "G64_check3": "Barriers can carry contamination to shared surfaces.",
+        "G64_check4": "Changed site pathways can invalidate the plan.",
+        "G64_check5": "Treatment and access release are distinct states.",
+        "G64_check6": "Prompt qualified help takes priority over administrative completion.",
+        "G64_final1": "Product-specific labeling matters.",
+        "G64_final2": "Hazard information and enforceable use conditions differ.",
+        "G64_final3": "Preserve agricultural and nonagricultural applicability distinctions.",
+        "G64_final4": "Credentials must match the real assignment.",
+        "G64_final5": "An improvised workaround cannot create label support.",
+        "G64_final6": "The course teaches interpretation without application recipes.",
+        "G64_final7": "Barrier selection is product/task specific.",
+        "G64_final8": "Respiratory protection is not an improvised accessory.",
+        "G64_final9": "Maintenance can have its own chemical and equipment controls.",
+        "G64_final10": "Pathway understanding supports site-specific controls.",
+        "G64_final11": "Odor is not a reliable safety criterion.",
+        "G64_final12": "Communication must reach the real interface.",
+        "G64_final13": "A restriction needs a supported factual basis.",
+        "G64_final14": "The exercise teaches time reasoning, not a product allowance.",
+        "G64_final15": "Appearance does not establish disposition.",
+        "G64_final16": "EPA advises urgent emergency help for these severe signs.",
+        "G64_final17": "Treatment depends on the product and qualified guidance.",
+        "G64_final18": "Identity alone does not establish the whole task.",
+        "G64_final19": "Separate issues need their own actual evidence.",
+        "G64_final20": "Online completion cannot issue credentials or prove unobserved performance."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

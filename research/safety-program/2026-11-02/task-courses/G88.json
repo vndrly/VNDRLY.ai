@@ -1,0 +1,911 @@
+{
+  "courseId": "G88",
+  "gapGroupId": "TG39",
+  "title": "Fall protection, scaffold and rope-access practical roles",
+  "description": "Six subject-specific lessons and two worked fictional cases with twenty-six explained decisions. Actual site methods, professional authority and observed practical qualification remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for fall protection, scaffold and rope-access practical roles.",
+  "audience": [
+    "Workers using an assigned height-access system",
+    "Scaffold users and task supervisors",
+    "Rope-access planning coordinators",
+    "Fall-system and rescue-readiness reviewers"
+  ],
+  "practicalBoundary": "A scaffold user, scaffold inspector, rope-access technician and fall-protection designer have different scopes. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual access role matrix linked to the actual work method, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual fall-system schedule linking component identities and approved compatibility, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual approved anchorage and clearance review linked to the selected system, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual scaffold handover and inspection record tied to the identified structure, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual height-work interface plan identifying tools, lower work areas and access routes, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual access-specific rescue plan and safe representative exercise record, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who distinguishes scaffold use, alteration, inspection, rope-access and underlying trade duties; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who identifies actual system components and reports an unreviewed compatibility substitution; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who recognizes changed geometry and routes anchorage/clearance decisions to the competent technical role; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who recognizes scaffold configuration or use changes and follows the competent review route; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who coordinates dropped-object and adjacent-activity information within the approved task plan; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who demonstrates assigned emergency duties through a qualified safe assessment and verifies rescue feasibility; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Actual entry, rescue, height-access, clinical, operator or trade performance requires its own approved safe practical evaluation by appropriately qualified assessors where assigned; online completion does not satisfy it."
+  ],
+  "sources": [
+    {
+      "title": "OSHA scaffolds",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.451",
+      "scopeLimit": "Applicable scaffold role and system; user awareness is not competent erection/examination."
+    },
+    {
+      "title": "OSHA construction fall-protection duties",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.501",
+      "scopeLimit": "Applicable task/sector requirements; no universal threshold is invented."
+    },
+    {
+      "title": "OSHA personal fall protection systems",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.140",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G88_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Work at height can use collective access, personal fall protection, scaffold or rope-access systems. These are not interchangeable qualifications. This course teaches access-role distinctions, system-selection logic, clearance and anchorage questions, scaffold status, dropped-object interfaces and rescue feasibility through safe paper exercises. It supplies no rigging method, anchorage design, erection sequence or rescue technique.\n\nApply the actual employer program and relevant sector requirements. A construction scaffold reference does not automatically govern every industrial access task. Record all twenty-six responses, retain original answers and explicitly acknowledge explained remediation. Knowledge completion cannot establish competent scaffold examination, rope-access skill or fall-system design authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G88_lesson1",
+        "title": "Lesson 1 — Identify the access role",
+        "body": "Choose an access approach by considering the actual work, location and exposure, not by starting with a familiar harness. Avoiding exposure or using suitable collective protection can address a different need from relying on personal fall equipment. The responsible planner determines the appropriate method within the actual requirements. The worker should understand what the selected arrangement is intended to do and what duties they personally supply.\n\nScaffold users, erectors, inspectors and designers have different scopes. A user can recognize a visible concern and report it without being competent to assess every structural feature. An inspector needs the relevant knowledge and actual designation. Alteration can change a previously accepted arrangement and must follow the appropriate competent process. Do not remove a member simply because it obstructs a task.\n\nRope access is also a distinct work method, not a synonym for wearing fall protection. It involves specialist systems, techniques, supervision and rescue capability. An online height-awareness result does not establish physical rope skill. Likewise, a technician's production experience does not automatically demonstrate every rescue configuration or design duty.\n\nSeparate access competence from the underlying trade. A person qualified to reach a location may not be qualified to inspect a weld, repair electrical equipment or perform another technical task there. The plan should identify both capabilities and avoid counting one certificate as proof of the other.\n\nIn the fictional exercise, a scaffold user is asked to remove an access section to move a large item. Their user training supports recognition that the planned access no longer fits the task, but it does not authorize alteration. The worked answer sends the changed need to the responsible scaffold and task planners. The user reports the obstacle accurately and waits for the approved arrangement rather than solving a design or erection question through improvisation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G88_lesson2",
+        "title": "Lesson 2 — Read system compatibility evidence",
+        "body": "Personal fall equipment functions as a system. An anchorage arrangement, connecting subsystem and body support interact with the intended use, geometry and user. Inspection of individual items is necessary under the actual program but does not by itself establish that every combination is compatible. Manufacturer restrictions and the competent selection process must address the actual arrangement.\n\nUnderstand the difference between restraint and arrest. A restraint arrangement is intended to prevent access to a fall exposure within its approved configuration. An arrest arrangement addresses a fall after it begins and therefore has different system and rescue implications. A work-positioning function has its own purpose and cannot be casually substituted for either. The planner must identify what the chosen system is designed to achieve.\n\nComponent identity matters. Similar colors, connector shapes or brand names do not prove compatibility. A substituted connecting device can have different use restrictions even if it attaches physically. The worker should recognize an unreviewed substitution and use the employer's reporting process. The technical decision must come from the authorized selection or design role, not an experiment in connecting equipment.\n\nFit, condition and actual use also need practical instruction. A diagram cannot establish that a person can inspect and use the assigned equipment correctly. The employer's qualified instructor must assess those duties safely with the actual equipment or approved representative method. This course teaches selection questions, not a fitting sequence or a physical demonstration.\n\nFor the desk exercise, compare a system schedule with an issued-equipment list. The connecting device differs from the accepted schedule. Preserve both identifiers and state the actual uncertainty: suitability of the changed combination. Do not label the entire system defective without evidence, but do not treat individually current inspection labels as approval of the substitution. The worker's accurate identification allows a competent reviewer to resolve the specific question.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G88_lesson3",
+        "title": "Lesson 3 — Interpret clearance and anchorage decisions",
+        "body": "Anchorage suitability and clearance are technical questions tied to the actual location and selected system. A beam that looks substantial is not automatically an approved anchorage. A marked point on a drawing is evidence of an intended location, not necessarily evidence of structural capacity or accepted use. The responsible design or selection process must establish the relevant requirements and approval.\n\nClearance concerns the space available for the system to perform its intended function without unacceptable contact. It depends on the actual arrangement and geometry. An obstruction below or beside the work can matter even when the worker uses familiar equipment. The course deliberately supplies no universal distance or calculation formula; the qualified review must use the actual system, manufacturer information and applicable requirements.\n\nConsider horizontal movement and the relationship between the work area and attachment arrangement. A plan adequate for one position may not cover another. The competent process evaluates the actual movement and system behavior. Workers should report a change in work location rather than assume that staying attached makes every position acceptable.\n\nThe fictional record approves location A, but the job moves to location B, which has a lower obstruction. The equipment and worker are unchanged, yet the geometry is not. The worked answer requests a location-specific competent review. It does not estimate a safe clearance by subtracting visible dimensions or select a nearby structure as an alternative attachment.\n\nFor a safe exercise, mark the approved location, proposed location and known obstructions on a drawing. List which assumptions changed and which evidence would need review. This helps workers understand why a relocation is a technical change rather than an administrative detail. If the approved arrangement cannot support the required task, the planner may need another access method. That decision belongs to the appropriate qualified roles.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G88_lesson4",
+        "title": "Lesson 4 — Review scaffold status and change",
+        "body": "A scaffold handover describes an identified structure in a stated configuration for an intended use, with relevant restrictions. Its inspection evidence must relate to the actual scaffold and current condition. A tag can communicate status under the employer's system, but the tag is not a substitute for the underlying inspection or a guarantee that later changes were assessed.\n\nRead the relationship between configuration and use. Loading, access, work area and attachments may be limited by the accepted arrangement. A user should not infer that any task is suitable merely because a platform exists. Proposed changes in materials or work can need review even when no scaffold member has moved. The responsible scaffold roles determine actual suitability.\n\nAlteration creates a particularly clear change question. If a crew modifies access after the recorded inspection, the old evidence describes the earlier condition. Leaving the tag unchanged does not extend the inspection to the alteration. Report the change and follow the designated review and release route. Do not climb or load an uncertain scaffold to test its apparent stability.\n\nDefect reporting should be factual. Identify the scaffold, location and observed condition without pretending to diagnose every structural consequence. A missing or damaged feature deserves competent attention; the user need not calculate capacity to make the report useful. The actual program determines restriction and reassessment duties.\n\nIn the fictional exercise, scaffold SC7 was handed over for one access arrangement, then another crew changes the access section. The user notices that the configuration no longer matches the handover description. The worked response preserves the old record, reports the actual change and requests the required competent review. The eventual disposition should identify the configuration accepted, not simply add a fresh date to the old tag. Scaffold design and examination remain specialist duties distinct from user awareness.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G88_lesson5",
+        "title": "Lesson 5 — Plan tools and adjacent exposure",
+        "body": "A height-work plan must consider objects and people as well as the person at risk of falling. Tools, materials and debris can affect people below or beside the task. A personal fall-arrest system does not control every dropped-object pathway. Collective access can also introduce loading, material handling and route interfaces that need coordinated planning.\n\nMap the task's vertical and horizontal surroundings. Identify work below, access routes, equipment, storage and activities that may change during the task. A drawing can reveal that the selected work position is above a routine pedestrian route or that a material transfer crosses another crew's area. The responsible planners select the actual controls; this lesson provides no universal exclusion distance or tethering recipe.\n\nTool and material controls must fit the actual items and method. A generic statement all tools secured does not show that the proposed equipment and handling arrangement are suitable. The qualified task team determines appropriate retention, transfer and housekeeping methods within the approved system. Workers should understand restrictions and report an item or task not covered by the plan.\n\nDo not let one control create an unreviewed interface with another. Added equipment can affect movement, loading or access. A change to improve productivity can alter the work arrangement and require reassessment. The worker's job is to communicate the actual change rather than assume that a good intention makes the new arrangement acceptable.\n\nFor the exercise, a maintenance plan identifies fall protection but omits the walkway below. The worker marks the route and the tools used, then identifies the site owner who controls pedestrian access and the task owner who controls tools. The worked answer is coordinated planning addressing both exposure paths. A harness certificate alone cannot resolve the people below, and a route closure alone cannot demonstrate that the wearer's selected fall system is suitable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G88_lesson6",
+        "title": "Lesson 6 — Test rescue feasibility as a planning question",
+        "body": "Rescue planning must be feasible for the actual access arrangement, not just mentioned in a briefing. A person left suspended or stranded may require a timely, suitable response by qualified people. The employer's specialists determine the actual rescue method, equipment and competence. This course does not teach casualty handling, rope rigging, suspension techniques or improvised recovery.\n\nReview three separate questions: capability, availability and compatibility with the location. A team may be competent for one arrangement but not another. The required equipment may exist but be committed elsewhere. Access for rescuers may differ from access for the production task. The plan needs evidence connecting those questions to the proposed work period and location.\n\nPractical rescue evidence should describe what was demonstrated and under what safe representative conditions. Attendance at a discussion can show participation in planning but cannot establish physical rescue performance. Conversely, a physical exercise in one configuration does not automatically establish every possible rescue scope. Keep limitations visible so the next planner can determine whether the evidence is representative.\n\nWorkers need to understand their own emergency roles. Recognizing a problem, raising the alarm and providing location information are different from conducting a technical rescue. An unassigned coworker should not be expected to improvise recovery because the task seems short. Duration does not create unavailable capability or remove the consequences of an abnormal event.\n\nIn the exercise, the rescue equipment named in the plan is booked at another site. A prior assessment also used a different access configuration. The worked answer identifies the availability and representativeness gaps separately. A new equipment booking would address only one. The qualified organization must establish a feasible arrangement before the work relies on it. The learner performs this analysis on paper without suspending anyone or testing a system.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G88_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: a maintenance crew will use personal fall protection at location A. The system schedule names an approved connecting device and anchorage arrangement. At dispatch, a different device is issued. The task then moves to location B, where a lower obstruction is shown on the site drawing. The foreman says the harness inspections are current and the workers use this brand regularly.\n\nThe worker first distinguishes component condition from system suitability. Current individual inspection evidence is useful, but it does not establish acceptance of the substituted combination. The actual device identity and restrictions are supplied to the authorized technical selection role. Nobody connects and loads the arrangement to prove it feels secure.\n\nThe relocation is a separate issue. Location B has changed geometry even though the equipment and people remain familiar. The existing clearance review for A does not automatically cover the obstruction at B. The qualified reviewer must assess the actual arrangement and permitted movement. The crew does not invent a universal distance or choose another attachment based on appearance.\n\nThe planning discussion also identifies a pedestrian route below B and tools not listed in the original work plan. The site and task owners coordinate those exposure paths. A suitable wearer system would not by itself control dropped objects or people passing below. Equally, coordinating the walkway would not establish anchorage suitability.\n\nThe worked decision therefore has three distinct dispositions: substituted component compatibility, location-specific system suitability and surrounding exposure controls. The foreman's brand familiarity does not close any of those questions. The existing inspection records remain part of the pack, but their claims stay within their actual scope.\n\nIf the reviewers approve a revised arrangement, the crew receives the correct equipment, location and restrictions through the actual instruction process. Practical equipment use and emergency response are assessed separately by qualified personnel. This case demonstrates a worker's useful contribution: accurate identification of the issued item, changed location and nearby activity. The worker need not be a structural designer to recognize that an approved assumption changed.\n\nA short task does not alter the reasoning. The need for a feasible rescue arrangement and suitable system follows the actual exposure and program, not a promise that the job will finish quickly.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G88_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: scaffold SC7 was handed over for inspection work in a defined configuration. Another crew later changes an access section to move a large item. The tag remains in place. The incoming user notices that the configuration differs from the handover. The planned repair also adds materials above a busy route. A rescue plan names equipment that is currently at another site.\n\nThe user reports the access alteration and avoids treating the unchanged tag as evidence of a new inspection. The responsible scaffold role reviews the actual changed configuration under the applicable process. The user does not remove further members or climb into the altered section to inspect it personally. Their report identifies the structure and observed change, which is enough to initiate the competent review.\n\nThe task planner next compares intended use with the accepted arrangement. Adding materials may affect suitability and needs the relevant technical consideration; a scaffold approved for one use is not automatically unrestricted. The planner does not infer capacity from how sturdy it appears. The actual scaffold authority determines the accepted configuration and restrictions.\n\nThe work below requires its own coordination. The task and site owners identify who may be exposed to tools or material and select controls suitable for the actual work. The crew's personal protective equipment record is not evidence that the lower route has been addressed. Each exposure needs a real owner and arrangement.\n\nFinally, the rescue plan is examined for availability. Equipment on another site is not current capability at SC7. The qualified organization must establish the actual rescue arrangement and any safe representative assessment needed for it. A tabletop discussion can rehearse contacts and status, but cannot replace physical competence evidence.\n\nThe worked handover records the reviewed scaffold configuration, task restrictions, lower-area arrangements and rescue readiness separately. Completion of one review does not erase the others. If the scaffold is accepted but rescue remains unresolved, the package is not made fully ready by a new cover signature.\n\nThis case teaches the incoming user to read status in relation to reality. A tag, certificate and rescue paragraph can each be genuine yet fail to support the changed task. Accurate reporting and proper role assignment preserve the value of those records while preventing a general readiness claim from exceeding what has actually been established.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G88_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Use the final decisions to apply access-role separation, component compatibility, location-specific clearance and anchorage review, scaffold status, dropped-object interfaces and rescue feasibility. Preserve original responses and acknowledge each explained correction.\n\nReal scaffold, rope-access, fall-system and rescue duties require actual method instruction and qualified practical evaluation. The underlying trade and any design authority remain separate. Passing this course grants no permission to erect, alter, inspect, rig or rescue beyond the person's established assigned competence.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G88_check1",
+        "prompt": "During identify the access role, a scaffold user card is accepted as scaffold alteration competence. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Require role-specific assessment before assigning alteration duties."
+          },
+          {
+            "id": "b",
+            "label": "Scaffold user awareness qualifies the worker to alter a scaffold."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G88_check2",
+        "prompt": "During read system compatibility evidence, a replacement connector has no documented acceptance in the selected system. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Matching colors establish fall-system compatibility."
+          },
+          {
+            "id": "b",
+            "label": "Refer the substitution to the authorized technical selection process."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G88_check3",
+        "prompt": "During interpret clearance and anchorage decisions, a clearance review for another location is reused despite changed geometry. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A strong-looking beam is an approved anchorage."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Obtain a location-specific competent review before relying on the arrangement."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G88_check4",
+        "prompt": "During review scaffold status and change, an access section was changed after the recorded inspection. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An unchanged tag validates all later alterations."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Refer the changed scaffold for the required competent review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G88_check5",
+        "prompt": "During plan tools and adjacent exposure, the plan protects the wearer but ignores workers below the task. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Coordinate dropped-object and lower-area controls with the affected work owners."
+          },
+          {
+            "id": "b",
+            "label": "A harness prevents tools from striking people below."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G88_check6",
+        "prompt": "During test rescue feasibility as a planning question, the designated rescue equipment is committed to another site during the work. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A short task does not need a feasible rescue arrangement."
+          },
+          {
+            "id": "b",
+            "label": "Resolve availability and reassess the rescue arrangement before release."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G88_final1",
+        "prompt": "Which evidence is most directly relevant to identify the access role?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Access role matrix linked to the actual work method."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G88_final2",
+        "prompt": "Which evidence is most directly relevant to read system compatibility evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Fall-system schedule linking component identities and approved compatibility."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G88_final3",
+        "prompt": "Which evidence is most directly relevant to interpret clearance and anchorage decisions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approved anchorage and clearance review linked to the selected system."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G88_final4",
+        "prompt": "Which evidence is most directly relevant to review scaffold status and change?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Scaffold handover and inspection record tied to the identified structure."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G88_final5",
+        "prompt": "Which evidence is most directly relevant to plan tools and adjacent exposure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Height-work interface plan identifying tools, lower work areas and access routes."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G88_final6",
+        "prompt": "Which evidence is most directly relevant to test rescue feasibility as a planning question?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Access-specific rescue plan and safe representative exercise record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G88_final7",
+        "prompt": "A colleague argues: “Scaffold user awareness qualifies the worker to alter a scaffold.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; require role-specific assessment before assigning alteration duties."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G88_final8",
+        "prompt": "A colleague argues: “Matching colors establish fall-system compatibility.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; refer the substitution to the authorized technical selection process."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G88_final9",
+        "prompt": "A colleague argues: “A strong-looking beam is an approved anchorage.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; obtain a location-specific competent review before relying on the arrangement."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G88_final10",
+        "prompt": "A colleague argues: “An unchanged tag validates all later alterations.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; refer the changed scaffold for the required competent review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G88_final11",
+        "prompt": "A colleague argues: “A harness prevents tools from striking people below.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; coordinate dropped-object and lower-area controls with the affected work owners."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G88_final12",
+        "prompt": "A colleague argues: “A short task does not need a feasible rescue arrangement.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; resolve availability and reassess the rescue arrangement before release."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G88_final13",
+        "prompt": "The task uses a scaffold, but the worker only has user training. What does that establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Authority to redesign the scaffold."
+          },
+          {
+            "id": "b",
+            "label": "Every rope-access rescue technique."
+          },
+          {
+            "id": "c",
+            "label": "A user-role evidence scope; alteration and technical inspection remain separate duties."
+          },
+          {
+            "id": "d",
+            "label": "Capacity approval for every intended load."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G88_final14",
+        "prompt": "A system is intended to prevent reaching a fall exposure. Which concept is being reviewed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An automatic guarantee of every arrest scenario."
+          },
+          {
+            "id": "b",
+            "label": "A scaffold erection sequence."
+          },
+          {
+            "id": "c",
+            "label": "A substitute for all rescue planning."
+          },
+          {
+            "id": "d",
+            "label": "The intended restraint function within the approved arrangement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G88_final15",
+        "prompt": "The work moves beside a lower obstruction. Why does the old clearance review need attention?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual geometry changed even though the equipment and worker did not."
+          },
+          {
+            "id": "b",
+            "label": "Every location uses one universal clearance."
+          },
+          {
+            "id": "c",
+            "label": "Only the equipment color matters."
+          },
+          {
+            "id": "d",
+            "label": "A harness inspection certifies structural anchorage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G88_final16",
+        "prompt": "A scaffold tag remains after an unreviewed access alteration. What does the old inspection describe?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every future configuration."
+          },
+          {
+            "id": "b",
+            "label": "The previously inspected configuration, not automatic acceptance of the later alteration."
+          },
+          {
+            "id": "c",
+            "label": "Rope-access competence."
+          },
+          {
+            "id": "d",
+            "label": "Unrestricted permission to add materials."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G88_final17",
+        "prompt": "A harness plan omits tools above a walkway. What needs separate attention?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the worker’s training certificate."
+          },
+          {
+            "id": "b",
+            "label": "The wording of the purchase order."
+          },
+          {
+            "id": "c",
+            "label": "Dropped-object exposure and coordination of the people and activities below."
+          },
+          {
+            "id": "d",
+            "label": "Nothing if the wearer is attached."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G88_final18",
+        "prompt": "Rescue equipment exists but is booked elsewhere. Which assumption failed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether the equipment has a familiar name."
+          },
+          {
+            "id": "b",
+            "label": "Whether the task is commercially urgent."
+          },
+          {
+            "id": "c",
+            "label": "Whether a tabletop attendance list is signed."
+          },
+          {
+            "id": "d",
+            "label": "Availability at the actual location and work period."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G88_final19",
+        "prompt": "The height-work crew supplies current harness/component inspection records after receiving a different connecting device and moving from A to B. What is still needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Competent acceptance of the changed combination and location-specific system/clearance suitability."
+          },
+          {
+            "id": "b",
+            "label": "No further review because individual inspection labels establish every combination."
+          },
+          {
+            "id": "c",
+            "label": "Only confirmation that both devices have the same color."
+          },
+          {
+            "id": "d",
+            "label": "A trial suspension by the worker to decide whether the arrangement feels secure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G88_final20",
+        "prompt": "SC7's changed scaffold configuration is later accepted, but the named rescue equipment is still at another site. What should the status record show?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Unrestricted task readiness because scaffold acceptance proves every emergency capability."
+          },
+          {
+            "id": "b",
+            "label": "The accepted scaffold scope and the independently unresolved rescue availability/readiness limitation."
+          },
+          {
+            "id": "c",
+            "label": "That rescue availability is irrelevant when the task is expected to be short."
+          },
+          {
+            "id": "d",
+            "label": "That a tabletop discussion demonstrates the missing physical rescue resources."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G88_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G88_lesson1",
+          "questionIds": [
+            "G88_check1"
+          ]
+        },
+        {
+          "lessonId": "G88_lesson2",
+          "questionIds": [
+            "G88_check2"
+          ]
+        },
+        {
+          "lessonId": "G88_lesson3",
+          "questionIds": [
+            "G88_check3"
+          ]
+        },
+        {
+          "lessonId": "G88_lesson4",
+          "questionIds": [
+            "G88_check4"
+          ]
+        },
+        {
+          "lessonId": "G88_lesson5",
+          "questionIds": [
+            "G88_check5"
+          ]
+        },
+        {
+          "lessonId": "G88_lesson6",
+          "questionIds": [
+            "G88_check6"
+          ]
+        },
+        {
+          "lessonId": "G88_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G88_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G88_final",
+          "questionIds": [
+            "G88_final1",
+            "G88_final2",
+            "G88_final3",
+            "G88_final4",
+            "G88_final5",
+            "G88_final6",
+            "G88_final7",
+            "G88_final8",
+            "G88_final9",
+            "G88_final10",
+            "G88_final11",
+            "G88_final12",
+            "G88_final13",
+            "G88_final14",
+            "G88_final15",
+            "G88_final16",
+            "G88_final17",
+            "G88_final18",
+            "G88_final19",
+            "G88_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G88_check1": "The correct decision is to require role-specific assessment before assigning alteration duties. A scaffold user, erector, inspector, rope-access technician and fall-system designer perform different tasks. Determine the actual method before assigning competence evidence. A worker who understands a harness label has not thereby demonstrated scaffold inspection or rope rescue. The planning record should state whether the worker uses an established access system or designs, alters, inspects or rescues from it. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G88_check2": "The correct decision is to refer the substitution to the authorized technical selection process. Fall-protection components function as a system; appearance or common connectors alone do not prove compatibility. The qualified design or selection process considers the actual arrangement and manufacturer instructions. Review identified components, approved use and recorded restrictions without assembling or loading equipment. A missing component identity is a traceability problem that requires resolution before it supports a work plan. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G88_check3": "The correct decision is to obtain a location-specific competent review before relying on the arrangement. A fall plan must address the actual geometry and system behavior through the authorized competent design process. An anchorage location on a drawing is not proof of structural suitability. Clearance depends on the selected arrangement, not an invented universal number. This desk lesson checks whether the calculation, assumptions and approval match the work area; it does not provide design loads or calculation recipes. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G88_check4": "The correct decision is to refer the changed scaffold for the required competent review. A scaffold status record should identify the scaffold, intended use, restrictions and inspection responsibility. A tag cannot explain an unreviewed alteration. Users report defects and changes through the established route rather than modifying members to gain access. The applicable erection, inspection and design roles remain separately assigned. Do not climb a structure to determine whether its paperwork is accurate. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G88_check5": "The correct decision is to coordinate dropped-object and lower-area controls with the affected work owners. Work at height also affects people below and beside the work area. Tool control, dropped-object exposure, access routes and simultaneous activities need coordinated arrangements. A fall-arrest system addresses a different problem from a dropped tool. The responsible planners choose suitable controls for actual items and work; the learner checks that these hazards have not disappeared from the plan merely because harness training was recorded. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G88_check6": "The correct decision is to resolve availability and reassess the rescue arrangement before release. A rescue plan needs a suitable team, method, equipment and availability for the actual access arrangement. Rope-access production skill does not automatically establish every rescue capability. The learner reviews a safe representative exercise record and limitations; they do not practice suspension or improvised recovery. A plan that depends on unavailable equipment remains unresolved even when the work itself appears brief. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G88_final1": "A access role matrix linked to the actual work method addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A scaffold user, erector, inspector, rope-access technician and fall-system designer perform different tasks. Determine the actual method before assigning competence evidence. A worker who understands a harness label has not thereby demonstrated scaffold inspection or rope rescue. The planning record should state whether the worker uses an established access system or designs, alters, inspects or rescues from it.",
+        "G88_final2": "A fall-system schedule linking component identities and approved compatibility addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Fall-protection components function as a system; appearance or common connectors alone do not prove compatibility. The qualified design or selection process considers the actual arrangement and manufacturer instructions. Review identified components, approved use and recorded restrictions without assembling or loading equipment. A missing component identity is a traceability problem that requires resolution before it supports a work plan.",
+        "G88_final3": "A approved anchorage and clearance review linked to the selected system addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A fall plan must address the actual geometry and system behavior through the authorized competent design process. An anchorage location on a drawing is not proof of structural suitability. Clearance depends on the selected arrangement, not an invented universal number. This desk lesson checks whether the calculation, assumptions and approval match the work area; it does not provide design loads or calculation recipes.",
+        "G88_final4": "A scaffold handover and inspection record tied to the identified structure addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A scaffold status record should identify the scaffold, intended use, restrictions and inspection responsibility. A tag cannot explain an unreviewed alteration. Users report defects and changes through the established route rather than modifying members to gain access. The applicable erection, inspection and design roles remain separately assigned. Do not climb a structure to determine whether its paperwork is accurate.",
+        "G88_final5": "A height-work interface plan identifying tools, lower work areas and access routes addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Work at height also affects people below and beside the work area. Tool control, dropped-object exposure, access routes and simultaneous activities need coordinated arrangements. A fall-arrest system addresses a different problem from a dropped tool. The responsible planners choose suitable controls for actual items and work; the learner checks that these hazards have not disappeared from the plan merely because harness training was recorded.",
+        "G88_final6": "A access-specific rescue plan and safe representative exercise record addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A rescue plan needs a suitable team, method, equipment and availability for the actual access arrangement. Rope-access production skill does not automatically establish every rescue capability. The learner reviews a safe representative exercise record and limitations; they do not practice suspension or improvised recovery. A plan that depends on unavailable equipment remains unresolved even when the work itself appears brief.",
+        "G88_final7": "That inference exceeds the evidence. A scaffold user, erector, inspector, rope-access technician and fall-system designer perform different tasks. Determine the actual method before assigning competence evidence. A worker who understands a harness label has not thereby demonstrated scaffold inspection or rope rescue. The planning record should state whether the worker uses an established access system or designs, alters, inspects or rescues from it. The appropriate task disposition remains to require role-specific assessment before assigning alteration duties.",
+        "G88_final8": "That inference exceeds the evidence. Fall-protection components function as a system; appearance or common connectors alone do not prove compatibility. The qualified design or selection process considers the actual arrangement and manufacturer instructions. Review identified components, approved use and recorded restrictions without assembling or loading equipment. A missing component identity is a traceability problem that requires resolution before it supports a work plan. The appropriate task disposition remains to refer the substitution to the authorized technical selection process.",
+        "G88_final9": "That inference exceeds the evidence. A fall plan must address the actual geometry and system behavior through the authorized competent design process. An anchorage location on a drawing is not proof of structural suitability. Clearance depends on the selected arrangement, not an invented universal number. This desk lesson checks whether the calculation, assumptions and approval match the work area; it does not provide design loads or calculation recipes. The appropriate task disposition remains to obtain a location-specific competent review before relying on the arrangement.",
+        "G88_final10": "That inference exceeds the evidence. A scaffold status record should identify the scaffold, intended use, restrictions and inspection responsibility. A tag cannot explain an unreviewed alteration. Users report defects and changes through the established route rather than modifying members to gain access. The applicable erection, inspection and design roles remain separately assigned. Do not climb a structure to determine whether its paperwork is accurate. The appropriate task disposition remains to refer the changed scaffold for the required competent review.",
+        "G88_final11": "That inference exceeds the evidence. Work at height also affects people below and beside the work area. Tool control, dropped-object exposure, access routes and simultaneous activities need coordinated arrangements. A fall-arrest system addresses a different problem from a dropped tool. The responsible planners choose suitable controls for actual items and work; the learner checks that these hazards have not disappeared from the plan merely because harness training was recorded. The appropriate task disposition remains to coordinate dropped-object and lower-area controls with the affected work owners.",
+        "G88_final12": "That inference exceeds the evidence. A rescue plan needs a suitable team, method, equipment and availability for the actual access arrangement. Rope-access production skill does not automatically establish every rescue capability. The learner reviews a safe representative exercise record and limitations; they do not practice suspension or improvised recovery. A plan that depends on unavailable equipment remains unresolved even when the work itself appears brief. The appropriate task disposition remains to resolve availability and reassess the rescue arrangement before release.",
+        "G88_final13": "A user-role evidence scope; alteration and technical inspection remain separate duties. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G88_final14": "The intended restraint function within the approved arrangement. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G88_final15": "The actual geometry changed even though the equipment and worker did not. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G88_final16": "The previously inspected configuration, not automatic acceptance of the later alteration. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G88_final17": "Dropped-object exposure and coordination of the people and activities below. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G88_final18": "Availability at the actual location and work period. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G88_final19": "Component condition is useful but cannot establish compatibility or suitability under changed geometry. The authorized technical process must review both the actual combination and location; no improvised loading test is justified.",
+        "G88_final20": "Scaffold acceptance does not place rescue resources at the site. Preserve each actual status and obtain the qualified feasible rescue arrangement before work relies on it; task duration and discussion cannot supply missing capability."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

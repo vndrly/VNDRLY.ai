@@ -1,0 +1,906 @@
+{
+  "courseId": "G62",
+  "gapGroupId": "G13",
+  "title": "Explosive-work interfaces: scope, accountability and specialist boundaries",
+  "description": "identify actual explosive-method responsibilities and preserve site, custody and abnormal-response boundaries",
+  "purpose": "identify actual explosive-method responsibilities and preserve site, custody and abnormal-response boundaries",
+  "audience": [
+    "Site coordinators",
+    "Adjacent-trade supervisors",
+    "Support personnel preparing for specialist instruction"
+  ],
+  "practicalBoundary": "This course authorizes no explosive handling, preparation, initiation, well-perforating execution, misfire intervention or recovery. It supplies no device recipe, firing circuit, setting, distance, timing or disposal method. Actual manufacturer/system instructions, jurisdiction-specific authorization and qualified observed practical competence remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual explosive versus nonexplosive method and applicable jurisdiction",
+    "Product/system-specific manufacturer procedures and qualified operation lead",
+    "Relevant licenses/permissions and role-specific training/experience evidence",
+    "Actual site/well interfaces, exclusion/warning and personnel-accountability plan",
+    "Transport/storage/custody arrangements for the assigned functions",
+    "Specialist abnormal/misfire/emergency/recovery resources and procedures"
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified method-specific program assesses actual assigned handling/execution duties under authorized controlled conditions",
+    "Competent specialist/site authorities assess actual interfaces, warnings and accountability",
+    "Separately qualified recovery program assesses abnormal intervention; support communication can be tested safely with harmless scenarios"
+  ],
+  "sources": [
+    {
+      "title": "OSHA blaster qualifications",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.901"
+    },
+    {
+      "title": "OSHA — Construction blasting general provisions; bounded scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.900"
+    },
+    {
+      "title": "OSHA — Oil and gas well completion/perforating context",
+      "url": "https://www.osha.gov/etools/oil-and-gas/well-completion"
+    },
+    {
+      "title": "OSHA — Oil and gas standards applicability",
+      "url": "https://www.osha.gov/oil-and-gas-extraction/standards"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G62_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Explosive-work interfaces: scope, accountability and specialist boundaries\n\nThis course teaches a bounded task: identify actual explosive-method responsibilities and preserve site, custody and abnormal-response boundaries Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis course authorizes no explosive handling, preparation, initiation, well-perforating execution, misfire intervention or recovery. It supplies no device recipe, firing circuit, setting, distance, timing or disposal method. Actual manufacturer/system instructions, jurisdiction-specific authorization and qualified observed practical competence remain separate. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G62_lesson1",
+        "title": "1. Resolve explosive and nonexplosive methods before assigning duties",
+        "body": "A service name such as seismic acquisition, inspection or well services does not establish that explosives will be used. Some methods are nonexplosive. Other activities, including certain well-perforating work, introduce specialist explosive systems and their own interfaces. Begin with the actual contract, method, equipment and duties. Do not assign explosive qualifications to an unrelated desk service or treat a broad service label as approval of explosive work.\n\nConstruction blasting and well perforating are not interchangeable operating methods. OSHA construction blasting provisions provide a bounded example of qualified personnel and control responsibilities; they are not a universal rulebook for every well operation or jurisdiction. The responsible employer must establish actual applicability, required licenses/permissions and the method-specific qualified program.\n\nSeparate roles concretely. A person coordinating site access, a driver transporting regulated material, a specialist handling explosive equipment and the authority directing the operation have different responsibilities. A credential for one function does not automatically qualify another. A general hazardous-material course does not establish shot-firing or well-perforating competence, and a commercial job title does not demonstrate practical proficiency.\n\nIdentify the boundaries before mobilization. Which activities will be performed, which product/system is involved, who controls the specialist operation and who controls connected site or well conditions? A sentence saying specialist contractor to manage it is incomplete if the site does not know how its own work must be coordinated. The contractor likewise needs accurate information about the actual environment.\n\nFor a harmless desk exercise, compare a nonexplosive survey, a construction blasting task and a well-perforating service. List the distinct method and authority questions. The learner must not supply a firing plan or select explosive equipment. The useful outcome is an explicit scope with specific missing evidence. Actual execution remains outside this course and requires the relevant qualified program and observed role competence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G62_lesson2",
+        "title": "2. Understand energetic material hazards and why appearance is insufficient",
+        "body": "An explosive system can release energy rapidly with severe consequences. Its condition cannot be judged by ordinary appearance or by whether the planned operation has apparently finished. A package, tool or component that looks intact is not automatically safe for an unqualified person to touch, open or move. The manufacturer's instructions and the qualified specialist program determine the actual handling and status verification.\n\nDistinguish item identity, custody and physical condition. An inventory record can identify what should be present and who is responsible. It does not prove that an item is in a particular safe operating state. A signed receipt proves its actual documented handoff only within scope. The qualified role must establish the relevant physical status using the approved method; the coordinator must not convert a spreadsheet entry into a technical clearance.\n\nUnknown or damaged items require the actual abnormal-response process. Do not inspect them by opening, shaking, manipulating or dismantling. Do not use an improvised tool to make an item safe. The support worker preserves separation, reports facts and prevents casual handling within their assigned access-control duty. Specialist assessment and recovery require their own method and competence.\n\nMaterial accountability protects against misplaced, lost or unauthorized items. The actual program defines records, custody and reporting. A missing item must not be explained away by adjusting the count to make paperwork balance. Conversely, a record discrepancy is not proof of a particular physical event. Report the exact identifier/count conflict and uncertainty to the designated authority.\n\nUse a fictional set of harmless item cards to practice this distinction. One card represents an issued item, another a returned record and another an unresolved physical-status report. The correct learner decision keeps the questions separate. It does not infer a safe state from the word returned or authorize anyone to search equipment. The later practical program must assess actual specialist handling and accountability under the real product/system instructions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G62_lesson3",
+        "title": "3. Identify site and well interfaces without designing initiation controls",
+        "body": "Explosive work exists within a wider site. Other equipment, energy sources, communications, moving vehicles, lifting, weather and nearby people can affect the operation. The actual explosive system and manufacturer instructions determine which interactions need control. This course intentionally supplies no initiation circuit, firing sequence, device assembly, triggering threshold or method for defeating a safety feature.\n\nThe planning skill is to identify who can change relevant conditions. A site electrical team, vehicle operator, control room or another contractor may introduce a change without knowing the specialist task is underway. The designated site and explosive-operation authorities need a coordinated arrangement, understood by the affected roles. A note in one contractor's work pack cannot control every other organization by itself.\n\nDo not invent universal rules for communication equipment or energy devices from a general lesson. Different systems can have different instructions and sensitivities. The qualified authority must establish the actual permitted/prohibited activities and communicate them. A support worker who receives a new request reports it before the condition changes instead of deciding that a small device or brief activity cannot matter.\n\nWell-perforating adds a distinct well-pressure and barrier interface. Explosive-work status does not prove the well is in the required condition, and a well-control clearance does not prove explosive equipment safe. The responsible well and specialist roles must coordinate the actual operation. This course provides no barrier configuration, pressure setting or well-intervention sequence.\n\nAn interface should be described in both directions. The site must understand how the specialist restriction affects other work, and the specialist must know what the site can actually hold or change. If a control room can remotely start equipment, a deck crew can move a load or a receiving gate can admit a delivery, the relevant operator must receive the actual instruction through the established chain. Merely writing other work stopped does not establish that the people capable of changing the condition know it. The coordinator should ask which role confirmed implementation, which activity the confirmation covers and how a proposed change will be communicated. The qualified authorities establish the technical protections; the coordinator preserves accurate operational communication.\n\nChanges also have a time and identity dimension. A confirmation for yesterday's equipment arrangement may not cover a replacement unit or a new contractor today. A message about work area A may not apply to similarly named area A-extension. Read the full identifiers and current scope rather than recognizing familiar words. If two messages conflict, retain both and obtain the responsible resolution before affected work. Do not silently choose the message that best fits the schedule. This discipline makes a safe desk exercise concrete: identify the actual conflict, name the person who can resolve it and state what remains held. It never requires a learner to operate equipment or explain how an explosive system is initiated.\n\nPractice with a fictional request to move lifting equipment through the specialist work area. Identify the activity, the actual control owner and the information needed before the request can be accepted. The answer is not a generic separation distance or a personal guess. The learner preserves the existing restriction and routes the change through the designated authorities, leaving the technical assessment with the people qualified to make it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G62_lesson4",
+        "title": "4. Make exclusion, warnings and personnel accountability meaningful",
+        "body": "An exclusion arrangement keeps unassigned people and incompatible work away from the actual hazard. Its dimensions, timing, access points and warning methods must be established by the qualified operation under the applicable method and jurisdiction. This course gives no blast radius, waiting period or warning sequence. A learner must not draw a convenient circle and call it safe.\n\nSite support needs to know the actual boundary, who controls entry, how visitors and contractors are handled and who can change or release the restriction. A barrier is useful only when it connects to real supervision and communication. A person who sees a gap must not assume the operation ended. The responsible qualified role determines the current status.\n\nWarnings must be understood through the actual local system. A general instruction to listen for a signal is inadequate if workers do not know its meaning, cannot perceive it or have conflicting information. The qualified program establishes the method, roles and response. Support personnel must not invent signals or use an informal message as an operational release.\n\nAccountability concerns actual people, not just the initial headcount. Someone can arrive late, move between tasks or remain in an area after their own job finishes. The responsible process must establish relevant status before the next authorized step. A gate log and a sign-in sheet are useful records within scope, but neither automatically proves every person is outside the controlled area.\n\nA safe exercise uses a site diagram and fictional personnel cards. Introduce a visitor whose location is uncertain and a contractor whose task is complete but departure unconfirmed. The learner should identify the accountability gap and the responsible decision, not send an unqualified person inside to search. Actual practical assessment must test the assigned access-control and communication duties safely and separately from specialist execution skills.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G62_lesson5",
+        "title": "5. Preserve transport, custody and manufacturer-specific handovers",
+        "body": "Moving explosive materials or equipment involves a distinct set of transport, storage and custody responsibilities. The actual material, mode, jurisdiction and task determine the applicable requirements. A driver, site receiver and specialist operator must each have the instruction and authority appropriate to their role. This course does not select packaging, prescribe storage construction or teach loading/handling methods.\n\nHandover information must refer to the actual item/system and condition established by the authorized roles. Compare identifiers and quantities without manipulating equipment. A manifest for one system cannot prove another compatible or ready. If a label or record is unclear, hold the affected handoff under the actual process and obtain the responsible resolution. Never relabel uncertain equipment from memory to meet a dispatch deadline.\n\nManufacturer instructions have a defined scope and revision. An instruction for another model, component or method is not automatically interchangeable. A familiar technician or apparently matching connector does not settle compatibility. The qualified technical program determines the actual evidence and any approved substitutions. No learner connects components or tests an item to answer the classroom questions.\n\nCustody should remain explicit through arrival, staging, use and return under the applicable program. Informal leave it by the gate instructions create uncertainty about who is responsible and whether the location is approved. The coordinator can identify that uncertainty without selecting a storage arrangement. The designated authorized role must establish the real disposition and communicate it to everyone involved.\n\nAfter a work interruption, reconcile the current state rather than relying on the original mobilization plan. Which items and people are present? Which operation is active or held? Which records have changed? A returned transport document does not prove every item is physically accounted for or safe for unrestricted handling. Preserve actual evidence and limitations so the next role does not inherit a false assurance.\n\nA custody handoff also needs a usable exception route. If the authorized receiver is absent or the stated location is unavailable, do not substitute another person or an improvised drop point. Record the actual arrival condition and contact the designated responsible role before the affected transfer. This preserves the connection between the manifest and real custody without teaching storage or handling techniques. The receiving person must understand the same item identity and restriction that the sender reports; a successful vehicle arrival is not a complete authorized handoff.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G62_lesson6",
+        "title": "6. Treat abnormal or uncertain outcomes as specialist work",
+        "body": "An unexpected event, uncertain operation outcome, damaged item, accountability discrepancy or suspected misfire requires the actual specialist emergency/abnormal procedure. The unqualified worker must not approach to confirm the condition or attempt to complete the job. Lack of a visible event is not proof that no hazard remains. A production deadline cannot supply the missing technical assessment.\n\nReport the actual location, equipment or item identity if known, observation, time, people potentially involved and actions already taken within your assignment. Distinguish direct observation from a relayed message. Avoid declaring the technical cause or safe state without qualified evidence. The responsible specialist needs precise uncertainty, not a confident guess that encourages another person to enter.\n\nMaintain the assigned boundary and use the designated emergency route. Rescue, recovery, disposal, re-entry and technical investigation require their actual qualified arrangements. This course gives no misfire waiting time, retrieval method, disassembly step or disposal recipe. A worker must not use tools, vehicles or improvised barriers to manipulate a suspect item.\n\nAfter the immediate response, several releases can remain separate: explosive-system status, material accountability, site access, well-pressure/barrier condition where relevant and return of other trades. One specialist's statement about one domain must not be extended to all. The responsible authorities need evidence for the actual activity they release.\n\nFinish with a bounded handover: current restriction, known facts, unresolved questions, responsible contacts and permitted next action. A general all clear is inadequate if its scope is unknown. The course records knowledge and explicit remediation only. Actual shot-firing, well-perforating, transport and abnormal-recovery skills require their separate method-specific qualification and competent practical assessment. Keep every remaining requirement named rather than claiming specialist competence from a completed screen.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G62_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: a nonexplosive survey becomes a specialist request\n\nA fictional contract originally calls for nonexplosive survey work. After mobilization, the client requests an explosive method to complete an inaccessible portion. The assigned crew has general site and transport awareness. Another contractor plans lifting through the proposed work area, and the project file contains only a generic blasting certificate for an employee who is not present.\n\nThe correct first decision is scope. The changed method introduces a specialist operation not established by the original service order. The crew's awareness does not qualify handling or execution, and an absent person's certificate cannot supply the actual team. The project must identify the actual method, qualified personnel and applicable requirements before assignment.\n\nThe lifting activity is an independent site interface. The designated authorities must coordinate its real effect and any restriction. The learner does not choose an explosive system, prescribe an initiation control or draw an exclusion distance. They hold the affected new work and communicate the specific missing method, people and interface evidence.\n\nSuppose a specialist later arrives with a relevant credential. That supports only its actual scope. Product/model instructions, site arrangements, accountability and the current plan still require real evidence. A construction blasting rule is not automatically the operating basis for every other explosive method. The worked output keeps the original nonexplosive task distinct from the proposed change and does not invent a universal qualification bundle.\n\nCase B: returned record, uncertain physical status\n\nA fictional well-perforating service reaches shift handover. A record marks equipment returned, but one identifier differs from the issue record. A worker reports an uncertain operation outcome. Another crew asks to enter the area because the well's pressure-related work status was separately accepted. The site coordinator is asked to look inside the equipment and settle the discrepancy.\n\nSeparate the questions. The record mismatch concerns identity/accountability. The uncertain outcome requires the actual specialist abnormal procedure. The well-pressure acceptance concerns its own scope and does not establish explosive-system clearance. None authorizes an unqualified coordinator to open or inspect equipment.\n\nThe coordinator reports the exact identifiers, observation and uncertainty, preserves the assigned access restriction and contacts the designated specialist and well/site authorities. No learner supplies a waiting period, retrieval step or firing action. The qualified program determines the physical status and the actual next safe disposition.\n\nIf a record correction later resolves the identifier, the uncertain outcome still needs its own technical disposition. If the specialist releases a defined explosive-work restriction, the well and site authorities must still establish their own remaining conditions before unrelated work resumes. The final handover records only the supported scope of each decision.\n\nA safe assessment can use harmless equipment cards and conflicting messages to test role boundaries, reporting and accountability. Actual handling, execution and abnormal recovery must be assessed separately by the qualified method-specific program. The classroom succeeds by preserving the right restrictions and communicating the real gaps, not by producing a dramatic technical solution.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G62_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G62_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced identify actual explosive-method responsibilities and preserve site, custody and abnormal-response boundaries Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G62_check1",
+        "prompt": "A survey changes to an explosive method. What comes first?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Establish the actual new method, qualified team and requirements."
+          },
+          {
+            "id": "b",
+            "label": "Use the same awareness record."
+          },
+          {
+            "id": "c",
+            "label": "Borrow an absent person's certificate."
+          },
+          {
+            "id": "d",
+            "label": "Only rename the task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G62_check2",
+        "prompt": "A returned entry proves what physical state automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every item safe."
+          },
+          {
+            "id": "b",
+            "label": "None beyond its actual supported verification."
+          },
+          {
+            "id": "c",
+            "label": "Every hazard removed."
+          },
+          {
+            "id": "d",
+            "label": "Unrestricted handling."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G62_check3",
+        "prompt": "A new device is proposed near specialist work. What should support do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Invent a universal safe device rule."
+          },
+          {
+            "id": "b",
+            "label": "Assume small means harmless."
+          },
+          {
+            "id": "c",
+            "label": "Refer the actual change to the designated authorities before it occurs."
+          },
+          {
+            "id": "d",
+            "label": "Choose a trigger threshold."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G62_check4",
+        "prompt": "A barrier gap appears. What should not be inferred?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A gap can be reported."
+          },
+          {
+            "id": "b",
+            "label": "The current authority matters."
+          },
+          {
+            "id": "c",
+            "label": "Access status needs clarification."
+          },
+          {
+            "id": "d",
+            "label": "The operation ended and access is released."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G62_check5",
+        "prompt": "A manifest identifier differs from equipment records. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold affected handoff and obtain authorized resolution."
+          },
+          {
+            "id": "b",
+            "label": "Relabel from memory."
+          },
+          {
+            "id": "c",
+            "label": "Use matching paint."
+          },
+          {
+            "id": "d",
+            "label": "Ignore the last digit."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G62_check6",
+        "prompt": "An outcome is uncertain. What may an unqualified worker do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approach to test."
+          },
+          {
+            "id": "b",
+            "label": "Use the actual reporting/protective procedure and preserve the boundary."
+          },
+          {
+            "id": "c",
+            "label": "Open equipment."
+          },
+          {
+            "id": "d",
+            "label": "Try to complete the operation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G62_final1",
+        "prompt": "Does all seismic work use explosives?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes always."
+          },
+          {
+            "id": "b",
+            "label": "Only the invoice decides."
+          },
+          {
+            "id": "c",
+            "label": "No; establish the actual method."
+          },
+          {
+            "id": "d",
+            "label": "Every camera does."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G62_final2",
+        "prompt": "Are construction blasting rules a universal well-perforating method?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes everywhere."
+          },
+          {
+            "id": "b",
+            "label": "Yes for every tool."
+          },
+          {
+            "id": "c",
+            "label": "Yes if familiar."
+          },
+          {
+            "id": "d",
+            "label": "No; actual operation and jurisdiction require their own determination."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G62_final3",
+        "prompt": "Does transport awareness qualify shot-firing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual role competence is separate."
+          },
+          {
+            "id": "b",
+            "label": "Yes automatically."
+          },
+          {
+            "id": "c",
+            "label": "Yes if current."
+          },
+          {
+            "id": "d",
+            "label": "Yes with a gate key."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G62_final4",
+        "prompt": "An item looks intact. What does that establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Safe to dismantle."
+          },
+          {
+            "id": "b",
+            "label": "Only the visual observation, not a safe operating state."
+          },
+          {
+            "id": "c",
+            "label": "Safe to handle."
+          },
+          {
+            "id": "d",
+            "label": "No stored hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G62_final5",
+        "prompt": "A count mismatch is found. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Change the count to balance."
+          },
+          {
+            "id": "b",
+            "label": "Assume theft without evidence."
+          },
+          {
+            "id": "c",
+            "label": "Report exact discrepancy and uncertainty without adjusting history."
+          },
+          {
+            "id": "d",
+            "label": "Ignore until payment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G62_final6",
+        "prompt": "A damaged item is reported. What must support avoid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Notifying the responsible role."
+          },
+          {
+            "id": "b",
+            "label": "Maintaining separation."
+          },
+          {
+            "id": "c",
+            "label": "Recording location."
+          },
+          {
+            "id": "d",
+            "label": "Manipulating it to diagnose the condition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G62_final7",
+        "prompt": "Who controls a site change affecting specialist work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual designated site and specialist authorities through coordination."
+          },
+          {
+            "id": "b",
+            "label": "Any visitor."
+          },
+          {
+            "id": "c",
+            "label": "Only the scheduler."
+          },
+          {
+            "id": "d",
+            "label": "The course author."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G62_final8",
+        "prompt": "Well-pressure status is accepted. What does it establish about explosives?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every item safe."
+          },
+          {
+            "id": "b",
+            "label": "No automatic explosive-system clearance."
+          },
+          {
+            "id": "c",
+            "label": "All specialist work finished."
+          },
+          {
+            "id": "d",
+            "label": "Every site boundary released."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G62_final9",
+        "prompt": "What exclusion radius does this course supply?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A universal number."
+          },
+          {
+            "id": "b",
+            "label": "Whatever fits the diagram."
+          },
+          {
+            "id": "c",
+            "label": "None; actual qualified method/site requirements govern."
+          },
+          {
+            "id": "d",
+            "label": "A visual estimate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G62_final10",
+        "prompt": "A worker hears an unfamiliar signal. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Guess from another site."
+          },
+          {
+            "id": "b",
+            "label": "Assume all clear."
+          },
+          {
+            "id": "c",
+            "label": "Use a personal signal."
+          },
+          {
+            "id": "d",
+            "label": "Actual local instruction and confirmed meaning under the program."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G62_final11",
+        "prompt": "A visitor's location is unknown. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual accountability resolution through responsible roles."
+          },
+          {
+            "id": "b",
+            "label": "Assume outside."
+          },
+          {
+            "id": "c",
+            "label": "Send an unqualified searcher in."
+          },
+          {
+            "id": "d",
+            "label": "Close the headcount."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G62_final12",
+        "prompt": "A driver can transport material. What handling authority follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every specialist duty."
+          },
+          {
+            "id": "b",
+            "label": "Only the actual separately assigned and qualified functions."
+          },
+          {
+            "id": "c",
+            "label": "All recovery work."
+          },
+          {
+            "id": "d",
+            "label": "All firing methods."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G62_final13",
+        "prompt": "Instructions cover another model. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume identical."
+          },
+          {
+            "id": "b",
+            "label": "Test by connecting."
+          },
+          {
+            "id": "c",
+            "label": "Actual qualified suitability/instruction determination."
+          },
+          {
+            "id": "d",
+            "label": "Use any matching connector."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G62_final14",
+        "prompt": "Leave it by the gate creates what issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatic secure storage."
+          },
+          {
+            "id": "b",
+            "label": "Physical safe-state proof."
+          },
+          {
+            "id": "c",
+            "label": "A completed transfer."
+          },
+          {
+            "id": "d",
+            "label": "Unclear approved custody/location and responsibility."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G62_final15",
+        "prompt": "A job pauses overnight. What should be re-established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual current item, people, operation and restriction state."
+          },
+          {
+            "id": "b",
+            "label": "Only the original schedule."
+          },
+          {
+            "id": "c",
+            "label": "Only the invoice."
+          },
+          {
+            "id": "d",
+            "label": "Nothing if unchanged wording."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G62_final16",
+        "prompt": "No visible event occurs. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Safe re-entry."
+          },
+          {
+            "id": "b",
+            "label": "No automatic proof that no hazard remains."
+          },
+          {
+            "id": "c",
+            "label": "Permission to recover."
+          },
+          {
+            "id": "d",
+            "label": "All clear."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G62_final17",
+        "prompt": "What emergency recipe is taught?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A misfire waiting interval."
+          },
+          {
+            "id": "b",
+            "label": "A retrieval method."
+          },
+          {
+            "id": "c",
+            "label": "None; use actual qualified procedures and reporting."
+          },
+          {
+            "id": "d",
+            "label": "A disposal mixture."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G62_final18",
+        "prompt": "Case A a relevant specialist credential arrives. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Everything resolved."
+          },
+          {
+            "id": "b",
+            "label": "Every employee qualified."
+          },
+          {
+            "id": "c",
+            "label": "Every method approved."
+          },
+          {
+            "id": "d",
+            "label": "Actual product/site/plan and current readiness evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G62_final19",
+        "prompt": "Case B record typo resolves. What may remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Uncertain outcome and actual specialist/well/site releases."
+          },
+          {
+            "id": "b",
+            "label": "Nothing."
+          },
+          {
+            "id": "c",
+            "label": "Authority to open equipment."
+          },
+          {
+            "id": "d",
+            "label": "Automatic re-entry."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G62_final20",
+        "prompt": "What does passing provide?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Shot-firing authority."
+          },
+          {
+            "id": "b",
+            "label": "Bounded knowledge separate from specialist execution competence."
+          },
+          {
+            "id": "c",
+            "label": "Perforating qualification."
+          },
+          {
+            "id": "d",
+            "label": "Recovery proficiency."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G62_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G62_lesson1",
+          "questionIds": [
+            "G62_check1"
+          ]
+        },
+        {
+          "lessonId": "G62_lesson2",
+          "questionIds": [
+            "G62_check2"
+          ]
+        },
+        {
+          "lessonId": "G62_lesson3",
+          "questionIds": [
+            "G62_check3"
+          ]
+        },
+        {
+          "lessonId": "G62_lesson4",
+          "questionIds": [
+            "G62_check4"
+          ]
+        },
+        {
+          "lessonId": "G62_lesson5",
+          "questionIds": [
+            "G62_check5"
+          ]
+        },
+        {
+          "lessonId": "G62_lesson6",
+          "questionIds": [
+            "G62_check6"
+          ]
+        },
+        {
+          "lessonId": "G62_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G62_final",
+          "questionIds": [
+            "G62_final1",
+            "G62_final2",
+            "G62_final3",
+            "G62_final4",
+            "G62_final5",
+            "G62_final6",
+            "G62_final7",
+            "G62_final8",
+            "G62_final9",
+            "G62_final10",
+            "G62_final11",
+            "G62_final12",
+            "G62_final13",
+            "G62_final14",
+            "G62_final15",
+            "G62_final16",
+            "G62_final17",
+            "G62_final18",
+            "G62_final19",
+            "G62_final20"
+          ]
+        },
+        {
+          "lessonId": "G62_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G62_check1": "A method change cannot inherit unproven specialist capability.",
+        "G62_check2": "Administrative custody and physical technical status differ.",
+        "G62_check3": "Actual system/manufacturer conditions govern technical compatibility.",
+        "G62_check4": "A physical gap is not an authorized release.",
+        "G62_check5": "Identity evidence must match the actual item.",
+        "G62_check6": "Abnormal intervention is specialist work.",
+        "G62_final1": "Broad service categories preserve method alternatives.",
+        "G62_final2": "A bounded legal reference must not be extended to unrelated execution.",
+        "G62_final3": "Functions and qualifications have distinct scope.",
+        "G62_final4": "Appearance cannot verify specialist system condition.",
+        "G62_final5": "Accountability requires honest traceability, not invented resolution.",
+        "G62_final6": "Technical assessment requires qualified method-specific capability.",
+        "G62_final7": "Connected operations need their assigned control roles.",
+        "G62_final8": "Well and explosive domains require distinct evidence.",
+        "G62_final9": "Online planning cannot design an exclusion arrangement.",
+        "G62_final10": "Warnings must be understood within the actual system.",
+        "G62_final11": "Initial sign-in does not prove current location.",
+        "G62_final12": "Transport qualification cannot be extended automatically.",
+        "G62_final13": "Model-specific evidence must apply to the actual system.",
+        "G62_final14": "Custody and disposition need explicit authorized arrangements.",
+        "G62_final15": "Interruption does not freeze physical state or accountability.",
+        "G62_final16": "Uncertain outcomes require specialist disposition.",
+        "G62_final17": "This course deliberately stops at safe preparatory knowledge.",
+        "G62_final18": "Credentials do not establish all operation-specific conditions.",
+        "G62_final19": "Independent issues need independent evidence.",
+        "G62_final20": "Online completion cannot establish unobserved hazardous skills."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

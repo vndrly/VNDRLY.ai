@@ -1,0 +1,905 @@
+{
+  "courseId": "G74",
+  "gapGroupId": "TG25",
+  "title": "Nitrogen, cryogenic and catalyst work-interface planning",
+  "description": "Teach process/person interface mapping, phase-state reasoning, material-history review and monitoring-coverage analysis beyond basic recognition.",
+  "purpose": "Teach process/person interface mapping, phase-state reasoning, material-history review and monitoring-coverage analysis beyond basic recognition.",
+  "audience": [
+    "Specialist gas/catalyst trainees in a theory role",
+    "Nitrogen service planners",
+    "Process-interface coordinators"
+  ],
+  "sources": [
+    {
+      "title": "CSB nitrogen asphyxiation bulletin",
+      "url": "https://www.csb.gov/hazards-of-nitrogen-asphyxiation/"
+    },
+    {
+      "title": "Air Products cryogenic liquid safetygram16",
+      "url": "https://www.airproducts.com/-/media/files/en/900/900-13-079-us-safe-handling-of-cryo-liquids-safetygram-16.pdf"
+    },
+    {
+      "title": "OSHA permit-required confined spaces",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+    },
+    {
+      "title": "OSHA direct-reading monitor assurance",
+      "url": "https://www.osha.gov/publications/shib093013"
+    }
+  ],
+  "practicalBoundary": "This course grants no nitrogen/cryogenic/catalyst operating qualification, inert-entry/rescue capability or design approval. It provides no purge, passivation, unloading, pressure/temperature or entry recipe.",
+  "vendorEvidenceRequired": [
+    "Actual gas/product state, equipment and engineered method",
+    "Discharge destinations and affected-area assessment",
+    "Actual catalyst product/process-conditioned history and supplier method",
+    "Qualified monitoring strategy and role-specific emergency capability",
+    "Applicable personnel instruction, medical/respiratory and credential scope"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual specialist equipment/method skills under a qualified safe program",
+    "Role-specific monitoring and abnormal-condition recognition where assigned",
+    "Separate qualified entry/rescue practical capability where actually required"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G74_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for nitrogen, cryogenic and catalyst work-interface planning. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no nitrogen/cryogenic/catalyst operating qualification, inert-entry/rescue capability or design approval. It provides no purge, passivation, unloading, pressure/temperature or entry recipe.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G74_lesson1",
+        "title": "1. Map process intent and human exposure as separate systems",
+        "body": "Nitrogen may be used to preserve a process condition by limiting oxygen or moisture. That process objective can conflict directly with human breathing needs. Planning must therefore describe two systems: what the operation needs and what protects people. A statement that a vessel is inert addresses a process condition; it does not establish that an opening, adjacent area or access route is safe for a person. The earlier G21 foundation teaches recognition. This module develops interface and evidence reasoning for actual specialist work planning.\n\nDraw a paper system map with the gas source, intended receiving equipment, planned discharge destinations, openings and adjacent occupied areas. Use the approved process documents as the source and mark unknown connections. The drawing is a conceptual review copy, not an isolation plan or valve lineup. Its purpose is to reveal where process intent and people can interact. A planned vent to a nominally outdoor area can still require assessment of nearby openings, pits, access routes and changing conditions.\n\nThen draw the role interfaces: process owner, gas-service supplier, catalyst contractor where applicable, instrumentation owner, permit/entry authority and emergency capability. One contractor's method may depend on another party maintaining a defined state. These dependencies must be explicit. A supplier statement that its equipment works does not establish that the receiving process or occupied surroundings are protected.\n\nPaper exercise: a nitrogen service proposal identifies the supply skid and vessel but omits the discharge destination. The missing element is not a minor paperwork defect: the gas must go somewhere, and that destination can affect people. Ask the responsible engineering/site owners for the approved destination and associated exposure arrangements. Do not calculate a safe dispersion area from this course or move a vent experimentally.\n\nThe CSB nitrogen bulletin illustrates the human consequence of oxygen displacement. It supports preserving the people/process distinction, not qualifying an entry team or validating a particular gas-service design.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G74_lesson2",
+        "title": "2. Understand phase change and pressure as linked hazards",
+        "body": "Cryogenic liquid and ambient-temperature gas are different physical states of the same substance with different handling implications. Heat entering a cryogenic liquid can produce gas. If the gas cannot expand into an appropriate system, pressure can rise. Very low temperatures can also affect people and material properties. These mechanisms explain why a container, connection or line must be suitable for the actual product and state; visual resemblance to ordinary gas equipment is not evidence of suitability.\n\nRead a supply proposal for state transitions. Identify where the product is stored as liquid, where it is intended to become gas and which equipment is responsible for that transition. A vaporizer's role is not interchangeable with a storage vessel's role. The actual design authority determines flow, pressure, temperature and protection requirements. This course teaches no sizing, relief selection, operating settings or connection sequence.\n\nOn a paper diagram, mark sections that could contain cold liquid or gas under the stated design. Mark the boundaries of available evidence rather than guessing actual temperatures. A service statement saying nitrogen only does not tell the reviewer whether the duty is cryogenic or ambient. Obtain the actual product and equipment configuration before assigning qualification and control requirements.\n\nMaterial compatibility is a technical decision. Some materials can become unsuitable at low temperature; seals and components must be approved for their actual duty. A component's pressure rating under one condition does not establish suitability for every temperature or product. The learner should recognize the missing design basis and ask the competent owner rather than selecting a replacement from a generic catalog.\n\nPaper exercise: a proposed temporary hose is supported only by an ambient-service data sheet while the drawing includes possible liquid service. Record the unsupported temperature/state scope. The correct outcome is qualified suitability review, not an invented pressure reduction or insulation workaround. Supplier safetygrams explain general mechanisms; actual equipment instructions and engineering approval remain necessary.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G74_lesson3",
+        "title": "3. Build a catalyst material-history question set",
+        "body": "Catalyst work introduces material-specific questions beyond the gas itself. New catalyst, spent catalyst and material exposed to a process can differ in chemical and physical condition. Process history may affect retained contaminants, reactivity, temperature and handling risks. Do not infer a universal catalyst hazard from the word catalyst, and do not assume used material has the same profile as the unopened product safety data sheet.\n\nPrepare a material-history question set for the competent process and catalyst specialists. Identify the actual product, process service, known contaminants, relevant operating history, planned removal/handling state and supplier instructions. Record what is confirmed, what is assumed and which information is unavailable. This does not authorize sampling, opening a vessel or exposing material to air to see how it behaves.\n\nSeparate product information from process-conditioned evidence. A manufacturer's safety data sheet describes the identified supplied product within its scope. A process history record describes actual exposure and operating events. Neither automatically replaces the other's information. The qualified technical owner integrates them into the approved method. If a cleaning or shutdown record is offered as proof that all hazards are removed, ask what specific hazards and acceptance basis it actually addressed.\n\nA change in material condition can affect more than the person handling it. Dust, retained liquids, reaction heat, waste handling and exposure to air may require specialist controls depending on the actual catalyst and service. This course deliberately supplies no passivation, unloading, inert-entry or disposal recipe. Those operations require an engineered/supplier-supported method and relevant practical capability.\n\nPaper exercise: a contractor receives only the fresh-product data sheet for a spent bed from a different process service. The learner identifies the missing process-conditioned information and requests specialist review. A generic inert-gas awareness badge does not resolve the chemistry question. The useful result is a precise information gap tied to the actual material and method, not a blanket assertion that every catalyst behaves the same.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G74_lesson4",
+        "title": "4. Interpret atmosphere-monitoring evidence at its actual boundary",
+        "body": "Monitoring evidence has a location, time, method and instrument scope. A reading near an opening cannot automatically describe every location inside a vessel or every nearby occupied area. A result from an earlier state cannot establish the current state after a change in gas flow, opening, ventilation or work activity. The planning team must identify the actual monitoring strategy through qualified personnel, not extrapolate one convenient reading into universal assurance.\n\nRead instrument capability separately from its condition. A device can be functioning yet lack the sensor needed for the hazard of concern. A calibration record can support a bounded assurance claim without proving that the actual sampling arrangement, location or response time is appropriate. Manufacturer instructions and the approved monitoring method govern those details. This course does not teach sensor setup, sample-line design, alarm settings or entry-clearance thresholds.\n\nUse an evidence matrix on paper. Rows represent the areas and work states identified by the approved plan; columns represent the required observations or decisions. Populate only what the supplied record actually covers. Mark an unmeasured location or changed state as not established. This exercise helps a coordinator recognize missing coverage without directing anyone to enter or place a sampler in danger.\n\nSeparate oxygen displacement from other possible hazards. An oxygen measurement does not identify every toxic or flammable substance, nor does a combustible-gas reading establish oxygen suitability. Actual catalyst/process hazards require the appropriate instrument and method scope. Smell, comfort and the ability to speak are not atmosphere measurements. The earlier foundation covers recognition; this lesson focuses on why the evidence must match the question.\n\nPaper exercise: a monitor report covers the external access platform before nitrogen service begins. A later request uses it as proof for work inside after the process state changes. Identify both location and time/state mismatches. The qualified authority must determine the required monitoring and acceptance arrangement. The course learner cannot issue a clearance by reusing the earlier result.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G74_lesson5",
+        "title": "5. Review transitions, simultaneous work and specialist rescue dependencies",
+        "body": "A specialist work plan must account for transitions, because the hazard picture can change between stable phases. Examples include movement from closed process equipment to an opened boundary, a change of gas supply, a shift handover or a change in catalyst handling state. These examples are planning categories, not operating sequences. The qualified method defines permitted transitions, prerequisites and responsible decisions.\n\nCreate a dependency table for each planned state. Identify the process condition being maintained, affected people, supporting systems, monitoring evidence and authority for the next transition. If one contractor depends on another's equipment or staffing, name that dependency. A general instruction to coordinate does not establish who may change the state or how the dependent party learns that conditions have changed.\n\nSimultaneous work can introduce new interfaces. Nearby hot work, lifting, vehicle movement or ventilation changes may affect gas-service or catalyst arrangements. The correct planning method is to identify the interaction and route it to the actual site coordination and technical owners. Do not conclude that all nearby work is forbidden or acceptable from a generic distance. The actual assessment and approved controls determine compatibility.\n\nRescue is a capability requirement, not merely an emergency telephone number. Where actual entry or specialist exposure requires rescue arrangements, the relevant program must establish an appropriately trained, equipped and available response with realistic access to the task. This course does not train rescue entry or breathing-apparatus use. A coordinator should not substitute an untrained coworker because the planned team is delayed.\n\nPaper exercise: the contractor's method assumes a specialist rescue resource, but the site plan lists only general first aid. Record the capability mismatch and its owner. The learner does not invent a rescue technique or perform an entry drill. The task remains conditional until the applicable qualified program establishes the necessary capability and work authorization.\n\nA transition exercise uses three fictional cards: closed equipment under process control, planned opened boundary, and next-shift handover. For each card, list only the evidence supplied for that state. A design drawing may establish the intended closed system, while an opening request introduces a different people interface. A shift roster establishes staffing names but not their specialist capability. Draw arrows showing which competent authority must approve the move between states. Leave an arrow unresolved when prerequisites are absent. This visual method helps the learner recognize that evidence is not automatically portable across changing configurations, without teaching any sequence for opening or inerting equipment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G74_lesson6",
+        "title": "6. Define assessment and handover for the actual specialist role",
+        "body": "Competence for nitrogen supply, cryogenic equipment, catalyst handling, inert entry, monitoring and rescue is not one universal badge. Begin with the actual role and method. A desk nitrogen engineer may need design/review competence but not entry skills if entry is outside the role. A field service worker needs the actual equipment and method capability. An entry/rescue role has its own requirements. Preserve these distinctions when selecting instruction and assessment.\n\nRequest the vendor's actual equipment configuration, supplier procedures, relevant personnel evidence and scope of supervised experience. Where applicable, verify credentials under the actual regime rather than inventing a generic legal certificate. A broad company service list does not establish a named person's observed performance. The assessor must have relevant technical and assessment competence for the specific duty.\n\nA safe desk assessment uses fictional process diagrams, material histories, monitoring records and role tables. Ask the learner to identify omitted discharge destinations, unsupported cryogenic component suitability, missing spent-material information and mismatched monitoring states. Require a handover that separates facts, assumptions and unresolved decisions. This demonstrates useful specialist-planning knowledge without exposure to gas or catalyst.\n\nPractical assessment must be arranged under a qualified safe program. It should observe actual method skills and abnormal-condition recognition appropriate to the role, with defined criteria and limitations. This online content supplies no hazardous exercise or permission to connect gas, manipulate cryogenic equipment, disturb catalyst, enter an inert space or conduct rescue. Actual manufacturer/site instruction remains necessary even after a successful theory assessment.\n\nThe final handoff should identify the process state, equipment boundary, material status, active dependencies, monitoring coverage, temporary arrangements, unresolved conditions and responsible decision owners. Preserve the actual practical scope and authorization status. Completion of this module records bounded knowledge with original quiz scores retained. It cannot establish an engineered method's validity, medical/respiratory readiness, specialist field performance or permission for a real task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G74_case1",
+        "title": "Worked fictional case 1: a gas service with no discharge destination",
+        "body": "Fictional facts: Summit Supply proposes nitrogen service to vessel V-6. Its pack names the supply skid and receiver but omits the discharge destination. A temporary component is supported only by an ambient-service data sheet, while a concept drawing includes possible liquid-state duty. The site coordinator has a previous external-platform monitor result and wants to mark the whole pack ready.\n\nThe reviewer separates three issues. First, the missing discharge destination leaves the people/process interface incomplete. The gas's intended path must be established by the competent design/site owners, including affected areas. The reviewer does not select a vent location or infer safe dispersion from outdoor appearance.\n\nSecond, the component suitability evidence does not cover the possible temperature/state duty. A general pressure rating is not enough to establish cryogenic suitability. The qualified supplier/engineering authority must identify the actual configuration and component basis. The reviewer does not prescribe a reduced setting or insulation workaround.\n\nThird, the atmosphere result has a defined location and earlier process state. It cannot establish conditions inside the vessel or after nitrogen service changes the system. The reviewer marks those conclusions not established and refers monitoring/acceptance planning to the responsible qualified role. No gas threshold or entry clearance is invented.\n\nIn the fictional resolution, competent owners provide the discharge arrangement, confirmed equipment/state scope and a monitoring plan for the actual work. The coordinator records the dependencies and affected roles. The documents now support further controlled planning, but no actual service or practical competence is demonstrated by their existence.\n\nFinal decision: initially the pack has distinct design, suitability and monitoring gaps. Exact residuals are approved engineering/supplier method, actual personnel capability, qualified monitoring evidence, emergency arrangements and task authorization. The paper learner demonstrates interface reasoning only; no equipment is connected or operated.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G74_case2",
+        "title": "Worked fictional case 2: fresh-product information for spent catalyst",
+        "body": "Fictional facts: Orchard Process plans catalyst work. The contractor has a fresh-product safety data sheet and a general nitrogen-awareness record. The bed has been used in a different process service, but its history is absent. The method assumes specialist rescue while the site document lists only general first aid. A shift change will occur during the planned work window.\n\nThe planner first identifies the material-information gap. Fresh-product information is not automatically a description of process-conditioned spent material. The actual process/catalyst specialists must supply relevant history and integrate it into the supported method. The planner neither assumes a particular reactivity nor declares the material safe. No sample is collected or exposed to air as part of the exercise.\n\nNext, the planner distinguishes awareness from specialist capability. The online record may support recognition but not catalyst method skill, inert-entry capability or rescue proficiency. Actual assigned roles and applicable requirements determine the evidence needed. The vendor must name personnel and relevant qualified assessment rather than relying on the company's service list.\n\nThe rescue documents contain a concrete mismatch: general first aid is not evidence of the specialist capability assumed by the method. The responsible program must resolve the requirement with actual qualified resources and access arrangements. The planner does not recruit an untrained coworker or design an improvised rescue.\n\nFinally, the handover dependency is made explicit. The incoming shift needs process state, material status, active gas interfaces, monitoring coverage and unresolved decisions. Everyone knows is not a usable transfer of responsibility. The qualified method/site owners establish transition authority and conditions.\n\nFinal decision: work readiness is not established until material history, actual method/personnel evidence, rescue capability and shift-transition arrangements are resolved. Residuals are the supported specialist method, observed role-specific performance, applicable medical/respiratory or credential requirements and actual work authorization. The theory learner's accomplishment is accurate planning, not permission to perform catalyst or inert-atmosphere work.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G74_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G74_check1",
+        "prompt": "Why separate process intent from human exposure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A condition preserving the process may be unsafe for breathing."
+          },
+          {
+            "id": "b",
+            "label": "Inert always means breathable."
+          },
+          {
+            "id": "c",
+            "label": "Process success proves personnel protection."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G74_check2",
+        "prompt": "Why does cryogenic phase change matter?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Heat can produce gas and pressure depends on the system arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Cold liquid never changes state."
+          },
+          {
+            "id": "d",
+            "label": "Any gas container is suitable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G74_check3",
+        "prompt": "Does a fresh-catalyst data sheet fully describe spent material?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, all catalyst is identical."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Not automatically; actual process history and specialist review matter."
+          },
+          {
+            "id": "d",
+            "label": "Yes, use history cannot matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G74_check4",
+        "prompt": "Can one external reading before gas service clear internal work later?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every location is equivalent."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the report is signed."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; location and changed state are different."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G74_check5",
+        "prompt": "Is general first aid proof of specialist rescue capability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual task/program capability must be established."
+          },
+          {
+            "id": "b",
+            "label": "Yes, all response is interchangeable."
+          },
+          {
+            "id": "c",
+            "label": "Yes, a phone number suffices."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G74_check6",
+        "prompt": "Does this module qualify inert entry?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual specialist instruction, performance and authorization remain separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after the quiz."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after reading both cases."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G74_final1",
+        "prompt": "What belongs on a conceptual gas-interface map?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An improvised operating sequence."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Source, receiver, discharge, openings and affected areas."
+          },
+          {
+            "id": "d",
+            "label": "An invented valve lineup."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G74_final2",
+        "prompt": "Why is a missing discharge destination significant?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Gas disappears after use."
+          },
+          {
+            "id": "b",
+            "label": "Only the skid matters."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Released gas can affect people outside the receiving equipment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G74_final3",
+        "prompt": "Can outdoor appearance establish a safe dispersion area?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual conditions and qualified design assessment matter."
+          },
+          {
+            "id": "b",
+            "label": "Yes, outdoors is always safe."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if there is wind."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G74_final4",
+        "prompt": "Does a pressure rating alone establish cryogenic suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual temperature, material and product duty matter."
+          },
+          {
+            "id": "c",
+            "label": "Yes, always."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if a component fits."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G74_final5",
+        "prompt": "What is a vaporizers conceptual role?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approving entry."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Converting liquid product toward the intended gas state."
+          },
+          {
+            "id": "d",
+            "label": "Providing every storage function."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G74_final6",
+        "prompt": "Should a learner select relief settings from this course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, any familiar setting."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after a paper sketch."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; qualified design and actual equipment methods govern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G74_final7",
+        "prompt": "What should be explicit in catalyst history?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Product, process service, contaminants and relevant operating history."
+          },
+          {
+            "id": "b",
+            "label": "Only the trade name."
+          },
+          {
+            "id": "c",
+            "label": "Only the vendor logo."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G74_final8",
+        "prompt": "Can a shutdown record prove every material hazard removed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Only the specific supported claim, not automatically every hazard."
+          },
+          {
+            "id": "c",
+            "label": "Yes, shutdown means harmless."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if production stopped."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G74_final9",
+        "prompt": "Should catalyst be exposed to air experimentally to identify behavior?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if only a small amount."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; use the supported specialist information and method."
+          },
+          {
+            "id": "d",
+            "label": "Yes, for realism."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G74_final10",
+        "prompt": "Can a functioning monitor still be unsuitable for a hazard?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No, every monitor detects everything."
+          },
+          {
+            "id": "b",
+            "label": "No, a sticker covers all gases."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if its sensing scope does not address that hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G74_final11",
+        "prompt": "Does an oxygen measurement identify every toxic substance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual hazards require appropriate scope and method."
+          },
+          {
+            "id": "b",
+            "label": "Yes, all gases are covered."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if oxygen appears normal."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G74_final12",
+        "prompt": "What should an evidence matrix mark for an unmeasured state?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Not established, with responsible follow-up."
+          },
+          {
+            "id": "c",
+            "label": "Automatically clear."
+          },
+          {
+            "id": "d",
+            "label": "Identical to the previous state."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G74_final13",
+        "prompt": "Why plan transitions separately?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only paperwork changes."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Opening, supply or staffing changes can alter dependencies and hazards."
+          },
+          {
+            "id": "d",
+            "label": "Stable-state evidence always covers all changes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G74_final14",
+        "prompt": "Does this course prescribe universal simultaneous-work distances?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, one radius fits all."
+          },
+          {
+            "id": "b",
+            "label": "Yes, any open space suffices."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual interaction assessment and controls govern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G74_final15",
+        "prompt": "What does a meaningful handover contain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual state, interfaces, coverage, limitations and decision owners."
+          },
+          {
+            "id": "b",
+            "label": "Everyone knows."
+          },
+          {
+            "id": "c",
+            "label": "Only a completed badge."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G74_final16",
+        "prompt": "In Summit, what does the ambient-only data sheet leave unsupported?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Possible cryogenic temperature/state duty."
+          },
+          {
+            "id": "c",
+            "label": "That a document exists."
+          },
+          {
+            "id": "d",
+            "label": "Every possible use everywhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G74_final17",
+        "prompt": "In Summit, can corrected planning documents prove service execution?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if marked approved."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual work and results remain separate."
+          },
+          {
+            "id": "d",
+            "label": "Yes, documents perform the task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G74_final18",
+        "prompt": "In Orchard, what is the rescue mismatch?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Too many trained people."
+          },
+          {
+            "id": "b",
+            "label": "A missing company color."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "The method assumes capability not demonstrated by general first aid."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G74_final19",
+        "prompt": "Does a desk nitrogen engineer automatically need inert-entry skills?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual assigned duties determine applicable competence."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every nitrogen role is entry."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every course graduate must enter."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G74_final20",
+        "prompt": "What remains after the knowledge assessment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Supported method, observed specialist capability and actual authorization."
+          },
+          {
+            "id": "c",
+            "label": "No specialist residuals."
+          },
+          {
+            "id": "d",
+            "label": "Only a prettier certificate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G74_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G74_lesson1",
+          "questionIds": [
+            "G74_check1"
+          ]
+        },
+        {
+          "lessonId": "G74_lesson2",
+          "questionIds": [
+            "G74_check2"
+          ]
+        },
+        {
+          "lessonId": "G74_lesson3",
+          "questionIds": [
+            "G74_check3"
+          ]
+        },
+        {
+          "lessonId": "G74_lesson4",
+          "questionIds": [
+            "G74_check4"
+          ]
+        },
+        {
+          "lessonId": "G74_lesson5",
+          "questionIds": [
+            "G74_check5"
+          ]
+        },
+        {
+          "lessonId": "G74_lesson6",
+          "questionIds": [
+            "G74_check6"
+          ]
+        },
+        {
+          "lessonId": "G74_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G74_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G74_final",
+          "questionIds": [
+            "G74_final1",
+            "G74_final2",
+            "G74_final3",
+            "G74_final4",
+            "G74_final5",
+            "G74_final6",
+            "G74_final7",
+            "G74_final8",
+            "G74_final9",
+            "G74_final10",
+            "G74_final11",
+            "G74_final12",
+            "G74_final13",
+            "G74_final14",
+            "G74_final15",
+            "G74_final16",
+            "G74_final17",
+            "G74_final18",
+            "G74_final19",
+            "G74_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G74_check1": "The process and people have different safety needs.",
+        "G74_check2": "Product state and confinement affect hazards.",
+        "G74_check3": "Process-conditioned material may differ from supplied product.",
+        "G74_check4": "Monitoring evidence is bounded by actual coverage and conditions.",
+        "G74_check5": "Rescue requirements depend on the actual specialist exposure and access.",
+        "G74_check6": "Planning knowledge cannot demonstrate entry/rescue skills.",
+        "G74_final1": "The map reveals interfaces without authorizing manipulation.",
+        "G74_final2": "The system boundary must include where gas goes.",
+        "G74_final3": "Nearby openings and changing conditions can affect exposure.",
+        "G74_final4": "Suitability requires the actual design conditions.",
+        "G74_final5": "Equipment functions differ within the supply system.",
+        "G74_final6": "This content provides mechanisms, not operating parameters.",
+        "G74_final7": "Material-condition questions need actual service information.",
+        "G74_final8": "Read the actual preparation and acceptance scope.",
+        "G74_final9": "Training does not authorize hazardous material experiments.",
+        "G74_final10": "Capability and condition are separate questions.",
+        "G74_final11": "One measurement type cannot answer every atmosphere question.",
+        "G74_final12": "Unknown coverage must remain visible.",
+        "G74_final13": "The qualified method must address changing conditions.",
+        "G74_final14": "Task interaction is context specific.",
+        "G74_final15": "Specific information preserves the controlled arrangement.",
+        "G74_final16": "The supporting evidence must fit the proposed configuration.",
+        "G74_final17": "Preparation evidence is not performed work.",
+        "G74_final18": "Resources must match the actual planned role and hazards.",
+        "G74_final19": "Role scope prevents blanket qualification assumptions.",
+        "G74_final20": "Knowledge cannot validate engineered methods or field performance."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

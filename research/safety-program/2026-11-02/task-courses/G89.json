@@ -1,0 +1,906 @@
+{
+  "courseId": "G89",
+  "gapGroupId": "TG40",
+  "title": "Clinical professional scope and medical deployment",
+  "description": "Six subject-specific lessons and two worked fictional cases with twenty-six explained decisions. Actual site methods, professional authority and observed practical qualification remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for clinical professional scope and medical deployment.",
+  "audience": [
+    "Medical deployment coordinators",
+    "Clinical service supervisors",
+    "Clinical credential and governance reviewers",
+    "Clinic administrators and occupational exposure coordinators"
+  ],
+  "practicalBoundary": "C08 first-aid assurance is not medical licensing; office medical administration is not clinical care. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual deployment role description separating administration, first aid and clinical duties, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual credential verification record matched to person, jurisdiction and assigned clinical scope, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual clinical governance pack showing oversight and current approved protocol scope, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual deployment interface plan identifying clinical escalation and transfer coordination, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual task exposure assessment and authorized health-information handling route, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual readiness matrix separating credentials, orientation, assessed clinical capability and deployment limits, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who maps the actual administrative, first-aid, clinical and transport-coordination service roles; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who matches individual professional evidence to the assigned profession, jurisdiction and restrictions through the authoritative route; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who identifies the applicable controlled protocol and clinical oversight without making unauthorized treatment decisions; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who performs a safe fictional location, escalation and transfer-coordination exercise; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who handles exposure-program and confidential information interfaces through approved role-appropriate channels; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who distinguishes clinical assessment, credentials, orientation and coordination evidence in the readiness record; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Actual entry, rescue, height-access, clinical, operator or trade performance requires its own approved safe practical evaluation by appropriately qualified assessors where assigned; online completion does not satisfy it."
+  ],
+  "sources": [
+    {
+      "title": "OSHA bloodborne pathogens",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030",
+      "scopeLimit": "Actual occupational blood/OPIM exposure; not a clinical licensing source."
+    },
+    {
+      "title": "OSHA medical and first aid",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.151",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G89_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "A medical deployment is a coordinated service with professional, operational and information boundaries. This course teaches role definition, credential verification, clinical governance, remote-site interfaces, exposure-program coordination and honest readiness records. It does not teach diagnosis, prescribing, treatment, clinical equipment use or patient triage.\n\nActual professional authorization depends on the jurisdiction and duty. Occupational first-aid provisions are not a clinical licensing system. Use fictional information only in these exercises. Complete twenty-six decisions, retain first responses and acknowledge explained remediation. A knowledge result cannot establish clinical qualification, medical oversight or authority to provide care.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G89_lesson1",
+        "title": "Lesson 1 — Distinguish clinical and administrative work",
+        "body": "Begin with what service is actually promised and who supplies each part. Appointment administration, first aid, professional clinical care and medical transport coordination are different functions. A contract headed medical services can contain several of them. Identify the intended population, location, hours and professional duties before reviewing qualifications. A broad service label cannot supply an unstated clinical role.\n\nAdministrative personnel can coordinate bookings, records and communication within their assigned duties without being licensed to assess or treat patients. First-aid capability addresses another scope under the actual employer arrangement. Professional clinical practice requires the relevant authorization and competence. Do not treat the progression as automatic: working in a clinic or holding first-aid training does not itself authorize diagnosis, medication decisions or independent treatment.\n\nSeparate professional scope from deployment readiness. A practitioner may hold an appropriate credential yet still need site orientation, equipment preparation, local governance and transfer arrangements. Conversely, a person familiar with the site may lack the professional authority for the promised service. Both questions matter, and neither should be hidden behind a single green roster field.\n\nThe fictional contract supplies an administrator and a clinician. A revised roster leaves only the administrator onsite while advertising uninterrupted clinical treatment. The mismatch is between the promised service and available professional role. The responsible clinical and contract authorities must resolve the service arrangement. The administrator should not be expected to fill the gap through an online safety course.\n\nFor the desk exercise, divide a proposed deployment into administrative tasks, first-aid duties, clinical duties and transport coordination. Identify the actual role owner for each. Mark unknown or overlapping responsibilities for clarification. This is service-planning work, not a clinical decision about an individual patient. It allows the organization to describe its actual capability accurately before workers depend on it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G89_lesson2",
+        "title": "Lesson 2 — Verify professional evidence correctly",
+        "body": "Credential verification asks whether the particular individual has the appropriate current professional authorization for the actual duty and jurisdiction. Start with the person's identity and profession, then determine the authoritative verification route. A training certificate, membership card or attractive biography may be relevant background without establishing a current license or registration. The responsible professional governance role determines what evidence is required.\n\nMatch scope and restrictions, not merely the existence of a number. A credential for one profession cannot automatically support another profession's assigned duties. Location can matter: authorization in one jurisdiction does not necessarily authorize practice in another. Remote advice, onsite practice and other service models may raise different questions that require the appropriate regulator and clinical governance review.\n\nRecord verification in a way that is traceable and proportionate. Identify the source checked, date, relevant scope and any limitation needed for assignment. Avoid copying unnecessary personal information into a broadly accessible staffing system. A status can be unresolved while verification is pending; vendor reputation is not a substitute for completing the actual check.\n\nKeep professional authorization separate from clinical competency assessment. A valid registration may be necessary without demonstrating every task, equipment or deployment capability. The clinical employer must determine the appropriate assessment and supervision for the actual service. An occupational safety reviewer should not claim to have certified clinical skills by checking a register.\n\nIn the exercise, the pack confirms profession A while the duty description assigns profession B's functions. Both documents may be authentic. The worked answer is to refer the mismatch to the professional authority and revise or verify the assignment, not choose the more convenient interpretation. A photocopy showing a familiar name does not resolve the profession, current status or jurisdiction question. Preserve the verification record and its conclusion without publishing confidential material to unrelated staff.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G89_lesson3",
+        "title": "Lesson 3 — Read clinical governance boundaries",
+        "body": "Clinical governance defines who is responsible for the service's professional decisions, approved protocols, supervision, escalation and review. A protocol is more than a file containing medical instructions. It must belong to the authorized service, apply to the relevant practitioner and location and be controlled through the actual governance system. This course does not assess the clinical correctness of treatment content.\n\nIdentify the medical oversight arrangement and the practitioner reporting route. A contract manager can coordinate commercial matters without holding clinical decision authority. A site supervisor can report operational needs without directing treatment outside their role. The governance plan should let staff route a clinical question to the correct professional rather than force them to choose between incompatible instructions.\n\nVersion control matters because clinical instructions can change. A downloaded protocol from another employer may be useful as a reference for qualified review, but it is not automatically locally approved. The actual service must establish ownership, applicable version and authorized use. Do not remove a restriction or change wording to make the protocol fit an available practitioner without the required professional review.\n\nConsider the difference between an equipment inventory and a clinical equipment readiness program. Having a device onsite does not demonstrate maintained suitability, user competence or authority to perform every procedure associated with it. The qualified clinical and technical roles determine the necessary preparation, maintenance and assessment. The desk learner checks that those responsibilities exist and are evidenced rather than choosing settings or testing equipment.\n\nThe fictional pack includes protocol C2 from a different service with another oversight arrangement. The worked response retains its provenance and refers it to the clinical governance authority. A new cover page with the local logo would not establish approval. The administrator can help locate the current controlled document and record its availability without interpreting treatment instructions or becoming responsible for professional content.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G89_lesson4",
+        "title": "Lesson 4 — Review deployment and evacuation interfaces",
+        "body": "Remote deployment connects clinical capability with location, communications and transfer arrangements. A service that is adequate near a well-supported facility may not be ready for a different site merely because the same practitioner travels there. Identify what the deployment actually promises and which organizations support it. The qualified clinical and logistics leads determine patient-care and transfer requirements.\n\nDistinguish routine passenger transport from medical transfer capability. A vehicle booking can show that transport is arranged without establishing clinical suitability, staffing, equipment or receiving coordination for a patient transfer. This course does not choose a transfer mode or assess a patient's condition. It teaches why those decisions need the appropriate professional and operational owners.\n\nLocation information must be usable. Site names can be ambiguous, gates may differ and communication coverage may vary. A safe tabletop can test whether participants can identify the correct location and contact route using fictional messages. That exercise evaluates coordination, not actual emergency response speed or clinical performance. Do not call real emergency services merely to complete a course exercise.\n\nReceiving arrangements also matter. A plan should identify the actual coordination route and responsibility for confirming the relevant receiving capability. A familiar facility name alone does not establish that the promised arrangement is available. Changes in work location, service hours or external availability can invalidate deployment assumptions and need review.\n\nIn the fictional exercise, a plan promises medical evacuation but provides only an ordinary taxi contact. The worked answer refers the service promise and transfer arrangement to the clinical and logistics authorities. It does not assume every taxi is unsuitable for every journey, nor that the booking establishes clinical capability. The actual service needs a truthful description of what is available and what remains conditional, communicated before workers rely on the deployment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G89_lesson5",
+        "title": "Lesson 5 — Protect exposure and information boundaries",
+        "body": "Exposure controls and patient-information controls address different risks. Occupational contact with blood or other potentially infectious material may require the applicable exposure program based on actual duties. Administrative presence near a clinic does not automatically establish that exposure, while a job title alone should not hide a real handling duty. The employer must assess the actual work and provide the relevant instruction and controls.\n\nThe learner should recognize a boundary mismatch. If an administrator is asked to handle contaminated items outside their assigned scope, the task needs review rather than informal expansion. The responsible exposure-program and clinical roles determine the actual method and preparation. This course provides no cleanup procedure, protective-equipment selection, sharps-handling technique or post-exposure treatment advice.\n\nClinical records, exposure reports, staffing records and training records serve different purposes. A broadly accessible training system should not collect patient diagnoses merely to demonstrate that a staff member attended a briefing. Use the minimum information needed for the authorized purpose and the organization's approved handling route. Applicable privacy and records obligations must be determined by the responsible organization and jurisdiction.\n\nSeparate readiness status from confidential detail. A staffing coordinator may need confirmation that a required prerequisite is satisfied without access to unrestricted medical records. The authorized professional or occupational health process can supply the appropriate status. Do not invent a disclosure requirement because it would make a spreadsheet easier to fill.\n\nIn the exercise, a course administrator asks for a patient diagnosis to prove a worker participated in a communication exercise. The worked answer uses the exercise attendance and assessment record instead. Fictional patient information should be used for training. If unnecessary real information has already entered the wrong system, route correction through the authorized privacy and records process, preserving required records appropriately rather than silently deleting history or spreading copies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G89_lesson6",
+        "title": "Lesson 6 — Assess readiness without simulating treatment online",
+        "body": "A truthful readiness matrix separates professional authorization, clinical assessment, site orientation, equipment preparation and deployment coordination. Each category answers a different question and may have a different owner. A single complete label is useful only when its underlying meaning is defined and supported. Otherwise it can conceal an important gap behind an unrelated success.\n\nChoose assessment evidence that matches the capability claimed. A tabletop can demonstrate that participants identify the correct clinical lead, communicate location information and coordinate a fictional transfer request. It cannot demonstrate examination, diagnosis, treatment or equipment performance. Those require qualified clinical assessment under the actual program. Do not use dramatic role play or real patient data to make an online exercise appear more authentic.\n\nRead practical records for scope and limitations. A practitioner may have demonstrated one equipment task under supervision without being assessed for every remote deployment role. The clinical authority determines additional preparation. An occupational safety course should retain its own result without extending it into a clinical qualification claim.\n\nHandover must preserve unresolved conditions. If professional verification is complete but the receiving-transfer arrangement is not, show both statuses. If an equipment item becomes unavailable, reassess the capability that depended on it. A service should not continue advertising the earlier scope without the appropriate governance decision. Changes in personnel, location or promised service can require fresh review even when training certificates remain current.\n\nFor the desk exercise, the roster marks clinical competence complete solely because the person passed an emergency-awareness quiz. The worked correction retains the quiz as awareness evidence and leaves clinical performance open for the qualified assessor. It also assigns the missing transfer coordination review. This is a more accurate record, not a downgrade of the learner: the organization is acknowledging exactly what each assessment did and did not establish.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G89_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek contracts for a remote clinic staffed by an administrator and a clinician. A late roster change removes the clinician from an afternoon shift. The administrator holds first-aid training and knows the site well. The service advertisement still promises professional clinical treatment. The deployment folder also contains a protocol copied from a different employer.\n\nThe coordinator first maps the promised service against actual roles. The administrator's scheduling and site knowledge remain valuable, but they do not establish authority to replace the clinician. The clinical and contract authorities must decide the actual staffing and service availability. The coordinator communicates the limitation through the responsible route instead of asking the administrator to improvise treatment.\n\nThe credential review then finds that a proposed replacement's evidence belongs to a different professional scope than the duty description. The record is not dismissed as worthless, but its relevance must be professionally verified. The appropriate authoritative source, jurisdiction and any restrictions are checked through the governance process. A familiar vendor name does not resolve the mismatch.\n\nThe copied protocol is reviewed separately. Its original ownership and oversight arrangement are retained. Applying a local logo or placing it in the clinic folder would not make it locally approved. The clinical authority must establish the applicable controlled protocol and practitioner authorization. The administrator can help manage the document without approving its treatment content.\n\nFinally, the readiness record is updated by category. Site orientation may be complete while professional assignment or protocol approval remains open. The service description must match the capability actually available after the authorized decision. A broadly reassuring complete box would be misleading even if several useful preparations were finished.\n\nThe worked outcome is service coordination, not a clinical care decision. No fictional patient is diagnosed or treated. The case teaches the coordinator to preserve first-aid, administrative and professional boundaries while obtaining the right review. The administrator is not blamed for a staffing problem and is not assigned authority they do not have.\n\nIf a properly authorized replacement is supplied later, the service still needs deployment orientation and the actual governance arrangement. Professional verification resolves an essential question, but it does not automatically establish every site, equipment or transfer capability.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G89_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: a clinical team is scheduled at a temporary remote worksite. Professional verification is current. The deployment plan promises medical transfer, but its only transport contact is an ordinary passenger booking. The site name in the plan matches two different gates. A training coordinator proposes using a real patient report to rehearse communication and then marking the whole team clinically competent.\n\nThe clinical and logistics leads review the transfer promise. The passenger booking remains evidence of that booking, not proof of a suitable clinical arrangement. Qualified roles determine what capability is required and how it will be coordinated. The course participants do not select a vehicle or make a patient-specific transport decision.\n\nThe location ambiguity is addressed through a safe tabletop. Using fictional information, participants identify the correct site, access point and approved contact route. The exercise reveals that two departments use the same site nickname for different locations. The handoff information is clarified and tested again through the organization's safe method. No real emergency call is placed.\n\nThe privacy issue is corrected by replacing the real report with fictional exercise data through the authorized process. The communication assessment needs the message content relevant to coordination, not a real person's diagnosis. Training attendance and performance records are kept separately from clinical records. Staff who need readiness status are not given unrestricted patient information.\n\nThe assessment conclusion is also bounded. Participants demonstrated communication and coordination decisions. They did not demonstrate clinical examination, treatment, equipment use or every deployment skill. The clinical authority separately reviews the required practical evidence. The matrix keeps professional verification, exercise performance, transfer readiness and clinical assessment in distinct fields.\n\nThe worked handover lists what is established and what remains pending before the service can make its promised capability claim. If the location exercise succeeds, that does not resolve the transfer arrangement. If transfer coordination is later confirmed, that does not transform tabletop attendance into clinical competence.\n\nThe case shows how operational accuracy and professional boundaries work together. A deployment can include genuinely qualified clinicians yet still have incomplete logistics. It can have an excellent communication exercise without proving treatment performance. An honest readiness account helps every responsible role complete the real work instead of hiding the gaps under a general medical-training label.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G89_final",
+        "title": "Final assessment and residual requirements",
+        "body": "The final assessment covers actual professional scope, authoritative credential matching, controlled clinical governance, deployment and transfer interfaces, exposure/privacy boundaries and assessment validity. Retain first responses and acknowledge each explained correction.\n\nReal care requires the appropriate professional authorization, clinical oversight, protocol, equipment preparation and qualified clinical assessment for the actual location and service. This course grants none of those qualifications and supplies no treatment instruction.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G89_check1",
+        "prompt": "During distinguish clinical and administrative work, an administrator with first-aid awareness is rostered to provide unsupervised clinical treatment. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Restrict the assignment and obtain appropriate professional staffing review."
+          },
+          {
+            "id": "b",
+            "label": "First-aid awareness permits independent clinical treatment."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G89_check2",
+        "prompt": "During verify professional evidence correctly, the submitted credential belongs to a different profession than the assigned duty. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any healthcare qualification authorizes every clinical role."
+          },
+          {
+            "id": "b",
+            "label": "Obtain appropriate professional verification and revise the duty assignment."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G89_check3",
+        "prompt": "During read clinical governance boundaries, a remote clinic relies on an uncontrolled protocol copied from another employer. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A downloaded treatment protocol grants authority to use it."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Refer it to the clinical governance authority before relying on it."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G89_check4",
+        "prompt": "During review deployment and evacuation interfaces, the plan promises medical evacuation but lists only an ordinary taxi contact. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any passenger transport arrangement establishes medical evacuation capability."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Require qualified clinical and logistics review of the promised transfer capability."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G89_check5",
+        "prompt": "During protect exposure and information boundaries, a general attendance record includes patient diagnoses visible to unrelated staff. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Remove unnecessary clinical detail through the authorized privacy process and preserve required records appropriately."
+          },
+          {
+            "id": "b",
+            "label": "All coworkers may inspect patient details to confirm training."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G89_check6",
+        "prompt": "During assess readiness without simulating treatment online, the matrix marks clinical competence complete solely from an online safety quiz. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Passing a safety quiz demonstrates clinical treatment competence."
+          },
+          {
+            "id": "b",
+            "label": "Retain the quiz result but leave clinical capability open for qualified assessment."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G89_final1",
+        "prompt": "Which evidence is most directly relevant to distinguish clinical and administrative work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Deployment role description separating administration, first aid and clinical duties."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G89_final2",
+        "prompt": "Which evidence is most directly relevant to verify professional evidence correctly?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Credential verification record matched to person, jurisdiction and assigned clinical scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G89_final3",
+        "prompt": "Which evidence is most directly relevant to read clinical governance boundaries?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Clinical governance pack showing oversight and current approved protocol scope."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G89_final4",
+        "prompt": "Which evidence is most directly relevant to review deployment and evacuation interfaces?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Deployment interface plan identifying clinical escalation and transfer coordination."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G89_final5",
+        "prompt": "Which evidence is most directly relevant to protect exposure and information boundaries?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Task exposure assessment and authorized health-information handling route."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G89_final6",
+        "prompt": "Which evidence is most directly relevant to assess readiness without simulating treatment online?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Readiness matrix separating credentials, orientation, assessed clinical capability and deployment limits."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G89_final7",
+        "prompt": "A colleague argues: “First-aid awareness permits independent clinical treatment.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; restrict the assignment and obtain appropriate professional staffing review."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G89_final8",
+        "prompt": "A colleague argues: “Any healthcare qualification authorizes every clinical role.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; obtain appropriate professional verification and revise the duty assignment."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G89_final9",
+        "prompt": "A colleague argues: “A downloaded treatment protocol grants authority to use it.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; refer it to the clinical governance authority before relying on it."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G89_final10",
+        "prompt": "A colleague argues: “Any passenger transport arrangement establishes medical evacuation capability.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; require qualified clinical and logistics review of the promised transfer capability."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G89_final11",
+        "prompt": "A colleague argues: “All coworkers may inspect patient details to confirm training.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; remove unnecessary clinical detail through the authorized privacy process and preserve required records appropriately."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G89_final12",
+        "prompt": "A colleague argues: “Passing a safety quiz demonstrates clinical treatment competence.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; retain the quiz result but leave clinical capability open for qualified assessment."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G89_final13",
+        "prompt": "The clinic administrator knows the site and has first-aid training. What does that not establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Useful site familiarity."
+          },
+          {
+            "id": "b",
+            "label": "Evidence of first-aid training within its actual scope."
+          },
+          {
+            "id": "c",
+            "label": "Professional authority to replace the absent clinician for the promised clinical service."
+          },
+          {
+            "id": "d",
+            "label": "An administrative contribution to coordination."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G89_final14",
+        "prompt": "Professional registration is verified. Which readiness category remains separate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The person’s identity must always be ignored."
+          },
+          {
+            "id": "b",
+            "label": "Every deployment is automatically approved."
+          },
+          {
+            "id": "c",
+            "label": "No restrictions can apply after registration."
+          },
+          {
+            "id": "d",
+            "label": "Clinical task assessment and actual site, equipment and governance preparation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G89_final15",
+        "prompt": "A protocol carries the local logo but came from another employer. What establishes authorized use?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual clinical governance authority’s controlled approval and applicable scope."
+          },
+          {
+            "id": "b",
+            "label": "The logo alone."
+          },
+          {
+            "id": "c",
+            "label": "A convenient filename."
+          },
+          {
+            "id": "d",
+            "label": "A commercial manager’s preference without clinical authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G89_final16",
+        "prompt": "A taxi booking is listed under medical evacuation. What should the coordinator establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That every taxi is universally prohibited."
+          },
+          {
+            "id": "b",
+            "label": "The actual clinically and operationally appropriate transfer arrangement through qualified owners."
+          },
+          {
+            "id": "c",
+            "label": "That the heading itself creates clinical capability."
+          },
+          {
+            "id": "d",
+            "label": "That transport paperwork replaces clinical oversight."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G89_final17",
+        "prompt": "A readiness system requests unrestricted medical records merely to show a prerequisite is satisfied. What is the appropriate approach?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Publish all details to every supervisor."
+          },
+          {
+            "id": "b",
+            "label": "Copy patient diagnoses into attendance records."
+          },
+          {
+            "id": "c",
+            "label": "Use the authorized professional process to provide the necessary readiness status with appropriate information boundaries."
+          },
+          {
+            "id": "d",
+            "label": "Replace verification with a general complete label."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G89_final18",
+        "prompt": "A communication exercise uses fictional data and tests site identification. What does it demonstrate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every clinical procedure."
+          },
+          {
+            "id": "b",
+            "label": "Professional registration in another jurisdiction."
+          },
+          {
+            "id": "c",
+            "label": "Universal medical-transport capability."
+          },
+          {
+            "id": "d",
+            "label": "The coordination decisions actually exercised, rather than diagnosis or treatment performance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G89_final19",
+        "prompt": "The remote-clinic afternoon roster leaves only the site-familiar administrator, who has first-aid training. What does that establish about the advertised clinical treatment service?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Administrative/site knowledge remains useful, but it does not authorize replacing the absent clinician for the promised professional service."
+          },
+          {
+            "id": "b",
+            "label": "That first-aid training automatically confers the absent clinician's professional scope."
+          },
+          {
+            "id": "c",
+            "label": "That a local logo on a copied protocol supplies clinical authority."
+          },
+          {
+            "id": "d",
+            "label": "That knowing the site removes the need for actual professional staffing review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G89_final20",
+        "prompt": "The fictional location rehearsal resolves which remote-site gate is intended. What remains separate from that successful exercise?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing; locating the gate proves diagnosis and treatment capability."
+          },
+          {
+            "id": "b",
+            "label": "The clinically/operationally appropriate transfer arrangement and actual clinical practical assessment."
+          },
+          {
+            "id": "c",
+            "label": "The need to keep patient diagnoses in the general training attendance record."
+          },
+          {
+            "id": "d",
+            "label": "Authority for participants to call real emergency services to make the exercise more realistic."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G89_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G89_lesson1",
+          "questionIds": [
+            "G89_check1"
+          ]
+        },
+        {
+          "lessonId": "G89_lesson2",
+          "questionIds": [
+            "G89_check2"
+          ]
+        },
+        {
+          "lessonId": "G89_lesson3",
+          "questionIds": [
+            "G89_check3"
+          ]
+        },
+        {
+          "lessonId": "G89_lesson4",
+          "questionIds": [
+            "G89_check4"
+          ]
+        },
+        {
+          "lessonId": "G89_lesson5",
+          "questionIds": [
+            "G89_check5"
+          ]
+        },
+        {
+          "lessonId": "G89_lesson6",
+          "questionIds": [
+            "G89_check6"
+          ]
+        },
+        {
+          "lessonId": "G89_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G89_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G89_final",
+          "questionIds": [
+            "G89_final1",
+            "G89_final2",
+            "G89_final3",
+            "G89_final4",
+            "G89_final5",
+            "G89_final6",
+            "G89_final7",
+            "G89_final8",
+            "G89_final9",
+            "G89_final10",
+            "G89_final11",
+            "G89_final12",
+            "G89_final13",
+            "G89_final14",
+            "G89_final15",
+            "G89_final16",
+            "G89_final17",
+            "G89_final18",
+            "G89_final19",
+            "G89_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G89_check1": "The correct decision is to restrict the assignment and obtain appropriate professional staffing review. Medical scheduling, supply coordination, first-aid support and licensed clinical care have different scopes. A service label does not identify the profession supplied. Record the actual clinical duties, jurisdiction, supervision and deployment location. Occupational safety training can support safe participation but cannot grant a clinical license or authorize diagnosis, prescribing or treatment outside the professional scope. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G89_check2": "The correct decision is to obtain appropriate professional verification and revise the duty assignment. Professional evidence must match the individual, profession, jurisdiction and actual duty. A course certificate is not a licensing register entry. Use the appropriate authoritative verification route and record the date and restrictions without publishing unnecessary personal information. Where the jurisdiction requires additional authorization or medical oversight, record it separately. An expired or mismatched record is unresolved rather than cured by the vendor reputation. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G89_check3": "The correct decision is to refer it to the clinical governance authority before relying on it. The clinical service needs identified medical oversight, applicable protocols, escalation and records arrangements. A protocol must belong to the authorized service and apply to the actual practitioner and location. This course does not teach diagnosis, medications or treatment algorithms. The desk reviewer checks governance and version traceability and refers clinical content judgments to the responsible qualified professionals. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G89_check4": "The correct decision is to require qualified clinical and logistics review of the promised transfer capability. A remote deployment needs communication, location information, escalation and transfer arrangements consistent with the service offered. A transport contact is not proof that clinical transfer capability is available. Distinguish routine appointment transport from medical evacuation. The qualified clinical and logistics leads determine patient-care and transfer requirements; this desk exercise checks named responsibility and evidence of coordination. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G89_check5": "The correct decision is to remove unnecessary clinical detail through the authorized privacy process and preserve required records appropriately. Occupational blood or other potentially infectious material exposure requires the applicable employer program and task-specific controls. Administrative personnel do not acquire exposure duties by working near a clinic. Keep patient information restricted to authorized purposes and channels. Exposure reports and clinical records serve different functions; the incident system should not collect unnecessary diagnostic detail to prove a worker attended training. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G89_check6": "The correct decision is to retain the quiz result but leave clinical capability open for qualified assessment. Readiness review should distinguish verified credential, site orientation, clinical competency assessment and equipment-specific preparation. An online quiz can assess governance decisions but cannot demonstrate clinical treatment skill. A safe exercise may rehearse communication and transfer coordination using fictional data; qualified assessors separately evaluate clinical capability under the actual service program and applicable professional requirements. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G89_final1": "A deployment role description separating administration, first aid and clinical duties addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Medical scheduling, supply coordination, first-aid support and licensed clinical care have different scopes. A service label does not identify the profession supplied. Record the actual clinical duties, jurisdiction, supervision and deployment location. Occupational safety training can support safe participation but cannot grant a clinical license or authorize diagnosis, prescribing or treatment outside the professional scope.",
+        "G89_final2": "A credential verification record matched to person, jurisdiction and assigned clinical scope addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Professional evidence must match the individual, profession, jurisdiction and actual duty. A course certificate is not a licensing register entry. Use the appropriate authoritative verification route and record the date and restrictions without publishing unnecessary personal information. Where the jurisdiction requires additional authorization or medical oversight, record it separately. An expired or mismatched record is unresolved rather than cured by the vendor reputation.",
+        "G89_final3": "A clinical governance pack showing oversight and current approved protocol scope addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. The clinical service needs identified medical oversight, applicable protocols, escalation and records arrangements. A protocol must belong to the authorized service and apply to the actual practitioner and location. This course does not teach diagnosis, medications or treatment algorithms. The desk reviewer checks governance and version traceability and refers clinical content judgments to the responsible qualified professionals.",
+        "G89_final4": "A deployment interface plan identifying clinical escalation and transfer coordination addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A remote deployment needs communication, location information, escalation and transfer arrangements consistent with the service offered. A transport contact is not proof that clinical transfer capability is available. Distinguish routine appointment transport from medical evacuation. The qualified clinical and logistics leads determine patient-care and transfer requirements; this desk exercise checks named responsibility and evidence of coordination.",
+        "G89_final5": "A task exposure assessment and authorized health-information handling route addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Occupational blood or other potentially infectious material exposure requires the applicable employer program and task-specific controls. Administrative personnel do not acquire exposure duties by working near a clinic. Keep patient information restricted to authorized purposes and channels. Exposure reports and clinical records serve different functions; the incident system should not collect unnecessary diagnostic detail to prove a worker attended training.",
+        "G89_final6": "A readiness matrix separating credentials, orientation, assessed clinical capability and deployment limits addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Readiness review should distinguish verified credential, site orientation, clinical competency assessment and equipment-specific preparation. An online quiz can assess governance decisions but cannot demonstrate clinical treatment skill. A safe exercise may rehearse communication and transfer coordination using fictional data; qualified assessors separately evaluate clinical capability under the actual service program and applicable professional requirements.",
+        "G89_final7": "That inference exceeds the evidence. Medical scheduling, supply coordination, first-aid support and licensed clinical care have different scopes. A service label does not identify the profession supplied. Record the actual clinical duties, jurisdiction, supervision and deployment location. Occupational safety training can support safe participation but cannot grant a clinical license or authorize diagnosis, prescribing or treatment outside the professional scope. The appropriate task disposition remains to restrict the assignment and obtain appropriate professional staffing review.",
+        "G89_final8": "That inference exceeds the evidence. Professional evidence must match the individual, profession, jurisdiction and actual duty. A course certificate is not a licensing register entry. Use the appropriate authoritative verification route and record the date and restrictions without publishing unnecessary personal information. Where the jurisdiction requires additional authorization or medical oversight, record it separately. An expired or mismatched record is unresolved rather than cured by the vendor reputation. The appropriate task disposition remains to obtain appropriate professional verification and revise the duty assignment.",
+        "G89_final9": "That inference exceeds the evidence. The clinical service needs identified medical oversight, applicable protocols, escalation and records arrangements. A protocol must belong to the authorized service and apply to the actual practitioner and location. This course does not teach diagnosis, medications or treatment algorithms. The desk reviewer checks governance and version traceability and refers clinical content judgments to the responsible qualified professionals. The appropriate task disposition remains to refer it to the clinical governance authority before relying on it.",
+        "G89_final10": "That inference exceeds the evidence. A remote deployment needs communication, location information, escalation and transfer arrangements consistent with the service offered. A transport contact is not proof that clinical transfer capability is available. Distinguish routine appointment transport from medical evacuation. The qualified clinical and logistics leads determine patient-care and transfer requirements; this desk exercise checks named responsibility and evidence of coordination. The appropriate task disposition remains to require qualified clinical and logistics review of the promised transfer capability.",
+        "G89_final11": "That inference exceeds the evidence. Occupational blood or other potentially infectious material exposure requires the applicable employer program and task-specific controls. Administrative personnel do not acquire exposure duties by working near a clinic. Keep patient information restricted to authorized purposes and channels. Exposure reports and clinical records serve different functions; the incident system should not collect unnecessary diagnostic detail to prove a worker attended training. The appropriate task disposition remains to remove unnecessary clinical detail through the authorized privacy process and preserve required records appropriately.",
+        "G89_final12": "That inference exceeds the evidence. Readiness review should distinguish verified credential, site orientation, clinical competency assessment and equipment-specific preparation. An online quiz can assess governance decisions but cannot demonstrate clinical treatment skill. A safe exercise may rehearse communication and transfer coordination using fictional data; qualified assessors separately evaluate clinical capability under the actual service program and applicable professional requirements. The appropriate task disposition remains to retain the quiz result but leave clinical capability open for qualified assessment.",
+        "G89_final13": "Professional authority to replace the absent clinician for the promised clinical service. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G89_final14": "Clinical task assessment and actual site, equipment and governance preparation. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G89_final15": "The actual clinical governance authority’s controlled approval and applicable scope. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G89_final16": "The actual clinically and operationally appropriate transfer arrangement through qualified owners. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G89_final17": "Use the authorized professional process to provide the necessary readiness status with appropriate information boundaries. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G89_final18": "The coordination decisions actually exercised, rather than diagnosis or treatment performance. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G89_final19": "The case separates administrative, first-aid and professional roles. The clinical/contract authorities must align the promised service with actual authorized staffing; the administrator cannot obtain professional treatment authority from site knowledge or a course.",
+        "G89_final20": "A safe location exercise demonstrates the coordination decisions rehearsed. It does not establish transfer resources or clinical performance, and it needs fictional rather than unnecessary real patient information."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

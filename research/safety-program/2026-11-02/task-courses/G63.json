@@ -1,0 +1,906 @@
+{
+  "courseId": "G63",
+  "gapGroupId": "G14",
+  "title": "Well-service preparation: barriers, monitoring and operating handover",
+  "description": "understand well-control role and barrier dependencies and communicate actual monitoring, change and readiness information",
+  "purpose": "understand well-control role and barrier dependencies and communicate actual monitoring, change and readiness information",
+  "audience": [
+    "Well-service support coordinators",
+    "Personnel preparing for role-specific well-control instruction",
+    "Supervisor/technical interface personnel"
+  ],
+  "practicalBoundary": "This course qualifies no well-control operator, supervisor, engineer or emergency responder. It supplies no shut-in/kill method, pressure or fluid setting, barrier design or equipment sequence. Actual well/rig/service instruction, role-specific simulation/practical assessment and applicable credentials remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual well, operational phase, service method and jurisdiction",
+    "Role-specific well-control training/certification and employer authorization as applicable",
+    "Current approved barrier information, procedures and operating limits",
+    "Actual installed pressure-control equipment, manufacturer instructions and assurance evidence",
+    "Monitoring, change management, communication and shift-handover arrangements",
+    "Qualified emergency/intervention capability and actual continuation/restart authority"
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified well-control program assesses actual role-specific monitoring and routine/abnormal decisions in appropriate simulation",
+    "Competent equipment/task assessor observes actual service-specific physical skills under authorized controlled conditions",
+    "Qualified well/operator technical authorities evaluate actual barrier/assurance and change/restart responsibilities"
+  ],
+  "sources": [
+    {
+      "title": "IOGP well-control training guidance",
+      "url": "https://www.iogp.org/pubs/476.pdf"
+    },
+    {
+      "title": "OSHA — Drilling and well-control context",
+      "url": "https://www.osha.gov/etools/oil-and-gas/drilling"
+    },
+    {
+      "title": "BSEE — Well-control regulations FAQ; bounded offshore context",
+      "url": "https://www.bsee.gov/guidance-and-regulations/Regulations/regulatory-reform/bsee-well-control-rule-2019/frequently-asked-questions-well-control-regulations"
+    },
+    {
+      "title": "OSHA — Common wellsite incidents and fatalities",
+      "url": "https://www.osha.gov/etools/oil-and-gas/general-safety/common-wellsite-incidents"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G63_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Well-service preparation: barriers, monitoring and operating handover\n\nThis course teaches a bounded task: understand well-control role and barrier dependencies and communicate actual monitoring, change and readiness information Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis course qualifies no well-control operator, supervisor, engineer or emergency responder. It supplies no shut-in/kill method, pressure or fluid setting, barrier design or equipment sequence. Actual well/rig/service instruction, role-specific simulation/practical assessment and applicable credentials remain separate. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G63_lesson1",
+        "title": "1. Connect well-control responsibilities to the actual operation",
+        "body": "Well control concerns maintaining control of fluids and pressure associated with the well through the actual operation and its protective arrangements. Drilling, completion, intervention, servicing and abandonment are not identical tasks. Different equipment, well conditions and roles can require different instruction and assessment. A general pressure-awareness course or a job title such as technician cannot establish the actual well-control competence.\n\nStart with the well identity, current operational phase, planned service, responsible operator and contractor roles. A person monitoring information, an equipment operator, a supervisor and an engineer approving a plan make different decisions. IOGP training guidance emphasizes role-specific preparation and practice; it does not issue a credential to the learner or prove legal applicability for every jurisdiction. The employer must determine the actual requirement and relevant qualified program.\n\nSupport personnel can contribute important observations and coordination without being authorized to operate pressure-control equipment. A dispatcher or service coordinator should understand which changes need the well team's review and how to report an abnormal observation. They must not prescribe a closure sequence, adjust a pressure setting or tell a crew to continue because the service ticket is nearly complete.\n\nKeep specialist subscopes distinct. Nitrogen work, radioactive logging tools, explosive perforating systems, lifting and confined-space duties may introduce additional requirements only when actually used. A well-control credential does not automatically qualify those methods. Conversely, a specialist credential in one tool does not prove the person can manage the well's barrier responsibilities.\n\nFor a desk exercise, describe the actual planned task and each role's decision boundary. Identify the instruction, simulator/practical evidence and employer authorization needed for that role. Do not choose a training level solely from a familiar title. The useful result is a specific competence map that matches the real well/service method, rather than a universal certificate demand or a claim that general online completion qualifies execution.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G63_lesson2",
+        "title": "2. Understand barriers as defined functions with evidence",
+        "body": "A well barrier is understood through the actual approved well design and operating plan. It is not simply any piece of equipment between a person and the well. Barrier elements and arrangements must perform their defined functions under the relevant conditions. Their identity, configuration, verification and limitations matter. This course gives no barrier design, equipment sequence or pressure-test recipe.\n\nRead the actual barrier information as a functional map. What is being contained or controlled? Which elements provide the required functions? Who is responsible for their condition and monitoring? What changes during the planned operation? The qualified well team provides the real answers. A simplified training sketch can show dependencies but cannot replace the current approved barrier schematic or actual verification.\n\nDistinguish installed, tested and accepted for the current operation. A component can be physically present without the evidence required for its intended duty. A test can cover a specific function and condition without proving every connected element. A signed acceptance can have a defined scope and limitations. Do not stretch one favorable record into a universal statement that the well is safe for all subsequent work.\n\nBarrier status can change as the operation changes. Removing or introducing equipment, changing a service method or moving between phases can alter the relevant configuration. The responsible technical and operating authorities must establish the actual plan and prerequisites. A worker must not bypass an unresolved element because another element appears available or because the operation is expected to be brief.\n\nUse precise language in a handover: element identity, current verified status, relevant restriction, evidence reference and responsible decision. Barrier okay is weak if the receiving person cannot tell which function and operation the statement covers. If information is contradictory, hold the affected action under the actual procedure and resolve it with the qualified authority. The learner never performs a live function test to fill a classroom gap.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G63_lesson3",
+        "title": "3. Recognize the meaning and limits of monitoring information",
+        "body": "Monitoring connects the well's actual behavior to the people responsible for responding. Pressure, flow, volumes and other observations can be relevant according to the operation. Their meaning depends on the current phase, equipment and expected activity. An unexplained change needs the actual trained response and communication; it should not be dismissed because one familiar indicator looks normal.\n\nKeep observation separate from diagnosis. A reported change in flow or volume is a fact to communicate within its measurement limits. It is not automatically proof of a particular cause, nor is uncertainty a reason to delay the designated notification. The qualified well team evaluates the relevant combination of information under the actual procedure. This course provides no kick-detection threshold, shut-in sequence or kill method.\n\nInstrument identity and validity matter. A reading should be tied to the actual sensor or record, units, time and operating context. A stale display, unavailable sensor or unclear tank reference can undermine the meaning of a number. A normal-looking screen does not prove every monitoring function works. The actual program must establish equipment readiness and the response to unreliable information.\n\nUnits and trends should be communicated honestly. A pressure value without its units or reference is incomplete. A volume change measured during one activity may not be comparable with a value recorded in a different phase. Do not convert uncertainty into a precise-looking result by choosing a likely unit or deleting an inconvenient observation. The well team needs the original facts to assess what changed.\n\nTime alignment is another part of meaning. A reading collected before a service change cannot be presented as though it describes the well afterward. An operator's spoken observation and a delayed screen update may refer to different moments. Record observation time and reporting time distinctly when known, and identify estimates. This avoids a false contradiction created by comparing unlike stages, while preserving a genuine unexplained change for qualified assessment. The coordinator should not edit timestamps to make trends appear smoother.\n\nThe source of a value also matters. A planned quantity, a calculated expectation, an instrument reading and a manually recorded observation are different kinds of evidence. Each can be useful within its actual scope, but they must not be substituted silently. A planned value does not prove the measured condition. A calculation based on uncertain inputs cannot repair missing observations. A manually entered number is not automatically a sensor measurement simply because it appears on the same screen. State these differences in the handover so the qualified well team can decide what information supports the actual response. This is practical data interpretation without providing an operating calculation or telling an unqualified person how to control a well.\n\nA safe exercise uses fictional trend cards labeled with time, phase and units. The learner identifies a missing unit, conflicting timestamp or unexplained change and reports it to the designated role. They do not calculate an operating response or select a control setting. Actual simulator and practical assessment must establish the role's required detection, decision and equipment-response skills through the qualified well-control program.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G63_lesson4",
+        "title": "4. Maintain procedural discipline through transitions and changes",
+        "body": "A well procedure must match the actual well, equipment and operational phase. A familiar sequence from another rig is not automatically suitable. Read applicability, entry conditions and responsibilities before the affected work. The qualified program supplies the actual operating method and must establish that assigned people understand it. This course teaches interpretation, not a generic sequence for controlling a well.\n\nTransitions deserve special attention because assumptions can change. A service moving from preparation to execution, a shift change, equipment maintenance or a planned pause can leave different people with different views of state. The handover must establish what actually happened and which prerequisites remain. A checkmark alone may not tell whether a step occurred before or after the latest change.\n\nProcedure discrepancies need precise escalation. If the instruction names equipment P-6 but the actual configuration references P-9, do not choose the item that looks similar. If a required function is unavailable, do not silently remove it from the prerequisite list. State the mismatch to the responsible well authority and preserve the affected hold. Qualified technical review determines the actual disposition.\n\nChanges can involve hardware, fluid system, tools, staffing, control interfaces or intended operating conditions. Calling a change temporary or minor does not establish its safety. Describe the actual difference, affected functions and documents, and obtain the required review through the employer's process. A vendor's statement that equipment is compatible must be supported for the installed system and actual duty.\n\nTraining readiness is part of the change. A revised display or response arrangement may require affected people to learn and demonstrate new duties before relying on it. Emailing an update does not prove understanding. The practical program must assess the real role and equipment, using appropriate simulation or controlled methods. Never use a live well as an informal experiment to discover whether an unreviewed change works.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G63_lesson5",
+        "title": "5. Coordinate service interfaces and equipment assurance",
+        "body": "A wellsite brings together organizations whose tasks affect one another. The operator, drilling or service contractor, equipment specialists and other trades may each control part of the work. The important interface question is who can change the well or equipment state, who must know and who authorizes the next step. A purchase order cannot supply that operational coordination.\n\nEquipment assurance must be specific to the actual system. Maintenance, repair, inspection and tests need relevant instructions, competent personnel and traceable evidence. A physically fitting replacement or current sticker does not prove every required function. BSEE's offshore guidance is a bounded regulatory example emphasizing actual equipment and manufacturer-related competence; it is not a universal rule for every land well.\n\nSeparate repair completion from acceptance for service. A technician may finish the assigned repair while testing, configuration checks, documentation, training or operating release remain. A report saying work complete should state its actual scope. It must not imply that every barrier, control and connected system is ready. The responsible technical and well-operating authorities integrate the necessary evidence.\n\nSimultaneous work can introduce changed conditions. Maintenance, lifting, deliveries, power changes or a specialist tool operation may affect access, communications or equipment dependencies. The actual site coordination process must review those interfaces. A crew should not continue merely because the conflicting activity is performed by another company or occurs outside its immediate work area.\n\nFor a fictional readiness meeting, give the learner separate cards for repaired equipment, a pending function check, an unbriefed replacement operator and a proposed adjacent lift. The correct answer names the owner and prerequisite for each issue. It does not average them into mostly ready or prescribe the technical test. Actual qualified assessment must demonstrate the assigned physical and decision skills for the particular service and installed equipment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G63_lesson6",
+        "title": "6. Hand over abnormal conditions and retain restart authority",
+        "body": "An abnormal observation must reach the designated well-control role promptly through the actual procedure. The support worker records the well/equipment identity, operating phase, time, observation, relevant units and actions already taken within their assignment. Do not wait to obtain certainty about the cause before using the required reporting route. Equally, do not declare a blowout or component failure without the evidence to support that conclusion.\n\nEmergency execution is specialist work. The actual crew must know and demonstrate their assigned response, communications and equipment duties. This course supplies no control sequence, pressure setting, circulation method or intervention tactic. An unassigned person should not touch controls, disconnect equipment or move into a hazardous area to collect a better reading. The real emergency plan defines protective actions and qualified response.\n\nA shift handover must make the current phase, barrier status, monitoring limitations, maintenance, temporary changes and unresolved decisions visible. Prioritize information that affects the next action. A long list of completed tasks can still be unsafe if it hides one unresolved pressure-control function. The incoming role should be able to explain the actual restriction and who can release it.\n\nRestart or continuation after an abnormal event requires its actual authorization and evidence. Stopping an immediate symptom does not establish that the cause, equipment condition and operating prerequisites are resolved. A successful test is bounded by what it actually tested. A service ticket closed by accounting is not a well-operating release.\n\nUse the event review to improve specific interfaces: unavailable information, ambiguous role, mismatched equipment reference or a failed update to the incoming crew. Preserve original observations and traceable corrections rather than rewriting the event as though no uncertainty existed. Course completion follows the same principle: retain original answers and explicit remediation. Actual well-control qualification, simulations, equipment skills and emergency capability remain separately assessed by the competent role-specific program.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G63_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: two normal-looking readings and one unexplained change\n\nA fictional well service is in a defined operational phase. Two displayed values appear consistent with the crew's expectation, but another assigned observer reports an unexplained volume change. The record lacks the observation's units and exact phase reference. A coordinator is asked to delete the report because it makes the handover look untidy. No real well data or live equipment is used in this exercise.\n\nThe correct first response is accurate communication, not diagnosis or deletion. The unexplained change is reported through the actual designated route with its known time/source and missing context. The qualified well team evaluates it using the actual procedure. Two reassuring observations do not automatically cancel another relevant observation, and missing units are a reason to clarify rather than manufacture a number.\n\nThe coordinator preserves the original report and requests the appropriate source clarification. They do not choose a detection threshold, close equipment or prescribe a circulation method. The desk task is to identify what the qualified decision maker needs: actual well and phase, sensor or source identity, units, timing, trend and actions already taken.\n\nSuppose clarification later shows the report relates to a different phase. The correction must remain traceable and the qualified team determines its relevance. The learner cannot conclude that every other monitoring function is therefore ready or that the well is released for the next operation. The worked outcome is a factual handover and a competent decision route, not a universal alarm-response rule.\n\nCase B: repaired equipment with incomplete operating readiness\n\nA fictional pressure-control equipment repair is complete according to its work order. A function check remains pending, the replacement operator has not received the changed-system briefing and a proposed service uses a configuration not shown in the current task sketch. The project manager asks the crew to restart because the repair contractor has left and the service window is closing.\n\nSeparate repair completion, functional evidence, configuration and human readiness. The work order can close its actual repair scope without proving all four. Departure of the repair contractor does not establish a qualified release. A current training certificate also cannot teach an undocumented configuration change by itself.\n\nThe responsible well and technical authorities must establish the actual configuration and approved method, complete or disposition the required checks and ensure affected workers understand their real duties. The learner names those prerequisites and owners, preserving the operating hold through the actual procedure. They do not invent the missing test or adjust equipment to see whether it works.\n\nIf the function check later passes, its actual scope matters. It does not automatically verify every connected barrier or provide the replacement operator's instruction. If the operator is briefed, configuration suitability still needs its own evidence. A readiness decision must integrate all relevant prerequisites rather than let one favorable update erase independent open items.\n\nThe final handover should identify the current phase, accepted equipment/configuration evidence, remaining limitations and the role authorized to release continuation. Safe simulator or controlled practical assessment can test role-specific decisions and actual equipment skills. This classroom result cannot substitute for that program or certify emergency well-control intervention.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G63_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G63_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced understand well-control role and barrier dependencies and communicate actual monitoring, change and readiness information Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G63_check1",
+        "prompt": "What defines well-control training needs?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual operation, equipment, role and applicable program."
+          },
+          {
+            "id": "b",
+            "label": "Job title alone."
+          },
+          {
+            "id": "c",
+            "label": "Any pressure course."
+          },
+          {
+            "id": "d",
+            "label": "Only service price."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G63_check2",
+        "prompt": "A component is installed. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every barrier proven."
+          },
+          {
+            "id": "b",
+            "label": "Its actual function, verification and acceptance for the operation."
+          },
+          {
+            "id": "c",
+            "label": "All tests complete."
+          },
+          {
+            "id": "d",
+            "label": "Every phase released."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G63_check3",
+        "prompt": "An unexplained volume change is reported. What should support do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Delete it."
+          },
+          {
+            "id": "b",
+            "label": "Invent a threshold."
+          },
+          {
+            "id": "c",
+            "label": "Communicate facts and missing context through the actual designated route."
+          },
+          {
+            "id": "d",
+            "label": "Choose a control sequence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G63_check4",
+        "prompt": "A procedure names P-6 but configuration names P-9. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choose the closest."
+          },
+          {
+            "id": "b",
+            "label": "Use memory."
+          },
+          {
+            "id": "c",
+            "label": "Erase the prerequisite."
+          },
+          {
+            "id": "d",
+            "label": "Hold affected action and resolve the identity/configuration mismatch."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G63_check5",
+        "prompt": "Repair is complete but a function check is pending. What is accurate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Repair scope complete; actual readiness remains unresolved."
+          },
+          {
+            "id": "b",
+            "label": "Everything ready."
+          },
+          {
+            "id": "c",
+            "label": "Contractor departure is release."
+          },
+          {
+            "id": "d",
+            "label": "Accounting closure proves barriers."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G63_check6",
+        "prompt": "A symptom stops after an abnormal event. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatic restart."
+          },
+          {
+            "id": "b",
+            "label": "Actual cause/equipment/prerequisite disposition and authorized continuation."
+          },
+          {
+            "id": "c",
+            "label": "All monitoring proven."
+          },
+          {
+            "id": "d",
+            "label": "Every role qualified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G63_final1",
+        "prompt": "Does one well-control credential qualify every specialist tool?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes universally."
+          },
+          {
+            "id": "b",
+            "label": "Yes if current."
+          },
+          {
+            "id": "c",
+            "label": "No; actual nitrogen/radiation/explosive/lifting scopes remain separate."
+          },
+          {
+            "id": "d",
+            "label": "Yes if the customer asks."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G63_final2",
+        "prompt": "Who selects a role's actual training/assessment requirement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A familiar title alone."
+          },
+          {
+            "id": "b",
+            "label": "A generic catalog label."
+          },
+          {
+            "id": "c",
+            "label": "A scheduler's preference."
+          },
+          {
+            "id": "d",
+            "label": "The responsible employer/operator program using actual duties."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G63_final3",
+        "prompt": "What is a barrier map useful for?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Understanding actual defined containment/control functions and dependencies."
+          },
+          {
+            "id": "b",
+            "label": "Replacing approved design."
+          },
+          {
+            "id": "c",
+            "label": "Inventing a pressure test."
+          },
+          {
+            "id": "d",
+            "label": "Choosing a universal sequence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G63_final4",
+        "prompt": "A test passes. What does it establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every connected element ready."
+          },
+          {
+            "id": "b",
+            "label": "Its actual tested function and conditions."
+          },
+          {
+            "id": "c",
+            "label": "Every future phase safe."
+          },
+          {
+            "id": "d",
+            "label": "All operator skills."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G63_final5",
+        "prompt": "Operational phase changes. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume all prior conditions remain."
+          },
+          {
+            "id": "b",
+            "label": "Ignore the phase."
+          },
+          {
+            "id": "c",
+            "label": "Review actual barrier/configuration prerequisites through the responsible process."
+          },
+          {
+            "id": "d",
+            "label": "Apply another rig's sequence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G63_final6",
+        "prompt": "Which handover is useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Barrier okay without scope."
+          },
+          {
+            "id": "b",
+            "label": "All good forever."
+          },
+          {
+            "id": "c",
+            "label": "No detail because crew is experienced."
+          },
+          {
+            "id": "d",
+            "label": "Element identity, actual status, restriction, evidence and owner."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G63_final7",
+        "prompt": "A pressure number has no units. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Clarify its actual source/context rather than infer a unit."
+          },
+          {
+            "id": "b",
+            "label": "Choose the usual unit."
+          },
+          {
+            "id": "c",
+            "label": "Treat all pressure units equal."
+          },
+          {
+            "id": "d",
+            "label": "Use the expected value."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G63_final8",
+        "prompt": "Two readings look normal. What about another unexplained observation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatically canceled."
+          },
+          {
+            "id": "b",
+            "label": "It still needs the actual qualified evaluation."
+          },
+          {
+            "id": "c",
+            "label": "Must be deleted."
+          },
+          {
+            "id": "d",
+            "label": "Cannot matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G63_final9",
+        "prompt": "A display may be stale. What does normal appearance prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every sensor valid."
+          },
+          {
+            "id": "b",
+            "label": "Every barrier intact."
+          },
+          {
+            "id": "c",
+            "label": "No universal current monitoring readiness."
+          },
+          {
+            "id": "d",
+            "label": "Continuation approved."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G63_final10",
+        "prompt": "What operational threshold does this course provide?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A universal kick number."
+          },
+          {
+            "id": "b",
+            "label": "A generic pressure setting."
+          },
+          {
+            "id": "c",
+            "label": "A shut-in sequence."
+          },
+          {
+            "id": "d",
+            "label": "None; use actual qualified procedures and instruction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G63_final11",
+        "prompt": "A temporary change is called minor. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its actual effect on approved assumptions and required review."
+          },
+          {
+            "id": "b",
+            "label": "The adjective."
+          },
+          {
+            "id": "c",
+            "label": "Only duration."
+          },
+          {
+            "id": "d",
+            "label": "Only invoice size."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G63_final12",
+        "prompt": "A changed display instruction was emailed. What is not established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That an email exists."
+          },
+          {
+            "id": "b",
+            "label": "Affected worker understanding and practical readiness."
+          },
+          {
+            "id": "c",
+            "label": "That a revision was proposed."
+          },
+          {
+            "id": "d",
+            "label": "That information can be reviewed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G63_final13",
+        "prompt": "A fitting replacement is proposed. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Physical fit proves all."
+          },
+          {
+            "id": "b",
+            "label": "Branding proves all."
+          },
+          {
+            "id": "c",
+            "label": "Actual compatibility and function evidence for the installed duty."
+          },
+          {
+            "id": "d",
+            "label": "No technical review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G63_final14",
+        "prompt": "A BSEE offshore example applies universally where?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every land well."
+          },
+          {
+            "id": "b",
+            "label": "Every utility job."
+          },
+          {
+            "id": "c",
+            "label": "Every laboratory."
+          },
+          {
+            "id": "d",
+            "label": "Nowhere automatically; actual jurisdiction and operation must be established."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G63_final15",
+        "prompt": "A nearby lift is introduced. What should occur?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual site/well interface coordination before affected work."
+          },
+          {
+            "id": "b",
+            "label": "Ignore another contractor."
+          },
+          {
+            "id": "c",
+            "label": "Assume distance resolves it."
+          },
+          {
+            "id": "d",
+            "label": "Use the old plan unchanged."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G63_final16",
+        "prompt": "A person is unassigned to controls. What should they avoid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reporting facts."
+          },
+          {
+            "id": "b",
+            "label": "Touching controls to obtain a better reading or settle uncertainty."
+          },
+          {
+            "id": "c",
+            "label": "Maintaining boundaries."
+          },
+          {
+            "id": "d",
+            "label": "Using the actual emergency route."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G63_final17",
+        "prompt": "A handover lists many completed tasks but hides one barrier issue. What is wrong?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Task count proves readiness."
+          },
+          {
+            "id": "b",
+            "label": "Longer notes are always safer."
+          },
+          {
+            "id": "c",
+            "label": "It fails to prioritize information affecting the next decision."
+          },
+          {
+            "id": "d",
+            "label": "No problem if accounting closes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G63_final18",
+        "prompt": "Case A units are later clarified. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatic next-phase approval."
+          },
+          {
+            "id": "b",
+            "label": "Every sensor proven."
+          },
+          {
+            "id": "c",
+            "label": "All restrictions gone."
+          },
+          {
+            "id": "d",
+            "label": "Qualified relevance/disposition and other independent readiness questions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G63_final19",
+        "prompt": "Case B function check passes. What may remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Configuration and replacement-operator readiness."
+          },
+          {
+            "id": "b",
+            "label": "Nothing."
+          },
+          {
+            "id": "c",
+            "label": "Universal restart."
+          },
+          {
+            "id": "d",
+            "label": "No need for briefing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G63_final20",
+        "prompt": "What does passing this course establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Equipment operator proficiency."
+          },
+          {
+            "id": "b",
+            "label": "Bounded knowledge separate from actual well-control practical qualification."
+          },
+          {
+            "id": "c",
+            "label": "Emergency responder capability."
+          },
+          {
+            "id": "d",
+            "label": "Engineering approval authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G63_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G63_lesson1",
+          "questionIds": [
+            "G63_check1"
+          ]
+        },
+        {
+          "lessonId": "G63_lesson2",
+          "questionIds": [
+            "G63_check2"
+          ]
+        },
+        {
+          "lessonId": "G63_lesson3",
+          "questionIds": [
+            "G63_check3"
+          ]
+        },
+        {
+          "lessonId": "G63_lesson4",
+          "questionIds": [
+            "G63_check4"
+          ]
+        },
+        {
+          "lessonId": "G63_lesson5",
+          "questionIds": [
+            "G63_check5"
+          ]
+        },
+        {
+          "lessonId": "G63_lesson6",
+          "questionIds": [
+            "G63_check6"
+          ]
+        },
+        {
+          "lessonId": "G63_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G63_final",
+          "questionIds": [
+            "G63_final1",
+            "G63_final2",
+            "G63_final3",
+            "G63_final4",
+            "G63_final5",
+            "G63_final6",
+            "G63_final7",
+            "G63_final8",
+            "G63_final9",
+            "G63_final10",
+            "G63_final11",
+            "G63_final12",
+            "G63_final13",
+            "G63_final14",
+            "G63_final15",
+            "G63_final16",
+            "G63_final17",
+            "G63_final18",
+            "G63_final19",
+            "G63_final20"
+          ]
+        },
+        {
+          "lessonId": "G63_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G63_check1": "Roles and methods differ across well work.",
+        "G63_check2": "Presence, testing and acceptance are different evidence.",
+        "G63_check3": "Qualified evaluation needs honest observations rather than premature diagnosis.",
+        "G63_check4": "Instructions must match the actual system.",
+        "G63_check5": "Work completion does not prove operating prerequisites.",
+        "G63_check6": "Immediate control and return-to-work are distinct decisions.",
+        "G63_final1": "Specialist functions have distinct requirements.",
+        "G63_final2": "Competence must match real responsibilities.",
+        "G63_final3": "Functional understanding supports qualified planning without becoming execution design.",
+        "G63_final4": "Evidence is bounded by its scope.",
+        "G63_final5": "Transitions can change the approved basis.",
+        "G63_final6": "The receiving role needs actionable specific state information.",
+        "G63_final7": "Meaningful interpretation requires a supported measurement basis.",
+        "G63_final8": "Reassuring data cannot erase an independent relevant observation.",
+        "G63_final9": "Information validity must be established under the actual program.",
+        "G63_final10": "The course deliberately teaches preparation without hazardous execution parameters.",
+        "G63_final11": "Change significance follows function and consequence.",
+        "G63_final12": "Distribution is not demonstrated competence.",
+        "G63_final13": "Equipment assurance must match actual service.",
+        "G63_final14": "Bounded regulatory guidance must retain its scope.",
+        "G63_final15": "Simultaneous work can change dependencies.",
+        "G63_final16": "Urgency does not grant specialist execution authority.",
+        "G63_final17": "Critical state matters more than administrative volume.",
+        "G63_final18": "One clarification cannot answer every operating question.",
+        "G63_final19": "Independent prerequisites require independent evidence.",
+        "G63_final20": "Actual role-specific simulation, equipment performance and authorization remain separate."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

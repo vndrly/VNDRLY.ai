@@ -1,0 +1,897 @@
+{
+  "courseId": "G69",
+  "gapGroupId": "TG20",
+  "title": "Aviation ground interfaces, loading concepts and role assurance",
+  "description": "Teach airside hazard mechanisms, diagram interpretation, loading-information quality and aviation role boundaries.",
+  "purpose": "Teach airside hazard mechanisms, diagram interpretation, loading-information quality and aviation role boundaries.",
+  "audience": [
+    "Assigned aviation ground coordinators",
+    "Customer logistics personnel",
+    "Aviation service planners"
+  ],
+  "sources": [
+    {
+      "title": "FAA pilot certification by aircraft and duty",
+      "url": "https://www.faa.gov/pilots/become"
+    },
+    {
+      "title": "FAA airport diagrams and hot-spot information",
+      "url": "https://www.faa.gov/airports/runway_safety/diagrams/"
+    }
+  ],
+  "practicalBoundary": "This course grants no pilot, mechanic, marshaller, flight-dispatch, dangerous-goods or aircraft-release qualification. It teaches no aircraft operation or maintenance recipe. Actual aircraft/program instruction, practical qualification and operational authority remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual aircraft and operating regime",
+    "Named operator, aircrew, maintenance and ground duties",
+    "Applicable role credentials and aircraft/task authorization",
+    "Current site/access and passenger/cargo procedures",
+    "Technical and operational release responsibilities"
+  ],
+  "practicalAssessmentRequired": [
+    "Aircraft/program-specific observation of assigned ground communication and access duties",
+    "Applicable flight or maintenance practical qualification through the responsible aviation program",
+    "Observed passenger/cargo coordination and abnormal-information handover within the actual role"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G69_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for aviation ground interfaces, loading concepts and role assurance. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no pilot, mechanic, marshaller, flight-dispatch, dangerous-goods or aircraft-release qualification. It teaches no aircraft operation or maintenance recipe. Actual aircraft/program instruction, practical qualification and operational authority remain separate.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G69_lesson1",
+        "title": "1. Separate aircrew, maintenance, ground and passenger roles",
+        "body": "An aviation service contract does not establish the duties of each person on the site. Aircraft rental can supply an aircraft without a pilot. A survey contract can include a passenger observing work without making that passenger aircrew. Ground support can involve baggage coordination without aircraft maintenance. Begin with a role map: who operates the aircraft, who controls ground movement, who performs maintenance, who coordinates passengers and who owns the customer's work objective.\n\nFor each role, identify the actual aircraft and operating context. FAA pilot guidance illustrates that certificate requirements differ with aircraft and intended flying. It does not establish that a generic aviation course qualifies a helicopter pilot, mechanic or ground marshal. Other jurisdictions and operating regimes require their own review. A vendor's broad aviation experience is relevant background but cannot replace evidence for the actual aircraft, duty and authority.\n\nWrite the interface between the customer and aviation operator. The customer defines the business task and provides relevant site information; the operator makes aviation decisions within the applicable regime. A production supervisor's desire to depart is not a flight release. A passenger count supplied by the customer is input to the operator's planning, not an approved loading calculation. A ground coordinator must understand when information is being supplied and when a specialized decision is being requested.\n\nPaper exercise: a contract says helicopter support for remote inspection. The proposal names an aircraft but does not state whether a pilot, maintenance support or ground coordinator is supplied. Produce a role table with unresolved entries. Do not fill them by assuming that aircraft rental includes all associated services. The useful result is a clear allocation of actual duties before credentials and practical assessments are selected.\n\nThis course teaches transferable coordination and hazard reasoning. It does not teach aircraft controls, flight maneuvers, maintenance procedures, marshalling signals or emergency flight actions. Those require approved aircraft/program instruction and the appropriate practical capability.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G69_lesson2",
+        "title": "2. Understand airside hazards through energy and visibility",
+        "body": "Airside hazards are best understood by the energy and movement involved. Propellers and rotors can be difficult to perceive, especially when moving or against an unfamiliar background. Jet intake and exhaust involve powerful airflow, heat and projected material. Ground vehicles introduce collision and visibility conflicts. The absence of obvious motion from a worker's viewing angle is not evidence that an area is safe to enter. Aircraft-specific approach and exclusion instructions must come from the responsible aviation personnel.\n\nForeign object debris is material that can damage an aircraft, interfere with equipment or become a projectile. Examples include loose packaging, small tools, fasteners and unsecured personal articles. A ground worker should understand the mechanism: material that seems harmless on a quiet apron can move under aircraft-generated airflow or enter vulnerable equipment. The local program defines inspection, reporting and removal duties; a worker must not retrieve material inside a controlled aircraft hazard area without the responsible person's direction.\n\nVisibility has several dimensions. The aircraft operator may not see a pedestrian near the airframe, and a ground worker wearing hearing protection may not hear a vehicle. Glare, darkness, precipitation and clutter can reduce recognition of signs and movement. Planning should identify who controls access, what route is approved and how changing conditions will be communicated. High-visibility clothing is one control element, not permission to walk anywhere.\n\nBuild a hazard map on a fictional plan. Mark aircraft operating areas, passenger routes, vehicle routes, controlled boundaries and places where sight lines are obstructed. Use symbols from the supplied legend and explicitly label unknown areas. Do not draw a universal rotor clearance or jet-blast distance; aircraft and local conditions determine those controls. The learning task is to recognize conflicts and ask the correct authority to resolve them.\n\nA correct worker response uses the agreed local route and coordination method. Improvised waving, following another passenger or assuming that a stopped vehicle gives airside permission are unreliable substitutes for the actual instruction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G69_lesson3",
+        "title": "3. Read location and movement information without inventing clearance",
+        "body": "A diagram is a planning aid with a defined purpose, not a movement authorization. Airport diagrams can show runways, taxiways and relevant layout information; FAA's diagram service also identifies hot-spot information. A company site sketch may show only a temporary landing area and access road. Start by identifying the location, diagram date or currency, legend, orientation and limitations. A map copied from a different facility or an old presentation cannot establish the current route.\n\nDistinguish position information from permission. Knowing where a runway or landing area is does not permit entry. Local access arrangements and the responsible aviation or airport authority determine movement. The ground coordinator should know the agreed communications route for requests and uncertainty, but this course does not teach radio clearances, standard marshalling signals or aircraft maneuver instructions. A worker who is unsure of location should communicate uncertainty through the approved method rather than continue on an assumed route.\n\nFor remote sites, review what information the aviation operator needs from the customer: site identity, access arrangements, nearby activities, obstructions known to the site and changes since the previous visit. This is information sharing, not a customer certification that a landing area is suitable. The operator's competent personnel assess suitability under their program. An aerial photograph may omit temporary plant, suspended loads, wires, dust or recent construction; record its date and limitations.\n\nPaper exercise: a site plan directs passengers across a vehicle route near the aircraft staging point. A later work notice places a crane beside that route. Mark the conflict and provide the new information to the aviation/site owners. Do not choose a new passenger route by walking between equipment to see whether it fits. The competent owners must agree a route and controls before use.\n\nThe distinction between a drawing and a clearance is transferable. It prevents a person with good map-reading skills from accidentally claiming operational authority they do not hold. Accurate location reporting supports safety only when paired with the actual access and movement process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G69_lesson4",
+        "title": "4. Prepare passenger and cargo information for qualified decisions",
+        "body": "Loading affects an aircraft as a system. Total mass matters, but distribution matters too because the center of gravity influences stability and control. A load that satisfies a total-mass limit can still be unsuitable if distributed incorrectly. Aircraft performance also depends on conditions and configuration. This conceptual explanation is not a loading formula or an approval criterion; qualified aviation personnel must use the actual aircraft data and operating procedure.\n\nThe coordinator's practical contribution is reliable information. Prepare the required passenger and cargo details using the operator's approved process. Identify unusual shapes, liquids, batteries, pressurized articles, hazardous materials or items whose nature is uncertain. Do not decide that an item is acceptable because it fits in a bag or was carried on a previous flight. Aviation dangerous-goods rules and operator restrictions need actual applicability review and competent determination.\n\nKeep original information and changes traceable. A late passenger substitution, added toolbox or changed destination may affect the operator's planning. Route changes to the designated aviation contact before movement. Do not quietly exchange one item for another on the assumption that they are similar. The person responsible for aircraft loading needs accurate inputs and authority to assess their consequences.\n\nPaper exercise: a fictional manifest lists two sealed sample containers and one toolbox, but no content declaration is available for the samples. Mark their contents unresolved and ask the designated specialist/operator for the required classification and acceptance process. Do not open, smell or experiment with samples to finish training. The coordinator can produce a complete question and preserve the hold without becoming a dangerous-goods certifier.\n\nAnother safe exercise uses tokens on a drawn aircraft to illustrate distribution. Moving a heavy token farther from a reference point changes its turning effect even when total token weight is unchanged. Describe that relationship verbally. Do not convert it into an operational center-of-gravity calculation or assume an arbitrary diagram has the geometry of a real aircraft.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G69_lesson5",
+        "title": "5. Manage handovers, abnormal information and operational pressure",
+        "body": "Aviation coordination depends on shared information at the right time. A useful handover states the flight or service identifier, aircraft/operator contact, site conditions, passenger/cargo status, approved ground arrangements and unresolved items. Distinguish confirmed information from estimates. A message saying everyone is ready can conceal an undeclared item, incomplete passenger briefing or changed ground activity. Specific facts allow the responsible aviation personnel to make their decisions.\n\nUse closed-loop communication for consequential coordination within the approved program. The sender gives the intended information clearly; the receiver confirms the important meaning; the sender corrects discrepancies. This is a communication concept, not a substitute for aviation radio phraseology or operational clearances. A repeated wrong identifier should be corrected explicitly rather than assumed to be a harmless slip. Multiple people speaking at once or using different names for the same site are warning signs of an unreliable shared picture.\n\nOperational pressure can distort roles. A customer manager may ask a ground coordinator to tell the pilot that conditions are acceptable. The coordinator should report the actual known conditions and limitations instead of making an aviation suitability judgment. A pilot or operator's decision to delay does not need to be argued away by a passenger's schedule. Similarly, a maintenance concern must go to the authorized aviation process; a ground worker should not troubleshoot the aircraft or clear the concern because departure is urgent.\n\nUnexpected events need the local emergency interface. Know how to summon assistance, account for people and communicate location within the assigned role. This lesson does not prescribe firefighting near aircraft, rescue entry, fuel-spill intervention or aircraft shutdown actions. Those require the approved emergency plan and appropriately trained responders. A general worker's useful contribution is timely factual reporting and compliance with the designated safe arrangements.\n\nPaper exercise: the manifest says Site East while a briefing sheet says East Annex. Identify the location conflict before it becomes a movement assumption. Ask the responsible coordinator to reconcile the identifier and distribute the corrected information through the agreed process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G69_lesson6",
+        "title": "6. Evaluate capability for the actual aviation program",
+        "body": "A capability review should be organized by role, aircraft and operating task. For aircrew, identify applicable certification and aircraft/task qualifications through the responsible aviation program. For maintenance, identify the actual authorized personnel and work scope. For ground roles, identify local aircraft-specific instruction, communications, access and observed skills. Passengers need the operator's relevant briefing, not a pilot credential. A blanket aviation certificate assigned to everyone hides these distinctions.\n\nVerify evidence rather than collecting labels. A document may identify a person and credential without establishing current authorization for a particular operator or task. A service proposal may list aircraft types that differ from the aircraft actually dispatched. Record the mismatch and ask for the appropriate evidence. This course does not establish legal applicability across jurisdictions or determine airworthiness; competent aviation authorities and operators retain those decisions.\n\nA safe paper assessment can test role recognition, diagram interpretation, manifest discrepancy detection and handover quality. Give the learner a fictional airside plan with an outdated passenger route, changed site activity and an unidentified cargo item. Ask for a fact-based coordination message and a list of unresolved decisions with owners. Success demonstrates these knowledge and planning skills. It does not demonstrate aircraft operation, marshalling, maintenance or emergency response.\n\nPractical assessment for assigned aviation roles must be performed through the applicable qualified program under safe conditions. It may include the actual local access route, approved communication method and duties specific to the person's role. The assessor must not create uncontrolled proximity to running aircraft to test confidence. Aircraft movement and operational hazards remain under the actual responsible aviation personnel.\n\nBefore closing a capability item, state exactly what was demonstrated, the aircraft/site context, assessor scope, conditions and limitations. Preserve applicable credential verification separately from practical results and work authorization. The final course record supplies a bounded knowledge component. It cannot turn an unassigned passenger into ground crew or replace an operator's aircraft-specific qualification and release process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G69_case1",
+        "title": "Worked fictional case 1: the survey charter with an unclear ground role",
+        "body": "Fictional facts: Ridge Survey books helicopter support for a remote survey. The contract says aircraft rental and names a model but does not identify supplied aircrew or ground support. The customer assigns Sam, an office logistics worker, to coordinate passengers. An old site photograph shows a clear staging area. A current construction notice places equipment nearby. One passenger brings sealed samples whose contents are not in the manifest.\n\nSam first maps roles. Passenger coordination is the assigned task; piloting, aircraft maintenance, loading approval and landing-area suitability are not assigned to Sam. The rental wording does not prove those services are supplied. Sam asks the contract and aviation owners to identify the operator, responsible aircrew and local ground arrangements. This is a specific scope question, not a demand that every passenger obtain an aviation credential.\n\nSam compares site information. The photograph is historical evidence, while the work notice identifies a later change. Neither document alone establishes current suitability. Sam reports the actual known equipment location, photograph date and uncertainty to the aviation/site owners. Sam does not move equipment, invent a clearance distance or certify the area as safe for landing.\n\nFor cargo, Sam records the sealed samples as unidentified contents and sends the required question through the operator's process. The samples are not opened for training or accepted because they fit in baggage. The qualified acceptance process determines classification and carriage conditions. Any resulting manifest change is communicated before movement.\n\nThe fictional resolution assigns the operator and responsible personnel, obtains current site information and agrees the ground passenger arrangements. The samples remain pending until the applicable acceptance information is supplied. Sam's role is successfully performed by providing accurate inputs and preserving unresolved decisions.\n\nFinal decision: the initial booking is not evidence of operational readiness. Residuals are the actual aviation personnel's qualifications and authorization, site suitability determination, approved ground instruction and cargo acceptance. A course score closes only Sam's taught coordination knowledge. It does not provide the missing operational decisions or practical ground-role observation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G69_case2",
+        "title": "Worked fictional case 2: late changes and a misleading ready message",
+        "body": "Fictional facts: Mesa Support plans a fixed-wing transfer between two facilities. A coordinator sends everyone ready. The manifest still names the original passenger, but a replacement has arrived with a different toolbox. The briefing sheet names East Annex while the transport request names Site East. A technician mentions an aircraft concern to the customer dispatcher, who wants departure on time.\n\nThe coordinator breaks the vague readiness statement into facts. Passenger identity has changed, cargo information has changed, location identifiers conflict and a technical concern has been reported. None is resolved by repeating ready. The coordinator sends a correction identifying the exact discrepancies and the responsible aviation contact. Original information and subsequent changes remain traceable.\n\nFor loading, the coordinator supplies the operator's required revised inputs without deciding that the toolbox is equivalent to the previous one. The conceptual lesson is that both total mass and distribution can matter; the coordinator does not calculate a release from a generic training diagram. The operator's qualified personnel assess the actual aircraft and conditions.\n\nThe location conflict is reconciled through the agreed coordination process. The coordinator does not infer that similar names refer to the same place or tell passengers to follow a familiar route. Corrected identifiers are distributed so that the receiving site, passengers and aviation personnel share the same destination information.\n\nThe technical concern goes to the authorized aviation process. The customer dispatcher cannot clear an aircraft maintenance issue merely by accepting schedule risk, and the course graduate does not inspect or repair it. Any operational delay or release decision belongs to the actual competent aviation roles.\n\nFinal decision: readiness remains conditional until the assigned owners resolve each material discrepancy. The useful outcome is reliable information and correct authority routing, not a forced departure. Exact residuals are updated loading/manifest acceptance, destination confirmation, technical disposition, relevant role qualifications and the operator's release. The fictional exercise demonstrates communication and reasoning only; it provides no flight or maintenance authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G69_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G69_check1",
+        "prompt": "A contract says aircraft rental. What can be inferred about a pilot?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing until supplied roles are confirmed."
+          },
+          {
+            "id": "b",
+            "label": "A pilot is always included."
+          },
+          {
+            "id": "c",
+            "label": "The customer must fly."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G69_check2",
+        "prompt": "Why can loose packaging be an airside hazard?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Airflow can move it into equipment or make it a projectile."
+          },
+          {
+            "id": "c",
+            "label": "Only its appearance matters."
+          },
+          {
+            "id": "d",
+            "label": "Paper cannot affect aircraft."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G69_check3",
+        "prompt": "Does an airport diagram grant permission to cross an operating area?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if familiar."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; movement requires the actual access/clearance process."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if the route is drawn."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G69_check4",
+        "prompt": "Can total mass alone establish loading suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, distribution never matters."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if bags fit."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; distribution and actual aircraft conditions also matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G69_check5",
+        "prompt": "A briefing and request use similar but different site names. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Explicit reconciliation through the responsible coordination process."
+          },
+          {
+            "id": "b",
+            "label": "Assume they mean the same place."
+          },
+          {
+            "id": "c",
+            "label": "Let passengers choose."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G69_check6",
+        "prompt": "A paper exercise identifies manifest errors. What skill does it demonstrate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "The assessed coordination and interpretation skills only."
+          },
+          {
+            "id": "c",
+            "label": "Aircraft operation."
+          },
+          {
+            "id": "d",
+            "label": "Aircraft maintenance release."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G69_final1",
+        "prompt": "Who owns aviation suitability decisions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every passenger."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "The actual responsible aviation roles under the applicable program."
+          },
+          {
+            "id": "d",
+            "label": "Any customer manager."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G69_final2",
+        "prompt": "Does surveying as a passenger make someone aircrew?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, all occupants are aircrew."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if they carry a camera."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual assigned duties govern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G69_final3",
+        "prompt": "Why is apparent absence of rotor motion unreliable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Moving components may be hard to perceive from some views."
+          },
+          {
+            "id": "b",
+            "label": "All rotors stop when quiet."
+          },
+          {
+            "id": "c",
+            "label": "A photograph proves safe state."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G69_final4",
+        "prompt": "What should a fictional hazard map mark?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Operating areas, routes, conflicts and unknowns."
+          },
+          {
+            "id": "c",
+            "label": "Invented universal clearances."
+          },
+          {
+            "id": "d",
+            "label": "A new landing approval."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G69_final5",
+        "prompt": "A worker sees debris in a controlled aircraft area. What governs retrieval?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Following any passenger."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "The local program and responsible personnel direction."
+          },
+          {
+            "id": "d",
+            "label": "Immediate entry regardless of aircraft state."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G69_final6",
+        "prompt": "What does high-visibility clothing provide by itself?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permission to walk anywhere."
+          },
+          {
+            "id": "b",
+            "label": "Aircraft operating qualification."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "One visibility control, not unrestricted access."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G69_final7",
+        "prompt": "What must be checked before using a location diagram?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Location, currency, legend, orientation and limitations."
+          },
+          {
+            "id": "b",
+            "label": "Only whether it looks familiar."
+          },
+          {
+            "id": "c",
+            "label": "Only its color."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G69_final8",
+        "prompt": "A historical aerial photo omits new construction. What should be reported?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "The known change and the photos limitation."
+          },
+          {
+            "id": "c",
+            "label": "That the photo guarantees suitability."
+          },
+          {
+            "id": "d",
+            "label": "A self-created landing approval."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G69_final9",
+        "prompt": "An unknown sample fits in baggage. What does that prove about carriage?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It is harmless."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Nothing about dangerous-goods acceptance."
+          },
+          {
+            "id": "d",
+            "label": "It is automatically acceptable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G69_final10",
+        "prompt": "How should a late toolbox change be handled?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat it as equivalent without review."
+          },
+          {
+            "id": "b",
+            "label": "Hide it to avoid delay."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Provide revised inputs to the designated aviation contact."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G69_final11",
+        "prompt": "What does moving a heavy token farther on a paper diagram illustrate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Changed turning effect despite unchanged total weight."
+          },
+          {
+            "id": "b",
+            "label": "An approved real aircraft loading limit."
+          },
+          {
+            "id": "c",
+            "label": "That distribution is irrelevant."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G69_final12",
+        "prompt": "What is a useful handover fact?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Confirmed passenger/cargo status and unresolved items with owners."
+          },
+          {
+            "id": "c",
+            "label": "Everyone ready without details."
+          },
+          {
+            "id": "d",
+            "label": "An assurance based only on schedule."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G69_final13",
+        "prompt": "What is closed-loop coordination in this course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Repeating an error without checking."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Clear information, confirmation of meaning and correction of discrepancies."
+          },
+          {
+            "id": "d",
+            "label": "Inventing aviation radio clearances."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G69_final14",
+        "prompt": "A customer asks a coordinator to declare weather acceptable. What should be supplied?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An unqualified flight release."
+          },
+          {
+            "id": "b",
+            "label": "A promise to depart."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Known facts and limitations to the aviation decision owner."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G69_final15",
+        "prompt": "A maintenance concern is reported before departure. Who resolves it?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The authorized aviation technical/operating process."
+          },
+          {
+            "id": "b",
+            "label": "A customer dispatcher accepting schedule risk."
+          },
+          {
+            "id": "c",
+            "label": "Any online-course graduate."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G69_final16",
+        "prompt": "In Ridge Survey, what is unresolved by the initial contract?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Actual supplied operational and ground roles."
+          },
+          {
+            "id": "c",
+            "label": "Whether a document exists."
+          },
+          {
+            "id": "d",
+            "label": "Whether a customer wants transport."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G69_final17",
+        "prompt": "In Ridge Survey, should sealed samples be opened for the exercise?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, experiment to identify them."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; use the actual classification and acceptance information route."
+          },
+          {
+            "id": "d",
+            "label": "Yes, smell them first."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G69_final18",
+        "prompt": "In Mesa Support, what is wrong with everyone ready?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It has too many details."
+          },
+          {
+            "id": "b",
+            "label": "It proves release."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "It conceals material changes and unresolved identifiers."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G69_final19",
+        "prompt": "Can a ground-role assessor use uncontrolled proximity to running aircraft for realism?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; assessment requires safe qualified program conditions."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after a quiz."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the learner is confident."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G69_final20",
+        "prompt": "What remains separate after this knowledge course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Role-specific credentials, observed skills and operational authorization."
+          },
+          {
+            "id": "c",
+            "label": "Nothing for aviation work."
+          },
+          {
+            "id": "d",
+            "label": "Only a nicer badge."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G69_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G69_lesson1",
+          "questionIds": [
+            "G69_check1"
+          ]
+        },
+        {
+          "lessonId": "G69_lesson2",
+          "questionIds": [
+            "G69_check2"
+          ]
+        },
+        {
+          "lessonId": "G69_lesson3",
+          "questionIds": [
+            "G69_check3"
+          ]
+        },
+        {
+          "lessonId": "G69_lesson4",
+          "questionIds": [
+            "G69_check4"
+          ]
+        },
+        {
+          "lessonId": "G69_lesson5",
+          "questionIds": [
+            "G69_check5"
+          ]
+        },
+        {
+          "lessonId": "G69_lesson6",
+          "questionIds": [
+            "G69_check6"
+          ]
+        },
+        {
+          "lessonId": "G69_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G69_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G69_final",
+          "questionIds": [
+            "G69_final1",
+            "G69_final2",
+            "G69_final3",
+            "G69_final4",
+            "G69_final5",
+            "G69_final6",
+            "G69_final7",
+            "G69_final8",
+            "G69_final9",
+            "G69_final10",
+            "G69_final11",
+            "G69_final12",
+            "G69_final13",
+            "G69_final14",
+            "G69_final15",
+            "G69_final16",
+            "G69_final17",
+            "G69_final18",
+            "G69_final19",
+            "G69_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G69_check1": "Rental wording alone does not allocate all aviation duties.",
+        "G69_check2": "Foreign object debris can have consequences beyond its size.",
+        "G69_check3": "Position information and operational permission differ.",
+        "G69_check4": "Center-of-gravity effects make distribution important.",
+        "G69_check5": "A shared identifier prevents location assumptions.",
+        "G69_check6": "Paper assessment cannot demonstrate physical specialist duties.",
+        "G69_final1": "Customer objectives do not transfer aviation authority.",
+        "G69_final2": "Presence aboard is not a specialist role assignment.",
+        "G69_final3": "Perception is not aircraft-specific safe-state evidence.",
+        "G69_final4": "Mapping identifies questions without granting operational approval.",
+        "G69_final5": "Debris control does not waive aircraft-area controls.",
+        "G69_final6": "Clothing does not replace access and movement arrangements.",
+        "G69_final7": "A diagram must be appropriate to the actual place and purpose.",
+        "G69_final8": "Current changes can invalidate assumptions from old imagery.",
+        "G69_final9": "Physical fit does not establish classification or operator acceptance.",
+        "G69_final10": "Changes can affect actual loading decisions.",
+        "G69_final11": "The desk model teaches a concept, not aircraft-specific calculation.",
+        "G69_final12": "Specific facts permit responsible decisions.",
+        "G69_final13": "The concept supports understanding without replacing approved phraseology.",
+        "G69_final14": "Information reporting and aviation suitability differ.",
+        "G69_final15": "Customer urgency cannot supply technical disposition.",
+        "G69_final16": "The case deliberately leaves service allocation unspecified.",
+        "G69_final17": "Training does not authorize hazardous identification experiments.",
+        "G69_final18": "Readiness must be supported by actual current information.",
+        "G69_final19": "Practical assessment cannot justify uncontrolled exposure.",
+        "G69_final20": "Knowledge completion cannot replace the actual aviation qualification program."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

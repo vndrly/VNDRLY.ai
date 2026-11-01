@@ -1,0 +1,901 @@
+{
+  "courseId": "G82",
+  "gapGroupId": "TG33",
+  "title": "Subject-specific teaching design and practical-assessment reasoning",
+  "description": "Teach needs diagnosis, objective/evidence alignment, worked-example design, observable rubrics, assessor calibration and honest remediation records.",
+  "purpose": "Teach needs diagnosis, objective/evidence alignment, worked-example design, observable rubrics, assessor calibration and honest remediation records.",
+  "audience": [
+    "Assigned subject instructors",
+    "Training designers",
+    "Practical-assessment coordinators"
+  ],
+  "sources": [
+    {
+      "title": "CDC quality training standards: public-health benchmark context",
+      "url": "https://www.cdc.gov/training-development/php/qts/index.html"
+    },
+    {
+      "title": "OSHA role-specific education and training",
+      "url": "https://www.osha.gov/safety-management/education-training"
+    },
+    {
+      "title": "CDC measuring training effectiveness",
+      "url": "https://www.cdc.gov/training-development/php/about/evaluate-training-measuring-effectiveness.html"
+    }
+  ],
+  "practicalBoundary": "This course grants no subject-matter qualification, practical-assessor designation, provider accreditation or authority to certify a hazardous trade. Actual subject/program approvals and observed teaching/assessment capability remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual subject, learner roles, needs and prerequisites",
+    "Approved program/objectives and governing assessment requirements",
+    "Named subject expertise and instructor/assessor competence evidence",
+    "Safe delivery/practical assessment conditions and rubric",
+    "Applicable provider/credential approval and completion-claim scope"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual subject-specific instruction with relevant expert review",
+    "Observed safe practical assessment and evidence-based scoring within assigned subject scope",
+    "Assessor calibration, feedback/remediation and honest record-handling demonstration"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G82_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for subject-specific teaching design and practical-assessment reasoning. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no subject-matter qualification, practical-assessor designation, provider accreditation or authority to certify a hazardous trade. Actual subject/program approvals and observed teaching/assessment capability remain separate.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G82_lesson1",
+        "title": "1. Diagnose the performance gap before assigning a course",
+        "body": "A training need is a gap that instruction can help address. A worker may perform poorly because of missing knowledge or skill, but also because the procedure is unclear, equipment is unavailable, responsibilities conflict or conditions prevent the required behavior. More slides cannot fix every cause. Begin with the actual task, expected performance, observed gap and evidence about why it occurs.\n\nSeparate subject expertise, teaching capability and assessment authority. A technically experienced person may need support designing instruction or assessing consistently. A skilled trainer may lack authority to teach a specialist hazardous method. An assessor may be competent for one subject and not another. This module teaches transferable instructional design and evaluation methods; it grants no subject-matter qualification or provider accreditation.\n\nCreate a needs table with task, expected behavior, observed evidence, likely learning/nonlearning contributors and responsible owner. Avoid personality labels such as careless when the evidence only shows a missed step. A worker unable to access the approved procedure needs an access/process solution as well as any learning support. A person who can explain a method but has never demonstrated it may need supervised practice and practical assessment, not another awareness quiz.\n\nPaper exercise: a fictional team repeatedly submits incomplete equipment records. Interviews show one group cannot find the current form, another misunderstands the required asset identifier and a third has no time allocated for documentation. Identify three different contributors. Instruction can teach identifier use; document access and work allocation need responsible process decisions. The course designer should not claim that training alone closes all three.\n\nCDC quality-training guidance and OSHA role-specific education recommendations provide useful design principles. Their citation does not make this a CDC-approved course or an OSHA-authorized provider program. Actual subject, learners, governing requirements and approval basis must be established separately before specialist delivery.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G82_lesson2",
+        "title": "2. Write objectives that match evidence and learner roles",
+        "body": "An objective should state what the learner will do, under what relevant conditions and what evidence or criterion will show success. Understand safety is too vague to select an assessment. Given a fictional work pack, identify the asset-identity conflict and explain which acceptance claim is unsupported is observable and bounded. It also states a knowledge/reasoning task rather than pretending to demonstrate field execution.\n\nChoose verbs that match the intended capability. Identify, compare, calculate and explain can support knowledge objectives. Demonstrate or perform requires actual observed behavior under appropriate conditions. Authorize or certify may require a separate legal/employer role, not merely a learning objective. Do not write a course objective that grants a power the provider cannot issue.\n\nAlign each objective with teaching, practice and assessment. A matrix can use one row per objective and columns for lesson, worked example, learner practice and evidence. A blank assessment column means the objective's achievement is not demonstrated. A quiz item about definitions cannot establish a physical skill simply because it sits beside a practical-sounding objective.\n\nPrerequisites matter. Learners may need subject knowledge, language support, basic digital access or prior practical competence before the module is useful. State actual prerequisites and how they are established; do not invent barriers unrelated to the task. If a course assumes specialist knowledge it does not teach, make that limitation visible rather than hiding it in difficult terminology.\n\nPaper exercise: an objective says safely operate machine M, but the course contains only photographs and multiple-choice questions. Rewrite the online objective as recognition/planning knowledge and identify a separate appropriately qualified practical assessment for operation. The result preserves useful teaching without manufacturing an operating qualification from a quiz.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G82_lesson3",
+        "title": "3. Teach with explanation, worked examples and safe practice",
+        "body": "Instruction should explain why a method or decision works, not merely list rules. A worked example models the reasoning from facts through evidence to a bounded conclusion. It should show the critical distinction, common error and correct interpretation. For specialist hazards, the example must stay within a safe role-level theory boundary and avoid supplying dangerous operating recipes to unqualified learners.\n\nUse an example sequence: describe the actual task context, identify relevant facts, explain the decision principle, apply it and state limitations. Then provide a different practice problem requiring the learner to transfer the principle. If the practice copies the example's wording with only a changed name, it may test recall of the page rather than understanding. Change a meaningful condition and ask what conclusion follows.\n\nSafe practice is designed, not improvised. Paper records, mock interfaces, inert models and carefully qualified simulations can teach useful skills without exposing learners to live hazards. The actual subject authority determines whether a simulation is appropriate and what practical skills it can or cannot assess. Never create an uncontrolled live operation, surprise confrontation or hazardous rescue to make training feel realistic.\n\nPaper teaching exercise: the principle is that a report's conclusion must stay within its coverage. Work a fictional accessible-area inspection example, then practice with an equipment test using a simulated input. The contexts differ but the inference limit is shared. Ask the learner to explain the unverified portion in each case. This tests transfer without requiring actual inspection or equipment operation.\n\nUsability is part of teaching. Use clear language, defined terms, readable visuals and accessible interaction. If translated, the technical meaning needs competent bilingual review rather than a literal word replacement. A learner's difficulty navigating a form is not evidence that they lack the subject skill. The instructor should identify and remove irrelevant delivery obstacles while preserving the actual performance standard.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G82_lesson4",
+        "title": "4. Build valid questions and observable practical criteria",
+        "body": "An assessment is valid for a claim when its evidence actually supports that claim. A multiple-choice question can assess a decision or interpretation, but cannot observe physical technique. A practical observation can demonstrate behavior under its conditions, but may not establish every future context. State the claim and evidence boundary before designing the test.\n\nFor a multiple-choice item, write a clear task-specific prompt with one defensible answer for a single-answer question. Distractors should represent plausible misconceptions, not random absurdities or hidden word tricks. Avoid giving away the key through consistently longer wording or a fixed answer position. Every explanation should teach why the correct choice follows and why the misconception fails. Distinct questions should address different decisions rather than repeat the same stop-and-escalate sentence.\n\nPractical criteria need observable behaviors. Uses the correct asset identifier, follows the approved method within the assigned role, records original observations and recognizes an unestablished condition are assessable when the actual task defines them. Confident, good attitude or looks experienced are not sufficient technical criteria. Some critical errors cannot be averaged away by unrelated strong performance; the applicable program must define their treatment.\n\nPaper exercise: two assessors disagree on a simulated handover. One values confidence; the other checks whether limitations and decision owners were communicated. Replace confidence with a rubric tied to the actual objective. Define what evidence counts for current state, unresolved items, references and responsible contacts. Do not invent a universal pass percentage for a regulated practical program.\n\nAssessors also need subject scope. A general trainer may score the quality of a written explanation with expert support, but cannot certify hazardous craft performance without the relevant competence and authorization. Practical conditions, equipment, assessor basis and unassessed limitations must be recorded. The assessment form cannot create its own accreditation.\n\nWorked rubric row: the objective requires a learner to distinguish test completion from operating release in a fictional handover. Evidence meeting the row states the completed test's boundary, names the pending release and identifies its owner. Evidence partly addressing the row names the pending release but omits the test limitation. Evidence not addressing it says all ready despite the supplied unresolved release. These descriptions let assessors point to actual words rather than award points for confidence. The real program determines the scoring and consequence of each result; this example supplies no regulated practical pass rule. A separate row can assess source references so that one strong explanation does not conceal missing traceability. Before use, the subject authority should confirm that the rubric reflects the actual task and does not accidentally require authority outside the learner's role.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G82_lesson5",
+        "title": "5. Calibrate assessor judgments and remediate without erasing history",
+        "body": "Assessment consistency improves when assessors apply the same criteria to the same evidence. Before consequential use, have relevant assessors independently review a safe sample performance or fictional record using the rubric. Compare judgments and identify which criterion or observation caused disagreement. Resolve ambiguous wording through the appropriate subject/program authority, then record the agreed interpretation. Agreement for its own sake is not enough if the rubric is wrong.\n\nDistinguish an observed failure from missing evidence. A learner may perform a step incorrectly, or the assessor may not have had a view/evidence sufficient to judge it. Those outcomes need different follow-up. Do not mark a hidden action successful because the learner usually does well. Do not call it failed solely because the form lacks a convenient field. State not observed where appropriate and arrange valid assessment under the actual program.\n\nFeedback should connect observation, consequence and next learning step. You attached the result to an unconfirmed asset identifier; that leaves traceability unsupported; practice reconciling the source records is actionable. Be more careful is not. The learner needs an explanation and a safe opportunity to improve the specific knowledge or skill.\n\nRetain original responses and first-attempt scores. Remediation can include reviewing a question-specific explanation, acknowledging the correction and reassessment under the applicable program. A corrected answer does not rewrite the initial understanding. For this course, all questions must be correct or have explicitly acknowledged remediation; practical or credential requirements remain separate regardless of the final quiz score.\n\nPaper exercise: an instructor deletes all initial errors after coaching so the completion report shows perfect first attempts. Identify the false historical claim. The improved result can be recorded alongside the original with date, feedback and reassessment. Honest records help the program identify recurring misunderstandings and improve teaching rather than merely improve the dashboard.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G82_lesson6",
+        "title": "6. Evaluate transfer and keep accreditation claims exact",
+        "body": "Completion, learning, workplace transfer and operational outcomes are different evaluation questions. Attendance shows participation. A knowledge assessment can show taught understanding. Practical observation shows behavior under assessed conditions. Later task evidence may show transfer to the workplace. An injury-free period or customer satisfaction alone cannot prove that training caused safe performance, because many factors affect outcomes.\n\nBuild an evaluation plan around the actual question. Ask whether learners can perform the objective, whether materials are usable, whether practical limitations remain and whether workplace conditions support the taught behavior. Learner satisfaction is useful feedback but not a substitute for competence evidence. A difficult course is not automatically rigorous, and a popular course is not automatically effective.\n\nUse follow-up evidence responsibly. If learners understand a procedure but cannot access required equipment, the program needs an operational response as well as training review. If many learners miss the same question, inspect the teaching, wording and actual misconception rather than simply lower the standard. Preserve subject accuracy and the governing criteria while removing irrelevant confusion.\n\nProvider approval and accreditation require an actual external or authorized basis where applicable. A course cannot become accredited because its title says certified or because it cites a respected regulator. Describe exactly what the record establishes: this bounded knowledge course completed, practical skill observed within a stated scope, or credential verified from an actual issuer. Do not merge them into a universal qualified badge.\n\nPaper exercise: a consultancy designs a training system but does not deliver specialist courses. Its capability claim should concern the actual consultancy work, not every subject instructor qualification. If it later supplies delivery or practical assessment, those duties need named subject competence and applicable approval. The final handoff should preserve the actual subject, learner role, teaching evidence, assessment conditions, original/remediated results and residual practical/credential requirements. This module improves instructional reasoning; it does not authorize teaching or certifying every hazardous trade.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G82_case1",
+        "title": "Worked fictional case 1: a practical objective assessed only by a quiz",
+        "body": "Fictional facts: Alder Training markets a course as machine-operator certification. Its objective says safely operate machine M, but the material contains photographs and definition questions only. The instructor is experienced in classroom delivery but has no established subject/operator assessment scope. A completion badge is proposed as permission for all machines at a site.\n\nThe reviewer first compares claim and evidence. The quiz may assess definitions or recognition, but it cannot observe machine operation. The objective and badge exceed the available assessment. The useful online content can be retained as bounded knowledge instruction while actual operating skill remains a separate qualified practical component.\n\nNext, the instructor's roles are separated. Classroom skill is relevant to delivery quality but not proof of machine-specific competence or assessment authority. The program needs the actual subject expert and qualified practical assessor under the applicable requirements. The reviewer does not invent a universal commercial certificate; the real regime and employer determine what is required.\n\nThe objectives are rewritten around observable online outcomes, such as identifying a documented scope mismatch and explaining an unsupported readiness claim. A teaching/practice/assessment matrix shows which lesson and question support each. Separate practical criteria and safe assessment conditions are developed by the actual qualified program, not supplied by a hazardous improvised exercise.\n\nIn the fictional resolution, marketing states the exact knowledge component and limitations. Actual machine/task instruction, observed performance, required credentials and employer/site assignment are tracked separately. No badge claims authority beyond the evidence.\n\nFinal decision: reject the universal operator-certification claim while preserving useful bounded teaching. Exact residuals are subject-specific instructor competence, qualified practical assessment, applicable provider/credential approval and actual work authorization. The learner in this paper case demonstrates instructional alignment reasoning, not operation or assessor qualification for machine M.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G82_case2",
+        "title": "Worked fictional case 2: perfect scores created by deleting errors",
+        "body": "Fictional facts: Meadow Academy teaches technical record interpretation. Many learners confuse a calibration certificate with full-system acceptance. The instructor gives coaching and deletes original wrong answers so everyone appears correct on the first attempt. Two assessors also score a mock handover differently because one rewards confidence and the other checks actual limitations.\n\nThe reviewer identifies two problems. The original-score deletion creates a false history, while assessor disagreement reveals an unclear or inconsistently applied rubric. Neither is solved by issuing a prettier completion badge. The program should preserve initial responses, explanations, remediation acknowledgments and reassessment outcomes.\n\nFor the recurring misconception, the instructor examines the teaching and item wording. A worked example should explain the difference between component measurement evidence and system acceptance. A new transfer exercise can use a different context to test the same inference boundary. The answer is not simply to lower the standard or repeat an unsupported slogan.\n\nFor assessor calibration, both assessors independently review the same fictional handover against objective criteria: current state, evidence references, unresolved limitations and decision owners. They compare the evidence behind each judgment and refer subject ambiguity to the appropriate authority. Confidence is removed as a substitute for technical content, while clear communication remains assessed through observable behavior.\n\nIn the fictional resolution, the records honestly show first-attempt gaps and later improvement. The revised lesson and rubric are reviewed and piloted safely. Follow-up asks whether learners can apply the distinction in their actual assigned record-review role, without claiming that the course qualifies them for every technical activity described in the examples.\n\nFinal decision: retain learning history and improve teaching/criteria based on evidence. Exact residuals are actual subject expert review, assessor capability for the specific practical duties, applicable program approval and workplace authorization. This course's paper assessment demonstrates instructional reasoning only; it cannot accredit the provider or create subject competence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G82_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G82_check1",
+        "prompt": "Can training alone fix every performance gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; equipment, access, procedures or work conditions may also need action."
+          },
+          {
+            "id": "b",
+            "label": "Yes, more slides fix everything."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every gap is ignorance."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G82_check2",
+        "prompt": "Which objective is assessable online?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Identify an asset-identity conflict in a fictional work pack."
+          },
+          {
+            "id": "c",
+            "label": "Safely operate every machine after photographs."
+          },
+          {
+            "id": "d",
+            "label": "Become universally qualified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G82_check3",
+        "prompt": "What should a worked example show?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An unqualified hazardous operating recipe."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Facts, principle, reasoning, conclusion and limitations."
+          },
+          {
+            "id": "d",
+            "label": "Only a slogan."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G82_check4",
+        "prompt": "Can a quiz observe physical craft technique?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, any correct answer proves technique."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if difficult."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual practical observation is separate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G82_check5",
+        "prompt": "Should coached errors be deleted from first-attempt history?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; retain originals and remediation/reassessment."
+          },
+          {
+            "id": "b",
+            "label": "Yes, perfect history is the goal."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after acknowledgment."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G82_check6",
+        "prompt": "Does citing CDC make a provider accredited?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; approval/accreditation requires its actual authorized basis."
+          },
+          {
+            "id": "c",
+            "label": "Yes, citations confer approval."
+          },
+          {
+            "id": "d",
+            "label": "Yes, a title can do it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G82_final1",
+        "prompt": "Does subject experience automatically establish teaching skill?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, no design is needed."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; subject, instruction and assessment capabilities differ."
+          },
+          {
+            "id": "d",
+            "label": "Yes, all experts teach well."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G82_final2",
+        "prompt": "Does skilled classroom delivery qualify every specialist subject?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, all teaching transfers universally."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after this module."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual subject competence and authority remain necessary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G82_final3",
+        "prompt": "What should a needs table include?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Task, expected behavior, observed gap, contributors and owner."
+          },
+          {
+            "id": "b",
+            "label": "Only careless worker."
+          },
+          {
+            "id": "c",
+            "label": "Only a course title."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G82_final4",
+        "prompt": "A worker cannot access the current form. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "A process/access response as well as any actual learning support."
+          },
+          {
+            "id": "c",
+            "label": "Only another quiz."
+          },
+          {
+            "id": "d",
+            "label": "A personality warning."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G82_final5",
+        "prompt": "What should objective alignment connect?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only badge wording."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Teaching, practice and evidence for each objective."
+          },
+          {
+            "id": "d",
+            "label": "Only attendance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G82_final6",
+        "prompt": "Can a physical objective be validated by definitions alone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, terminology is operation."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if score is high."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; revise the online claim and arrange qualified practical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G82_final7",
+        "prompt": "Why change a meaningful condition in practice?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To assess transfer of the principle rather than copied wording."
+          },
+          {
+            "id": "b",
+            "label": "To trick the learner."
+          },
+          {
+            "id": "c",
+            "label": "To hide the objective."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G82_final8",
+        "prompt": "Can realism justify uncontrolled live hazards?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; practice requires an appropriate safe arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Yes, surprise improves every assessment."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after consent to a quiz."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G82_final9",
+        "prompt": "What should technical translation include?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume every term transfers."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Competent review preserving actual meaning and learner usability."
+          },
+          {
+            "id": "d",
+            "label": "Literal word replacement only."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G82_final10",
+        "prompt": "What makes a single-answer item defensible?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hidden word tricks."
+          },
+          {
+            "id": "b",
+            "label": "Always the longest answer."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "A clear prompt with one supported key and meaningful misconception distractors."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G82_final11",
+        "prompt": "What is an observable practical criterion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Records the actual asset identifier correctly under the task conditions."
+          },
+          {
+            "id": "b",
+            "label": "Looks confident."
+          },
+          {
+            "id": "c",
+            "label": "Has the right personality."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G82_final12",
+        "prompt": "Can unrelated strengths always average away critical errors?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; the actual program defines critical-error treatment."
+          },
+          {
+            "id": "c",
+            "label": "Yes, any high total suffices."
+          },
+          {
+            "id": "d",
+            "label": "Yes, attendance compensates."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G82_final13",
+        "prompt": "What is assessor calibration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Changing every result to pass."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Independent scoring of shared evidence, comparison and resolution of criteria differences."
+          },
+          {
+            "id": "d",
+            "label": "Forcing agreement without evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G82_final14",
+        "prompt": "How should an unobserved action be recorded?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatically successful."
+          },
+          {
+            "id": "b",
+            "label": "Automatically a deliberate failure."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "As not observed where appropriate, with valid follow-up."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G82_final15",
+        "prompt": "Which feedback is actionable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The unconfirmed asset ID leaves traceability unsupported; practice reconciliation."
+          },
+          {
+            "id": "b",
+            "label": "Be more careful."
+          },
+          {
+            "id": "c",
+            "label": "Be more aggressive."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G82_final16",
+        "prompt": "In Alder, what exceeds the evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Universal operator certification from photographs and quiz results."
+          },
+          {
+            "id": "c",
+            "label": "A bounded recognition objective."
+          },
+          {
+            "id": "d",
+            "label": "A separate practical residual."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G82_final17",
+        "prompt": "In Alder, should useful online knowledge be discarded?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No, call it full qualification."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; retain it with accurate scope and separate practical requirements."
+          },
+          {
+            "id": "d",
+            "label": "Yes, every partial component is worthless."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G82_final18",
+        "prompt": "In Meadow, what does recurring confusion suggest reviewing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only lower the standard."
+          },
+          {
+            "id": "b",
+            "label": "Delete more errors."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Teaching, item wording and the actual misconception."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G82_final19",
+        "prompt": "Does learner satisfaction alone prove competence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; it is feedback, not task-performance evidence."
+          },
+          {
+            "id": "b",
+            "label": "Yes, popularity proves skill."
+          },
+          {
+            "id": "c",
+            "label": "Yes, all positive surveys certify."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G82_final20",
+        "prompt": "What remains after this module?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Subject-specific competence, practical assessor capability and applicable program/work authority."
+          },
+          {
+            "id": "c",
+            "label": "Accreditation for every provider."
+          },
+          {
+            "id": "d",
+            "label": "Authority to certify every trade."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G82_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G82_lesson1",
+          "questionIds": [
+            "G82_check1"
+          ]
+        },
+        {
+          "lessonId": "G82_lesson2",
+          "questionIds": [
+            "G82_check2"
+          ]
+        },
+        {
+          "lessonId": "G82_lesson3",
+          "questionIds": [
+            "G82_check3"
+          ]
+        },
+        {
+          "lessonId": "G82_lesson4",
+          "questionIds": [
+            "G82_check4"
+          ]
+        },
+        {
+          "lessonId": "G82_lesson5",
+          "questionIds": [
+            "G82_check5"
+          ]
+        },
+        {
+          "lessonId": "G82_lesson6",
+          "questionIds": [
+            "G82_check6"
+          ]
+        },
+        {
+          "lessonId": "G82_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G82_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G82_final",
+          "questionIds": [
+            "G82_final1",
+            "G82_final2",
+            "G82_final3",
+            "G82_final4",
+            "G82_final5",
+            "G82_final6",
+            "G82_final7",
+            "G82_final8",
+            "G82_final9",
+            "G82_final10",
+            "G82_final11",
+            "G82_final12",
+            "G82_final13",
+            "G82_final14",
+            "G82_final15",
+            "G82_final16",
+            "G82_final17",
+            "G82_final18",
+            "G82_final19",
+            "G82_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G82_check1": "Needs analysis separates learning and nonlearning contributors.",
+        "G82_check2": "The objective matches a bounded observable reasoning task.",
+        "G82_check3": "Explanation teaches transfer and inference boundaries.",
+        "G82_check4": "Assessment evidence must support the claim.",
+        "G82_check5": "Improvement does not rewrite initial understanding.",
+        "G82_check6": "Reference use is not accreditation.",
+        "G82_final1": "Distinct roles need relevant evidence.",
+        "G82_final2": "Pedagogy cannot create hazardous-method expertise.",
+        "G82_final3": "Specific evidence supports an appropriate solution.",
+        "G82_final4": "The barrier is not necessarily missing knowledge.",
+        "G82_final5": "A blank assessment link leaves achievement unsupported.",
+        "G82_final6": "Claim and evidence must match.",
+        "G82_final7": "Transfer requires applying reasoning in a new relevant context.",
+        "G82_final8": "Training cannot manufacture uncontrolled exposure.",
+        "G82_final9": "Language accuracy affects the learning task.",
+        "G82_final10": "Questions should assess the intended decision.",
+        "G82_final11": "Criteria should describe evidence rather than impressions.",
+        "G82_final12": "Consequential criteria need their actual governing rule.",
+        "G82_final13": "Consistency must be tied to valid criteria and observations.",
+        "G82_final14": "Missing evidence differs from observed incorrect performance.",
+        "G82_final15": "Feedback should connect observation, consequence and learning step.",
+        "G82_final16": "The advertised physical claim is unsupported.",
+        "G82_final17": "Useful bounded teaching can coexist with explicit residuals.",
+        "G82_final18": "Evaluation should improve learning rather than hide gaps.",
+        "G82_final19": "Evaluation questions require appropriate evidence.",
+        "G82_final20": "Instructional theory cannot create specialist qualifications."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

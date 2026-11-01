@@ -1,0 +1,916 @@
+{
+  "courseId": "G85",
+  "gapGroupId": "TG36",
+  "title": "Hydroblasting, hydrovac and specialist cleaning methods",
+  "description": "Task-specific instruction with two worked fictional cases, six checks and twenty explained final decisions. Employer methods and observed qualification remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for hydroblasting, hydrovac and specialist cleaning methods.",
+  "audience": [
+    "Assigned specialist cleaning crew members",
+    "Hydrovac and vacuum-transfer task planners",
+    "Cleaning supervisors",
+    "Equipment preparation and customer handover personnel"
+  ],
+  "practicalBoundary": "Travel/standby billing is not evidence of active hydrovac excavation; pressure-washer rental does not imply a supplied hydroblaster. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual work order separating jetting, vacuum transfer and excavation duties, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual equipment dossier identifying unit, hose assemblies, accessories and configuration approval, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual site plan showing cleaning zone, adjacent activities, utilities and access coordination, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual residue and effluent plan linked to material history and approved receiving route, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual task briefing with stop roles, communications and equipment-specific emergency information, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual completion report listing cleaned boundaries, exclusions, waste disposition and defects, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who distinguishes the actual jetting, vacuum, excavation and chemical-cleaning duties; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who recognizes equipment identity, substitution and compatibility limitations; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who identifies site, traffic and utility interfaces in a representative work plan; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who traces residues and recovered material to characterization and acceptance owners; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who demonstrates assigned equipment stop and emergency communication duties through an approved safe method; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who hands over bounded cleaning results, exclusions, recovered material and equipment restrictions; records the representative task, errors, correction, limits and assessment decision.",
+    "Actual hazardous, equipment, trade or regulated duties require their own approved method assessment and applicable credentials. This online result does not satisfy those practical requirements."
+  ],
+  "sources": [
+    {
+      "title": "OSHA recommended safety-program education and training",
+      "url": "https://www.osha.gov/safety-management/education-training",
+      "scopeLimit": "General role- and hazard-specific training guidance; not a trade license or universal legal mandate."
+    },
+    {
+      "title": "OSHA excavation requirements",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651",
+      "scopeLimit": "Applicable construction excavation scope and actual ground/services."
+    },
+    {
+      "title": "OSHA permit-required confined spaces",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
+      "scopeLimit": "General-industry scope and exclusions; actual space/method and applicable regime required."
+    },
+    {
+      "title": "OSHA hazardous energy control",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G85_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Specialist cleaning is not one interchangeable activity. Water jetting, vacuum transfer, hydrovac excavation and chemical cleaning have different equipment, materials and interfaces. This course teaches workers and planners to identify those differences, understand the evidence behind a safe task plan and report conditions that invalidate it. It supplies no pressure settings, hose assembly sequence, chemical recipe or operating technique.\n\nThe fictional exercises are completed with records and drawings only. Actual equipment operation, utility exposure, material handling, entry and emergency intervention need approved method instruction and observed qualification. Complete six lesson checks and twenty final questions. Preserve original responses and explicitly acknowledge any explained remediation. A knowledge result cannot be presented as equipment-specific practical competence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G85_lesson1",
+        "title": "Lesson 1 — Distinguish cleaning and excavation duties",
+        "body": "Read a cleaning work order by identifying the physical activity and supplied responsibility, not just the invoice heading. Hydroblasting applies high-pressure water to a surface or deposit. Vacuum transfer moves material through a vacuum system. Hydrovac excavation combines material removal with excavation interfaces. Chemical cleaning introduces product, compatibility and reaction questions beyond water cleaning. A contractor may supply several activities, but that does not make every crew member qualified for all of them.\n\nThe material being removed matters. Cleaning a known external surface differs from removing an uncharacterized residue from equipment. The destination of debris or liquid, possible contamination and surrounding exposures belong in the scope. A clean-looking surface is an observed result; it does not establish internal integrity, a safe atmosphere or suitability for subsequent service.\n\nDistinguish equipment supply from operation. Renting a pressure washer does not prove that a supplied industrial hydroblasting crew is included. Likewise, travel or standby charges do not establish that active hydrovac excavation took place. Qualification review should follow the actual duty rather than billing terminology. Clarify conditional work before the condition is activated, including who authorizes the additional scope.\n\nFor the fictional order, line one is standby, line two is vacuum transfer and line three says possible hydrovac exposure of a utility. The first two lines do not authorize the third. The planner asks whether excavation will occur, which crew supplies it and which utility and excavation arrangements apply. They preserve the original distinction rather than labeling the whole job hydroblasting.\n\nWorkers contribute by describing what they are actually asked to do and reporting departures from the briefing. If a cleaning task changes to entry, chemical treatment or excavation, the assignment needs reassessment. Familiarity with one cleaning method cannot supply the missing competence for a different physical activity.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G85_lesson2",
+        "title": "Lesson 2 — Trace the equipment configuration",
+        "body": "High-energy cleaning equipment is a connected system. The unit, hoses, accessories, controls and protective features must be suitable for the actual approved configuration. A component that physically connects is not thereby compatible. The manufacturer instructions and competent technical selection process establish the applicable equipment relationships; this course does not provide assembly instructions or substitute engineering approval.\n\nReview equipment identity before reviewing condition. A satisfactory inspection for another unit is not evidence for the unit scheduled to work. Component identifiers and the controlled equipment list allow the crew to recognize an unreviewed substitution. A replacement accessory can change the configuration even when the main unit remains the same. Report that change rather than assuming the previous acceptance covers it.\n\nCondition evidence should distinguish inspection, defects, corrective work and release. A defect does not vanish because someone removes a tag from a file. The responsible technical role needs to determine the disposition and record the necessary verification. A successful delivery or a clean appearance is not the same as equipment readiness.\n\nStop functions are equipment specific. Workers need actual instruction and assessed practice under the employer's safe evaluation method. A generic course can teach why a mismatch matters, but it cannot establish that a person can identify, use and verify the correct function on every unit. Do not energize unfamiliar equipment as a way of answering a document question.\n\nIn the desk exercise, unit J4 is approved with accessory family R. Dispatch substitutes family T without a documented technical acceptance. The worker identifies the mismatch and prevents that unreviewed configuration from being treated as ready. The technical review must address the actual unit and accessory, not merely their connection size. This is a useful task decision even though the worker does not personally make the compatibility judgment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G85_lesson3",
+        "title": "Lesson 3 — Review work-zone and interface assumptions",
+        "body": "A work zone is the space through which task effects can reach people, equipment and adjacent activities. For specialist cleaning, those effects can include debris, fluids, hoses, vehicle movements and the changing work face. A line drawn around the machine does not necessarily address all those pathways. The responsible task planner selects the actual controls and boundaries for the method and environment.\n\nStart a drawing exercise by marking the cleaning target, equipment position, recovery destination, access route and people who must pass nearby. Then add other work, deliveries and fixed facilities. The exercise reveals interfaces rather than prescribing operating distances. A pedestrian route omitted from the cleaning sketch remains a real route, and a delivery booking can create a conflict even when each crew has its own permit.\n\nHydrovac excavation adds utility and ground questions. Existing drawings and surface markings are inputs to the applicable locating and excavation process; they are not proof that every underground service is known. Conflicting routes, changed ground or uncertain service status require the designated competent review. A cleaning qualification does not automatically establish utility-location or excavation competence.\n\nThe fictional bay plan shows the unit and target but omits the office walkway. A delivery vehicle also uses the same gate during the proposed work. Overlaying those movements makes the conflict visible. The planner coordinates with the site traffic owner and affected work groups before the plan is relied on. The lesson is not to choose an improvised separation distance; it is to identify whose activities and exposures the arrangement must address.\n\nWorkers should report new nearby work, changed access and unexpected services promptly through the task change route. A plan based on an empty bay may no longer fit when a delivery arrives. The actual approved stop and reassessment arrangements govern the response; continuing simply because the cleaning target is unchanged would ignore the changed interface.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G85_lesson4",
+        "title": "Lesson 4 — Identify containment and exposure interfaces",
+        "body": "The cleaning material pathway begins before removal and continues through collection, storage, treatment and disposal. The work plan should identify what is known about residues and what remains uncertain. A product safety data sheet may describe a supplied cleaning chemical, but it does not necessarily characterize the residue mixture produced by the task. Material history and competent characterization may be needed for the actual receiving decision.\n\nDo not assume waste responsibility follows the hose. One contractor may remove material while another characterizes it and a third supplies transport or treatment. These are legitimate divisions only if the information and acceptance handoffs are explicit. A quote that excludes waste does not make recovered sludge disappear from the task plan. Identify the responsible owner and authorized destination before relying on the removal arrangement.\n\nContainment and exposure controls depend on the actual material and method. Qualified planners determine those controls using the relevant hazard information and site arrangements. This course does not select chemical mixtures, ventilation settings or respiratory equipment. It teaches the worker to recognize when a plan describes only the cleaning machine while ignoring what the machine will release or collect.\n\nTank cleaning must remain distinct from tank entry. An external or remote cleaning assignment does not establish entrant, attendant or rescue qualification. If access changes, the space program and underlying trade competence need separate review. A later cleaning report is not an entry permit and cannot establish atmosphere or isolation conditions for another task.\n\nIn the exercise, a tank has an unknown prior residue. The cleaning contractor will collect sludge, but the receiving contractor has accepted only a known wash-water profile. The worked answer preserves the uncertainty and assigns characterization and receiving review. It rejects the idea that water cleaning automatically makes all recovered material acceptable. The crew needs an accurate material boundary, not an unsupported reassuring label.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G85_lesson5",
+        "title": "Lesson 5 — Verify stop and emergency arrangements on paper",
+        "body": "Emergency arrangements should match the actual equipment, exposure and location. Workers need to know how to recognize a problem, act within their assigned stop role, communicate essential information and summon the planned assistance. A generic first-aid notice cannot demonstrate that these arrangements fit the task. High-pressure injection injury is a reason to use the emergency arrangements promptly even when the visible wound seems minor; assessment and treatment belong to medical professionals.\n\nCommunication is a capability, not merely a telephone number. Identify the work location in a form responders can use and determine how the planned communication route works there. If ordinary reception is unreliable, that limitation needs a resolved arrangement before it is relied on. The course does not prescribe emergency communications equipment; it teaches why a number on paper is insufficient evidence.\n\nEquipment stop instruction must name the actual unit and assigned roles. A control label copied from another model can confuse a worker at the moment it matters. Qualified instructors should use the approved safe method to assess recognition and response. The desk learner can identify the mismatch without testing a live machine or improvising a stop sequence.\n\nSeparate reporting from rescue or hazardous intervention. A crew member may be assigned to raise the alarm and provide location and known exposure information without being qualified to enter a tank, intervene in a chemical release or provide clinical treatment. The emergency plan must not depend on unassigned people doing those things.\n\nThe fictional briefing names a stop function absent from the scheduled unit and gives a mobile contact at a location with unreliable reception. Both defects matter. Correcting the contact number does not resolve the wrong equipment instruction, and correcting the instruction does not establish a usable communication route. The responsible planner needs distinct evidence for each before the briefing supports the task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G85_lesson6",
+        "title": "Lesson 6 — Reconcile completion and return status",
+        "body": "Cleaning closeout should say what was done, where and to what agreed acceptance basis. A statement such as clean and safe is too broad unless its meaning and authority are established. Distinguish cleaning completion, inspection acceptance, integrity assessment, entry authorization and operational release. They may involve different people and different evidence. A crew should not accidentally certify them all with one undifferentiated signature.\n\nRecord boundaries and exclusions. If accessible external surfaces were cleaned but an internal section was excluded, the receiving team needs to know. Photographs can illustrate the result but should identify the subject and limitations. A visual record does not prove conditions it cannot show. Where acceptance requires a specific competent examination, retain that examination evidence separately from the cleaning report.\n\nRecovered material needs its own disposition record linked to the actual material and destination. Equipment defects or contamination also affect return status. A unit that completed the job may still need maintenance, cleaning or technical assessment before the next assignment. Do not treat job completion as a universal ready-for-use decision.\n\nThe handover should identify unfinished work, restrictions and the person responsible for each next decision. This helps the receiving crew plan without reconstructing the job from invoices. If the intended subsequent task changes, reassess whether the existing evidence supports it. A report adequate to show external deposit removal may be inadequate to support a different inspection or access decision.\n\nFor the desk exercise, the report says external cleaning complete and internal section excluded. A supervisor asks whether the vessel is ready to enter and operate. The worked answer confirms only the documented cleaning result. It routes entry and operational release to their designated authorities, preserving the exclusion. This protects the usefulness of the cleaning evidence without turning it into a claim the crew did not establish.\n\nA cleaning acceptance example illustrates the importance of agreed criteria. The customer requests removal of visible deposit from an accessible external panel. The crew records the panel identity, observed result and excluded inaccessible area. This can support that bounded cleaning task. If the customer later asks whether a coating is intact or whether corrosion has reduced strength, those are additional inspection questions. The existing photographs may provide context but cannot become an unperformed technical examination.\n\nThe same distinction applies to the equipment returning from the job. The operator reports unusual behavior during the task even though the cleaning result was achieved. A successful result does not erase that report. The return process must preserve it for competent equipment assessment. Keeping task acceptance and equipment readiness separate helps the next crew: they can see what work was completed and why the unit may still be restricted. Neither an invoice marked paid nor an asset marked returned resolves the technical condition.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G85_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek schedules cleaning of an outdoor equipment bay. The order includes vacuum transfer and a conditional hydrovac task near a utility. The equipment pack identifies unit J4 with an approved accessory family, but the dispatch list substitutes another family. The bay drawing shows no pedestrians, although staff use a walkway to the office and deliveries enter through the same gate.\n\nThe coordinator begins by separating the actual activities. Vacuum transfer is confirmed. Hydrovac excavation remains conditional and cannot be treated as included simply because the contractor supplies that service elsewhere. The coordinator identifies who would authorize that added scope and which utility and excavation roles would be needed. The crew briefing preserves that limit.\n\nThe accessory substitution is then referred for competent compatibility review. The coordinator does not attempt a physical connection to demonstrate suitability. The useful task evidence is the identity of the proposed component and the mismatch with the controlled configuration. Inspection records for the original accessory do not resolve acceptance of the substitute.\n\nNext, the drawing is overlaid with the actual office route and delivery movements. This reveals a site interface missing from the cleaning sketch. The task planner and traffic owner coordinate the affected activities through the approved process. They do not assume a permit held by one crew gives that crew control of every adjacent movement.\n\nThe worked release decision remains bounded. The pack must not be marked ready for the substituted configuration or conditional excavation until the relevant reviews are resolved. Other valid preparation records remain usable. The coordinator tells the crew exactly which planned activity and configuration are affected, avoiding both a vague all-clear and a vague rejection of the entire contractor.\n\nIf the equipment review accepts a configuration and the site interface arrangement is approved, those decisions are linked to the correct versions. That still does not activate the conditional excavation without its separate scope and utility review. The case demonstrates how several genuine records can each support only part of the task. Workers can help by reporting the actual equipment and nearby conditions accurately rather than trying to repair planning gaps through improvised operation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G85_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: a contractor cleans accessible external surfaces of a tank and collects liquid and sludge. The material history includes an unknown residue. The receiving facility's approval describes a known wash-water profile, while the cleaning contract excludes final waste acceptance. The emergency card uses a stop-control name from another unit, and communication reception at the work area is unreliable.\n\nThe planner treats these as different questions. First, the recovered material requires an identified characterization and acceptance owner. The crew does not infer that use of water makes the unknown residue nonhazardous or acceptable. The current facility approval remains evidence for its stated material, not automatic approval of the collected mixture. The material boundary is preserved for competent review.\n\nSecond, the emergency instruction needs to match the actual unit and communication conditions. The wrong control name is referred to the qualified equipment instructor and task planner. The reception limitation needs a workable approved communication arrangement, not merely a fresh copy of the same telephone number. Neither discrepancy can be resolved by relying on the crew's general experience.\n\nAfter the cleaning, the report accurately states external surfaces cleaned and internal section excluded. A receiving supervisor asks the crew to sign a form saying vessel safe for entry and operation. The worked response retains the documented cleaning result but declines to broaden its technical meaning. Entry and operating release require their own evidence and designated authority. The crew can explain the exclusion without becoming an entry supervisor or integrity inspector.\n\nThe final handover identifies cleaning boundaries, recovered material status, unresolved receiving conditions and any equipment restrictions. It does not hide open items under complete. A separate technical authority can later make the appropriate release decision with the actual evidence available.\n\nThe counterfactual is important: even if the tank looks spotless, the unknown material and entry questions do not disappear. Even if the waste route is later accepted, that does not establish the correct stop instruction or a feasible communication route. The case teaches workers to preserve the distinctions that make each decision reliable while leaving hazardous methods and technical acceptance to the qualified roles.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G85_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Use the final questions to distinguish cleaning methods, equipment compatibility, site interfaces, material pathways, emergency communication and bounded closeout. Review the explanation for every error and acknowledge remediation while retaining the original response.\n\nActual work requires equipment- and task-specific instruction, safe observed assessment and site authorization. Entry, respiratory protection, excavation, waste classification and emergency-response duties remain separately applicable only when actually assigned and required. This course provides no hazardous execution method or unrestricted cleaning qualification.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G85_check1",
+        "prompt": "During distinguish cleaning and excavation duties, a pressure-washer rental is assigned the same crew obligations as supplied industrial hydroblasting. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Clarify supplied equipment and personnel before assigning task-specific requirements."
+          },
+          {
+            "id": "b",
+            "label": "Every pressure-washer rental includes a qualified hydroblasting operator."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G85_check2",
+        "prompt": "During trace the equipment configuration, a substitute accessory has no documented compatibility with the selected unit. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A fitting that connects proves the assembly is suitable."
+          },
+          {
+            "id": "b",
+            "label": "Quarantine the substitution from the plan pending manufacturer or competent technical confirmation."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G85_check3",
+        "prompt": "During review work-zone and interface assumptions, the plan shows an old utility sketch but no current utility confirmation. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An old utility sketch establishes that excavation is clear."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Hold affected excavation planning until the responsible utility and excavation review is complete."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G85_check4",
+        "prompt": "During identify containment and exposure interfaces, the cleaning quote excludes waste but no party accepts responsibility for recovered sludge. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cleaning completion automatically resolves waste acceptance."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Assign characterization and receiving responsibilities before authorizing the affected scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G85_check5",
+        "prompt": "During verify stop and emergency arrangements on paper, the briefing names a stop control absent from the selected unit. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Return the briefing for unit-specific correction and qualified verification."
+          },
+          {
+            "id": "b",
+            "label": "A generic stop-control label applies to every machine."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G85_check6",
+        "prompt": "During reconcile completion and return status, the report says clean and safe without identifying the inspected boundary. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A cleaning certificate authorizes vessel entry and operation."
+          },
+          {
+            "id": "b",
+            "label": "Replace the unsupported conclusion with bounded cleaning evidence and refer separate release decisions."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G85_final1",
+        "prompt": "Which evidence is most directly relevant to distinguish cleaning and excavation duties?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Work order separating jetting, vacuum transfer and excavation duties."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G85_final2",
+        "prompt": "Which evidence is most directly relevant to trace the equipment configuration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Equipment dossier identifying unit, hose assemblies, accessories and configuration approval."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G85_final3",
+        "prompt": "Which evidence is most directly relevant to review work-zone and interface assumptions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Site plan showing cleaning zone, adjacent activities, utilities and access coordination."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G85_final4",
+        "prompt": "Which evidence is most directly relevant to identify containment and exposure interfaces?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Residue and effluent plan linked to material history and approved receiving route."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G85_final5",
+        "prompt": "Which evidence is most directly relevant to verify stop and emergency arrangements on paper?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Task briefing with stop roles, communications and equipment-specific emergency information."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G85_final6",
+        "prompt": "Which evidence is most directly relevant to reconcile completion and return status?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Completion report listing cleaned boundaries, exclusions, waste disposition and defects."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G85_final7",
+        "prompt": "A colleague argues: “Every pressure-washer rental includes a qualified hydroblasting operator.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; clarify supplied equipment and personnel before assigning task-specific requirements."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G85_final8",
+        "prompt": "A colleague argues: “A fitting that connects proves the assembly is suitable.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; quarantine the substitution from the plan pending manufacturer or competent technical confirmation."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G85_final9",
+        "prompt": "A colleague argues: “An old utility sketch establishes that excavation is clear.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; hold affected excavation planning until the responsible utility and excavation review is complete."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G85_final10",
+        "prompt": "A colleague argues: “Cleaning completion automatically resolves waste acceptance.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; assign characterization and receiving responsibilities before authorizing the affected scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G85_final11",
+        "prompt": "A colleague argues: “A generic stop-control label applies to every machine.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; return the briefing for unit-specific correction and qualified verification."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G85_final12",
+        "prompt": "A colleague argues: “A cleaning certificate authorizes vessel entry and operation.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; replace the unsupported conclusion with bounded cleaning evidence and refer separate release decisions."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G85_final13",
+        "prompt": "After the discrepancy in distinguish cleaning and excavation duties is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Evidence that addresses the actual discrepancy in the work order separating jetting, vacuum transfer and excavation duties, linked to the original record."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G85_final14",
+        "prompt": "After the discrepancy in trace the equipment configuration is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          },
+          {
+            "id": "d",
+            "label": "Evidence that addresses the actual discrepancy in the equipment dossier identifying unit, hose assemblies, accessories and configuration approval, linked to the original record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G85_final15",
+        "prompt": "After the discrepancy in review work-zone and interface assumptions is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Evidence that addresses the actual discrepancy in the site plan showing cleaning zone, adjacent activities, utilities and access coordination, linked to the original record."
+          },
+          {
+            "id": "b",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "c",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G85_final16",
+        "prompt": "After the discrepancy in identify containment and exposure interfaces is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "Evidence that addresses the actual discrepancy in the residue and effluent plan linked to material history and approved receiving route, linked to the original record."
+          },
+          {
+            "id": "c",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G85_final17",
+        "prompt": "After the discrepancy in verify stop and emergency arrangements on paper is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Evidence that addresses the actual discrepancy in the task briefing with stop roles, communications and equipment-specific emergency information, linked to the original record."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G85_final18",
+        "prompt": "After the discrepancy in reconcile completion and return status is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          },
+          {
+            "id": "d",
+            "label": "Evidence that addresses the actual discrepancy in the completion report listing cleaned boundaries, exclusions, waste disposition and defects, linked to the original record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G85_final19",
+        "prompt": "The bay-cleaning accessory substitution is accepted after competent review. Does that activate the conditional hydrovac excavation task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; conditional excavation still needs its actual scope authorization and utility/excavation arrangements."
+          },
+          {
+            "id": "b",
+            "label": "Yes; accepting any cleaning configuration approves every service the contractor offers."
+          },
+          {
+            "id": "c",
+            "label": "Yes; vacuum transfer and excavation have identical role requirements."
+          },
+          {
+            "id": "d",
+            "label": "No; the accepted accessory evidence must now be discarded as worthless."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G85_final20",
+        "prompt": "After accessible external tank cleaning, the report excludes an internal section. What may the crew's handover accurately establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That the spotless exterior proves the vessel breathable and safe to enter."
+          },
+          {
+            "id": "b",
+            "label": "The bounded external cleaning result and exclusion, with entry and operating release left to their designated authorities and evidence."
+          },
+          {
+            "id": "c",
+            "label": "That the cleaning signature certifies internal pressure integrity."
+          },
+          {
+            "id": "d",
+            "label": "That accepting the waste route would automatically resolve every entry and operating condition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G85_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G85_lesson1",
+          "questionIds": [
+            "G85_check1"
+          ]
+        },
+        {
+          "lessonId": "G85_lesson2",
+          "questionIds": [
+            "G85_check2"
+          ]
+        },
+        {
+          "lessonId": "G85_lesson3",
+          "questionIds": [
+            "G85_check3"
+          ]
+        },
+        {
+          "lessonId": "G85_lesson4",
+          "questionIds": [
+            "G85_check4"
+          ]
+        },
+        {
+          "lessonId": "G85_lesson5",
+          "questionIds": [
+            "G85_check5"
+          ]
+        },
+        {
+          "lessonId": "G85_lesson6",
+          "questionIds": [
+            "G85_check6"
+          ]
+        },
+        {
+          "lessonId": "G85_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G85_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G85_final",
+          "questionIds": [
+            "G85_final1",
+            "G85_final2",
+            "G85_final3",
+            "G85_final4",
+            "G85_final5",
+            "G85_final6",
+            "G85_final7",
+            "G85_final8",
+            "G85_final9",
+            "G85_final10",
+            "G85_final11",
+            "G85_final12",
+            "G85_final13",
+            "G85_final14",
+            "G85_final15",
+            "G85_final16",
+            "G85_final17",
+            "G85_final18",
+            "G85_final19",
+            "G85_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G85_check1": "The correct decision is to clarify supplied equipment and personnel before assigning task-specific requirements. Hydroblasting, hydrovac excavation, vacuum transfer and chemical cleaning involve different equipment and exposure pathways. A standby invoice does not prove an active excavation occurred. Identify material, location, supplied crew and intended result before selecting instructions. High-pressure injection hazards require prompt use of the emergency arrangements after suspected injury, even when the visible wound appears small; this course teaches recognition and reporting, not treatment. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G85_check2": "The correct decision is to quarantine the substitution from the plan pending manufacturer or competent technical confirmation. The controlled equipment list should identify the unit and connected components against the manufacturer-approved configuration. Compatibility cannot be inferred from fittings that happen to connect. Review inspection status, defects and stop-control documentation without energizing the equipment. Actual hose routing, assembly, operation and stop-function testing require the approved method and assessed personnel; a desk exercise supplies no pressure settings or connection sequence. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G85_check3": "The correct decision is to hold affected excavation planning until the responsible utility and excavation review is complete. Cleaning plans need identified people and adjacent work, not a circle drawn without context. Consider where debris, fluid, hoses and vehicle movements may affect others. Hydrovac planning also needs verified utility information and the responsible excavation arrangements. A marked route alone does not resolve depth, abandoned services or changed ground. The technical lead establishes the actual exclusion and utility exposure method. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G85_check4": "The correct decision is to assign characterization and receiving responsibilities before authorizing the affected scope. The removed material can be as important as the cleaning equipment. Establish what contamination may be present, who characterizes it and where recovered material goes. Tank cleaning does not grant entry authority. Chemical cleaning may add compatibility and exposure questions that water cleaning does not answer. The reviewer checks whether these interfaces have owners and approved evidence; they do not choose chemical mixtures or enter equipment to identify residue. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G85_check5": "The correct decision is to return the briefing for unit-specific correction and qualified verification. An emergency plan should identify how personnel recognize a problem, stop within their assigned role, summon help and communicate the nature of the exposure. It must match actual equipment and location. A generic first-aid poster does not demonstrate an injection-injury response arrangement or a feasible remote-site communication route. Only assessed personnel perform equipment-specific stop-function demonstrations under a safe approved evaluation. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G85_check6": "The correct decision is to replace the unsupported conclusion with bounded cleaning evidence and refer separate release decisions. Cleaning completion, inspection acceptance and fitness for service are separate records. Confirm what was cleaned, what was excluded and who accepts the result. A visually clean surface does not prove internal integrity or a safe atmosphere. Recovered material and equipment defects need traceable disposition. Handover should preserve incomplete work and limitations so the next crew does not treat a cleaning certificate as permission to enter or operate. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G85_final1": "A work order separating jetting, vacuum transfer and excavation duties addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Hydroblasting, hydrovac excavation, vacuum transfer and chemical cleaning involve different equipment and exposure pathways. A standby invoice does not prove an active excavation occurred. Identify material, location, supplied crew and intended result before selecting instructions. High-pressure injection hazards require prompt use of the emergency arrangements after suspected injury, even when the visible wound appears small; this course teaches recognition and reporting, not treatment.",
+        "G85_final2": "A equipment dossier identifying unit, hose assemblies, accessories and configuration approval addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. The controlled equipment list should identify the unit and connected components against the manufacturer-approved configuration. Compatibility cannot be inferred from fittings that happen to connect. Review inspection status, defects and stop-control documentation without energizing the equipment. Actual hose routing, assembly, operation and stop-function testing require the approved method and assessed personnel; a desk exercise supplies no pressure settings or connection sequence.",
+        "G85_final3": "A site plan showing cleaning zone, adjacent activities, utilities and access coordination addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Cleaning plans need identified people and adjacent work, not a circle drawn without context. Consider where debris, fluid, hoses and vehicle movements may affect others. Hydrovac planning also needs verified utility information and the responsible excavation arrangements. A marked route alone does not resolve depth, abandoned services or changed ground. The technical lead establishes the actual exclusion and utility exposure method.",
+        "G85_final4": "A residue and effluent plan linked to material history and approved receiving route addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. The removed material can be as important as the cleaning equipment. Establish what contamination may be present, who characterizes it and where recovered material goes. Tank cleaning does not grant entry authority. Chemical cleaning may add compatibility and exposure questions that water cleaning does not answer. The reviewer checks whether these interfaces have owners and approved evidence; they do not choose chemical mixtures or enter equipment to identify residue.",
+        "G85_final5": "A task briefing with stop roles, communications and equipment-specific emergency information addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. An emergency plan should identify how personnel recognize a problem, stop within their assigned role, summon help and communicate the nature of the exposure. It must match actual equipment and location. A generic first-aid poster does not demonstrate an injection-injury response arrangement or a feasible remote-site communication route. Only assessed personnel perform equipment-specific stop-function demonstrations under a safe approved evaluation.",
+        "G85_final6": "A completion report listing cleaned boundaries, exclusions, waste disposition and defects addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Cleaning completion, inspection acceptance and fitness for service are separate records. Confirm what was cleaned, what was excluded and who accepts the result. A visually clean surface does not prove internal integrity or a safe atmosphere. Recovered material and equipment defects need traceable disposition. Handover should preserve incomplete work and limitations so the next crew does not treat a cleaning certificate as permission to enter or operate.",
+        "G85_final7": "That inference exceeds the evidence. Hydroblasting, hydrovac excavation, vacuum transfer and chemical cleaning involve different equipment and exposure pathways. A standby invoice does not prove an active excavation occurred. Identify material, location, supplied crew and intended result before selecting instructions. High-pressure injection hazards require prompt use of the emergency arrangements after suspected injury, even when the visible wound appears small; this course teaches recognition and reporting, not treatment. The appropriate task disposition remains to clarify supplied equipment and personnel before assigning task-specific requirements.",
+        "G85_final8": "That inference exceeds the evidence. The controlled equipment list should identify the unit and connected components against the manufacturer-approved configuration. Compatibility cannot be inferred from fittings that happen to connect. Review inspection status, defects and stop-control documentation without energizing the equipment. Actual hose routing, assembly, operation and stop-function testing require the approved method and assessed personnel; a desk exercise supplies no pressure settings or connection sequence. The appropriate task disposition remains to quarantine the substitution from the plan pending manufacturer or competent technical confirmation.",
+        "G85_final9": "That inference exceeds the evidence. Cleaning plans need identified people and adjacent work, not a circle drawn without context. Consider where debris, fluid, hoses and vehicle movements may affect others. Hydrovac planning also needs verified utility information and the responsible excavation arrangements. A marked route alone does not resolve depth, abandoned services or changed ground. The technical lead establishes the actual exclusion and utility exposure method. The appropriate task disposition remains to hold affected excavation planning until the responsible utility and excavation review is complete.",
+        "G85_final10": "That inference exceeds the evidence. The removed material can be as important as the cleaning equipment. Establish what contamination may be present, who characterizes it and where recovered material goes. Tank cleaning does not grant entry authority. Chemical cleaning may add compatibility and exposure questions that water cleaning does not answer. The reviewer checks whether these interfaces have owners and approved evidence; they do not choose chemical mixtures or enter equipment to identify residue. The appropriate task disposition remains to assign characterization and receiving responsibilities before authorizing the affected scope.",
+        "G85_final11": "That inference exceeds the evidence. An emergency plan should identify how personnel recognize a problem, stop within their assigned role, summon help and communicate the nature of the exposure. It must match actual equipment and location. A generic first-aid poster does not demonstrate an injection-injury response arrangement or a feasible remote-site communication route. Only assessed personnel perform equipment-specific stop-function demonstrations under a safe approved evaluation. The appropriate task disposition remains to return the briefing for unit-specific correction and qualified verification.",
+        "G85_final12": "That inference exceeds the evidence. Cleaning completion, inspection acceptance and fitness for service are separate records. Confirm what was cleaned, what was excluded and who accepts the result. A visually clean surface does not prove internal integrity or a safe atmosphere. Recovered material and equipment defects need traceable disposition. Handover should preserve incomplete work and limitations so the next crew does not treat a cleaning certificate as permission to enter or operate. The appropriate task disposition remains to replace the unsupported conclusion with bounded cleaning evidence and refer separate release decisions.",
+        "G85_final13": "The correction must address why the work order separating jetting, vacuum transfer and excavation duties did not support the claim. Hydroblasting, hydrovac excavation, vacuum transfer and chemical cleaning involve different equipment and exposure pathways. A standby invoice does not prove an active excavation occurred. Identify material, location, supplied crew and intended result before selecting instructions. High-pressure injection hazards require prompt use of the emergency arrangements after suspected injury, even when the visible wound appears small; this course teaches recognition and reporting, not treatment. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G85_final14": "The correction must address why the equipment dossier identifying unit, hose assemblies, accessories and configuration approval did not support the claim. The controlled equipment list should identify the unit and connected components against the manufacturer-approved configuration. Compatibility cannot be inferred from fittings that happen to connect. Review inspection status, defects and stop-control documentation without energizing the equipment. Actual hose routing, assembly, operation and stop-function testing require the approved method and assessed personnel; a desk exercise supplies no pressure settings or connection sequence. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G85_final15": "The correction must address why the site plan showing cleaning zone, adjacent activities, utilities and access coordination did not support the claim. Cleaning plans need identified people and adjacent work, not a circle drawn without context. Consider where debris, fluid, hoses and vehicle movements may affect others. Hydrovac planning also needs verified utility information and the responsible excavation arrangements. A marked route alone does not resolve depth, abandoned services or changed ground. The technical lead establishes the actual exclusion and utility exposure method. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G85_final16": "The correction must address why the residue and effluent plan linked to material history and approved receiving route did not support the claim. The removed material can be as important as the cleaning equipment. Establish what contamination may be present, who characterizes it and where recovered material goes. Tank cleaning does not grant entry authority. Chemical cleaning may add compatibility and exposure questions that water cleaning does not answer. The reviewer checks whether these interfaces have owners and approved evidence; they do not choose chemical mixtures or enter equipment to identify residue. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G85_final17": "The correction must address why the task briefing with stop roles, communications and equipment-specific emergency information did not support the claim. An emergency plan should identify how personnel recognize a problem, stop within their assigned role, summon help and communicate the nature of the exposure. It must match actual equipment and location. A generic first-aid poster does not demonstrate an injection-injury response arrangement or a feasible remote-site communication route. Only assessed personnel perform equipment-specific stop-function demonstrations under a safe approved evaluation. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G85_final18": "The correction must address why the completion report listing cleaned boundaries, exclusions, waste disposition and defects did not support the claim. Cleaning completion, inspection acceptance and fitness for service are separate records. Confirm what was cleaned, what was excluded and who accepts the result. A visually clean surface does not prove internal integrity or a safe atmosphere. Recovered material and equipment defects need traceable disposition. Handover should preserve incomplete work and limitations so the next crew does not treat a cleaning certificate as permission to enter or operate. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G85_final19": "Accessory acceptance addresses the reviewed equipment configuration. It does not activate a different conditional physical activity. Preserve valid equipment evidence and keep excavation authority and requirements separate.",
+        "G85_final20": "The case documents a limited cleaning result. It does not establish internal atmosphere, integrity or operating readiness. A clear exclusion makes the report useful without expanding the crew's technical authority."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

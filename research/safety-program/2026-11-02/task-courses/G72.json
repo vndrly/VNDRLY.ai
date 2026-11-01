@@ -1,0 +1,901 @@
+{
+  "courseId": "G72",
+  "gapGroupId": "TG23",
+  "title": "Fabrication process principles, welding variables and joint traceability",
+  "description": "Teach thermal-effect reasoning, procedure-variable comparison, material/joint traceability and bounded fabrication acceptance.",
+  "purpose": "Teach thermal-effect reasoning, procedure-variable comparison, material/joint traceability and bounded fabrication acceptance.",
+  "audience": [
+    "Welding and fabrication trainees in a theory module",
+    "Fabrication coordinators",
+    "Assigned quality reviewers"
+  ],
+  "sources": [
+    {
+      "title": "TWI welding procedure knowledge",
+      "url": "https://www.twi-global.com/technical-knowledge/job-knowledge/welding-procedure-039"
+    },
+    {
+      "title": "ASME boiler and pressure-vessel certification",
+      "url": "https://www.asme.org/certification-accreditation/boiler-and-pressure-vessel-certification"
+    },
+    {
+      "title": "OSHA welding/cutting general requirements",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.252"
+    }
+  ],
+  "practicalBoundary": "This course grants no welder/fusion/machining qualification, procedure approval, inspector designation, code certification or hot-work authorization. It supplies no operating parameters or hazardous repair recipe.",
+  "vendorEvidenceRequired": [
+    "Actual product, material, process and governing code/contract",
+    "Approved WPS/fusion/machining method and supporting qualification basis",
+    "Applicable personnel scope and employer authorization",
+    "Material/consumable and joint traceability controls",
+    "Inspection, repair and product-certification/release requirements"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual craft performance under the adopted qualified program",
+    "Method-specific material identification, preparation, process control and recording",
+    "Applicable qualified inspection/evaluation and controlled handover"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G72_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for fabrication process principles, welding variables and joint traceability. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no welder/fusion/machining qualification, procedure approval, inspector designation, code certification or hot-work authorization. It supplies no operating parameters or hazardous repair recipe.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G72_lesson1",
+        "title": "1. Identify the joining or fabrication process actually used",
+        "body": "Fabrication is a broad service category. It can include metallic welding, polymer fusion, brazing, machining, mechanical assembly and preparation of oil-country tubular goods. These methods do not share one universal operator qualification. Begin with the product, material, joint or feature, process, intended service and governing requirements. A work order that says pipe repair does not establish whether the joint is welded, fused, threaded or otherwise assembled.\n\nFor welded work, distinguish design requirements, production instructions, procedure qualification and welder performance evidence. The design identifies what the finished item must achieve. The production procedure specifies the approved way of making the joint. Supporting qualification evidence establishes the procedure's basis under the adopted framework. The welder's performance evidence concerns the person's demonstrated scope. None of these documents alone replaces the others.\n\nPressure-code work requires an actual code and certification scope determination. Not every fabricated pipe is a code pressure component, and an ASME mark is not a general badge for every service a company offers. ASME's certification program describes defined manufacturer/assembler quality-system scopes. A planner must identify the applicable product, jurisdiction and contract requirements rather than applying every certification label to every repair.\n\nPaper exercise: a proposal offers one welding certificate for steel welding, HDPE fusion and threaded tubular acceptance. List three distinct method questions. For steel, identify the adopted welding procedure and personnel scope. For polymer fusion, identify the actual fusion method and approved product instructions. For threaded goods, identify the inspection/assembly acceptance basis. Do not infer equivalence because all activities involve pipe.\n\nThis course teaches process reasoning, variable traceability and evidence interpretation. It gives no welding parameters, fusion cycles, heat-treatment schedules, pressure-test limits or machining setups. Actual craft performance and safe equipment use require method-specific instruction and qualified practical assessment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G72_lesson2",
+        "title": "2. Understand heat, cooling and distortion as planning concepts",
+        "body": "Joining can change the material as well as its shape. In fusion welding, localized heating and cooling create regions with different thermal histories. The weld metal and adjacent heat-affected material can have properties influenced by the process, material and cooling conditions. A visually smooth bead does not prove that all required mechanical properties or internal soundness have been achieved. The approved procedure and inspection strategy address the actual requirements.\n\nExpansion and contraction explain distortion conceptually. A heated region tends to expand; surrounding material and fixtures can restrain that movement. As the region cools, contraction can produce changes in shape and residual stress. A paper strip illustration can show why unequal contraction on opposite sides could bend a simple assembly. This does not establish a real restraint, preheat, sequence or straightening method. Those decisions need qualified fabrication engineering and the approved procedure.\n\nThickness, joint geometry, material condition and process influence how heat is distributed and removed. Changing one of these can change the resulting joint even if the finished bead looks similar. This is why a procedure is a controlled set of variables, not merely a photograph of a desirable weld. A worker should recognize that an apparently convenient substitution may have technical consequences beyond immediate appearance.\n\nPaper exercise: two fictional assemblies have the same visible joint length but different thicknesses and restraint arrangements. Do not predict an exact temperature or distortion. Identify which differences need review against the procedure and design requirements. Explain that equal external dimensions do not establish identical thermal response or qualified process scope.\n\nA repair proposal to heat and straighten a distorted component is a new technical activity. It is not automatically covered by the original welding procedure or a general hot-work permit. The qualified owner must determine method, material/property implications and acceptance. The learner's correct contribution is to identify the changed task and required evidence, not to select a heating pattern.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G72_lesson3",
+        "title": "3. Trace WPS variables and supporting qualification evidence",
+        "body": "A welding procedure specification is a controlled production instruction under its adopted requirements. Supporting procedure qualification records describe the actual qualification work and results. Welder performance qualification concerns a person's demonstrated ability within a defined scope. Terminology and approval routes vary by framework; read the actual adopted code or standard rather than assuming that a familiar acronym means identical requirements everywhere.\n\nCreate a variable comparison table for the proposed joint. Include the actual process, base material, product/thickness information, joint arrangement, position and any other variables the governing procedure identifies. Record the proposed value or condition, the approved procedure range or instruction, supporting source and any discrepancy. This table is a reasoning tool, not a new procedure. The qualified welding authority determines essential-variable rules and acceptable scope under the actual requirements.\n\nDo not infer that a variable is nonessential because it seems minor. Some changes can affect qualification, procedure revision, mechanical properties or required testing. Likewise, do not invent a universal rule that every difference requires a new qualification test. The adopted framework defines how differences are treated. The useful learner skill is recognizing a difference, locating its governing rule and preserving the decision for the authorized technical person.\n\nPaper exercise: a fictional WPS identifies process P and material group M, while the work order proposes process Q on material N. The learner marks both mismatches and asks the welding authority for an applicable procedure or approved disposition. They do not edit the WPS to match the order, assume one process is equivalent or tell the welder to compensate with personal experience.\n\nCheck that the procedure available at the work point is the approved revision and that its referenced records can be identified. A photocopy missing pages can omit critical instructions. A newer draft is not automatically the approved production version. Document control matters because craft execution needs a reliable shared instruction, not because signatures alone make a technically unsuitable method valid.\n\nA useful variable-trace exercise uses three fictional columns: work order, approved WPS and supporting record. The work order names process A; the WPS names process A; the supporting qualification reference is absent. The process labels agree, but supporting qualification is not established by agreement alone. In a second row, the work order names material B while the WPS's listed scope names material C. That row contains a different problem: a visible scope mismatch. State both findings separately. One needs the missing support reference and its review; the other needs the authorized technical decision about applicability. A single green status would conceal the distinction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G72_lesson4",
+        "title": "4. Maintain material, consumable and joint traceability",
+        "body": "Traceability connects what was fabricated with its inputs and process history. For the actual job, identify how base materials, components, consumables and joint locations are tracked. The requirements depend on the product and governing framework; do not invent universal marking or retention rules. The principle is that the finished record should support the required connection between an item and the evidence used to accept it.\n\nMaterial identification is more than visual resemblance. Two items can look alike while differing in grade, specification, condition or suitability. A certificate must be connected to the actual item through the required controlled system. A heat or batch number on a loose document does not establish that an unmarked component belongs to it. When traceability is broken, record the uncertainty and obtain qualified disposition rather than assigning the most plausible certificate.\n\nConsumable controls are process specific. Storage, condition, identity and handling requirements may influence the approved method. This course does not prescribe baking temperatures, exposure times or substitute consumable selections. The worker must use actual manufacturer and procedure instructions and recognize when supplied material does not match them. A similar trade name or color is not evidence of equivalence.\n\nJoint mapping allows process and examination records to be associated with the correct location. Read the joint identifier, drawing revision, welder identity where required, procedure reference and inspection/test record links. A report for one weld cannot be attached to another because both are the same diameter. Controlled corrections can resolve demonstrated transcription errors, but missing work cannot be created by changing a map.\n\nPaper exercise: a fabricated spool has welds J-1 and J-2. The inspection report names J-2, while the completion checklist lists J-1. The learner records an identity conflict and requests supporting reconciliation. They should not copy the pass result into both rows. Traceability preserves the difference between known accepted evidence and a joint still awaiting its own result.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G72_lesson5",
+        "title": "5. Separate safety permission, workmanship and technical acceptance",
+        "body": "A hot-work permit manages the work's fire and site interfaces under the actual program. It is not a welding procedure qualification, welder performance record or technical acceptance certificate. Conversely, a qualified welding procedure does not grant permission to work in an uncontrolled location. Safety arrangements and product-quality requirements are parallel necessities when applicable, each with its own responsible roles and evidence.\n\nFire and exposure controls must account for the actual environment, materials and adjacent areas. Heat and sparks can affect spaces not directly visible from the weld location. Coatings and process residues can change exposure concerns. This course does not specify a universal exclusion radius, ventilation design or cleaning method. The applicable safety rules, substance information and competent site assessment establish those controls. A pressure-system or contaminated-vessel repair introduces additional preparation boundaries; no craft credential authorizes an improvised intervention.\n\nTechnical acceptance follows the governing product criteria. Visual appearance can be part of evidence but does not replace required dimensional checks, NDT, mechanical testing or other specified examinations. The inspection method and personnel must match the requirement. A smooth weld with missing required examination is not fully accepted merely because an experienced observer likes it.\n\nRepair of an unacceptable joint is itself controlled work. The technical owner determines the repair method, required procedure/personnel scope and re-examination. A worker must not repeatedly grind, weld or heat a component outside the approved arrangement to obtain a passing appearance. The record should retain original findings and subsequent authorized repair history so that the final conclusion is reconstructable.\n\nPaper exercise: a permit is signed and the weld looks neat, but the inspection plan's required result is absent. State that site permission and visual observation are documented while the specified technical acceptance evidence remains outstanding. Do not call the joint defective without evaluation, but do not mark the inspection complete.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G72_lesson6",
+        "title": "6. Build process-specific competence and release evidence",
+        "body": "A useful competence review begins with actual duties: preparation, fitting, welding/fusion/machining, inspection or technical release. Match evidence to the assigned process, material, geometry and governing scope. A worker may be proficient in one process and need additional instruction or assessment for another. A company quality-system certificate does not establish every employee's craft qualification, and a welder's performance record does not establish the company's product-certification scope.\n\nVerify the applicable qualification and continuity requirements under the actual adopted framework. Do not invent expiry dates or transfer rules from a different code. Ask for the relevant record, identifying the person and supported range, and the employer's current authorization for the task. Qualification evidence should be evaluated by someone competent in the applicable requirements rather than treated as a decorative upload.\n\nSafe paper assessment can test variable traceability. Supply a fictional work order, WPS, material record, personnel record and inspection map. Ask the learner to identify mismatches, explain which conclusion is unsupported and prepare a precise technical query. Success demonstrates this knowledge skill. It does not demonstrate control of an arc, fusion equipment, machine tool or heat-treatment process.\n\nPractical craft assessment requires an appropriately qualified assessor and safe planned conditions suited to the actual method. It should observe the relevant work against approved criteria, including correct documentation use, material identity, preparation, process control, recording and response to unexpected conditions. The method's actual program determines specimens, tests and performance criteria. This course supplies no hazardous training recipe.\n\nThe release pack should connect the item and joints to material evidence, approved procedures, personnel scope, actual process records, examinations, repairs and final acceptance authority. Preserve exclusions and unresolved items. A course completion can close only this bounded theory component after all correct answers or acknowledged remediation. Applicable craft qualification, product/code certification, observed performance and employer/site authorization remain separate.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G72_case1",
+        "title": "Worked fictional case 1: one pipe certificate for three different processes",
+        "body": "Fictional facts: Delta Fabrication proposes steel weld repair, polymer pipe fusion and acceptance of threaded tubulars under one purchase order. It submits one steel welding performance record and a general hot-work course. The steel work order names a material and process different from the attached WPS. The customer asks whether the full order is covered because all activities involve pipe.\n\nThe planner separates the three methods. Steel welding needs its actual procedure/personnel and inspection scope. Polymer fusion needs the actual product/method instruction and qualified practical evidence. Threaded tubular acceptance needs its own dimensional/condition criteria and authorized inspection role. The steel record is retained as potentially relevant evidence for its scope, not rejected as meaningless and not expanded to every pipe activity.\n\nNext, the planner compares steel variables. The process and material differences are recorded against exact source references. The planner does not decide whether they are essential variables from personal intuition. The qualified welding authority must apply the adopted framework and supply an applicable approved procedure or disposition. Editing the WPS to resemble the order would conceal the unresolved technical issue.\n\nThe hot-work course supports the knowledge it actually teaches. It cannot establish craft skill or code acceptance. The site permission and exposure controls remain necessary where applicable, but they do not repair the procedure mismatch. The planner also asks which work is actually pressure-code fabrication and what product-certification requirements apply; no blanket ASME claim is assumed.\n\nIn the fictional resolution, the vendor narrows and clarifies its supplied scope, provides appropriate method evidence and the technical owner resolves the steel procedure question. Practical assessments and job authorization are arranged for the actual workers. No fabrication has yet occurred.\n\nFinal decision: initially the full order is not supported by the submitted evidence. Residuals are process-specific practical capability, applicable procedure/personnel qualification, actual fabrication/examination records and technical release. A knowledge-course pass cannot make the three methods interchangeable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G72_case2",
+        "title": "Worked fictional case 2: a clean dashboard concealing joint identity",
+        "body": "Fictional facts: Pine Spool contains joints J-1 and J-2. A completion checklist marks both accepted. The inspection report names J-2, the sketch arrow points to an unidentified joint, and no separate J-1 result is supplied. A hot-work permit is closed. An administrator asks the reviewer to duplicate the report into both rows because the joints look alike.\n\nThe reviewer identifies what each record supports. The closed permit is site-work permission history. The inspection report may support J-2 if identity and coverage are confirmed. It cannot establish J-1 acceptance merely because dimensions or appearance are similar. The ambiguous sketch is a traceability question, not proof that both joints were examined.\n\nThe reviewer creates a discrepancy entry linking the checklist, report and sketch. The qualified inspection/fabrication owners must reconcile the actual examination location through traceable evidence. If a transcription error is demonstrated, a controlled correction retains the original and basis. If J-1 was not examined as required, additional work and result evidence are needed; a copied document cannot supply them.\n\nThe final technical criteria are then checked. A signed permit and neat appearance do not replace the inspection plan's requirement. The reviewer does not pronounce the unknown joint defective; they state that the specified acceptance evidence is not yet established. This precise limitation is useful to the technical decision owner and fair to the vendor.\n\nIn the fictional resolution, the inspection owner confirms J-2 and schedules the required J-1 work under the actual plan. The dashboard preserves each joint's real state until the additional record and acceptance decision exist. Any repair history remains attached to the correct location.\n\nFinal decision: reject duplication of one report as two examinations. Exact residuals are joint identity reconciliation, missing required examination, qualified evaluation and final technical release. The paper learner demonstrates evidence reasoning only, not welding or inspection proficiency. The course record cannot authorize fabrication, repair or operation of the spool.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G72_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G72_check1",
+        "prompt": "Does one pipe service label establish one universal craft qualification?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual joining, fabrication and acceptance methods differ."
+          },
+          {
+            "id": "b",
+            "label": "Yes, all pipe work is the same."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if one vendor supplies it."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G72_check2",
+        "prompt": "Why can a smooth bead fail to prove all required properties?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Thermal history and internal condition are not established by appearance alone."
+          },
+          {
+            "id": "c",
+            "label": "Appearance proves everything."
+          },
+          {
+            "id": "d",
+            "label": "Properties never change during joining."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G72_check3",
+        "prompt": "A proposed process differs from the WPS. Who determines the consequence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The dashboard administrator."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "The qualified authority applying the adopted requirements."
+          },
+          {
+            "id": "d",
+            "label": "Any worker guessing it is minor."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G72_check4",
+        "prompt": "Can a similar-looking material be assigned an unconnected certificate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if color matches."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the certificate is nearby."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual traceability must be established."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G72_check5",
+        "prompt": "Does a hot-work permit establish weld acceptance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; site permission and product-quality evidence differ."
+          },
+          {
+            "id": "b",
+            "label": "Yes, any signed permit does."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the weld is neat."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G72_check6",
+        "prompt": "What does this paper course assess?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Bounded process reasoning and evidence interpretation."
+          },
+          {
+            "id": "c",
+            "label": "Arc control in production."
+          },
+          {
+            "id": "d",
+            "label": "Polymer fusion proficiency."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G72_final1",
+        "prompt": "Which evidence concerns the persons demonstrated welding scope?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a company logo."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Welder performance qualification evidence under the adopted program."
+          },
+          {
+            "id": "d",
+            "label": "Only the design drawing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G72_final2",
+        "prompt": "What does a supporting procedure qualification record describe?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every workers skill automatically."
+          },
+          {
+            "id": "b",
+            "label": "All future product releases."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "The actual qualification work and results under its framework."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G72_final3",
+        "prompt": "Does an ASME company scope cover every service it offers?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; identify the actual certification scope and product."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every activity."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every employee."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G72_final4",
+        "prompt": "What can unequal heating and cooling contribute to?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Distortion and residual stress depending on conditions."
+          },
+          {
+            "id": "c",
+            "label": "Guaranteed zero distortion."
+          },
+          {
+            "id": "d",
+            "label": "A universal straightening recipe."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G72_final5",
+        "prompt": "Does this lesson authorize a preheat or straightening schedule?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if a joint bends."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual qualified engineering and procedures govern."
+          },
+          {
+            "id": "d",
+            "label": "Yes, choose any heat pattern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G72_final6",
+        "prompt": "A WPS copy lacks pages. What is the issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The shorter copy is always better."
+          },
+          {
+            "id": "b",
+            "label": "Missing pages cannot matter."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Required production instructions may be missing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G72_final7",
+        "prompt": "Is a newer draft automatically the production procedure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; approval state and applicability matter."
+          },
+          {
+            "id": "b",
+            "label": "Yes, highest revision always applies."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if emailed."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G72_final8",
+        "prompt": "Should every variable difference automatically trigger the same action?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; the governing framework defines treatment."
+          },
+          {
+            "id": "c",
+            "label": "Yes, always ignore it."
+          },
+          {
+            "id": "d",
+            "label": "Yes, always requalify every detail."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G72_final9",
+        "prompt": "Why track joint identifiers?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To reuse one result everywhere."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "To connect process and examination evidence to actual locations."
+          },
+          {
+            "id": "d",
+            "label": "Only for decoration."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G72_final10",
+        "prompt": "Do similar consumable names prove equivalence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, similar words suffice."
+          },
+          {
+            "id": "b",
+            "label": "Yes, color suffices."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; approved identity and method requirements govern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G72_final11",
+        "prompt": "A proposed heat-straightening repair appears after welding. What should be recognized?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A distinct technical activity requiring applicable method review."
+          },
+          {
+            "id": "b",
+            "label": "Automatic coverage by the hot-work permit."
+          },
+          {
+            "id": "c",
+            "label": "No material implications."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G72_final12",
+        "prompt": "Can a neat weld replace a specified NDT result?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; required examination evidence remains necessary."
+          },
+          {
+            "id": "c",
+            "label": "Yes, experienced appearance is enough."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after payment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G72_final13",
+        "prompt": "Who determines an unacceptable joints repair method and re-examination?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The invoice clerk."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "The appropriate technical authority under the actual requirements."
+          },
+          {
+            "id": "d",
+            "label": "Any learner seeking a passing appearance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G72_final14",
+        "prompt": "What should repair history retain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the final neat photograph."
+          },
+          {
+            "id": "b",
+            "label": "A rewritten initial pass."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Original findings and subsequent authorized work/evaluation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G72_final15",
+        "prompt": "Does company quality-system certification establish every employees craft skill?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; personnel and company scope are separate evidence."
+          },
+          {
+            "id": "b",
+            "label": "Yes, automatically."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if displayed on a website."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G72_final16",
+        "prompt": "In Delta Fabrication, what is unsupported initially?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "One steel record covering welding, polymer fusion and threaded acceptance."
+          },
+          {
+            "id": "c",
+            "label": "That pipe exists."
+          },
+          {
+            "id": "d",
+            "label": "That a vendor submitted documents."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G72_final17",
+        "prompt": "In Delta, what do process/material differences require?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Personal compensation by the welder."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Recorded technical applicability review and approved disposition."
+          },
+          {
+            "id": "d",
+            "label": "Silent WPS editing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G72_final18",
+        "prompt": "In Pine Spool, can J-2's report establish J-1's result?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, copy it."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if dimensions match."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; similar joints still need their own traceable evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G72_final19",
+        "prompt": "Does missing evidence prove the joint is defective?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; it means acceptance is not yet established from the file."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every gap is a defect."
+          },
+          {
+            "id": "c",
+            "label": "No, it proves acceptance."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G72_final20",
+        "prompt": "What remains after theory completion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Applicable craft/method qualification, actual performance and technical/site release."
+          },
+          {
+            "id": "c",
+            "label": "No fabrication residuals."
+          },
+          {
+            "id": "d",
+            "label": "Only a badge design."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G72_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G72_lesson1",
+          "questionIds": [
+            "G72_check1"
+          ]
+        },
+        {
+          "lessonId": "G72_lesson2",
+          "questionIds": [
+            "G72_check2"
+          ]
+        },
+        {
+          "lessonId": "G72_lesson3",
+          "questionIds": [
+            "G72_check3"
+          ]
+        },
+        {
+          "lessonId": "G72_lesson4",
+          "questionIds": [
+            "G72_check4"
+          ]
+        },
+        {
+          "lessonId": "G72_lesson5",
+          "questionIds": [
+            "G72_check5"
+          ]
+        },
+        {
+          "lessonId": "G72_lesson6",
+          "questionIds": [
+            "G72_check6"
+          ]
+        },
+        {
+          "lessonId": "G72_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G72_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G72_final",
+          "questionIds": [
+            "G72_final1",
+            "G72_final2",
+            "G72_final3",
+            "G72_final4",
+            "G72_final5",
+            "G72_final6",
+            "G72_final7",
+            "G72_final8",
+            "G72_final9",
+            "G72_final10",
+            "G72_final11",
+            "G72_final12",
+            "G72_final13",
+            "G72_final14",
+            "G72_final15",
+            "G72_final16",
+            "G72_final17",
+            "G72_final18",
+            "G72_final19",
+            "G72_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G72_check1": "Process and governing requirements determine scope.",
+        "G72_check2": "Visual form is only part of technical evidence.",
+        "G72_check3": "Variable treatment comes from the actual framework.",
+        "G72_check4": "Appearance is not controlled material identity.",
+        "G72_check5": "Safety authorization cannot replace specified inspection evidence.",
+        "G72_check6": "Theory and practical craft performance require separate evidence.",
+        "G72_final1": "Personnel performance differs from design and procedure evidence.",
+        "G72_final2": "Procedure support and individual performance are distinct.",
+        "G72_final3": "Defined quality-system scopes are not universal craft badges.",
+        "G72_final4": "The thermal mechanism explains why method control matters.",
+        "G72_final5": "Conceptual mechanisms are not operating parameters.",
+        "G72_final6": "Craft execution needs the complete approved instruction.",
+        "G72_final7": "Document currency includes approval and actual scope.",
+        "G72_final8": "Avoid inventing either universal exemption or universal requalification.",
+        "G72_final9": "Joint mapping supports traceability and bounded acceptance.",
+        "G72_final10": "Consumable substitution needs the actual technical basis.",
+        "G72_final11": "New work may introduce new property and acceptance questions.",
+        "G72_final12": "Visual appearance does not erase governing examination requirements.",
+        "G72_final13": "Repair is controlled technical work, not cosmetic improvisation.",
+        "G72_final14": "History makes the final acceptance reconstructable.",
+        "G72_final15": "Organizational certification cannot substitute for observed individual performance.",
+        "G72_final16": "Different methods retain their own qualifications and criteria.",
+        "G72_final17": "The approved method must actually support the task.",
+        "G72_final18": "Identity and actual coverage govern report applicability.",
+        "G72_final19": "State the evidence limitation without inventing a technical result.",
+        "G72_final20": "Knowledge completion cannot replace physical skill or authority."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

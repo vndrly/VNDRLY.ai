@@ -1,0 +1,916 @@
+{
+  "courseId": "G98",
+  "gapGroupId": "TG49",
+  "title": "Fire/protection-system service and impairment methods",
+  "description": "Six subject-specific lessons and two worked fictional cases with twenty-six explained decisions. Actual method instruction and qualified practical capability remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for fire/protection-system service and impairment methods.",
+  "audience": [
+    "Assigned protection-system service personnel",
+    "Fire-detection and suppression maintenance coordinators",
+    "Impairment-control and site-restoration authorities",
+    "System-specific test and handover reviewers"
+  ],
+  "practicalBoundary": "Maintain the distinction between servicing a protective system and performing fire brigade response. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual system/function/asset scope and assigned service personnel’s system-specific competence, with response roles excluded unless separately supplied.",
+    "Current configuration, manufacturer instructions, approved service/test method and controlled revisions covering affected interfaces.",
+    "Actual impairment approval, affected functions, notification owners, temporary arrangements and change/reassessment conditions.",
+    "Asset-specific functional test results against approved criteria, including the required local and remote/interface verification and limitations.",
+    "Fault history, corrective activity, accepted replacement/configuration evidence and competent verification/disposition.",
+    "Restoration acceptance by the designated authority, remaining restrictions, status notifications and linked impairment/service history."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who identifies the actual protective functions, assigned service scope and separate emergency-response boundary; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who reconciles controller/configuration and instruction versions through the technical authority; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who identifies the affected protection and obtains actual impairment coordination through the assigned process; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who records bounded test observations and required interface evidence against approved criteria; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who preserves fault recurrence and links corrective work to qualified verification without treating reset as repair; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who hands over completed work, verified functions and accepted restoration as distinct status decisions; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Actual language/equipment skill, hazardous response, protective-system servicing or other supplied execution requires the relevant method-specific practical evaluation and applicable credentials. This online knowledge result does not establish those qualifications."
+  ],
+  "sources": [
+    {
+      "title": "OSHA recommended safety-program education and training",
+      "url": "https://www.osha.gov/safety-management/education-training",
+      "scopeLimit": "General role- and hazard-specific training guidance; not a trade license or universal legal mandate."
+    },
+    {
+      "title": "OSHA process safety management",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119",
+      "scopeLimit": "Specific coverage/exceptions; not all oilfield or process work is automatically covered."
+    },
+    {
+      "title": "OSHA fire detection systems",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.164",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    },
+    {
+      "title": "OSHA fixed extinguishing systems",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.160",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G98_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Protective-system service must preserve the relationship between the system's intended function, actual configuration, maintenance activity and verified restoration. This course teaches system scope, controlled instructions, impairment planning, functional evidence, fault disposition and release handover. It supplies no bypass, disabling, isolation, detector-adjustment, agent-discharge or electrical test instructions.\n\nUse fictional service records and interface drawings only. Complete twenty-six decisions, retain first answers and acknowledge explained remediation. Actual system-specific service, trade and test competence require approved instruction and qualified practical evaluation. Maintaining an alarm or suppression system does not qualify a technician as a firefighter.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G98_lesson1",
+        "title": "Lesson 1 — Identify the protective system and service duty",
+        "body": "Identify the protective function before selecting a service method. Detection, local warning, remote notification, suppression and protective interlocks perform different tasks. One installation may connect several functions, but a successful check of one does not automatically establish the others. The service scope must identify the actual system, assets and included duties.\n\nSeparate maintenance from emergency response. A technician can service a detector or control interface without being assigned fire-brigade intervention. The response organization may depend on the system's information, but that relationship does not merge the qualifications. The actual contract and employer program determine who maintains equipment, who accepts restoration and who responds to an event.\n\nRead broad service categories carefully. Safety, security and fire protection can describe several systems with different methods and technical requirements. A generic maintenance certificate is not proof of competence with every controller, detector or suppression arrangement. The assigned person's evidence must match the actual system and task. Manufacturer and employer instructions establish the relevant method.\n\nConsider the consequence of the proposed work. Cleaning a component, replacing it, altering configuration and verifying an interface can involve different responsibilities. The technician needs authority for the actual activity, not just access to the equipment room. A commercial request to get the alarm working should be translated into a defined technical task through the responsible service process.\n\nIn the fictional exercise, the order covers a smoke-detection loop and remote notification interface, while the technician's documented experience concerns another protection system. The worked answer identifies the actual scope and obtains system-specific competence and authorization evidence. It does not assume the technician lacks all useful knowledge, but it rejects universal qualification based on a broad maintenance title. The course learner practices matching functions and roles without performing a live test or intervention.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G98_lesson2",
+        "title": "Lesson 2 — Trace current configuration and instructions",
+        "body": "Current configuration connects instructions to reality. Identify the controller, relevant devices, interfaces and approved revisions used in the service plan. A drawing may accurately describe an earlier installation while no longer representing the current one. A familiar appearance does not establish that the same test or maintenance procedure remains applicable.\n\nTrace changes through controlled records. A modification can affect local indications, remote signals, shutdown interfaces or other functions. The appropriate technical authority determines the actual effect. The desk reviewer should identify inconsistent versions and obtain reconciliation rather than choose the document with the newest cover date automatically. A date alone does not prove its technical content matches the system.\n\nManufacturer instructions must fit the actual model and configuration. A procedure for a related controller can be informative background without being an approved method for the installed one. Do not improvise settings or test steps from memory. Qualified service personnel must receive and demonstrate the actual task method under a safe program.\n\nMap interfaces at a functional level. A detector signal may lead to local indication and another action elsewhere. The planning drawing should identify which relationships the service affects and who owns them. The learner need not know how to wire or program the system to recognize that an omitted remote interface is a different verification question.\n\nFor the desk exercise, drawing D2 shows controller F2, the modification register identifies F3 and the test sheet still references F2. The worked response preserves the discrepancy and refers it to the responsible technical owner. It does not run the old procedure to see whether it works. Once the actual configuration and method are accepted, the correct versions are communicated to service personnel and retained with the resulting evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G98_lesson3",
+        "title": "Lesson 3 — Plan impairment as a separate decision",
+        "body": "Impairment is a condition in which protection is reduced or unavailable relative to the function being relied on. Planned service can create such a condition even when its purpose is improvement. The site must understand what protection is affected, who approves the arrangement and what temporary precautions or restrictions the responsible authority requires. The course provides no instructions for disabling or bypassing a function.\n\nDefine the affected function rather than use a vague system offline label. A local component activity may affect remote notification or another interface. The technical and site roles must determine the actual scope. Workers in the affected area and relevant response organizations may need accurate status through the applicable process. The responsible employer determines actual notification duties and temporary arrangements.\n\nSeparate permission to perform maintenance from permission to reduce protection. A work order can authorize a task while the site still needs an impairment decision. A technician should not assume that a quiet shift, short duration or routine task makes the loss acceptable. Duration does not itself establish a suitable alternative or remove the need to coordinate affected people.\n\nConditions can change during the work. If the impairment extends beyond the reviewed period or affects another function, the responsible roles need that information. The approved process determines reassessment and restrictions. A technician should not silently broaden the impairment because another repair becomes convenient.\n\nIn the exercise, maintenance of a monitored function is scheduled without any identified site impairment owner. The worked answer obtains the actual technical scope and routes it for the required approval and coordination. It does not prescribe a fire watch, choose an alternative system or disable anything. Those actual decisions require the site's competent process. The learner's useful skill is recognizing that maintenance intent and protection availability are separate facts.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G98_lesson4",
+        "title": "Lesson 4 — Read test evidence and acceptance criteria",
+        "body": "Functional evidence should identify the asset, method, approved acceptance criteria, observed result and limitations. A green indicator can show one condition without demonstrating every function or interface. The technical assessor must determine the actual test required. This course teaches how to interpret the relationship between a claim and the evidence; it does not supply a test sequence or acceptance threshold.\n\nDistinguish component and end-to-end conclusions. A local detector check may address a component, while remote notification or another action may need separate verification under the approved method. Do not assume that all downstream functions worked because the first indication appeared. Equally, a missing interface result does not automatically invalidate every useful local observation.\n\nRead the acceptance basis before the result. The criterion should come from the applicable technical requirements and approved method, not be invented after the test to match what happened. A trained person knowledgeable about the actual system must perform the service and testing required by the employer's applicable program. A general course badge cannot certify a particular test.\n\nPreserve failed and qualified results. A later pass should be linked to the corrective work and verification rather than replace the failure without explanation. Test records also need the correct configuration and relevant conditions. A valid result for the earlier controller does not establish the changed system's performance.\n\nFor the fictional exercise, the sheet records a local indication, but the summary claims all remote interfaces operate. The worked answer limits the statement to what was actually verified and obtains the required interface evidence from the qualified role. The local result remains useful. The report becomes more accurate by separating established performance, untested functions and the authority needed for final acceptance.\n\nA test record should also distinguish an observed response from an inferred cause. If a signal fails to appear at the expected interface, the observation is the missing response under the stated method and conditions. The cause may require further qualified diagnosis. Writing controller failed without that diagnosis can misdirect repair, while writing passed because another indication worked can hide the failure. Accurate observations support competent troubleshooting without asking the recorder to make a conclusion outside the evidence or their technical authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G98_lesson5",
+        "title": "Lesson 5 — Control faults and incomplete restoration",
+        "body": "A fault indication, an observed symptom and a technical diagnosis are different information. The technician or user should report the actual behavior accurately. The competent service process determines cause and correction. A reset can change an indication without establishing that the underlying defect has been repaired. Repeatedly resetting and closing the record can conceal a recurring issue.\n\nDefect disposition must identify the actual asset, condition, restriction, corrective work and acceptance evidence. A replacement component can introduce configuration and compatibility questions. The technical authority must assess them under the applicable instructions; a part that fits physically is not automatically suitable. This course gives no replacement, adjustment or programming method.\n\nKeep incomplete restoration visible. One repaired component may coexist with another unverified function or continuing impairment. A broad job-complete status should not erase those limits. The site needs the actual protection status so it can maintain the appropriate arrangement until authorized restoration. Commercial billing and technical readiness can have different completion times.\n\nPreserve history for recurring-fault review. If the same symptom returns, prior observations and corrective attempts can inform competent diagnosis. Deleting the earlier record makes that review harder and can create a false appearance that each event is isolated. Corrections should be traceable through the authorized record process, not silently overwritten.\n\nIn the exercise, a fault clears after reset and returns at the next review. The worked answer records that sequence and keeps the technical issue open for the competent service authority. It does not infer a specific failure mechanism or tell the user to keep resetting. The service record separates observed behavior, actual repair activity and verified result. That distinction is useful to technicians, supervisors and the people who rely on the protective function.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G98_lesson6",
+        "title": "Lesson 6 — Release protection through the assigned authority",
+        "body": "Restoration is an accepted status of the actual system, not merely the end of a technician's activity. The approved release conditions must address the relevant functions and interfaces. The designated site authority must receive the evidence and limitations needed to decide when the function can again be relied on. The technician may supply technical results without holding every operational acceptance duty.\n\nSeparate three statements: assigned work completed, required verification completed and restoration accepted. They may occur together, but none should be assumed from another. A service ticket can accurately show component work complete while a remote interface remains unavailable. The receiving site needs that distinction, particularly if temporary precautions depend on the impairment continuing.\n\nNotifications should communicate current status through the actual process. People told that protection was impaired need the appropriate restoration information when authorized. Do not assume they learn it because a job ticket closes in a contractor system. The responsible employer determines the required recipients, content and authority.\n\nHandover also includes residual faults, restrictions and follow-up work. A technically accepted temporary condition must be described within its actual scope rather than converted into unrestricted normal status. Later changes need their own review. The impairment history should remain linked to restoration so a future reviewer can understand what was unavailable and how it was resolved.\n\nFor the desk exercise, the technician completes a component replacement, but remote notification is still unverified. The worked answer records the completed work and preserves the interface limitation. The qualified technical role obtains the required verification, and the designated site authority accepts restoration under the actual arrangement. A fresh completion signature cannot supply the missing result. This is a concrete handover skill: state what others may rely on, who accepted it and what remains outside that assurance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G98_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek schedules service of a smoke-detection loop linked to local indication and remote notification. Drawing D2 names controller F2, while the modification register says F3. The attached method still references F2. The work order is approved, but no one has identified the site owner for the possible impairment. The technician is experienced with another protection system.\n\nThe planning reviewer starts with actual scope and competence. The task includes the identified loop and remote interface, not every system covered by the broad maintenance contract. The technician's prior experience is considered within its actual scope, while system-specific instruction and assessment are verified for the assigned duty. A familiar safety title cannot establish universal service competence.\n\nThe configuration conflict is resolved through the responsible technical owner before the method is relied on. The team preserves the drawing, modification record and test sheet so the difference is explicit. They do not execute the old procedure on F3 to see whether it behaves similarly. The accepted current configuration and controlled method become the basis of the actual service.\n\nThe impairment decision is addressed separately. Maintenance approval does not establish that temporary loss of the monitored function is coordinated. The technical and site roles determine the affected protection, required notifications and actual temporary arrangements under their process. The course participant does not choose a substitute precaution or bypass a function.\n\nThe plan also names who will verify the local function and who will address the remote interface. This prevents the final report from treating one observation as proof of every downstream result. Actual testing must be performed by qualified people using the approved method; the fictional exercise contains no steps or thresholds.\n\nThe worked outcome is a coherent task basis: actual system, accepted method, competent personnel, coordinated impairment and defined verification responsibilities. Each is a distinct requirement. Correcting the controller number does not establish impairment approval, and obtaining approval does not prove that the test was performed.\n\nThe technician can now receive actual task instruction and execute only within established competence and authority. The reviewer has contributed technical planning clarity without becoming a firefighter, system designer or live test operator. The resulting evidence can support a truthful restoration decision rather than an unsupported general complete label.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G98_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: a service sheet records a successful local indication after component work. The summary says the entire protective system is normal. No remote-notification verification is attached. A recurring fault had cleared after reset but returned later. The contractor wants to close the ticket, and the site has temporary arrangements in place because the function was impaired.\n\nThe reviewer separates the actual evidence. The local indication is retained as a useful result within its test scope. It does not prove the unverified remote interface. The qualified technical authority determines what verification is required for that interface under the actual method. The reviewer does not invalidate every completed activity or fill the gap with an assumed pass.\n\nThe recurring fault is recorded as an observation sequence: reset, cleared indication and later return. That sequence is not proof of a particular diagnosis, but it contradicts a simple repaired claim based only on reset. The competent service process must assess the fault and record corrective work and verification. Prior history remains available rather than being deleted to close the ticket.\n\nThe contractor's activity completion is then distinguished from site restoration acceptance. Component work may be complete while protection remains limited. The site needs the true status to decide its continuing arrangements. A billing deadline does not create verified functionality or authorize the site to remove precautions.\n\nWhen technical verification and fault disposition are available, the designated authority reviews them against the actual release conditions. Restoration notifications follow the established route. People who relied on the impairment status should not have to infer normal operation from a contractor's closed ticket. The record states the accepted functions and any remaining limitation.\n\nThe worked handover therefore preserves local results, remote-interface status, recurring-fault disposition, impairment history and acceptance authority separately. Resolving one category changes only that category. A later successful remote check would not by itself explain the recurring fault; a repaired fault would not prove a previously untested interface.\n\nThis case teaches why careful service records are operational information. Workers and responders may rely on protection status without seeing the equipment. A truthful bounded statement lets them act through the actual site arrangements. An attractive all-normal summary unsupported by the test evidence would remove that essential distinction, even if the technician had completed valuable work.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G98_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Apply the final decisions to protective functions, current configuration, impairment, test evidence, fault history and accepted restoration. Preserve original answers and acknowledge explained remediation.\n\nActual installation, service, adjustment, test and repair require system-specific instruction, qualified practical assessment and any applicable trade/provider credentials. Fire-brigade response remains separate. This course grants no permission to disable, bypass, operate or certify a protective system.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G98_check1",
+        "prompt": "During identify the protective system and service duty, a generic maintenance contract is used as proof of competence for an unfamiliar suppression system. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain system-specific service authorization and competence evidence."
+          },
+          {
+            "id": "b",
+            "label": "General maintenance experience qualifies every protection-system service."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G98_check2",
+        "prompt": "During trace current configuration and instructions, the test procedure references a replaced controller not present in the current system. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A familiar procedure may be used despite a different controller."
+          },
+          {
+            "id": "b",
+            "label": "Reconcile configuration and obtain the correct approved service method."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G98_check3",
+        "prompt": "During plan impairment as a separate decision, maintenance is scheduled without considering loss of the monitored protective function. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Routine maintenance never requires impairment review."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Obtain the required impairment review and coordinated arrangements before affected work."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G98_check4",
+        "prompt": "During read test evidence and acceptance criteria, a local indicator check is reported as proof that all remote alarm interfaces work. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "One local indicator proves the entire protective system functions."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Limit the claim and obtain the required interface verification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G98_check5",
+        "prompt": "During control faults and incomplete restoration, a recurring fault is closed because the display was reset. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the defect open pending competent diagnosis and required verification."
+          },
+          {
+            "id": "b",
+            "label": "Resetting an indication proves the fault was repaired."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G98_check6",
+        "prompt": "During release protection through the assigned authority, the job is marked complete while a remote notification interface remains unverified. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A technician completion signature proves every protective function is restored."
+          },
+          {
+            "id": "b",
+            "label": "Retain the limitation and obtain required verification and authorized acceptance."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G98_final1",
+        "prompt": "Which evidence is most directly relevant to identify the protective system and service duty?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Service scope identifying protective function, asset and included test or repair duties."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G98_final2",
+        "prompt": "Which evidence is most directly relevant to trace current configuration and instructions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "System dossier linking configuration, instructions and service method revision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G98_final3",
+        "prompt": "Which evidence is most directly relevant to plan impairment as a separate decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Impairment authorization naming affected functions, duration conditions and notification owners."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G98_final4",
+        "prompt": "Which evidence is most directly relevant to read test evidence and acceptance criteria?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Functional test record linking actual functions tested and approved acceptance criteria."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G98_final5",
+        "prompt": "Which evidence is most directly relevant to control faults and incomplete restoration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Fault disposition record linking failed evidence, repair and verification."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G98_final6",
+        "prompt": "Which evidence is most directly relevant to release protection through the assigned authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Restoration handover separating technician completion, verified functions and site acceptance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G98_final7",
+        "prompt": "A colleague argues: “General maintenance experience qualifies every protection-system service.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; obtain system-specific service authorization and competence evidence."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G98_final8",
+        "prompt": "A colleague argues: “A familiar procedure may be used despite a different controller.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; reconcile configuration and obtain the correct approved service method."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G98_final9",
+        "prompt": "A colleague argues: “Routine maintenance never requires impairment review.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; obtain the required impairment review and coordinated arrangements before affected work."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G98_final10",
+        "prompt": "A colleague argues: “One local indicator proves the entire protective system functions.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; limit the claim and obtain the required interface verification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G98_final11",
+        "prompt": "A colleague argues: “Resetting an indication proves the fault was repaired.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; keep the defect open pending competent diagnosis and required verification."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G98_final12",
+        "prompt": "A colleague argues: “A technician completion signature proves every protective function is restored.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; retain the limitation and obtain required verification and authorized acceptance."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G98_final13",
+        "prompt": "A technician services alarms. What does that not automatically establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Useful knowledge within the actual service scope."
+          },
+          {
+            "id": "b",
+            "label": "The need to identify the asset and function."
+          },
+          {
+            "id": "c",
+            "label": "Fire-brigade response qualification or competence with every different protective system."
+          },
+          {
+            "id": "d",
+            "label": "A role in technical handover where assigned."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G98_final14",
+        "prompt": "The drawing names F2 while the modification register names F3. What is the correct response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Try the old procedure to see whether it works."
+          },
+          {
+            "id": "b",
+            "label": "Choose the document with the most attractive cover."
+          },
+          {
+            "id": "c",
+            "label": "Assume familiar display appearance proves equivalence."
+          },
+          {
+            "id": "d",
+            "label": "Reconcile actual configuration and obtain the applicable controlled service/test method through the technical authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G98_final15",
+        "prompt": "A work order approves maintenance that may reduce protection. What remains a separate decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual impairment scope, site approval, notifications and required temporary arrangements."
+          },
+          {
+            "id": "b",
+            "label": "Whether maintenance intent automatically eliminates every impairment."
+          },
+          {
+            "id": "c",
+            "label": "Whether a quiet shift makes review irrelevant."
+          },
+          {
+            "id": "d",
+            "label": "Whether the technician can silently broaden the loss."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G98_final16",
+        "prompt": "The sheet records local indication but claims every remote interface passed. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume every downstream function worked."
+          },
+          {
+            "id": "b",
+            "label": "Retain the local result within scope and obtain the actual required interface verification."
+          },
+          {
+            "id": "c",
+            "label": "Delete all local evidence."
+          },
+          {
+            "id": "d",
+            "label": "Invent a remote result to complete the summary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G98_final17",
+        "prompt": "A fault clears after reset and returns later. What does the record show?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A permanent repair."
+          },
+          {
+            "id": "b",
+            "label": "A specific technical cause without further evidence."
+          },
+          {
+            "id": "c",
+            "label": "An observed recurrence needing competent diagnosis/disposition, not proof of repair from reset alone."
+          },
+          {
+            "id": "d",
+            "label": "Permission to delete earlier faults."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G98_final18",
+        "prompt": "Component work is complete while remote notification is unverified. What is the correct handover?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Declare the entire system normal."
+          },
+          {
+            "id": "b",
+            "label": "Treat billing closure as operational acceptance."
+          },
+          {
+            "id": "c",
+            "label": "Assume a new signature creates the missing result."
+          },
+          {
+            "id": "d",
+            "label": "Record the completed work and preserve the separate interface/restoration limitation for the designated authorities."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G98_final19",
+        "prompt": "In case one, the controller discrepancy is resolved. What can still need action?",
+        "options": [
+          {
+            "id": "a",
+            "label": "System-specific competence, impairment coordination and actual verification responsibilities."
+          },
+          {
+            "id": "b",
+            "label": "Nothing; identity fixes every service condition."
+          },
+          {
+            "id": "c",
+            "label": "Only the report font."
+          },
+          {
+            "id": "d",
+            "label": "Every existing preparation record must be discarded."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G98_final20",
+        "prompt": "In case two, remote verification later passes. What can remain separate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing; one passed interface explains every fault."
+          },
+          {
+            "id": "b",
+            "label": "The recurring-fault disposition and designated restoration acceptance."
+          },
+          {
+            "id": "c",
+            "label": "Only the contractor’s invoice number."
+          },
+          {
+            "id": "d",
+            "label": "All original impairment history must disappear."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G98_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G98_lesson1",
+          "questionIds": [
+            "G98_check1"
+          ]
+        },
+        {
+          "lessonId": "G98_lesson2",
+          "questionIds": [
+            "G98_check2"
+          ]
+        },
+        {
+          "lessonId": "G98_lesson3",
+          "questionIds": [
+            "G98_check3"
+          ]
+        },
+        {
+          "lessonId": "G98_lesson4",
+          "questionIds": [
+            "G98_check4"
+          ]
+        },
+        {
+          "lessonId": "G98_lesson5",
+          "questionIds": [
+            "G98_check5"
+          ]
+        },
+        {
+          "lessonId": "G98_lesson6",
+          "questionIds": [
+            "G98_check6"
+          ]
+        },
+        {
+          "lessonId": "G98_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G98_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G98_final",
+          "questionIds": [
+            "G98_final1",
+            "G98_final2",
+            "G98_final3",
+            "G98_final4",
+            "G98_final5",
+            "G98_final6",
+            "G98_final7",
+            "G98_final8",
+            "G98_final9",
+            "G98_final10",
+            "G98_final11",
+            "G98_final12",
+            "G98_final13",
+            "G98_final14",
+            "G98_final15",
+            "G98_final16",
+            "G98_final17",
+            "G98_final18",
+            "G98_final19",
+            "G98_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G98_check1": "The correct decision is to obtain system-specific service authorization and competence evidence. Smoke detection, suppression, alarms, security interfaces and other protective systems have different functions and service methods. A maintenance assignment does not create fire-brigade authority. Identify the actual system, asset, work boundary and applicable service responsibility. A general maintenance contract cannot establish competence with every detector or suppression arrangement; the assigned technician needs system-specific evidence. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G98_check2": "The correct decision is to reconcile configuration and obtain the correct approved service method. Protective systems can have interfaces with alarms, shutdowns, access or remote monitoring. The controlled configuration and manufacturer instructions must match the actual system and proposed work. A diagram is useful only when its revision and limitations are known. The desk reviewer identifies mismatches; qualified personnel decide and perform the technical test or service method. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G98_check3": "The correct decision is to obtain the required impairment review and coordinated arrangements before affected work. Servicing can temporarily reduce protection even if the intended result is improvement. The impairment arrangement should identify affected functions, responsible approval, notifications and compensating arrangements chosen by the authorized site roles. A technician should not assume a quiet work period makes loss of protection acceptable. This course gives no bypass, disabling or isolation instructions. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G98_check4": "The correct decision is to limit the claim and obtain the required interface verification. A service record needs the asset, method, approved criteria, observed result and disposition. A green indicator may not establish every required function or interface. The technical assessor determines the appropriate verification. The learner checks whether the claimed result exceeds the actual test scope and preserves failures instead of replacing them with a generic passed label. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G98_check5": "The correct decision is to keep the defect open pending competent diagnosis and required verification. Faults and incomplete tasks need explicit restrictions, owners and handover. A reset indication is not by itself proof that the underlying defect was repaired. Preserve failed test evidence and link any corrective work to verification. Configuration changes or replacement components require the appropriate technical approval; dispatch pressure does not establish suitability or authorize silent changes. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G98_check6": "The correct decision is to retain the limitation and obtain required verification and authorized acceptance. Restoration requires the actual system and interfaces to meet the approved release conditions and required parties to receive status. Completion of a technician task is not necessarily the site authorization to return the function to reliance. The handover should identify remaining limitations, test evidence and who accepts restoration, preserving the impairment history for later review. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G98_final1": "A service scope identifying protective function, asset and included test or repair duties addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Smoke detection, suppression, alarms, security interfaces and other protective systems have different functions and service methods. A maintenance assignment does not create fire-brigade authority. Identify the actual system, asset, work boundary and applicable service responsibility. A general maintenance contract cannot establish competence with every detector or suppression arrangement; the assigned technician needs system-specific evidence.",
+        "G98_final2": "A system dossier linking configuration, instructions and service method revision addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Protective systems can have interfaces with alarms, shutdowns, access or remote monitoring. The controlled configuration and manufacturer instructions must match the actual system and proposed work. A diagram is useful only when its revision and limitations are known. The desk reviewer identifies mismatches; qualified personnel decide and perform the technical test or service method.",
+        "G98_final3": "A impairment authorization naming affected functions, duration conditions and notification owners addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Servicing can temporarily reduce protection even if the intended result is improvement. The impairment arrangement should identify affected functions, responsible approval, notifications and compensating arrangements chosen by the authorized site roles. A technician should not assume a quiet work period makes loss of protection acceptable. This course gives no bypass, disabling or isolation instructions.",
+        "G98_final4": "A functional test record linking actual functions tested and approved acceptance criteria addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A service record needs the asset, method, approved criteria, observed result and disposition. A green indicator may not establish every required function or interface. The technical assessor determines the appropriate verification. The learner checks whether the claimed result exceeds the actual test scope and preserves failures instead of replacing them with a generic passed label.",
+        "G98_final5": "A fault disposition record linking failed evidence, repair and verification addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Faults and incomplete tasks need explicit restrictions, owners and handover. A reset indication is not by itself proof that the underlying defect was repaired. Preserve failed test evidence and link any corrective work to verification. Configuration changes or replacement components require the appropriate technical approval; dispatch pressure does not establish suitability or authorize silent changes.",
+        "G98_final6": "A restoration handover separating technician completion, verified functions and site acceptance addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Restoration requires the actual system and interfaces to meet the approved release conditions and required parties to receive status. Completion of a technician task is not necessarily the site authorization to return the function to reliance. The handover should identify remaining limitations, test evidence and who accepts restoration, preserving the impairment history for later review.",
+        "G98_final7": "That inference exceeds the evidence. Smoke detection, suppression, alarms, security interfaces and other protective systems have different functions and service methods. A maintenance assignment does not create fire-brigade authority. Identify the actual system, asset, work boundary and applicable service responsibility. A general maintenance contract cannot establish competence with every detector or suppression arrangement; the assigned technician needs system-specific evidence. The appropriate task disposition remains to obtain system-specific service authorization and competence evidence.",
+        "G98_final8": "That inference exceeds the evidence. Protective systems can have interfaces with alarms, shutdowns, access or remote monitoring. The controlled configuration and manufacturer instructions must match the actual system and proposed work. A diagram is useful only when its revision and limitations are known. The desk reviewer identifies mismatches; qualified personnel decide and perform the technical test or service method. The appropriate task disposition remains to reconcile configuration and obtain the correct approved service method.",
+        "G98_final9": "That inference exceeds the evidence. Servicing can temporarily reduce protection even if the intended result is improvement. The impairment arrangement should identify affected functions, responsible approval, notifications and compensating arrangements chosen by the authorized site roles. A technician should not assume a quiet work period makes loss of protection acceptable. This course gives no bypass, disabling or isolation instructions. The appropriate task disposition remains to obtain the required impairment review and coordinated arrangements before affected work.",
+        "G98_final10": "That inference exceeds the evidence. A service record needs the asset, method, approved criteria, observed result and disposition. A green indicator may not establish every required function or interface. The technical assessor determines the appropriate verification. The learner checks whether the claimed result exceeds the actual test scope and preserves failures instead of replacing them with a generic passed label. The appropriate task disposition remains to limit the claim and obtain the required interface verification.",
+        "G98_final11": "That inference exceeds the evidence. Faults and incomplete tasks need explicit restrictions, owners and handover. A reset indication is not by itself proof that the underlying defect was repaired. Preserve failed test evidence and link any corrective work to verification. Configuration changes or replacement components require the appropriate technical approval; dispatch pressure does not establish suitability or authorize silent changes. The appropriate task disposition remains to keep the defect open pending competent diagnosis and required verification.",
+        "G98_final12": "That inference exceeds the evidence. Restoration requires the actual system and interfaces to meet the approved release conditions and required parties to receive status. Completion of a technician task is not necessarily the site authorization to return the function to reliance. The handover should identify remaining limitations, test evidence and who accepts restoration, preserving the impairment history for later review. The appropriate task disposition remains to retain the limitation and obtain required verification and authorized acceptance.",
+        "G98_final13": "Fire-brigade response qualification or competence with every different protective system. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G98_final14": "Reconcile actual configuration and obtain the applicable controlled service/test method through the technical authority. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G98_final15": "Actual impairment scope, site approval, notifications and required temporary arrangements. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G98_final16": "Retain the local result within scope and obtain the actual required interface verification. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G98_final17": "An observed recurrence needing competent diagnosis/disposition, not proof of repair from reset alone. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G98_final18": "Record the completed work and preserve the separate interface/restoration limitation for the designated authorities. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G98_final19": "System-specific competence, impairment coordination and actual verification responsibilities. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G98_final20": "The recurring-fault disposition and designated restoration acceptance. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

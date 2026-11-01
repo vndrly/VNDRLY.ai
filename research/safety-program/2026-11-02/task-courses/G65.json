@@ -1,0 +1,903 @@
+{
+  "courseId": "G65",
+  "gapGroupId": "TG16",
+  "title": "Engineering requirements, design assumptions and technical review decisions",
+  "description": "Six fully written engineering review lessons, two worked unit/interface cases and 26explained decisions. Actual design qualification remains separate.",
+  "purpose": "Develop bounded requirements, inspect calculation meaning, trace interfaces and changes, and distinguish supported technical evidence from professional approval.",
+  "audience": [
+    "Assigned design engineers",
+    "Design coordinators",
+    "Discipline technical reviewers"
+  ],
+  "sources": [
+    {
+      "title": "NASA Systems Engineering Handbook — System Design Processes; engineering guidance example, not an oilfield code",
+      "url": "https://www.nasa.gov/reference/4-0-system-design-processes/"
+    },
+    {
+      "title": "NASA Systems Engineering Handbook — Product Realization; verification and validation concepts",
+      "url": "https://www.nasa.gov/reference/5-0-product-realization/"
+    },
+    {
+      "title": "OSHA1910.119 — actual coverage and change provisions, not automatic catalog applicability",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119"
+    },
+    {
+      "title": "Texas Board basic engineering licensure requirements — jurisdiction-specific example only",
+      "url": "https://pels.texas.gov/lic_basic.htm"
+    }
+  ],
+  "practicalBoundary": "This course develops review reasoning. It confers no engineering license, discipline qualification, authority to design hazardous equipment, approval of a technical calculation or permission to perform field tests, commissioning or startup. Actual jurisdiction, employer procedures, competent discipline review and any practical assessment remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual jurisdiction and professional-duty applicability decision, with current authorization evidence where required.",
+    "Project requirements and design basis, applicable technical codes/specifications, actual interfaces and accepted assumptions.",
+    "Assigned discipline preparation, independent checking and approval responsibilities with competence evidence.",
+    "Controlled calculation/drawing/software baselines, verification/validation records, resolved technical findings and change/handover decisions."
+  ],
+  "practicalAssessmentRequired": [
+    "Competent discipline assessor evaluates the person’s actual engineering review/design task, including method selection, assumptions, calculations, interfaces and technical judgments within the declared scope.",
+    "Any field inspection, commissioning, hazardous testing or operational function requires its own safe observed evaluation and employer/site authorization."
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G65_intro",
+        "title": "Start here — engineering review knowledge and its limits",
+        "body": "This original course teaches assigned engineers, design coordinators and technical reviewers how to make requirements, assumptions and evidence usable. The examples are fictional paper exercises. There is no live system or equipment activity. This course develops review reasoning. It confers no engineering license, discipline qualification, authority to design hazardous equipment, approval of a technical calculation or permission to perform field tests, commissioning or startup. Actual jurisdiction, employer procedures, competent discipline review and any practical assessment remain separate.\n\nComplete six taught lessons, six checks, two worked cases and twenty final questions. Passing requires all 26 questions correct or explicitly acknowledged question-specific remediation. Original answers and first-attempt scores remain recorded alongside corrected results. A remediated knowledge result cannot establish unobserved technical performance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G65_lesson1",
+        "title": "Develop a bounded, evaluable requirement",
+        "body": "An engineering requirement connects an intended function to a condition that can be evaluated. A request to make a system reliable expresses a concern but leaves designers and reviewers guessing what result is acceptable. Begin with the intended user, operating context and consequence of failure. Identify what the system must do, the conditions in which it must do it and the evidence the owner expects before accepting it. Do not choose an arbitrary numerical target merely to make a sentence measurable. The responsible technical and operating authorities must establish a justified target.\n\nSeparate function, performance and constraint. Function describes the required activity. Performance describes how well that activity must be accomplished under stated conditions. A constraint limits the available solution, such as an established interface, site restriction or governing specification. A proposed product is a solution candidate, not automatically the requirement itself. “Use pump model Q” can hide the real need for a specified duty and compatible process interface. When an existing approved asset really is a constraint, record that reason rather than pretending the model name supplies every operating requirement.\n\nMake the scope of each requirement identifiable. Assign a stable reference and link it to the source decision, relevant system or component, revision and intended verification. Use one independently evaluable obligation rather than bundling unrelated expectations into a single vague sentence. Record assumptions and open decisions separately. An assumption is information temporarily used for reasoning; it is not a confirmed property of the installed facility. If a design depends on an assumed ambient condition, the owner must know who will establish that condition and what happens if it is different.\n\nIn a fictional remote monitoring installation, “the display must be easy to use and always available” contains several unresolved needs. The reviewer separates readability for the intended users, availability under the approved operating conditions and behavior during loss of communication. They ask the operating owner to establish acceptance criteria and the technical team to identify feasible verification methods. They do not turn “always” into an unsupported guarantee or decide an alarm response time from memory.\n\nA useful requirement review therefore produces specific questions: which user and activity does this serve; which condition bounds it; what evidence can show it was met; and who accepts the result? NASA's systems engineering guidance provides a requirements-development example, not a mandatory oilfield design code. Apply the actual project and jurisdiction requirements.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G65_lesson2",
+        "title": "Check quantities, assumptions and calculation meaning",
+        "body": "A calculation can be arithmetically correct and still answer the wrong physical question. Before checking numbers, identify the quantity, units, reference conditions, sign convention, boundary and applicable range. A mass flow and a volume flow are different quantities; converting between them requires an appropriate density and its conditions. A dimension labeled overall length does not necessarily establish the available clearance for installation or maintenance. The reviewer must understand what the input represents before treating it as usable evidence.\n\nWrite a compact input ledger for the particular calculation. For each material input, record its value or range, unit, source and revision, operating condition and whether it is measured, specified or assumed. This ledger is not a substitute for a competent design calculation. It makes the technical basis visible so that a reviewer can identify a missing input or a mismatch. Retain uncertainty and variability where they matter. A single nominal value cannot represent an entire range merely because the spreadsheet accepts one number.\n\nUse dimensional checks to expose simple errors. In a fictional planning exercise, an asset is 2.4 metres long and a sketch labels a clear opening as 2,500 millimetres. Converting 2.4 metres to 2,400 millimetres gives an apparent 100-millimetre difference. That arithmetic does not prove installation is possible: the drawing may omit handles, packaging, lifting orientation, movement path and required clearance. State the narrow conclusion: the two supplied nominal dimensions differ by 100 millimetres. Refer the actual installation geometry and required allowances to the responsible discipline.\n\nSign conventions matter in comparisons. If a review defines difference as proposed minus permitted, a positive result indicates that the proposed quantity is above the stated limit. Reversing the subtraction reverses the sign. State the convention next to the calculation rather than relying on what a positive number usually means in another team's spreadsheet. Keep the original figures and show conversions so another reviewer can reproduce the reasoning.\n\nCheck the applicability of the model itself. A relationship intended for one material state, geometry or operating regime may not apply after those conditions change. Software completion, a plausible answer and a polished chart cannot establish model validity. The qualified technical reviewer must assess the governing method and assumptions. This lesson teaches how to identify and communicate the basis of a calculation; it supplies no design formula or acceptance threshold for hazardous equipment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G65_lesson3",
+        "title": "Review interfaces and human use",
+        "body": "An interface is a place where one part of the design depends on another part or on a person, environment or external service. Mechanical connections, electrical supplies, signals, software data, access routes and operating responsibilities are all potential interfaces. A component that meets its own specification can fail as part of the system if the interface assumptions differ. The task of interface review is to make those shared assumptions explicit and resolve them with the people responsible for both sides.\n\nStart with the intended connection and list what crosses it. For a monitoring signal, this may include the measured quantity, engineering units, range interpretation, data quality state, update behavior, loss-of-signal behavior and who responds to the indication. For a physical installation, consider the actual connection geometry, support and environmental assumptions, access and the boundaries of installation responsibility. This list identifies questions for the competent disciplines; it does not authorize a learner to design a circuit, support or protective function.\n\nDistinguish a shared label from an agreed meaning. Two systems can both display “level” while one uses a percent of instrument span and the other uses a percent of usable capacity. The numbers can look reasonable and still describe different quantities. Reconcile definitions and reference conditions before accepting a demonstration. Likewise, a status called normal in a software test may not be the approved safe operating state of the physical process.\n\nInclude human interfaces. An alarm or maintenance instruction depends on the intended person's ability to notice, understand and act under actual work conditions. A screen demonstration in a quiet office does not establish visibility in the field or the feasibility of an action during an emergency. Identify the intended users and the circumstances needing validation. The actual employer and technical team determine suitable representative evaluation and the necessary practical safeguards.\n\nBoundary ownership must remain clear after a subcontract handoff. If one supplier provides a sensor, another provides communications and a third provides the display, “the other vendor owns the alarm” is not a completed interface decision. Record which party defines the function, which party implements each part, who verifies the integration and who approves the operational response. The final evidence must connect the actual configuration across those parties rather than collecting unrelated component certificates.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G65_lesson4",
+        "title": "Distinguish verification from validation",
+        "body": "Verification and validation answer different questions. Verification evaluates whether a product satisfies its stated requirements. Validation evaluates whether it is suitable for the intended use and stakeholder need. A product can pass a requirement check yet fail the intended job if the requirement was incomplete or if the evaluation omitted an important use condition. Keep both questions visible when deciding what a test or analysis actually demonstrates.\n\nChoose evidence appropriate to the claim. Inspection can establish an observable attribute within its scope. Analysis can support a prediction using a justified model and inputs. A demonstration can show a behavior under stated conditions. A test can measure response using a controlled method. Those methods are not interchangeable labels for approval. A component inspection does not establish whole-system performance, and a simulation does not prove every physical installation condition. The qualified review team decides the necessary combination and the limits of each result.\n\nBefore accepting a verification record, match requirement, item, configuration, method and acceptance basis. Identify what was actually tested, which software or drawing revision applied, the relevant environment and the instruments or reference data used. A report lacking that identity may contain useful observations but cannot automatically close the intended requirement. Review deviations and anomalies rather than treating a pass stamp as a summary of every unresolved condition.\n\nUse a fictional enclosure example. Requirement R-12 concerns the approved installed arrangement. A supplier report evaluates an earlier enclosure with a different cable-entry layout. The report is not necessarily false; it may be valid for its tested configuration. The reviewer records the difference and asks the technical owner whether existing evidence remains applicable or whether additional evaluation is needed. The reviewer does not infer equivalence from the shared product family name.\n\nTreat acceptance as a decision supported by evidence, not as an adjective printed on a document. The decision should state the requirement or use condition covered, relevant limitations and remaining actions. A learner who can explain these distinctions has demonstrated knowledge; a qualified discipline reviewer must still assess actual design adequacy and the employer must still approve the real verification or validation activity. Do not perform live equipment tests to complete the course.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G65_lesson5",
+        "title": "Trace the consequences of change",
+        "body": "A design change is a change in technical meaning, not merely a new file date. A different material, software revision, operating duty, layout, supplier or maintenance approach can affect requirements, interfaces and earlier evidence. Begin a change review by identifying the actual difference between the approved baseline and the proposal. “Equivalent replacement” is a claim requiring a technical basis; the procurement description alone does not establish it.\n\nFollow dependencies outward from the changed item. Ask which calculations, drawings, protective functions, operating procedures, inspections, spare parts, training and acceptance records depend on its properties. A change can leave many items unaffected, but that conclusion must come from an appropriate review rather than from copying every earlier approval. Preserve unaffected evidence with its proper scope and identify exactly which evidence needs revision or re-evaluation.\n\nAssess temporary changes with the same clarity about their boundaries. State the purpose, actual configuration, authorizing decision, responsible owner and conditions or duration of use. The employer's applicable process determines how they are controlled and ended. Do not let a temporary arrangement become the assumed permanent baseline because a work order remains open. Completion of an administrative task does not establish restoration of the physical or digital arrangement.\n\nFor a fictional dashboard change, the proposed edit converts a displayed quantity from litres to cubic metres. The arithmetic conversion is simple, but the interface review must consider the label, number of decimal places, connected reports and the user's existing instructions. A training slide showing the old units can create a new mismatch even if the conversion code is correct. The responsible team establishes and evaluates the actual change; the learner identifies its dependency chain without accessing a live system.\n\nWhere OSHA process safety management applies to the actual process, its change provisions address specific technical and safety considerations. Applicability must be determined from the real process and governing regime; the presence of an oilfield engineering service in the catalog does not establish coverage. The broader learning point is to connect change, affected evidence, instruction and accepted configuration. Neither this course nor a successful software download authorizes startup or return to service.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G65_lesson6",
+        "title": "Keep technical authority and handover bounded",
+        "body": "Technical authority attaches to a defined duty and competence basis. A job title, course score or company administrator account does not establish authority to make every engineering decision. Identify the discipline and decision: preparation of a drawing, independent checking, specialist analysis, approval of a method, acceptance of a deviation and professional signing can require different responsibilities. One person's valid authority for one duty must not be expanded to an unrelated discipline by convenience.\n\nDetermine applicable professional requirements through the responsible jurisdiction and actual service. The Texas engineering board is one jurisdiction-specific reference, not proof that every catalog engineering or software service requires a Texas professional engineer. A competent applicability review must establish the regulated act, location, relevant exemptions or limits and acceptable evidence of authorization. The course does not issue a license, validate an individual credential or decide whether a specific project may legally proceed.\n\nPrepare a technical handover that makes the accepted basis usable. Link the released documents and revisions, the intended operating or installation scope, the evidence accepted and any unresolved limitations. Separate an approved design package from an as-built record of what was actually installed. If installation differs, document and review the actual difference rather than silently treating a design drawing as an observation of the facility.\n\nA qualification record also needs boundaries. State the task and discipline evaluated, the evidence reviewed or observed, the evaluator's relevant competence, the result and any limits or follow-up. A successful paper exercise can demonstrate reasoning about requirements or units. It cannot demonstrate field inspection technique, software commissioning behavior or the ability to perform a hazardous technical method. Arrange those separately using an approved safe evaluation plan and the appropriate assessor.\n\nClose a review finding by inspecting its resolution. If a missing assumption is answered, verify which calculations and decisions depended on it. If a drawing is revised, verify that the released set and the receiving team use that revision. If an action is transferred, identify the receiving owner and the conditions limiting use until completion. These are useful engineering review skills, but the authority to accept actual design adequacy and authorize work remains with the properly designated technical and operating roles.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G65_case1",
+        "title": "Worked case 1",
+        "body": "Case 1: a fictional equipment layout with a deceptively simple clearance calculation\n\nA planning team proposes moving packaged unit U-7 through opening O-2 at North Creek's fictional training facility. No real move is planned. The supplied sketch lists the unit length as 2.4 metres and the opening width as 2,500 millimetres. A slide says “100 millimetres spare: installation accepted.” The project requirement instead calls for an approved installation route allowing the actual unit and the required handling and maintenance arrangements. The learner is the assigned design review coordinator, not the lifting planner or design approval authority.\n\nFirst, reproduce the arithmetic without expanding its meaning. Converting 2.4 metres gives 2,400 millimetres. Subtracting from 2,500 gives 100 millimetres. That is the difference between two supplied nominal dimensions. It does not establish clearance along the whole route, orientation, projections, lifting equipment, packaging or the allowances required by the approved method. The review finding therefore identifies an unsupported installation conclusion, rather than calling the subtraction wrong.\n\nSecond, inspect input identity. The unit drawing is revision B, while the supplier's current package drawing is revision D. The reviewer cannot decide whether the physical envelope changed from the revision letters alone. They request the authorized comparison and the actual configuration intended for installation. They retain revision B as part of the submitted basis so a later reviewer can understand the original conclusion.\n\nThird, trace interfaces and responsibilities. The civil designer owns the opening geometry, the equipment supplier owns the package definition and the appointed handling team owns its approved movement method within the agreed responsibilities. The coordinator brings the specific interface questions to those owners. They do not test the uncertainty by asking a crew to attempt the move.\n\nFourth, separate design acceptance and field confirmation. The technical team must establish appropriate geometry and method evidence; the actual site must then be checked through an approved competent process where required. A revised slide saying “reviewed” does not supply those observations. The supported closure would identify the accepted revisions, applicable route and method, the technical decisions and any remaining installation conditions.\n\nThe lesson is precise: retain the correct arithmetic, reject the unsupported inference, obtain the missing technical basis and keep the actual movement authorization separate. Passing this case neither qualifies a lifting planner nor approves any real clearance value.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G65_case2",
+        "title": "Worked case 2",
+        "body": "Case 2: a fictional monitoring display passes a test but misses the intended user need\n\nA training project changes a monitoring display from litres to cubic metres. The approved use description requires the assigned operator to distinguish current information from unavailable information and use the displayed quantity consistently with the current procedure. A developer demonstrates that the conversion produces 1.8 cubic metres from the fictional input of 1,800 litres. A reviewer is asked to accept the full change because the conversion is correct. No connection to an operational system is part of this exercise.\n\nBegin by identifying the supported verification claim. Because 1,000 litres equals one cubic metre, the supplied conversion is arithmetically consistent. That verifies the particular conversion example under its stated assumptions. It does not establish every value, data path or installed configuration, and it does not validate whether the display meets the intended user's needs.\n\nNext inspect the interface. The old report still labels the number as litres, while a revised screen labels it as cubic metres. The screen test says nothing about the report's meaning. The reviewers identify the inconsistent unit definitions as an interface defect and route it to the responsible change owners. They do not correct one screen and leave the report discrepancy as an undocumented user convention.\n\nThen examine an omitted use condition. The demonstration uses a valid input throughout. It provides no evidence about the approved display behavior when information is unavailable or stale. The team must establish the intended behavior and appropriate verification or validation methods through the responsible technical and operating review. The learner does not invent a timeout, alarm setting or safe fallback value.\n\nFinally consider the people and baseline. The operator instruction and the handover slide still show the earlier units. Even a technically correct display can create a use error if those materials no longer match the accepted configuration. The change review must address the affected instruction and suitable representative evaluation with the intended users, as well as any actual installation or startup controls required by the employer.\n\nThe decision is to preserve the valid conversion result as bounded evidence, retain the open interface and use-condition findings and obtain an integrated acceptance decision for the actual change. Calling the entire system failed would discard useful evidence; calling it accepted would outrun that evidence. The qualified technical authority must determine the necessary tests and evaluate actual results. The course records the learner's reasoning, not a software release approval.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G65_final",
+        "title": "Final assessment — evidence and technical authority",
+        "body": "Answer twenty decisions applying the taught methods. Review each incorrect answer and explicitly acknowledge its explanation before continuing. The original score remains part of the record; completing remediation does not rewrite the first answer. This course develops review reasoning. It confers no engineering license, discipline qualification, authority to design hazardous equipment, approval of a technical calculation or permission to perform field tests, commissioning or startup. Actual jurisdiction, employer procedures, competent discipline review and any practical assessment remain separate.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G65_check1",
+        "prompt": "Which requirement is ready for competent evaluation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A bounded function with justified conditions and an identified acceptance method."
+          },
+          {
+            "id": "b",
+            "label": "A promise that the system will always work."
+          },
+          {
+            "id": "c",
+            "label": "A preferred product name with no intended duty."
+          },
+          {
+            "id": "d",
+            "label": "The supplier logo on the cover."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G65_check2",
+        "prompt": "The supplied dimensions are 2.4 m and 2,500 mm. What does their difference establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The drawing revisions must match."
+          },
+          {
+            "id": "b",
+            "label": "A nominal difference of 100 mm, with installation suitability still unproved."
+          },
+          {
+            "id": "c",
+            "label": "The unit can safely be moved through the opening."
+          },
+          {
+            "id": "d",
+            "label": "The handling method is approved."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G65_check3",
+        "prompt": "Two displays both show level, one as percent of span and one as percent of usable capacity. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Using whichever value looks normal."
+          },
+          {
+            "id": "b",
+            "label": "Treating matching labels as matching quantities."
+          },
+          {
+            "id": "c",
+            "label": "An agreed quantity definition and interface interpretation."
+          },
+          {
+            "id": "d",
+            "label": "Averaging the two percentages."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G65_check4",
+        "prompt": "What is validation principally asking?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether a document has a pass stamp."
+          },
+          {
+            "id": "b",
+            "label": "Whether a calculation file opens."
+          },
+          {
+            "id": "c",
+            "label": "Whether every component has a supplier certificate."
+          },
+          {
+            "id": "d",
+            "label": "Whether the product suits the intended use and stakeholder need."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G65_check5",
+        "prompt": "A change converts a displayed quantity to cubic metres. Which items may need review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Labels, linked reports, user instructions and the relevant configuration/evaluation evidence."
+          },
+          {
+            "id": "b",
+            "label": "Only the arithmetic statement."
+          },
+          {
+            "id": "c",
+            "label": "Only the purchase order."
+          },
+          {
+            "id": "d",
+            "label": "No prior evidence because a change invalidates everything automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G65_check6",
+        "prompt": "A course graduate is asked to sign an unrelated discipline design. What establishes authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The urgency of the project."
+          },
+          {
+            "id": "b",
+            "label": "The actual discipline, designated duty and applicable competence/professional authorization."
+          },
+          {
+            "id": "c",
+            "label": "Their online score alone."
+          },
+          {
+            "id": "d",
+            "label": "Their administrator access."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G65_final1",
+        "prompt": "What distinguishes a constraint from a solution preference?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A preference needs no explanation once called a constraint."
+          },
+          {
+            "id": "b",
+            "label": "All constraints can be ignored during a trade study."
+          },
+          {
+            "id": "c",
+            "label": "A constraint has an established basis limiting available solutions."
+          },
+          {
+            "id": "d",
+            "label": "A constraint is whatever product the first supplier sells."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G65_final2",
+        "prompt": "An assumed ambient condition is used in design reasoning. What must remain visible?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the final calculated number."
+          },
+          {
+            "id": "b",
+            "label": "A statement that assumptions are always facts."
+          },
+          {
+            "id": "c",
+            "label": "An unqualified guarantee that the installed site matches it."
+          },
+          {
+            "id": "d",
+            "label": "Its source/status, dependent decisions and the person responsible for confirming it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G65_final3",
+        "prompt": "Why assign a stable reference to a requirement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To trace its source, implementation, revision and evaluation evidence."
+          },
+          {
+            "id": "b",
+            "label": "To replace its actual content with a number."
+          },
+          {
+            "id": "c",
+            "label": "To avoid discussing intended use."
+          },
+          {
+            "id": "d",
+            "label": "To make any similarly numbered report acceptable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G65_final4",
+        "prompt": "Can mass flow be treated as volume flow without additional information?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if both appear in a spreadsheet."
+          },
+          {
+            "id": "b",
+            "label": "No; the quantities differ and conversion needs an appropriate basis such as density and conditions."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the displayed numbers are close."
+          },
+          {
+            "id": "d",
+            "label": "Yes, for every liquid."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G65_final5",
+        "prompt": "A spreadsheet completes successfully. What remains to review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the color of its chart."
+          },
+          {
+            "id": "b",
+            "label": "Only whether the author is available."
+          },
+          {
+            "id": "c",
+            "label": "The intended physical question, model applicability, inputs, units and relevant limits."
+          },
+          {
+            "id": "d",
+            "label": "Nothing; execution proves physical validity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G65_final6",
+        "prompt": "Difference is defined as proposed minus permitted. A positive value means what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It is automatically a safety margin."
+          },
+          {
+            "id": "b",
+            "label": "The proposed quantity is lower."
+          },
+          {
+            "id": "c",
+            "label": "The calculation grants approval."
+          },
+          {
+            "id": "d",
+            "label": "The proposed quantity exceeds the stated permitted quantity under that convention."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G65_final7",
+        "prompt": "What belongs in an interface review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual shared quantities, conditions, responsibilities and failure/use states."
+          },
+          {
+            "id": "b",
+            "label": "Only each component supplier name."
+          },
+          {
+            "id": "c",
+            "label": "Only the project invoice."
+          },
+          {
+            "id": "d",
+            "label": "A statement that interfaces are somebody else’s responsibility."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G65_final8",
+        "prompt": "A component meets its own specification. What follows about system suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No user validation can ever be useful."
+          },
+          {
+            "id": "b",
+            "label": "It remains to be evaluated with the actual interfaces and intended system use."
+          },
+          {
+            "id": "c",
+            "label": "The entire system is automatically suitable."
+          },
+          {
+            "id": "d",
+            "label": "Every other component can be omitted from review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G65_final9",
+        "prompt": "An office demonstration is readable. What additional question concerns field use?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether the screen can be photographed."
+          },
+          {
+            "id": "b",
+            "label": "Whether readability removes all communication duties."
+          },
+          {
+            "id": "c",
+            "label": "Whether intended users can perceive and act on the information under the relevant actual conditions."
+          },
+          {
+            "id": "d",
+            "label": "Whether the demo used a large conference room."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G65_final10",
+        "prompt": "A report tests an earlier configuration. How should it be used?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Change the report date and accept it."
+          },
+          {
+            "id": "b",
+            "label": "Discard it without looking at the difference."
+          },
+          {
+            "id": "c",
+            "label": "Assume a shared family name proves equivalence."
+          },
+          {
+            "id": "d",
+            "label": "Retain its valid scope and have competent reviewers assess applicability to the proposed configuration."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G65_final11",
+        "prompt": "What makes a verification record traceable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Links among requirement, actual item/configuration, method, conditions and acceptance basis."
+          },
+          {
+            "id": "b",
+            "label": "A pass stamp by itself."
+          },
+          {
+            "id": "c",
+            "label": "A report number with no item identity."
+          },
+          {
+            "id": "d",
+            "label": "A current file creation date."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G65_final12",
+        "prompt": "A conversion works at one supplied input. What is supported?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The operator’s full competence."
+          },
+          {
+            "id": "b",
+            "label": "That bounded example, not unrestricted operation or all use conditions."
+          },
+          {
+            "id": "c",
+            "label": "Every possible input and failure mode."
+          },
+          {
+            "id": "d",
+            "label": "The current installed software configuration automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G65_final13",
+        "prompt": "A temporary arrangement is still present after its authorization conditions end. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hiding it from the baseline."
+          },
+          {
+            "id": "b",
+            "label": "Calling it permanent because production continued."
+          },
+          {
+            "id": "c",
+            "label": "Review by the responsible authority of its actual state and permitted continuation or restoration."
+          },
+          {
+            "id": "d",
+            "label": "Treating an open work order as an extension of approval."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G65_final14",
+        "prompt": "A changed material is described as equivalent. What supports that claim?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The description equivalent by itself."
+          },
+          {
+            "id": "b",
+            "label": "Matching packaging color."
+          },
+          {
+            "id": "c",
+            "label": "A lower purchase price."
+          },
+          {
+            "id": "d",
+            "label": "A competent technical comparison against the actual requirements and affected evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G65_final15",
+        "prompt": "A drawing is approved for design. Does it prove what was installed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual installation and any differences need appropriate competent confirmation."
+          },
+          {
+            "id": "b",
+            "label": "Yes, design and as-built always mean the same thing."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the file is a PDF."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if the drawing is newer than the invoice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G65_final16",
+        "prompt": "Who decides applicable engineering licensure requirements?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The fact that Texas has an engineering board."
+          },
+          {
+            "id": "b",
+            "label": "A competent applicability review using the actual duty and governing jurisdiction."
+          },
+          {
+            "id": "c",
+            "label": "The course quiz automatically."
+          },
+          {
+            "id": "d",
+            "label": "A catalog keyword alone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G65_final17",
+        "prompt": "What should a practical qualification record identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the employee’s department."
+          },
+          {
+            "id": "b",
+            "label": "Only a score with no task definition."
+          },
+          {
+            "id": "c",
+            "label": "Actual task, evaluator competence, evidence/observations, result and limits."
+          },
+          {
+            "id": "d",
+            "label": "Only course attendance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G65_final18",
+        "prompt": "A requirement finding is answered by a revised assumption. What else needs checking?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only whether an email was sent."
+          },
+          {
+            "id": "b",
+            "label": "Nothing once the action is marked complete."
+          },
+          {
+            "id": "c",
+            "label": "Every unrelated design must be redesigned automatically."
+          },
+          {
+            "id": "d",
+            "label": "The calculations and decisions that depended on that assumption."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G65_final19",
+        "prompt": "Does OSHA process safety management apply to every catalog engineering service?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual process coverage and governing requirements must be established."
+          },
+          {
+            "id": "b",
+            "label": "Yes, the word engineering makes every process covered."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every software change is automatically covered."
+          },
+          {
+            "id": "d",
+            "label": "No process could ever be covered."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G65_final20",
+        "prompt": "What does completing this course establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permission to run live acceptance tests."
+          },
+          {
+            "id": "b",
+            "label": "Recorded knowledge of the taught review reasoning, with actual design authority and practical competence still separately evidenced."
+          },
+          {
+            "id": "c",
+            "label": "Unlimited design signing authority."
+          },
+          {
+            "id": "d",
+            "label": "Approval of the fictional installation dimensions for real use."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G65_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G65_lesson1",
+          "questionIds": [
+            "G65_check1"
+          ]
+        },
+        {
+          "lessonId": "G65_lesson2",
+          "questionIds": [
+            "G65_check2"
+          ]
+        },
+        {
+          "lessonId": "G65_lesson3",
+          "questionIds": [
+            "G65_check3"
+          ]
+        },
+        {
+          "lessonId": "G65_lesson4",
+          "questionIds": [
+            "G65_check4"
+          ]
+        },
+        {
+          "lessonId": "G65_lesson5",
+          "questionIds": [
+            "G65_check5"
+          ]
+        },
+        {
+          "lessonId": "G65_lesson6",
+          "questionIds": [
+            "G65_check6"
+          ]
+        },
+        {
+          "lessonId": "G65_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G65_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G65_final",
+          "questionIds": [
+            "G65_final1",
+            "G65_final2",
+            "G65_final3",
+            "G65_final4",
+            "G65_final5",
+            "G65_final6",
+            "G65_final7",
+            "G65_final8",
+            "G65_final9",
+            "G65_final10",
+            "G65_final11",
+            "G65_final12",
+            "G65_final13",
+            "G65_final14",
+            "G65_final15",
+            "G65_final16",
+            "G65_final17",
+            "G65_final18",
+            "G65_final19",
+            "G65_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G65_check1": "A requirement needs a defined claim and evaluation basis; preference and assurance language do not establish them.",
+        "G65_check2": "The arithmetic is valid after conversion, but the physical route, configuration and required allowances remain separate questions.",
+        "G65_check3": "Identical labels do not establish a common reference or denominator.",
+        "G65_check4": "Validation addresses intended use; bounded component evidence alone cannot answer that whole question.",
+        "G65_check5": "Review dependencies to identify what changed and what remains applicable, rather than accepting or rejecting all evidence without analysis.",
+        "G65_check6": "Knowledge completion and application permissions do not establish professional signing or technical approval authority.",
+        "G65_final1": "Record the reason for a real constraint; labeling a preference does not create that basis.",
+        "G65_final2": "An assumption can support provisional reasoning but must not silently become a verified installed condition.",
+        "G65_final3": "Traceability links specific claims and evidence, rather than relying on resemblance.",
+        "G65_final4": "Quantity identity and physical conditions are part of the calculation basis.",
+        "G65_final5": "Software execution does not validate the engineering model or its use.",
+        "G65_final6": "Read the declared subtraction order; the sign alone is not an approval decision.",
+        "G65_final7": "Integration depends on agreed meaning and ownership across the connection.",
+        "G65_final8": "A component claim has bounded scope and cannot establish all integrated behavior.",
+        "G65_final9": "Representative use conditions matter to validation and human interfaces.",
+        "G65_final10": "Configuration differences need technical assessment; evidence may be useful without being sufficient.",
+        "G65_final11": "Those links establish what the evaluation actually covered.",
+        "G65_final12": "The evidence should be used within its tested scope.",
+        "G65_final13": "The administrative queue cannot establish continuing technical authorization.",
+        "G65_final14": "Equivalence depends on properties and application, not the commercial label.",
+        "G65_final15": "A design instruction and an observation of the installed arrangement are different evidence.",
+        "G65_final16": "Jurisdiction-specific examples do not establish a universal licensing requirement.",
+        "G65_final17": "A bounded assessment needs a defined task and credible evaluation evidence.",
+        "G65_final18": "Follow dependencies to evaluate the effect of the actual resolution.",
+        "G65_final19": "Coverage is a specific applicability question, not a conclusion from a catalog label.",
+        "G65_final20": "Knowledge, qualified technical judgment, observed performance and operational authorization remain distinct."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

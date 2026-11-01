@@ -1,0 +1,902 @@
+{
+  "courseId": "G55",
+  "gapGroupId": "G06",
+  "title": "Analytical bench preparation: identity, compatibility and trustworthy results",
+  "description": "prepare an analytical task by connecting sample identity, chemical controls, equipment condition and the meaning of quality-control evidence",
+  "purpose": "prepare an analytical task by connecting sample identity, chemical controls, equipment condition and the meaning of quality-control evidence",
+  "audience": [
+    "Assigned laboratory sample receivers",
+    "Analytical technicians preparing for method instruction",
+    "Laboratory supervisors and result reviewers"
+  ],
+  "practicalBoundary": "No chemical recipe, reaction conditions, pressure method, instrument repair, biological procedure or live experimental test is authorized. This course does not validate an analytical method or qualify clinical, radiation or specialist laboratory work. Actual chemical hygiene plan, validated method, chemical/equipment instruction and observed performance remain necessary.",
+  "vendorEvidenceRequired": [
+    "Actual laboratory-use applicability and current chemical hygiene plan",
+    "Sample-specific hazard information, acceptance and chain-of-identity arrangements",
+    "Approved validated analytical method with reagents, compatibility, ventilation and waste controls",
+    "Current instrument operating, maintenance and acceptance instructions",
+    "Method-specific quality-control interpretation and authorized result-release criteria",
+    "Observed proficiency for actual preparation, instrument, waste and emergency duties"
+  ],
+  "practicalAssessmentRequired": [
+    "Competent laboratory method assessor observes sample identification and approved preparation with appropriate safe training materials",
+    "Qualified chemical-hygiene/task assessor observes actual ventilation/PPE selection, compatible storage and waste handling",
+    "Instrument/method specialist observes authorized instrument use and interpretation of actual control failures without creating hazardous conditions"
+  ],
+  "sources": [
+    {
+      "title": "OSHA — Laboratory chemical exposure standard, scope and chemical hygiene plan",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450"
+    },
+    {
+      "title": "OSHA — Nonmandatory chemical hygiene recommendations",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450AppA"
+    },
+    {
+      "title": "OSHA — Laboratory Safety Guidance; advisory publication",
+      "url": "https://www.osha.gov/sites/default/files/publications/OSHA3404laboratory-safety-guidance.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G55_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Analytical bench preparation: identity, compatibility and trustworthy results\n\nThis course teaches a bounded task: prepare an analytical task by connecting sample identity, chemical controls, equipment condition and the meaning of quality-control evidence Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nNo chemical recipe, reaction conditions, pressure method, instrument repair, biological procedure or live experimental test is authorized. This course does not validate an analytical method or qualify clinical, radiation or specialist laboratory work. Actual chemical hygiene plan, validated method, chemical/equipment instruction and observed performance remain necessary. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G55_lesson1",
+        "title": "1. Preserve sample identity without using appearance as evidence",
+        "body": "A sample result belongs to a particular material, location, time and collection context. Begin by connecting the sample container to its submission record and requested analysis. Record the identifier, source, collection information required by the method, condition on receipt and any relevant preservation or storage information. A clear liquid in a familiar bottle is not an identified sample. Two samples can look identical while differing in composition, concentration or hazard.\n\nSeparate the sample identifier from the container identifier and analysis request. A container can hold the wrong material; a request can name a test unsuitable for the actual sample. Compare the sources before opening or preparing anything. If a label says W-17 while the request says W-71, preserve that discrepancy rather than correcting the label from memory. The authorized sample-resolution process must establish what can be known and what must be recollected or rejected.\n\nReceipt observations are useful when bounded. “Seal damaged on arrival” describes a condition. It does not establish why the damage occurred, whether material escaped or whether the sample remains analytically valid. The laboratory's acceptance and hazard-assessment process decides the consequences. A technician should not smell, taste or casually open an uncertain container to improve the description.\n\nKeep identity through subdivision. If an approved method transfers a portion to another vessel, the actual labeling and traceability system must link that portion to the original sample and the relevant preparation. A result copied from one instrument position to another can become an identity error even if both analyses were technically well performed. Practical assessment should observe labeling and record transitions at the point they occur, not just inspect a tidy final report.\n\nA useful receiving decision states accepted for the named method, held pending a specific resolution or rejected under the actual process. Do not use accepted as a blanket statement that all hazards are known or every requested test is valid. Analytical suitability, hazard information and chain of identity answer related but different questions. Each must be supported before the relevant bench step proceeds.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G55_lesson2",
+        "title": "2. Match the method to the actual hazards and chemical hygiene plan",
+        "body": "An analytical method describes how an answer is produced; the chemical hygiene plan and task controls establish how the assigned laboratory work is protected. Read them together. Identify sample hazards, reagents, possible incompatibilities, exposure routes, physical energy and waste. A validated measurement does not justify an uncontrolled preparation, and a careful-looking technique does not make an unvalidated result scientifically acceptable.\n\nUse actual chemical information rather than broad family names. The safety data sheet, product label, method and employer chemical information can address different aspects of the task. A generic word such as acid, solvent or mud does not establish composition or compatibility. If the sample can contain unknown constituents, the responsible laboratory authority must define how that uncertainty is managed. This course gives no universal method for mixing, digesting, heating or testing an unknown sample.\n\nCompare the proposed task with the approved method's scope. A different sample matrix, concentration range, reagent substitution or preparation scale may change both analytical behavior and safety. Do not call a larger preparation “the same test” without the actual technical and chemical review. A small bench procedure is not automatically safe when enlarged, enclosed, heated or performed with another material.\n\nState prior-approval questions precisely. “The requested sample matrix is outside method M's stated scope” is actionable. “The task feels unusual” is less useful, although uncertainty should still be reported. The designated laboratory authority determines whether the work can proceed, which approved method applies and what additional controls or validation are needed. The technician does not invent a trial reaction to settle the question.\n\nBefore the first contact step, confirm that the actual instructions and controls can be used: current method, trained worker, suitable location, required equipment and available emergency arrangements. If one prerequisite is absent, hold the affected bench work and resolve it. Administrative receiving tasks may continue within their own safe scope, but an accepted sample number must not be mistaken for permission to begin every requested analysis.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G55_lesson3",
+        "title": "3. Understand exposure control at the bench and the limits of PPE",
+        "body": "Exposure control must address where material can escape and how it could reach a person. Inhalation, skin or eye contact, ingestion through contaminated hands and injection by a sharp are different pathways. A closed original container may present a different exposure situation from an open preparation. The actual task assessment and chemical hygiene plan select controls for the relevant stage, not merely for the product name.\n\nVentilation is a designed control with a defined purpose and operating conditions. Use the laboratory's approved equipment and status checks. A nearby fan or an open room door is not automatically equivalent to the required local exhaust. A device suitable for one hazard may be unsuitable for another, and an airflow indication alone does not prove every use or setup is acceptable. The actual equipment instruction and competent assessment govern its use.\n\nKeep the work area arranged so the control can function. Unapproved storage, obstructed access or a setup outside the instructed configuration can defeat the intended protection. This lesson does not provide sash positions, airflow setpoints or a universal hood test. The practical assessor observes the actual equipment, approved setup and worker response to a control fault. The learner must know how to recognize and report an unavailable or unreliable control without experimenting with hazardous material.\n\nPPE adds task-specific barriers. Select it through the actual chemical/task instructions, including compatibility and expected contact. One glove type is not suitable for every solvent or preparation. Eye protection chosen for one splash risk does not automatically protect against all physical energy. Do not use discomfort as a reason to remove a required barrier while the hazard remains; resolve unsuitable sizing or selection through the supervisor.\n\nPrevent transfer to shared surfaces. A gloved hand that contacts a sample or reagent can contaminate a keyboard, notebook or phone. Keep clean documentation and personal items outside the contaminated interface, using the actual changeover and hygiene method. Successful instrument output does not establish that exposure was controlled. Analytical quality and worker protection must both be demonstrated for the actual task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G55_lesson4",
+        "title": "4. Recognize instrument energy and the meaning of a status indication",
+        "body": "Analytical instruments may include heat, moving parts, electrical energy, pressure or vacuum, lasers or other specialist hazards. A software-ready message usually describes a defined instrument state, not permission to open covers, change tubing or service energized equipment. Identify the actual operating boundary in the instrument instruction and keep operation separate from repair or engineering adjustment.\n\nBefore an assigned run, check the actual required readiness items: instrument identity, suitable method configuration, maintenance/status information, required accessories and relevant acceptance checks. A check applies only to its stated scope. A recent service sticker may not address a later fault or an accessory now fitted. Do not use a date alone to prove compatibility with a new sample matrix or operating configuration.\n\nA fault message requires the authorized response. Repeatedly restarting equipment to clear a message can hide useful information and may create an unintended sequence. Record the instrument, message, time, stage and actions already taken under the instruction. The designated specialist determines diagnosis and repair. Do not disconnect a line, defeat an interlock or open a heated or pressurized system as an online troubleshooting exercise.\n\nDistinguish a measurement check from a safety check. A calibration or reference-material result can support measurement performance under defined conditions. It does not necessarily establish physical integrity, safe containment or functioning protective interlocks. Conversely, an instrument that is safe to operate may still fail the analytical method's quality criteria. The technician must follow both the safety and result-acceptance processes.\n\nPrepare the handover after a fault with explicit limits. “Run stopped under method instruction; instrument fault F recorded; sample identity retained; specialist review pending” is more useful than “machine bad.” State whether prepared samples or waste remain and how their conditions are controlled under the actual method. The next worker should not resume a run from a reassuring software screen without understanding the unresolved physical and analytical state.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G55_lesson5",
+        "title": "5. Keep compatible materials and waste streams distinct",
+        "body": "Storage and waste decisions depend on actual chemical compatibility and the employer's approved arrangements. Appearance, common use or a broad label such as liquid waste does not show that two materials may safely share a container. Do not mix leftovers or combine waste streams simply to reduce container count. The chemical hygiene and waste programs define the appropriate segregation, containers, identification and disposal route.\n\nPlan waste before beginning preparation. Identify what the actual method will generate, where it will be collected and who owns the final disposition. A method can produce waste different from the original sample because reagents or preparation steps change the mixture. The original sample description alone may therefore be insufficient for the waste decision. Refer uncertain combinations to the responsible chemical/waste authority instead of trying a small mixing test.\n\nMaintain labels and traceability while material is in the work area. An unmarked bottle labeled later from memory creates both hazard and result-integrity problems. A secondary container needs the employer's actual identification arrangement for its use. Do not use food or drink containers for laboratory chemicals, and keep personal consumption outside the chemical work interface under the actual plan.\n\nContaminated tools, absorbents and disposable items also need a defined route. An empty-looking vessel can retain residue or physical hazards. A sealed lid does not prove the contents are compatible or ready for disposal. The assigned worker follows the actual method and disposition instructions; specialist transport or regulated-waste duties may require additional scope and competence beyond this course.\n\nAt the end of a shift, reconcile the actual materials: original samples, prepared portions, reagents, retained extracts or other method products and waste. Record held items and restrictions for the next worker. A clean-looking bench is not sufficient if an unidentified mixture remains in a drawer. Good housekeeping means that the next task starts with known identities, controlled conditions and an available safe waste route, not just an uncluttered surface.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G55_lesson6",
+        "title": "6. Interpret quality controls without confusing precision, identity and safety",
+        "body": "A result needs evidence that the approved method performed acceptably for the actual sample and purpose. Quality controls have specific roles. A blank can help identify contamination introduced through the relevant preparation or measurement process. A reference or control material can test a defined part of performance. Duplicate results can reveal agreement under their actual conditions. None is a universal certificate that every result is correct.\n\nRead the method's acceptance criteria and prescribed actions rather than inventing thresholds. Two duplicate results can agree closely and both be wrong because of a shared bias, wrong sample identity or inappropriate method. A good reference result may not resolve a sample-specific interference. A blank result with an issue must be evaluated through the actual method; the technician must not simply subtract whatever value produces a convenient answer unless that correction is part of an authorized validated process.\n\nUnits, dilution factors and transcription deserve explicit checking. In a fictional record, 4 milligrams in 2 liters corresponds arithmetically to 2 milligrams per liter. That calculation demonstrates unit reasoning only; it does not approve any preparation, measurement or reporting method. If a worksheet's volume is uncertain, the result cannot be rescued by selecting the most plausible number. Resolve the source record through the actual quality process.\n\nSeparate release decisions. The laboratory's authorized result reviewer determines whether the analytical evidence meets the actual criteria. Chemical safety and equipment disposition may require separate decisions even after a result is accepted. A failed run can leave material that still needs controlled storage or waste handling, and an analytically successful run can coexist with an exposure incident requiring follow-up.\n\nPreserve raw observations, original calculations, corrections and the basis for final release under the laboratory's record controls. A corrected value should not pretend the original mistake never occurred. This course's original and remediated quiz scores follow the same honest principle. The practical assessment then checks the actual method performance and interpretation with a competent laboratory assessor, rather than treating a tidy final report as proof of every skill.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G55_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: a sample identity conflict before preparation\n\nA fictional laboratory receives a clear liquid labeled W-17. The request form says W-71 and asks for method M, which is approved for a defined water matrix. The courier says both identifiers are probably the same job. The container seal is damaged. A technician proposes opening it to check whether the smell resembles the laboratory's usual water samples. No real sample is used in this exercise.\n\nThe correct decision begins with three separate questions: identity, receipt condition and method suitability. The two identifiers conflict, the damaged seal is an observation requiring the actual acceptance process, and the requested matrix has not been established. The courier's familiarity does not authorize a label correction. Appearance and smell cannot resolve identity or safe handling.\n\nThe technician holds the affected preparation, preserves the original identifiers and routes the discrepancy to the authorized sample-resolution role. The receiving note states the observed seal condition without claiming that a spill occurred. If an approved source later resolves the identifier, the seal and method-suitability questions still require their actual dispositions. One corrected field does not establish all prerequisites.\n\nSuppose the laboratory obtains traceable information identifying W-17 as a matrix outside method M's approved scope. The next step is technical and chemical-hygiene review, not a trial using the familiar recipe. The requested analysis might be reassigned to another validated method, declined or recollected according to the actual process. This course cannot choose an experimental preparation.\n\nThe worked output is a traceable hold and three named decisions. Administrative sample logging can be completed within its safe boundary, but bench preparation remains unapproved until the actual method and hazard controls are established. The practical assessor can observe this decision with harmless labeled bottles and records.\n\nCase B: close duplicates, failed blank and an uncertain unit\n\nA fictional worksheet reports two sample results of 2.01 and 2.02 in the stated reporting unit. They agree closely. The preparation blank has a result requiring review under the approved method, and the worksheet's source volume field is unclear between 2 liters and 2 milliliters. The instrument software displays run complete. A supervisor asks the technician to release the average immediately because the duplicate agreement looks excellent.\n\nStart by interpreting what each observation establishes. The duplicates demonstrate agreement within their actual shared process; they do not establish correct sample identity, absence of contamination or a correct volume basis. The blank requires the method's prescribed evaluation. The ambiguous volume can materially change the reported concentration. The software message establishes only its defined run status.\n\nThe technician holds the affected result release and preserves the raw data. They request resolution of the original volume record and apply the approved blank-failure decision route with the authorized reviewer. They do not choose the volume that creates the expected concentration, invent a blank subtraction or rewrite one duplicate to make the result look more credible.\n\nFor a separate harmless arithmetic check, 4 milligrams divided by 2 liters is 2 milligrams per liter. That calculation cannot be applied to the ambiguous worksheet until its actual units and validated reporting basis are established. Correct mathematics with the wrong source quantity is still an unsupported result.\n\nMeanwhile, the prepared samples and waste remain under their actual chemical controls. A held result does not make the materials harmless or authorize disposal into an ordinary sink. Final analytical release and material disposition are separate actions with their responsible roles. The practical assessment should observe both honest data interpretation and the actual method-specific handling skills without introducing a hazardous fault for demonstration.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G55_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G55_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced prepare an analytical task by connecting sample identity, chemical controls, equipment condition and the meaning of quality-control evidence Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G55_check1",
+        "prompt": "Container W-17 conflicts with request W-71. What comes first?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold affected preparation and resolve identity through the authorized source process."
+          },
+          {
+            "id": "b",
+            "label": "Relabel from courier memory."
+          },
+          {
+            "id": "c",
+            "label": "Smell the sample."
+          },
+          {
+            "id": "d",
+            "label": "Use the result expected by the customer."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G55_check2",
+        "prompt": "A matrix differs from the validated method scope. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Try a small improvised reaction."
+          },
+          {
+            "id": "b",
+            "label": "Obtain the actual technical and chemical-hygiene review before preparation."
+          },
+          {
+            "id": "c",
+            "label": "Scale the usual recipe automatically."
+          },
+          {
+            "id": "d",
+            "label": "Ignore the matrix."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G55_check3",
+        "prompt": "The required ventilation is unavailable. What is defensible?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use any nearby fan as equivalent."
+          },
+          {
+            "id": "b",
+            "label": "Rely only on the instrument output."
+          },
+          {
+            "id": "c",
+            "label": "Hold the affected task and obtain the approved control arrangement."
+          },
+          {
+            "id": "d",
+            "label": "Work faster to reduce concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G55_check4",
+        "prompt": "Software says ready. What does that authorize?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Opening every cover."
+          },
+          {
+            "id": "b",
+            "label": "Repairing pressure lines live."
+          },
+          {
+            "id": "c",
+            "label": "Defeating interlocks."
+          },
+          {
+            "id": "d",
+            "label": "Only the actions allowed under the actual instrument instruction and assigned role."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G55_check5",
+        "prompt": "Two waste liquids look alike. May they be combined?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only if the actual compatibility and approved waste arrangement support it."
+          },
+          {
+            "id": "b",
+            "label": "Yes, appearance proves compatibility."
+          },
+          {
+            "id": "c",
+            "label": "Yes, all liquid waste is identical."
+          },
+          {
+            "id": "d",
+            "label": "Try mixing a small amount first."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G55_check6",
+        "prompt": "Duplicates agree closely but the blank requires review. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Agreement overrides every control."
+          },
+          {
+            "id": "b",
+            "label": "Use the method's actual review/action criteria before result release."
+          },
+          {
+            "id": "c",
+            "label": "Delete the blank."
+          },
+          {
+            "id": "d",
+            "label": "Invent a convenient subtraction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G55_final1",
+        "prompt": "What does a clear sample appearance prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Water identity."
+          },
+          {
+            "id": "b",
+            "label": "Absence of chemical hazards."
+          },
+          {
+            "id": "c",
+            "label": "Only the visible observation within its limits."
+          },
+          {
+            "id": "d",
+            "label": "Suitability for every method."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G55_final2",
+        "prompt": "A damaged seal is observed. What should the receipt note say?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A definite spill occurred without evidence."
+          },
+          {
+            "id": "b",
+            "label": "All contents are contaminated without assessment."
+          },
+          {
+            "id": "c",
+            "label": "The sample is harmless."
+          },
+          {
+            "id": "d",
+            "label": "The actual seal condition and unresolved acceptance questions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G55_final3",
+        "prompt": "Why preserve identity during subdivision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Prepared portions and results must stay linked to the original sample."
+          },
+          {
+            "id": "b",
+            "label": "To avoid reading the method."
+          },
+          {
+            "id": "c",
+            "label": "To prove every reaction safe."
+          },
+          {
+            "id": "d",
+            "label": "To replace quality controls."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G55_final4",
+        "prompt": "Does accepting a sample number authorize all bench work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, logging is universal approval."
+          },
+          {
+            "id": "b",
+            "label": "No; actual method and hazard prerequisites still apply."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the customer paid."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if it looks familiar."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G55_final5",
+        "prompt": "A larger preparation is proposed. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only that the same reagent names appear."
+          },
+          {
+            "id": "b",
+            "label": "Only the container color."
+          },
+          {
+            "id": "c",
+            "label": "Its actual scale, method scope and hazard/control review."
+          },
+          {
+            "id": "d",
+            "label": "The fact the small method worked once."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G55_final6",
+        "prompt": "Which prior-approval question is precise?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Something is odd, therefore invent a method."
+          },
+          {
+            "id": "b",
+            "label": "The sample is definitely safe."
+          },
+          {
+            "id": "c",
+            "label": "The worksheet should look cleaner."
+          },
+          {
+            "id": "d",
+            "label": "The requested matrix is outside method M's stated scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G55_final7",
+        "prompt": "A glove touched reagent then a shared keyboard. What is the concern?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A contamination transfer pathway."
+          },
+          {
+            "id": "b",
+            "label": "The keyboard becomes chemically protective."
+          },
+          {
+            "id": "c",
+            "label": "Gloves make all surfaces clean."
+          },
+          {
+            "id": "d",
+            "label": "Only bare hands can contaminate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G55_final8",
+        "prompt": "Does one glove type suit every solvent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, all gloves are universal."
+          },
+          {
+            "id": "b",
+            "label": "No; actual chemical/task suitability must be established."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if thicker."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if new."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G55_final9",
+        "prompt": "What does a calibration check necessarily establish about physical interlocks?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every interlock operates."
+          },
+          {
+            "id": "b",
+            "label": "All containment is intact."
+          },
+          {
+            "id": "c",
+            "label": "Nothing beyond its actual defined test scope."
+          },
+          {
+            "id": "d",
+            "label": "Repairs are authorized."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G55_final10",
+        "prompt": "An instrument faults repeatedly. What should the technician do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Restart indefinitely to hide it."
+          },
+          {
+            "id": "b",
+            "label": "Open hot equipment experimentally."
+          },
+          {
+            "id": "c",
+            "label": "Disconnect a line to see what changes."
+          },
+          {
+            "id": "d",
+            "label": "Use the instructed response and record the actual message/stage for the specialist."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G55_final11",
+        "prompt": "A service sticker is recent. What still matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Instrument identity, scope, later faults and actual configuration."
+          },
+          {
+            "id": "b",
+            "label": "Only the date."
+          },
+          {
+            "id": "c",
+            "label": "Only the sticker color."
+          },
+          {
+            "id": "d",
+            "label": "Only whether it looks official."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G55_final12",
+        "prompt": "Why plan waste before preparation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To combine all leftovers afterward."
+          },
+          {
+            "id": "b",
+            "label": "To have an approved route for the actual method-generated materials."
+          },
+          {
+            "id": "c",
+            "label": "To avoid identifying residues."
+          },
+          {
+            "id": "d",
+            "label": "To prove sinks are universally acceptable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G55_final13",
+        "prompt": "An empty-looking vessel remains on the bench. What should be considered?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It is automatically harmless."
+          },
+          {
+            "id": "b",
+            "label": "It can become a drink bottle."
+          },
+          {
+            "id": "c",
+            "label": "Residue, identity and the actual cleaning/disposition instructions."
+          },
+          {
+            "id": "d",
+            "label": "Its appearance replaces hazard review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G55_final14",
+        "prompt": "Two duplicates share a wrong sample identity. Can close agreement fix it?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, precision proves identity."
+          },
+          {
+            "id": "b",
+            "label": "Yes, averaging creates traceability."
+          },
+          {
+            "id": "c",
+            "label": "Yes, a software pass corrects labels."
+          },
+          {
+            "id": "d",
+            "label": "No; agreement does not resolve a shared identity error."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G55_final15",
+        "prompt": "Four milligrams in two liters equals what arithmetically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Two milligrams per liter, without validating the analytical method."
+          },
+          {
+            "id": "b",
+            "label": "Two liters per milligram."
+          },
+          {
+            "id": "c",
+            "label": "Eight milligrams per liter."
+          },
+          {
+            "id": "d",
+            "label": "A universal detection limit."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G55_final16",
+        "prompt": "A worksheet volume is ambiguous. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Pick the expected number."
+          },
+          {
+            "id": "b",
+            "label": "Resolve the original source record through the actual quality process."
+          },
+          {
+            "id": "c",
+            "label": "Change units silently."
+          },
+          {
+            "id": "d",
+            "label": "Use the larger result to be safe."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G55_final17",
+        "prompt": "An analytical result is held. What about prepared material?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It becomes harmless automatically."
+          },
+          {
+            "id": "b",
+            "label": "It may always enter an ordinary drain."
+          },
+          {
+            "id": "c",
+            "label": "It remains subject to its actual chemical/storage/waste controls."
+          },
+          {
+            "id": "d",
+            "label": "It no longer needs identity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G55_final18",
+        "prompt": "Case A identifier is resolved but seal acceptance is not. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All questions are automatically closed."
+          },
+          {
+            "id": "b",
+            "label": "Authority for a trial reaction."
+          },
+          {
+            "id": "c",
+            "label": "Proof the matrix is water."
+          },
+          {
+            "id": "d",
+            "label": "The separate receipt-condition and method dispositions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G55_final19",
+        "prompt": "Case B run complete means what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The software's defined run state, not every release criterion."
+          },
+          {
+            "id": "b",
+            "label": "The blank issue is erased."
+          },
+          {
+            "id": "c",
+            "label": "The source volume is correct."
+          },
+          {
+            "id": "d",
+            "label": "Waste disposal is approved."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G55_final20",
+        "prompt": "What should a corrected laboratory record preserve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the convenient final value."
+          },
+          {
+            "id": "b",
+            "label": "Original observations and traceable corrections with release basis."
+          },
+          {
+            "id": "c",
+            "label": "A fabricated passing history."
+          },
+          {
+            "id": "d",
+            "label": "An unsupported diagnosis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G55_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G55_lesson1",
+          "questionIds": [
+            "G55_check1"
+          ]
+        },
+        {
+          "lessonId": "G55_lesson2",
+          "questionIds": [
+            "G55_check2"
+          ]
+        },
+        {
+          "lessonId": "G55_lesson3",
+          "questionIds": [
+            "G55_check3"
+          ]
+        },
+        {
+          "lessonId": "G55_lesson4",
+          "questionIds": [
+            "G55_check4"
+          ]
+        },
+        {
+          "lessonId": "G55_lesson5",
+          "questionIds": [
+            "G55_check5"
+          ]
+        },
+        {
+          "lessonId": "G55_lesson6",
+          "questionIds": [
+            "G55_check6"
+          ]
+        },
+        {
+          "lessonId": "G55_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G55_final",
+          "questionIds": [
+            "G55_final1",
+            "G55_final2",
+            "G55_final3",
+            "G55_final4",
+            "G55_final5",
+            "G55_final6",
+            "G55_final7",
+            "G55_final8",
+            "G55_final9",
+            "G55_final10",
+            "G55_final11",
+            "G55_final12",
+            "G55_final13",
+            "G55_final14",
+            "G55_final15",
+            "G55_final16",
+            "G55_final17",
+            "G55_final18",
+            "G55_final19",
+            "G55_final20"
+          ]
+        },
+        {
+          "lessonId": "G55_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G55_check1": "Sample identity must be established before an analytical result can meaningfully belong to it.",
+        "G55_check2": "Method suitability and hazard controls depend on the actual material and preparation.",
+        "G55_check3": "A required designed control cannot be replaced by an unsupported convenience.",
+        "G55_check4": "A status message is bounded and does not expand the worker's operating or repair authority.",
+        "G55_check5": "Actual composition and method determine compatibility, not appearance or container count.",
+        "G55_check6": "Precision does not establish correctness or resolve a separate control issue.",
+        "G55_final1": "Visual similarity cannot identify composition, hazard or analytical matrix.",
+        "G55_final2": "An observation must not be converted into an unsupported diagnosis.",
+        "G55_final3": "Traceability must survive each container and record transition.",
+        "G55_final4": "Administrative receipt and technical/safety release are distinct.",
+        "G55_final5": "Scale and conditions can change both analytical behavior and safety.",
+        "G55_final6": "A specific method-scope mismatch supports a competent decision.",
+        "G55_final7": "Gloves can carry chemicals to surfaces used by another person.",
+        "G55_final8": "Barrier compatibility and task requirements are specific.",
+        "G55_final9": "Measurement performance and physical protective-function verification are different evidence.",
+        "G55_final10": "Diagnosis and repair remain with the actual authorized technical process.",
+        "G55_final11": "A date does not establish every current readiness condition.",
+        "G55_final12": "Preparations can change waste composition and required handling.",
+        "G55_final13": "Empty appearance does not establish absence of residue or other hazards.",
+        "G55_final14": "Precision is different from correct attribution and method suitability.",
+        "G55_final15": "The exercise teaches units; it does not prove sample or measurement validity.",
+        "G55_final16": "Correct calculation depends on a supported source quantity.",
+        "G55_final17": "Result disposition and material control are separate responsibilities.",
+        "G55_final18": "One resolved field does not establish every prerequisite.",
+        "G55_final19": "A software state cannot replace independent analytical and material decisions.",
+        "G55_final20": "Honest correction protects the meaning of the result and the learning record."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

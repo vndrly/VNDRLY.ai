@@ -1,0 +1,906 @@
+{
+  "courseId": "G87",
+  "gapGroupId": "TG38",
+  "title": "Confined-space entry and rescue practical roles",
+  "description": "Six subject-specific lessons and two worked fictional cases with twenty-six explained decisions. Actual site methods, professional authority and observed practical qualification remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for confined-space entry and rescue practical roles.",
+  "audience": [
+    "Assigned confined-space entrants",
+    "Assigned attendants and entry supervisors",
+    "Space-program coordinators",
+    "Rescue-readiness reviewers"
+  ],
+  "practicalBoundary": "The underlying installation trade also needs its own competence; an entry qualification is not a repair qualification. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual space-specific role assignment and task description, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual entry permit matched to space identifier and actual task revision, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual space isolation plan cross-referenced to current configuration and verification record, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual atmospheric record linked to instrument assurance and permit criteria, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual communication plan including attendant responsibilities and loss-of-contact response, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual rescue readiness evidence tied to representative space and available responders, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who maps entrant, attendant, entry-supervisor, rescue and underlying trade responsibilities without conflating them; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who reconciles space identity, task scope and linked permit evidence through the actual entry program; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who identifies a changed connection and communicates it to the designated isolation and entry authorities; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who interprets atmosphere-record time, location, instrument and method limitations without inventing limits; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who performs the assigned communication and attendant duties in an approved safe representative assessment; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who evaluates actual rescue availability, space representativeness and qualified capability evidence; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Actual entry, rescue, height-access, clinical, operator or trade performance requires its own approved safe practical evaluation by appropriately qualified assessors where assigned; online completion does not satisfy it."
+  ],
+  "sources": [
+    {
+      "title": "OSHA permit-required confined spaces",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
+      "scopeLimit": "General-industry scope and exclusions; actual space/method and applicable regime required."
+    },
+    {
+      "title": "OSHA confined spaces construction overview",
+      "url": "https://www.osha.gov/confined-spaces/construction",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G87_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Confined-space work combines a defined space, a defined task and several distinct roles. This course teaches entry-program reasoning, permit interpretation, isolation interfaces, atmospheric limitations, communication and rescue planning. It supplies no entry procedure, gas limits, ventilation settings or rescue technique. Use fictional documents only.\n\nThe employer must establish the actual space program and applicable regime. The cited general-industry standard excludes construction, agriculture and shipyard employment; a similar-looking space can therefore require a different regulatory pathway. Complete twenty-six decisions, retain original responses and acknowledge explained remediation. An entry knowledge result cannot establish entrant, attendant, entry-supervisor, rescue or repair competence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G87_lesson1",
+        "title": "Lesson 1 — Separate space roles",
+        "body": "Start by separating the space from the task. A vessel name does not establish every hazard, and a familiar task does not establish that the vessel is ready. The applicable program identifies spaces and determines the relevant entry requirements. Workers need the actual space identity, assignment and program instructions, not a generic assumption that all tanks are alike or that a brief inspection needs fewer safeguards.\n\nRole separation is fundamental. An entrant performs the authorized work within the space and follows the assigned entry conditions and communication arrangements. An attendant remains outside and performs the program's monitoring and protective duties. The entry supervisor verifies and authorizes the entry decision under the program. Rescue personnel provide separately established rescue capability. The underlying trade worker also needs competence for the inspection, repair or other task being performed.\n\nOne person may hold more than one duty only where the actual program permits it and competence, staffing and task compatibility support it. A person cannot be counted twice in a way that makes simultaneous duties impossible. A trade qualification does not establish attendant capability, and an entry course does not establish the trade. The title supervisor is not enough to identify the person who holds entry authorization authority.\n\nIn a fictional vessel inspection, Priya is the entrant, Omar the attendant and Ellis the entry supervisor. The contractor's inspector performs a technical function, while a separate team supplies rescue capability. Map these responsibilities before examining signatures. If Omar is also booked to drive away for a delivery, the problem is incompatible staffing, not a missing signature box.\n\nFor the exercise, draw a role map and connect each role to its actual duties, reporting route and required evidence. Mark any unassigned or conflicting duty. The useful result is a realistic staffing arrangement. It is not permission to enter or a claim that everyone on the map can perform every role.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G87_lesson2",
+        "title": "Lesson 2 — Read the permit as a linked decision",
+        "body": "An entry permit is a linked authorization, not a collection of reassuring check marks. It should connect the identified space, proposed task, hazards, required conditions, assigned people and authorization period or conditions under the employer's program. A signature is meaningful only when it applies to those actual facts. The entry authority must determine whether the required arrangements are established.\n\nRead identifiers first. Compare the permit with the work order, space register, isolation documents and atmospheric records. A neighboring vessel with the same model can have different contents, connections or conditions. An identity conflict must be reconciled before the permit is relied on. Do not approach or enter an uncertain space to decide which document is probably correct.\n\nThen compare task scope. Inspection, cleaning, welding and material removal can introduce different conditions. A permit prepared for one activity should not silently expand to another. Tools, chemicals or simultaneous work may change the hazard picture. The responsible entry and technical roles must review actual changes rather than assume an existing permit covers anything performed inside the same opening.\n\nCheck whether the documents describe current conditions. A permit cannot make an incomplete isolation or unavailable rescue arrangement complete. Nor does a correct atmospheric record resolve a staffing conflict. Each required condition needs its own supporting evidence, with the entry authority integrating the decision through the actual procedure.\n\nThe fictional work order names vessel V2, while the permit and atmospheric sheet name V3. The worked response identifies exactly which documents conflict and routes the discrepancy to the entry supervisor. Similar appearance and a correct date do not resolve identity. Once reconciled, corrected documents should remain linked to the originals so the record explains the change. The learner practices interpretation at a desk, not permit issuance or space classification beyond their assigned authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G87_lesson3",
+        "title": "Lesson 3 — Review isolation evidence without operating",
+        "body": "Isolation for space work concerns pathways through which energy or material can reach the work. Those pathways may include process connections, moving parts, electrical energy, stored pressure or other actual sources. The competent isolation process determines the method and verification for the specific configuration. This lesson explains how workers recognize an incomplete interface; it does not tell them which devices to operate or how to make an isolation.\n\nTrace the relationship between the space, task and current configuration. An old drawing can be useful background while omitting a temporary connection. A maintenance change can alter a previously understood boundary. Ask whether the approved isolation evidence addresses the actual configuration and the proposed activity. A familiar vessel identifier does not prove its connections are unchanged.\n\nSeparate process status from verified isolation. A control display, quiet equipment or absence of visible flow may be information, but it is not automatically the program's required verification. Workers should use the employer's approved process and remain within their assigned roles. An entrant should not personally improvise a disconnection to compensate for uncertain records.\n\nCoordination matters when different employers control different parts of the system. Identify who establishes isolation, who verifies the relevant conditions and who communicates a change. Another crew may work on connected equipment during the entry period. The entry arrangement must account for those interfaces through the actual program rather than assume nobody will affect the system.\n\nIn the exercise, a temporary material line appears in the current configuration pack but not in the isolation drawing. The worked answer is to hold the affected entry decision and obtain competent reassessment. It is not to select an isolation device from the drawing. Record the discrepancy, the responsible technical and entry roles and the final disposition. That accurate worker report can prevent a missing pathway from being hidden behind a signed form.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G87_lesson4",
+        "title": "Lesson 4 — Interpret atmospheric records carefully",
+        "body": "Atmospheric information has a place, time, method and purpose. A reading describes what the instrument and method could establish under the conditions of measurement. It is not a permanent certificate for an entire space. Conditions can differ within a space and can change as work, connections, materials or ventilation change. The actual monitoring plan must address the relevant hazards and task.\n\nInstrument assurance and monitoring technique are separate competence questions. An instrument can have current assurance evidence while being used in a way that does not represent the intended location. Conversely, a careful collection method cannot repair an unsuitable or unverified instrument. The assigned competent role must understand the instrument, limitations and employer requirements. This course provides no sampling sequence, alarm setting or gas threshold.\n\nRead the atmospheric record for identity, instrument, time, location or approved sampling rationale, relevant measured hazards and the criteria governing the entry decision. If the record contains numbers but no time or location, explain why the connection to this entry is incomplete. Do not copy a reassuring value from another permit or infer that an unmeasured hazard was absent.\n\nAcceptable values at one moment do not remove the need for the program's continuing controls. The task may introduce new substances or change the atmosphere. Loss of an agreed control or unexpected condition requires the approved reporting, exit and reassessment response. The entrant must be trained in those actual actions; passing this lesson cannot establish physical performance or authorize an exception.\n\nFor the desk exercise, compare a complete fictional record with a sheet that lists values only. The worked conclusion preserves any valid instrument information but does not treat the incomplete sheet as supporting the proposed entry. Ask the designated monitoring and entry roles to resolve the evidence. The absence of a universal number in this course is intentional: the actual applicable criteria and competent method must govern the real task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G87_lesson5",
+        "title": "Lesson 5 — Check communication and attendant feasibility",
+        "body": "Communication connects the entrant's condition and work with the attendant and entry authority. The arrangement must fit the actual space, noise, equipment and task. A phone number or radio listed on a permit is not proof of reliable contact. The employer's program establishes the method, confirmation and response to loss of communication; the assigned people need safe representative practice with that arrangement.\n\nThe attendant role must be feasible throughout the entry. Other duties cannot undermine the required monitoring and protective functions. If the attendant leaves for a delivery, a plan that depends on their presence is no longer being performed. An entrant's occasional message does not convert an absent person into an effective attendant. The supervisor must resolve staffing within the actual program.\n\nUse explicit status communication. The attendant and entrant should know whom they are communicating with and what an instruction means under the agreed procedure. Ambiguous phrases such as all good can conceal different understandings. A desk rehearsal can practice reporting a changed condition and identifying the responsible authority without simulating actual entry or equipment operation.\n\nConsider simultaneous work and handovers. A new shift must understand current entrants, task status, restrictions and communication arrangements. A name change on a roster is not enough if the incoming role has not accepted the actual duties and information. The program determines the required transfer and authorization process.\n\nIn the fictional exercise, Omar is assigned as attendant and also scheduled to collect a delivery at a distant gate. The worked answer is to resolve the incompatible assignment before entry, not ask Priya to send occasional messages. Another question tests loss of contact: participants identify the approved reporting and protective response from the actual program. They do not improvise a wait time or send an unassigned person inside to investigate.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G87_lesson6",
+        "title": "Lesson 6 — Evaluate rescue readiness without improvisation",
+        "body": "Rescue planning is about demonstrated capability for the actual space and hazards. Naming a nearby team or public emergency number is not enough to establish availability, access knowledge, suitable capability and coordination. The entry authority must have a defensible basis for relying on the selected arrangement under the applicable program. Actual rescue methods and equipment selection belong to qualified specialists.\n\nReview the relationship between the rescue plan and the space. Can the response organization understand the access, internal configuration, relevant hazards and task? Does the capability evidence represent those conditions? A team assessed for a different access arrangement may need additional review. A general rescue certificate does not automatically establish every specific capability or deployment condition.\n\nAvailability is distinct from competence. A skilled team committed elsewhere cannot supply immediate availability merely because its name is printed on the permit. The work period and actual response arrangement need confirmation through the employer's process. Changes must be communicated before the entry decision relies on outdated assumptions.\n\nDistinguish recognition, notification and intervention. An attendant may recognize a problem and summon the designated rescue service without being authorized to enter. Unplanned entry by a well-intentioned coworker can add casualties. This course teaches the boundary and planning evidence, not retrieval rigging, breathing-apparatus use or casualty treatment. Qualified safe practical assessment remains essential for those duties.\n\nFor a desk exercise, the planned rescue team is unavailable until after the entry period. Its prior exercise also covered a different access configuration. The worked answer identifies both availability and representativeness questions. Fixing the schedule alone does not resolve the capability question. The entry authority must obtain a suitable arrangement supported by actual evidence before authorizing the task. The learner can explain that reasoning without conducting any rescue drill or suspending a person to test a plan.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G87_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek plans an inspection inside vessel V2. Priya is the proposed entrant, Omar the attendant and Ellis the entry supervisor. The work order names V2, but the permit and atmospheric sheet name V3. The vessels look similar. A contractor suggests the difference is an obvious typing error and asks the team to proceed while the office corrects it.\n\nEllis first treats identity as part of the entry decision. Similar appearance does not establish identical contents, connections or conditions. The affected entry remains unauthorized while the documents and space identity are reconciled through the program. The team does not enter either vessel to discover which pack fits. The original records are retained so the correction has an understandable history.\n\nDuring review, the current configuration pack shows a temporary material connection missing from the isolation drawing. This is a separate technical interface, not another spelling error. The designated isolation authority must assess the actual configuration and required verification. A correct vessel number would not by itself resolve that missing pathway. Priya reports the observation rather than selecting a disconnection method.\n\nThe atmospheric sheet also lacks a measurement time and location. The instrument assurance record is current, but assurance of the instrument does not supply the missing relationship between the readings and the proposed entry. The assigned monitoring role must establish the appropriate evidence under the actual plan. The team does not interpret the reassuring numbers as a permanent guarantee.\n\nThe worked outcome separates three questions: identity, isolation configuration and atmospheric relevance. Each has an owner and evidence requirement. Correcting the permit identifier changes only the first. The entry supervisor integrates the eventual results under the program; a signed cover page cannot replace the missing decisions.\n\nFor task workers, the case demonstrates three useful skills: notice a mismatch, describe it accurately and preserve the actual duty boundary. It does not require them to classify the space, design isolation or perform atmospheric monitoring beyond their assigned competence. The contractor's inspection skill remains important, but it cannot supply those separate entry-role requirements.\n\nIf the inspection later adds another activity, such as a repair using different tools or materials, that change must also be reviewed. The authorization is for the defined task and conditions, not an unlimited right to do whatever becomes convenient after access is obtained.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G87_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: an approved planning meeting has identified the correct vessel and task. The crew roster assigns Omar as attendant, but dispatch also expects him to collect a delivery at the remote gate. The rescue contact confirms that its team is committed elsewhere during the proposed work period. A manager says the inspection should be short and the entrant has a mobile phone.\n\nThe supervisor examines whether the duties can actually be performed. An attendant who leaves cannot fulfill an arrangement that depends on their presence. The mobile phone does not replace the attendant's assigned monitoring and protective role. The staffing conflict is resolved before entry rather than converted into an informal exception based on expected task duration.\n\nThe rescue question remains even after staffing is corrected. A team name on the permit does not establish availability. The selected organization must be able to provide the relevant capability for the actual space and work period. The supervisor seeks evidence of an appropriate arrangement through the program; they do not count unassigned coworkers as rescuers because they are nearby.\n\nThe team then conducts a desk communication rehearsal using fictional status messages. Participants identify who receives a changed-condition report and which approved response applies to loss of contact. The rehearsal reveals that two workers interpreted the phrase stop work differently. The actual program terminology is clarified by the responsible instructor. No one enters a space or performs a physical rescue during the exercise.\n\nThe rehearsal is recorded as communication practice, not proof of rescue performance. A separate safe practical evaluation is needed for actual entry roles and rescue duties. The qualification record retains which role each person demonstrated and any limitations. The underlying inspection trade assessment remains separate as well.\n\nThe worked decision is to authorize nothing on the basis of short duration or a reassuring phone number. Entry may proceed only when the actual program's conditions and assigned authorities support it. If a contact or availability condition changes later, the entry authority must receive that information and apply the program's response.\n\nThis case also shows why administrative completion and operational readiness differ. A full roster, permit and emergency telephone field can coexist with impossible staffing and unavailable rescue. The task team's reasoning makes those contradictions visible before people rely on them, while preserving the useful planning work already completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G87_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Answer the final questions using the actual role and evidence boundaries taught here. Every error requires review and explicit acknowledgment of its explanation, with the original answer retained.\n\nBefore real entry, the employer must verify the applicable space program, method instruction and observed capability for each assigned role. Qualified rescue assessment, atmosphere-monitoring competence, isolation authority and the underlying trade remain separate. No online completion authorizes entry or rescue.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G87_check1",
+        "prompt": "During separate space roles, a repair technician is listed as rescuer solely because they hold entry awareness training. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Require separate rescue capability evidence and explicit role designation."
+          },
+          {
+            "id": "b",
+            "label": "Entry awareness automatically qualifies a rescuer."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G87_check2",
+        "prompt": "During read the permit as a linked decision, the permit references a neighboring tank while the work order names another. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A similar tank permit may be reused when the task looks identical."
+          },
+          {
+            "id": "b",
+            "label": "Hold the affected entry authorization and reconcile the space identity."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G87_check3",
+        "prompt": "During review isolation evidence without operating, a temporary material connection is absent from the isolation review. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed isolation form proves every temporary connection was considered."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Refer the configuration discrepancy for qualified reassessment before entry."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G87_check4",
+        "prompt": "During interpret atmospheric records carefully, a record has values but no location or time. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any acceptable gas reading proves the space stays safe."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Request traceable monitoring evidence from the assigned competent role."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G87_check5",
+        "prompt": "During check communication and attendant feasibility, the attendant is also assigned an unrelated delivery task away from the space. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Resolve the incompatible duties before entry is authorized."
+          },
+          {
+            "id": "b",
+            "label": "An attendant can leave if the entrants have mobile phones."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G87_check6",
+        "prompt": "During evaluate rescue readiness without improvisation, the rescue plan names a team that has not reviewed the space and is unavailable during the work. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any nearby worker can enter to rescue a collapsed entrant."
+          },
+          {
+            "id": "b",
+            "label": "Require the responsible entry authority to resolve rescue capability before entry."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G87_final1",
+        "prompt": "Which evidence is most directly relevant to separate space roles?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Space-specific role assignment and task description."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G87_final2",
+        "prompt": "Which evidence is most directly relevant to read the permit as a linked decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Entry permit matched to space identifier and actual task revision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G87_final3",
+        "prompt": "Which evidence is most directly relevant to review isolation evidence without operating?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Space isolation plan cross-referenced to current configuration and verification record."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G87_final4",
+        "prompt": "Which evidence is most directly relevant to interpret atmospheric records carefully?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Atmospheric record linked to instrument assurance and permit criteria."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G87_final5",
+        "prompt": "Which evidence is most directly relevant to check communication and attendant feasibility?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Communication plan including attendant responsibilities and loss-of-contact response."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G87_final6",
+        "prompt": "Which evidence is most directly relevant to evaluate rescue readiness without improvisation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Rescue readiness evidence tied to representative space and available responders."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G87_final7",
+        "prompt": "A colleague argues: “Entry awareness automatically qualifies a rescuer.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; require separate rescue capability evidence and explicit role designation."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G87_final8",
+        "prompt": "A colleague argues: “A similar tank permit may be reused when the task looks identical.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; hold the affected entry authorization and reconcile the space identity."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G87_final9",
+        "prompt": "A colleague argues: “A signed isolation form proves every temporary connection was considered.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; refer the configuration discrepancy for qualified reassessment before entry."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G87_final10",
+        "prompt": "A colleague argues: “Any acceptable gas reading proves the space stays safe.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; request traceable monitoring evidence from the assigned competent role."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G87_final11",
+        "prompt": "A colleague argues: “An attendant can leave if the entrants have mobile phones.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; resolve the incompatible duties before entry is authorized."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G87_final12",
+        "prompt": "A colleague argues: “Any nearby worker can enter to rescue a collapsed entrant.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject unassigned rescue entry; raise the alarm and summon designated qualified rescue through the actual emergency plan while remaining within the assigned role."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G87_final13",
+        "prompt": "Priya is both a qualified repair technician and proposed entrant. Which additional question remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Trade qualification automatically supplies every entry role."
+          },
+          {
+            "id": "b",
+            "label": "The repair certificate replaces the permit."
+          },
+          {
+            "id": "c",
+            "label": "Whether the actual entry role is assigned, instructed and practically assessed under the applicable program."
+          },
+          {
+            "id": "d",
+            "label": "An attendant is unnecessary for technical specialists."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G87_final14",
+        "prompt": "An atmospheric instrument has current assurance, but the record omits measurement location. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Current assurance proves every part of the space acceptable."
+          },
+          {
+            "id": "b",
+            "label": "The record may be copied from another vessel."
+          },
+          {
+            "id": "c",
+            "label": "Location never affects atmospheric interpretation."
+          },
+          {
+            "id": "d",
+            "label": "Instrument assurance remains useful, while the relationship of the reading to this entry still needs resolution."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G87_final15",
+        "prompt": "The space configuration adds a temporary connection after isolation planning. What must the team do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Give the actual change to the designated isolation and entry authorities for reassessment."
+          },
+          {
+            "id": "b",
+            "label": "Assume temporary connections cannot carry hazards."
+          },
+          {
+            "id": "c",
+            "label": "Let the entrant choose a disconnection method from the drawing."
+          },
+          {
+            "id": "d",
+            "label": "Leave the connection out of the record if it is inconvenient."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G87_final16",
+        "prompt": "Omar must leave the opening to collect a delivery. Which issue must be resolved?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether the delivery invoice has the correct number."
+          },
+          {
+            "id": "b",
+            "label": "Whether the attendant duties can actually be performed throughout entry under the program."
+          },
+          {
+            "id": "c",
+            "label": "Whether Priya agrees to send occasional messages instead."
+          },
+          {
+            "id": "d",
+            "label": "Whether the expected inspection is short enough to ignore staffing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G87_final17",
+        "prompt": "A rescue team is competent but unavailable during the proposed entry period. What is missing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Another copy of the same team certificate."
+          },
+          {
+            "id": "b",
+            "label": "A shorter estimated task duration."
+          },
+          {
+            "id": "c",
+            "label": "An available suitable rescue arrangement for the actual work period."
+          },
+          {
+            "id": "d",
+            "label": "A signature from any nearby coworker."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G87_final18",
+        "prompt": "The task changes from inspection to a repair using different materials. Which conclusion is supported?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The same opening makes every internal activity covered."
+          },
+          {
+            "id": "b",
+            "label": "Repair tools determine the vessel identity."
+          },
+          {
+            "id": "c",
+            "label": "An unchanged permit date resolves all changes."
+          },
+          {
+            "id": "d",
+            "label": "The actual task and changed conditions need the program’s review before the existing authorization is extended."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G87_final19",
+        "prompt": "In the vessel-inspection case, V3 is correctly reconciled to V2. Which separate evidence still cannot be supplied by that identifier correction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assessment of the temporary connection missing from isolation review and the missing time/location relationship of atmospheric readings."
+          },
+          {
+            "id": "b",
+            "label": "The fact that the corrected documents now name V2."
+          },
+          {
+            "id": "c",
+            "label": "The existence of the original work order in the review history."
+          },
+          {
+            "id": "d",
+            "label": "The ability to retain the original permit as a superseded record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G87_final20",
+        "prompt": "The crew rehearses fictional lost-contact messages at a desk and clarifies ambiguous terminology. What may that exercise record claim?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Demonstrated breathing-apparatus and casualty-retrieval skills."
+          },
+          {
+            "id": "b",
+            "label": "The communication decisions actually rehearsed, while physical entry and rescue performance remain separately assessed."
+          },
+          {
+            "id": "c",
+            "label": "Proof that an unavailable rescue team can respond during the entry period."
+          },
+          {
+            "id": "d",
+            "label": "Authorization for the attendant to leave because entrants carry phones."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G87_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G87_lesson1",
+          "questionIds": [
+            "G87_check1"
+          ]
+        },
+        {
+          "lessonId": "G87_lesson2",
+          "questionIds": [
+            "G87_check2"
+          ]
+        },
+        {
+          "lessonId": "G87_lesson3",
+          "questionIds": [
+            "G87_check3"
+          ]
+        },
+        {
+          "lessonId": "G87_lesson4",
+          "questionIds": [
+            "G87_check4"
+          ]
+        },
+        {
+          "lessonId": "G87_lesson5",
+          "questionIds": [
+            "G87_check5"
+          ]
+        },
+        {
+          "lessonId": "G87_lesson6",
+          "questionIds": [
+            "G87_check6"
+          ]
+        },
+        {
+          "lessonId": "G87_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G87_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G87_final",
+          "questionIds": [
+            "G87_final1",
+            "G87_final2",
+            "G87_final3",
+            "G87_final4",
+            "G87_final5",
+            "G87_final6",
+            "G87_final7",
+            "G87_final8",
+            "G87_final9",
+            "G87_final10",
+            "G87_final11",
+            "G87_final12",
+            "G87_final13",
+            "G87_final14",
+            "G87_final15",
+            "G87_final16",
+            "G87_final17",
+            "G87_final18",
+            "G87_final19",
+            "G87_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G87_check1": "The correct decision is to require separate rescue capability evidence and explicit role designation. An entrant, attendant, entry supervisor and rescuer have distinct duties. A person may perform only the roles actually assigned and supported by the applicable program. A trade qualification does not establish entry competence, and entry training does not establish repair competence. Review whether the activity is entry under the applicable regime with the responsible program owner rather than deciding from the vessel name alone. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G87_check2": "The correct decision is to hold the affected entry authorization and reconcile the space identity. A permit should connect the identified space, task, hazards, authorized roles and conditions for entry. A completed signature box does not cure a permit for a different vessel. Compare identifiers and revisions across the task plan, isolation documents and entry authorization. Do not enter to resolve an identity discrepancy. The responsible entry authority decides whether conditions and documentation support release. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G87_check3": "The correct decision is to refer the configuration discrepancy for qualified reassessment before entry. Space preparation may involve multiple energy and material pathways. The reviewer traces whether the approved isolation plan accounts for the actual space and connected systems; they do not select devices, disconnect lines or perform verification from course instructions. A process drawing may omit temporary connections. Unresolved configuration differences require competent review, and isolation authority remains with the designated people. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G87_check4": "The correct decision is to request traceable monitoring evidence from the assigned competent role. Atmospheric records need identified instrument, location or sampling rationale, time, relevant hazards and approved criteria. An acceptable reading at one time and place does not guarantee all parts of a space or future conditions. Instrument assurance and actual monitoring technique require competent instruction. This course does not supply gas limits, sampling sequences or ventilation settings; it teaches when a record cannot support the proposed decision. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G87_check5": "The correct decision is to resolve the incompatible duties before entry is authorized. Communication must work for the actual space and task, including loss of contact. The attendant needs an arrangement compatible with their assigned duties; unrelated duties must not undermine monitoring. A phone number is not proof that a communication method works at the opening or inside the structure. The designated team evaluates feasibility through safe approved methods before relying on the arrangement. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G87_check6": "The correct decision is to require the responsible entry authority to resolve rescue capability before entry. Rescue arrangements must fit the actual space, hazards, access and available response capability. Naming the public emergency number is not evidence that a suitable rescue team is available and prepared. A well-intentioned unassigned entry can create additional casualties. Review response coordination, access information and representative safe exercise evidence; only qualified teams determine and demonstrate the actual rescue method. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G87_final1": "A space-specific role assignment and task description addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. An entrant, attendant, entry supervisor and rescuer have distinct duties. A person may perform only the roles actually assigned and supported by the applicable program. A trade qualification does not establish entry competence, and entry training does not establish repair competence. Review whether the activity is entry under the applicable regime with the responsible program owner rather than deciding from the vessel name alone.",
+        "G87_final2": "A entry permit matched to space identifier and actual task revision addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A permit should connect the identified space, task, hazards, authorized roles and conditions for entry. A completed signature box does not cure a permit for a different vessel. Compare identifiers and revisions across the task plan, isolation documents and entry authorization. Do not enter to resolve an identity discrepancy. The responsible entry authority decides whether conditions and documentation support release.",
+        "G87_final3": "A space isolation plan cross-referenced to current configuration and verification record addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Space preparation may involve multiple energy and material pathways. The reviewer traces whether the approved isolation plan accounts for the actual space and connected systems; they do not select devices, disconnect lines or perform verification from course instructions. A process drawing may omit temporary connections. Unresolved configuration differences require competent review, and isolation authority remains with the designated people.",
+        "G87_final4": "A atmospheric record linked to instrument assurance and permit criteria addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Atmospheric records need identified instrument, location or sampling rationale, time, relevant hazards and approved criteria. An acceptable reading at one time and place does not guarantee all parts of a space or future conditions. Instrument assurance and actual monitoring technique require competent instruction. This course does not supply gas limits, sampling sequences or ventilation settings; it teaches when a record cannot support the proposed decision.",
+        "G87_final5": "A communication plan including attendant responsibilities and loss-of-contact response addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Communication must work for the actual space and task, including loss of contact. The attendant needs an arrangement compatible with their assigned duties; unrelated duties must not undermine monitoring. A phone number is not proof that a communication method works at the opening or inside the structure. The designated team evaluates feasibility through safe approved methods before relying on the arrangement.",
+        "G87_final6": "A rescue readiness evidence tied to representative space and available responders addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Rescue arrangements must fit the actual space, hazards, access and available response capability. Naming the public emergency number is not evidence that a suitable rescue team is available and prepared. A well-intentioned unassigned entry can create additional casualties. Review response coordination, access information and representative safe exercise evidence; only qualified teams determine and demonstrate the actual rescue method.",
+        "G87_final7": "That inference exceeds the evidence. An entrant, attendant, entry supervisor and rescuer have distinct duties. A person may perform only the roles actually assigned and supported by the applicable program. A trade qualification does not establish entry competence, and entry training does not establish repair competence. Review whether the activity is entry under the applicable regime with the responsible program owner rather than deciding from the vessel name alone. The appropriate task disposition remains to require separate rescue capability evidence and explicit role designation.",
+        "G87_final8": "That inference exceeds the evidence. A permit should connect the identified space, task, hazards, authorized roles and conditions for entry. A completed signature box does not cure a permit for a different vessel. Compare identifiers and revisions across the task plan, isolation documents and entry authorization. Do not enter to resolve an identity discrepancy. The responsible entry authority decides whether conditions and documentation support release. The appropriate task disposition remains to hold the affected entry authorization and reconcile the space identity.",
+        "G87_final9": "That inference exceeds the evidence. Space preparation may involve multiple energy and material pathways. The reviewer traces whether the approved isolation plan accounts for the actual space and connected systems; they do not select devices, disconnect lines or perform verification from course instructions. A process drawing may omit temporary connections. Unresolved configuration differences require competent review, and isolation authority remains with the designated people. The appropriate task disposition remains to refer the configuration discrepancy for qualified reassessment before entry.",
+        "G87_final10": "That inference exceeds the evidence. Atmospheric records need identified instrument, location or sampling rationale, time, relevant hazards and approved criteria. An acceptable reading at one time and place does not guarantee all parts of a space or future conditions. Instrument assurance and actual monitoring technique require competent instruction. This course does not supply gas limits, sampling sequences or ventilation settings; it teaches when a record cannot support the proposed decision. The appropriate task disposition remains to request traceable monitoring evidence from the assigned competent role.",
+        "G87_final11": "That inference exceeds the evidence. Communication must work for the actual space and task, including loss of contact. The attendant needs an arrangement compatible with their assigned duties; unrelated duties must not undermine monitoring. A phone number is not proof that a communication method works at the opening or inside the structure. The designated team evaluates feasibility through safe approved methods before relying on the arrangement. The appropriate task disposition remains to resolve the incompatible duties before entry is authorized.",
+        "G87_final12": "A collapsed entrant does not authorize any nearby worker to enter. Use the actual emergency notification and qualified rescue arrangement, staying within assigned competence and duties; do not improvise entry. Suitable rescue capability must also have been established before planned entry. This knowledge question teaches the response boundary, not rescue technique or a universal physical action sequence.",
+        "G87_final13": "Whether the actual entry role is assigned, instructed and practically assessed under the applicable program. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G87_final14": "Instrument assurance remains useful, while the relationship of the reading to this entry still needs resolution. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G87_final15": "Give the actual change to the designated isolation and entry authorities for reassessment. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G87_final16": "Whether the attendant duties can actually be performed throughout entry under the program. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G87_final17": "An available suitable rescue arrangement for the actual work period. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G87_final18": "The actual task and changed conditions need the program’s review before the existing authorization is extended. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G87_final19": "Correct identity resolves identity only. It does not assess a newly identified material pathway or establish where and when gas readings relate to the entry. Those require their own competent evidence and entry decision.",
+        "G87_final20": "The rehearsal can demonstrate communication understanding within its safe scope. It neither observes physical rescue/entry skills nor resolves real staffing or availability requirements."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

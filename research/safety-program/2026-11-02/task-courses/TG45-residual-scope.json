@@ -1,0 +1,448 @@
+{
+  "gapGroupId": "TG45",
+  "reservedCourseId": "G94",
+  "courseAuthored": false,
+  "status": "unresolved_actual_scope",
+  "purpose": "Resolve actual service method and role at individual-service level before assigning the appropriate task course or practical qualification. No universal hazardous-execution course is defensible.",
+  "services": [
+    {
+      "serviceId": "VMS-03C8D0E551",
+      "serviceName": "Instrument Testing / Calibration Services",
+      "sourceContext": "Instrument testing/calibration is a broad supplier classification; it does not identify the instrument, measurement or work environment.",
+      "sourceRecordIds": [
+        "SRC-289146184A04"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify instrument type, measurement function, model and intended use of the result.",
+        "State whether work is bench calibration, installed verification, adjustment, repair or safety-function testing.",
+        "Provide the approved method, traceability basis, acceptance criteria and authority for release; identify any electrical or process interfaces."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the actual measurement/calibration method and any separately assigned electrical or safety-function work after those duties are confirmed."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-06FE930588",
+      "serviceName": "Load Testing Services",
+      "sourceContext": "Load testing classification does not establish the asset, test type or energy involved.",
+      "sourceRecordIds": [
+        "SRC-A14FD4FC3CAC"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify the asset, intended test purpose and applicable technical standard or approved specification.",
+        "State whether the service includes test design, load application, instrumentation, examination or interpretation.",
+        "Provide the approved test plan, competent design/acceptance roles and interface restrictions without inferring crane operation from the label."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the actual test and interpretation duties using an approved safe evaluation; separately verify plant or lifting roles only if supplied."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-12B9F55960",
+      "serviceName": "Photogrammetry Surveying Services",
+      "sourceContext": "Photogrammetry surveying does not establish aerial acquisition or a supplied aircraft operator.",
+      "sourceRecordIds": [
+        "SRC-4A7E409B46E7"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "State whether acquisition is ground-based, UAS, crewed aircraft or data processing only.",
+        "Identify the deliverable, accuracy/verification basis, equipment and assigned acquisition and interpretation roles.",
+        "Provide site-access and data-authority arrangements; route any confirmed aviation duty to its actual operating regime."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the actual acquisition or processing method; require aerial operating qualification only for an actual supplied aviation role."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-1DC98D03F8",
+      "serviceName": "Nitrogen Unit Engineering Services",
+      "sourceContext": "Nitrogen Unit Engineering Services identifies engineering scope, not an established nitrogen operating method.",
+      "sourceRecordIds": [
+        "SRC-A424857708F3"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "State whether duties are design/advice, equipment supply, commissioning, inerting, pressure testing or operation.",
+        "Identify equipment, nitrogen state, process interface, work location and jurisdiction.",
+        "Provide actual technical authority and method review; identify oxygen-deficiency, pressure or cryogenic interfaces only where present."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the confirmed engineering or operating duty; do not treat gas awareness as authorization to execute nitrogen operations."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-2565321694",
+      "serviceName": "Hiring of Tank / Pipeline",
+      "sourceContext": "BPCL E. Hiring work > Hiring Equipments: Hiring of Tank / Pipeline is supply context and does not establish included operation.",
+      "sourceRecordIds": [
+        "SRC-7A0EE2F8D5B5"
+      ],
+      "sourceUrls": [
+        "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify the actual hired asset, intended use and preparation/inspection criteria.",
+        "State whether delivery, installation, connection, cleaning, maintenance, testing or operation is included or excluded.",
+        "Name the party supplying each included role and provide its specific handover and competence evidence."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess asset preparation and inspection if supplied; qualify operation, entry, testing or other execution only when expressly included."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-377738C421",
+      "serviceName": "Passenger Transport Services",
+      "sourceContext": "Passenger Transport Services does not identify road, rail, marine or aviation mode.",
+      "sourceRecordIds": [
+        "SRC-76F39F487E42"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Confirm each actual transport mode, route, vehicle/vessel/aircraft and jurisdiction.",
+        "State whether the vendor is a booking agent, carrier, vehicle-only supplier or provider of operating personnel.",
+        "Identify driver/master/pilot and passenger-assistance duties and provide mode-specific carrier and personnel evidence only for those confirmed duties."
+      ],
+      "practicalAssessmentRequired": [
+        "After mode and roles are known, assess the actual transport function and verify applicable operator/carrier credentials; passenger status alone does not imply operator qualification."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-3B1957F394",
+      "serviceName": "Inspection services",
+      "sourceContext": "BPCL inspection-services wording does not identify a technical inspection method.",
+      "sourceRecordIds": [
+        "SRC-4CB04AC0EAD0",
+        "SRC-510B8DBA421C"
+      ],
+      "sourceUrls": [
+        "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+        "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify asset/material, inspection objective and method, including whether inspection is visual, dimensional or another defined technique.",
+        "State whether scope includes access, isolation, equipment operation, testing or technical interpretation.",
+        "Provide adopted acceptance criteria, method-specific qualification practice and release authority."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the confirmed inspection method and interpretation level; separately qualify access or hazardous techniques only when actually assigned."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-5364B92E50",
+      "serviceName": "Lift services",
+      "sourceContext": "BPCL H. Mechanical works > Installation/Maintenance of Equipment: original wording Lift work. It is not evidence of crane operation and does not conclusively establish elevator work.",
+      "sourceRecordIds": [
+        "SRC-72CBCEB88E6E",
+        "SRC-839313005C96"
+      ],
+      "sourceUrls": [
+        "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+        "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+      ],
+      "vendorEvidenceRequired": [
+        "Ask the service owner what Lift work denotes in this contract: asset, function and actual activity.",
+        "Confirm whether the work is installation, maintenance, repair, inspection, lifting operation or another task; do not choose one from the label.",
+        "Identify equipment, jurisdiction, included personnel and applicable technical authority before routing to crane, elevator/trade or another qualification pathway."
+      ],
+      "practicalAssessmentRequired": [
+        "No universal practical qualification can be assigned until the actual lift asset and duty are identified; assess only the confirmed method and roles."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-53E5E23870",
+      "serviceName": "Process / Utilities / Piping / HVAC Engineering Services",
+      "sourceContext": "Process / Utilities / Piping / HVAC Engineering Services is a broad engineering parent containing alternatives.",
+      "sourceRecordIds": [
+        "SRC-4838D29C9A1D"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify discipline, deliverable, jurisdiction and whether a professional approval is supplied.",
+        "Separate desk design/review from field survey, installation, commissioning, refrigerant service and process operation.",
+        "Provide actual authority, technical method and competence evidence for the selected discipline and included field work."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the confirmed engineering deliverable and any actual field technique; apply trade or refrigerant requirements only to duties that trigger them."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-7996531883",
+      "serviceName": "Non-destructive testing services",
+      "sourceContext": "Non-destructive testing services includes multiple possible methods; radiography is not established by the parent label.",
+      "sourceRecordIds": [
+        "SRC-22B6CD865CA8",
+        "SRC-3A00B4ECB292",
+        "SRC-A7EA6D629451"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+        "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+        "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify NDT method, technique, material, product and interpretation level.",
+        "Provide the applicable employer written practice or adopted certification system and actual personnel evidence.",
+        "State whether radioactive sources, electrical work, entry or other access duties are actually supplied and route those separately."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the actual NDT method and interpretation level under the applicable practice; radiography qualification is conditional on confirmed radiographic work."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-7E1A0EC386",
+      "serviceName": "Lease or Rental of Property or Building",
+      "sourceContext": "Lease or Rental of Property or Building does not establish construction, maintenance or operational service.",
+      "sourceRecordIds": [
+        "SRC-7E064D415592"
+      ],
+      "sourceUrls": [
+        "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify property type, location, intended occupancy/use and jurisdiction.",
+        "State whether the vendor provides only leasing or also maintenance, facilities operation, construction or emergency functions.",
+        "Provide responsibility allocation and evidence for actual included services; do not assign unrelated plant or trade credentials to a leasing-only role."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess only actual facilities or other execution duties when included; a leasing-only scope requires appropriate administrative and handover capability rather than invented trade performance."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-9FF8F73BBE",
+      "serviceName": "Luboil Services",
+      "sourceContext": "Luboil Services is insufficient to distinguish supply, sampling, analysis, lubrication work or machinery intervention.",
+      "sourceRecordIds": [
+        "SRC-E6D8A35BDB89"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify the actual service: product supply, condition sampling/analysis, replenishment, flushing or another method.",
+        "State equipment, materials, access and whether machinery isolation or operation is included.",
+        "Provide manufacturer/employer method, material information and role-specific acceptance authority."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the confirmed handling, sampling, analysis or machinery method; separately qualify energy-control or operating roles only where assigned."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-A4C5377894",
+      "serviceName": "Pipeline Engineering Services",
+      "sourceContext": "Pipeline Engineering Services does not itself establish construction, pigging or pipeline operating duties.",
+      "sourceRecordIds": [
+        "SRC-C24F1D23F47E"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify engineering discipline, deliverable, pipeline type and jurisdiction.",
+        "Separate desk engineering, survey, construction support, inspection, commissioning and operation.",
+        "Provide the actual technical approval authority and evidence for any included field method or regulated professional duty."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the actual engineering deliverable and confirmed field duties; pipeline operating qualification is conditional on an actual covered operating task."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-A8B155E0F7",
+      "serviceName": "Navigation / Positioning Services",
+      "sourceContext": "Navigation / Positioning Services does not establish marine, aviation, land-survey or desk-processing mode.",
+      "sourceRecordIds": [
+        "SRC-E03E03E52B42"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify navigation/positioning mode, platform, equipment and intended deliverable.",
+        "State whether personnel operate a vessel/aircraft, provide technical positioning support or process data only.",
+        "Provide mode-specific authority and competence evidence for supplied roles; do not infer pilot or mariner duty from a positioning label."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the confirmed positioning method and platform interfaces; operator credentials apply only where the person actually supplies that operating role."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-A95329DF09",
+      "serviceName": "Laundering services",
+      "sourceContext": "SEQual 91111500 Domestic and Personal Assistance includes laundering context; it does not automatically establish clinical laundry or occupational blood exposure.",
+      "sourceRecordIds": [
+        "SRC-3D350CBC9F46",
+        "SRC-C48264DD0DF3"
+      ],
+      "sourceUrls": [
+        "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+        "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify whether laundry is ordinary domestic/workwear, contaminated industrial material, clinical linen or another stream.",
+        "State materials/contamination expected, actual sorting/handling/process duties and equipment supplied.",
+        "Provide the applicable employer process and exposure assessment; require bloodborne or chemical programs only where actual exposure/duty makes them applicable."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the actual laundering and material-handling method; clinical exposure or hazardous decontamination competence is conditional on confirmed material and duties."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-AB79138E0F",
+      "serviceName": "Personnel / Training System Consultancy",
+      "sourceContext": "Personnel / Training System Consultancy does not establish direct instruction in every technical trade.",
+      "sourceRecordIds": [
+        "SRC-6DE77063DDB9"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify whether the service designs systems, audits records, develops content, delivers training or assesses practical performance.",
+        "Name the subjects, audience, delivery method and any claimed qualification outcome.",
+        "Provide subject expertise, assessment authority and validity evidence for actual deliverables; do not treat consultancy as universal operator qualification."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the actual consultancy, instructional or assessment method; technical practical assessment requires appropriate subject capability only for subjects actually supplied."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-B6CE77BDD5",
+      "serviceName": "Heat exchanger testing services",
+      "sourceContext": "Heat exchanger testing services does not identify pressure, leak, performance, NDT or another test method.",
+      "sourceRecordIds": [
+        "SRC-B9D0A25696E5"
+      ],
+      "sourceUrls": [
+        "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify exchanger type, test objective, method, equipment and whether it is installed or removed.",
+        "State containment, energy, chemical, access and interpretation duties actually included.",
+        "Provide approved test plan, criteria and qualified technical acceptance authority."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the confirmed test method and interpretation duty with safe approved evaluation; separately qualify pressure, NDT, electrical or entry roles only where present."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-BF1FDDA924",
+      "serviceName": "Material Technology / Anti-Corrosion / Surface Protection Engineering Services",
+      "sourceContext": "Material Technology / Anti-Corrosion / Surface Protection Engineering Services contains several engineering alternatives.",
+      "sourceRecordIds": [
+        "SRC-3724AB1968F1"
+      ],
+      "sourceUrls": [
+        "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify the actual material, deliverable and engineering method.",
+        "Separate desk specification/review from laboratory work, inspection, coating application and field preparation.",
+        "Provide technical approval authority and actual field/material evidence; do not infer asbestos or another specific hazardous material without evidence."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the confirmed engineering or technical method; hazardous-material and application skills remain conditional on actual included materials and work."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-C8819E7708",
+      "serviceName": "Permitting Services",
+      "sourceContext": "Permitting Services does not establish whether the vendor prepares administrative applications, supplies professional studies or issues site work permits.",
+      "sourceRecordIds": [
+        "SRC-25A481B622BF"
+      ],
+      "sourceUrls": [
+        "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify the permit type, jurisdiction, applicant and actual deliverable.",
+        "State whether duties are administrative coordination, technical study, professional certification or employer work-permit authority.",
+        "Provide the relevant authorization and subject competence; distinguish submission support from the regulator or site authority issuing approval."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the actual application, technical study or work-permit method; professional or operational qualification depends on the confirmed duty."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-E292CCFE3B",
+      "serviceName": "Hydrocarbon Measurement",
+      "sourceContext": "SEQual 71151502 Hydrocarbon Measurement sits under Hydrocarbon Allocation Management and Consultancy; it does not establish hands-on meter maintenance.",
+      "sourceRecordIds": [
+        "SRC-C0636B37285E"
+      ],
+      "sourceUrls": [
+        "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Identify whether the service is allocation consultancy, data review, measurement design, calibration, sampling or installed maintenance.",
+        "Name the deliverable, measurement method, equipment and any field/process duties actually included.",
+        "Provide technical authority and method-specific evidence for that scope; preserve a consultancy-only boundary where applicable."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the confirmed allocation/measurement analysis or field method; do not assign meter-maintenance or process-operation competence to consultancy-only personnel."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    },
+    {
+      "serviceId": "VMS-E3F80578C2",
+      "serviceName": "Navigational Services",
+      "sourceContext": "Navigational Services does not establish the operating mode or whether operating personnel are supplied.",
+      "sourceRecordIds": [
+        "SRC-A2257284E085"
+      ],
+      "sourceUrls": [
+        "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+      ],
+      "vendorEvidenceRequired": [
+        "Confirm land, marine, aviation or other actual mode and the service platform.",
+        "Identify advisory, positioning, data-processing and direct operating responsibilities separately.",
+        "Provide jurisdiction and mode-specific evidence for confirmed duties and preserve passenger/consultant boundaries."
+      ],
+      "practicalAssessmentRequired": [
+        "Assess the actual navigation method and assigned platform role; pilot, mariner or other operator qualifications are conditional on confirmed operating duties."
+      ],
+      "status": "open_until_actual_scope_confirmed"
+    }
+  ],
+  "originalGapRecordIds": [
+    "gap_43fb9ffdcdf8feb6",
+    "gap_541b23a1e738f97c",
+    "gap_3e937e42a904ddbf",
+    "gap_11f7520cae6f4bff"
+  ],
+  "originalServiceApplicationCount": 23,
+  "uniqueServiceCount": 21,
+  "boundary": "Scope answers must be confirmed by the responsible service owner. Training knowledge completion never resolves an unidentified task or grants a professional/operator credential."
+}

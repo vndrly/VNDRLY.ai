@@ -1,0 +1,897 @@
+{
+  "courseId": "G70",
+  "gapGroupId": "TG21",
+  "title": "NDT method limitations, coverage and technical acceptance",
+  "description": "Teach inspection-question selection, indication reasoning, coverage limits and method-specific evidence interpretation.",
+  "purpose": "Teach inspection-question selection, indication reasoning, coverage limits and method-specific evidence interpretation.",
+  "audience": [
+    "NDT trainees in a bounded theory role",
+    "Inspection coordinators",
+    "Technical report reviewers"
+  ],
+  "sources": [
+    {
+      "title": "ASNT NDT methods",
+      "url": "https://www.asnt.org/what-is-nondestructive-testing/methods"
+    },
+    {
+      "title": "ASNT employer-based certification programs",
+      "url": "https://www.asnt.org/standards-publications/blog/employer-based-certification-programs"
+    }
+  ],
+  "practicalBoundary": "This course provides no NDT method certification, real indication-interpretation authority, radiography qualification or asset-release authority. Actual method training/experience, safe practical examination and applicable technical certification remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual component, material, method and governing acceptance basis",
+    "Adopted employer written practice or applicable certification program",
+    "Personnel method/level and assigned evaluation/procedure authority",
+    "Approved procedure, equipment assurance and coverage plan",
+    "Actual regulatory/product certification and release scope where applicable"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual method skills under the adopted qualified assessment program",
+    "Method-specific component identification, arrangement verification, systematic coverage and recording",
+    "Qualified interpretation and acceptance evaluation within the actual assigned role"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G70_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for ndt method limitations, coverage and technical acceptance. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course provides no NDT method certification, real indication-interpretation authority, radiography qualification or asset-release authority. Actual method training/experience, safe practical examination and applicable technical certification remain separate.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G70_lesson1",
+        "title": "1. Match the inspection question to a physical mechanism",
+        "body": "Nondestructive testing is a family of methods, not one interchangeable skill. Begin with the question: what condition is being sought, in what material, geometry and location, for what decision? A weld surface crack, internal discontinuity, wall-thickness concern and equipment load test are different questions. The intended decision determines the needed evidence. A generic service label such as inspection cannot establish that one method or inspector is suitable for all of them.\n\nThink in terms of access and physical response. Visual inspection depends on a view of the relevant surface. Penetrant testing concerns discontinuities open to a suitable surface. Magnetic particle methods have material restrictions. Ultrasonic methods use sound interactions. Radiographic methods form images through radiation and require separate radiation controls and qualifications. These distinctions explain why a negative result in one method cannot be expanded into a claim that every possible condition has been excluded.\n\nA method-selection review should identify the expected condition, material, component shape, surface state, access, coverage and governing technical requirements. The qualified inspection authority determines the actual method and procedure. This lesson supplies conceptual comparison, not parameters for performing an inspection. Do not select chemical dwell times, magnetizing settings, probe configurations, radiation exposures or defect limits from this course.\n\nPaper exercise: a fictional proposal offers penetrant testing to prove absence of every internal flaw in a thick component. Identify the mismatch between a surface-opening method and the proposed broad internal conclusion. The correct response is to ask the inspection authority for an appropriate inspection strategy and bounded claim. It is not to substitute radiography yourself or tell an unqualified worker to try another method.\n\nThe useful habit is to state the inspection question and method limitation together. This allows planners, technicians and reviewers to understand what the chosen evidence can answer before anyone uses a pass mark as proof of unrestricted asset integrity.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G70_lesson2",
+        "title": "2. Understand indication, discontinuity and acceptance",
+        "body": "An indication is an observable response produced during inspection. Its meaning requires interpretation under the approved method. A discontinuity is a departure in material or geometry that may or may not be unacceptable for the intended use. A defect is a condition judged unacceptable under the applicable criteria. Do not use these terms as synonyms. Calling every indication a defect exaggerates evidence; calling every indication harmless suppresses the decision that inspection is intended to support.\n\nDistinguish relevant responses from effects associated with geometry, surface condition, equipment or technique. A response near a component edge may have more than one explanation. The qualified method personnel evaluate it using the approved procedure and evidence. This course does not train a learner to interpret a real scan or image, and a planner should not diagnose a discontinuity from an isolated screenshot without context.\n\nAcceptance criteria come from the governing project/code/engineering basis for the actual component and service. A method procedure describes how evidence is generated; it may reference acceptance requirements, but the reviewer should identify the exact source and revision. Similar-looking welds can have different requirements because their materials, service or adopted standards differ. An acceptance limit copied from another job is not an authorized basis.\n\nUse a three-column paper exercise: observation, interpretation, disposition. The fictional observation is a linear response on an inspection record. The interpretation is not yet confirmed because location and evaluation evidence are missing. The disposition therefore remains pending technical evaluation. This is a complete and useful reasoning outcome. A learner should not invent a size, classify the response or approve service simply to fill every field.\n\nRetain the original data and the technical evaluation trail. If further evaluation changes the initial interpretation, the record should show the reason and responsible authority. The goal is a traceable conclusion, not an artificially perfect first report. An honest unresolved indication is safer and more informative than an unsupported accepted stamp.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G70_lesson3",
+        "title": "3. Reason about coverage, orientation and sensitivity",
+        "body": "Inspection coverage is the portion and conditions actually examined. A report may cover specified weld lengths, accessible surfaces, selected grid points or a defined scan volume. Read its coverage statement literally. An unexamined area is not an area with no indications. If access prevents part of the planned examination, the limitation must remain visible in the result and technical disposition.\n\nOrientation matters because a discontinuity interacts with a method's physical mechanism. A method that responds well to one orientation may respond differently to another. Geometry can also affect access and interpretation. On a paper sketch, draw an inspection path and mark the surface or volume it could reasonably address under a supplied fictional procedure. Then shade excluded areas. The exercise teaches coverage reasoning without teaching probe placement, magnetization or exposure techniques.\n\nSensitivity describes the ability of the inspection arrangement to reveal responses of interest under specified conditions. More sensitivity is not automatically a better accepted inspection: unsuitable conditions can generate confusing responses, and a method must be fit for its purpose. Reference standards or checks used by the actual method provide evidence about the inspection arrangement; they are not a universal guarantee that every flaw in the asset will be found.\n\nSeparate equipment calibration from examination validity. A correctly identified instrument with calibration evidence may still be used with an unsuitable setup, incomplete coverage or incorrect procedure. Conversely, a plausible-looking image does not prove that required equipment checks were performed. Review the chain from approved method through equipment/arrangement verification, actual coverage, recorded responses and qualified evaluation.\n\nPaper exercise: a report says no relevant indications in the accessible portion and notes an inaccessible support region. The correct summary preserves both facts. Do not shorten it to no defects anywhere. The qualified owner decides whether additional examination, another method or a bounded disposition is needed for the unexamined region. The learner's job is to recognize why a negative result is conditional on what could actually be examined.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G70_lesson4",
+        "title": "4. Establish component, procedure and result traceability",
+        "body": "A technically useful inspection record connects a specific component with the method actually used. Review the component identifier, location/orientation references, material/configuration information, procedure and revision, equipment identities, personnel role and examination date. Different fields serve different purposes: component identity prevents evidence being attached to the wrong asset, while location references allow a later qualified person to find the reported condition. A neat report missing these links may be unusable for the intended decision.\n\nRead sketches and photographs as supporting records. A photograph can show an area but may not establish scale, orientation or complete coverage. A markup may identify a suspected location without being an approved engineering drawing. Record the source and purpose. Do not extract exact flaw dimensions from an unscaled image or treat a cropped screenshot as the complete original data set.\n\nProcedure revision is a technical boundary. A report referencing a withdrawn or different revision needs review of what changed and whether it affects the result. The correct question is not simply whether the higher revision number is newer. The qualified authority must determine applicability and disposition. Preserve the procedure actually used; do not silently edit its revision in the finished report to make it match the order.\n\nChanges and corrections should retain history. A demonstrated tag transcription error can be corrected through a controlled process with its original entry and basis retained. A missing examination cannot be corrected by changing the coverage field. Additional evidence may support a later conclusion, but it does not alter what was originally performed. The distinction matters when comparing inspections over time.\n\nPaper exercise: a report for weld W-16 includes a sketch labelled W-61 and a photograph with no location marker. The learner lists the identity conflict and missing location support, then requests traceable reconciliation. Similar digits are not proof of a typographical mistake. Until resolved, the report cannot be confidently assigned to the requested weld.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G70_lesson5",
+        "title": "5. Distinguish method certification from technical release authority",
+        "body": "Personnel qualification must match the actual method and duties. An inspector's competence can include different levels of performance, interpretation, procedure preparation or supervision depending on the adopted program. ASNT's employer-based certification explanation shows why the employer's written practice and adopted requirements matter. Do not assume that a certificate from one employer transfers unrestricted authority to another employer or to a different method.\n\nIdentify what the person is authorized to do on this job. Performing an examination, evaluating results, approving a procedure, certifying a product and releasing an asset for service are distinct responsibilities. One appropriately authorized person may hold more than one role, but the record must establish that scope. An NDT report is not automatically a statutory inspection certificate or an engineering fitness-for-service assessment.\n\nReview the actual credential basis without inventing a universal legal requirement. Some jobs use employer-based certification, some require particular external certification, and some involve regulatory or customer approval. Identify which regime the contract and applicable jurisdiction require. A course completion badge cannot create its own accreditation. Radiation work also needs its separate licensing, training and operational controls; nonradiographic NDT teaching does not confer radiography authority.\n\nFor load testing or technical certification services, identify the equipment, test purpose, engineered method and authority behind the final claim. A load test is not interchangeable with a weld examination, and an NDT qualification does not make someone a lift engineer or notified body. The component's governing requirements determine who can issue the actual acceptance or certification decision.\n\nPaper exercise: a vendor provides an ultrasonic personnel certificate but proposes to issue an unrestricted statutory certificate for an entire pressure system. The learner should recognize the unsupported expansion of role and scope. Ask for the required authority and applicable basis, preserving the ultrasonic evidence as relevant only to its actual method and authorized duties.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G70_lesson6",
+        "title": "6. Plan a safe learning and evidence handoff",
+        "body": "This course's desk exercises assess inspection reasoning, not method performance. A safe assessment gives the learner fictional component sketches, procedure references, personnel evidence and reports containing coverage or identity conflicts. Ask them to state the inspection question, identify the method limitation, distinguish observation from acceptance and produce a bounded summary. Score the reasoning and traceability, not the confidence of a broad safe-to-use statement.\n\nActual method competence requires the relevant training, experience and observed practical evaluation under the adopted program. The assessor must have the appropriate method and assessment scope. The arrangement should provide suitable safe specimens, equipment and conditions for the intended skill without uncontrolled exposure. This course does not prescribe live inspection of operating equipment, chemical use, radiation work or access to hazardous structures as a training exercise.\n\nPlan the practical criteria around the actual role. A technician may need to demonstrate component identification, procedure use, arrangement verification, systematic coverage, faithful recording and recognition of limitations. An evaluator may need to demonstrate qualified interpretation and application of the acceptance basis. A procedure authority has a different scope again. The exact criteria come from the adopted method/program and governing requirements, not a generic online checklist.\n\nThe handover should make the final claim reconstructable. State the component, method, procedure, coverage, observed responses, qualified evaluation, acceptance source and unresolved exclusions. Reference original records and identify the person authorized for the next decision. A phrase such as inspected and passed is inadequate when it conceals an unexamined region or a pending evaluation.\n\nBefore closing any residual, distinguish verified personnel evidence, demonstrated practical skill and permission to perform this job. They are related but not interchangeable. The knowledge score records the learner's understanding of this bounded content after correct answers or acknowledged remediation, with original scores preserved. It does not close method certification, actual examination performance, engineering evaluation, regulatory certification or site release.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G70_case1",
+        "title": "Worked fictional case 1: surface evidence offered as complete internal assurance",
+        "body": "Fictional facts: Mill Creek orders examination of a fabricated component because its technical owner is concerned about both surface-opening and internal conditions. A proposal offers one surface method and promises no flaws anywhere. The vendor supplies a personnel card for a different NDT method. An attached example report contains a pass mark but no identified acceptance source.\n\nThe reviewer begins with the inspection questions. The request includes different possible locations and physical conditions; the proposal's single surface-opening method cannot by itself support every internal conclusion. The reviewer writes the precise mismatch. They do not select a new inspection method or instruct the vendor to improvise equipment settings. A qualified inspection authority must establish the actual strategy.\n\nNext, the personnel evidence is matched to the proposed duties. A card for a different method may demonstrate relevant background but does not establish authority for the offered method. The reviewer requests evidence under the adopted program for the people who will perform and evaluate the actual examination. If a credential requirement applies, its exact basis and scope must be identified.\n\nThe example report is examined for conclusion support. Its pass mark cannot replace the missing acceptance criterion. The reviewer asks what governing source and revision will apply to this component and who is authorized to interpret the results. The report also needs asset identity and coverage so that a future conclusion can be attached to actual work.\n\nIn the fictional resolution, the inspection authority issues a revised strategy with bounded method coverage and the proper acceptance references. The vendor supplies appropriate personnel evidence for the assigned methods and roles. The initial unrestricted promise is removed rather than softened into ambiguous marketing language. No examination has occurred yet.\n\nFinal decision: planning evidence is improved, while actual method performance, original data, qualified evaluation and technical acceptance remain future evidence. The course learner has demonstrated recognition of a method-limit mismatch. That is useful knowledge, but it is not a new NDT qualification or an asset-integrity certificate.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G70_case2",
+        "title": "Worked fictional case 2: negative findings with an inaccessible region",
+        "body": "Fictional facts: Brook Line receives a report for weld W-16. The conclusion says no relevant indications in the accessible examined area. A note excludes the region behind a support. The sketch labels the weld W-61. A purchaser asks the reviewer to summarize all welds defect free because the project needs a clean completion dashboard.\n\nThe reviewer first preserves the negative finding exactly within its scope. No relevant indications were reported in the examined accessible area. The inaccessible region was not examined, so no negative finding is established for it. The report is neither worthless nor comprehensive. The correct summary must retain both the useful evidence and the exclusion.\n\nSecond, the reviewer creates an identity discrepancy between the report heading and sketch. They do not assume transposed digits. The original record and any controlled correction need enough basis to connect the evidence to the actual weld. The photograph attached to the report lacks a location marker, so it cannot independently resolve the mismatch.\n\nThird, the technical owner is asked to determine the consequence of incomplete coverage for the actual acceptance purpose. Additional examination, another suitable approach or a specifically authorized disposition may be considered by qualified personnel. The desk reviewer cannot make the region inspected by changing a coverage field or using a different report's result.\n\nThe fictional authority later receives traceable identity reconciliation and an approved plan for the excluded region. Until that work and evaluation are complete, the dashboard records the bounded examined result with the named residual. A later result is linked as additional evidence rather than rewriting the original examination history.\n\nFinal decision: reject the requested defect-free-all-welds summary. Exact residuals are identity resolution, disposition of inaccessible coverage, actual additional examination where required, qualified evaluation and the governing acceptance/release decision. The learner's paper assessment tests these distinctions only. It does not demonstrate scanning skill, real indication interpretation or authority to certify the asset.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G70_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G70_check1",
+        "prompt": "What should method selection begin with?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The condition sought, component/material and intended decision."
+          },
+          {
+            "id": "b",
+            "label": "The cheapest available badge."
+          },
+          {
+            "id": "c",
+            "label": "A promise to find every possible flaw."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G70_check2",
+        "prompt": "Are indication and defect interchangeable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; observation and unacceptable-condition determination differ."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every response is a defect."
+          },
+          {
+            "id": "d",
+            "label": "Yes, every response is harmless."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G70_check3",
+        "prompt": "What does an inaccessible region mean for a negative finding?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It was examined indirectly by paperwork."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No negative finding is established for that unexamined region."
+          },
+          {
+            "id": "d",
+            "label": "It has no defects."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G70_check4",
+        "prompt": "Report and sketch identify W-16 and W-61. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume a typo."
+          },
+          {
+            "id": "b",
+            "label": "Change the sketch silently."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Traceable identity reconciliation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G70_check5",
+        "prompt": "Does a method certificate grant unrestricted asset-release authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; method duties and release authority must be established separately."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every certificate grants it."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the vendor is familiar."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G70_check6",
+        "prompt": "What does a paper NDT case demonstrate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "The assessed method-limit and evidence reasoning."
+          },
+          {
+            "id": "c",
+            "label": "Real scanning proficiency."
+          },
+          {
+            "id": "d",
+            "label": "Radiography operating authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G70_final1",
+        "prompt": "Can a surface-opening method alone exclude every internal flaw?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the report says pass."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; the broad conclusion exceeds that methods physical scope."
+          },
+          {
+            "id": "d",
+            "label": "Yes, any NDT is universal."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G70_final2",
+        "prompt": "Why does material matter to NDT choice?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every method works identically on everything."
+          },
+          {
+            "id": "b",
+            "label": "Only component color matters."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Methods interact differently with material properties."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G70_final3",
+        "prompt": "What is the role of acceptance criteria?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Define the applicable basis for judging the evaluated condition."
+          },
+          {
+            "id": "b",
+            "label": "Replace examination evidence."
+          },
+          {
+            "id": "c",
+            "label": "Provide a convenient number from another job."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G70_final4",
+        "prompt": "A screenshot shows a response near an edge. What is justified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Qualified interpretation needs the procedure and context."
+          },
+          {
+            "id": "c",
+            "label": "A certain defect diagnosis by any viewer."
+          },
+          {
+            "id": "d",
+            "label": "An automatic harmless classification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G70_final5",
+        "prompt": "What should a coverage sketch preserve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A claim of universal access."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Examined and excluded regions."
+          },
+          {
+            "id": "d",
+            "label": "Only the clean-looking areas."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G70_final6",
+        "prompt": "Does higher sensitivity automatically make a valid accepted examination?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, maximum settings are always best."
+          },
+          {
+            "id": "b",
+            "label": "Yes, noise never matters."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; arrangement suitability and method conditions still matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G70_final7",
+        "prompt": "What does calibration of an instrument establish alone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Bounded measurement evidence, not complete examination validity."
+          },
+          {
+            "id": "b",
+            "label": "Correct setup and coverage automatically."
+          },
+          {
+            "id": "c",
+            "label": "Every inspectors qualification."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G70_final8",
+        "prompt": "Why retain original data?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "To reconstruct evaluation and later changes in interpretation."
+          },
+          {
+            "id": "c",
+            "label": "Only to make files larger."
+          },
+          {
+            "id": "d",
+            "label": "So unsupported conclusions can be hidden."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G70_final9",
+        "prompt": "Can an unscaled photograph establish exact dimensions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, crop it first."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Not reliably without suitable scale and context."
+          },
+          {
+            "id": "d",
+            "label": "Yes, any viewer can guess."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G70_final10",
+        "prompt": "A report used a different procedure revision. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Silently replace the revision number."
+          },
+          {
+            "id": "b",
+            "label": "Assume the highest number was used."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Qualified review of applicability and consequences."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G70_final11",
+        "prompt": "Can a missing examination be corrected by editing coverage?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; additional work and evidence are separate."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if an administrator agrees."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if no flaw is expected."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G70_final12",
+        "prompt": "How should a demonstrated transcription error be corrected?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Through controlled correction retaining basis and original history."
+          },
+          {
+            "id": "c",
+            "label": "Delete all previous versions."
+          },
+          {
+            "id": "d",
+            "label": "Rewrite without explanation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G70_final13",
+        "prompt": "What governs employer-based certification scope?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any unrelated online course."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "The adopted program and employers written practice with applicable requirements."
+          },
+          {
+            "id": "d",
+            "label": "A self-created badge title alone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G70_final14",
+        "prompt": "Does nonradiographic NDT teaching authorize radiation work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, all inspection is equivalent."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after remediation."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; radiation roles and controls remain separate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G70_final15",
+        "prompt": "Is load testing interchangeable with weld examination?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; the equipment, purpose, method and authority differ."
+          },
+          {
+            "id": "b",
+            "label": "Yes, both say test."
+          },
+          {
+            "id": "c",
+            "label": "Yes, either report releases the whole asset."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G70_final16",
+        "prompt": "In Mill Creek, what is wrong with the initial promise?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "One surface method is offered as complete internal assurance."
+          },
+          {
+            "id": "c",
+            "label": "The report has too many limitations."
+          },
+          {
+            "id": "d",
+            "label": "The request has an asset identifier."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G70_final17",
+        "prompt": "Mill Creek receives a revised plan. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only payment."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Actual examination, original data, evaluation and acceptance."
+          },
+          {
+            "id": "d",
+            "label": "Nothing technical."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G70_final18",
+        "prompt": "In Brook Line, is the accessible-area result worthless?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every partial result is false."
+          },
+          {
+            "id": "b",
+            "label": "No, it proves every area."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; it is useful within its recorded boundary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G70_final19",
+        "prompt": "Who decides consequences of Brook Lines excluded region?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The qualified technical owner under the governing requirements."
+          },
+          {
+            "id": "b",
+            "label": "The dashboard clerk alone."
+          },
+          {
+            "id": "c",
+            "label": "Any purchaser wanting a green status."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G70_final20",
+        "prompt": "What residual remains after this knowledge course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Applicable method qualification, observed performance and actual technical release."
+          },
+          {
+            "id": "c",
+            "label": "No NDT residuals."
+          },
+          {
+            "id": "d",
+            "label": "Only cosmetic report formatting."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G70_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G70_lesson1",
+          "questionIds": [
+            "G70_check1"
+          ]
+        },
+        {
+          "lessonId": "G70_lesson2",
+          "questionIds": [
+            "G70_check2"
+          ]
+        },
+        {
+          "lessonId": "G70_lesson3",
+          "questionIds": [
+            "G70_check3"
+          ]
+        },
+        {
+          "lessonId": "G70_lesson4",
+          "questionIds": [
+            "G70_check4"
+          ]
+        },
+        {
+          "lessonId": "G70_lesson5",
+          "questionIds": [
+            "G70_check5"
+          ]
+        },
+        {
+          "lessonId": "G70_lesson6",
+          "questionIds": [
+            "G70_check6"
+          ]
+        },
+        {
+          "lessonId": "G70_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G70_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G70_final",
+          "questionIds": [
+            "G70_final1",
+            "G70_final2",
+            "G70_final3",
+            "G70_final4",
+            "G70_final5",
+            "G70_final6",
+            "G70_final7",
+            "G70_final8",
+            "G70_final9",
+            "G70_final10",
+            "G70_final11",
+            "G70_final12",
+            "G70_final13",
+            "G70_final14",
+            "G70_final15",
+            "G70_final16",
+            "G70_final17",
+            "G70_final18",
+            "G70_final19",
+            "G70_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G70_check1": "An inspection strategy must answer the actual technical question.",
+        "G70_check2": "Evaluation under the applicable criteria determines significance.",
+        "G70_check3": "Coverage limits the result.",
+        "G70_check4": "Similar digits do not prove component identity.",
+        "G70_check5": "Performance, evaluation and release are distinct roles.",
+        "G70_check6": "Paper assessment cannot observe specialist method performance.",
+        "G70_final1": "Method mechanisms and coverage constrain conclusions.",
+        "G70_final2": "The inspection authority must match mechanism to material and task.",
+        "G70_final3": "Acceptance requires a governing source for the actual component.",
+        "G70_final4": "Geometry and method effects can complicate responses.",
+        "G70_final5": "Exclusions must remain visible in the technical claim.",
+        "G70_final6": "More response is not automatically better valid evidence.",
+        "G70_final7": "Equipment assurance is one link in the evidence chain.",
+        "G70_final8": "Traceability supports technical review and learning.",
+        "G70_final9": "Images need appropriate measurement and location support.",
+        "G70_final10": "The actual method history must be preserved.",
+        "G70_final11": "A record change cannot create unperformed work.",
+        "G70_final12": "A correction needs a traceable reason and authority.",
+        "G70_final13": "The actual qualification framework determines personnel duties.",
+        "G70_final14": "Radiography introduces separately controlled specialist scope.",
+        "G70_final15": "Service labels cannot collapse distinct technical activities.",
+        "G70_final16": "The method cannot support the unrestricted conclusion.",
+        "G70_final17": "Prepared planning does not establish performed inspection.",
+        "G70_final18": "Bounded evidence should be retained without exaggeration.",
+        "G70_final19": "Technical disposition requires appropriate authority and basis.",
+        "G70_final20": "Knowledge completion cannot replace specialist qualification and acceptance."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

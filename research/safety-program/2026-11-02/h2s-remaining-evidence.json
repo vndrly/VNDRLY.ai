@@ -1,0 +1,207 @@
+{
+  "id": "h2s_monitoring_safety_trailer",
+  "name": "H2S Monitoring & Safety Trailer",
+  "sourceUrls": [
+    "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
+    "https://hseintegrated.com/service/h2s-safety/",
+    "https://www.totalsafety.uk.com/gas-detection-services"
+  ],
+  "scopeNotes": [
+    "The 963-service research snapshot has no exact H2S monitoring/safety-trailer label. Preserve this existing application service and its ID; do not manufacture an equivalent VMS ID or silently merge it into a broad inspection category.",
+    "Preserved existing service 111; this display does not create a VMS catalog entry or change any marketplace mapping."
+  ],
+  "roleMappings": [
+    {
+      "role": "Worker exposed to H2S who wears an assigned personal detector",
+      "familyIds": [
+        "H13",
+        "E04"
+      ],
+      "trigger": "Actual exposure and assigned detector use; teach only the relevant user functions.",
+      "rationale": "Recognize the exposure, alarm response and escape boundaries, and understand the assigned detector's checks and limitations. Wearing a detector does not authorize clearance testing, service or rescue."
+    },
+    {
+      "role": "Gas-monitoring installation and monitoring technician",
+      "familyIds": [
+        "H13",
+        "E04",
+        "H01",
+        "H02",
+        "E02"
+      ],
+      "trigger": "Actual setup, operation, checking or monitoring duties.",
+      "rationale": "The technician must understand detector selection, bounded sampling/measurement, assurance checks, defects, positioning and alarm communication within the monitoring plan."
+    },
+    {
+      "role": "Designated gas tester or permit-atmosphere verifier",
+      "familyIds": [
+        "H13",
+        "E04",
+        "C07",
+        "H03"
+      ],
+      "trigger": "Only a formally assigned gas-testing or permit-verification duty.",
+      "rationale": "C07 teaches endorsement assurance. Instrument- and task-specific practical assessment and employer/site authorization remain necessary; these courses do not grant gas-clearance authority."
+    },
+    {
+      "role": "Breathing-air equipment technician or assigned respirator user",
+      "familyIds": [
+        "H15",
+        "E07",
+        "E02"
+      ],
+      "trigger": "Only actual respiratory-equipment duties or required respirator use; not every H2S worker.",
+      "rationale": "Respirator selection, medical evaluation, fit testing where applicable, breathing-air quality and equipment-specific operation require the appropriate program and separately verified task capability."
+    },
+    {
+      "role": "Assigned H2S rescue/response team",
+      "familyIds": [
+        "H13",
+        "H15",
+        "R01",
+        "R02",
+        "C08"
+      ],
+      "trigger": "Actual assigned emergency/rescue responsibilities.",
+      "rationale": "Knowledge foundations support response planning; the rescue mode, equipment, team exercises, medical/first-aid competence and applicable response-level qualification must be separately assessed. No unprotected rescue entry is authorized."
+    },
+    {
+      "role": "Detector calibration/repair technician",
+      "familyIds": [
+        "E04",
+        "E01",
+        "E02"
+      ],
+      "trigger": "Only calibration, maintenance or repair functions actually supplied.",
+      "rationale": "Manufacturer- and model-specific service instruction, reference standards and release-to-service competence are not established by a user's bump-test knowledge."
+    }
+  ],
+  "residualRequirements": [
+    {
+      "groupId": "H2S-role-1",
+      "title": "Worker exposed to H2S who wears an assigned personal detector",
+      "courseId": "H13",
+      "role": "Worker exposed to H2S who wears an assigned personal detector",
+      "serviceIds": [
+        "h2s_monitoring_safety_trailer"
+      ],
+      "vendorEvidenceRequired": [
+        "Assigned detector model, relevant hazards, alarm/escape instructions and site communication arrangements."
+      ],
+      "practicalAssessmentRequired": [
+        "Observe pre-use inspection, specified response check, correct wearing, alarm recognition and escape/reporting actions."
+      ],
+      "scopeConfirmation": "Actual exposure and assigned detector use; teach only the relevant user functions.",
+      "sourceUrls": [
+        "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
+        "https://hseintegrated.com/service/h2s-safety/",
+        "https://www.totalsafety.uk.com/gas-detection-services"
+      ]
+    },
+    {
+      "groupId": "H2S-role-2",
+      "title": "Gas-monitoring installation and monitoring technician",
+      "courseId": "E04",
+      "role": "Gas-monitoring installation and monitoring technician",
+      "serviceIds": [
+        "h2s_monitoring_safety_trailer"
+      ],
+      "vendorEvidenceRequired": [
+        "Approved monitoring plan with actual detector/sensor model, target gases, sampling arrangement, positioning basis, alarm authority and handover contacts."
+      ],
+      "practicalAssessmentRequired": [
+        "Observe model-specific setup, approved response checks, interpretation of measurement limitations, alarm communication and defect handling."
+      ],
+      "scopeConfirmation": "Actual setup, operation, checking or monitoring duties.",
+      "sourceUrls": [
+        "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
+        "https://hseintegrated.com/service/h2s-safety/",
+        "https://www.totalsafety.uk.com/gas-detection-services"
+      ]
+    },
+    {
+      "groupId": "H2S-role-3",
+      "title": "Designated gas tester or permit-atmosphere verifier",
+      "courseId": "C07",
+      "role": "Designated gas tester or permit-atmosphere verifier",
+      "serviceIds": [
+        "h2s_monitoring_safety_trailer"
+      ],
+      "vendorEvidenceRequired": [
+        "Named gas-testing designation, actual permit/space/task scope, approved sampling procedure and instrument assurance records."
+      ],
+      "practicalAssessmentRequired": [
+        "Qualified gas-testing assessor observes the assigned sampling method, timing/limitations, result interpretation, permit communication and response to invalid readings."
+      ],
+      "scopeConfirmation": "Only a formally assigned gas-testing or permit-verification duty.",
+      "sourceUrls": [
+        "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
+        "https://hseintegrated.com/service/h2s-safety/",
+        "https://www.totalsafety.uk.com/gas-detection-services"
+      ]
+    },
+    {
+      "groupId": "H2S-role-4",
+      "title": "Breathing-air equipment technician or assigned respirator user",
+      "courseId": "H15",
+      "role": "Breathing-air equipment technician or assigned respirator user",
+      "serviceIds": [
+        "h2s_monitoring_safety_trailer"
+      ],
+      "vendorEvidenceRequired": [
+        "Applicable respiratory program, assigned equipment, selection authority, required medical/fit evidence held through the appropriate confidential process, and breathing-air assurance."
+      ],
+      "practicalAssessmentRequired": [
+        "Observe equipment-specific inspection, fitting/use and emergency actions; separately assess breathing-air servicing only if assigned."
+      ],
+      "scopeConfirmation": "Only actual respiratory-equipment duties or required respirator use; not every H2S worker.",
+      "sourceUrls": [
+        "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
+        "https://hseintegrated.com/service/h2s-safety/",
+        "https://www.totalsafety.uk.com/gas-detection-services"
+      ]
+    },
+    {
+      "groupId": "H2S-role-5",
+      "title": "Assigned H2S rescue/response team",
+      "courseId": "C08",
+      "role": "Assigned H2S rescue/response team",
+      "serviceIds": [
+        "h2s_monitoring_safety_trailer"
+      ],
+      "vendorEvidenceRequired": [
+        "Approved rescue mode, team roster, equipment, response arrangements, relevant medical/first-aid prerequisites and exercise records."
+      ],
+      "practicalAssessmentRequired": [
+        "Qualified rescue assessor observes team communications, equipment use and scenario performance using a safe representative exercise; online completion authorizes no entry."
+      ],
+      "scopeConfirmation": "Actual assigned emergency/rescue responsibilities.",
+      "sourceUrls": [
+        "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
+        "https://hseintegrated.com/service/h2s-safety/",
+        "https://www.totalsafety.uk.com/gas-detection-services"
+      ]
+    },
+    {
+      "groupId": "H2S-role-6",
+      "title": "Detector calibration/repair technician",
+      "courseId": "G71",
+      "role": "Detector calibration/repair technician",
+      "serviceIds": [
+        "h2s_monitoring_safety_trailer"
+      ],
+      "vendorEvidenceRequired": [
+        "Manufacturer/model service instructions, authorized calibration/repair scope, suitable reference gas/standards with expiry and traceability, and release criteria."
+      ],
+      "practicalAssessmentRequired": [
+        "Model-competent assessor observes calibration/service, response to failed checks, records and bounded release-to-service decision."
+      ],
+      "scopeConfirmation": "Only calibration, maintenance or repair functions actually supplied.",
+      "sourceUrls": [
+        "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
+        "https://hseintegrated.com/service/h2s-safety/",
+        "https://www.totalsafety.uk.com/gas-detection-services"
+      ]
+    }
+  ]
+}

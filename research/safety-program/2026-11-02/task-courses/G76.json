@@ -1,0 +1,901 @@
+{
+  "courseId": "G76",
+  "gapGroupId": "TG27",
+  "title": "Machine and trade fault reasoning, parts and process acceptance",
+  "description": "Teach symptom/cause separation, functional hypotheses, part-equivalence reasoning and thermal-cycle evidence interpretation.",
+  "purpose": "Teach symptom/cause separation, functional hypotheses, part-equivalence reasoning and thermal-cycle evidence interpretation.",
+  "audience": [
+    "Machine/trade trainees in a theory module",
+    "Repair and treatment coordinators",
+    "Technical maintenance reviewers"
+  ],
+  "sources": [
+    {
+      "title": "OSHA machine guarding",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.212"
+    },
+    {
+      "title": "OSHA hazardous-energy control and scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147"
+    },
+    {
+      "title": "OSHA role-specific education/training",
+      "url": "https://www.osha.gov/safety-management/education-training"
+    }
+  ],
+  "practicalBoundary": "This course is not machine/operator/trade qualification or thermal-process approval. It authorizes no running diagnosis, guard bypass, isolation, machining setup, repair sequence or thermal-treatment schedule.",
+  "vendorEvidenceRequired": [
+    "Actual machine/product/process and reported symptom",
+    "Manufacturer-approved method and technical acceptance source",
+    "Approved part/supersession and material identity",
+    "Actual guarding/energy-control applicability and test arrangement",
+    "Named trade/process personnel and technical/operating release roles"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual machine/trade method skills under qualified safe assessment",
+    "Method-specific preparation, configuration/parts control and faithful process records",
+    "Observed functional interpretation, safeguarding restoration and handover within role"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G76_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for machine and trade fault reasoning, parts and process acceptance. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course is not machine/operator/trade qualification or thermal-process approval. It authorizes no running diagnosis, guard bypass, isolation, machining setup, repair sequence or thermal-treatment schedule.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G76_lesson1",
+        "title": "1. Turn a broad repair request into a technical question",
+        "body": "Machine and trade services include many different processes: mechanical repair, printing, grounds machinery, heat treatment, surface treatment and other product-specific operations. There is no single operator qualification for all of them. Begin by identifying the machine, product, intended function, reported symptom and proposed task. Repair a pump, change a printing setup and run a thermal cycle require different methods and skills even when the same maintenance department coordinates them.\n\nSeparate symptom from cause. A symptom is what was observed, such as vibration, an inconsistent product dimension or an unexpected shutdown. A cause is an explanation supported by investigation. A report saying bad bearing may be an initial hypothesis rather than a confirmed finding. Record the original observation and who made the interpretation. This prevents a replacement part being treated as a diagnosis merely because it was ordered.\n\nDefine the required function. What was the machine or process supposed to do under the stated conditions? A comparison with that intended function helps identify useful evidence. The intended product specification, approved operating range and manufacturer instructions are sources, but their actual applicability must be established. This course supplies no operating settings or universal acceptance values.\n\nBuild a paper problem statement: asset, expected behavior, actual observation, time/conditions and known changes. Add an explicit unknown list. The unknowns guide technical review without authorizing hands-on exploration. An unqualified trainee should not run a faulty machine, bypass a guard or open a system to gather evidence for this lesson.\n\nPaper exercise: a work order says motor failed, while the operator log says the line stopped after a product change and no motor test is recorded. Rewrite the problem as a reported line stoppage with an unconfirmed motor hypothesis. Request competent investigation under the actual safe method rather than replacing a component based solely on the label.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G76_lesson2",
+        "title": "2. Use functional blocks and evidence-based fault hypotheses",
+        "body": "A functional-block diagram describes how an intended result is produced. For a generic machine, blocks might include energy input, controls, drive, working mechanism, product/material input and output. The diagram is conceptual; actual machine documentation defines the real interfaces. Its purpose is to prevent a single symptom being attributed automatically to the most familiar component.\n\nTrace the symptom through possible blocks. Poor output can arise from material variation, setup, a worn component, sensing or measurement, controls or an external dependency. Write each as a hypothesis with supporting and missing evidence. Do not treat a long hypothesis list as proof that every cause is equally likely. The qualified investigator chooses actual tests using approved methods and safe conditions.\n\nUse a simple paper discrimination exercise. A fictional process makes an inconsistent product after a material batch change. The drive log is unchanged, and the measurement instrument's status is uncertain. Three hypotheses remain: changed material, process/setup issue and measurement issue. The next useful question is which approved evidence can distinguish them. Replacing the drive immediately does not follow from the supplied facts.\n\nCorrelation is not a complete cause determination. A problem occurring after a change makes the change relevant, but other conditions may also have changed. A component found worn may be the cause, a consequence or an unrelated observation. Preserve event timing, original data and the technical reasoning that connects a finding to the symptom. Do not rewrite uncertainty into certainty after a convenient repair appears successful.\n\nA fault investigation and a safety determination are distinct. A machine that temporarily produces good output can still have an unresolved guarding or energy-control issue. A machine made safe for investigation is not necessarily repaired. Keep these states separate in work records so that technical troubleshooting does not accidentally authorize operation.\n\nWorked hypothesis matrix: a fictional line produces inconsistent lengths. The supplied records show that the raw-material batch changed, a length sensor was recently replaced, and the drive has no recorded alarm. Create rows for material variation, measurement-chain error and mechanical/process variation. Under each row, copy the supplied facts that bear on it and list what evidence is missing. The absence of an alarm is not proof that every drive function is correct, and the replacement sensor is not proof that the sensor is wrong. The matrix should therefore retain all three as bounded hypotheses rather than turning one into a verdict. Next identify the qualified role that owns the relevant approved diagnostic evidence for each row. The material owner can address batch properties; the measurement/machine authority can address the sensor and process. Do not instruct either to perform an improvised live test. The final paper output is a prioritized technical question set with traceable observations. It supports competent investigation while protecting the distinction between a useful lead, a confirmed cause and permission to return equipment to production.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G76_lesson3",
+        "title": "3. Understand fit, identity and replacement-part equivalence",
+        "body": "A replacement part must be suitable for its actual function and conditions. Physical fit is only one aspect. Material, dimensions, rating, tolerance, compatibility and manufacturer-approved configuration can matter. A part that bolts into place can still differ in a way that affects reliability or protection. The competent technical owner determines equivalence under the actual equipment requirements.\n\nRead parts information as a chain. Connect the asset/model and configuration to the approved parts source, ordered item, received identity and installed record. A supplier catalog for a similar model is not automatically an approved substitute. A revised part number may represent a legitimate supersession, but the basis must be established rather than assumed. Preserve the original and replacement identities for future maintenance and traceability.\n\nTolerance is not a target that can be inferred from appearance. A drawing or approved specification defines the actual dimensional requirement and measurement basis. A technician's result must identify the feature, units, method and applicable criterion. A number without its feature or units is not a useful acceptance record. This course does not specify machining fits or repair dimensions.\n\nPaper exercise: the received component has the same outer dimensions as the removed one but a different material designation. The work pack contains no approved substitution evidence. Record fit as a limited observation and material equivalence as unresolved. Ask the responsible technical authority to determine suitability. Do not machine, heat or modify the part to make it seem equivalent.\n\nConfiguration changes need appropriate control. A different component can affect guarding, control response, lubrication, maintenance or product quality. The actual change process determines which documents, tests and approvals are needed. A successful installation invoice does not establish those consequences have been reviewed. The learner should identify the affected functions and missing evidence without claiming design authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G76_lesson4",
+        "title": "4. Read thermal-treatment and process-cycle records conceptually",
+        "body": "Thermal and material-treatment processes act through conditions over time. A final temperature or a completed timer alone does not describe the entire cycle. Material condition, loading arrangement, equipment behavior, atmosphere where relevant, heating/cooling history and measurement evidence can affect the result. The actual qualified process specification defines the required variables and acceptance; this course supplies no temperature, dwell, cooling or chemical-treatment recipe.\n\nA cycle record should connect the product or batch to the approved method, equipment, recorded conditions, deviations and technical evaluation. The graph is evidence of what the measuring system recorded, not automatic proof of every item's internal condition. Sensor placement and method validation are technical matters for the actual process authority. A visually smooth curve is not a substitute for suitable instrumentation and applicable qualification.\n\nUse a paper time-series exercise. A fictional specification requires phases named A, B and C, with no numerical operating instructions given here. The supplied record shows A and C but has missing data during B. The learner should state that B is not established from the record. They should not draw a straight line through the gap or assume the controller completed it because the final screen says done.\n\nSeparate process completion from product acceptance. A completed machine cycle can still require inspection, testing or technical disposition. A measured product property may support a particular claim without validating every cycle variable. If a deviation occurred, the qualified owner determines its consequence using the governing requirements. Do not repeat the cycle or apply compensating heat on personal initiative.\n\nPaper exercise: a batch record lists product lot L-4, while a chart names L-7. The cycle might have occurred, but its connection to L-4 is unresolved. Request traceable reconciliation before using it as acceptance evidence. Similar timing or product appearance is not enough to assign the chart to a different lot.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G76_lesson5",
+        "title": "5. Distinguish safeguarding, energy control and functional testing",
+        "body": "Machines can injure through movement, stored energy, material ejection, heat and other task-specific mechanisms. A point-of-operation guard, an interlock, an emergency stop and an energy-control arrangement serve different functions. Do not assume that one replaces every other protection. A stopped display does not establish absence of stored energy, and a fitted guard does not prove that maintenance isolation is complete.\n\nThe applicable safe-work framework must be identified for the actual task and sector. OSHA's general hazardous-energy provision has explicit scope exclusions, including oil and gas well drilling and servicing. It must not be cited as a blanket legal rule for every catalog service. The employer establishes the applicable method and authorized roles. This lesson teaches the reviewer to recognize an interface, not to perform isolation or choose an exception.\n\nFunctional testing after repair can reintroduce energy and movement. The actual plan should identify the test purpose, safe arrangement, responsible personnel, operating boundary and acceptance source. A repair technician's authority to replace a component does not automatically establish authority to operate a production test under every condition. Temporary guards, bypasses or altered controls require their actual technical/site process; this course authorizes none.\n\nPaper exercise: a repair report says motor replaced and starts normally, but a removed guard remains on the parts list and no restoration evidence exists. Separate the reported drive function from the unresolved safeguarding condition. A machine can produce motion while remaining unready for normal use. The correct handover preserves that distinction.\n\nTesting evidence must fit the conclusion. A no-load demonstration can support its actual observed behavior while leaving loaded or process performance unverified. The qualified method determines required tests. Do not invent a loaded trial, operate without protection or use a worker's body as a test object to make assessment realistic.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G76_lesson6",
+        "title": "6. Match trade capability and technical release to actual work",
+        "body": "A broad maintenance certificate cannot establish every craft skill. Match the person's evidence to the actual machine/process, method and assigned duties. Mechanical repair, grounds equipment, printing and thermal treatment retain their own instructions and practical performance requirements. Where a trade credential is legally or contractually required, verify its actual scope; do not invent a universal license from the service name.\n\nEvidence should show the specific instruction, supervised experience, observed task, assessor competence, conditions, criteria and limitations. A person may be skilled on one machine family but unfamiliar with another control or process. Record the new capability needed rather than calling the person either universally qualified or wholly unqualified. Employer/site authorization remains distinct from previous experience.\n\nA safe desk assessment gives the learner fictional logs, part records, cycle data and test forms. Ask them to separate symptom from hypothesis, identify a missing batch link, question an unsupported substitution and distinguish functional output from guarding restoration. The exercise can assess technical reasoning without starting equipment or handling hazardous material.\n\nPractical assessment requires a qualified safe arrangement suited to the actual role. It should observe approved documentation use, equipment/part identification, preparation, craft/process control, faithful records, result interpretation and response to abnormal conditions. The method authority determines actual performance criteria. This course supplies no machining setup, repair sequence, thermal schedule or hazardous test procedure.\n\nThe final release pack should state the asset/product, confirmed fault findings, work performed, parts/configuration changes, process/test evidence, safeguarding restoration, unresolved limitations and technical/operating decision owners. A closed work order is administrative evidence unless supported by the required technical records. Knowledge completion closes only this taught component, retaining original answers and acknowledged remediation. Actual trade skill, approved method, observed performance and permission to return the machine or product to use remain residuals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G76_case1",
+        "title": "Worked fictional case 1: a motor hypothesis and an unapproved part",
+        "body": "Fictional facts: Pine Works reports inconsistent output after a material change. The work order says failed motor, but no technical test is attached. A replacement part fits the mounting points but has a different material/designation record. The technician reports that the machine starts. A guard removed during work has no restoration entry.\n\nThe reviewer first restores the distinction between symptom and hypothesis. Inconsistent output is the observation; motor failure is not confirmed by the available evidence. The material change and measurement status may be relevant to qualified investigation. The reviewer does not order a new troubleshooting sequence or run the machine to test a guess.\n\nSecond, physical fit is separated from suitability. The different part identity requires the actual approved substitution or supersession basis. The reviewer records the mismatch and asks the technical owner for disposition. A successful start cannot prove material, rating or functional equivalence for every duty.\n\nThird, the reported start is bounded evidence. It may show a particular observed function under the recorded conditions, but it does not establish process output or safeguarding restoration. The missing guard record remains an independent readiness question. The reviewer does not infer restoration from a closed work order or a photograph of the machine exterior.\n\nIn the fictional resolution, the qualified owner investigates the actual symptom, resolves component suitability and defines appropriate verification. Safeguarding restoration is documented through the approved method. Original observations and changes remain traceable. The operating owner considers return to use only after its prerequisites are established.\n\nFinal decision: the initial packet does not prove fault cause, suitable repair or complete readiness. Exact residuals are competent diagnosis, approved part/configuration basis, actual practical repair skill, required testing/restoration evidence and technical/operating release. The learner demonstrates reasoning only, not machine operation or repair proficiency.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G76_case2",
+        "title": "Worked fictional case 2: a completed thermal cycle with missing evidence",
+        "body": "Fictional facts: Meadow Treatment processes lot L-4. A report says cycle complete and product accepted. The attached chart names L-7 and has missing data during required phase B. The operator suggests drawing a line through the gap because phases A and C look normal. A purchaser wants to close the job before the next shift.\n\nThe reviewer separates identity and process coverage. The chart cannot yet be assigned to L-4 because its lot identifier differs. Missing phase-B data are a different issue even if identity is later reconciled. A line drawn through the gap would create an observation that was not recorded, so it cannot be used as evidence of phase B.\n\nNext, the reviewer identifies the acceptance basis. A cycle completion message does not automatically establish the product's required properties or every process condition. The actual method and qualified process authority determine required evidence and how deviations are evaluated. The reviewer does not prescribe repeating the cycle or applying compensating heat.\n\nThe original chart, report and discrepancy notes are preserved. If a traceable transcription error explains the lot ID, a controlled correction records the basis and author. If phase-B evidence remains absent, the qualified owner determines what can be concluded and what further evaluation is permitted. Schedule pressure cannot fill a missing technical record.\n\nIn the fictional resolution, lot identity is reconciled but the missing phase remains open for technical disposition. The handover states exactly that result instead of marking everything complete or declaring the product defective without evaluation. The next shift receives the method reference, original data and named decision owner.\n\nFinal decision: retain useful evidence and preserve the unsupported phase and acceptance conclusion. Exact residuals are method-specific process capability, valid cycle/product evidence, qualified deviation disposition and authorized release. A theory score cannot supply missing data or qualify a thermal-treatment operator.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G76_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G76_check1",
+        "prompt": "A work order says bad bearing without investigation. What is that?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A hypothesis unless supported by technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "A confirmed cause automatically."
+          },
+          {
+            "id": "c",
+            "label": "A full repair method."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G76_check2",
+        "prompt": "Why use functional blocks?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "To connect possible causes to the intended function and evidence."
+          },
+          {
+            "id": "c",
+            "label": "To prove the familiar component failed."
+          },
+          {
+            "id": "d",
+            "label": "To replace actual machine documentation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G76_check3",
+        "prompt": "Does physical fit prove replacement suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if inexpensive."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual material, rating and approved configuration can matter."
+          },
+          {
+            "id": "d",
+            "label": "Yes, bolts prove equivalence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G76_check4",
+        "prompt": "Can missing phase-B data be filled by a drawn line?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the curve looks smooth."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if urgent."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; interpolation cannot create an unrecorded observation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G76_check5",
+        "prompt": "Does a normal start prove guarding restored?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; function and safeguarding need separate evidence."
+          },
+          {
+            "id": "b",
+            "label": "Yes, movement proves safety."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after payment."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G76_check6",
+        "prompt": "Does generic maintenance training qualify every machine/process?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual method and practical scope matter."
+          },
+          {
+            "id": "c",
+            "label": "Yes, all maintenance is identical."
+          },
+          {
+            "id": "d",
+            "label": "Yes, one badge covers all."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G76_final1",
+        "prompt": "What belongs in a problem statement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only cost code."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Asset, expected function, observation, conditions and changes."
+          },
+          {
+            "id": "d",
+            "label": "Only a guessed failed part."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G76_final2",
+        "prompt": "Does a fault after a change prove the change caused it?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, timing is complete proof."
+          },
+          {
+            "id": "b",
+            "label": "Yes, ignore alternatives."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; it is relevant correlation needing evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G76_final3",
+        "prompt": "Can a worn component be a consequence rather than the cause?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; technical investigation determines significance."
+          },
+          {
+            "id": "b",
+            "label": "No, wear always explains everything."
+          },
+          {
+            "id": "c",
+            "label": "No, replace every part."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G76_final4",
+        "prompt": "Which item is not automatically an approved substitute?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "A similar-model catalog part that merely fits."
+          },
+          {
+            "id": "c",
+            "label": "An applicable approved source."
+          },
+          {
+            "id": "d",
+            "label": "A traceable authorized supersession."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G76_final5",
+        "prompt": "What makes a dimensional result interpretable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A green cell only."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Feature, units, method and applicable criterion."
+          },
+          {
+            "id": "d",
+            "label": "A bare number."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G76_final6",
+        "prompt": "What should a legitimate part supersession retain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the final invoice."
+          },
+          {
+            "id": "b",
+            "label": "No configuration history."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Original/replacement identity and approved basis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G76_final7",
+        "prompt": "Can a component change affect guarding or control response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; actual change review must address relevant functions."
+          },
+          {
+            "id": "b",
+            "label": "No, only fit matters."
+          },
+          {
+            "id": "c",
+            "label": "No, if installed quickly."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G76_final8",
+        "prompt": "Does a final cycle temperature describe an entire thermal treatment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual method variables and time history matter."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every phase is implied."
+          },
+          {
+            "id": "d",
+            "label": "Yes, a timer replaces all evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G76_final9",
+        "prompt": "Is a smooth cycle graph automatic proof of every items internal condition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if printed."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; method validity and measurement scope matter."
+          },
+          {
+            "id": "d",
+            "label": "Yes, appearance proves properties."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G76_final10",
+        "prompt": "Can cycle completion and product acceptance be different?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No, done always means accepted."
+          },
+          {
+            "id": "b",
+            "label": "No, all products are identical."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Yes; specified inspections or technical disposition may remain."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G76_final11",
+        "prompt": "A chart names L-7 and order L-4. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Traceable lot identity reconciliation."
+          },
+          {
+            "id": "b",
+            "label": "Assume the closest number."
+          },
+          {
+            "id": "c",
+            "label": "Change the chart silently."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G76_final12",
+        "prompt": "Does an emergency stop establish all energy absent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual energy-control verification is separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes, every source is gone."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if the screen is dark."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G76_final13",
+        "prompt": "Does OSHA1910.147 apply universally to well drilling/servicing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every task called maintenance."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; the cited standard has explicit exclusions."
+          },
+          {
+            "id": "d",
+            "label": "Yes, all catalog services."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G76_final14",
+        "prompt": "What should a post-repair functional test plan identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only start the machine."
+          },
+          {
+            "id": "b",
+            "label": "Only production urgency."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Purpose, safe arrangement, responsible roles and acceptance source."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G76_final15",
+        "prompt": "Can a no-load demonstration prove every loaded condition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; its conclusion is bounded by actual test conditions."
+          },
+          {
+            "id": "b",
+            "label": "Yes, any motion proves all duty."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if quiet."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G76_final16",
+        "prompt": "In Pine Works, what is the initial confirmed observation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Inconsistent output after a material change."
+          },
+          {
+            "id": "c",
+            "label": "Proven motor failure."
+          },
+          {
+            "id": "d",
+            "label": "Proven successful repair."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G76_final17",
+        "prompt": "In Pine, what remains despite a reported start?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only invoice approval."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Part suitability, process result and safeguarding questions."
+          },
+          {
+            "id": "d",
+            "label": "Nothing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G76_final18",
+        "prompt": "In Meadow, are lot mismatch and missing phase data the same issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, one typo explains both."
+          },
+          {
+            "id": "b",
+            "label": "Yes, erase both."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; each needs its own evidence/disposition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G76_final19",
+        "prompt": "Should a learner repeat a thermal cycle to compensate for missing records?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual qualified disposition and method govern."
+          },
+          {
+            "id": "b",
+            "label": "Yes, repeat until a pass appears."
+          },
+          {
+            "id": "c",
+            "label": "Yes, add heat by intuition."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G76_final20",
+        "prompt": "What remains after knowledge completion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Actual trade/method performance, approved technical evidence and release."
+          },
+          {
+            "id": "c",
+            "label": "All machine authority is granted."
+          },
+          {
+            "id": "d",
+            "label": "Only badge printing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G76_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G76_lesson1",
+          "questionIds": [
+            "G76_check1"
+          ]
+        },
+        {
+          "lessonId": "G76_lesson2",
+          "questionIds": [
+            "G76_check2"
+          ]
+        },
+        {
+          "lessonId": "G76_lesson3",
+          "questionIds": [
+            "G76_check3"
+          ]
+        },
+        {
+          "lessonId": "G76_lesson4",
+          "questionIds": [
+            "G76_check4"
+          ]
+        },
+        {
+          "lessonId": "G76_lesson5",
+          "questionIds": [
+            "G76_check5"
+          ]
+        },
+        {
+          "lessonId": "G76_lesson6",
+          "questionIds": [
+            "G76_check6"
+          ]
+        },
+        {
+          "lessonId": "G76_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G76_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G76_final",
+          "questionIds": [
+            "G76_final1",
+            "G76_final2",
+            "G76_final3",
+            "G76_final4",
+            "G76_final5",
+            "G76_final6",
+            "G76_final7",
+            "G76_final8",
+            "G76_final9",
+            "G76_final10",
+            "G76_final11",
+            "G76_final12",
+            "G76_final13",
+            "G76_final14",
+            "G76_final15",
+            "G76_final16",
+            "G76_final17",
+            "G76_final18",
+            "G76_final19",
+            "G76_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G76_check1": "Observation and cause determination differ.",
+        "G76_check2": "The model broadens structured reasoning without authorizing tests.",
+        "G76_check3": "Fit is only one aspect of suitability.",
+        "G76_check4": "Original evidence must remain honest.",
+        "G76_check5": "A functioning machine may still have unresolved protection.",
+        "G76_check6": "Broad categories conceal distinct skills.",
+        "G76_final1": "A clear problem guides competent investigation.",
+        "G76_final2": "Cause needs a supported connection, not timing alone.",
+        "G76_final3": "A finding needs context and causal reasoning.",
+        "G76_final4": "Similarity cannot establish actual equipment suitability.",
+        "G76_final5": "The result must describe what was measured and why it meets requirements.",
+        "G76_final6": "Traceability supports future maintenance and review.",
+        "G76_final7": "Configuration changes may have wider consequences.",
+        "G76_final8": "A process is more than a single end value.",
+        "G76_final9": "Recorded conditions and product condition are connected but distinct.",
+        "G76_final10": "The governing method defines acceptance evidence.",
+        "G76_final11": "Evidence must connect to the actual product.",
+        "G76_final12": "Stopping and safe-state evidence differ.",
+        "G76_final13": "Applicability must be determined for the actual sector and task.",
+        "G76_final14": "Testing reintroduces energy and needs the actual approved method.",
+        "G76_final15": "Required coverage comes from the actual technical plan.",
+        "G76_final16": "The work-order hypothesis exceeds the supplied observation.",
+        "G76_final17": "One function does not close every readiness element.",
+        "G76_final18": "Identity and process coverage are independent links.",
+        "G76_final19": "This course cannot authorize treatment recipes or rework.",
+        "G76_final20": "Theory cannot demonstrate craft execution or readiness."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

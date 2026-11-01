@@ -1,0 +1,906 @@
+{
+  "courseId": "G95",
+  "gapGroupId": "TG46",
+  "title": "Vehicle, combination, cargo and driver practical qualification",
+  "description": "Six subject-specific lessons, two worked fictional cases and twenty-six explained decisions. Actual employer methods and qualified practical performance remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for vehicle, combination, cargo and driver practical qualification.",
+  "audience": [
+    "Assigned drivers within confirmed vehicle scope",
+    "Transport dispatch and receiving coordinators",
+    "Vehicle/trailer readiness reviewers",
+    "Cargo and journey-planning supervisors"
+  ],
+  "practicalBoundary": "Rental self-drive, chauffeured service, carrier operation and office dispatch are different roles. Regulated hazardous cargo is separately classified under G01. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual transport role profile linking vehicle combination, cargo, route and supplied driver, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual driver readiness record separating credential verification and combination-specific assessment, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual vehicle-trailer defect and release record linked to current assigned units, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual load-specific securement plan linked to actual cargo and vehicle, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual journey plan linking approved route, receiving readiness and change contacts, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual breakdown and delivery handoff separating driver reporting, recovery and cargo acceptance, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who defines the actual driver, dispatch, loading and receiving duties for the vehicle/combination/load; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who matches verified credential scope and restrictions with separate employer practical evidence; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who reconciles each unit’s actual defect and authorized release status; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who recognizes changed cargo and obtains qualified load-specific securement review; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who coordinates changed route/destination and actual receiving readiness through the agreed process; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who uses the approved breakdown/reporting route and stays within the assigned recovery boundary; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Actual hazardous experiment, pipeline operation, equipment inspection/repair, driving, coupling, loading or recovery requires its own method-specific instruction and qualified safe practical assessment where assigned. This online result does not satisfy those requirements."
+  ],
+  "sources": [
+    {
+      "title": "FMCSA cargo securement",
+      "url": "https://www.fmcsa.dot.gov/regulations/cargo-securement/cargo-securement-rules",
+      "scopeLimit": "Actual vehicle/cargo/jurisdiction coverage; not a driver license."
+    },
+    {
+      "title": "FMCSA commercial driver license overview",
+      "url": "https://www.fmcsa.dot.gov/registration/commercial-drivers-license",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G95_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Vehicle readiness connects a driver, an actual vehicle or combination, a load and a journey. This course teaches role classification, credential matching, defect evidence, cargo-securement planning, route/receiving interfaces and recovery boundaries. It does not teach driving maneuvers, coupling, restraint calculations, roadside repair or recovery techniques.\n\nUse fictional dispatch and vehicle records only. Complete twenty-six questions, preserve original answers and acknowledge explained remediation. Applicable licenses, employer instruction and vehicle/load-specific practical assessment remain separate. A dispatcher is not automatically a driver, and a driving credential is not proof of every combination or recovery skill.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G95_lesson1",
+        "title": "Lesson 1 — Classify the driving assignment",
+        "body": "Define the transport service before assigning qualifications. Equipment-only rental, chauffeured transport, commercial carriage and office dispatch involve different duties. A booking can supply a vehicle without a driver or a carrier service with one. The actual vehicle, trailer, cargo, route and jurisdiction determine what evidence is relevant. Do not use a broad trucking label to assign every possible duty to every person.\n\nSeparate driver, loader, securement, dispatcher and receiving responsibilities. One person may hold several roles only when actually assigned and competent. The driver may need information supplied by the loader or customer, while dispatch coordinates a route without designing a restraint arrangement. Gaps between organizations must be resolved explicitly rather than left for the person arriving at the gate.\n\nIdentify the actual combination. A driver familiar with a tractor may face a different trailer or load. Legal credential scope and employer assessment need to match the assigned duty. Experience with one configuration is relevant evidence, not automatic authority for every other configuration. The employer must determine actual familiarization, instruction and practical evaluation requirements.\n\nRegulated hazardous-material functions require a separate applicability review. Driving a vehicle and classifying or declaring a regulated shipment are not identical qualifications. Conversely, an office-only coordinator should not be assigned hands-on cargo or recovery credentials unless those are actual duties. Match the function, not the department name.\n\nFor the fictional exercise, the order supplies a truck with a driver and separately rents an unstaffed trailer. The dispatcher must identify who provides the combination and load-specific readiness evidence. The fact that both lines appear on one purchase order does not prove the supplied driver has been assessed for the combined assignment. The worked result is a clear responsibility and evidence map before movement is relied on.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G95_lesson2",
+        "title": "Lesson 2 — Match credentials and restrictions",
+        "body": "Credential review establishes whether the individual has the required legal authorization for the actual assignment under the applicable jurisdiction. It begins with identity and the vehicle/duty scope, not simply a photocopy labeled license. The appropriate official verification route and employer process determine current status, restrictions and any relevant endorsements. This course does not decide a legal classification for an unspecified vehicle.\n\nKeep legal authorization and demonstrated task capability separate. A current license may be necessary without proving competence with a particular trailer, cargo or site arrangement. An employer practical assessment can demonstrate a defined skill without replacing a required license. The readiness record should show both categories accurately and identify unresolved limitations.\n\nRead restrictions as meaningful conditions. A qualification result may apply only to specified equipment or supervised operation. Do not convert it into unrestricted readiness because a booking is urgent. The appropriate transport authority must determine what additional instruction or assessment is needed for a changed assignment.\n\nProtect personal information while recording the relevant status. Dispatch may need confirmation that the driver is authorized and ready without unrestricted copies of all personal records. Use the employer's approved handling route and necessary verification fields. A broad roster tick should not hide a pending official check.\n\nIn the desk exercise, a driver has a valid credential for the legal class, while the employer assessment covers a different combination. The worked answer credits the credential within its scope and identifies the actual combination-assessment question. It does not declare the license worthless or treat it as proof of every physical skill. Qualified personnel must assess real driving, inspection, coupling and handling duties through the approved safe method. No road test or coupling demonstration is part of this online course.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G95_lesson3",
+        "title": "Lesson 3 — Read inspection and defect evidence",
+        "body": "Vehicle and trailer condition records need identity, observed defects, technical disposition and actual release status. A current tractor inspection does not establish the condition of a different trailer. A combination is not ready merely because one unit has satisfactory paperwork. The actual vehicle program and applicable requirements govern inspection and roadworthiness decisions.\n\nDistinguish the report of a condition from its diagnosis. A driver can accurately describe unusual behavior or a visible issue without being qualified to repair it. The competent technical role determines the significance and required correction. Do not dismiss a report because the vehicle completed a previous journey, and do not invent a technical cause from a brief dispatch note.\n\nRepair and release are different records. A work order or invoice can show activity without demonstrating the required verification and acceptance. The defect history should link the original report, corrective work and technical disposition. Deleting the defect entry is not evidence of repair. Dispatch urgency cannot supply the missing technical decision.\n\nThe learner's desk task is to reconcile identifiers and status. They should not drive, couple, crawl beneath equipment or perform a physical check to resolve an uncertain document. Actual inspection and operation require the employer's instruction and assessed competence. The course supplies no brake test, coupling sequence or repair method.\n\nIn the fictional exercise, the assigned tractor is available, but the trailer record contains an unresolved brake-related report. Dispatch marks the combination ready based on the tractor alone. The worked correction retains the trailer restriction and refers it to the authorized technical role. A fresh dispatch date would not address the defect. The driver receives the actual status rather than being expected to decide technical release at departure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G95_lesson4",
+        "title": "Lesson 4 — Interpret cargo securement planning",
+        "body": "Cargo securement planning concerns the actual load and vehicle arrangement. The objective is to prevent unacceptable movement or loss of cargo under the applicable rules and approved method. Different cargo can require different arrangements. A photograph of a successful earlier load cannot automatically establish suitability for changed machinery, packaging or support conditions.\n\nIdentify the cargo and its relevant characteristics through the responsible loading and technical process. The planner needs accurate information rather than a generic description such as equipment. The qualified person selects and verifies the actual arrangement using applicable requirements and equipment information. This lesson provides no tiedown count, working-load calculation, restraint pattern or loading sequence.\n\nSecurement equipment has identity, condition and approved use. A device's presence does not prove it is suitable for every task. The assessment must connect the actual equipment and arrangement to the load and vehicle. Workers should report substitutions, damage or changed cargo rather than assume the original plan remains valid because the delivery destination is unchanged.\n\nResponsibility and inspection interfaces need to be clear. The actual carrier and employer program determine who performs required checks and how changes or concerns are handled. A customer statement that a load is ready does not automatically eliminate the driver's or carrier's applicable duties. Equally, dispatch should not invent a technical arrangement outside its role.\n\nFor the exercise, the approved plan covers boxed goods while the customer substitutes irregular machinery. The worked answer identifies a changed load and obtains competent load-specific review before the movement. The original plan remains useful evidence for the original load only. The reviewer does not improvise restraint quantities from the image or instruct the driver to try a short trip to test stability. Actual loading and securement competence must be observed safely by qualified assessors.\n\nA load-information discrepancy can be as important as an equipment defect. If the shipping description names one item while the loading record shows another, the securement and transport reviewers need the actual identity before deciding suitability. Do not resolve the conflict by choosing the lighter description or copying a previous load sheet. Accurate cargo information links the customer, loading team, carrier and receiver. Each should receive the corrected approved information through the adopted process so that a later handoff does not reintroduce the obsolete description.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G95_lesson5",
+        "title": "Lesson 5 — Review journey and receiving interfaces",
+        "body": "A journey plan connects the route with vehicle/load constraints, access and receiving readiness. An estimated arrival time is only one part. The transport team must determine the actual legal and operational requirements for the vehicle, cargo and jurisdiction. This course does not prescribe routes, driving tactics or hours limits for an unspecified assignment.\n\nRead route assumptions together with the destination. A familiar road journey can end at a different gate, surface or unloading arrangement. The receiving site needs to confirm the actual interface through its responsible role. A paid appointment or access permission does not prove suitable unloading equipment or personnel are available.\n\nChanges require targeted review. If the destination moves from a staffed yard to an unattended location, the receiving assumptions change even if the distance is shorter. If the cargo changes, vehicle and route suitability may need review as well. Identify the affected assumptions and responsible authorities rather than treating every change as merely a new arrival time.\n\nDispatch must communicate restrictions accurately. A schedule cannot override technical defects, legal limitations or driver fitness concerns. Workers need the actual reporting and escalation route when conditions differ from the plan. The employer determines the approved response; this lesson does not invent permission to continue or a universal roadside action.\n\nIn the desk exercise, the destination changes after planning, but gate access and unloading readiness were confirmed only for the original yard. The worked answer reopens those specific confirmations and supplies the new information to the transport and receiving owners. Unrelated valid evidence, such as an unchanged credential check, is not discarded automatically. This proportional approach lets the team complete the changed planning without pretending that a previous site approval travels with the truck.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G95_lesson6",
+        "title": "Lesson 6 — Separate recovery and incident duties",
+        "body": "Breakdown, incident and recovery duties must be defined separately from driving. A person can be authorized to drive while lacking competence for recovery, roadside repair, cargo intervention or emergency response. The approved plan should identify how the driver reports the problem and obtains the appropriate assistance. This course gives no recovery rigging, traffic-control or repair instructions.\n\nAccurate reporting is valuable. State the location, vehicle identity, known load information, observable condition and uncertainty through the approved route. Do not guess a technical diagnosis to satisfy a form. A qualified recovery or technical organization needs truthful facts to plan its own work. The driver should not be expected to create capability by improvising outside the assigned role.\n\nDifferent cargo or incidents can activate additional requirements. Regulated hazardous cargo and uncontrolled releases need their actual response arrangements and qualifications. Ordinary driving authorization does not establish those intervention skills. Recognizing and reporting a problem is a legitimate role that should not be confused with conducting the specialist response.\n\nDelivery closeout should reconcile actual cargo acceptance, damage or discrepancies and reported vehicle conditions. Successful arrival does not prove every earlier decision was correct. Preserve near-miss and defect information so the responsible organization can learn and assess the next use. A signed receipt should not erase an unresolved technical report.\n\nFor the exercise, a driver reports a breakdown and is told to improvise a recovery using equipment they have not been assigned or assessed to use. The worked answer follows the approved specialist escalation and keeps the driver within the actual capability boundary. The delivery record remains pending as appropriate; a scheduling problem does not justify a false completion or an unqualified intervention. Real emergency actions must be taught by the employer for the actual task and location.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G95_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek dispatches a tractor with a supplied driver and adds a separately rented trailer. The legal credential check is current, but the employer assessment covers another combination. The tractor's condition record is satisfactory. The trailer contains an unresolved reported defect. The customer also changes the load from boxed material to irregular machinery shortly before departure.\n\nThe transport coordinator begins with the actual assignment. The purchase order does not establish that every combined duty has been assessed. The driver credential remains useful evidence of its legal scope, while the actual combination readiness question goes to the responsible employer assessment process. The coordinator does not invent a road test or coupling lesson.\n\nThe trailer defect is examined separately from the credential issue. A satisfactory tractor record cannot release another unit's unresolved condition. The authorized technical role must disposition the report under the actual vehicle program. A new dispatch date or completed rental receipt does not supply that evidence. The driver receives the real status rather than a general ready label.\n\nThe cargo change creates a third review. A securement plan for boxes does not automatically apply to irregular machinery. The competent loading and transport roles need accurate cargo and vehicle information to determine the actual arrangement. The desk exercise supplies no restraint calculations or loading pattern. The coordinator preserves the original load plan and identifies exactly why it no longer supports the changed movement.\n\nThe worked outcome therefore tracks credential/assessment scope, vehicle technical release and load-specific planning independently. One success cannot close the other categories. A current license does not repair the trailer, and a repaired trailer does not establish the changed cargo arrangement. Existing valid records are credited accurately without being broadened.\n\nThe departure decision is made only through the real authorities and requirements once the affected questions are resolved. The course learner's achievement is identifying the actual dependencies and communicating them clearly. That is useful to drivers and dispatchers alike because it avoids leaving organizational contradictions for the person at the gate to solve through improvisation.\n\nIf the customer withdraws the load change, the team can revisit that particular issue while the combination and defect questions remain. Proportional evidence use means neither repeating everything unnecessarily nor treating one correction as universal readiness.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G95_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: a machinery delivery is planned to a staffed yard. The receiver confirms an appointment and gate access, but no unloading owner is identified. The destination then changes to an unattended location. Before movement, the driver reports unusual vehicle behavior. A manager says the previous journey succeeded and suggests that any later breakdown can be recovered by the driver.\n\nThe coordinator separates receiving, vehicle and recovery assumptions. The original appointment does not establish the second destination's access or unloading capability. The responsible receiving and transport roles review the actual changed location and provide the required confirmation. Dispatch does not choose an improvised unloading method to maintain the original timetable.\n\nThe reported vehicle behavior is recorded factually and routed to the competent technical authority. Successful earlier operation is relevant history but not proof that the current report is harmless. The driver is not required to diagnose the cause, and the coordinator does not replace technical release with a commercial assurance. The actual program governs restriction and disposition.\n\nRecovery is a different duty. The driver's operating authorization does not automatically include recovery equipment, roadside repair or hazardous-cargo intervention. The approved response arrangement must identify suitable assistance and the driver's actual reporting role. The fictional exercise asks participants to communicate location and known load information; it does not simulate a breakdown on a road or teach recovery tactics.\n\nAfter the actual authorities resolve the relevant questions, the handoff records current destination, receiving readiness, vehicle status and response contacts. If any category remains open, its effect on the planned movement stays visible. A single complete cover sheet would not create the missing capability.\n\nAt closeout, the team records actual acceptance and any discrepancies without erasing the initial vehicle report. The history can inform the next assignment and technical review. Reaching a destination is an outcome, not a retrospective certificate that all planning was sound.\n\nThe case teaches a practical transport discipline: accurate information and role boundaries are controls in their own right. A driver contributes observations and assigned driving skill; a technical role evaluates defects; a receiving owner confirms the interface; a specialist supplies recovery where required. Dispatch makes these relationships explicit instead of treating one person's experience as a substitute for every missing function.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G95_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Apply the final questions to actual transport roles, credential and assessment scope, unit-specific defects, load-specific securement, changed journeys and recovery boundaries. Preserve first answers and acknowledge explained remediation.\n\nReal driving, inspection, coupling, securement and recovery require actual instruction and qualified practical assessment where assigned. Applicable legal credentials and hazardous-material functions remain separate. Passing this course does not authorize a vehicle movement or specialist intervention.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G95_check1",
+        "prompt": "During classify the driving assignment, an office dispatcher is treated as authorized to drive a combination they have not been assigned or assessed for. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep dispatch and driving scopes distinct and review any actual driving assignment."
+          },
+          {
+            "id": "b",
+            "label": "Every dispatcher is automatically an authorized driver."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G95_check2",
+        "prompt": "During match credentials and restrictions, a valid credential is accepted as sole proof of competence with an unfamiliar trailer combination. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A valid license proves competence with every trailer."
+          },
+          {
+            "id": "b",
+            "label": "Verify the legal scope and arrange the required combination-specific assessment."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G95_check3",
+        "prompt": "During read inspection and defect evidence, a reported brake-related defect is still open but dispatch marks the combination available. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Dispatch urgency permits administrative closure of a technical defect."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Retain the restriction and obtain authorized technical disposition."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G95_check4",
+        "prompt": "During interpret cargo securement planning, a plan for boxed goods is reused for a different machinery load. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "One securement photograph proves suitability for every cargo."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Obtain competent load-specific review before the changed movement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G95_check5",
+        "prompt": "During review journey and receiving interfaces, the destination changes after dispatch but access and receiving arrangements are not reviewed. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Refer the changed journey for the required transport and receiving review."
+          },
+          {
+            "id": "b",
+            "label": "A new destination changes only the estimated arrival time."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G95_check6",
+        "prompt": "During separate recovery and incident duties, a driver is told to improvise recovery outside their assessed duty. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Driving authorization includes every recovery and repair task."
+          },
+          {
+            "id": "b",
+            "label": "Use the approved recovery escalation and keep the driver within assigned capability."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G95_final1",
+        "prompt": "Which evidence is most directly relevant to classify the driving assignment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Transport role profile linking vehicle combination, cargo, route and supplied driver."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G95_final2",
+        "prompt": "Which evidence is most directly relevant to match credentials and restrictions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Driver readiness record separating credential verification and combination-specific assessment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G95_final3",
+        "prompt": "Which evidence is most directly relevant to read inspection and defect evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Vehicle-trailer defect and release record linked to current assigned units."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G95_final4",
+        "prompt": "Which evidence is most directly relevant to interpret cargo securement planning?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Load-specific securement plan linked to actual cargo and vehicle."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G95_final5",
+        "prompt": "Which evidence is most directly relevant to review journey and receiving interfaces?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Journey plan linking approved route, receiving readiness and change contacts."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G95_final6",
+        "prompt": "Which evidence is most directly relevant to separate recovery and incident duties?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Breakdown and delivery handoff separating driver reporting, recovery and cargo acceptance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G95_final7",
+        "prompt": "A colleague argues: “Every dispatcher is automatically an authorized driver.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; keep dispatch and driving scopes distinct and review any actual driving assignment."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G95_final8",
+        "prompt": "A colleague argues: “A valid license proves competence with every trailer.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; verify the legal scope and arrange the required combination-specific assessment."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G95_final9",
+        "prompt": "A colleague argues: “Dispatch urgency permits administrative closure of a technical defect.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; retain the restriction and obtain authorized technical disposition."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G95_final10",
+        "prompt": "A colleague argues: “One securement photograph proves suitability for every cargo.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; obtain competent load-specific review before the changed movement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G95_final11",
+        "prompt": "A colleague argues: “A new destination changes only the estimated arrival time.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; refer the changed journey for the required transport and receiving review."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G95_final12",
+        "prompt": "A colleague argues: “Driving authorization includes every recovery and repair task.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; use the approved recovery escalation and keep the driver within assigned capability."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G95_final13",
+        "prompt": "A valid license is supplied, but the employer assessment covers another combination. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No question; every combination is covered."
+          },
+          {
+            "id": "b",
+            "label": "The license must be discarded as useless."
+          },
+          {
+            "id": "c",
+            "label": "The actual combination-specific readiness question under the employer’s applicable process."
+          },
+          {
+            "id": "d",
+            "label": "Only the driver’s preferred route."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G95_final14",
+        "prompt": "The tractor is satisfactory while the trailer has an open technical report. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A fresh tractor signature only."
+          },
+          {
+            "id": "b",
+            "label": "A paid trailer rental receipt."
+          },
+          {
+            "id": "c",
+            "label": "A promise that the previous journey succeeded."
+          },
+          {
+            "id": "d",
+            "label": "Authorized disposition of the trailer condition before treating the actual combination as ready."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G95_final15",
+        "prompt": "Cargo changes from boxes to irregular machinery. Which assumption changed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The load-specific securement and transport planning basis."
+          },
+          {
+            "id": "b",
+            "label": "Only the delivery time."
+          },
+          {
+            "id": "c",
+            "label": "Nothing if the trailer is unchanged."
+          },
+          {
+            "id": "d",
+            "label": "The applicable driver identity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G95_final16",
+        "prompt": "A destination changes to an unattended yard. What requires review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the mileage estimate."
+          },
+          {
+            "id": "b",
+            "label": "Access and receiving arrangements tied to the actual changed location."
+          },
+          {
+            "id": "c",
+            "label": "Every unrelated credential must be erased."
+          },
+          {
+            "id": "d",
+            "label": "Nothing if the first appointment was paid."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G95_final17",
+        "prompt": "A dispatcher never drives or handles loads. What competence should be matched?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every vehicle and recovery skill by department association."
+          },
+          {
+            "id": "b",
+            "label": "Clinical transfer assessment."
+          },
+          {
+            "id": "c",
+            "label": "The actual coordination duties, adding driver or handling requirements only when those roles are assigned."
+          },
+          {
+            "id": "d",
+            "label": "Unrelated plant credentials."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G95_final18",
+        "prompt": "The driver is asked to improvise recovery outside their assessed role. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Driving authority includes every recovery technique."
+          },
+          {
+            "id": "b",
+            "label": "A short delay permits unassessed work."
+          },
+          {
+            "id": "c",
+            "label": "An online quiz can supply recovery qualification."
+          },
+          {
+            "id": "d",
+            "label": "Use the approved specialist reporting/escalation arrangement and remain within assigned capability."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G95_final19",
+        "prompt": "The customer withdraws the machinery substitution and returns to the original boxed load. Which issues from the tractor/trailer case can still remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual combination-specific assessment and the trailer's unresolved technical defect/release."
+          },
+          {
+            "id": "b",
+            "label": "None; restoring the original cargo repairs the trailer."
+          },
+          {
+            "id": "c",
+            "label": "Only badge printing, because the legal credential proves every combination skill."
+          },
+          {
+            "id": "d",
+            "label": "A duty for the dispatcher to perform a road test personally."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G95_final20",
+        "prompt": "The machinery delivery destination changes from a staffed yard to an unattended location. What does the original appointment/gate confirmation establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatic unloading capability at the unattended location."
+          },
+          {
+            "id": "b",
+            "label": "Only its original-site arrangement; actual access and receiving/unloading responsibilities for the changed destination need confirmation."
+          },
+          {
+            "id": "c",
+            "label": "Permission for the driver to invent an unloading or recovery method."
+          },
+          {
+            "id": "d",
+            "label": "That any unusual vehicle behavior can be ignored because a prior journey succeeded."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G95_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G95_lesson1",
+          "questionIds": [
+            "G95_check1"
+          ]
+        },
+        {
+          "lessonId": "G95_lesson2",
+          "questionIds": [
+            "G95_check2"
+          ]
+        },
+        {
+          "lessonId": "G95_lesson3",
+          "questionIds": [
+            "G95_check3"
+          ]
+        },
+        {
+          "lessonId": "G95_lesson4",
+          "questionIds": [
+            "G95_check4"
+          ]
+        },
+        {
+          "lessonId": "G95_lesson5",
+          "questionIds": [
+            "G95_check5"
+          ]
+        },
+        {
+          "lessonId": "G95_lesson6",
+          "questionIds": [
+            "G95_check6"
+          ]
+        },
+        {
+          "lessonId": "G95_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G95_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G95_final",
+          "questionIds": [
+            "G95_final1",
+            "G95_final2",
+            "G95_final3",
+            "G95_final4",
+            "G95_final5",
+            "G95_final6",
+            "G95_final7",
+            "G95_final8",
+            "G95_final9",
+            "G95_final10",
+            "G95_final11",
+            "G95_final12",
+            "G95_final13",
+            "G95_final14",
+            "G95_final15",
+            "G95_final16",
+            "G95_final17",
+            "G95_final18",
+            "G95_final19",
+            "G95_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G95_check1": "The correct decision is to keep dispatch and driving scopes distinct and review any actual driving assignment. Self-drive rental, chauffeured service, commercial carriage and office dispatch are different roles. Determine vehicle, trailer, cargo, route and jurisdiction before identifying credentials. A driver license alone does not demonstrate competence with every combination or load. Conversely, a dispatcher does not become a driver merely by scheduling transport. Regulated hazardous-material functions need their separate applicability and qualification review. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G95_check2": "The correct decision is to verify the legal scope and arrange the required combination-specific assessment. Check driver evidence against the actual jurisdiction, vehicle class and assignment, including relevant restrictions through the authorized verification process. A photocopy can be incomplete or outdated. Preserve privacy while recording verification and unresolved limitations. Employer vehicle-specific assessment and familiarization remain separate from legal credential verification; neither record should be substituted for the other. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G95_check3": "The correct decision is to retain the restriction and obtain authorized technical disposition. Vehicle and trailer inspection records need identity, current condition and defect disposition under the applicable program. A recurring check mark is not evidence that a reported defect was assessed. The learner reviews records without conducting road tests, coupling or repairs. The designated competent role decides technical roadworthiness and release; dispatch should transmit restrictions rather than remove them to protect a schedule. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G95_check4": "The correct decision is to obtain competent load-specific review before the changed movement. Cargo securement depends on actual load, vehicle arrangement, equipment and applicable rules. A generic photograph cannot establish suitability for a changed cargo. The responsible qualified person selects and verifies the arrangement; this course provides no tie-down counts, working-load calculations or loading recipe. Review load identity, approved plan, equipment traceability and inspection responsibilities before relying on the plan. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G95_check5": "The correct decision is to refer the changed journey for the required transport and receiving review. A route plan needs actual constraints and receiving arrangements, not merely an estimated arrival time. Consider permitted access, delivery coordination and the driver reporting route for changed conditions. The authorized transport team determines legal and operational requirements. A schedule cannot override restrictions or fitness concerns. The learner practices escalating a changed route at a desk rather than selecting driving techniques. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G95_check6": "The correct decision is to use the approved recovery escalation and keep the driver within assigned capability. A driver may recognize and report a breakdown without being qualified for recovery, roadside repair or hazardous-cargo intervention. Identify the approved response arrangement and communicate location and known hazards through the designated route. Delivery closeout should reconcile actual cargo and defects without treating successful arrival as proof that all earlier decisions were sound. Preserve incident and near-miss evidence for review. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G95_final1": "A transport role profile linking vehicle combination, cargo, route and supplied driver addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Self-drive rental, chauffeured service, commercial carriage and office dispatch are different roles. Determine vehicle, trailer, cargo, route and jurisdiction before identifying credentials. A driver license alone does not demonstrate competence with every combination or load. Conversely, a dispatcher does not become a driver merely by scheduling transport. Regulated hazardous-material functions need their separate applicability and qualification review.",
+        "G95_final2": "A driver readiness record separating credential verification and combination-specific assessment addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Check driver evidence against the actual jurisdiction, vehicle class and assignment, including relevant restrictions through the authorized verification process. A photocopy can be incomplete or outdated. Preserve privacy while recording verification and unresolved limitations. Employer vehicle-specific assessment and familiarization remain separate from legal credential verification; neither record should be substituted for the other.",
+        "G95_final3": "A vehicle-trailer defect and release record linked to current assigned units addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Vehicle and trailer inspection records need identity, current condition and defect disposition under the applicable program. A recurring check mark is not evidence that a reported defect was assessed. The learner reviews records without conducting road tests, coupling or repairs. The designated competent role decides technical roadworthiness and release; dispatch should transmit restrictions rather than remove them to protect a schedule.",
+        "G95_final4": "A load-specific securement plan linked to actual cargo and vehicle addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Cargo securement depends on actual load, vehicle arrangement, equipment and applicable rules. A generic photograph cannot establish suitability for a changed cargo. The responsible qualified person selects and verifies the arrangement; this course provides no tie-down counts, working-load calculations or loading recipe. Review load identity, approved plan, equipment traceability and inspection responsibilities before relying on the plan.",
+        "G95_final5": "A journey plan linking approved route, receiving readiness and change contacts addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A route plan needs actual constraints and receiving arrangements, not merely an estimated arrival time. Consider permitted access, delivery coordination and the driver reporting route for changed conditions. The authorized transport team determines legal and operational requirements. A schedule cannot override restrictions or fitness concerns. The learner practices escalating a changed route at a desk rather than selecting driving techniques.",
+        "G95_final6": "A breakdown and delivery handoff separating driver reporting, recovery and cargo acceptance addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A driver may recognize and report a breakdown without being qualified for recovery, roadside repair or hazardous-cargo intervention. Identify the approved response arrangement and communicate location and known hazards through the designated route. Delivery closeout should reconcile actual cargo and defects without treating successful arrival as proof that all earlier decisions were sound. Preserve incident and near-miss evidence for review.",
+        "G95_final7": "That inference exceeds the evidence. Self-drive rental, chauffeured service, commercial carriage and office dispatch are different roles. Determine vehicle, trailer, cargo, route and jurisdiction before identifying credentials. A driver license alone does not demonstrate competence with every combination or load. Conversely, a dispatcher does not become a driver merely by scheduling transport. Regulated hazardous-material functions need their separate applicability and qualification review. The appropriate task disposition remains to keep dispatch and driving scopes distinct and review any actual driving assignment.",
+        "G95_final8": "That inference exceeds the evidence. Check driver evidence against the actual jurisdiction, vehicle class and assignment, including relevant restrictions through the authorized verification process. A photocopy can be incomplete or outdated. Preserve privacy while recording verification and unresolved limitations. Employer vehicle-specific assessment and familiarization remain separate from legal credential verification; neither record should be substituted for the other. The appropriate task disposition remains to verify the legal scope and arrange the required combination-specific assessment.",
+        "G95_final9": "That inference exceeds the evidence. Vehicle and trailer inspection records need identity, current condition and defect disposition under the applicable program. A recurring check mark is not evidence that a reported defect was assessed. The learner reviews records without conducting road tests, coupling or repairs. The designated competent role decides technical roadworthiness and release; dispatch should transmit restrictions rather than remove them to protect a schedule. The appropriate task disposition remains to retain the restriction and obtain authorized technical disposition.",
+        "G95_final10": "That inference exceeds the evidence. Cargo securement depends on actual load, vehicle arrangement, equipment and applicable rules. A generic photograph cannot establish suitability for a changed cargo. The responsible qualified person selects and verifies the arrangement; this course provides no tie-down counts, working-load calculations or loading recipe. Review load identity, approved plan, equipment traceability and inspection responsibilities before relying on the plan. The appropriate task disposition remains to obtain competent load-specific review before the changed movement.",
+        "G95_final11": "That inference exceeds the evidence. A route plan needs actual constraints and receiving arrangements, not merely an estimated arrival time. Consider permitted access, delivery coordination and the driver reporting route for changed conditions. The authorized transport team determines legal and operational requirements. A schedule cannot override restrictions or fitness concerns. The learner practices escalating a changed route at a desk rather than selecting driving techniques. The appropriate task disposition remains to refer the changed journey for the required transport and receiving review.",
+        "G95_final12": "That inference exceeds the evidence. A driver may recognize and report a breakdown without being qualified for recovery, roadside repair or hazardous-cargo intervention. Identify the approved response arrangement and communicate location and known hazards through the designated route. Delivery closeout should reconcile actual cargo and defects without treating successful arrival as proof that all earlier decisions were sound. Preserve incident and near-miss evidence for review. The appropriate task disposition remains to use the approved recovery escalation and keep the driver within assigned capability.",
+        "G95_final13": "The actual combination-specific readiness question under the employer’s applicable process. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G95_final14": "Authorized disposition of the trailer condition before treating the actual combination as ready. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G95_final15": "The load-specific securement and transport planning basis. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G95_final16": "Access and receiving arrangements tied to the actual changed location. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G95_final17": "The actual coordination duties, adding driver or handling requirements only when those roles are assigned. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G95_final18": "Use the approved specialist reporting/escalation arrangement and remain within assigned capability. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G95_final19": "Withdrawing a cargo change can resolve that changed-load question. It cannot establish driver assessment for the actual combination or technical disposition of the separate trailer condition.",
+        "G95_final20": "A site-specific confirmation does not travel automatically with the vehicle. The actual changed location and receiving interface need responsible review, separately from vehicle-condition and recovery-role questions."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

@@ -1,0 +1,916 @@
+{
+  "courseId": "G84",
+  "gapGroupId": "TG35",
+  "title": "Waste characterization, environmental sampling and treatment methods",
+  "description": "Task-specific instruction with two worked fictional cases, six checks and twenty explained final decisions. Employer methods and observed qualification remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for waste characterization, environmental sampling and treatment methods.",
+  "audience": [
+    "Waste characterization coordinators",
+    "Assigned environmental samplers",
+    "Laboratory liaison personnel",
+    "Waste acceptance and shipment reviewers"
+  ],
+  "practicalBoundary": "Nonhazardous disposal, hazardous waste, emergency response and environmental desk advice must remain distinct. HAZWOPER is not inferred from the word waste. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual waste profile linking generator, process, history and receiving decision, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual approved sampling plan showing target material, analytical objectives and laboratory instructions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual chain-of-custody record matched to sample labels and laboratory receipt exceptions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual laboratory report with qualifiers, units and an approved decision criterion, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual receiving-facility approval linked to current waste profile and proposed treatment route, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual shipment reconciliation linking waste profile, actual load and authorized destination, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who links process knowledge and changed inputs to the actual characterization question; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who explains representativeness against an approved sampling objective without improvising collection; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who reconciles sample identity and custody discrepancies while retaining originals; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who interprets units, nondetects and qualifiers within assigned competence; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who matches a material profile to actual receiving conditions and flags changed mixtures; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who reconciles material, load, destination and assigned transport/response functions; records the representative task, errors, correction, limits and assessment decision.",
+    "Actual hazardous, equipment, trade or regulated duties require their own approved method assessment and applicable credentials. This online result does not satisfy those practical requirements."
+  ],
+  "sources": [
+    {
+      "title": "OSHA hazardous waste operations and emergency response",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120",
+      "scopeLimit": "Coverage and actual response role must be determined; not every waste service is covered."
+    },
+    {
+      "title": "PHMSA hazardous-material training requirements",
+      "url": "https://www.phmsa.dot.gov/about-phmsa/hazardous-materials-training-requirements",
+      "scopeLimit": "Applies to actual regulated transport functions; FAQ guidance does not itself create obligations."
+    },
+    {
+      "title": "OSHA laboratory chemical exposure",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450",
+      "scopeLimit": "Defined laboratory-use scope; not universal certification of analytical methods."
+    },
+    {
+      "title": "EPA hazardous waste identification",
+      "url": "https://www.epa.gov/hw/defining-hazardous-waste-listed-characteristic-and-mixed-radiological-wastes",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G84_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Waste characterization connects knowledge about a material to a decision about handling, analysis, treatment, transport or acceptance. This course teaches how to build that connection without guessing composition or inventing a sampling method. The generating process, representative sampling, sample identity, analytical limitations and receiving conditions each contribute different evidence.\n\nThe desk exercises use fictional profiles and reports. They do not authorize collection, chemical handling, tank entry, treatment-plant operation or regulated shipping declarations. Those duties need actual method instruction and assessed capability. Waste work is not automatically emergency response, and the word waste alone does not establish HAZWOPER applicability. Complete all twenty-six questions, retain the first responses and acknowledge explained remediation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G84_lesson1",
+        "title": "Lesson 1 — Characterize the waste question",
+        "body": "Begin with the decision the characterization must support. Classifying a waste, choosing an analytical method and obtaining a facility's acceptance are related questions with different evidence needs. A laboratory result can inform classification without proving that a particular facility will receive the material. An acceptance letter can identify a permitted destination without proving that the actual load matches the accepted profile.\n\nDescribe the generating process: what activity produced the material, which inputs may be present, how it was stored and whether other streams were added. Process knowledge can be important evidence, but its basis must be documented. An experienced person's recollection is not automatically a current and complete description. Changes to feedstocks, cleaning products, equipment or storage can change what the historical knowledge supports.\n\nUnder the cited United States framework, hazardous-waste identification includes listed and characteristic waste questions, with other scope and exclusion questions determined by the applicable regime. Appearance alone answers none of those questions. Clear liquid may contain substances of concern, while a dark material is not classified solely because it looks dirty. A safety data sheet for a purchased input can inform the review but does not necessarily describe the resulting waste mixture.\n\nBuild a profile that links the material to its generator, process, relevant history and characterization basis. Record unknown additions as unknown rather than leaving the field blank in a way that implies none occurred. Identify who is qualified to make the classification decision and who will approve receiving conditions.\n\nIn the fictional exercise, a wash-water process began using a different cleaning product. Last year's profile describes the earlier process. Keep it as historical evidence, identify the changed input and ask the competent environmental reviewer what current characterization is needed. Copying the old nonhazardous label would hide the very change that requires review.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G84_lesson2",
+        "title": "Lesson 2 — Read a sampling plan before collecting",
+        "body": "A sample represents a defined population under a particular plan. The population might be a batch, a section of soil, an overlying liquid or another specified material. If the decision concerns the whole batch but the sample represents only an accessible surface, the relationship needs technical justification. More laboratory precision cannot repair a sample that does not represent the decision population.\n\nRead the sampling objective before considering containers or locations. What decision will the data support? Which material, area or period is included? What variability is expected? Which limitations will remain? A qualified sampling planner connects those questions to the approved collection method. This course does not prescribe collection patterns, access methods, quantities or preservation recipes.\n\nHeterogeneity matters. Settled solids and an overlying liquid may differ. A convenient liquid grab cannot automatically characterize the solids. Combining subsamples may answer some questions while obscuring differences relevant to another decision. Whether discrete or composite samples are appropriate belongs to the actual technical plan and analytical objectives, not a preference for fewer containers.\n\nCoordinate with the laboratory before collection through the authorized plan. The requested analysis, approved method, containers, preservation and handling conditions must fit together. A laboratory can produce a valid result for the received sample while the result remains unsuitable for the original question because the collection design was wrong.\n\nFor a desk exercise, draw a vessel with liquid and settled material and write two questions: what represents the liquid and what represents the proposed whole-vessel removal? Mark which question a fictional surface sample could support and which remains unaddressed. The useful learning is representativeness, not a physical sampling technique. Actual sampling may introduce exposure, access or containment hazards requiring separately qualified personnel and task controls.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G84_lesson3",
+        "title": "Lesson 3 — Protect sample identity and custody",
+        "body": "Sample identification is the thread connecting field observations to laboratory results. Each sample needs an unambiguous identifier linked to its source and collection record. The container label, field sheet, chain-of-custody record, laboratory receipt and final report should be reconcilable. Matching spelling alone is insufficient if the source, collection event or requested analysis conflicts.\n\nChain of custody records transfers and responsibility under the adopted method. It should reflect what actually happened. Do not backfill an invented signature or transfer time because the expected chain looks incomplete. If custody evidence is incomplete, record the limitation and obtain a competent disposition. Some decisions may require stronger custody assurance than others; the actual quality requirements determine acceptability.\n\nLaboratory receipt is an important checkpoint. The laboratory may note container condition, identification differences or handling exceptions. Preserve those observations with the sample record. A qualified reviewer must decide what effect an exception has on the intended analysis and decision. Accepting delivery into a laboratory does not automatically mean every quality requirement was satisfied.\n\nA discrepancy should trigger reconciliation, not silent relabeling. In the exercise, field record S12 names container WC-12, the custody sheet names WC-21 and the receipt flags the difference. Ask the collector and laboratory to review contemporaneous records through the authorized process. If identity can be established, document the evidence and correction. If it cannot, state that limitation and obtain the appropriate technical decision.\n\nKeep original records and link corrected versions. This protects the credibility of valid data as well as exposing limitations. A perfectly formatted final report cannot supply a missing relationship between the reported sample and the material whose acceptance is being decided. The worker's accurate observations and prompt reporting of errors are therefore part of technical quality, not merely administration.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G84_lesson4",
+        "title": "Lesson 4 — Interpret reports without erasing uncertainty",
+        "body": "Read an analytical report in layers. First identify the sample, method and requested analysis. Then inspect units, reporting limits, qualifiers and relevant quality notes. Only then compare the result with an applicable decision criterion selected by the authorized specialist. A table of numbers without these relationships can look authoritative while answering the wrong question.\n\nUnits must be compatible with the comparison. A result expressed on a different basis cannot simply be copied into another unit column. The competent analyst or reviewer determines any valid conversion and its assumptions. Do not invent a conversion or criterion to finish an acceptance form. The desk learner should identify a mismatch and explain why an unqualified direct comparison would be unsound.\n\nA nondetect is not a measured zero. It conveys a method-dependent reporting statement. Retain the laboratory expression and reporting limit rather than replacing it with zero in a spreadsheet. Whether the reporting capability is sufficient depends on the decision being made. A result can be properly reported yet incapable of resolving a particular low-level criterion.\n\nQualifiers describe limitations or conditions affecting interpretation. Do not delete them from a summary because they make the table untidy. A qualified result may remain useful for one purpose and unsuitable for another. Ask the responsible reviewer to explain the effect in the context of the actual decision, and retain that disposition with the result.\n\nFor the exercise, a report says below reporting limit and includes a qualifier. The draft acceptance table says zero and omits the note. The worked correction restores the laboratory expression, units and qualifier and refers the decision comparison for competent interpretation. It does not declare the material acceptable or unacceptable solely from the word nondetect. The relationship between sampling, analysis and decision remains visible.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G84_lesson5",
+        "title": "Lesson 5 — Separate treatment from acceptance",
+        "body": "Treatment suitability requires a defined feed and a defined process. A treatment provider needs evidence that the proposed material lies within its accepted operating and regulatory envelope. A quote can describe a commercial proposal without establishing technical suitability or permission. A permit can establish an authorized activity without proving that every incoming load meets the facility's acceptance conditions.\n\nRead the receiving approval for identity and scope. Which profile, process, material and conditions does it reference? Does it exclude unreviewed additions? Does the approval apply to the actual destination? A familiar facility name is not a substitute for the current acceptance relationship. The responsible environmental and facility roles determine actual permit and acceptance requirements.\n\nMixing changes the characterization question. Do not assume that two separately described materials become acceptable merely because they share a truck or container. The combined material may have different properties, compatibility issues or acceptance requirements. This course provides no blending, neutralization or treatment recipe; the appropriate technical process must review the actual proposal before affected work proceeds.\n\nConsider a fictional approval A06 for wash water from one profile. Dispatch proposes adding a separate cleaning residue. The original approval is evidence for the original material, not the mixture. The worker should report the proposed addition and preserve its identity. The technical reviewer decides what further characterization, compatibility and receiving review is necessary.\n\nAcceptance conditions should be usable by the people preparing and dispatching the load. They need the correct material identity, exclusions and route for changes. If the approval depends on conditions nobody has communicated to the crew, the handoff is incomplete. A signed profile does not excuse sending a materially different load, and a receiving signature does not retrospectively validate an unsupported characterization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G84_lesson6",
+        "title": "Lesson 6 — Maintain shipment and response boundaries",
+        "body": "The final material handoff should reconcile the profile, actual load, shipping functions and destination. Different people may generate the waste, characterize it, collect it, prepare shipping information, transport it and accept it. Each needs the information relevant to their duty, with a clear owner for discrepancies. A gap between organizations is not resolved by assuming the next party will classify the material.\n\nRegulated hazardous-material transport functions require their own applicability and training review. Environmental sampling competence does not automatically authorize a shipping declaration. Conversely, someone doing office scheduling should not be assigned every transport or response qualification unless they actually performs those duties. Match qualifications to functions rather than to a broad disposal-service label.\n\nDistinguish routine waste handling from uncontrolled emergency response. A person may recognize and report a release without being assigned to intervene. HAZWOPER coverage depends on actual circumstances and roles; not every collection service or environmental advisory task is covered. The employer determines the applicable program and response boundaries. The course does not authorize cleanup, entry or emergency intervention.\n\nA reconciliation record should connect load identity and quantity information required by the adopted process with the approved destination and receiving evidence. Explain differences rather than editing the earlier record to match the later one. If the destination changes, determine whether the acceptance and shipping arrangements remain valid before relying on them.\n\nIn the desk exercise, load ticket LT09 identifies the accepted profile while dispatch names a different facility. Both facilities are familiar, but only one acceptance is in the pack. The worked response establishes the actual destination, confirms the applicable acceptance and assigns any declaration to the authorized qualified function. It does not ask an unassigned clerk to sign a technical classification merely because dispatch is waiting.\n\nA useful quality review asks whether uncertainty could change the decision. Not every limitation makes data worthless, but neither should every limitation be dismissed as routine. For example, a result can adequately identify a broad material difference while remaining unsuitable for a sensitive acceptance comparison. The competent reviewer should state the permitted use and the reason. This is more informative than labeling the whole report valid or invalid without context.\n\nKeep process knowledge and analytical evidence distinguishable. A generator may know that a particular input was never used during the relevant batch, while analysis addresses substances within the chosen method's scope. Neither source should be represented as answering questions it did not address. If the profile relies on both, identify which conclusion each supports and how changed process information would trigger review. This lets a worker report a meaningful change immediately instead of waiting for the next laboratory result to expose an assumption that was already known to be outdated.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G84_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek produces wash water from equipment cleaning. The previous profile described a stable process, but a new cleaning product was introduced. A tank also contains settled material. The proposed removal is the entire tank contents. Dispatch has a quote from a familiar treatment facility and wants to use last year's profile without further review.\n\nThe environmental coordinator separates three questions: what the current material is, whether the proposed sampling represents it, and whether the receiving route accepts it. The old profile remains useful history. It does not establish the current composition because a relevant input changed. The coordinator records the new product and asks the competent reviewer to determine the current characterization basis.\n\nThe only supplied analysis comes from a surface liquid sample. It may describe the sampled liquid under the method used, but it does not automatically represent settled material. The plan's objective was written as liquid monitoring, while the current decision concerns whole-tank removal. The reviewer identifies that mismatch without prescribing a new collection technique from the desk. Qualified sampling personnel must develop and perform any needed method under the actual task controls.\n\nThe facility quote names liquid treatment but contains no acceptance for the mixed removal. The coordinator obtains the receiving criteria and routes the actual profile for technical acceptance. The crew is told that the material identity and exclusions must remain intact; adding other residue to simplify dispatch would create another changed material question.\n\nThe worked outcome is not a blanket hazardous or nonhazardous classification. It is a traceable path from changed process knowledge through representative characterization to destination acceptance. The assigned sampler, environmental reviewer and receiving facility each have a distinct decision. Dispatch can arrange timing while the technical questions remain open, but it cannot convert a quote into permission or treat an old label as a current finding.\n\nIf the later competent review establishes an acceptable current profile and receiving route, record the evidence and its conditions. Keep the earlier profile as history. That history explains why the review occurred and prevents the same unreviewed assumption from returning with the next load.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G84_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: a soil investigation sends samples to a laboratory under an approved plan. Field sheet S12 identifies container WC-12, while the custody sheet says WC-21. The laboratory receipt flags that difference and records a condition exception. The report includes a qualified nondetect for one analysis. A draft summary changes it to zero and marks the material acceptable for a facility whose approval references a different profile.\n\nThe worked review begins with identity. The collector and laboratory examine their contemporaneous records through the authorized reconciliation process. The reviewer does not choose the most plausible identifier or ask for a clean replacement form that hides the discrepancy. Any established correction must explain its basis and remain linked to the originals. If identity remains uncertain, the technical decision must account for that limitation.\n\nNext, the analytical expression is restored. A nondetect is retained with its reporting limit, units and qualifier. The reviewer asks the qualified analyst and environmental decision owner what the receipt exception and reporting capability mean for the intended comparison. This preserves valid information without claiming that an uncertain result answers every acceptance question.\n\nFinally, the receiving relationship is checked. Approval for another profile does not establish acceptance of this material. The current profile, supporting characterization and relevant limitations must be supplied through the facility's actual process. A new signature on the old approval would not resolve the mismatch unless the responsible authority genuinely reviews and accepts the current material.\n\nThe resulting record has three separate dispositions: sample identity, analytical interpretability and facility acceptance. Resolving one does not automatically resolve the others. A correctly identified sample can still have analytical limitations; a valid analytical result can still fail to establish destination acceptance. The review therefore updates each conclusion independently and preserves the original evidence.\n\nThis is how careful records support task workers: the collector knows what observations matter, the laboratory receives accurate context, the reviewer does not overstate a result and dispatch receives an unambiguous accepted material and destination. None is asked to compensate for missing technical evidence by signing a broader assurance than their role supports.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G84_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Apply the twenty final decisions to material identity, representativeness, custody, analytical limitations, receiving conditions and shipment roles. Every error requires review of the specific explanation and explicit acknowledgment of remediation, with the original response retained.\n\nReal sampling, handling, treatment and transport duties require the actual approved method and qualified practical assessment. Applicable permits and legal declarations remain separate from this course. The completion record must not state that a waste classification, facility acceptance or emergency-response qualification has been obtained merely because the learner passed these desk decisions.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G84_check1",
+        "prompt": "During characterize the waste question, a mixed tank sludge is described using an old profile for a different process. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold classification-dependent acceptance and request a competent characterization review."
+          },
+          {
+            "id": "b",
+            "label": "Clear liquid is automatically nonhazardous."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G84_check2",
+        "prompt": "During read a sampling plan before collecting, a surface grab is being used to represent every layer of an uncharacterized vessel. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any collected sample represents the entire waste stream."
+          },
+          {
+            "id": "b",
+            "label": "Ask the qualified sampling lead to assess representativeness and revise the plan."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G84_check3",
+        "prompt": "During protect sample identity and custody, the laboratory receipt lists a sample identifier absent from the field record. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A familiar collector may silently relabel an uncertain sample."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Reconcile the discrepancy with the collector and laboratory while retaining both originals."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G84_check4",
+        "prompt": "During interpret reports without erasing uncertainty, a nondetect is entered as an exact zero in an acceptance comparison. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nondetect proves the substance is absent."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Retain the reporting limit and qualifier and obtain the appropriate technical interpretation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G84_check5",
+        "prompt": "During separate treatment from acceptance, a facility quote is used as sole proof of permission for a changed waste mixture. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Request current acceptance evidence and competent review of the changed material."
+          },
+          {
+            "id": "b",
+            "label": "A paid quotation establishes lawful acceptance of every load."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G84_check6",
+        "prompt": "During maintain shipment and response boundaries, dispatch requests an unassigned clerk to sign a regulated classification declaration. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An environmental awareness course authorizes hazardous-material declarations."
+          },
+          {
+            "id": "b",
+            "label": "Refer the declaration to the authorized qualified function and preserve the dispatch hold."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G84_final1",
+        "prompt": "Which evidence is most directly relevant to characterize the waste question?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Waste profile linking generator, process, history and receiving decision."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G84_final2",
+        "prompt": "Which evidence is most directly relevant to read a sampling plan before collecting?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Approved sampling plan showing target material, analytical objectives and laboratory instructions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G84_final3",
+        "prompt": "Which evidence is most directly relevant to protect sample identity and custody?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Chain-of-custody record matched to sample labels and laboratory receipt exceptions."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G84_final4",
+        "prompt": "Which evidence is most directly relevant to interpret reports without erasing uncertainty?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Laboratory report with qualifiers, units and an approved decision criterion."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G84_final5",
+        "prompt": "Which evidence is most directly relevant to separate treatment from acceptance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Receiving-facility approval linked to current waste profile and proposed treatment route."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G84_final6",
+        "prompt": "Which evidence is most directly relevant to maintain shipment and response boundaries?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Shipment reconciliation linking waste profile, actual load and authorized destination."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G84_final7",
+        "prompt": "A colleague argues: “Clear liquid is automatically nonhazardous.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; hold classification-dependent acceptance and request a competent characterization review."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G84_final8",
+        "prompt": "A colleague argues: “Any collected sample represents the entire waste stream.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; ask the qualified sampling lead to assess representativeness and revise the plan."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G84_final9",
+        "prompt": "A colleague argues: “A familiar collector may silently relabel an uncertain sample.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; reconcile the discrepancy with the collector and laboratory while retaining both originals."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G84_final10",
+        "prompt": "A colleague argues: “Nondetect proves the substance is absent.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; retain the reporting limit and qualifier and obtain the appropriate technical interpretation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G84_final11",
+        "prompt": "A colleague argues: “A paid quotation establishes lawful acceptance of every load.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; request current acceptance evidence and competent review of the changed material."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G84_final12",
+        "prompt": "A colleague argues: “An environmental awareness course authorizes hazardous-material declarations.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; refer the declaration to the authorized qualified function and preserve the dispatch hold."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G84_final13",
+        "prompt": "After the discrepancy in characterize the waste question is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Evidence that addresses the actual discrepancy in the waste profile linking generator, process, history and receiving decision, linked to the original record."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G84_final14",
+        "prompt": "After the discrepancy in read a sampling plan before collecting is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          },
+          {
+            "id": "d",
+            "label": "Evidence that addresses the actual discrepancy in the approved sampling plan showing target material, analytical objectives and laboratory instructions, linked to the original record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G84_final15",
+        "prompt": "After the discrepancy in protect sample identity and custody is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Evidence that addresses the actual discrepancy in the chain-of-custody record matched to sample labels and laboratory receipt exceptions, linked to the original record."
+          },
+          {
+            "id": "b",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "c",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G84_final16",
+        "prompt": "After the discrepancy in interpret reports without erasing uncertainty is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "Evidence that addresses the actual discrepancy in the laboratory report with qualifiers, units and an approved decision criterion, linked to the original record."
+          },
+          {
+            "id": "c",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G84_final17",
+        "prompt": "After the discrepancy in separate treatment from acceptance is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Evidence that addresses the actual discrepancy in the receiving-facility approval linked to current waste profile and proposed treatment route, linked to the original record."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G84_final18",
+        "prompt": "After the discrepancy in maintain shipment and response boundaries is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          },
+          {
+            "id": "d",
+            "label": "Evidence that addresses the actual discrepancy in the shipment reconciliation linking waste profile, actual load and authorized destination, linked to the original record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G84_final19",
+        "prompt": "The wash-water case concerns whole-tank removal, but the supplied analysis is from a surface liquid sample. What remains to be established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether the characterization represents the actual removal, including settled material, under a qualified plan."
+          },
+          {
+            "id": "b",
+            "label": "That a more precise laboratory number automatically represents every tank layer."
+          },
+          {
+            "id": "c",
+            "label": "That last year's profile remains current despite the changed cleaning product."
+          },
+          {
+            "id": "d",
+            "label": "That the treatment quotation itself classifies the entire tank."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G84_final20",
+        "prompt": "The soil-sample report contains a qualified nondetect, but the draft acceptance table says zero and removes the note. What is the correct revision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep zero because it is easier to compare with the criterion."
+          },
+          {
+            "id": "b",
+            "label": "Restore the laboratory expression, reporting limit, units and qualifier, and obtain competent interpretation for the intended comparison."
+          },
+          {
+            "id": "c",
+            "label": "Delete the receipt exception because the laboratory accepted delivery."
+          },
+          {
+            "id": "d",
+            "label": "Treat the nondetect as approval for a receiving facility that accepted a different profile."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G84_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G84_lesson1",
+          "questionIds": [
+            "G84_check1"
+          ]
+        },
+        {
+          "lessonId": "G84_lesson2",
+          "questionIds": [
+            "G84_check2"
+          ]
+        },
+        {
+          "lessonId": "G84_lesson3",
+          "questionIds": [
+            "G84_check3"
+          ]
+        },
+        {
+          "lessonId": "G84_lesson4",
+          "questionIds": [
+            "G84_check4"
+          ]
+        },
+        {
+          "lessonId": "G84_lesson5",
+          "questionIds": [
+            "G84_check5"
+          ]
+        },
+        {
+          "lessonId": "G84_lesson6",
+          "questionIds": [
+            "G84_check6"
+          ]
+        },
+        {
+          "lessonId": "G84_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G84_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G84_final",
+          "questionIds": [
+            "G84_final1",
+            "G84_final2",
+            "G84_final3",
+            "G84_final4",
+            "G84_final5",
+            "G84_final6",
+            "G84_final7",
+            "G84_final8",
+            "G84_final9",
+            "G84_final10",
+            "G84_final11",
+            "G84_final12",
+            "G84_final13",
+            "G84_final14",
+            "G84_final15",
+            "G84_final16",
+            "G84_final17",
+            "G84_final18",
+            "G84_final19",
+            "G84_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G84_check1": "The correct decision is to hold classification-dependent acceptance and request a competent characterization review. A waste description must identify the generating process, material history and intended decision. A trade name or clear appearance does not establish composition. Distinguish classification, treatment suitability and receiving-facility acceptance; these are related but different decisions. A new process input may invalidate historical characterization. Sampling and transport requirements depend on actual material, method and jurisdiction rather than the word waste alone. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G84_check2": "The correct decision is to ask the qualified sampling lead to assess representativeness and revise the plan. A defensible plan explains the population being represented, sampling locations or rationale, method, laboratory needs and limitations. A convenient surface sample may not represent stratified material. The learner reviews the plan at a desk; actual collection needs method competence and controls for the location. Never enter a container or improvise a sampling device to resolve a paperwork question. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G84_check3": "The correct decision is to reconcile the discrepancy with the collector and laboratory while retaining both originals. Sample identity connects the physical container to its collection record, requested analysis and reported result. Record each transfer and explain discrepancies rather than backfilling an invented history. Laboratory preservation, containers and holding conditions come from the approved method and laboratory instructions. A broken seal or illegible label requires a documented disposition; it cannot be cured by copying the expected identifier from memory. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G84_check4": "The correct decision is to retain the reporting limit and qualifier and obtain the appropriate technical interpretation. Read units, analytical method, reporting qualifiers and sample identity before comparing a result with a decision criterion. A nondetect is not proof of zero concentration. A qualified result may remain useful for a limited question while unsuitable for another. The authorized environmental specialist selects applicable criteria and evaluates uncertainty; the learner checks that the comparison is traceable and asks about unresolved limitations. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G84_check5": "The correct decision is to request current acceptance evidence and competent review of the changed material. A treatment proposal needs a defined feed envelope and evidence that the process and destination can accept that material. A disposal quote is not a permit, and a permit does not prove a particular load meets acceptance conditions. Do not blend unknown wastes to make paperwork easier. Changes in feed composition, treatment route or destination require the responsible technical and regulatory review before the affected work proceeds. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G84_check6": "The correct decision is to refer the declaration to the authorized qualified function and preserve the dispatch hold. Determine who classifies the shipment, who prepares documents and who performs any regulated transport function. A disposal worker is not automatically trained for hazardous-material shipping or emergency intervention. Routine collection, contaminated cleanup and uncontrolled emergency response require different scope decisions. Reconcile load identity and destination records so that the material accepted is the material described, and escalate unexplained differences rather than editing history. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G84_final1": "A waste profile linking generator, process, history and receiving decision addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A waste description must identify the generating process, material history and intended decision. A trade name or clear appearance does not establish composition. Distinguish classification, treatment suitability and receiving-facility acceptance; these are related but different decisions. A new process input may invalidate historical characterization. Sampling and transport requirements depend on actual material, method and jurisdiction rather than the word waste alone.",
+        "G84_final2": "A approved sampling plan showing target material, analytical objectives and laboratory instructions addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A defensible plan explains the population being represented, sampling locations or rationale, method, laboratory needs and limitations. A convenient surface sample may not represent stratified material. The learner reviews the plan at a desk; actual collection needs method competence and controls for the location. Never enter a container or improvise a sampling device to resolve a paperwork question.",
+        "G84_final3": "A chain-of-custody record matched to sample labels and laboratory receipt exceptions addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Sample identity connects the physical container to its collection record, requested analysis and reported result. Record each transfer and explain discrepancies rather than backfilling an invented history. Laboratory preservation, containers and holding conditions come from the approved method and laboratory instructions. A broken seal or illegible label requires a documented disposition; it cannot be cured by copying the expected identifier from memory.",
+        "G84_final4": "A laboratory report with qualifiers, units and an approved decision criterion addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Read units, analytical method, reporting qualifiers and sample identity before comparing a result with a decision criterion. A nondetect is not proof of zero concentration. A qualified result may remain useful for a limited question while unsuitable for another. The authorized environmental specialist selects applicable criteria and evaluates uncertainty; the learner checks that the comparison is traceable and asks about unresolved limitations.",
+        "G84_final5": "A receiving-facility approval linked to current waste profile and proposed treatment route addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A treatment proposal needs a defined feed envelope and evidence that the process and destination can accept that material. A disposal quote is not a permit, and a permit does not prove a particular load meets acceptance conditions. Do not blend unknown wastes to make paperwork easier. Changes in feed composition, treatment route or destination require the responsible technical and regulatory review before the affected work proceeds.",
+        "G84_final6": "A shipment reconciliation linking waste profile, actual load and authorized destination addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Determine who classifies the shipment, who prepares documents and who performs any regulated transport function. A disposal worker is not automatically trained for hazardous-material shipping or emergency intervention. Routine collection, contaminated cleanup and uncontrolled emergency response require different scope decisions. Reconcile load identity and destination records so that the material accepted is the material described, and escalate unexplained differences rather than editing history.",
+        "G84_final7": "That inference exceeds the evidence. A waste description must identify the generating process, material history and intended decision. A trade name or clear appearance does not establish composition. Distinguish classification, treatment suitability and receiving-facility acceptance; these are related but different decisions. A new process input may invalidate historical characterization. Sampling and transport requirements depend on actual material, method and jurisdiction rather than the word waste alone. The appropriate task disposition remains to hold classification-dependent acceptance and request a competent characterization review.",
+        "G84_final8": "That inference exceeds the evidence. A defensible plan explains the population being represented, sampling locations or rationale, method, laboratory needs and limitations. A convenient surface sample may not represent stratified material. The learner reviews the plan at a desk; actual collection needs method competence and controls for the location. Never enter a container or improvise a sampling device to resolve a paperwork question. The appropriate task disposition remains to ask the qualified sampling lead to assess representativeness and revise the plan.",
+        "G84_final9": "That inference exceeds the evidence. Sample identity connects the physical container to its collection record, requested analysis and reported result. Record each transfer and explain discrepancies rather than backfilling an invented history. Laboratory preservation, containers and holding conditions come from the approved method and laboratory instructions. A broken seal or illegible label requires a documented disposition; it cannot be cured by copying the expected identifier from memory. The appropriate task disposition remains to reconcile the discrepancy with the collector and laboratory while retaining both originals.",
+        "G84_final10": "That inference exceeds the evidence. Read units, analytical method, reporting qualifiers and sample identity before comparing a result with a decision criterion. A nondetect is not proof of zero concentration. A qualified result may remain useful for a limited question while unsuitable for another. The authorized environmental specialist selects applicable criteria and evaluates uncertainty; the learner checks that the comparison is traceable and asks about unresolved limitations. The appropriate task disposition remains to retain the reporting limit and qualifier and obtain the appropriate technical interpretation.",
+        "G84_final11": "That inference exceeds the evidence. A treatment proposal needs a defined feed envelope and evidence that the process and destination can accept that material. A disposal quote is not a permit, and a permit does not prove a particular load meets acceptance conditions. Do not blend unknown wastes to make paperwork easier. Changes in feed composition, treatment route or destination require the responsible technical and regulatory review before the affected work proceeds. The appropriate task disposition remains to request current acceptance evidence and competent review of the changed material.",
+        "G84_final12": "That inference exceeds the evidence. Determine who classifies the shipment, who prepares documents and who performs any regulated transport function. A disposal worker is not automatically trained for hazardous-material shipping or emergency intervention. Routine collection, contaminated cleanup and uncontrolled emergency response require different scope decisions. Reconcile load identity and destination records so that the material accepted is the material described, and escalate unexplained differences rather than editing history. The appropriate task disposition remains to refer the declaration to the authorized qualified function and preserve the dispatch hold.",
+        "G84_final13": "The correction must address why the waste profile linking generator, process, history and receiving decision did not support the claim. A waste description must identify the generating process, material history and intended decision. A trade name or clear appearance does not establish composition. Distinguish classification, treatment suitability and receiving-facility acceptance; these are related but different decisions. A new process input may invalidate historical characterization. Sampling and transport requirements depend on actual material, method and jurisdiction rather than the word waste alone. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G84_final14": "The correction must address why the approved sampling plan showing target material, analytical objectives and laboratory instructions did not support the claim. A defensible plan explains the population being represented, sampling locations or rationale, method, laboratory needs and limitations. A convenient surface sample may not represent stratified material. The learner reviews the plan at a desk; actual collection needs method competence and controls for the location. Never enter a container or improvise a sampling device to resolve a paperwork question. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G84_final15": "The correction must address why the chain-of-custody record matched to sample labels and laboratory receipt exceptions did not support the claim. Sample identity connects the physical container to its collection record, requested analysis and reported result. Record each transfer and explain discrepancies rather than backfilling an invented history. Laboratory preservation, containers and holding conditions come from the approved method and laboratory instructions. A broken seal or illegible label requires a documented disposition; it cannot be cured by copying the expected identifier from memory. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G84_final16": "The correction must address why the laboratory report with qualifiers, units and an approved decision criterion did not support the claim. Read units, analytical method, reporting qualifiers and sample identity before comparing a result with a decision criterion. A nondetect is not proof of zero concentration. A qualified result may remain useful for a limited question while unsuitable for another. The authorized environmental specialist selects applicable criteria and evaluates uncertainty; the learner checks that the comparison is traceable and asks about unresolved limitations. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G84_final17": "The correction must address why the receiving-facility approval linked to current waste profile and proposed treatment route did not support the claim. A treatment proposal needs a defined feed envelope and evidence that the process and destination can accept that material. A disposal quote is not a permit, and a permit does not prove a particular load meets acceptance conditions. Do not blend unknown wastes to make paperwork easier. Changes in feed composition, treatment route or destination require the responsible technical and regulatory review before the affected work proceeds. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G84_final18": "The correction must address why the shipment reconciliation linking waste profile, actual load and authorized destination did not support the claim. Determine who classifies the shipment, who prepares documents and who performs any regulated transport function. A disposal worker is not automatically trained for hazardous-material shipping or emergency intervention. Routine collection, contaminated cleanup and uncontrolled emergency response require different scope decisions. Reconcile load identity and destination records so that the material accepted is the material described, and escalate unexplained differences rather than editing history. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G84_final19": "The decision population changed from liquid monitoring to whole-tank removal. The sample may remain useful for its bounded liquid question, but qualified representativeness and current characterization review must address the actual material.",
+        "G84_final20": "A nondetect is not an exact zero. Its method-dependent expression and qualifiers must remain visible. Sample identity, analytical interpretation and destination acceptance are separate questions and cannot be resolved by simplifying the table."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

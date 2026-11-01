@@ -1,0 +1,911 @@
+{
+  "courseId": "G92",
+  "gapGroupId": "TG43",
+  "title": "Pipeline operating, pigging and inline-inspection methods",
+  "description": "Six subject-specific lessons, two worked fictional cases and twenty-six explained decisions. Actual employer methods and qualified practical performance remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for pipeline operating, pigging and inline-inspection methods.",
+  "audience": [
+    "Pipeline field and control-room coordination personnel",
+    "Assigned pigging and inline-inspection support personnel",
+    "Tool/run planning specialists",
+    "Inspection data and operational handover reviewers"
+  ],
+  "practicalBoundary": "Pipeline transportation is distinct from pipeline construction. Inline inspection is not automatically radiography. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual pipeline responsibility schedule separating tool supply, operation and interpretation, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual tool-run planning dossier linking line identity, tool configuration and technical approval, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual approved containment and energy-control documents linked to the actual equipment, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual communication plan naming field and control-room authority and confirmation route, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual inspection handover linking run identity, data coverage and interpretation limitations, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual post-run status record separating inspection completion, anomalies and operational release, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who maps tool support, pipeline operation, interpretation and release responsibilities; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who reconciles actual tool/line configuration against competent compatibility approval; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who identifies containment/energy evidence gaps and routes them to the operating authority without live intervention; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who uses the approved field/control-room confirmation and handover method in a safe fictional rehearsal; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who preserves data coverage, identity and method limitations in technical handover; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who reports abnormal status accurately and distinguishes vendor completion from operational release; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Actual hazardous experiment, pipeline operation, equipment inspection/repair, driving, coupling, loading or recovery requires its own method-specific instruction and qualified safe practical assessment where assigned. This online result does not satisfy those requirements."
+  ],
+  "sources": [
+    {
+      "title": "OSHA process safety management",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119",
+      "scopeLimit": "Specific coverage/exceptions; not all oilfield or process work is automatically covered."
+    },
+    {
+      "title": "OSHA hazardous energy control",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147",
+      "scopeLimit": "Specific exclusions include oil/gas well drilling and servicing; useful bounded reference, not blanket applicability."
+    },
+    {
+      "title": "PHMSA operator qualification overview",
+      "url": "https://www.phmsa.dot.gov/pipeline/operator-qualifications/operator-qualification-overview",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G92_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Pipeline operating, pigging support and inline-inspection work involve distinct technical and operating duties. This course teaches role and asset identification, tool compatibility questions, containment and energy interfaces, field/control-room coordination, inspection-data limitations and abnormal-run handover. It contains no launcher or receiver sequence, valve instructions, pressure limits or tool-recovery technique.\n\nUse fictional planning and data records only. Complete twenty-six decisions, preserve original answers and acknowledge explained remediation. The operator's actual qualification program, approved procedures and qualified practical assessment govern real duties. Pipeline construction experience or online awareness alone does not establish operating competence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G92_lesson1",
+        "title": "Lesson 1 — Identify pipeline duties precisely",
+        "body": "Identify the actual pipeline function before assigning training. Pipeline construction installs or changes an asset; transportation operates it. Pigging can serve different purposes, and inline inspection collects information through a particular tool and method. Tool delivery, field operation, data processing and technical interpretation are separate responsibilities even when one contract includes several of them.\n\nMap the organizations and people who control each decision. The pipeline operator holds responsibilities for its system and actual operating qualification program. A tool vendor may supply specialist information without holding authority to operate the launcher or receiver. A data analyst may interpret a defined method without deciding the pipeline's fitness for service. A commercial representative cannot create operating authority by promising to accept responsibility.\n\nFor applicable United States pipeline duties, the operator determines covered tasks and qualification requirements through its written program. Do not treat the presence of an external certificate as automatic approval for every operator or task. Conversely, do not assign operating qualification to a delivery-only employee who supplies no covered operating duty. Match the actual work and applicable regime.\n\nInline inspection does not automatically mean radiography. Different tools and sensing methods create different competence and interpretation needs. The actual method must be identified before selecting specialist requirements. A generic NDT label is insufficient to establish the technique, level or authority for a specific conclusion.\n\nIn the fictional exercise, the vendor supplies a tool and data specialist while the pipeline operator retains launcher and receiver operation. The role map records that division explicitly. If the operator asks the data specialist to perform an operating step, that is a changed assignment needing actual authorization and competence review. The specialist can explain the tool's documented requirements within their scope without becoming the operating authority merely by being onsite.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G92_lesson2",
+        "title": "Lesson 2 — Review configuration and tool compatibility",
+        "body": "A tool-run plan connects a particular tool configuration with a particular pipeline and intended objective. Model-family familiarity is not enough. The technical review must address the actual configuration, line characteristics and approved interface conditions. This course teaches how to identify a mismatch; it does not supply dimensions, operating settings or a compatibility calculation.\n\nBegin with asset identity. The line section, launcher or receiver identifiers and tool configuration should be consistent across the approved dossier, dispatch information and work pack. A correct product name attached to the wrong section can still be the wrong plan. Record the configuration version so a later substitution is recognizable.\n\nCompatibility is broader than whether the tool can be delivered to the site. The qualified pipeline and tool specialists evaluate the technical relationship and limitations for the intended run. A successful run elsewhere can be relevant experience without proving this arrangement acceptable. Changes in tool components, line configuration or objective need the appropriate review.\n\nRead technical assumptions as conditions, not background decoration. If the approval relies on specified line information, missing or changed information affects the basis. The planner should identify who verifies the current configuration and how unresolved differences are dispositioned. Workers should not try the run to determine whether a discrepancy matters.\n\nFor the desk exercise, the approved dossier identifies line P8 and tool configuration T3, but the dispatch sheet supplies T4. The worked answer preserves both records, identifies the changed configuration and routes it to the pipeline and tool technical authorities. A new delivery note with the familiar model name would not resolve the technical question. The eventual accepted configuration must be communicated to the actual operating and data teams, so everyone plans around the same reviewed arrangement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G92_lesson3",
+        "title": "Lesson 3 — Trace containment and energy-control evidence",
+        "body": "Containment-opening and pipeline work can involve pressure, stored energy and process material. The actual operating method must establish the conditions required for each task and the means of verifying them. A desk lesson cannot tell a worker how to operate, depressurize, isolate or open equipment. Those actions require approved procedures and assessed personnel within the operator's program.\n\nUnderstand why status and verification differ. A display can report a process value or state, but it may not establish every condition required by a containment task. Quiet equipment or absence of visible flow is also incomplete evidence. The designated operating authority must apply the actual method and interpret the required verification. Do not infer safe opening from a single reassuring indication.\n\nConfiguration matters to energy and material pathways. Temporary connections, changes or adjacent work can affect the reviewed boundary. Workers should report a difference from the approved plan rather than assume that familiar equipment is unchanged. The operator and relevant technical roles determine the actual effect and disposition.\n\nThe cited hazardous-energy guidance has defined coverage and exclusions. It should not be represented as a universal legal operating procedure for every oilfield or pipeline task. The employer must determine the applicable regime and approved method. The useful course principle is that actual hazardous-energy and containment interfaces require explicit competent control and verification.\n\nIn the fictional exercise, a field pack contains a remote display printout but lacks the approved verification evidence for the proposed containment-opening duty. The worker identifies the missing relationship and refers it to the operating authority. They do not perform an opening or manipulate a valve to answer the paperwork question. A valid printout can remain part of the evidence without being stretched into authority for a task it does not alone support.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G92_lesson4",
+        "title": "Lesson 4 — Read control-room and field communications",
+        "body": "Field and control-room coordination is an exchange of authority and status, not merely a communication device. The plan should identify who requests an action, who authorizes it, who performs it and how the resulting state is confirmed. These roles may involve several organizations. A text message sent to a group does not establish that the correct operating authority received, understood and accepted the request.\n\nUse the operator's approved communication method and terminology. Clear identification of asset, task and current status prevents people from applying a valid message to the wrong section or step. Confirmation should reflect the agreed meaning rather than a vague all good. This course can rehearse communication using fictional status information but must never issue a live operating command.\n\nShift changes create an important interface. The incoming role needs the actual state, outstanding actions, restrictions and responsibility transfer. The outgoing person should not assume that the next controller accepted authority merely because a shift time passed. The actual procedure determines the transfer and documentation needed.\n\nLoss of communication and conflicting instructions need a known response. The approved procedure and assigned authority govern what the field team does; the learner must not invent a waiting period or continue because the next action seems obvious. A technical specialist may explain a tool requirement while the operating authority decides the actual system action.\n\nIn the desk exercise, the field team requests a status change during handover, but responsibility between controllers is not confirmed. The worked answer establishes the current authority and uses the approved confirmation route before any affected action. Participants practice identifying asset and state with fictional messages. The assessment records communication reasoning, not proof that they can operate the pipeline or that the actual field/control-room link has been tested.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G92_lesson5",
+        "title": "Lesson 5 — Interpret run and inspection records",
+        "body": "Inspection information should preserve the relationship between the run, tool, line section and data. Identify the coverage basis, relevant time or distance reference, data quality and limitations. A technically sophisticated report can still be misleading if it applies results to an unrecorded section or an unverified configuration. Data identity is therefore part of technical assurance, not just file naming.\n\nDistinguish data collection, interpretation and fitness-for-service decisions. A run can be completed while data quality remains under review. An interpretation can identify a finding without establishing the pipeline's acceptable operating condition. The appropriate qualified technical roles determine the actual conclusions and next actions. Do not let a general inspection-complete label merge these different stages.\n\nCoverage gaps must remain visible. Good data on neighboring sections cannot create information where none was recorded. The technical owner may determine an appropriate disposition, including further work or a bounded conclusion, but the analyst should not fill the gap with a satisfactory label based on expectation. Retain the actual limitation and its location basis.\n\nRead method limitations as part of the result. Different sensing and analytical methods answer different questions. A finding or absence of a reported indication must be interpreted within the actual method and quality basis. A learner should not infer radiographic qualification, structural certification or universal defect detection from the phrase inline inspection.\n\nFor the exercise, report R8 shows interpretable data on either side of a section marked incomplete coverage. The summary calls the entire section satisfactory. The worked correction retains the useful data, restores the coverage limitation and obtains the responsible technical disposition. It does not reject the whole run automatically or invent data for the gap. The receiving operating authority is given the true technical status and any outstanding decision.\n\nA useful review question is whether a reported distance or section boundary has the same basis throughout the handover. If the collection system, field log and analysis report use different references, the technical team must reconcile them before assigning a finding to an asset location. Do not align them by eye because the diagrams appear similar. Preserve the actual references and qualified reconciliation so the operating organization can understand where the evidence applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G92_lesson6",
+        "title": "Lesson 6 — Keep recovery and restart authority separate",
+        "body": "An abnormal run or uncertain tool status can introduce work beyond the routine plan. Recovery, investigation or intervention must follow the operator's approved escalation and technical process. Experience with a normal run does not authorize improvised recovery. This course gives no recovery tactics, containment-opening sequence or instruction to locate a tool through live actions.\n\nThe worker's first contribution is accurate status reporting within the assigned role. Identify the asset, known observations, uncertainty and relevant changes. Distinguish what is measured from what is inferred. A person should not turn an uncertain location into a precise claim because a report form requires a value. The technical and operating authorities determine the actual response.\n\nPost-run handover needs several separate statuses: field task completion, tool and equipment condition, data quality, technical findings and operational release. One may be complete while another remains open. A completed inspection report does not itself authorize restart or return to unrestricted operation. The designated authority must receive the evidence and limitations required by the actual procedure.\n\nPreserve abnormal-event records and later corrections. If a suspected anomaly is resolved, link the technical disposition rather than deleting the initial observation. The history can explain why work paused or why another review occurred. It also prevents later users from mistaking an initial uncertainty for a confirmed defect or a final clearance.\n\nIn the exercise, the vendor completes its data delivery while an operational anomaly remains unresolved. The worked answer marks the vendor deliverable accurately and keeps operational release separate. The operator's responsible role receives the anomaly and technical status. A commercial completion signature cannot supply the missing release decision. This lets a contract closeout remain truthful without hiding what the pipeline organization still must decide.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G92_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek plans an inline-inspection run on line P8. The tool vendor supplies configuration T4, while the approved dossier names T3. The vendor's data specialist is onsite, and the pipeline operator has assigned its own field operating crew. A commercial contact suggests the specialist can perform receiver duties because they know the tool best.\n\nThe planning lead separates technical knowledge from operating authority. The specialist can supply tool information within their actual competence, but that does not establish qualification or assignment for receiver operation. The role map keeps tool support, pipeline operation and data interpretation distinct. Any proposed role change must be reviewed under the actual operator program.\n\nThe configuration discrepancy is then addressed before the affected run plan is relied on. The actual T4 identity and differences are supplied to the pipeline and tool technical authorities. A previous successful T4 run on another line is relevant experience but not acceptance of this line/tool relationship. The team does not attempt the run to see whether the difference matters.\n\nDuring preparation, the field pack also contains a remote display printout proposed as the sole evidence for a containment-opening duty. The operating authority must determine the actual required verification through its approved procedure. The specialist does not interpret a reassuring screen as permission to open equipment. The course exercise includes no live action or operating sequence.\n\nThe field/control-room rehearsal uses fictional messages to confirm which person holds authority and how asset and status are identified. It reveals that the incoming controller had not accepted the handover. Responsibility is clarified through the actual program before any affected request is acted on. The rehearsal is recorded as communication practice, not operating qualification.\n\nThe worked outcome has separate resolutions for role assignment, tool compatibility, containment evidence and communication authority. One signed cover sheet cannot establish them all. Valid records remain in the pack, but each supports only its actual conclusion. The operating crew receives the accepted configuration and instructions through its established process once the relevant authorities have made their decisions.\n\nThis case teaches a useful field-support skill: notice where a technical or commercial assumption crosses into another authority's duty. Accurate information from the vendor is essential, while the operator retains its actual responsibilities. Neither role is strengthened by pretending that expertise in one part automatically qualifies every other part.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G92_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: an inspection run is complete and the vendor prepares the report. Most data are interpretable, but one section has incomplete coverage. The summary marks the whole section satisfactory because adjacent data look normal. The field team also reports an unresolved operational anomaly. A manager wants the completed vendor report to serve as the restart authorization.\n\nThe data reviewer first restores the coverage limitation. Neighboring results cannot supply measurements for an unrecorded section. The good data remain useful within their coverage. The responsible technical authority decides the actual disposition of the gap and what conclusions the method supports. The reviewer does not invent a defect, but also does not erase an unknown by calling it satisfactory.\n\nThe report's identity and configuration basis are checked. The run, tool and line section must correspond to the actual accepted arrangement. If a later corrected interpretation changes a finding, the history links the original and revised conclusions. A new report date alone is not proof that the coverage issue was resolved.\n\nThe operational anomaly is routed separately to the operator's designated roles. The vendor can complete its contracted data handover while the operator still has an open release question. Conversely, a release decision would not automatically establish that every analytical deliverable is complete. The status record must distinguish these outcomes.\n\nThe manager's proposed shortcut is rejected on evidence and authority grounds. A completed inspection report supplies information; it is not automatically the operator's authorization to restart. The designated operating authority needs the actual technical status, limitations and unresolved conditions required by its procedure. No course participant is asked to choose a restart sequence or recovery action.\n\nThe final handover identifies field completion, data coverage, interpretation status, the anomaly and the owner of each next decision. It also records what the analyst could not conclude. The report remains useful precisely because it does not claim more than the method and data support.\n\nThe counterfactual clarifies the lesson: changing the summary to all complete would not create missing data or resolve the anomaly. Resolving the anomaly would not create coverage. Each decision changes only when its own evidence and authority requirements are met. This is sound pipeline coordination and inspection reasoning, while actual operation and method-specific interpretation require their separate qualified performance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G92_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Apply the final decisions to actual pipeline roles, configuration, containment evidence, field/control-room authority, coverage limitations and release status. Retain first responses and acknowledge explained remediation.\n\nReal launcher, receiver, pigging, recovery and pipeline operating duties require approved method instruction and applicable operator qualification with observed competence. Technical inspection interpretation is method specific. This course supplies no hazardous operating recipe or permission to restart.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G92_check1",
+        "prompt": "During identify pipeline duties precisely, a tool-delivery technician is assigned receiver operation without role evidence. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain explicit operating assignment and required qualification evidence before that duty."
+          },
+          {
+            "id": "b",
+            "label": "Supplying an inspection tool qualifies the supplier to operate the receiver."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G92_check2",
+        "prompt": "During review configuration and tool compatibility, the planned tool configuration differs from the approved compatibility review. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Previous success on another line proves this tool configuration is suitable."
+          },
+          {
+            "id": "b",
+            "label": "Refer the discrepancy to the pipeline and tool technical authorities."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G92_check3",
+        "prompt": "During trace containment and energy-control evidence, a single remote indication is treated as sole proof that opening is safe. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A remote display alone authorizes opening containment."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Require the designated operating authority to resolve the verification evidence under the approved method."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G92_check4",
+        "prompt": "During read control-room and field communications, a field request is acted on without confirmation from the designated operating authority. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Sending a text message establishes authorization."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Hold the affected action and establish the approved confirmation and status agreement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G92_check5",
+        "prompt": "During interpret run and inspection records, an unrecorded section is marked satisfactory because adjacent data looked normal. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Retain the coverage gap and obtain the responsible technical disposition."
+          },
+          {
+            "id": "b",
+            "label": "Good neighboring data proves an unrecorded section is satisfactory."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G92_check6",
+        "prompt": "During keep recovery and restart authority separate, a completed inspection report is used as automatic restart authority. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Inspection completion automatically authorizes restart."
+          },
+          {
+            "id": "b",
+            "label": "Obtain the designated operational release with unresolved findings explicitly addressed."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G92_final1",
+        "prompt": "Which evidence is most directly relevant to identify pipeline duties precisely?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Pipeline responsibility schedule separating tool supply, operation and interpretation."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G92_final2",
+        "prompt": "Which evidence is most directly relevant to review configuration and tool compatibility?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Tool-run planning dossier linking line identity, tool configuration and technical approval."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G92_final3",
+        "prompt": "Which evidence is most directly relevant to trace containment and energy-control evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approved containment and energy-control documents linked to the actual equipment."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G92_final4",
+        "prompt": "Which evidence is most directly relevant to read control-room and field communications?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Communication plan naming field and control-room authority and confirmation route."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G92_final5",
+        "prompt": "Which evidence is most directly relevant to interpret run and inspection records?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Inspection handover linking run identity, data coverage and interpretation limitations."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G92_final6",
+        "prompt": "Which evidence is most directly relevant to keep recovery and restart authority separate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Post-run status record separating inspection completion, anomalies and operational release."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G92_final7",
+        "prompt": "A colleague argues: “Supplying an inspection tool qualifies the supplier to operate the receiver.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; obtain explicit operating assignment and required qualification evidence before that duty."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G92_final8",
+        "prompt": "A colleague argues: “Previous success on another line proves this tool configuration is suitable.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; refer the discrepancy to the pipeline and tool technical authorities."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G92_final9",
+        "prompt": "A colleague argues: “A remote display alone authorizes opening containment.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; require the designated operating authority to resolve the verification evidence under the approved method."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G92_final10",
+        "prompt": "A colleague argues: “Sending a text message establishes authorization.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; hold the affected action and establish the approved confirmation and status agreement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G92_final11",
+        "prompt": "A colleague argues: “Good neighboring data proves an unrecorded section is satisfactory.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; retain the coverage gap and obtain the responsible technical disposition."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G92_final12",
+        "prompt": "A colleague argues: “Inspection completion automatically authorizes restart.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; obtain the designated operational release with unresolved findings explicitly addressed."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G92_final13",
+        "prompt": "The vendor supplies a data specialist. What operating claim is unsupported without separate evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That the specialist can supply information within their actual role."
+          },
+          {
+            "id": "b",
+            "label": "That data interpretation is a distinct function."
+          },
+          {
+            "id": "c",
+            "label": "That the specialist is assigned and qualified to operate the receiver."
+          },
+          {
+            "id": "d",
+            "label": "That the operator retains actual program responsibilities."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G92_final14",
+        "prompt": "The approved dossier names T3, but dispatch supplies T4. What must be resolved?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the invoice price."
+          },
+          {
+            "id": "b",
+            "label": "Nothing if T4 worked elsewhere."
+          },
+          {
+            "id": "c",
+            "label": "The line identity can be changed to match the tool."
+          },
+          {
+            "id": "d",
+            "label": "The actual configuration’s suitability for this line and objective through competent review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G92_final15",
+        "prompt": "A remote display is offered as sole containment-opening evidence. What is the proper question?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether the actual approved operating method’s required verification is established."
+          },
+          {
+            "id": "b",
+            "label": "Whether the display color is reassuring."
+          },
+          {
+            "id": "c",
+            "label": "Whether opening briefly can confirm the reading."
+          },
+          {
+            "id": "d",
+            "label": "Whether the data specialist can assume operating authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G92_final16",
+        "prompt": "The field request arrives during an unconfirmed control-room handover. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An assumption authority transfers at the clock time."
+          },
+          {
+            "id": "b",
+            "label": "Clear current authority and the approved status/confirmation arrangement before affected action."
+          },
+          {
+            "id": "c",
+            "label": "Any group-chat reaction."
+          },
+          {
+            "id": "d",
+            "label": "A commercial manager’s promise."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G92_final17",
+        "prompt": "Adjacent sections have good data, but one section has incomplete coverage. What should the report show?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Satisfactory status inferred from the neighbors."
+          },
+          {
+            "id": "b",
+            "label": "Invented replacement measurements."
+          },
+          {
+            "id": "c",
+            "label": "The actual coverage gap and its qualified technical disposition."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of all good data."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G92_final18",
+        "prompt": "The vendor deliverable is complete while an operational anomaly remains. What is the correct distinction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The completed report automatically authorizes restart."
+          },
+          {
+            "id": "b",
+            "label": "A paid invoice resolves the anomaly."
+          },
+          {
+            "id": "c",
+            "label": "The original anomaly report should disappear."
+          },
+          {
+            "id": "d",
+            "label": "Vendor completion and operational release remain separate outcomes with their own authorities."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G92_final19",
+        "prompt": "The technical owners accept tool T4 for line P8 after reviewing its difference from T3. What does that not by itself establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The vendor specialist's receiver-operation qualification, required containment verification or current control-room authority."
+          },
+          {
+            "id": "b",
+            "label": "The accepted tool configuration for the reviewed line/objective."
+          },
+          {
+            "id": "c",
+            "label": "The ability to retain the original T3 dossier in the change history."
+          },
+          {
+            "id": "d",
+            "label": "The fact that tool compatibility received a technical disposition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G92_final20",
+        "prompt": "The operator resolves the post-run operational anomaly, but the report still marks one section incomplete coverage. What should the analyst retain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An all-satisfactory label because anomaly resolution creates missing measurements."
+          },
+          {
+            "id": "b",
+            "label": "The actual coverage limitation and its qualified technical disposition, without inventing satisfactory data from adjacent sections."
+          },
+          {
+            "id": "c",
+            "label": "A universal defect finding for the unrecorded section."
+          },
+          {
+            "id": "d",
+            "label": "Only the commercial completion signature, deleting the original gap."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G92_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G92_lesson1",
+          "questionIds": [
+            "G92_check1"
+          ]
+        },
+        {
+          "lessonId": "G92_lesson2",
+          "questionIds": [
+            "G92_check2"
+          ]
+        },
+        {
+          "lessonId": "G92_lesson3",
+          "questionIds": [
+            "G92_check3"
+          ]
+        },
+        {
+          "lessonId": "G92_lesson4",
+          "questionIds": [
+            "G92_check4"
+          ]
+        },
+        {
+          "lessonId": "G92_lesson5",
+          "questionIds": [
+            "G92_check5"
+          ]
+        },
+        {
+          "lessonId": "G92_lesson6",
+          "questionIds": [
+            "G92_check6"
+          ]
+        },
+        {
+          "lessonId": "G92_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G92_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G92_final",
+          "questionIds": [
+            "G92_final1",
+            "G92_final2",
+            "G92_final3",
+            "G92_final4",
+            "G92_final5",
+            "G92_final6",
+            "G92_final7",
+            "G92_final8",
+            "G92_final9",
+            "G92_final10",
+            "G92_final11",
+            "G92_final12",
+            "G92_final13",
+            "G92_final14",
+            "G92_final15",
+            "G92_final16",
+            "G92_final17",
+            "G92_final18",
+            "G92_final19",
+            "G92_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G92_check1": "The correct decision is to obtain explicit operating assignment and required qualification evidence before that duty. Pipeline transportation, construction, pigging support and inline-inspection interpretation are distinct duties. A tool supplier may deliver equipment without operating the launcher or receiver. Identify the actual pipeline owner, operating authority and supplied functions before reviewing qualifications. Inline inspection can use different methods and is not automatically radiography. Assignment must follow the confirmed task rather than a general pipeline service label. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G92_check2": "The correct decision is to refer the discrepancy to the pipeline and tool technical authorities. The technical plan should identify the actual line, tool and approved operating interface. A tool that worked on another pipeline is not automatically suitable here. Compare controlled identifiers and approved assumptions rather than relying on a product brochure. Qualified pipeline and tool specialists decide compatibility; this course gives no launcher sequence, tool dimensions, pressures or operating settings. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G92_check3": "The correct decision is to require the designated operating authority to resolve the verification evidence under the approved method. Launcher and receiver activities can involve pressure, stored energy and process material. An office reviewer checks that the actual configuration and required controls have approved evidence; they do not infer safe opening from a screen indication or operate valves. Energy-control references have scope limitations, and the employer must determine the applicable regime and method for the actual pipeline task. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G92_check4": "The correct decision is to hold the affected action and establish the approved confirmation and status agreement. Pipeline tasks need an agreed link between field roles and the operating authority. Identify who requests a change, who authorizes it and how status is confirmed. A message sent is not necessarily a message understood. Loss of communication and shift changes must be addressed by the approved procedure. Desk rehearsal can test readback and status reporting without commanding actual equipment. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G92_check5": "The correct decision is to retain the coverage gap and obtain the responsible technical disposition. Run records and inspection results need tool identity, line section, time or distance basis, data quality and limitations. A gap in data must remain visible; it cannot be filled by assuming neighboring results apply. Technical interpretation requires the relevant method competence. An inspection report can identify findings while leaving fitness-for-service decisions to separately authorized technical roles. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G92_check6": "The correct decision is to obtain the designated operational release with unresolved findings explicitly addressed. An abnormal run, uncertain tool location or equipment discrepancy requires the approved escalation arrangement. A recovery operation can introduce a different scope and must not be improvised from routine instructions. Completion of an inspection does not by itself release the pipeline to service. The handover should identify status, outstanding findings and the person authorized to accept the operational condition. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G92_final1": "A pipeline responsibility schedule separating tool supply, operation and interpretation addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Pipeline transportation, construction, pigging support and inline-inspection interpretation are distinct duties. A tool supplier may deliver equipment without operating the launcher or receiver. Identify the actual pipeline owner, operating authority and supplied functions before reviewing qualifications. Inline inspection can use different methods and is not automatically radiography. Assignment must follow the confirmed task rather than a general pipeline service label.",
+        "G92_final2": "A tool-run planning dossier linking line identity, tool configuration and technical approval addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. The technical plan should identify the actual line, tool and approved operating interface. A tool that worked on another pipeline is not automatically suitable here. Compare controlled identifiers and approved assumptions rather than relying on a product brochure. Qualified pipeline and tool specialists decide compatibility; this course gives no launcher sequence, tool dimensions, pressures or operating settings.",
+        "G92_final3": "A approved containment and energy-control documents linked to the actual equipment addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Launcher and receiver activities can involve pressure, stored energy and process material. An office reviewer checks that the actual configuration and required controls have approved evidence; they do not infer safe opening from a screen indication or operate valves. Energy-control references have scope limitations, and the employer must determine the applicable regime and method for the actual pipeline task.",
+        "G92_final4": "A communication plan naming field and control-room authority and confirmation route addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Pipeline tasks need an agreed link between field roles and the operating authority. Identify who requests a change, who authorizes it and how status is confirmed. A message sent is not necessarily a message understood. Loss of communication and shift changes must be addressed by the approved procedure. Desk rehearsal can test readback and status reporting without commanding actual equipment.",
+        "G92_final5": "A inspection handover linking run identity, data coverage and interpretation limitations addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Run records and inspection results need tool identity, line section, time or distance basis, data quality and limitations. A gap in data must remain visible; it cannot be filled by assuming neighboring results apply. Technical interpretation requires the relevant method competence. An inspection report can identify findings while leaving fitness-for-service decisions to separately authorized technical roles.",
+        "G92_final6": "A post-run status record separating inspection completion, anomalies and operational release addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. An abnormal run, uncertain tool location or equipment discrepancy requires the approved escalation arrangement. A recovery operation can introduce a different scope and must not be improvised from routine instructions. Completion of an inspection does not by itself release the pipeline to service. The handover should identify status, outstanding findings and the person authorized to accept the operational condition.",
+        "G92_final7": "That inference exceeds the evidence. Pipeline transportation, construction, pigging support and inline-inspection interpretation are distinct duties. A tool supplier may deliver equipment without operating the launcher or receiver. Identify the actual pipeline owner, operating authority and supplied functions before reviewing qualifications. Inline inspection can use different methods and is not automatically radiography. Assignment must follow the confirmed task rather than a general pipeline service label. The appropriate task disposition remains to obtain explicit operating assignment and required qualification evidence before that duty.",
+        "G92_final8": "That inference exceeds the evidence. The technical plan should identify the actual line, tool and approved operating interface. A tool that worked on another pipeline is not automatically suitable here. Compare controlled identifiers and approved assumptions rather than relying on a product brochure. Qualified pipeline and tool specialists decide compatibility; this course gives no launcher sequence, tool dimensions, pressures or operating settings. The appropriate task disposition remains to refer the discrepancy to the pipeline and tool technical authorities.",
+        "G92_final9": "That inference exceeds the evidence. Launcher and receiver activities can involve pressure, stored energy and process material. An office reviewer checks that the actual configuration and required controls have approved evidence; they do not infer safe opening from a screen indication or operate valves. Energy-control references have scope limitations, and the employer must determine the applicable regime and method for the actual pipeline task. The appropriate task disposition remains to require the designated operating authority to resolve the verification evidence under the approved method.",
+        "G92_final10": "That inference exceeds the evidence. Pipeline tasks need an agreed link between field roles and the operating authority. Identify who requests a change, who authorizes it and how status is confirmed. A message sent is not necessarily a message understood. Loss of communication and shift changes must be addressed by the approved procedure. Desk rehearsal can test readback and status reporting without commanding actual equipment. The appropriate task disposition remains to hold the affected action and establish the approved confirmation and status agreement.",
+        "G92_final11": "That inference exceeds the evidence. Run records and inspection results need tool identity, line section, time or distance basis, data quality and limitations. A gap in data must remain visible; it cannot be filled by assuming neighboring results apply. Technical interpretation requires the relevant method competence. An inspection report can identify findings while leaving fitness-for-service decisions to separately authorized technical roles. The appropriate task disposition remains to retain the coverage gap and obtain the responsible technical disposition.",
+        "G92_final12": "That inference exceeds the evidence. An abnormal run, uncertain tool location or equipment discrepancy requires the approved escalation arrangement. A recovery operation can introduce a different scope and must not be improvised from routine instructions. Completion of an inspection does not by itself release the pipeline to service. The handover should identify status, outstanding findings and the person authorized to accept the operational condition. The appropriate task disposition remains to obtain the designated operational release with unresolved findings explicitly addressed.",
+        "G92_final13": "That the specialist is assigned and qualified to operate the receiver. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G92_final14": "The actual configuration’s suitability for this line and objective through competent review. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G92_final15": "Whether the actual approved operating method’s required verification is established. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G92_final16": "Clear current authority and the approved status/confirmation arrangement before affected action. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G92_final17": "The actual coverage gap and its qualified technical disposition. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G92_final18": "Vendor completion and operational release remain separate outcomes with their own authorities. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G92_final19": "Tool acceptance resolves the actual configuration question. It does not assign operating duties, verify containment-opening conditions or confirm the separate authority handover. Those have their own evidence and owners.",
+        "G92_final20": "Operational anomaly disposition cannot create inspection data. Preserve good data within scope and keep the gap visible for the relevant technical decision, without asserting a defect or satisfactory condition unsupported by the method."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

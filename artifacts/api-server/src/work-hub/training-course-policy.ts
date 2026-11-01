@@ -4,7 +4,7 @@ import {LibraryMetadataSchema,TrainingPolicyDetailsSchema,type WorkHubCommandEnv
 import {libraryAuthority,libraryRecord,libraryCommand,checkLibraryVersion,LibraryError,type LibraryActor,type LibraryTx} from './library-core';
 import {companyLibraryPeople,libraryOptions} from './library-audience';
 import {allocateLibraryItems} from './library-assignments';
-import {trainingCatalog,selectedTrainingServices}from'../lib/company-required-training';
+import {trainingCatalog,selectedTrainingServices,additionalTrainingApplies}from'../lib/company-required-training';
 import {trainingPositionIds,type TrainingPosition as Position} from '../lib/safety-training-position';
 export {trainingPositionIds} from '../lib/safety-training-position';
 
@@ -42,7 +42,7 @@ export async function readTrainingPolicy(actor:LibraryActor,id:string){
  const policy=TrainingPolicyDetailsSchema.parse(own.metadata.trainingPolicy??{title:course?.name??own.record.name,description:course?.libraryMetadata?LibraryMetadataSchema.parse(course.libraryMetadata).content?.description??'':own.metadata.content?.description??'',purpose:reference?.purpose??own.metadata.content?.description??''});
  const requiredPeopleIds=options.people.filter(person=>{const worker=staff.rows.find(row=>row.id===person.vendorPeopleId||row.userId===person.userId);return policy.requiredUserIds.includes(person.userId)||(worker&&policy.requiredStaffRoleIds.some(role=>trainingPositionIds(worker,staff.positions).includes(role)));}).map(person=>person.userId);
  const selected=await selectedTrainingServices(db,owner),additional=trainingCatalog.additional.courses.find(item=>item.courseId===own.metadata.safetyResource!.familyId);
- const applicabilityOptions=additional?selected.services.filter(service=>additional.masterServiceIds.some(id=>service.masterServiceIds.includes(id))).map(service=>({serviceId:service.code,label:service.name,roleDescriptions:additional.roleMappings.filter(rule=>rule.masterServiceIds.some(id=>service.masterServiceIds.includes(id))).map(rule=>rule.trigger??rule.rationale)})):[];
+ const applicabilityOptions=additional?selected.services.filter(service=>additionalTrainingApplies(additional,service)).map(service=>({serviceId:service.code,label:service.name,roleDescriptions:additional.roleMappings.filter(rule=>additionalTrainingApplies(rule,service)).map(rule=>rule.trigger??rule.rationale)})):[];
  return {itemId:id,version:own.metadata.version,familyId:own.metadata.safetyResource!.familyId,trainingItemId:course?.id??null,policy,requiredPeopleIds,applicabilityOptions,people:options.people,groups:options.groups,positions:staff.options,files:options.files};
 }
 export async function saveTrainingPolicy(actor:LibraryActor,id:string,envelope:WorkHubCommandEnvelope){
@@ -57,7 +57,7 @@ export async function saveTrainingPolicy(actor:LibraryActor,id:string,envelope:W
    if(decision.userIds.some(id=>!options.people.some(p=>p.userId===id)&&!old?.userIds.includes(id))||decision.staffRoleIds.some(id=>!staff.options.some(p=>p.id===id)&&!old?.staffRoleIds.includes(id)))throw new LibraryError('Choose exposure decisions for people and positions in this company',400);
   }
   const additional=trainingCatalog.additional.courses.find(item=>item.courseId===own.metadata.safetyResource!.familyId);
-  if(input.serviceApplicability.some(decision=>!prior?.serviceApplicability.some(old=>old.serviceId===decision.serviceId)&&!selected.services.some(service=>service.code===decision.serviceId&&additional?.masterServiceIds.some(id=>service.masterServiceIds.includes(id)))))throw new LibraryError('Confirm only a reviewed service in this company catalog',400);
+  if(input.serviceApplicability.some(decision=>!prior?.serviceApplicability.some(old=>old.serviceId===decision.serviceId)&&!selected.services.some(service=>service.code===decision.serviceId&&(additional&&additionalTrainingApplies(additional,service)))))throw new LibraryError('Confirm only a reviewed service in this company catalog',400);
   // Retain historical selections visibly when a person/group/file becomes
   // unavailable; never accept a newly introduced out-of-company identifier.
   if(input.requiredUserIds.some(id=>!options.people.some(p=>p.userId===id)&&!prior?.requiredUserIds.includes(id))||input.requiredGroupIds.some(id=>!options.groups.some(g=>g.id===id)&&!prior?.requiredGroupIds.includes(id))||input.requiredStaffRoleIds.some(id=>!staff.options.some(r=>r.id===id)&&!prior?.requiredStaffRoleIds.includes(id))||input.attachmentFileIds.some(id=>!options.files.some(f=>f.id===id)&&!prior?.attachmentFileIds.includes(id)))throw new LibraryError('Choose people, groups, positions and files from this company',400);
@@ -116,3 +116,4 @@ export async function ensurePolicyTraining(tx:LibraryTx,owner:WorkHubOwner,userI
  }
  return count;
 }
+

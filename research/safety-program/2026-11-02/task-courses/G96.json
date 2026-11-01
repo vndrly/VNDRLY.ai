@@ -1,0 +1,911 @@
+{
+  "courseId": "G96",
+  "gapGroupId": "TG47",
+  "title": "Language, travel and media equipment task instruction",
+  "description": "Six subject-specific lessons and two worked fictional cases with twenty-six explained decisions. Actual method instruction and qualified practical capability remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for language, travel and media equipment task instruction.",
+  "audience": [
+    "Assigned technical interpreters and translators",
+    "Guides and travel coordinators",
+    "Ground photography and media-production personnel",
+    "Technical-content and site-access reviewers"
+  ],
+  "practicalBoundary": "Ground photography is not UAS operation; an interpreter does not acquire the technical trade authority of the people being interpreted. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Confirmed language, subject, audience and service scope, with technical approval retained by the responsible discipline.",
+    "Actual source/translation revisions, agreed critical terminology and subject-review arrangements.",
+    "Evidence of relevant language proficiency and a safe comprehension-confirmation exercise for the actual audience.",
+    "Actual media equipment, approved ground locations, site restrictions and separate UAS/aviation scope evidence only if aerial work is supplied.",
+    "Confirmed destination, host entry decision, transport/support responsibilities and change-contact route.",
+    "Authorized recording/translation use, information-handling route, material-edit history and technical-content acceptance."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who distinguishes faithful language work from technical approval and routes ambiguity to the responsible speaker; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who resolves a critical terminology/version discrepancy with the author and preserves the accepted meaning; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who conducts a safe fictional comprehension check without leading or removing restrictions; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who identifies actual ground-media equipment/access interfaces and separates proposed aerial work; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who reconciles booked travel with actual host permission and support-role boundaries; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who preserves technical context and authorized use in an edited recording or translated deliverable; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Actual language/equipment skill, hazardous response, protective-system servicing or other supplied execution requires the relevant method-specific practical evaluation and applicable credentials. This online knowledge result does not establish those qualifications."
+  ],
+  "sources": [
+    {
+      "title": "OSHA recommended safety-program education and training",
+      "url": "https://www.osha.gov/safety-management/education-training",
+      "scopeLimit": "General role- and hazard-specific training guidance; not a trade license or universal legal mandate."
+    },
+    {
+      "title": "FAA commercial UAS operators",
+      "url": "https://www.faa.gov/uas/commercial_operators",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    },
+    {
+      "title": "OSHA training in a language and vocabulary workers understand",
+      "url": "https://www.osha.gov/laws-regs/standardinterpretations/2010-04-28",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G96_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Interpretation, guided travel and media production share a need for accurate communication, but they do not create one interchangeable profession. This course teaches role boundaries, terminology preparation, confirmation of meaning, ground-media planning, destination coordination and responsible delivery of recordings or translations. It does not teach aviation, technical operation, clinical care or protective security.\n\nComplete the fictional desk exercises and all twenty-six questions. Retain original responses and acknowledge explained remediation. Actual language proficiency, equipment skill and destination/site instruction require appropriate assessment. A ground-photography assignment does not authorize drone flight, and an interpreter does not acquire the technical authority of the people being interpreted.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G96_lesson1",
+        "title": "Lesson 1 — Separate interpretation from technical authority",
+        "body": "Start a language assignment by identifying speakers, audience, subject and purpose. Interpreting a live maintenance discussion differs from translating a written visitor guide. A technically fluent speaker can still use ambiguous shorthand, and a fluent interpreter can still lack the meaning of a specialized term. The service needs a route to the responsible speaker or author for clarification.\n\nSeparate faithful communication from technical approval. The interpreter conveys the speaker's meaning and identifies uncertainty; the responsible technical person approves the method or decision. Translating an instruction accurately does not authorize the interpreter to decide whether the instruction is safe, clinically appropriate or professionally compliant. That authority remains with the relevant discipline and employer.\n\nUse explicit boundaries when someone asks for an opinion outside the assignment. The interpreter can say that a term has two possible meanings and ask the speaker to clarify. They should not choose a technical meaning merely because one sounds more natural in the target language. Nor should they silently improve a procedure by changing what the speaker said.\n\nGuides and travel coordinators have comparable scope questions. Helping a visitor navigate an itinerary does not automatically include driving, security intervention or medical assistance. Identify the actual service and escalation contacts rather than infer every possible support duty from the word guide. Additional duties require their own qualification and authorization review.\n\nIn the fictional exercise, an interpreter translates a technician's explanation of a maintenance method. The supervisor asks the interpreter whether that method is approved. The worked answer routes approval to the technical authority while helping clarify the language. The interpreter preserves what was said, identifies any uncertainty and keeps their professional language role useful without pretending to be the trade expert. A finished translation and an approved method are different outcomes.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G96_lesson2",
+        "title": "Lesson 2 — Prepare a controlled terminology aid",
+        "body": "A terminology aid connects the language work to the actual subject. Gather key asset names, role names, units and technical terms from the responsible source. Ask the author or technical reviewer to explain ambiguous terms in context. A glossary should record agreed meaning and applicable document version, not simply provide a list of preferred words detached from the task.\n\nSome words carry action differences. Inspect, test, verify and approve can imply different duties. If two translations use those words inconsistently, the technical author must establish the intended action before the language version is finalized. Fluent phrasing cannot compensate for a changed duty. Preserve restrictions and conditions as carefully as the main instruction.\n\nNumbers, units and identifiers also require attention. A location code or equipment identifier should remain unambiguous across versions. Do not silently convert units or reinterpret a reference because it looks unusual. The appropriate author or technical reviewer must confirm any material correction. The language professional can flag the issue without making the engineering decision.\n\nVersion control matters when source text changes. A correct translation of an old procedure can still be the wrong instruction for the current task. Identify the source revision, translation revision and reviewer. If only part of a document changed, determine which translated portions need review rather than assume the old version remains entirely applicable.\n\nFor a desk exercise, one version translates a critical term as inspect while another says test. The worked response identifies the action difference, asks the technical author to clarify the intended duty and updates the controlled terminology and translation accordingly. It retains the original issue and review result. The exercise does not ask the interpreter to design a test or decide which technical activity the employer should require. It teaches the concrete skill of preserving meaning through a traceable clarification.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G96_lesson3",
+        "title": "Lesson 3 — Use confirmation without leading the audience",
+        "body": "Comprehension is not established by polite agreement alone. A recipient may nod while understanding a different task, especially when unfamiliar vocabulary, noise, pace or social pressure interferes. Use an appropriate confirmation method that lets the recipient explain the intended action or key restriction in their own words. The authorized speaker resolves technical discrepancies; the interpreter supports accurate exchange.\n\nAvoid leading confirmation. Asking you will follow step X, correct can produce agreement without showing independent understanding. A better prompt asks what the person understands they are being asked to do and what condition must be satisfied first. The content and assessment method must fit the actual task and audience. This course uses fictional messages, not live operating instructions.\n\nPreserve conditions and uncertainty. Simplifying language should make meaning clearer without removing a limitation. If the speaker says only after authorization, the translation must not reduce it to proceed. If a word is uncertain, say so and obtain clarification rather than deliver a confident but unsupported instruction. An unresolved communication barrier is important information for the host.\n\nInterpretation may need pauses or another supported arrangement to allow accurate exchange. The responsible organization should provide a method appropriate to the audience and subject. The interpreter should not be pressured to compress a high-consequence explanation into an unusable fragment merely to keep a schedule.\n\nIn the exercise, the recipient nods during a briefing but later describes an action that omits the authorization condition. The worked answer returns the discrepancy to the authorized speaker and repeats the comprehension check after clarification. The record states what was demonstrated and what was corrected. It does not label the person incompetent in every task or claim that one successful explanation establishes practical ability to perform the underlying work.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G96_lesson4",
+        "title": "Lesson 4 — Plan ground media work and permissions",
+        "body": "Ground media work needs a plan for equipment, location, people and permissions. A camera can be a handheld device or part of a larger setup with tripods, lighting, cables and power. Those arrangements can affect routes and nearby work even when the photographer does not operate the site's industrial equipment. The actual site and media roles must determine suitable equipment and restrictions.\n\nIdentify the approved subject and area. Permission to photograph one location does not automatically cover restricted equipment, personal information or another work zone. Site access and permission to publish can also be separate. The photographer needs a clear contact for changed requests rather than assume that being admitted to the site authorizes every image or use.\n\nMap physical interfaces on a drawing. Show where equipment, cables and people will be relative to access routes and ongoing activities. The responsible planner selects actual controls; this course does not specify electrical connections, hazardous-area equipment ratings or exclusion distances. A ground camera approval cannot establish that a lighting arrangement is suitable for every environment.\n\nKeep ground photography separate from aerial work. Adding a drone introduces a different operating method and applicable aviation requirements. The relevant pilot, aircraft, airspace and site permissions must be reviewed under the actual regime. A client's desire for an overhead shot does not create those qualifications, and a remote-pilot credential alone does not replace every needed authorization.\n\nFor the desk exercise, the approved plan allows handheld filming from a designated ground area. A producer proposes aerial footage and a powered lighting setup across a walkway. The worked answer preserves the approved ground scope while routing the new methods and interfaces for their actual reviews. It does not teach flight or electrical operation and does not claim that one media permit covers all additions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G96_lesson5",
+        "title": "Lesson 5 — Review travel and destination information",
+        "body": "Travel coordination should connect an itinerary with real host arrangements. Identify the actual destination, access point, host contact, travel role and communication route for changes. A booking can confirm transport or accommodation without proving admission to an operational area. The guide must describe what is confirmed and what remains conditional before the traveler relies on the plan.\n\nSeparate passenger support from vehicle operation. A guide may accompany a traveler while another party supplies driving, aviation or marine service. The guide does not acquire the operator's qualification through proximity. If the guide also supplies operation, that actual duty needs the corresponding review. Likewise, ordinary visitor assistance is not automatically protective security or clinical care.\n\nDestination-specific instruction matters. Site names, entrances, languages and local arrangements can differ even within one customer organization. A familiar itinerary template should not carry forward unverified details. The responsible host must supply current restrictions and the coordinator must communicate them accurately. Do not promise entry because a previous visit was allowed.\n\nChanges need a clear owner. A new site, time or transport mode may affect access and support arrangements. Record the changed assumption and obtain the relevant confirmation through the established channel. A message sent to a booking agent may not reach the host who controls entry. The adopted process should make current status understandable to the traveler.\n\nIn the fictional exercise, the guide has confirmed hotel and vehicle bookings but no host approval for the operational-area visit. The worked response keeps the bookings as valid evidence of those arrangements and seeks the missing host decision. It corrects the service promise if access is not approved. The guide does not substitute personal familiarity for authorization or ask the traveler to test the gate and see what happens.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G96_lesson6",
+        "title": "Lesson 6 — Protect recordings and deliverable context",
+        "body": "A media or translation deliverable should preserve context and approved use. An edit can change meaning even when each remaining sentence is accurate. Removing a condition, changing sequence or combining statements from different situations can create an instruction the original speaker never gave. The responsible technical reviewer must assess material content when the deliverable concerns technical work.\n\nDistinguish presentation editing from technical authorship. An editor can improve readability, framing or sound within the approved brief, but should not silently decide which technical restrictions matter. An interpreter can identify ambiguity without authorizing the underlying activity. The handover should name who owns technical content and which version was accepted.\n\nInformation permissions also need a defined scope. Images and recordings may include people, documents or operational details beyond the intended subject. Use the organization's authorized collection, review, storage and delivery route. Do not distribute a raw recording broadly merely because a final edited clip was approved. Applicable privacy and information rules must be determined by the responsible organization and jurisdiction.\n\nRetain enough provenance to explain the deliverable. Identify source material, material edits, language version and relevant reviewer approval. A later user should know whether the video is promotional material, a record of an event or an authorized instruction. A polished appearance does not make it a controlled operating procedure.\n\nFor the exercise, an editor removes only after authorization from a translated safety video to shorten it. The worked answer restores the condition and obtains the appropriate technical review before release. The shorter version is not a faithful simplification because it changes the action boundary. The correction preserves the original source and review history rather than pretending the omission never occurred. This is a concrete media-quality skill that supports safe communication without granting trade or operating authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G96_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek asks an interpreter to support a maintenance briefing. The source document is revision B, but the translated handout came from revision A. One key term appears as inspect in one version and test in another. The authorized speaker uses the phrase only after approval. The recipient nods, then describes a task that omits that condition.\n\nThe interpreter first identifies the version mismatch. The old translation may have been accurate for its source, but it does not establish the current instruction. The author and language reviewer determine which changes need translation and technical review. The interpreter does not copy the new revision label onto the old text and call the problem resolved.\n\nThe terminology issue is handled separately. Inspect and test can imply different work. The responsible technical author clarifies the intended action, and the agreed meaning is recorded in the terminology aid for the relevant version. The interpreter conveys that meaning without choosing a technical method or deciding whether the task should be performed.\n\nThe recipient's nod is then tested through an open comprehension prompt. Their explanation reveals the missing authorization condition. The speaker clarifies the instruction and the interpreter preserves the condition faithfully. A second check asks the recipient to explain the boundary in their own words. This is a language-understanding exercise, not proof that the person can physically perform the maintenance.\n\nAfter the briefing, the supervisor asks the interpreter to sign that the method is technically approved. The worked answer keeps approval with the responsible technical authority. The interpreter can confirm the language service and identify the clarification history within their actual role. They cannot acquire engineering or trade authority by accurately translating someone else's explanation.\n\nThe resulting pack includes the correct source and language versions, the clarified term and the actual comprehension result. It preserves the original discrepancy and correction. The maintenance team receives a more reliable message because the interpreter did not hide uncertainty or simplify away a restriction.\n\nThe case demonstrates useful professional work: version matching, terminology resolution and confirmation of meaning. Each can be assessed safely using fictional text and dialogue. Actual language proficiency and the underlying technical task remain separate competence questions, and neither is established by a generic attendance sheet.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G96_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: a media crew and guide plan a visit to North Creek. Accommodation and a vehicle are booked. The host has approved handheld ground filming from a designated area, but has not approved access to an operational section. A producer proposes drone footage, powered lights across a walkway and a short edited safety clip. The draft edit removes an authorization condition to save time.\n\nThe guide separates booked travel from host access. A paid itinerary does not establish operational-area permission. The responsible host confirms the actual visit boundary, and the guide communicates it before the travelers arrive. The guide does not promise security, medical or operator services that are not part of the assignment.\n\nThe media planner preserves the approved handheld ground scope while identifying the new methods. Drone work requires its own actual aviation and site review; the existing photography permission does not cover it. The lighting and walkway arrangement needs the responsible site and equipment review. The course does not prescribe flight behavior or electrical setup.\n\nThe technical edit is examined for meaning rather than appearance. Removing only after authorization changes the instruction. The editor restores the condition and routes the revised clip to the technical content owner. A shorter, more attractive clip is not acceptable if it creates an unsupported instruction boundary.\n\nInformation review also checks whether the raw footage includes people or documents outside the approved subject. The authorized review and delivery process determines what may be used. Approval of a final clip is not treated as permission to distribute every source recording. The deliverable record identifies purpose, version and reviewer.\n\nThe worked outcome distinguishes travel booking, host entry, ground-media scope, proposed aerial work, equipment interfaces and technical-content acceptance. Completing one does not establish the others. If the host later approves another area, that does not authorize flight or change the wording of the safety instruction.\n\nThe guide and media crew can now deliver a truthful service within their roles. They do not need every qualification associated with the site, but they do need actual competence for the methods they supply and reliable coordination with the responsible host. This is more useful than either a universal media credential claim or a blanket prohibition unrelated to the actual assignment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G96_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Apply the final decisions to role boundaries, terminology, comprehension, ground-media interfaces, destination access and responsible delivery. Preserve original answers and acknowledge explained remediation.\n\nActual language, media-equipment and guide skills require relevant assessment. Aviation, driving, security and clinical qualifications apply only to confirmed additional duties under the actual regime. This course authorizes none of those activities and cannot replace site-specific instruction.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G96_check1",
+        "prompt": "During separate interpretation from technical authority, an interpreter is asked to approve a technical instruction after translating it. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Refer approval to the responsible technical authority and retain the interpretation boundary."
+          },
+          {
+            "id": "b",
+            "label": "Accurate translation grants authority to approve the technical method."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G96_check2",
+        "prompt": "During prepare a controlled terminology aid, two versions translate a critical term differently without an approved clarification. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The most fluent wording is automatically technically correct."
+          },
+          {
+            "id": "b",
+            "label": "Obtain author and technical clarification before relying on the disputed instruction."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G96_check3",
+        "prompt": "During use confirmation without leading the audience, the recipient agrees politely but describes a different task when asked to explain. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Polite agreement proves the technical message was understood."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Return the discrepancy to the authorized speaker for clarification."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G96_check4",
+        "prompt": "During plan ground media work and permissions, a ground-photography approval is used to justify an unreviewed drone flight. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A photography permit automatically authorizes drone operation."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Hold aerial work and obtain its separate applicable authorization and qualification review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G96_check5",
+        "prompt": "During review travel and destination information, a guide promises operational-area access that the host has not approved. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Confirm host authorization and correct the promised scope before the visit."
+          },
+          {
+            "id": "b",
+            "label": "A paid travel booking establishes operational site access."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G96_check6",
+        "prompt": "During protect recordings and deliverable context, an edited safety video removes a condition that limited the original instruction. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An attractive edit may omit technical restrictions for clarity."
+          },
+          {
+            "id": "b",
+            "label": "Refer the edit for technical review and restore the necessary context."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G96_final1",
+        "prompt": "Which evidence is most directly relevant to separate interpretation from technical authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Communication assignment naming language, technical speakers and approval authority."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G96_final2",
+        "prompt": "Which evidence is most directly relevant to prepare a controlled terminology aid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Reviewed glossary linked to document version and responsible technical reviewers."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G96_final3",
+        "prompt": "Which evidence is most directly relevant to use confirmation without leading the audience?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Communication rehearsal record showing recipient explanation and resolved discrepancies."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G96_final4",
+        "prompt": "Which evidence is most directly relevant to plan ground media work and permissions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Media plan separating ground equipment, location permission and any proposed aerial work."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G96_final5",
+        "prompt": "Which evidence is most directly relevant to review travel and destination information?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Travel handoff linking booking, host access and assigned support duties."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G96_final6",
+        "prompt": "Which evidence is most directly relevant to protect recordings and deliverable context?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Media or translation delivery record identifying approved use, context and reviewer."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G96_final7",
+        "prompt": "A colleague argues: “Accurate translation grants authority to approve the technical method.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; refer approval to the responsible technical authority and retain the interpretation boundary."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G96_final8",
+        "prompt": "A colleague argues: “The most fluent wording is automatically technically correct.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; obtain author and technical clarification before relying on the disputed instruction."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G96_final9",
+        "prompt": "A colleague argues: “Polite agreement proves the technical message was understood.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; return the discrepancy to the authorized speaker for clarification."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G96_final10",
+        "prompt": "A colleague argues: “A photography permit automatically authorizes drone operation.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; hold aerial work and obtain its separate applicable authorization and qualification review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G96_final11",
+        "prompt": "A colleague argues: “A paid travel booking establishes operational site access.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; confirm host authorization and correct the promised scope before the visit."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G96_final12",
+        "prompt": "A colleague argues: “An attractive edit may omit technical restrictions for clarity.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; refer the edit for technical review and restore the necessary context."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G96_final13",
+        "prompt": "The interpreter is asked to approve a technical method after translating it. What is the appropriate distinction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Fluency automatically grants trade authority."
+          },
+          {
+            "id": "b",
+            "label": "The interpreter should silently improve the method."
+          },
+          {
+            "id": "c",
+            "label": "Accurate communication remains the interpreter’s role; technical approval stays with the responsible qualified authority."
+          },
+          {
+            "id": "d",
+            "label": "A translated sentence replaces employer authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G96_final14",
+        "prompt": "One version says inspect and another says test. What resolves the discrepancy?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choosing whichever word sounds smoother."
+          },
+          {
+            "id": "b",
+            "label": "Copying a new revision label onto old text."
+          },
+          {
+            "id": "c",
+            "label": "Assuming the two actions are always identical."
+          },
+          {
+            "id": "d",
+            "label": "Clarification by the responsible author/technical reviewer, then a controlled terminology and version update."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G96_final15",
+        "prompt": "The recipient nods but describes a task missing an authorization condition. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Return the discrepancy to the authorized speaker, clarify meaning and repeat an appropriate comprehension check."
+          },
+          {
+            "id": "b",
+            "label": "Treat the nod as complete understanding."
+          },
+          {
+            "id": "c",
+            "label": "Remove the condition to simplify the task."
+          },
+          {
+            "id": "d",
+            "label": "Record practical competence from politeness alone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G96_final16",
+        "prompt": "A ground-camera plan adds drone footage. Which statement is supported?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A ground-photography permit automatically covers flight."
+          },
+          {
+            "id": "b",
+            "label": "Aerial work is a separate operating scope needing its actual applicable authorization and qualification review."
+          },
+          {
+            "id": "c",
+            "label": "A client request grants every airspace permission."
+          },
+          {
+            "id": "d",
+            "label": "A guide becomes a pilot through the itinerary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G96_final17",
+        "prompt": "Hotel and vehicle bookings are confirmed, but host entry is not. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Unrestricted site access."
+          },
+          {
+            "id": "b",
+            "label": "Every security and clinical support role."
+          },
+          {
+            "id": "c",
+            "label": "The bookings, while operational-area access remains a separate host decision."
+          },
+          {
+            "id": "d",
+            "label": "Permission to test the gate without confirmation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G96_final18",
+        "prompt": "An editor removes only after authorization from a safety clip. What changed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the clip length with no effect on meaning."
+          },
+          {
+            "id": "b",
+            "label": "The editor’s professional license."
+          },
+          {
+            "id": "c",
+            "label": "Nothing if the final image looks polished."
+          },
+          {
+            "id": "d",
+            "label": "The instruction boundary, requiring restoration of meaning and appropriate technical review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G96_final19",
+        "prompt": "In case one, the translation version is corrected. What can remain separate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Terminology, comprehension and technical approval, each needing the actual relevant resolution."
+          },
+          {
+            "id": "b",
+            "label": "Nothing; a new revision label proves practical performance."
+          },
+          {
+            "id": "c",
+            "label": "Only the font choice."
+          },
+          {
+            "id": "d",
+            "label": "Every prior language skill becomes invalid."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G96_final20",
+        "prompt": "In case two, host access expands. What does that not automatically authorize?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The specifically approved new access area."
+          },
+          {
+            "id": "b",
+            "label": "Drone operation, unreviewed equipment arrangements or a changed technical instruction."
+          },
+          {
+            "id": "c",
+            "label": "Use of accurate host information."
+          },
+          {
+            "id": "d",
+            "label": "A truthful update to the itinerary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G96_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G96_lesson1",
+          "questionIds": [
+            "G96_check1"
+          ]
+        },
+        {
+          "lessonId": "G96_lesson2",
+          "questionIds": [
+            "G96_check2"
+          ]
+        },
+        {
+          "lessonId": "G96_lesson3",
+          "questionIds": [
+            "G96_check3"
+          ]
+        },
+        {
+          "lessonId": "G96_lesson4",
+          "questionIds": [
+            "G96_check4"
+          ]
+        },
+        {
+          "lessonId": "G96_lesson5",
+          "questionIds": [
+            "G96_check5"
+          ]
+        },
+        {
+          "lessonId": "G96_lesson6",
+          "questionIds": [
+            "G96_check6"
+          ]
+        },
+        {
+          "lessonId": "G96_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G96_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G96_final",
+          "questionIds": [
+            "G96_final1",
+            "G96_final2",
+            "G96_final3",
+            "G96_final4",
+            "G96_final5",
+            "G96_final6",
+            "G96_final7",
+            "G96_final8",
+            "G96_final9",
+            "G96_final10",
+            "G96_final11",
+            "G96_final12",
+            "G96_final13",
+            "G96_final14",
+            "G96_final15",
+            "G96_final16",
+            "G96_final17",
+            "G96_final18",
+            "G96_final19",
+            "G96_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G96_check1": "The correct decision is to refer approval to the responsible technical authority and retain the interpretation boundary. An interpreter conveys meaning but does not acquire the engineering, clinical or operating authority of the speakers. Identify language, subject, audience and the decision being communicated. Ask speakers to resolve ambiguous technical terms instead of inventing a translation that sounds fluent. A guide or travel coordinator likewise needs a defined service boundary and site contact rather than an assumed emergency or security role. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G96_check2": "The correct decision is to obtain author and technical clarification before relying on the disputed instruction. Agree critical terms, names and units with the responsible speakers before a high-consequence communication. Preserve the distinction between an untranslated term and an uncertain interpretation. A glossary assists consistency but does not replace confirmation of meaning in context. The desk exercise compares two written versions and records questions for the author rather than deciding a technical dispute through language preference. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G96_check3": "The correct decision is to return the discrepancy to the authorized speaker for clarification. For important communication, ask the recipient to explain the intended action in their own words and have the authorized speaker resolve discrepancies. A yes response to do you understand provides weak evidence of comprehension. Keep interpretation faithful rather than simplifying away a condition or restriction. Record unresolved communication barriers so the host can choose an appropriate supported arrangement. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G96_check4": "The correct decision is to hold aerial work and obtain its separate applicable authorization and qualification review. Photography and filming need authorized access, subject permission where required and equipment arrangements suitable for the actual location. Ground photography does not authorize drone flight. Tripods, cables and lighting can affect routes and adjacent work. The responsible site and media personnel determine equipment suitability and restrictions; the learner reviews the plan without energizing equipment or entering restricted areas. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G96_check5": "The correct decision is to confirm host authorization and correct the promised scope before the visit. A travel service should establish the destination, host contact, access arrangements and communication route for changes. A booking confirmation does not prove a visitor may enter an operational area. Separate guidance and interpretation from driving, protective security or clinical assistance unless those duties are actually supplied. Give travelers accurate restrictions rather than promises beyond the service scope. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G96_check6": "The correct decision is to refer the edit for technical review and restore the necessary context. Images, recordings and translations can expose personal or sensitive operational information. Use the authorized collection, review and delivery route. Retain context so edited material does not misrepresent an instruction or event. A media edit should not become an unofficial operating procedure. The final handoff should identify approved use, limitations and the person responsible for technical content rather than silently assigning that responsibility to the editor. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G96_final1": "A communication assignment naming language, technical speakers and approval authority addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. An interpreter conveys meaning but does not acquire the engineering, clinical or operating authority of the speakers. Identify language, subject, audience and the decision being communicated. Ask speakers to resolve ambiguous technical terms instead of inventing a translation that sounds fluent. A guide or travel coordinator likewise needs a defined service boundary and site contact rather than an assumed emergency or security role.",
+        "G96_final2": "A reviewed glossary linked to document version and responsible technical reviewers addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Agree critical terms, names and units with the responsible speakers before a high-consequence communication. Preserve the distinction between an untranslated term and an uncertain interpretation. A glossary assists consistency but does not replace confirmation of meaning in context. The desk exercise compares two written versions and records questions for the author rather than deciding a technical dispute through language preference.",
+        "G96_final3": "A communication rehearsal record showing recipient explanation and resolved discrepancies addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. For important communication, ask the recipient to explain the intended action in their own words and have the authorized speaker resolve discrepancies. A yes response to do you understand provides weak evidence of comprehension. Keep interpretation faithful rather than simplifying away a condition or restriction. Record unresolved communication barriers so the host can choose an appropriate supported arrangement.",
+        "G96_final4": "A media plan separating ground equipment, location permission and any proposed aerial work addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Photography and filming need authorized access, subject permission where required and equipment arrangements suitable for the actual location. Ground photography does not authorize drone flight. Tripods, cables and lighting can affect routes and adjacent work. The responsible site and media personnel determine equipment suitability and restrictions; the learner reviews the plan without energizing equipment or entering restricted areas.",
+        "G96_final5": "A travel handoff linking booking, host access and assigned support duties addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A travel service should establish the destination, host contact, access arrangements and communication route for changes. A booking confirmation does not prove a visitor may enter an operational area. Separate guidance and interpretation from driving, protective security or clinical assistance unless those duties are actually supplied. Give travelers accurate restrictions rather than promises beyond the service scope.",
+        "G96_final6": "A media or translation delivery record identifying approved use, context and reviewer addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Images, recordings and translations can expose personal or sensitive operational information. Use the authorized collection, review and delivery route. Retain context so edited material does not misrepresent an instruction or event. A media edit should not become an unofficial operating procedure. The final handoff should identify approved use, limitations and the person responsible for technical content rather than silently assigning that responsibility to the editor.",
+        "G96_final7": "That inference exceeds the evidence. An interpreter conveys meaning but does not acquire the engineering, clinical or operating authority of the speakers. Identify language, subject, audience and the decision being communicated. Ask speakers to resolve ambiguous technical terms instead of inventing a translation that sounds fluent. A guide or travel coordinator likewise needs a defined service boundary and site contact rather than an assumed emergency or security role. The appropriate task disposition remains to refer approval to the responsible technical authority and retain the interpretation boundary.",
+        "G96_final8": "That inference exceeds the evidence. Agree critical terms, names and units with the responsible speakers before a high-consequence communication. Preserve the distinction between an untranslated term and an uncertain interpretation. A glossary assists consistency but does not replace confirmation of meaning in context. The desk exercise compares two written versions and records questions for the author rather than deciding a technical dispute through language preference. The appropriate task disposition remains to obtain author and technical clarification before relying on the disputed instruction.",
+        "G96_final9": "That inference exceeds the evidence. For important communication, ask the recipient to explain the intended action in their own words and have the authorized speaker resolve discrepancies. A yes response to do you understand provides weak evidence of comprehension. Keep interpretation faithful rather than simplifying away a condition or restriction. Record unresolved communication barriers so the host can choose an appropriate supported arrangement. The appropriate task disposition remains to return the discrepancy to the authorized speaker for clarification.",
+        "G96_final10": "That inference exceeds the evidence. Photography and filming need authorized access, subject permission where required and equipment arrangements suitable for the actual location. Ground photography does not authorize drone flight. Tripods, cables and lighting can affect routes and adjacent work. The responsible site and media personnel determine equipment suitability and restrictions; the learner reviews the plan without energizing equipment or entering restricted areas. The appropriate task disposition remains to hold aerial work and obtain its separate applicable authorization and qualification review.",
+        "G96_final11": "That inference exceeds the evidence. A travel service should establish the destination, host contact, access arrangements and communication route for changes. A booking confirmation does not prove a visitor may enter an operational area. Separate guidance and interpretation from driving, protective security or clinical assistance unless those duties are actually supplied. Give travelers accurate restrictions rather than promises beyond the service scope. The appropriate task disposition remains to confirm host authorization and correct the promised scope before the visit.",
+        "G96_final12": "That inference exceeds the evidence. Images, recordings and translations can expose personal or sensitive operational information. Use the authorized collection, review and delivery route. Retain context so edited material does not misrepresent an instruction or event. A media edit should not become an unofficial operating procedure. The final handoff should identify approved use, limitations and the person responsible for technical content rather than silently assigning that responsibility to the editor. The appropriate task disposition remains to refer the edit for technical review and restore the necessary context.",
+        "G96_final13": "Accurate communication remains the interpreter’s role; technical approval stays with the responsible qualified authority. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G96_final14": "Clarification by the responsible author/technical reviewer, then a controlled terminology and version update. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G96_final15": "Return the discrepancy to the authorized speaker, clarify meaning and repeat an appropriate comprehension check. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G96_final16": "Aerial work is a separate operating scope needing its actual applicable authorization and qualification review. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G96_final17": "The bookings, while operational-area access remains a separate host decision. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G96_final18": "The instruction boundary, requiring restoration of meaning and appropriate technical review. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G96_final19": "Terminology, comprehension and technical approval, each needing the actual relevant resolution. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G96_final20": "Drone operation, unreviewed equipment arrangements or a changed technical instruction. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

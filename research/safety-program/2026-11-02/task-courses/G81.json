@@ -1,0 +1,901 @@
+{
+  "courseId": "G81",
+  "gapGroupId": "TG32",
+  "title": "IT/OT change-validation matrices and recovery evidence",
+  "description": "Teach functional dependency mapping, baseline/delta reasoning, safe test coverage and backup-versus-recovery evidence beyond basic cyber awareness.",
+  "purpose": "Teach functional dependency mapping, baseline/delta reasoning, safe test coverage and backup-versus-recovery evidence beyond basic cyber awareness.",
+  "audience": [
+    "Assigned IT/OT technical trainees in a theory module",
+    "Change coordinators",
+    "Recovery validation reviewers"
+  ],
+  "sources": [
+    {
+      "title": "NIST SP800-82Revision3 final OT guidance",
+      "url": "https://csrc.nist.gov/pubs/sp/800/82/r3/final"
+    },
+    {
+      "title": "NIST SP1339 OT Backup Quick Start Guide",
+      "url": "https://csrc.nist.gov/pubs/sp/1339/final"
+    },
+    {
+      "title": "NIST Cybersecurity Framework",
+      "url": "https://www.nist.gov/cyberframework"
+    }
+  ],
+  "practicalBoundary": "This course grants no access, scanning/probing, configuration, incident-response, recovery or functional-safety authority. Exercises use fictional data and no live systems. Actual system methods and practical qualifications remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual asset/function dependencies and approved baseline",
+    "Authorized change/access delta and vendor compatibility evidence",
+    "Representative safe validation matrix and acceptance authority",
+    "Trustworthy backup/configuration and tested recovery basis",
+    "Actual technical/security/functional-safety/operating role allocation"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual system-specific controlled technical duties in an approved safe environment",
+    "Role-specific validation, anomaly recognition and faithful evidence recording",
+    "Separate qualified cyber response, recovery or functional-safety capability where assigned"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G81_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for it/ot change-validation matrices and recovery evidence. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no access, scanning/probing, configuration, incident-response, recovery or functional-safety authority. Exercises use fictional data and no live systems. Actual system methods and practical qualifications remain separate.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G81_lesson1",
+        "title": "1. Build an asset/function dependency model for the actual change",
+        "body": "IT and operational technology can share services while having different consequences when they fail or change. A business reporting workstation may depend on the same identity or network service as an operational display. A physical access controller may look like office equipment while affecting movement at a working site. The earlier G23 foundation teaches defensive boundaries. This module develops safe change-validation and recovery reasoning for assigned technical workers without granting system access or operating authority.\n\nStart with the requested change and affected function. Identify assets, versions/configuration, owners, upstream inputs, downstream consumers and physical-process dependencies. A list of computer names is not yet a functional model. Ask what each asset does and what depends on its availability, integrity or timing. The actual architecture and technical owners must establish the real relationships.\n\nDraw a paper dependency graph. A fictional identity service connects to a reporting tool and an operational-support terminal. The graph shows why an authentication change might affect more than office login. It does not prove that every connected system is safety critical, and it does not authorize probing to discover connections. Use approved records and explicitly mark unknown relationships.\n\nClassify the requested role: information gathering, technical implementation, test execution, security response, functional-safety assessment or operating release. Administrative access does not establish competence or permission for every role. A cyber specialist does not automatically hold functional-safety design authority, and a process operator does not automatically have permission to change network configuration.\n\nPaper exercise: a ticket says update remote support on server S-4 but omits what physical operations depend on it. The useful next step is an owner-confirmed dependency and scope review. Do not install the update to see what fails or scan connected assets as part of this course. Actual authorized discovery and change methods remain separate.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G81_lesson2",
+        "title": "2. Define a baseline and a reviewable change delta",
+        "body": "A baseline describes an approved known configuration for a defined purpose and time. A change delta describes the intended difference from that baseline. Version labels alone may be insufficient: dependencies, configuration, access rules, device firmware or approved settings can affect behavior. The actual technical program determines what must be recorded and how sensitive information is protected.\n\nRead a change request for the problem, affected assets/functions, proposed delta, technical basis, risk/dependency review, test evidence, recovery arrangement and decision owners. These elements serve different purposes. A reason for change does not establish that the proposed implementation is suitable. A successful laboratory test does not establish that the laboratory matches the actual system.\n\nSeparate approved intent, implemented state and verified state. A ticket approved for version B does not prove B was installed. An installation log does not prove all relevant functions were verified. A screenshot of a version number cannot establish every dependent configuration. The final record must connect actual implementation evidence with the intended baseline and test results.\n\nPaper exercise: baseline A names a device and configuration profile P. The proposed change names a new software version but omits profile compatibility. Identify the missing dependency, request the actual vendor/technical evidence and keep the conclusion bounded. Do not infer compatibility from the version being newer or from another site's success.\n\nA temporary exception or support route is also a configuration change. It needs an owner, scope, conditions and controlled closure/review under the actual program. The word temporary does not make exposure disappear. The learner should recognize a new path or privilege as part of the delta rather than treating it as informal convenience. This lesson provides no commands for changing access, services or safeguards.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G81_lesson3",
+        "title": "3. Construct a validation matrix with positive, negative and dependency cases",
+        "body": "A test should answer a defined question with expected evidence. Begin by mapping each intended requirement to a test or review method. A requirement such as authorized users can access a reporting function needs positive evidence for the permitted behavior and negative evidence that relevant unauthorized behavior is not permitted under the approved scope. This concept is defensive validation, not permission to attack or probe a live system.\n\nUse a paper matrix with requirement, test condition, expected result, actual result, evidence reference and limitation. Include relevant dependencies and failure/abnormal cases determined by qualified owners. A single login demonstration may show one path works while leaving role restrictions, recovery or physical interfaces unverified. The actual validation plan determines safe methods and environments.\n\nSafe fictional example: a mock interface has two roles, viewer and editor. The supplied requirement says viewers may read a report but may not edit it; editors may edit only within their assigned scope. A paper test plan therefore includes permitted reading, denied editing for viewers and scope checks for editors. The learner writes expected outcomes without logging into any real system or attempting bypasses.\n\nTest-environment representativeness matters. A simulator or offline copy can safely support learning and some technical evidence, but differences from production must be identified. Hardware, configuration, timing, interfaces and data assumptions can affect transferability. A laboratory pass is not automatically a production release. The responsible technical/operating owners decide what additional controlled verification is required.\n\nPaper exercise: a proposed change affects both a reporting display and an alarm interface, but the test plan checks only that the report opens. Mark the untested alarm dependency and request qualified coverage. Do not create an alarm condition on operating equipment to fill the gap. The course assesses test reasoning; actual technical tests need specific authorization and safe conditions.\n\nWorked matrix row: requirement R-3 says a mock viewer may read report D but may not change its approved content. Row one expects permitted read and records the supplied fictional successful read result. Row two expects denied edit, but no result is supplied. The correct summary is read path demonstrated in the mock environment; edit restriction not yet demonstrated. Do not write access control passed. A third row concerns a dependent display and is also untested. Keeping separate rows prevents one favorable observation from spreading across unrelated requirements. If a later authorized test supplies the missing result, link it with the actual environment and evidence reference. This paper method teaches test completeness without asking the learner to attempt unauthorized access or interact with a real control system.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G81_lesson4",
+        "title": "4. Interpret backup, integrity and recovery evidence",
+        "body": "A backup is useful only in relation to a defined recovery need. Identify what it contains, which configuration it represents, where it is protected, who may use it and what dependencies are required for recovery. A file named latest backup is not automatically a trustworthy or suitable source. The actual program must establish provenance and integrity without exposing credentials or sensitive configuration in a general training record.\n\nDistinguish backup creation, backup verification, restore testing and operational recovery. A successful copy job reports one action. A restore test can show that a defined environment was reconstructed under stated conditions. Operational recovery includes the relevant system functions and dependencies, technical review and operating readiness. One result should not be promoted into all four claims.\n\nNIST's OT backup guidance emphasizes integrating backups with change management and exercising recovery. This module develops the evidence distinction using fictional records rather than providing restore commands. Actual recovery can affect physical processes, so authorized specialists and operations must control the method. An online learner should not restore production or overwrite a system to demonstrate skill.\n\nPaper exercise: a backup predates an approved configuration change, while the recovery plan assumes the newer configuration. The learner records the mismatch and asks the responsible technical owner how the required state will be established. Do not assume that newer is always trustworthy or that older is always safe. Suitability depends on the actual incident, approved baseline and evidence.\n\nIntegrity evidence also has scope. A matching file checksum can show that two byte sequences match under the comparison; it does not prove that the configuration is correct, free of malicious content or suitable for the process. The technical program must establish trustworthy provenance and relevant validation. This distinction prevents a useful technical check from becoming an unsupported universal assurance claim.\n\nA recovery evidence table can use separate rows for source identified, copy created, integrity comparison, isolated restore exercised, dependencies verified and operating release. In a fictional packet, only the first three rows have records. The learner should mark the remaining rows not demonstrated rather than treating a majority of completed rows as recovery complete. These are evidence categories, not a technical restore sequence. The actual owner may need additional categories for the system and incident. This table makes a partial but useful result reviewable: the backup has some supporting evidence, while restoration and readiness still need their own qualified work. A percentage complete is not a substitute for naming the missing functions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G81_lesson5",
+        "title": "5. Preserve incident facts and separate containment from operating decisions",
+        "body": "An abnormal digital observation can have reliability, cyber, human-interface or process causes. Record the actual symptom, time basis, affected function, relevant changes and uncertainty. Do not label every failure a cyberattack or dismiss one because production looks normal. Accurate facts let the responsible technical, security and operational roles coordinate the actual response.\n\nContainment decisions can affect physical operations. Disconnecting a component, disabling an account or shutting down a service may have dependencies beyond the visible computer. The actual incident/operating plan determines authority and safe action. This course does not prescribe indiscriminate disconnection, live investigation commands, forensic collection or process shutdown. A worker follows the approved role and communicates the known physical interface.\n\nSeparate evidence preservation from unauthorized investigation. Reporting that a relevant log or device exists is not permission to copy sensitive data, connect removable media or run tools. The responsible authorized specialists determine collection and handling. The training record should use fictional data and contain no real credentials, network secrets or personal incident details.\n\nPaper exercise: a display shows stale values after a support change, while a separate process indication remains available. The learner reports the stale-display observation and actual known dependencies without deciding the physical process is safe or compromised. The assigned operating authority determines the approved operational response, and the technical team investigates through its actual method.\n\nRecovery release is not the same as closing a support ticket. Relevant configuration, access, protective/operating functions, dependencies and human readiness may need evidence. An attractive dashboard or a normal version label cannot establish every prerequisite. The final handover should identify what has been restored, what was verified, what remains limited and who owns the operating decision.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G81_lesson6",
+        "title": "6. Assess technical capability with safe simulations and bounded claims",
+        "body": "IT support, OT administration, cyber response, recovery engineering and functional-safety work are distinct capabilities. A person may hold several only when actual competence and authorization are established. A generic cyber credential or administrator account cannot close every role. Specialized credentials depend on the actual legal/contractual scope; this course creates no accreditation or universal licensing requirement.\n\nUse a safe paper or deliberately isolated fictional simulation to assess reasoning. Provide an asset graph, baseline/delta record, mock role requirements, test matrix and backup log. Ask the learner to identify missing negative tests, unverified dependencies, a stale backup and an unsupported release conclusion. No connection to actual systems, probing, exploitation or configuration change is needed.\n\nThe practical assessment for a real technical role must be planned by relevant qualified personnel using an approved safe environment. It should observe actual system-specific documentation use, controlled implementation, relevant validation, faithful evidence, anomaly recognition and recovery/handover within the assigned scope. The assessment must not introduce uncontrolled changes into an operating process to make the exercise realistic.\n\nFeedback should identify the unsupported inference. You treated a copy-job success as a tested restore is useful coaching. Be more technical is not a performance criterion. Retain original findings, remediation and reassessment so that improved understanding does not rewrite the first result. Practical limitations must remain explicit when an environment omits real hardware or interfaces.\n\nThe final capability handoff should name the system/task, approved methods, practical environment, assessor scope, test coverage, limitations and authorization status. Knowledge completion records this bounded change-validation and recovery theory with original scores retained. It cannot grant system access, permit security testing, approve a safety-critical design or authorize operating restart. Actual manufacturer/site instruction and qualified practical capability remain residuals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G81_case1",
+        "title": "Worked fictional case 1: a successful login hiding an untested alarm dependency",
+        "body": "Fictional facts: Cedar Controls proposes a remote-support update for S-4. The dependency graph shows a reporting display and alarm interface, but the change request omits the alarm function. The laboratory test demonstrates one administrator login and report opening. A vendor asks the coordinator to call the update fully validated and create an alternative access route if the approved one fails.\n\nThe learner first reconciles scope. The alarm interface is an affected dependency in the supplied graph, so the change request and test plan need qualified review of that function. A reporting demonstration cannot establish alarm behavior. The learner does not trigger an alarm on operating equipment or alter a protective function to gather evidence.\n\nNext, the validation matrix is examined. One administrator login covers neither relevant role restrictions nor every dependency. The learner writes missing expected outcomes for the mock viewer/editor requirements and the alarm-related technical question. Actual test methods and environments remain with the authorized owners. The course exercise stays on paper.\n\nThe proposed alternative access route is treated as another change, not a harmless workaround. Its purpose, privileges, exposure and operational implications require the actual approval process. A familiar vendor and a working password cannot supply authorization. The coordinator retains the approved route's failure as a fact without creating a private bypass.\n\nIn the fictional resolution, technical and operating owners revise scope and validation coverage, establish representative safe test evidence and decide the controlled implementation/release conditions. The record distinguishes laboratory results from actual-system verification. No system access is granted by this case.\n\nFinal decision: initial full-validation and unrestricted workaround claims are unsupported. Exact residuals are actual system-specific competence, approved change/access method, relevant safe test evidence, dependency review and operating authorization. The learner demonstrates validation reasoning only, not OT administration or functional-safety authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G81_case2",
+        "title": "Worked fictional case 2: a backup file and a normal screen",
+        "body": "Fictional facts: Willow Operations recovers from an abnormal support event. A backup copy job reports success, but the file predates an approved configuration change. No restore exercise is recorded. A technician observes a normal screen and asks to close the recovery as fully operational. The incident's cause remains uncertain.\n\nThe learner separates backup claims. The copy job supports a reported creation action. It does not prove restore testing, current configuration suitability or complete operational recovery. The older baseline may be useful but must be assessed against the required state and incident context. The learner does not restore or overwrite any real system.\n\nThe normal screen is also bounded. It shows one observed interface state, not verified dependencies or protective functions. The technical/operating owners must establish actual configuration and relevant function evidence under their approved process. A version label or checksum, even if supplied, would not automatically establish trustworthy suitability for the whole operation.\n\nThe incident report preserves uncertainty. It records symptoms, changes, time basis and affected functions without declaring a confirmed cyberattack or harmless glitch. Evidence handling goes through authorized specialists. No log extraction, scanning or removable-media connection is performed in this exercise.\n\nIn the fictional resolution, the responsible team evaluates backup provenance and configuration, conducts approved recovery validation and documents limitations. The operating authority decides readiness after its actual prerequisites. The support ticket can record technical progress without pretending that every release decision is complete.\n\nFinal decision: a successful copy and normal screen cannot close recovery. Exact residuals are suitable trustworthy recovery source, tested restore/function evidence, actual technical practical capability and authorized operating release. The theory learner demonstrates evidence distinctions and safe role routing, not recovery execution or incident-response qualification.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G81_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G81_check1",
+        "prompt": "Why use a function dependency graph?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To identify what actual change can affect beyond a device name."
+          },
+          {
+            "id": "b",
+            "label": "To authorize scanning."
+          },
+          {
+            "id": "c",
+            "label": "To prove every system is safety critical."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G81_check2",
+        "prompt": "Does approval for version B prove B was implemented and verified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; intent, implementation and verification are separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes, approval performs installation."
+          },
+          {
+            "id": "d",
+            "label": "Yes, a label proves all functions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G81_check3",
+        "prompt": "A mock viewer read succeeds but denied-edit test is absent. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every dependency is valid."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Read path only; edit restriction remains untested."
+          },
+          {
+            "id": "d",
+            "label": "All access controls passed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G81_check4",
+        "prompt": "Does a backup copy success prove a tested restore?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, automatically."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if named latest."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; creation and restore testing are different claims."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G81_check5",
+        "prompt": "Does an abnormal display prove a cyberattack?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; record facts and uncertainty for authorized response."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every failure is malicious."
+          },
+          {
+            "id": "c",
+            "label": "No, cyber causes are impossible."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G81_check6",
+        "prompt": "Can this course grant live-system testing authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual access, methods and safe assessment remain separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after the quiz."
+          },
+          {
+            "id": "d",
+            "label": "Yes, for curiosity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G81_final1",
+        "prompt": "Does an administrator account establish functional-safety authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if experienced in office IT."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; role competence and authorization differ."
+          },
+          {
+            "id": "d",
+            "label": "Yes, privileges grant every role."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G81_final2",
+        "prompt": "What belongs in a change delta?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a slogan."
+          },
+          {
+            "id": "b",
+            "label": "An unrecorded workaround."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "The actual intended difference from the approved baseline."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G81_final3",
+        "prompt": "Does newer software guarantee compatibility?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual profile/dependency evidence is needed."
+          },
+          {
+            "id": "b",
+            "label": "Yes, always."
+          },
+          {
+            "id": "c",
+            "label": "Yes, another site used it."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G81_final4",
+        "prompt": "Is a temporary support route a change?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Yes; its access/exposure scope needs the actual process."
+          },
+          {
+            "id": "c",
+            "label": "No, temporary means harmless."
+          },
+          {
+            "id": "d",
+            "label": "No, if a familiar vendor asks."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G81_final5",
+        "prompt": "What should a validation matrix connect?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only developer confidence."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Requirement, condition, expected/actual result, evidence and limitations."
+          },
+          {
+            "id": "d",
+            "label": "Only pass marks."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G81_final6",
+        "prompt": "Does laboratory success automatically validate production?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, all environments are identical."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if screenshots match."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; representativeness and actual-system needs must be reviewed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G81_final7",
+        "prompt": "Should a learner trigger a real alarm to fill missing test coverage?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; authorized qualified methods and safe conditions govern."
+          },
+          {
+            "id": "b",
+            "label": "Yes, for completeness."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after a paper plan."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G81_final8",
+        "prompt": "What does a matching checksum show alone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Matching byte sequences under that comparison."
+          },
+          {
+            "id": "c",
+            "label": "Correct safe configuration everywhere."
+          },
+          {
+            "id": "d",
+            "label": "Absence of all malicious content."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G81_final9",
+        "prompt": "Can a backup predating a change be assumed suitable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No, old is always useless."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual required state, provenance and incident context matter."
+          },
+          {
+            "id": "d",
+            "label": "Yes, old always means safe."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G81_final10",
+        "prompt": "What must a backup record identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only latest in the filename."
+          },
+          {
+            "id": "b",
+            "label": "Only file size."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Contents/configuration scope, provenance, protection and recovery dependencies."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G81_final11",
+        "prompt": "Is operational recovery identical to a restored component?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; relevant functions, dependencies and readiness remain."
+          },
+          {
+            "id": "b",
+            "label": "Yes, any component restores all."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if screen is normal."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G81_final12",
+        "prompt": "Can indiscriminate disconnection affect physical operations?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Yes; actual incident/operating authority and dependencies matter."
+          },
+          {
+            "id": "c",
+            "label": "No, networks never affect equipment."
+          },
+          {
+            "id": "d",
+            "label": "No, any worker may unplug everything."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G81_final13",
+        "prompt": "Does reporting a relevant log grant permission to copy it?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if urgent."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; authorized evidence-handling process governs."
+          },
+          {
+            "id": "d",
+            "label": "Yes, to any personal device."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G81_final14",
+        "prompt": "What should an incident report retain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a guessed attack label."
+          },
+          {
+            "id": "b",
+            "label": "Only reassurance."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Symptoms, time basis, changes, affected functions and uncertainty."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G81_final15",
+        "prompt": "What should a recovery handover distinguish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Restored items, verified functions, limitations and operating decision owner."
+          },
+          {
+            "id": "b",
+            "label": "Only ticket closed."
+          },
+          {
+            "id": "c",
+            "label": "Only normal dashboard."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G81_final16",
+        "prompt": "In Cedar, what does the initial test omit?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Alarm dependency and relevant role-restriction evidence."
+          },
+          {
+            "id": "c",
+            "label": "Nothing because login worked."
+          },
+          {
+            "id": "d",
+            "label": "Only branding."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G81_final17",
+        "prompt": "In Cedar, does a familiar vendor authorize an alternative route?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if password works."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; the actual access/change process must approve it."
+          },
+          {
+            "id": "d",
+            "label": "Yes, familiarity suffices."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G81_final18",
+        "prompt": "In Willow, does normal screen behavior establish full readiness?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, appearance proves function."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after a copy job."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual configuration/dependency evidence and release remain."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G81_final19",
+        "prompt": "Should practical assessment introduce uncontrolled production changes?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; use qualified approved safe conditions."
+          },
+          {
+            "id": "b",
+            "label": "Yes, realism is enough."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if reversible in theory."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G81_final20",
+        "prompt": "What remains after this theory component?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "System-specific practical capability, approved methods and actual operating authorization."
+          },
+          {
+            "id": "c",
+            "label": "All OT/cyber authority."
+          },
+          {
+            "id": "d",
+            "label": "Only badge printing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G81_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G81_lesson1",
+          "questionIds": [
+            "G81_check1"
+          ]
+        },
+        {
+          "lessonId": "G81_lesson2",
+          "questionIds": [
+            "G81_check2"
+          ]
+        },
+        {
+          "lessonId": "G81_lesson3",
+          "questionIds": [
+            "G81_check3"
+          ]
+        },
+        {
+          "lessonId": "G81_lesson4",
+          "questionIds": [
+            "G81_check4"
+          ]
+        },
+        {
+          "lessonId": "G81_lesson5",
+          "questionIds": [
+            "G81_check5"
+          ]
+        },
+        {
+          "lessonId": "G81_lesson6",
+          "questionIds": [
+            "G81_check6"
+          ]
+        },
+        {
+          "lessonId": "G81_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G81_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G81_final",
+          "questionIds": [
+            "G81_final1",
+            "G81_final2",
+            "G81_final3",
+            "G81_final4",
+            "G81_final5",
+            "G81_final6",
+            "G81_final7",
+            "G81_final8",
+            "G81_final9",
+            "G81_final10",
+            "G81_final11",
+            "G81_final12",
+            "G81_final13",
+            "G81_final14",
+            "G81_final15",
+            "G81_final16",
+            "G81_final17",
+            "G81_final18",
+            "G81_final19",
+            "G81_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G81_check1": "Functions and dependencies define the review scope.",
+        "G81_check2": "Each state needs its own evidence.",
+        "G81_check3": "Positive evidence cannot substitute for missing negative coverage.",
+        "G81_check4": "Recovery evidence must match the actual activity.",
+        "G81_check5": "Cause requires evidence; avoid unsupported certainty.",
+        "G81_check6": "Knowledge completion is not technical permission.",
+        "G81_final1": "Digital access cannot create engineering authority.",
+        "G81_final2": "A reviewable delta makes affected behavior and evidence explicit.",
+        "G81_final3": "Version recency is not an applicability basis.",
+        "G81_final4": "Temporary configuration still affects the system boundary.",
+        "G81_final5": "Traceable rows support bounded validation.",
+        "G81_final6": "Environment differences constrain transferability.",
+        "G81_final7": "Training cannot justify uncontrolled process interference.",
+        "G81_final8": "Integrity comparison is useful but not universal suitability proof.",
+        "G81_final9": "Suitability needs qualified evaluation rather than age alone.",
+        "G81_final10": "Recovery needs a defined trustworthy source.",
+        "G81_final11": "Whole-function recovery can require more evidence.",
+        "G81_final12": "Containment actions can have operational consequences.",
+        "G81_final13": "Preservation needs and collection authority differ.",
+        "G81_final14": "Factual context supports coordinated response.",
+        "G81_final15": "Useful status cannot collapse technical and operating decisions.",
+        "G81_final16": "One favorable path does not cover all requirements.",
+        "G81_final17": "Identity and convenience cannot replace authorization.",
+        "G81_final18": "Interface observations are bounded.",
+        "G81_final19": "Assessment must protect the physical operation.",
+        "G81_final20": "Knowledge cannot validate safety-critical design or execute recovery."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

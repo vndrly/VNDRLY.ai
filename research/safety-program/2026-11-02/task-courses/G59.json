@@ -1,0 +1,914 @@
+{
+  "courseId": "G59",
+  "gapGroupId": "G10",
+  "title": "Radiation work interfaces: method identity, exposure concepts and abnormal reporting",
+  "description": "distinguish radiation methods and evidence, respect controlled areas and communicate abnormal conditions without attempting source intervention",
+  "purpose": "distinguish radiation methods and evidence, respect controlled areas and communicate abnormal conditions without attempting source intervention",
+  "audience": [
+    "Radiation-work site coordinators",
+    "Adjacent-trade supervisors",
+    "Assigned support personnel preparing for licensed-program instruction"
+  ],
+  "practicalBoundary": "This knowledge course qualifies no radiographer, logging supervisor, radiation surveyor, source handler, recovery specialist or decontamination worker. It supplies no exposure allowance, source-operation sequence, survey acceptance level or recovery method. Actual licensed-program role training, examinations/experience and demonstrated equipment proficiency remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual radiation method/source or generator and jurisdiction/licensed program",
+    "Role-specific authorization, training, examinations/experience and practical proficiency",
+    "Current method/equipment operating, monitoring and emergency procedures",
+    "Actual source accountability, security, maintenance and survey evidence",
+    "Site boundary/adjacent-work arrangements and qualified release authority",
+    "Confidential exposure evaluation and specialist recovery/decontamination resources"
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified licensed-program assessor observes the actual radiography/logging/other assigned method skills",
+    "Competent radiation-protection assessor evaluates instrument use and interpretation only for the actual authorized role",
+    "Qualified program exercises access control, reporting and emergency interfaces safely; specialist recovery remains separately assessed"
+  ],
+  "sources": [
+    {
+      "title": "NRC radiography training",
+      "url": "https://www.nrc.gov/reading-rm/doc-collections/cfr/part034/part034-0043"
+    },
+    {
+      "title": "NRC well-logging personnel training",
+      "url": "https://www.nrc.gov/reading-rm/doc-collections/cfr/part039/part039-0061"
+    },
+    {
+      "title": "OSHA — Ionizing radiation",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1096"
+    },
+    {
+      "title": "CDC — Contamination versus exposure",
+      "url": "https://www.cdc.gov/radiation-emergencies/causes/"
+    },
+    {
+      "title": "ARPANSA — Industrial radiography workers",
+      "url": "https://www.arpansa.gov.au/understanding-radiation/sources-radiation/occupational-exposure/occupational-exposure-industrial-radiography-workers"
+    },
+    {
+      "title": "eCFR — Radioactive well logging, 10 CFR Part 39",
+      "url": "https://www.ecfr.gov/current/title-10/chapter-I/part-39"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G59_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Radiation work interfaces: method identity, exposure concepts and abnormal reporting\n\nThis course teaches a bounded task: distinguish radiation methods and evidence, respect controlled areas and communicate abnormal conditions without attempting source intervention Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis knowledge course qualifies no radiographer, logging supervisor, radiation surveyor, source handler, recovery specialist or decontamination worker. It supplies no exposure allowance, source-operation sequence, survey acceptance level or recovery method. Actual licensed-program role training, examinations/experience and demonstrated equipment proficiency remain separate. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G59_lesson1",
+        "title": "1. Identify the radiation method before assigning the role",
+        "body": "Non-destructive testing is a family of methods, not a synonym for radioactive-source work. Some inspections use ionizing radiation; others use different physical techniques. Well logging can likewise use different technologies. Before assigning a worker, identify the actual method, equipment, radiation source or generator, licensed program and task. A person qualified for one method is not automatically qualified to operate another.\n\nIndustrial radiography can use radiation-generating equipment or a radioactive source. Their operating and regulatory arrangements differ. Radioactive material continues to be radioactive without an electrical power supply; switching off nearby equipment does not establish that the source hazard is removed. A generator also requires its actual verified operating and protection arrangements. This course gives no source operation or generator-control instruction.\n\nKeep radiography, radioactive well logging, contamination work and radioactive-waste duties distinct. Each can involve its own equipment, procedures, training, experience and authorization. A radiographer's record is not automatically a logging-supervisor qualification. A general laboratory or transport course does not authorize source handling. The licensed employer and applicable regulator determine the actual role requirements.\n\nSupport workers have a bounded contribution. They can provide accurate site information, respect established boundaries, report an abnormal condition and coordinate through the designated radiation-protection role. They must not take over source movement, surveys, recovery or licensing decisions because the specialist is busy. A camera operator's title is especially misleading here: industrial radiography is not ordinary photography.\n\nFor a harmless classification exercise, compare a visual camera survey, a nonradioactive inspection and a radioactive logging task. Identify which facts establish the actual method and which questions remain for the qualified program. The correct result is not a universal radiation certificate for all three. It is a precise assignment that activates the relevant requirements only for the actual technology and duties.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G59_lesson2",
+        "title": "2. Distinguish irradiation, contamination and internal uptake",
+        "body": "Radiation exposure and radioactive contamination are different concepts. Exposure can occur from a source outside the body without radioactive material being deposited on the person. Contamination means radioactive material is present where it is unwanted, such as on a surface, clothing or a person. Internal contamination involves material entering the body through relevant pathways. Those differences affect the protective and assessment questions; they must not be reduced to the word radiation.\n\nA person near an intact radiation source is not automatically contaminated. Conversely, a clean-looking object is not proven free of radioactive material. Human senses do not provide a reliable radiation survey. The qualified program selects suitable instruments, methods and acceptance criteria for the actual source and task. No learner approaches an object, wipes a surface or handles a suspected source to resolve uncertainty in this course.\n\nTrack possible transfer pathways conceptually. Material on a tool can be carried to a vehicle or work area; contaminated hands can contact personal items. That reasoning supports respecting the actual controlled handling system. It does not authorize an untrained worker to decontaminate or sample. The licensed program establishes the appropriate controls, monitoring, waste route and medical interfaces.\n\nAn irradiation concern and a contamination concern may coexist. A survey or conclusion addressing one does not necessarily resolve the other. For example, a statement about an external radiation reading does not automatically establish whether a surface is suitable for unrestricted handling. Ask which question the evidence actually answers and who is authorized to interpret it.\n\nUse accurate reporting language: suspected source out of its expected secured condition, possible contamination reported on equipment or worker reports potential exposure. Do not diagnose radiation injury or declare a person radioactive without qualified assessment. The emergency and radiation-protection roles need observations, location, timing and uncertainty. Clear distinctions prevent the wrong response while keeping specialist assessment with the people equipped and authorized to perform it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G59_lesson3",
+        "title": "3. Understand time, distance and shielding without designing protection",
+        "body": "Radiation-protection programs use principles that include limiting unnecessary exposure time, maintaining appropriate separation and using suitable shielding. These are concepts, not an instruction for an unqualified person to calculate a safe approach. Actual source type, energy, geometry, shielding, scatter and task conditions determine the engineered and operational arrangements. A wall or container that looks substantial is not automatically an adequate shield.\n\nThe proper support-worker behavior is to remain outside the actual established boundary, avoid unnecessary presence and follow the qualified program's instructions. Do not shorten a route through a restricted area because the crossing would be brief. Do not infer that twice the apparent distance makes every situation acceptable. This course supplies no exposure-duration allowance, source-strength calculation or shielding thickness.\n\nKeep quantities distinct. Source activity describes a property of radioactive material, while dose and dose rate address different exposure quantities. A dose rate includes a time basis; a cumulative dose is not the same kind of reading. An instrument display is meaningful only with its units, purpose, condition and applicable interpretation. A bare number copied into a work order cannot support a protection decision.\n\nUnit prefixes also matter. A record labeled millisievert and one labeled microsievert do not represent equal quantities merely because the displayed numbers match. The conversion relationship is a unit-literacy fact, not permission to derive a permissible work duration. The qualified radiation program interprets actual measurements, legal limits and work planning. An online arithmetic exercise cannot replace that assessment.\n\nDistinguish personal dosimetry from area surveying. A dosimeter provides its intended personal exposure information under the program. A survey instrument is used for its specified measurement purpose. Carrying one device does not establish that every area has been assessed or that a source is secured. Their suitability, checks, use and interpretation require the actual program and observed proficiency. A normal-looking badge cannot be used as permission to cross an uncertain boundary.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G59_lesson4",
+        "title": "4. Respect the actual controlled area and verification roles",
+        "body": "An established radiation work area needs a clear boundary, access control, communication and qualified verification under the actual procedure. Signs and barriers inform people of the control arrangement, but their appearance alone does not prove the source state or measurement basis. The responsible radiation personnel establish the actual conditions and determine when the area can be released.\n\nBefore nearby work, understand who controls access, which activities are restricted and how a change will be communicated. A maintenance worker may need to postpone a task that would enter the controlled area or disrupt its boundaries. A site supervisor coordinates those interfaces but cannot independently remove a barrier because another trade is waiting. The work must fit the real radiation operation, not merely the general site permit.\n\nVerification has a defined scope. An authorized survey must use the actual suitable equipment and method and must be interpreted by the qualified role. A technician's report should identify the relevant location, conditions and result according to the program. An unqualified person must not repeat a survey by copying how someone held a meter or decide that a silent alarm means no hazard.\n\nMeasurement evidence needs context before anyone relies on it. Ask which quantity was measured, which location and time it represents, what source or equipment condition existed and who interpreted it under the actual procedure. The phrase meter checked can mean several different activities and is therefore inadequate as an area-release statement. A functional check of an instrument is not an area survey. An area survey is not necessarily a contamination assessment. An assessment made before equipment or work conditions change may not answer the new question. The qualified program determines suitability, range, response and interpretation; the support worker's task is to avoid extending a narrow statement beyond its actual scope. In a fictional exercise, one card says instrument function checked and another asks whether a neighboring corridor is released. The correct answer is that the first card does not establish the second. The learner should request the actual area-release evidence from the authorized role rather than carry the instrument into the corridor. This distinction is useful even for workers who never operate a radiation instrument: it prevents a valid technical record from being used as a false universal clearance and makes the missing decision specific enough to resolve.\n\nBoundary changes require the actual reassessment and communication process. Moving work, changing equipment, opening a route or adding another activity can alter the protected arrangement. Do not stretch a tape line informally to make room. If a barrier is disturbed, access status becomes a specific issue for the responsible program; it is not automatically safe or automatically evidence of a release. Report the facts and maintain the assigned separation.\n\nPractice with a fictional site diagram containing a radiography work area and a requested maintenance route. The learner identifies the interface and the authority that must resolve it. The exercise does not set distances or approve the route. Actual practical assessment must observe the relevant licensed method and radiation-protection skills with suitable controlled arrangements. Nearby workers need their own applicable instruction for respecting the interface.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G59_lesson5",
+        "title": "5. Preserve source accountability, equipment identity and method boundaries",
+        "body": "Radioactive-source accountability is a physical and administrative responsibility under the licensed program. Records must connect the actual source/equipment identity, authorized custodian, location and task. A signed delivery note or an entry in a spreadsheet cannot by itself establish that a source is physically secured in its required condition. The qualified program determines the actual verification and handling process.\n\nCompare identifiers carefully when supporting the record handoff. Similar-looking devices, containers or tools may have different contents, status and permitted use. If the work packet refers to equipment R-14 and the actual equipment record refers to R-41, preserve the mismatch for the authorized role. Do not correct it from memory or assume that matching color and manufacturer establish the same source.\n\nEquipment inspection, maintenance and tests are method-specific. A device with an overdue or unresolved status must follow the actual program; a recent sticker does not override a later fault. The learner does not repair a source assembly, disconnect a cable, open a shield or operate controls to verify a record. Those are specialist actions with potentially severe consequences.\n\nTransport and storage are separate functions requiring their actual instructions and authority. A worker who may support a site boundary is not automatically authorized to move a package or prepare transport information. A transport qualification likewise does not authorize source recovery. The employer must identify which role is actually being assigned rather than offering a broad radiation-trained label.\n\nAt handover, state what was verified, by whom, under which actual procedure and what remains restricted. Record only observations and actions actually established. A source-accountability discrepancy is not resolved by closing the work order or assuming the previous shift returned everything. If the physical status is uncertain, the responsible program must control the situation. The support worker's valuable action is accurate escalation and preservation of the boundary, not an improvised search.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G59_lesson6",
+        "title": "6. Report abnormal conditions and leave recovery to the qualified program",
+        "body": "An unexpected alarm, missing source-accountability item, damaged equipment or uncertain source position requires the actual emergency and radiation-protection procedure. The worker must not assume a familiar warning is harmless or approach to see whether it stops. Follow the assigned protective action, maintain separation and notify the designated responsible role through the established route.\n\nReport location, equipment identity if already known, observed condition, time, people potentially involved and actions already taken within the assigned role. Distinguish direct observation from a second-hand message. Do not claim that a source is definitely lost or a person definitely injured unless the competent process establishes it. Uncertainty belongs in the report because it affects the specialist assessment.\n\nSource recovery, damaged-device intervention, contamination assessment and decontamination require their actual qualified arrangements. A supervisor's urgency or a customer's production loss does not grant those capabilities. Do not use tongs, tools, vehicles or improvised shields to retrieve a suspected object. This course supplies no recovery sequence, handling technique or emergency exposure allowance.\n\nPotentially exposed or contaminated people need the appropriate prompt qualified evaluation and instructions through the actual plan. A person feeling well does not establish absence of exposure. Keep medical information confidential and provide the relevant factual information to authorized responders. Do not prescribe treatment, perform intrusive sampling or spread private results in general project messages.\n\nAfter the immediate response, several decisions remain distinct: physical source/equipment status, area release, personal follow-up, waste disposition and return to the task. A favorable result in one domain does not close all others. The licensed program and responsible authorities make those decisions from real evidence. Course completion records knowledge and remediation only; it cannot qualify a radiographer, logging supervisor, source-recovery specialist or radiation medical professional.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G59_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: a changed inspection method and a neighboring trade\n\nA fictional service order says inspection. The initial plan used a visual camera, but the client now requests industrial radiography. A maintenance team is already scheduled nearby and has permission to access the site. The new vendor has supplied a generic training attendance sheet, but the actual radiation method, licensed program and equipment are not identified in the work packet.\n\nThe first issue is a method change. Ordinary camera work and ionizing-radiation inspection do not share the same operating and qualification basis. The attendance sheet cannot establish the actual role, experience, equipment proficiency or authorization. The project must identify the real method and qualified program before assigning the radiography work.\n\nThe maintenance access is a separate interface. Permission to enter the property does not authorize entry into a radiation-controlled area. The responsible site and radiation roles must coordinate the actual work and boundaries. The learner does not select a distance, estimate shielding from the wall thickness or ask maintenance personnel to watch the device.\n\nThe worked output names missing evidence: actual method/equipment, relevant program authorization, role competence, controlled-area arrangement and coordinated maintenance access. If the radiography team later supplies its credentials, that resolves only their stated scope. Current site protection and equipment readiness still need real evidence. No online learning record can turn the generic order into approval of a hazardous method.\n\nCase B: source status uncertain after a shift change\n\nA fictional logging operation ends its planned task. The incoming coordinator finds a source-accountability entry marked returned, but the equipment identity differs from the issued record. A worker also reports an unexpected radiation alarm near the storage interface. The coordinator is asked to look inside the container to settle the mismatch and close the shift report. The worker reporting the alarm feels well.\n\nSeparate observations from conclusions. The record identifiers conflict, and an alarm was reported. Those facts do not establish where the source is, whether contamination exists or what exposure occurred. Nor does feeling well prove no relevant exposure. The coordinator must use the actual protective/reporting process and preserve the assigned boundary.\n\nThe correct report includes the two identifiers, location, alarm observation, time/source of the report, people potentially involved and actual actions taken. It avoids declaring a lost source without assessment. The coordinator does not open the container, retrieve an object or repeat an unfamiliar survey. The qualified radiation program establishes physical status and the needed response.\n\nSuppose the identifier is later corrected through a traceable authorized record. The alarm concern still needs its actual disposition. Conversely, a survey conclusion addressing an area does not automatically settle source inventory or personal follow-up. Each decision needs evidence for the question it answers. Confidential medical assessment remains with the authorized clinical route.\n\nThe final handover can therefore contain mixed states honestly: record identity resolved under a named correction; physical source status verified only by the actual competent process; area restriction retained until authorized release; personal follow-up pending or completed only as the confidential process establishes. An administrative desire for one completed status cannot erase those independent requirements.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G59_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G59_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced distinguish radiation methods and evidence, respect controlled areas and communicate abnormal conditions without attempting source intervention Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G59_check1",
+        "prompt": "A service changes from visual camera to radiography. What changes?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual method, hazards, program and role requirements must be established."
+          },
+          {
+            "id": "b",
+            "label": "Nothing."
+          },
+          {
+            "id": "c",
+            "label": "Camera experience suffices."
+          },
+          {
+            "id": "d",
+            "label": "Only the file format."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G59_check2",
+        "prompt": "Exposure without material deposited on a person is what concept?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Always internal contamination."
+          },
+          {
+            "id": "b",
+            "label": "Irradiation/exposure, distinct from contamination."
+          },
+          {
+            "id": "c",
+            "label": "Always a spill."
+          },
+          {
+            "id": "d",
+            "label": "Proof of infection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G59_check3",
+        "prompt": "Time-distance-shielding principles allow an unqualified worker to do what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Calculate an improvised exposure allowance."
+          },
+          {
+            "id": "b",
+            "label": "Choose any wall as shielding."
+          },
+          {
+            "id": "c",
+            "label": "Understand why actual boundaries matter, without designing a safe approach."
+          },
+          {
+            "id": "d",
+            "label": "Cross briefly without permission."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G59_check4",
+        "prompt": "A barrier is moved. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume still safe."
+          },
+          {
+            "id": "b",
+            "label": "Move it farther by guess."
+          },
+          {
+            "id": "c",
+            "label": "Use a silent alarm as approval."
+          },
+          {
+            "id": "d",
+            "label": "Report the actual change and preserve access control pending the qualified disposition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G59_check5",
+        "prompt": "A record names R-14 but equipment records show R-41. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Preserve and route the identity discrepancy to the authorized role."
+          },
+          {
+            "id": "b",
+            "label": "Correct from memory."
+          },
+          {
+            "id": "c",
+            "label": "Use matching paint."
+          },
+          {
+            "id": "d",
+            "label": "Close the work order."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G59_check6",
+        "prompt": "An unexpected alarm occurs. What must an unqualified worker avoid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reporting facts."
+          },
+          {
+            "id": "b",
+            "label": "Approaching or opening equipment to investigate."
+          },
+          {
+            "id": "c",
+            "label": "Following assigned protective action."
+          },
+          {
+            "id": "d",
+            "label": "Maintaining separation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G59_final1",
+        "prompt": "Does every NDT method use radioactive material?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes always."
+          },
+          {
+            "id": "b",
+            "label": "Only if the invoice says inspection."
+          },
+          {
+            "id": "c",
+            "label": "No; identify the actual technology."
+          },
+          {
+            "id": "d",
+            "label": "Every camera does."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G59_final2",
+        "prompt": "Does switching nearby electrical power off remove radioactive-source hazard?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes universally."
+          },
+          {
+            "id": "b",
+            "label": "Yes if a display goes dark."
+          },
+          {
+            "id": "c",
+            "label": "Yes if the job is complete."
+          },
+          {
+            "id": "d",
+            "label": "Not by itself; radioactive material remains radioactive."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G59_final3",
+        "prompt": "Does radiography qualification automatically qualify well logging?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual method and role evidence remain specific."
+          },
+          {
+            "id": "b",
+            "label": "Yes every radiation role."
+          },
+          {
+            "id": "c",
+            "label": "Yes every waste task."
+          },
+          {
+            "id": "d",
+            "label": "Yes every recovery task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G59_final4",
+        "prompt": "Can senses establish a radiation survey?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes by smell."
+          },
+          {
+            "id": "b",
+            "label": "No; suitable instruments/methods and qualified interpretation are required."
+          },
+          {
+            "id": "c",
+            "label": "Yes by clean appearance."
+          },
+          {
+            "id": "d",
+            "label": "Yes by silence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G59_final5",
+        "prompt": "A clean-looking tool is what evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Unrestricted release."
+          },
+          {
+            "id": "b",
+            "label": "A complete survey."
+          },
+          {
+            "id": "c",
+            "label": "Only visual appearance, not proof of no radioactive contamination."
+          },
+          {
+            "id": "d",
+            "label": "Safe disposal authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G59_final6",
+        "prompt": "A survey addresses external readings. What may remain separate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing ever."
+          },
+          {
+            "id": "b",
+            "label": "All licensing complete."
+          },
+          {
+            "id": "c",
+            "label": "All medical clearance."
+          },
+          {
+            "id": "d",
+            "label": "Surface contamination, source status and personal questions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G59_final7",
+        "prompt": "Which quantity includes a time basis?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Dose rate."
+          },
+          {
+            "id": "b",
+            "label": "Every cumulative dose."
+          },
+          {
+            "id": "c",
+            "label": "Every source identifier."
+          },
+          {
+            "id": "d",
+            "label": "Every inventory count."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G59_final8",
+        "prompt": "Equal numbers labeled mSv and microsievert mean what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Identical dose."
+          },
+          {
+            "id": "b",
+            "label": "They are not equal quantities merely because the numbers match."
+          },
+          {
+            "id": "c",
+            "label": "Automatic compliance."
+          },
+          {
+            "id": "d",
+            "label": "Permission for a brief entry."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G59_final9",
+        "prompt": "A personal dosimeter proves what about every area?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All areas released."
+          },
+          {
+            "id": "b",
+            "label": "Every source safe."
+          },
+          {
+            "id": "c",
+            "label": "No universal proof that areas were surveyed or sources secured."
+          },
+          {
+            "id": "d",
+            "label": "Every surface clean."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G59_final10",
+        "prompt": "May a site manager independently remove a radiation boundary for another trade?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes for production."
+          },
+          {
+            "id": "b",
+            "label": "Yes with a gate key."
+          },
+          {
+            "id": "c",
+            "label": "Yes if the trade is senior."
+          },
+          {
+            "id": "d",
+            "label": "No; coordinate through the responsible radiation program and actual authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G59_final11",
+        "prompt": "A device has a recent sticker but later fault. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual unresolved status under the method/program."
+          },
+          {
+            "id": "b",
+            "label": "Only sticker date."
+          },
+          {
+            "id": "c",
+            "label": "Only manufacturer logo."
+          },
+          {
+            "id": "d",
+            "label": "Only the invoice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G59_final12",
+        "prompt": "A source handling role is proposed to a transport-trained worker. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing."
+          },
+          {
+            "id": "b",
+            "label": "Actual source-role authorization and observed competence."
+          },
+          {
+            "id": "c",
+            "label": "Only a signature."
+          },
+          {
+            "id": "d",
+            "label": "Automatic recovery qualification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G59_final13",
+        "prompt": "A returned entry exists in a spreadsheet. What does it not alone prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That an entry was made."
+          },
+          {
+            "id": "b",
+            "label": "That the record can be reviewed."
+          },
+          {
+            "id": "c",
+            "label": "Actual physical secured condition."
+          },
+          {
+            "id": "d",
+            "label": "That identifiers matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G59_final14",
+        "prompt": "Which report is accurate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Source definitely lost without assessment."
+          },
+          {
+            "id": "b",
+            "label": "Everyone injured without evidence."
+          },
+          {
+            "id": "c",
+            "label": "No hazard because worker feels well."
+          },
+          {
+            "id": "d",
+            "label": "Worker reports alarm at the named interface; cause/source state unconfirmed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G59_final15",
+        "prompt": "May an unqualified worker retrieve a suspected source with a tool?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; recovery belongs to the actual qualified program."
+          },
+          {
+            "id": "b",
+            "label": "Yes if quick."
+          },
+          {
+            "id": "c",
+            "label": "Yes with any tongs."
+          },
+          {
+            "id": "d",
+            "label": "Yes behind an improvised shield."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G59_final16",
+        "prompt": "A worker feels well after possible exposure. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatic medical clearance."
+          },
+          {
+            "id": "b",
+            "label": "Use prompt qualified evaluation under the actual plan."
+          },
+          {
+            "id": "c",
+            "label": "No record needed."
+          },
+          {
+            "id": "d",
+            "label": "Prescribe treatment from this course."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G59_final17",
+        "prompt": "What belongs in general project messages?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Private test results."
+          },
+          {
+            "id": "b",
+            "label": "A guessed diagnosis."
+          },
+          {
+            "id": "c",
+            "label": "Necessary operational status, with medical details kept confidential."
+          },
+          {
+            "id": "d",
+            "label": "Full health history."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G59_final18",
+        "prompt": "Case A credentials arrive. What remains independent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing."
+          },
+          {
+            "id": "b",
+            "label": "Automatic adjacent maintenance access."
+          },
+          {
+            "id": "c",
+            "label": "Every future method approval."
+          },
+          {
+            "id": "d",
+            "label": "Actual equipment readiness and current site protection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G59_final19",
+        "prompt": "Case B record typo is resolved. What can remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The alarm and physical/personal disposition questions."
+          },
+          {
+            "id": "b",
+            "label": "No issue."
+          },
+          {
+            "id": "c",
+            "label": "Automatic area release."
+          },
+          {
+            "id": "d",
+            "label": "Authority to open the container."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G59_final20",
+        "prompt": "What does this course issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Radiographer certification."
+          },
+          {
+            "id": "b",
+            "label": "Bounded knowledge evidence only."
+          },
+          {
+            "id": "c",
+            "label": "Logging supervisor authority."
+          },
+          {
+            "id": "d",
+            "label": "Source-recovery qualification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G59_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G59_lesson1",
+          "questionIds": [
+            "G59_check1"
+          ]
+        },
+        {
+          "lessonId": "G59_lesson2",
+          "questionIds": [
+            "G59_check2"
+          ]
+        },
+        {
+          "lessonId": "G59_lesson3",
+          "questionIds": [
+            "G59_check3"
+          ]
+        },
+        {
+          "lessonId": "G59_lesson4",
+          "questionIds": [
+            "G59_check4"
+          ]
+        },
+        {
+          "lessonId": "G59_lesson5",
+          "questionIds": [
+            "G59_check5"
+          ]
+        },
+        {
+          "lessonId": "G59_lesson6",
+          "questionIds": [
+            "G59_check6"
+          ]
+        },
+        {
+          "lessonId": "G59_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G59_final",
+          "questionIds": [
+            "G59_final1",
+            "G59_final2",
+            "G59_final3",
+            "G59_final4",
+            "G59_final5",
+            "G59_final6",
+            "G59_final7",
+            "G59_final8",
+            "G59_final9",
+            "G59_final10",
+            "G59_final11",
+            "G59_final12",
+            "G59_final13",
+            "G59_final14",
+            "G59_final15",
+            "G59_final16",
+            "G59_final17",
+            "G59_final18",
+            "G59_final19",
+            "G59_final20"
+          ]
+        },
+        {
+          "lessonId": "G59_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G59_check1": "Inspection labels do not establish radiation-method capability.",
+        "G59_check2": "Exposure and radioactive material transfer are different questions.",
+        "G59_check3": "General principles do not supply site-specific protection design.",
+        "G59_check4": "The established controlled-area arrangement must remain valid.",
+        "G59_check5": "Source/equipment evidence must match the actual item.",
+        "G59_check6": "Assessment and recovery require the actual qualified program.",
+        "G59_final1": "NDT is a family of methods.",
+        "G59_final2": "Source and generator arrangements differ.",
+        "G59_final3": "Specialist scopes must not be conflated.",
+        "G59_final4": "Radiation cannot be assessed reliably by ordinary senses.",
+        "G59_final5": "Contamination status requires its actual assessment.",
+        "G59_final6": "Evidence must answer the actual question rather than every related issue.",
+        "G59_final7": "Units and quantity meanings matter to interpretation.",
+        "G59_final8": "Prefixes change scale; unit literacy does not authorize work.",
+        "G59_final9": "Personal monitoring and area verification have distinct purposes.",
+        "G59_final10": "General site access does not override radiation control.",
+        "G59_final11": "Recent maintenance evidence does not erase subsequent faults.",
+        "G59_final12": "Transport and source handling are distinct functions.",
+        "G59_final13": "Administrative accountability must connect to actual verification.",
+        "G59_final14": "Observations and uncertainty support competent response.",
+        "G59_final15": "Improvised handling can create severe exposure.",
+        "G59_final16": "Symptoms do not establish exposure status or treatment.",
+        "G59_final17": "Operational coordination does not require public medical disclosure.",
+        "G59_final18": "Qualification is not operation-specific readiness.",
+        "G59_final19": "One correction does not resolve separate physical and exposure issues.",
+        "G59_final20": "Actual licensed-program training, experience and observed skills remain separate."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

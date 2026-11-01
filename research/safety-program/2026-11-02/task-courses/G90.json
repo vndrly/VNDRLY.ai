@@ -1,0 +1,906 @@
+{
+  "courseId": "G90",
+  "gapGroupId": "TG41",
+  "title": "Host-task, staffing and logistics role instruction",
+  "description": "Six subject-specific lessons and two worked fictional cases with twenty-six explained decisions. Actual site methods, professional authority and observed practical qualification remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for host-task, staffing and logistics role instruction.",
+  "audience": [
+    "Supplied workers and host supervisors",
+    "Staffing-agency placement coordinators",
+    "Logistics and receiving coordinators",
+    "Employer competence and assignment reviewers"
+  ],
+  "practicalBoundary": "Recruitment and project/logistics management are not direct evidence of hands-on execution; confirm each person’s duties. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual person-level assignment record linked to host task and contract scope, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual host-supplier instruction matrix with named owners and task-specific evidence, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual competence-to-task comparison showing scope and restrictions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual supervision map distinguishing task direction, commercial contact and change approval, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual logistics handoff linking delivery, site acceptance and interface owners, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual assignment closeout preserving restrictions, changed duties and worker feedback, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who translates a contract into a person-level task statement with explicit exclusions; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who allocates actual host/supplier instruction and verifies worker understanding through an appropriate method; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who matches demonstrated scope and restrictions to the actual assignment without demanding irrelevant qualifications; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who uses the established supervision and escalation route for a changed host task; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who reconciles booking, access, receiving capability and changed-destination confirmations; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who closes an assignment while preserving assessment limits, worker feedback and original history; records the representative conditions, errors, correction, restrictions and outcome.",
+    "Actual entry, rescue, height-access, clinical, operator or trade performance requires its own approved safe practical evaluation by appropriately qualified assessors where assigned; online completion does not satisfy it."
+  ],
+  "sources": [
+    {
+      "title": "OSHA recommended safety-program education and training",
+      "url": "https://www.osha.gov/safety-management/education-training",
+      "scopeLimit": "General role- and hazard-specific training guidance; not a trade license or universal legal mandate."
+    },
+    {
+      "title": "OSHA protecting temporary workers",
+      "url": "https://www.osha.gov/temporaryworkers",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G90_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Staffing and logistics services succeed when each supplied person has a defined host task, instruction, supervision and competence boundary. This course teaches assignment translation, host/supplier training coordination, evidence matching, task-change control, logistics interfaces and accurate closeout. It does not qualify a person for every trade, vehicle or emergency role a host may need.\n\nUse fictional contracts and rosters in the exercises. Actual employer responsibilities depend on the facts and applicable regime; a contract allocation does not remove statutory duties. Record all twenty-six answers, preserve original responses and explicitly acknowledge explained remediation. Passing coordination decisions cannot establish hands-on operator competence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G90_lesson1",
+        "title": "Lesson 1 — Translate the contract into person-level duties",
+        "body": "Translate a service contract into duties that an individual can recognize. General support, manpower and logistics management are broad descriptions. They do not tell a worker whether they may operate plant, direct traffic, handle materials, prepare documents or supervise another person. Start with the person's actual task, location, work period and expected result, then identify what is excluded.\n\nDistinguish recruitment from execution. A recruiter may verify submitted experience and arrange a placement without supplying the trade work personally. A project coordinator may sequence activities without operating the equipment. A logistics planner may book a carrier without driving. Qualification review should follow those actual functions rather than assign every credential associated with the overall project to every employee.\n\nThe host task description and supplier assignment need to agree. If one says warehouse coordination and the other assumes forklift operation, the mismatch must be resolved before that operation is assigned. The original coordination work can remain a valid scope; the new request introduces another duty with its own instruction and assessment. Do not silently expand the placement because the worker is already onsite.\n\nIdentify who controls the task and who can approve changes. A purchase-order contact may arrange commercial terms without being authorized to approve the work method. The worker needs a practical reporting route when a request falls outside the assignment. This should be clear before a conflict occurs, not negotiated while the worker is under pressure to keep production moving.\n\nIn the desk exercise, mark each verb in a fictional assignment: schedule, receive, inspect, drive, operate and approve. Ask which are actually contracted and assigned. A broad noun such as support can hide several distinct activities; concrete verbs expose the qualification and authority questions. The result is a person-level duty statement usable in a briefing, not a universal competent status that implies every host task is covered.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G90_lesson2",
+        "title": "Lesson 2 — Allocate host and employer instruction",
+        "body": "Host and supplier knowledge are complementary. The supplier may know the worker's background and assessment history, while the host knows current equipment, site hazards, procedures and interfaces. If each assumes the other taught everything, the worker can receive two general inductions and no instruction for the actual task. Coordination must identify the content, owner and evidence for each needed element.\n\nSeparate general orientation, workplace information and task-method instruction. A welcome briefing can explain access and reporting routes without teaching a changed receiving process. A technical certificate can show prior assessment without describing the host's current arrangement. Both can be valid while a specific instruction gap remains. Repeating the same induction does not necessarily fill that gap.\n\nUse a responsibility matrix with the actual subject and assigned party, not only headings such as training provided. For example, the supplier verifies the relevant background, the host teaches its current receiving procedure and the appropriate assessor evaluates actual task performance. The real allocation must fit the facts and applicable duties. Neither organization can assume a contract clause eliminates its responsibility to verify protections within its role.\n\nCheck understanding through an appropriate method. Ask the worker to explain the task boundary, reporting route and relevant restrictions in their own words. A signature confirms a record of participation; it does not necessarily show comprehension. Language or vocabulary barriers need a supported arrangement rather than an assumption that a nod means understanding.\n\nIn the exercise, the supplier confirms general induction and the host confirms equipment availability. Neither record shows instruction on the revised receiving procedure. The worked answer identifies the missing subject and assigns delivery and understanding verification. It preserves the completed induction instead of declaring all training absent. This precise gap statement lets both organizations finish the actual instruction without unnecessary or misleading repetition.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G90_lesson3",
+        "title": "Lesson 3 — Match competence to actual equipment and work",
+        "body": "Competence evidence must match the actual duty. A resume can identify relevant experience, but a broad employment history does not prove current readiness for every machine, load or host process. Compare what the person has demonstrated with what the assignment requires. Identify the method, equipment scope, level, restrictions and assessment basis where relevant.\n\nDistinguish credentials from employer assessment. A legal license or professional registration may be required for an actual duty without establishing every task-specific skill. A practical assessment may demonstrate a limited task without supplying a required legal credential. The appropriate employer or professional authority determines both questions. A safety coordinator should not merge them into an unrestricted qualified label.\n\nAvoid both under-assignment and irrelevant demands. A dispatcher who books transport and communicates load information should be assessed for accurate coordination, not automatically treated as a driver. If the dispatcher is later assigned driving, the actual vehicle, jurisdiction and competence requirements must be reviewed. Requiring unrelated plant credentials from office-only personnel can obscure the evidence that matters for their real role.\n\nRead restrictions as part of the result. Supervised performance on one machine is not unrestricted authorization for a fleet. An assessment completed under a particular method or scope should retain those limits. A later qualification expansion needs actual evidence, not a different label on the same record.\n\nFor a desk exercise, compare a placement profile for warehouse coordination with a certificate for another machine and a host request to operate a forklift. The certificate may be relevant background, but the operation remains a new assignment needing the appropriate requirements and assessment. The worked disposition keeps coordination and operation separate while the responsible parties decide whether and how the person can be prepared for the changed task. No equipment is operated during the exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G90_lesson4",
+        "title": "Lesson 4 — Clarify supervision and change authority",
+        "body": "Supervision needs an understandable chain of task direction. The worker should know who assigns work, who answers technical questions, who approves a changed method and how conflicting instructions are resolved. The supplier's employment relationship and the host's operational control can overlap, but vague overlapping authority can leave the worker choosing between incompatible directions.\n\nSeparate commercial, administrative and technical decisions. A billing contact can correct an invoice or discuss a contract without authorizing a hazardous task. A scheduler can move an appointment without deciding that the new work method is safe. The designated host and employer authorities must review the competence and control implications of an actual task change.\n\nChange review begins with the changed duty or condition. A worker moved from receiving coordination to operating a machine has a new performance demand. A revised procedure, different site or new material may alter the instruction needed even if the job title stays the same. Record which assumption changed and what evidence must be refreshed; do not discard all useful prior evidence or carry every old conclusion forward automatically.\n\nThe worker needs a supported escalation route. Raising a scope concern should not require a debate with a commercial contact about technical competence. The organizations should establish who resolves the question and how the worker is informed of the authorized outcome. A promise to take responsibility does not create the missing skill or approval.\n\nIn the fictional exercise, the supplier contact asks for one shift plan while the host supervisor assigns an unreviewed higher-risk task. The worked answer identifies the specific conflicting instructions and refers the change to the designated operational and employer roles. The worker continues only within the actual authorized arrangement. The course does not invent a universal stop procedure; the employer must teach the real response and assess the person's ability to use it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G90_lesson5",
+        "title": "Lesson 5 — Plan logistics interfaces as operational information",
+        "body": "Logistics coordination turns a booking into a usable operational handoff. It needs accurate information about the load or person being moved, destination, access, receiving readiness and interface responsibilities. An appointment confirms a time arrangement; it does not prove the site has suitable receiving equipment or that every technical condition has been met.\n\nIdentify assumptions that belong to another party. If dispatch assumes a crane will unload a delivery, the receiving site must confirm the relevant arrangement through its responsible role. A familiar site name or repeated route does not establish current availability. Changed destination, load or timing can invalidate the earlier confirmation and require renewed coordination.\n\nKeep dispatch information separate from operating instructions. A coordinator should transmit approved restrictions accurately rather than invent a loading, lifting or driving shortcut to protect the schedule. The operator or technical team needs reliable facts and the proper approved method. Scheduling pressure does not establish technical suitability.\n\nUse closed-loop communication for material changes. Identify who receives the new information, who reviews it and how acceptance or a restriction is confirmed. A message sent to a group chat may not reach the person who controls receiving readiness. The adopted process should make current status visible without requiring the driver or worker to reconcile contradictory versions at arrival.\n\nFor the desk exercise, a booking says delivery confirmed while the site contact confirms only gate access. The unloading arrangement remains unassigned. The worked answer asks the responsible receiving owner to confirm the actual interface before dispatch release. The gate confirmation remains valid for its own purpose. It is not rejected, but neither is it stretched into evidence of lifting capability. This precise distinction helps coordinators maintain progress while ensuring that the real technical handoff is completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G90_lesson6",
+        "title": "Lesson 6 — Close the assignment with limitations intact",
+        "body": "Assignment closeout records what work occurred, what changed and what the next person needs to know. It should not turn successful attendance into unrestricted qualification. A worker may complete a supervised shift on one task while retaining limits on independent work or other equipment. Those limits belong in the ongoing record, not just the assessor's private notes.\n\nSeparate work completion, performance assessment and authorization for future assignment. A completed task can provide evidence for assessment without automatically satisfying every criterion. An assessor may record a competent result within a defined scope, while another authority decides deployment. The actual employer process determines those relationships; the coordinator must report them honestly.\n\nWorker feedback is useful operational evidence. A person may identify a missing host instruction, conflicting procedure or inaccessible reporting contact. Record the issue and route it to the responsible host and supplier roles. Do not wait for an incident before checking whether the next placement would repeat the same gap. Feedback should support improvement rather than become a reason to relabel the worker as difficult.\n\nPreserve the original qualification and assignment history. If a record was entered too broadly, correct it through the authorized process and link the reason rather than erasing what happened. This allows reviewers to distinguish the original claim, observed performance and later correction. Confidential personal information should remain within appropriate access boundaries.\n\nIn the exercise, a supervised task assessment is copied into the competence system as unrestricted fleet qualification. The worked answer restores the demonstrated scope and supervision limitation, retaining the original assessment. A later expansion needs actual evidence. The closeout also notes a revised receiving procedure that the host failed to brief. That instruction issue is assigned to the host/supplier coordination process, so the next worker receives the missing information rather than another unrelated induction certificate.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G90_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek obtains a supplied worker for warehouse coordination. The supplier verifies relevant coordination experience and provides general induction. The host provides site access information. On the first shift, a supervisor asks the worker to operate a forklift because another operator is absent. The purchase-order contact says general support includes helping wherever needed.\n\nThe worker identifies the actual change in verbs: the original assignment was to coordinate, while the new request is to operate. Those duties have different performance and qualification questions. The commercial phrase general support does not resolve them. The designated host and employer roles must review the operating assignment and appropriate preparation before it is authorized.\n\nThe evidence comparison shows a certificate for another machine and a general induction sheet. Both remain valid within their scope. Neither automatically demonstrates readiness for this forklift and host task. The coordinator records the specific gap rather than declaring the worker wholly unqualified or assuming all equipment experience is interchangeable.\n\nThe review also discovers that the receiving procedure changed recently. The supplier thought the host taught it; the host thought the supplier's induction covered it. The missing instruction is the actual revised procedure. The organizations assign the owner, provide the relevant instruction and check understanding through an appropriate safe method. Repeating the general welcome briefing alone would not answer that gap.\n\nThe worker can continue coordination only within the authorized arrangement while the new operation question is resolved. The course does not prescribe how to operate, inspect or test the forklift. Qualified instruction and practical evaluation must address actual operation under the applicable program. The decision cannot be supplied by an online staffing quiz or a promise from the billing contact.\n\nThe eventual record distinguishes the coordination assignment, revised receiving instruction and any separately authorized operating role. If operation is not supplied, the duty remains excluded. If it is later assessed and authorized, the evidence states the actual scope and restrictions. The original placement is not retrospectively rewritten as if every duty had been included from the beginning.\n\nThe case teaches a practical staffing skill: preserve the worker's real assignment while routing a genuine host need to the right decision-makers. This supports the host without asking the worker to absorb an organizational gap through unreviewed hands-on work.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G90_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: a logistics coordinator books delivery of machinery to North Creek. The booking confirms arrival time and gate access. Dispatch assumes the receiving site will provide unloading support, but the site contact has not arranged it. During the journey-planning stage, the destination changes to another yard. Separately, a worker's supervised assessment is being entered as unrestricted competence for future placements.\n\nThe coordinator separates appointment, access and receiving capability. A confirmed slot is not evidence that unloading equipment and responsible personnel are available. The receiving owner must confirm the actual interface through the agreed process. The coordinator does not invent a lifting method or ask the driver to improvise unloading because the commercial booking is complete.\n\nThe changed destination then requires review of assumptions tied to the original site. Gate permission at the first yard does not establish permission or receiving readiness at the second. The current load information and proposed destination are sent to the designated reviewers, and their disposition is communicated through the adopted confirmation route. A message posted without acknowledged responsibility is not treated as a completed handoff.\n\nAt the same time, the competence administrator reviews the supplied worker's assessment. It describes one task under supervision with specified equipment. The proposed unrestricted label exceeds that evidence. The record is corrected to retain the demonstrated scope and limits, with the original history preserved. A successful delivery or shift does not automatically establish every future equipment role.\n\nThe closeout also captures worker feedback that the receiving procedure had conflicting versions. The issue is assigned to the host and supplier coordination owners. Their response should establish the current instruction and how future workers receive it. An attendance reminder alone would not resolve competing procedure versions.\n\nThe worked outcome is a reliable logistics and staffing handover. The coordinator can state the current destination, confirmed receiving arrangement, task restrictions and actual qualification scope. Outstanding questions remain visible until the proper authority resolves them. This is more useful than a general ready label that mixes several unrelated completions.\n\nThe lesson for office personnel is concrete: their decisions influence physical work through the accuracy of information and assignment boundaries. They need strong coordination competence, while driving, lifting, trade execution and practical assessment remain with the people actually assigned and qualified for those duties.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G90_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Apply the final decisions to person-level scope, host/supplier instruction, competence matching, supervision, logistics interfaces and closeout limitations. Preserve first responses and explicitly acknowledge explained remediation.\n\nThe employer and host must verify actual task instruction and observed competence before assigning hands-on work. Operator, trade, driver and responder requirements apply to confirmed duties, not automatically to every person supplied under a broad contract. This course establishes only the bounded coordination knowledge taught here.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G90_check1",
+        "prompt": "During translate the contract into person-level duties, general support is interpreted as authorization to operate any available equipment. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain a specific duty assignment and appropriate task qualification evidence."
+          },
+          {
+            "id": "b",
+            "label": "A general support contract qualifies every supplied person for every host task."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G90_check2",
+        "prompt": "During allocate host and employer instruction, both parties assume the other instructed the worker on a revised host procedure. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A site induction proves every host task method was taught."
+          },
+          {
+            "id": "b",
+            "label": "Resolve the responsibility and deliver the missing task-specific instruction."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G90_check3",
+        "prompt": "During match competence to actual equipment and work, a dispatcher is either treated as a qualified driver or required to hold unrelated plant credentials. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every logistics employee needs every vehicle operator credential."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Assess dispatch duties separately and add driving requirements only for an actual driving assignment."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G90_check4",
+        "prompt": "During clarify supervision and change authority, a billing contact instructs a worker to perform an unreviewed higher-risk task. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A purchase-order contact may authorize any task change."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Refer the changed task to the designated host and employer authorities."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G90_check5",
+        "prompt": "During plan logistics interfaces as operational information, the booking assumes lifting support that the receiving site has not arranged. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Confirm receiving readiness with the responsible site role before dispatch release."
+          },
+          {
+            "id": "b",
+            "label": "A confirmed booking proves receiving equipment is available."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G90_check6",
+        "prompt": "During close the assignment with limitations intact, a limited supervised assessment is entered as unrestricted task qualification. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Finishing one supervised shift proves unrestricted competence."
+          },
+          {
+            "id": "b",
+            "label": "Correct the scope record while preserving the original assessment history."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G90_final1",
+        "prompt": "Which evidence is most directly relevant to translate the contract into person-level duties?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Person-level assignment record linked to host task and contract scope."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G90_final2",
+        "prompt": "Which evidence is most directly relevant to allocate host and employer instruction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Host-supplier instruction matrix with named owners and task-specific evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G90_final3",
+        "prompt": "Which evidence is most directly relevant to match competence to actual equipment and work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Competence-to-task comparison showing scope and restrictions."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G90_final4",
+        "prompt": "Which evidence is most directly relevant to clarify supervision and change authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Supervision map distinguishing task direction, commercial contact and change approval."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G90_final5",
+        "prompt": "Which evidence is most directly relevant to plan logistics interfaces as operational information?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Logistics handoff linking delivery, site acceptance and interface owners."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G90_final6",
+        "prompt": "Which evidence is most directly relevant to close the assignment with limitations intact?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Assignment closeout preserving restrictions, changed duties and worker feedback."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G90_final7",
+        "prompt": "A colleague argues: “A general support contract qualifies every supplied person for every host task.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; obtain a specific duty assignment and appropriate task qualification evidence."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G90_final8",
+        "prompt": "A colleague argues: “A site induction proves every host task method was taught.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; resolve the responsibility and deliver the missing task-specific instruction."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G90_final9",
+        "prompt": "A colleague argues: “Every logistics employee needs every vehicle operator credential.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; assess dispatch duties separately and add driving requirements only for an actual driving assignment."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G90_final10",
+        "prompt": "A colleague argues: “A purchase-order contact may authorize any task change.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; refer the changed task to the designated host and employer authorities."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G90_final11",
+        "prompt": "A colleague argues: “A confirmed booking proves receiving equipment is available.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; confirm receiving readiness with the responsible site role before dispatch release."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G90_final12",
+        "prompt": "A colleague argues: “Finishing one supervised shift proves unrestricted competence.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; correct the scope record while preserving the original assessment history."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G90_final13",
+        "prompt": "An assignment says coordinate receiving, then the host requests machine operation. What changed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the worker’s job-title spelling."
+          },
+          {
+            "id": "b",
+            "label": "Nothing if general support appears in the contract."
+          },
+          {
+            "id": "c",
+            "label": "The actual duty and its competence/instruction requirements."
+          },
+          {
+            "id": "d",
+            "label": "The purchase order automatically becomes an operator certificate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G90_final14",
+        "prompt": "Both parties supplied general induction, but neither taught the revised host procedure. What is the gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A need to erase both induction records."
+          },
+          {
+            "id": "b",
+            "label": "Proof the worker lacks every skill."
+          },
+          {
+            "id": "c",
+            "label": "A missing commercial invoice."
+          },
+          {
+            "id": "d",
+            "label": "The actual task-specific instruction and understanding verification for that revision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G90_final15",
+        "prompt": "A dispatcher never drives. Which competence should be assessed for that role?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accurate dispatch information and logistics coordination for the actual duties."
+          },
+          {
+            "id": "b",
+            "label": "Every vehicle operator skill solely because transport is scheduled."
+          },
+          {
+            "id": "c",
+            "label": "Clinical treatment ability."
+          },
+          {
+            "id": "d",
+            "label": "Scaffold design for unrelated projects."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G90_final16",
+        "prompt": "A purchase-order contact proposes a higher-risk method. What authority question matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether the contact can approve an invoice."
+          },
+          {
+            "id": "b",
+            "label": "Who is designated to approve the task change and its technical and competence implications."
+          },
+          {
+            "id": "c",
+            "label": "Whether the worker wants an earlier finish."
+          },
+          {
+            "id": "d",
+            "label": "Whether the contact promises to accept blame."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G90_final17",
+        "prompt": "A delivery appointment is confirmed, but unloading support is not. What does the booking prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All lifting and operating readiness."
+          },
+          {
+            "id": "b",
+            "label": "Every driver’s qualification."
+          },
+          {
+            "id": "c",
+            "label": "The appointment arrangement, while receiving capability remains a separate confirmation."
+          },
+          {
+            "id": "d",
+            "label": "Acceptance of any changed destination."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G90_final18",
+        "prompt": "A supervised assessment on one machine is entered as unrestricted fleet competence. What is the correct correction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Delete the assessment entirely."
+          },
+          {
+            "id": "b",
+            "label": "Treat successful attendance as unrestricted competence."
+          },
+          {
+            "id": "c",
+            "label": "Ask a billing clerk to certify all machines."
+          },
+          {
+            "id": "d",
+            "label": "Retain the demonstrated scope and supervision limit, linking the record correction to the original evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G90_final19",
+        "prompt": "The supplied warehouse coordinator is asked to operate a forklift because the regular operator is absent. What is the correct assignment interpretation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Operation is a changed duty requiring the designated host/employer review and appropriate preparation, separate from the original coordination role."
+          },
+          {
+            "id": "b",
+            "label": "General support wording automatically includes every available machine."
+          },
+          {
+            "id": "c",
+            "label": "The purchase-order contact can supply physical skill by accepting responsibility."
+          },
+          {
+            "id": "d",
+            "label": "An authentic certificate for another machine proves this new operating assignment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G90_final20",
+        "prompt": "A supervised one-task assessment is being entered as unrestricted future competence while the logistics booking changes destination. How should the competence entry be handled?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Expand it because a delivery was successfully booked."
+          },
+          {
+            "id": "b",
+            "label": "Retain its demonstrated task/equipment and supervision limits, linking any correction to the original record."
+          },
+          {
+            "id": "c",
+            "label": "Erase the original supervision condition when the new yard confirms gate access."
+          },
+          {
+            "id": "d",
+            "label": "Use the old assessment as unrestricted evidence for every host task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G90_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G90_lesson1",
+          "questionIds": [
+            "G90_check1"
+          ]
+        },
+        {
+          "lessonId": "G90_lesson2",
+          "questionIds": [
+            "G90_check2"
+          ]
+        },
+        {
+          "lessonId": "G90_lesson3",
+          "questionIds": [
+            "G90_check3"
+          ]
+        },
+        {
+          "lessonId": "G90_lesson4",
+          "questionIds": [
+            "G90_check4"
+          ]
+        },
+        {
+          "lessonId": "G90_lesson5",
+          "questionIds": [
+            "G90_check5"
+          ]
+        },
+        {
+          "lessonId": "G90_lesson6",
+          "questionIds": [
+            "G90_check6"
+          ]
+        },
+        {
+          "lessonId": "G90_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G90_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G90_final",
+          "questionIds": [
+            "G90_final1",
+            "G90_final2",
+            "G90_final3",
+            "G90_final4",
+            "G90_final5",
+            "G90_final6",
+            "G90_final7",
+            "G90_final8",
+            "G90_final9",
+            "G90_final10",
+            "G90_final11",
+            "G90_final12",
+            "G90_final13",
+            "G90_final14",
+            "G90_final15",
+            "G90_final16",
+            "G90_final17",
+            "G90_final18",
+            "G90_final19",
+            "G90_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G90_check1": "The correct decision is to obtain a specific duty assignment and appropriate task qualification evidence. A staffing or logistics contract describes a service, but each supplied person needs a clear duty boundary. Recruitment, dispatch, supervision and hands-on execution are different assignments. Read the statement of work alongside the host task description and identify who controls each task. A broad phrase such as general support should trigger clarification before it becomes permission to operate plant or intervene in emergencies. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G90_check2": "The correct decision is to resolve the responsibility and deliver the missing task-specific instruction. The supplier may know the worker qualifications while the host knows the current site hazards and procedures. Neither should assume the other completed all instruction. Record which party teaches task methods, site interfaces, restrictions and reporting routes, then verify the handoff. An induction sign-in confirms attendance but does not establish whether the actual changed task was taught or understood. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G90_check3": "The correct decision is to assess dispatch duties separately and add driving requirements only for an actual driving assignment. A generic resume is a starting point, not proof of readiness for an assigned machine, trade or duty. Compare the evidence scope with the task, equipment and restrictions. Record gaps honestly and arrange qualified assessment where actual performance is required. A logistics planner does not need every operator qualification unless the planner is also assigned operation; do not create irrelevant credential demands. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G90_check4": "The correct decision is to refer the changed task to the designated host and employer authorities. A supplied worker needs to know who directs the task, who can change it and how conflicting instructions are resolved. A commercial contact may arrange billing without authority over the work method. If the host changes the assignment, revisit competence and instruction before relying on the original release. Escalation must protect the worker from having to choose between incompatible supervisors. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G90_check5": "The correct decision is to confirm receiving readiness with the responsible site role before dispatch release. Delivery times, access permissions, lifting interfaces and receiving responsibilities need reliable communication. A booking is not confirmation that a site can receive a load safely. Identify who verifies readiness and who accepts changes. Keep dispatch information separate from technical operating instructions; a scheduler should transmit approved restrictions accurately rather than inventing a shortcut to maintain the timetable. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G90_check6": "The correct decision is to correct the scope record while preserving the original assessment history. At shift end or reassignment, record completed work, outstanding restrictions and relevant changes. Avoid a blanket competent status that hides a limited assessment or temporary supervision arrangement. Worker feedback can reveal missing host information and should reach the responsible parties. An assignment closeout should improve the next handoff without rewriting the original qualification evidence or exposure history. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G90_final1": "A person-level assignment record linked to host task and contract scope addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A staffing or logistics contract describes a service, but each supplied person needs a clear duty boundary. Recruitment, dispatch, supervision and hands-on execution are different assignments. Read the statement of work alongside the host task description and identify who controls each task. A broad phrase such as general support should trigger clarification before it becomes permission to operate plant or intervene in emergencies.",
+        "G90_final2": "A host-supplier instruction matrix with named owners and task-specific evidence addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. The supplier may know the worker qualifications while the host knows the current site hazards and procedures. Neither should assume the other completed all instruction. Record which party teaches task methods, site interfaces, restrictions and reporting routes, then verify the handoff. An induction sign-in confirms attendance but does not establish whether the actual changed task was taught or understood.",
+        "G90_final3": "A competence-to-task comparison showing scope and restrictions addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A generic resume is a starting point, not proof of readiness for an assigned machine, trade or duty. Compare the evidence scope with the task, equipment and restrictions. Record gaps honestly and arrange qualified assessment where actual performance is required. A logistics planner does not need every operator qualification unless the planner is also assigned operation; do not create irrelevant credential demands.",
+        "G90_final4": "A supervision map distinguishing task direction, commercial contact and change approval addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A supplied worker needs to know who directs the task, who can change it and how conflicting instructions are resolved. A commercial contact may arrange billing without authority over the work method. If the host changes the assignment, revisit competence and instruction before relying on the original release. Escalation must protect the worker from having to choose between incompatible supervisors.",
+        "G90_final5": "A logistics handoff linking delivery, site acceptance and interface owners addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Delivery times, access permissions, lifting interfaces and receiving responsibilities need reliable communication. A booking is not confirmation that a site can receive a load safely. Identify who verifies readiness and who accepts changes. Keep dispatch information separate from technical operating instructions; a scheduler should transmit approved restrictions accurately rather than inventing a shortcut to maintain the timetable.",
+        "G90_final6": "A assignment closeout preserving restrictions, changed duties and worker feedback addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. At shift end or reassignment, record completed work, outstanding restrictions and relevant changes. Avoid a blanket competent status that hides a limited assessment or temporary supervision arrangement. Worker feedback can reveal missing host information and should reach the responsible parties. An assignment closeout should improve the next handoff without rewriting the original qualification evidence or exposure history.",
+        "G90_final7": "That inference exceeds the evidence. A staffing or logistics contract describes a service, but each supplied person needs a clear duty boundary. Recruitment, dispatch, supervision and hands-on execution are different assignments. Read the statement of work alongside the host task description and identify who controls each task. A broad phrase such as general support should trigger clarification before it becomes permission to operate plant or intervene in emergencies. The appropriate task disposition remains to obtain a specific duty assignment and appropriate task qualification evidence.",
+        "G90_final8": "That inference exceeds the evidence. The supplier may know the worker qualifications while the host knows the current site hazards and procedures. Neither should assume the other completed all instruction. Record which party teaches task methods, site interfaces, restrictions and reporting routes, then verify the handoff. An induction sign-in confirms attendance but does not establish whether the actual changed task was taught or understood. The appropriate task disposition remains to resolve the responsibility and deliver the missing task-specific instruction.",
+        "G90_final9": "That inference exceeds the evidence. A generic resume is a starting point, not proof of readiness for an assigned machine, trade or duty. Compare the evidence scope with the task, equipment and restrictions. Record gaps honestly and arrange qualified assessment where actual performance is required. A logistics planner does not need every operator qualification unless the planner is also assigned operation; do not create irrelevant credential demands. The appropriate task disposition remains to assess dispatch duties separately and add driving requirements only for an actual driving assignment.",
+        "G90_final10": "That inference exceeds the evidence. A supplied worker needs to know who directs the task, who can change it and how conflicting instructions are resolved. A commercial contact may arrange billing without authority over the work method. If the host changes the assignment, revisit competence and instruction before relying on the original release. Escalation must protect the worker from having to choose between incompatible supervisors. The appropriate task disposition remains to refer the changed task to the designated host and employer authorities.",
+        "G90_final11": "That inference exceeds the evidence. Delivery times, access permissions, lifting interfaces and receiving responsibilities need reliable communication. A booking is not confirmation that a site can receive a load safely. Identify who verifies readiness and who accepts changes. Keep dispatch information separate from technical operating instructions; a scheduler should transmit approved restrictions accurately rather than inventing a shortcut to maintain the timetable. The appropriate task disposition remains to confirm receiving readiness with the responsible site role before dispatch release.",
+        "G90_final12": "That inference exceeds the evidence. At shift end or reassignment, record completed work, outstanding restrictions and relevant changes. Avoid a blanket competent status that hides a limited assessment or temporary supervision arrangement. Worker feedback can reveal missing host information and should reach the responsible parties. An assignment closeout should improve the next handoff without rewriting the original qualification evidence or exposure history. The appropriate task disposition remains to correct the scope record while preserving the original assessment history.",
+        "G90_final13": "The actual duty and its competence/instruction requirements. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G90_final14": "The actual task-specific instruction and understanding verification for that revision. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G90_final15": "Accurate dispatch information and logistics coordination for the actual duties. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G90_final16": "Who is designated to approve the task change and its technical and competence implications. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G90_final17": "The appointment arrangement, while receiving capability remains a separate confirmation. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G90_final18": "Retain the demonstrated scope and supervision limit, linking the record correction to the original evidence. This is the specific distinction taught in the relevant lesson or worked case; retain the original answer and explicitly acknowledge the corrected reasoning after an error.",
+        "G90_final19": "The case changes the action from coordinate to operate. Prior coordination and unrelated equipment evidence remain bounded; the actual new task needs the applicable competence, instruction and authorization.",
+        "G90_final20": "The assessment's scope does not expand through unrelated logistics success. Preserve the actual observed conditions and history; any wider future assignment needs its own relevant evidence."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

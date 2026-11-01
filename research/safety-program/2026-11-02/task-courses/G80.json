@@ -1,0 +1,901 @@
+{
+  "courseId": "G80",
+  "gapGroupId": "TG31",
+  "title": "Facility water-program evidence and hygiene workflow analysis",
+  "description": "Teach water-system mapping, monitoring-versus-effectiveness distinctions and clean/dirty/food/clinical workflow boundaries beyond basic recognition.",
+  "purpose": "Teach water-system mapping, monitoring-versus-effectiveness distinctions and clean/dirty/food/clinical workflow boundaries beyond basic recognition.",
+  "audience": [
+    "Facility-support trainees in a theory module",
+    "Water/hygiene program coordinators",
+    "Support-service planners"
+  ],
+  "sources": [
+    {
+      "title": "CDC Legionella water-management toolkit",
+      "url": "https://www.cdc.gov/control-legionella/php/toolkit/wmp-toolkit.html"
+    },
+    {
+      "title": "OSHA bloodborne-pathogen actual exposure scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030"
+    },
+    {
+      "title": "FDA Food Code and adoption context",
+      "url": "https://www.fda.gov/food/retail-food-protection/fda-food-code"
+    }
+  ],
+  "practicalBoundary": "This course grants no water-treatment, sampling, contaminated-laundry, food-service or clinical practical qualification. It supplies no dosing, flushing, disinfection, medical or food time/temperature recipe.",
+  "vendorEvidenceRequired": [
+    "Actual facility systems, duties and exposure determination",
+    "Approved water/hygiene/food program and locally applicable requirements",
+    "System/use description, monitoring and verification/validation basis",
+    "Clean/dirty, food/chemical and professional duty boundaries",
+    "Actual personnel instruction and required credentials where applicable"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual facility/hygiene method skills under qualified safe assessment",
+    "Task-specific procedure use, transfer-boundary handling, records and abnormal response",
+    "Separate professional/clinical or public-health capability only where actual duties require it"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G80_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for facility water-program evidence and hygiene workflow analysis. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no water-treatment, sampling, contaminated-laundry, food-service or clinical practical qualification. It supplies no dosing, flushing, disinfection, medical or food time/temperature recipe.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G80_lesson1",
+        "title": "1. Separate facility systems and biological task pathways",
+        "body": "Facility support is not one hygiene method. Water-system maintenance, ordinary housekeeping, contaminated laundry, food service and personal/clinical support involve different systems and duties. A hotel lease or warehouse service does not automatically include catering or clinical care. Start with the actual task, material/system, people affected and intended outcome. The earlier G22 foundation teaches recognition; this module develops workflow and evidence analysis for actual service planning.\n\nDraw three elements for each task: source, transfer route and recipient. For a water device, the relevant route may involve aerosols under the actual assessment. For contaminated laundry, material handling and sharps can matter. For food work, raw-to-ready transfer pathways and process control can matter. Do not merge these into a universal biological certificate. Each has its own actual method and applicability.\n\nDistinguish facility ownership from technical operation. A property manager may coordinate service without being qualified to alter treatment equipment. A cleaner may follow approved instructions without authority to choose a disinfectant for every hazard. A clinical professional's duties are different again. The work pack should identify which party supplies each real decision and practical capability.\n\nPaper exercise: a contract says accommodation support but includes laundry collection, meal service and maintenance of an aerosol-producing water device. Create three method/role rows. Identify whether laundry is actually contaminated under the relevant program, what food duties are supplied and who owns the water-management program. Do not assume every worker performs all three or that a general facility badge closes them.\n\nThe cited CDC, OSHA and FDA sources support distinct program contexts. FDA's Food Code is a model whose actual adoption must be checked; OSHA bloodborne coverage concerns actual occupational blood/other potentially infectious material exposure. Neither establishes universal professional or food credentials for every facility worker.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G80_lesson2",
+        "title": "2. Map a water system to find actual control questions",
+        "body": "A water-management diagram should represent the actual system at a useful level: incoming supply, treatment/storage where present, distribution, recirculation where present, devices and relevant endpoints. Its purpose is to help the responsible team understand where conditions can support growth or exposure and where controls and monitoring belong. A generic building plan may show rooms without describing water flow, so it cannot replace the system description.\n\nMark low-use areas, changes, disconnected/modified sections and devices that create relevant exposure pathways under the actual assessment. Stagnation, temperature conditions, sediment/biofilm and disinfectant conditions can matter to Legionella management, but their control values and methods must come from the actual competent program. This course supplies no flushing duration, treatment dose, temperature target or emergency disinfection recipe.\n\nA flow path is not a guarantee of water quality. Drawings can be outdated or omit recent modifications. Record the source, revision and known limitations. A worker assigned to diagram review should not open valves, sample an unknown system or operate treatment equipment to discover the layout. The qualified facility/water team establishes actual configuration through its safe process.\n\nPaper exercise: a water schematic shows a guest wing in normal use, while occupancy records show it has been closed for months. The learner identifies a changed-use condition relevant to the program. They do not prescribe a universal reopening flush. The actual team must assess the system and approved response, including monitoring and acceptance for the intended use.\n\nCDC's water-management toolkit provides a structured program framework for relevant buildings/devices. Applying it requires the actual team, system description and risk review. A diagram produced by this course is a learning artifact, not validation of a real water-management program or evidence that a building can reopen.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G80_lesson3",
+        "title": "3. Distinguish control limits, monitoring, verification and validation",
+        "body": "A program needs to explain what is controlled, what is measured and how the team knows the program is working. A control limit is an actual program criterion; monitoring checks a defined condition against the program. Verification asks whether required program activities are implemented as intended. Validation asks whether the program is effective for its intended purpose. Terminology may be specified by the actual adopted program, so read its definitions rather than using these words as interchangeable stamps.\n\nA completed log can support implementation evidence but does not automatically prove effectiveness. A single acceptable reading at one point may not characterize every device or time. Conversely, an out-of-limit observation does not by itself establish the entire cause or health consequence. The qualified program defines response, follow-up and technical/public-health interfaces. The learner records the observation and applicable rule without inventing a dose or diagnostic conclusion.\n\nUse a fictional paper control table with named points A and B, an exercise criterion supplied by the program and a required response owner. If point A has a recorded observation and point B is blank, only A has evidence for that event. Do not copy A's value into B or use an average to hide the missing observation. If a value is outside the supplied criterion, identify the required program route and preserve the original entry.\n\nMeasurement suitability matters. Instrument identity, method, units, location and conditions should match the actual control question. A calibration sticker alone cannot establish that a sample or reading represents the correct endpoint. Sampling and interpretation can require specialist capability. This module does not authorize collecting water samples, operating a device or interpreting clinical tests.\n\nPaper exercise: a contractor reports all water controls passed based on one unlabeled reading and a signed checklist. The learner identifies missing location/method scope and the unsupported full-system conclusion. Ask the actual program owner for the required evidence and review, retaining the useful record without inflating it into universal assurance.\n\nWorked evidence classification: a fictional program requires observations at endpoints A and B and a supervisor review of the weekly log. The log contains a value at A, no entry at B and a completed review signature. The signature may establish that someone reviewed the log, but it cannot create the missing B observation. The learner should identify implementation evidence for A, a missing monitoring item at B and a review action whose quality needs evaluation. If a separate effectiveness review is required, neither endpoint reading nor the signature automatically supplies it. Keep these claims in different rows. This prevents a reassuring all-complete status from merging measurement, review and effectiveness into one unsupported conclusion. The actual program owner determines the response, required follow-up and any consequences for use; the course supplies no numerical limits or treatment method.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G80_lesson4",
+        "title": "4. Analyze clean/dirty workflows for laundry and cleaning",
+        "body": "A hygiene workflow follows material and people through the task. For laundry, distinguish collection, transport, handling, processing and clean storage. For cleaning, distinguish the contaminated task, tools/chemicals, waste and return to a clean area. A plan can fail at the interfaces even if each individual action appears reasonable. A clean item placed on an unverified surface can lose the protection intended by the process.\n\nActual contaminated laundry can involve blood/other potentially infectious material or sharps under the applicable program. Ordinary linen is not automatically in that category. The employer determines exposure and provides the correct method, controls and response. This course does not teach hand sorting, sharps retrieval or chemical treatment. A worker should not search through a suspect bag to prove whether a hazard exists for training.\n\nCleaning and disinfection are different claims. Removing visible soil and applying an approved disinfecting process can serve different purposes. Product suitability, surface compatibility, required method and worker exposure must come from actual manufacturer/label and competent program instructions. A strong smell or a higher improvised concentration is not proof of effectiveness. Never mix products or choose a new chemical process from this course.\n\nPaper workflow exercise: dirty collection carts and clean linen share an unreviewed staging table. Draw the dirty and clean routes, then mark the contact interface. The learner identifies the cross-transfer question and asks the responsible hygiene/facility owner for a supported arrangement. They do not design an improvised decontamination recipe or assume a clean-looking table is suitable.\n\nRecord actual completion and deviations. Bag delivered, load processed, area cleaned and released for use are distinct states. If an unexpected sharp or contamination is reported, the actual safe response and exposure process govern. Knowledge completion cannot establish occupational health clearance or qualify a person for clinical exposure assessment.\n\nA transfer record should identify who hands material to whom and what status is being communicated. Collected linen is not necessarily processed linen; processed linen is not necessarily protected during later transport. In a fictional handoff, write the actual stage and any handling limitation rather than simply clean. This makes the receiving person's task clear and exposes a missing storage or transport control. The exercise evaluates communication of workflow state, not a real decontamination result.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G80_lesson5",
+        "title": "5. Apply workflow reasoning to food and personal-support boundaries",
+        "body": "Food-service tasks need their actual hygiene and process controls under the applicable local rules and approved program. A food item passes through receipt, storage, preparation, holding/service and disposition. The worker's duties may cover only one stage. A general accommodation service does not automatically assign food handling, and a food-handler course does not qualify water-treatment or clinical work.\n\nUse a pathway model to identify cross-contact and contamination questions. Separate raw and ready-to-eat flows, food and nonfood chemicals, tools, hands and contact surfaces in a paper diagram. The actual program defines controls, allergens, temperatures, time limits and corrective actions. This course deliberately provides no universal numerical food limit or credential claim. FDA's model code supports local adoption, but its newest edition is not automatically the law at every site.\n\nPersonal support also requires a duty boundary. Helping someone arrange transport or clean a room is not automatically clinical care. Medication, clinical procedures or professional health assessment require the actual appropriate role and authorization. A facility worker should communicate a concern through the approved route rather than diagnose illness or perform a procedure because they completed a biological-awareness lesson.\n\nPaper exercise: a support contract includes meal delivery and a request to administer medication. These are distinct duties. Identify actual food-handling steps and their program owner, then record the medication task as needing the appropriate professional/employer scope determination. Do not invent a credential for every helper or assume ordinary support authorizes clinical work.\n\nA second exercise traces a ready-to-eat container placed beside an unlabeled cleaning chemical in a shared cart. The useful finding is an unreviewed food/chemical interface, not a diagnosis that someone has been poisoned. The responsible program determines disposition and control. The learner's role is to identify the pathway and preserve accurate information.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G80_lesson6",
+        "title": "6. Build task-specific evidence and practical assessment",
+        "body": "Capability evidence should match the actual facility method. Water-program implementation, contaminated-laundry handling, food service, routine cleaning and clinical duties have different skills and requirements. Identify the named worker, assigned stage, relevant system/product, applicable regime and responsible supervisor. A generic hygiene badge cannot close every residual. Professional or public-health credentials should be verified only where the actual duty requires them.\n\nAsk for the approved procedures and the evidence that personnel understand and can perform them. Practical assessment should identify assessor scope, safe conditions, criteria, outcome and limitations. A person may be competent in ordinary cleaning but need additional instruction for a new chemical or contaminated-laundry duty. The gap statement should name that change rather than assigning an undifferentiated biological course.\n\nA safe desk assessment can use a fictional water schematic, incomplete monitoring table, clean/dirty laundry map and food/chemical cart diagram. Ask the learner to identify unestablished coverage, transfer pathways and appropriate decision owners. The exercise demonstrates useful systems reasoning without collecting samples, operating treatment equipment, handling contaminated material or preparing food for others.\n\nActual practical assessment must be arranged under a qualified safe program for the task. It should observe actual procedure use, material/system identification, hygiene interfaces, recording, abnormal-condition response and handover. Clinical assessment and occupational exposure follow-up belong to the appropriate qualified professionals. This course supplies no treatment or decontamination procedure.\n\nThe final handoff should distinguish system configuration, approved control criteria, actual monitoring, program verification/validation, material workflow, unresolved deviations and permission for use. Preserve the boundary between knowledge, performance and authorization. Completion records the bounded theory with original quiz results and acknowledged remediation. It cannot validate water safety, issue a food/professional credential, establish actual exposure status or authorize clinical/facility operation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G80_case1",
+        "title": "Worked fictional case 1: reopening a low-use wing",
+        "body": "Fictional facts: Cedar Lodge plans to reopen a wing closed for months. Its water schematic shows normal occupancy and no recent modification. A contractor records one unlabeled reading and marks every control passed. The manager asks the facility coordinator to use a general hygiene course as proof that reopening is safe.\n\nThe coordinator first identifies the changed-use condition. The actual occupancy history differs from the schematic's assumption. The water-management team must review the system and program response for the intended use. The coordinator does not prescribe a universal flush duration, temperature or chemical dose.\n\nNext, the evidence is bounded. One unlabeled reading does not establish location, method or full-system coverage. A signed checklist can show a reported activity but not automatic program effectiveness. The coordinator asks the actual program owner for the required monitoring and verification/validation evidence, preserving the original observation rather than copying it into every point.\n\nThe course record is then separated from technical readiness. It may show understanding of program concepts; it does not validate the building's water condition or qualify a worker to operate treatment equipment. Actual roles, supported method and relevant practical capability remain necessary. The building owner retains the appropriate use/reopening decision under applicable requirements.\n\nIn the fictional resolution, the team updates the system/use description, performs its approved review and obtains the required evidence through qualified personnel. Remaining limitations and responsible owners are documented. No device is operated or sample collected as part of this paper case.\n\nFinal decision: the initial packet cannot support all-controls-passed or reopening clearance. Exact residuals are actual system assessment, approved program response, suitable monitoring and review, method-specific practical capability and authorized facility release. A hygiene quiz cannot replace those outcomes.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G80_case2",
+        "title": "Worked fictional case 2: one cart for three different support tasks",
+        "body": "Fictional facts: Meadow Support collects ordinary linen, transports a reported potentially contaminated laundry bag and delivers ready-to-eat meals. A shared cart also carries an unlabeled cleaning chemical. The clean linen staging surface has no defined hygiene status. A supervisor says a single facility-awareness certificate covers every task and asks a helper to administer medication as well.\n\nThe planner separates the actual workflows. Ordinary linen and potentially contaminated laundry require their real exposure/method determination. The learner does not open the bag or search for sharps. The responsible employer program establishes the safe handling and exposure response. Clean linen needs a supported interface with storage and transport, not merely a clean appearance.\n\nThe food/chemical interface is identified separately. A meal-delivery workflow and chemical transport cannot be treated as harmless because they share a cart. The actual food/hygiene program determines control and disposition. The learner records the unlabeled chemical and transfer concern without diagnosing an exposure or inventing a disinfection recipe.\n\nThe medication request is a distinct professional-scope question. General support and meal delivery do not automatically authorize clinical activity. The employer and appropriate professional authority must establish actual duties and capability. The helper's course score cannot create that authority.\n\nIn the fictional resolution, task owners define separate supported workflows, applicable instruction and practical assessment. The chemical identity is resolved through the actual safe process, and the clinical request is assigned only through its proper role determination. The handover states actual status and remaining limitations.\n\nFinal decision: reject the blanket one-certificate-covers-all claim. Exact residuals are exposure/method determination, supported clean/dirty and food/chemical controls, applicable role credentials, observed practical performance and assignment authorization. The paper learner demonstrates pathway reasoning only; no contaminated material, food or medication is handled.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G80_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G80_check1",
+        "prompt": "Does accommodation support automatically include clinical care?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual duties and professional boundaries must be identified."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every helper is clinical staff."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after hygiene training."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G80_check2",
+        "prompt": "What does a water-system diagram help identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Actual flow, devices, use changes and control questions."
+          },
+          {
+            "id": "c",
+            "label": "Automatic water safety."
+          },
+          {
+            "id": "d",
+            "label": "A universal treatment dose."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G80_check3",
+        "prompt": "Can a review signature create a missing endpoint observation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if weekly."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; monitoring evidence remains absent."
+          },
+          {
+            "id": "d",
+            "label": "Yes, signatures replace readings."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G80_check4",
+        "prompt": "Is ordinary linen automatically contaminated laundry?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, all fabric is identical."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every facility uses the same program."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual exposure/material status must be determined."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G80_check5",
+        "prompt": "Does the latest FDA model edition automatically become every sites law?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual jurisdiction adoption and rules must be checked."
+          },
+          {
+            "id": "b",
+            "label": "Yes, immediately everywhere."
+          },
+          {
+            "id": "c",
+            "label": "Yes, any food site."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G80_check6",
+        "prompt": "Does this course validate a real water system?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual program evidence and qualified decisions remain separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after the quiz."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after one diagram."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G80_final1",
+        "prompt": "What are the three workflow elements taught?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the tool operator."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Source, transfer route and recipient."
+          },
+          {
+            "id": "d",
+            "label": "Price, color and logo."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G80_final2",
+        "prompt": "Can a property manager automatically operate treatment equipment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, ownership is skill."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if a contractor is late."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual method competence and authorization are required."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G80_final3",
+        "prompt": "Does an old schematic establish current configuration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Not automatically; modifications/use changes need review."
+          },
+          {
+            "id": "b",
+            "label": "Yes, forever."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if printed."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G80_final4",
+        "prompt": "What does a closed wing introduce for water planning?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "A changed-use condition for the actual program team to assess."
+          },
+          {
+            "id": "c",
+            "label": "A universal flushing recipe."
+          },
+          {
+            "id": "d",
+            "label": "Proof that every device is contaminated."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G80_final5",
+        "prompt": "Does this course specify Legionella treatment temperature or dose?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, higher is always better."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual competent program criteria govern."
+          },
+          {
+            "id": "d",
+            "label": "Yes, use any remembered value."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G80_final6",
+        "prompt": "What is monitoring in the taught framework?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proof of every programs effectiveness."
+          },
+          {
+            "id": "b",
+            "label": "A substitute for location identity."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Checking a defined condition under the actual program."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G80_final7",
+        "prompt": "Does a completed log automatically prove effectiveness?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; implementation and effectiveness need their applicable evidence."
+          },
+          {
+            "id": "b",
+            "label": "Yes, any checklist validates."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if signed."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G80_final8",
+        "prompt": "Why identify measurement location and units?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "To connect the result to the actual control question."
+          },
+          {
+            "id": "c",
+            "label": "Only for neatness."
+          },
+          {
+            "id": "d",
+            "label": "To make one reading cover all points."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G80_final9",
+        "prompt": "Should a learner open a suspect laundry bag to check for sharps?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, after a paper case."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; use the actual qualified handling process."
+          },
+          {
+            "id": "d",
+            "label": "Yes, for realism."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G80_final10",
+        "prompt": "Are cleaning and disinfection interchangeable claims?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, both always mean the same."
+          },
+          {
+            "id": "b",
+            "label": "Yes, smell proves both."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; actual purpose, product and method differ."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G80_final11",
+        "prompt": "Does stronger chemical concentration always mean better control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual approved product instructions and compatibility govern."
+          },
+          {
+            "id": "b",
+            "label": "Yes, always double it."
+          },
+          {
+            "id": "c",
+            "label": "Yes, mix products."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G80_final12",
+        "prompt": "What is the concern with dirty carts sharing clean linen staging?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "An unreviewed transfer interface."
+          },
+          {
+            "id": "c",
+            "label": "Automatic proof everyone is ill."
+          },
+          {
+            "id": "d",
+            "label": "No concern if visually clean."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G80_final13",
+        "prompt": "Can one food-handler credential qualify water treatment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, after renewal."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual methods and duties differ."
+          },
+          {
+            "id": "d",
+            "label": "Yes, all hygiene is one trade."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G80_final14",
+        "prompt": "What should a food-flow diagram distinguish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only delivery price."
+          },
+          {
+            "id": "b",
+            "label": "Every sites invented temperature."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Actual raw/ready, chemical, tool and contact pathways."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G80_final15",
+        "prompt": "Can meal delivery authorize medication administration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; clinical/professional scope needs separate determination."
+          },
+          {
+            "id": "b",
+            "label": "Yes, both are support."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if requested informally."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G80_final16",
+        "prompt": "In Cedar Lodge, why is one unlabeled reading insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Location/method and full coverage are not established."
+          },
+          {
+            "id": "c",
+            "label": "Every reading is false."
+          },
+          {
+            "id": "d",
+            "label": "Only the ink is wrong."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G80_final17",
+        "prompt": "In Cedar, does a course score clear reopening?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if all answers correct."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual assessment, program evidence and release are separate."
+          },
+          {
+            "id": "d",
+            "label": "Yes, automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G80_final18",
+        "prompt": "In Meadow, should one certificate close every workflow?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every biological duty is equivalent."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the supervisor agrees."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; distinct actual methods need their own evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G80_final19",
+        "prompt": "Who handles clinical exposure assessment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The appropriate qualified professional through the actual process."
+          },
+          {
+            "id": "b",
+            "label": "Any paper-course graduate."
+          },
+          {
+            "id": "c",
+            "label": "The invoice clerk."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G80_final20",
+        "prompt": "What remains after this module?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Applicable method/credential evidence, observed skills and actual release/assignment."
+          },
+          {
+            "id": "c",
+            "label": "All facility authority."
+          },
+          {
+            "id": "d",
+            "label": "Only badge printing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G80_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G80_lesson1",
+          "questionIds": [
+            "G80_check1"
+          ]
+        },
+        {
+          "lessonId": "G80_lesson2",
+          "questionIds": [
+            "G80_check2"
+          ]
+        },
+        {
+          "lessonId": "G80_lesson3",
+          "questionIds": [
+            "G80_check3"
+          ]
+        },
+        {
+          "lessonId": "G80_lesson4",
+          "questionIds": [
+            "G80_check4"
+          ]
+        },
+        {
+          "lessonId": "G80_lesson5",
+          "questionIds": [
+            "G80_check5"
+          ]
+        },
+        {
+          "lessonId": "G80_lesson6",
+          "questionIds": [
+            "G80_check6"
+          ]
+        },
+        {
+          "lessonId": "G80_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G80_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G80_final",
+          "questionIds": [
+            "G80_final1",
+            "G80_final2",
+            "G80_final3",
+            "G80_final4",
+            "G80_final5",
+            "G80_final6",
+            "G80_final7",
+            "G80_final8",
+            "G80_final9",
+            "G80_final10",
+            "G80_final11",
+            "G80_final12",
+            "G80_final13",
+            "G80_final14",
+            "G80_final15",
+            "G80_final16",
+            "G80_final17",
+            "G80_final18",
+            "G80_final19",
+            "G80_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G80_check1": "Service labels cannot assign specialist duties automatically.",
+        "G80_check2": "A diagram supports program reasoning, not validation by itself.",
+        "G80_check3": "Review and measurement are separate evidence claims.",
+        "G80_check4": "Task and exposure scope matter.",
+        "G80_check5": "The Food Code is a model for adoption.",
+        "G80_check6": "Theory is not technical validation or operating authorization.",
+        "G80_final1": "Pathways connect a material/system to affected people.",
+        "G80_final2": "Coordination and technical operation differ.",
+        "G80_final3": "System records have scope and currency limitations.",
+        "G80_final4": "Identify the condition without inventing a technical result.",
+        "G80_final5": "The lesson supplies concepts, not hazardous process settings.",
+        "G80_final6": "Monitoring produces bounded observations.",
+        "G80_final7": "Verification/validation claims must be supported separately.",
+        "G80_final8": "Context bounds the evidence.",
+        "G80_final9": "Knowledge training does not authorize hazardous searching.",
+        "G80_final10": "Visible soil removal and pathogen-control processes have distinct bases.",
+        "G80_final11": "Improvised chemical methods can be unsafe and unsupported.",
+        "G80_final12": "Workflow analysis identifies pathways without inventing exposure outcomes.",
+        "G80_final13": "Credentials must match the task.",
+        "G80_final14": "The diagram identifies control questions for the actual program.",
+        "G80_final15": "A new professional duty cannot be inferred from a service label.",
+        "G80_final16": "Bounded evidence cannot support an unrestricted system conclusion.",
+        "G80_final17": "Knowledge cannot validate facility conditions.",
+        "G80_final18": "Task-specific scope prevents false blanket qualification.",
+        "G80_final19": "The course provides no clinical authority.",
+        "G80_final20": "Theory completion closes only the bounded knowledge component."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

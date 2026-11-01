@@ -37,5 +37,15 @@ describe('catalog conditional course connections',()=>{
     expect(noPublished.vendorExtrasCountTowardScore).toBe(false);
     delete catalog.residuals;
   });
+  it('projects only the service-specific scope questions rather than every unresolved method',async()=>{
+    const catalog=fixtures.catalog as typeof fixtures.catalog&{residuals?:{groups:unknown[]}};
+    catalog.residuals={groups:[{groupId:'TG45',title:'Actual method unresolved',courseId:null,role:'Assigned source operator',serviceIds:['VMS-SEISMIC'],vendorEvidenceRequired:['Generic unresolved scope'],practicalAssessmentRequired:['Generic conditional evaluation'],scopeConfirmation:'Generic scope',sourceUrls:[],serviceEvidence:[{serviceId:'VMS-SEISMIC',sourceContext:'Confirm the actual acquisition source.',vendorEvidenceRequired:['Identify whether explosives are used.'],practicalAssessmentRequired:['Evaluate only confirmed source duties.']},{serviceId:'OTHER',sourceContext:'Unrelated mode',vendorEvidenceRequired:['Unrelated passenger credential'],practicalAssessmentRequired:[]}]}]};
+    const view=await safetyTrainingCatalogView({userId:1} as never,{}),gap=view.services[0].residualRequirements[0];
+    expect(gap.vendorEvidenceRequired).toEqual(['Identify whether explosives are used.']);
+    expect(gap.scopeConfirmation).toBe('Confirm the actual acquisition source.');
+    expect(gap).not.toHaveProperty('serviceEvidence');
+    expect(gap.trainingItemId).toBeNull();
+    delete catalog.residuals;
+  });
 });
 

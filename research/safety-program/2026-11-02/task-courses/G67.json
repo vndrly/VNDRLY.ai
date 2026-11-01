@@ -1,0 +1,897 @@
+{
+  "courseId": "G67",
+  "gapGroupId": "TG18",
+  "title": "Electrical and instrument work-pack interpretation and commissioning evidence",
+  "description": "Interpret electrical/instrument work boundaries, reconcile technical records and review bounded commissioning claims without performing hazardous testing.",
+  "purpose": "Interpret electrical/instrument work boundaries, reconcile technical records and review bounded commissioning claims without performing hazardous testing.",
+  "audience": [
+    "Electrical work planners",
+    "Instrument service coordinators",
+    "Assigned commissioning document reviewers"
+  ],
+  "sources": [
+    {
+      "title": "OSHA electrical training",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.332"
+    },
+    {
+      "title": "OSHA electrical safety-related work practices: deenergizing and reenergizing equipment",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333"
+    }
+  ],
+  "practicalBoundary": "This course grants no electrical qualified-person designation, trade license, switching authority or permission to work on exposed parts. Actual circuit-specific instruction, safe-state methods, qualified practical assessment and site release remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual equipment/circuit and voltage/task scope",
+    "Approved drawing and change baseline",
+    "Approved test procedure and acceptance source",
+    "Assigned electrical/instrument qualifications and applicable trade credentials",
+    "Isolation, process-interface and restoration responsibilities"
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified observation of the actual electrical/instrument duty using a safe approved assessment arrangement",
+    "Demonstrated equipment identification, approved method use and result interpretation",
+    "Observed controlled restoration and handover within the assessed role"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G67_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for electrical and instrument work-pack interpretation and commissioning evidence. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no electrical qualified-person designation, trade license, switching authority or permission to work on exposed parts. Actual circuit-specific instruction, safe-state methods, qualified practical assessment and site release remain separate.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G67_lesson1",
+        "title": "1. Translate an electrical request into a bounded assignment",
+        "body": "Electrical work must be described by its interaction with equipment, not by the worker's department. Installing an office application, replacing an enclosed peripheral, connecting an instrument to a process, opening an electrical enclosure and commissioning a protective circuit are different assignments. Write a task sentence with an action, identified asset and intended result. “Support generator G-4” is too vague. “Review the maintenance record and drawings for the proposed G-4 inspection without opening equipment” defines a desk role and makes the next permission boundary visible.\n\nBuild an interface list from the work request. Include the electrical supply, any independent control supply, battery or stored-energy connection, remote commands, process connection and equipment that depends on the circuit. This is a document review, not an instruction to locate conductors or perform isolation. Record an interface as unknown when the records do not establish it. A blank field falsely suggests that the interface does not exist; an explicit unknown creates a technical question that an accountable person can answer.\n\nRead drawings from the title block before reading symbols. Match the equipment identifier, drawing purpose, revision, approval state and sheet references to the proposed task. A conceptual single-line drawing explains relationships but may omit the detail needed for a maintenance method. An installation diagram is not automatically an approved record of the present installation. Compare the task's asset label with the asset register and the work order. Similar names do not establish identity, especially after equipment replacement or renumbering.\n\nClassify each proposed activity as document review, supervised learning, authorized technical execution or release decision. Then assign the role that actually owns it. A person can be qualified for one circuit or task and outside their demonstrated scope for another. The cited OSHA training provision connects training to job assignments and distinguishes additional skills for qualified persons; it does not convert an online score into those skills.\n\nDesk exercise: a purchase order says “instrument service,” while the attached method includes opening a control panel and disconnecting a pressure impulse line. Mark both interfaces, request the appropriate electrical and process method owners, and retain the narrow desk-review task until the execution scope is settled.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G67_lesson2",
+        "title": "2. Reconcile drawings, asset records and change history",
+        "body": "A defensible electrical work pack distinguishes what the documents say from what has been confirmed about the installation. Start a discrepancy table with four columns: source and revision, stated condition, conflicting evidence, and decision owner. Do not silently change an engineering drawing to make the work request appear consistent. A marked-up review copy can identify a question while preserving the approved baseline and showing that the mark is not an installation instruction.\n\nFor an instrument loop, a loop drawing, device data sheet, input/output list and cause-and-effect description answer different questions. The loop drawing describes connections; the data sheet identifies intended device characteristics; the input/output list associates signals with the control system; the cause-and-effect record describes the intended response to conditions. A matching tag across all four supports traceability, but matching tags alone do not prove that the device, wiring or logic currently performs as intended. Missing revision alignment is a reason to seek engineering reconciliation before using the pack for technical work.\n\nA calibration certificate can establish a bounded measurement result for an identified instrument under stated conditions. It does not prove correct installation, suitability for a hazardous location, functional operation of an entire protective loop or authority to energize equipment. Similarly, a purchase invoice for a replacement module is not evidence that the replacement has approved characteristics. Record what each evidence item actually supports and what it cannot support.\n\nRead the change history as a chain. Identify the approved change request, affected documents, implementation evidence, testing evidence and release decision. A closed maintenance ticket with no referenced test record may establish administrative closure only. Where a field modification appears in a photograph but not in the current drawings, the reviewer should name the discrepancy and ask the designated technical owner for disposition; the reviewer should not deduce a new connection scheme from the photograph.\n\nDesk exercise: the input/output list refers to PT-24, a certificate refers to PT-42, and the work order says “pressure transmitter.” The correct result is not a clever guess about transposed digits. Record that the certificate cannot yet be assigned to the task asset, request identity evidence and keep the verification claim open.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G67_lesson3",
+        "title": "3. Review a test plan without inventing a test method",
+        "body": "A test plan should explain the question being answered before listing instruments. Distinguish an inspection for visible condition, a measurement of a component, a functional test of a loop and commissioning of an integrated system. Each supports a different conclusion. A satisfactory component measurement cannot establish that the entire system responds correctly, and an integrated demonstration cannot supply a missing component suitability assessment.\n\nOn a desk review copy, identify the test object, approved configuration, purpose, prerequisites, responsible technical personnel, controlling procedure and acceptance source. Locate how the plan treats people and equipment outside the test boundary. Commissioning can introduce temporary supplies, simulated signals or changed operating states; those features need explicit technical review and operational coordination. This course does not teach connections, test voltages, live measurements, approach distances or switching sequences. Those belong to qualified personnel using an approved method for the actual equipment and applicable rules.\n\nAcceptance criteria must come from an identified approved source. A spreadsheet with an unexplained green cell is not an acceptance basis. Ask whether the criterion is a manufacturer specification, engineered requirement, approved procedure or governing standard adopted for the job. Record units and the definition of the quantity being assessed. A result written as “4.2” is not interpretable until the quantity and unit are known. Do not use this lesson to calculate a hazardous operating limit.\n\nReview measurement assurance without pretending to be the test technician. The planned instrument should have an identity and evidence appropriate to its intended use, including the relevant range or function and current condition. A calibration sticker cannot establish that every measurement function is suitable. Ask how the method handles a suspect instrument or result and who determines the consequence for previous results. The plan should retain original readings, test conditions and deviations rather than only a pass mark.\n\nDesk exercise: a loop test form has a signature and no stated acceptance source. Write “result recorded; acceptance basis not demonstrated.” Request the approved criterion and technical review. Do not supply a customary value from memory, a different site or an internet example.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G67_lesson4",
+        "title": "4. Understand safe-state and commissioning evidence",
+        "body": "“Off,” “isolated,” “de-energized,” “tested” and “released” are distinct claims. A switch position is a position indication. An isolation record describes a controlled arrangement. Evidence that an appropriately qualified person verified the relevant condition supports a bounded safe-state claim at a time and place. Release is a decision made under the site's authority after its prerequisites are met. A desk reviewer should use precise language so that one claim is not accidentally promoted into another.\n\nIdentify which procedure governs the work and whether its scope actually includes the task. General hazardous-energy rules have exclusions and sector differences, so a familiar lockout form should not be treated as proof that one legal regime applies universally. The employer must establish the applicable electrical and energy-control arrangements. The reviewer can check whether the pack identifies the responsible people, equipment boundary, relevant energy interfaces and restoration controls without issuing an isolation or instructing a switching sequence.\n\nCommissioning documentation should distinguish a temporary test condition from the intended normal configuration. A successful demonstration with a temporary simulator may prove the simulated part of the test while leaving the field sensor or final element unverified. Read the test boundaries and record exclusions. Temporary jumpers, disabled functions or substituted inputs are not acceptable merely because a test form is signed. Their use, control and removal require the appropriate technical and operational authority; this course does not authorize creating or removing them.\n\nRead completion records for unresolved items. A punch-list category must have an approved meaning on that project. Do not assume that every open item is cosmetic or that an unfamiliar category permits startup. Locate the named owner and release conditions for each unresolved issue. A technical authority may approve a defined disposition, but the record must preserve its limits rather than replacing the original concern with “accepted.”\n\nDesk exercise: a commissioning record reports a passed controller response using a simulated input, while the field device installation is incomplete. Write two separate findings: the recorded simulated response and the unverified field path. The complete loop has not been established by the available record.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G67_lesson5",
+        "title": "5. Interpret results, deviations and restoration records",
+        "body": "Technical records are useful when another authorized person can reconstruct what was tested and what remains uncertain. Review whether the result identifies the equipment, date, procedure revision, test configuration, instrument identities, relevant conditions, original observations and person performing the work. The purpose is not to add signatures for appearance. Each element connects a claim to the actual event and prevents the result being reused for a different asset or configuration.\n\nA deviation is a departure from the approved method or expected condition. Its significance depends on the task and the technical basis. A reviewer should describe it specifically: “the specified test point was inaccessible and was not measured” is more useful than “minor issue.” If a technician substituted a method, find the recorded approval and the limits of the substitute evidence. Do not assume equivalent results because both methods produce a number with the same unit.\n\nSeparate data correction from result alteration. A demonstrated transcription mistake can be corrected through the controlled record process with the original entry, reason, author and date retained. A surprising reading cannot be deleted because the next reading looks better. The technical reviewer decides whether repeated measurements, equipment condition or method validity affect acceptance. Original evidence protects learning as well as accountability; it allows an apparently intermittent problem to be recognized later.\n\nRestoration needs its own evidence. The pack should identify what was temporarily disconnected, inhibited, substituted or removed during the approved work and how the responsible personnel verified the intended final configuration. This is a record-review requirement, not permission to reconnect or energize anything. A clean work area and closed ticket do not establish functional readiness. Operating release remains with the authority assigned by the employer and site.\n\nDesk exercise: a completed test sheet says “all restored,” but the change log lists a temporary alarm suppression with no closure record. Carry that exact conflict into the handover. Ask the authorized owner to verify disposition against the approved configuration and operating conditions. Do not change the log yourself or infer closure from the absence of an alarm.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G67_lesson6",
+        "title": "6. Build a task-specific competence and handover pack",
+        "body": "A competence pack connects a person to a defined task and evidence of capability. Start with the proposed duties and equipment rather than a folder of certificates. For each duty, identify necessary technical knowledge, supervised experience, observed practical performance and any applicable legal or contractual credential. Record who assessed the person, the assessor's relevant scope, conditions of assessment, performance criteria, outcome and limitations. An electrical trade credential, an instrument manufacturer course and an employer designation answer different questions and should not be collapsed into one badge.\n\nDesign a safe desk assessment for the reviewer role. Give the learner fictional drawings, a data sheet, a test plan and a result form containing a traceability conflict. Ask them to identify the conflict, describe the unsupported claim and route the question to the correct technical owner. Assess the quality of their reasoning and record interpretation. Do not mark the learner qualified for exposed electrical work because they completed this paper exercise.\n\nFor the practical role, the employer must arrange appropriately qualified assessment using a safe arrangement suited to the task. The assessor determines how the person demonstrates the necessary skills without uncontrolled exposure. The scope may include equipment identification, correct use of approved methods, interpretation of results, management of unexpected conditions and controlled restoration. This course does not prescribe an assessment involving live parts, and a supervisor should not create one merely to make training realistic.\n\nA handover should give the incoming team a usable state. State the asset, work completed, configuration covered by the evidence, limitations, unresolved deviations, temporary arrangements and release authority. Reference exact documents rather than attaching an unexplained pile of files. An incoming person should be able to distinguish “test complete awaiting review” from “accepted for the defined purpose” and from “authorized for operation.”\n\nDesk exercise: an instrument technician has demonstrated calibration of one transmitter family but is assigned protective-loop commissioning on another platform. Record the existing evidence as relevant background, identify the new loop and platform skills, and arrange task-specific assessment and authorization. Preserve what is known without manufacturing either a blanket qualification or a blanket rejection.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G67_case1",
+        "title": "Worked fictional case 1: the replacement transmitter package",
+        "body": "Fictional facts: Cedar Yard requests replacement of pressure transmitter PT-17 during a planned maintenance window. The planner receives a work order naming PT-17, loop drawing revision C, a data sheet revision E, a calibration certificate naming PT-71 and a proposed functional test based on revision C. No worker is being asked to open equipment as part of this exercise. The records are deliberately inconsistent.\n\nFirst, the reviewer creates an evidence table. The work order establishes the requested asset identity. The drawing describes a loop at revision C, while the data sheet describes device requirements at revision E. The certificate currently supports an identified PT-71 result, not PT-17. The reviewer records all three conflicts without deciding that the certificate has a typographical error. This preserves the actual evidence and avoids attaching a plausible but unsupported certificate to the replacement.\n\nSecond, the reviewer separates device service from electrical and process interfaces. Replacing a transmitter may involve wiring, a pressure connection and effects on the monitored process. The work pack must identify the approved methods and competent roles for the interfaces actually included. The planner does not infer that an instrument-service vendor is authorized for every electrical or pressure activity. The requested work window also needs coordination with the operating owner because a measurement or protective function may be unavailable.\n\nThird, the reviewer examines the proposed test's conclusion. The test form demonstrates an intended controller response but does not state whether it includes the installed field device. The reviewer requests a clear boundary and acceptance source. If the method uses a simulated input, its evidence must be described as simulated response evidence; the untested portion cannot disappear from the final claim.\n\nThe fictional technical owner later supplies the correct asset record, an approved revision reconciliation and a controlled correction confirming which certificate belongs to PT-17. The approved test plan identifies its scope and responsible qualified personnel. The reviewer can now mark the document conflicts resolved with references. This does not mean the physical work has happened. Execution, original results, restoration verification and operating release remain separate future records.\n\nFinal worked decision: the initial package is not ready to support an execution or full-loop acceptance claim. The useful deliverable is a specific discrepancy list and a corrected, traceable pack. The residuals are the actual personnel's qualifications, approved isolation/process method, observed task performance, completed test evidence and authorized release. The paper exercise closes none of those residuals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G67_case2",
+        "title": "Worked fictional case 2: a passed cabinet test and an open suppression",
+        "body": "Fictional facts: West Bend's commissioning summary says “panel complete, all tests passed.” A detailed sheet shows controller response tested using a simulator. The field sensor cable is listed as incomplete. A separate log records temporary alarm suppression, but the closure column is blank. A supervisor asks the document reviewer to change the summary to “ready for operation” because the display looks normal.\n\nThe reviewer starts with the conclusion being requested. Readiness for operation is broader than a passed controller test. The simulator record supports only the response within its stated test boundary. It does not verify the incomplete cable or installed sensor path. A normal display is an observation at one time, not evidence of the full protective function. The reviewer writes these distinctions in the review note and retains the original test report unchanged.\n\nNext, the reviewer reconciles the suppression log. A blank closure field does not prove the suppression remains active, but it also does not prove it has been removed. The correct finding is “disposition not established from the available record.” The designated technical and operating owners must determine actual state using their approved process. The reviewer neither accesses the controller nor tries to restore a setting. Document access does not confer configuration authority.\n\nThe reviewer then reads the project's punch-list rules. The cable item has no approved release disposition, and no responsible person has accepted its limitation for the proposed use. The summary therefore cannot honestly support an unrestricted readiness statement. If an authority later approves a defined restricted use, that decision must specify scope and conditions; the reviewer must not describe it as a completed test of the missing field path.\n\nFor handover, the reviewer records the controller test reference, simulator boundary, incomplete field installation, unresolved suppression disposition and named decision owners. The team schedules qualified completion and verification under the established commissioning plan. No hazardous demonstration is performed to satisfy the desk exercise.\n\nFinal worked decision: preserve the passed test as bounded valid evidence, reject the unsupported expansion of its conclusion, and keep operating release pending its actual prerequisites. The residuals are physical completion, appropriate technical verification, suppression disposition, role-specific practical capability and the site's release decision. This approach protects useful evidence while preventing administrative optimism from becoming a false electrical safety claim.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G67_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G67_check1",
+        "prompt": "A request says instrument service but includes a process line disconnection. What belongs in scope?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Both electrical and process interfaces actually involved."
+          },
+          {
+            "id": "b",
+            "label": "Only the catalog service name."
+          },
+          {
+            "id": "c",
+            "label": "Every possible trade regardless of the job."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G67_check2",
+        "prompt": "PT-24 on a work order and PT-42 on a certificate are similar. How should the reviewer treat them?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Record an unresolved asset identity conflict."
+          },
+          {
+            "id": "c",
+            "label": "Assume transposed digits and accept."
+          },
+          {
+            "id": "d",
+            "label": "Delete the certificate reference."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G67_check3",
+        "prompt": "A test sheet has a result but no acceptance source. What is missing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A more attractive form."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "The approved basis for deciding whether the result is acceptable."
+          },
+          {
+            "id": "d",
+            "label": "A second signature regardless of authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G67_check4",
+        "prompt": "A controller test uses simulated input. What can its record support?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The complete installed field loop automatically."
+          },
+          {
+            "id": "b",
+            "label": "The calibration of every connected sensor."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "The response within the recorded simulated test boundary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G67_check5",
+        "prompt": "A restoration statement conflicts with an unclosed suppression log. What is the review finding?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The final disposition is not established by the available records."
+          },
+          {
+            "id": "b",
+            "label": "Suppression is certainly absent."
+          },
+          {
+            "id": "c",
+            "label": "The reviewer should change the controller."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G67_check6",
+        "prompt": "A person has one transmitter calibration assessment. What establishes scope for different protective-loop work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Task-specific evidence and appropriate employer authorization."
+          },
+          {
+            "id": "c",
+            "label": "The paper-course score alone."
+          },
+          {
+            "id": "d",
+            "label": "The same badge with no additional review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G67_final1",
+        "prompt": "What should a task sentence identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only vendor name."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Action, asset and intended result."
+          },
+          {
+            "id": "d",
+            "label": "Only department and cost code."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G67_final2",
+        "prompt": "Which source should be read before using a drawing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The largest printed symbol only."
+          },
+          {
+            "id": "b",
+            "label": "A remembered drawing from another site."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Its title block, purpose, revision and approval state."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G67_final3",
+        "prompt": "What does a blank interface field risk implying?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That no interface exists when it is actually unknown."
+          },
+          {
+            "id": "b",
+            "label": "That every interface has been tested."
+          },
+          {
+            "id": "c",
+            "label": "That the worker is automatically qualified."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G67_final4",
+        "prompt": "What does a matching instrument tag across documents establish by itself?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "A traceability link requiring further suitability and state evidence."
+          },
+          {
+            "id": "c",
+            "label": "Correct physical installation."
+          },
+          {
+            "id": "d",
+            "label": "Successful functional operation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G67_final5",
+        "prompt": "A calibration record is offered as proof of an entire protective loop. What is the problem?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The font is too small."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Component measurement evidence has been extended beyond its scope."
+          },
+          {
+            "id": "d",
+            "label": "Calibration records can never be useful."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G67_final6",
+        "prompt": "What is the first question for a test plan?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether the result will be green."
+          },
+          {
+            "id": "b",
+            "label": "How quickly a signature can be obtained."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "What technical question and object the test addresses."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G67_final7",
+        "prompt": "A spreadsheet supplies an unexplained acceptable value. What should be requested?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its approved criterion source and units."
+          },
+          {
+            "id": "b",
+            "label": "A copied value from a different site."
+          },
+          {
+            "id": "c",
+            "label": "A rounded value that looks normal."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G67_final8",
+        "prompt": "Does this course teach switching sequences or live measurement connections?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual qualified methods and authorization remain separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes, any learner may improvise them."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after the first quiz."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G67_final9",
+        "prompt": "What does an off-position indicator establish alone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All independent supplies are absent."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "An indicated position, not a complete safe-state or release claim."
+          },
+          {
+            "id": "d",
+            "label": "Equipment is ready for maintenance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G67_final10",
+        "prompt": "A project punch-list category is unfamiliar. What should the reviewer do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume it means cosmetic."
+          },
+          {
+            "id": "b",
+            "label": "Delete it if production is urgent."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Read the approved project meaning and release conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G67_final11",
+        "prompt": "A method was substituted during testing. What evidence matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Recorded approval and the substitute evidence limitations."
+          },
+          {
+            "id": "b",
+            "label": "That it produces a number with the same unit."
+          },
+          {
+            "id": "c",
+            "label": "That a technician preferred it."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G67_final12",
+        "prompt": "How should an unexpected original reading be handled?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Retain it and route its significance for technical review."
+          },
+          {
+            "id": "c",
+            "label": "Change it to the average without a record."
+          },
+          {
+            "id": "d",
+            "label": "Remove it when a later reading is better."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G67_final13",
+        "prompt": "What distinguishes a controlled correction from concealed alteration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No one can identify the correction."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Original entry, reason, author and date remain traceable."
+          },
+          {
+            "id": "d",
+            "label": "Only the final neat value survives."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G67_final14",
+        "prompt": "Which handover statement is most useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All good."
+          },
+          {
+            "id": "b",
+            "label": "Panel done, probably safe."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Test complete within stated configuration; technical acceptance pending."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G67_final15",
+        "prompt": "Who determines practical assessment conditions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An appropriately qualified assessor under the actual employer arrangement."
+          },
+          {
+            "id": "b",
+            "label": "The document reviewer acting alone."
+          },
+          {
+            "id": "c",
+            "label": "Any learner seeking realism."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G67_final16",
+        "prompt": "In Cedar Yard, what is the initial certificate conclusion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "PT-71 evidence cannot yet be assigned to PT-17."
+          },
+          {
+            "id": "c",
+            "label": "It is certainly PT-17 with a typo."
+          },
+          {
+            "id": "d",
+            "label": "It proves every transmitter at the yard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G67_final17",
+        "prompt": "Cedar Yard resolves the document conflicts. What has happened physically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The loop has been energized."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No physical execution is established by document reconciliation."
+          },
+          {
+            "id": "d",
+            "label": "The transmitter has been installed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G67_final18",
+        "prompt": "In West Bend, does a normal display close the incomplete field path?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the supervisor is confident."
+          },
+          {
+            "id": "b",
+            "label": "Yes, appearance proves function."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; it is not full-loop verification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G67_final19",
+        "prompt": "West Bend has no suppression closure record. What must the reviewer avoid claiming?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That the suppression is verified removed."
+          },
+          {
+            "id": "b",
+            "label": "That further evidence is needed."
+          },
+          {
+            "id": "c",
+            "label": "That the owner must resolve disposition."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G67_final20",
+        "prompt": "What does knowledge-course completion close?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "This bounded knowledge component after all correct answers or acknowledged remediation."
+          },
+          {
+            "id": "c",
+            "label": "All practical electrical duties."
+          },
+          {
+            "id": "d",
+            "label": "The site operating release."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G67_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G67_lesson1",
+          "questionIds": [
+            "G67_check1"
+          ]
+        },
+        {
+          "lessonId": "G67_lesson2",
+          "questionIds": [
+            "G67_check2"
+          ]
+        },
+        {
+          "lessonId": "G67_lesson3",
+          "questionIds": [
+            "G67_check3"
+          ]
+        },
+        {
+          "lessonId": "G67_lesson4",
+          "questionIds": [
+            "G67_check4"
+          ]
+        },
+        {
+          "lessonId": "G67_lesson5",
+          "questionIds": [
+            "G67_check5"
+          ]
+        },
+        {
+          "lessonId": "G67_lesson6",
+          "questionIds": [
+            "G67_check6"
+          ]
+        },
+        {
+          "lessonId": "G67_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G67_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G67_final",
+          "questionIds": [
+            "G67_final1",
+            "G67_final2",
+            "G67_final3",
+            "G67_final4",
+            "G67_final5",
+            "G67_final6",
+            "G67_final7",
+            "G67_final8",
+            "G67_final9",
+            "G67_final10",
+            "G67_final11",
+            "G67_final12",
+            "G67_final13",
+            "G67_final14",
+            "G67_final15",
+            "G67_final16",
+            "G67_final17",
+            "G67_final18",
+            "G67_final19",
+            "G67_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G67_check1": "The work description governs the interfaces; the service label does not remove a pressure connection.",
+        "G67_check2": "A plausible typographical explanation is not traceability evidence.",
+        "G67_check3": "A number and signature do not identify the technical criterion.",
+        "G67_check4": "A test result applies to its actual configuration and exclusions.",
+        "G67_check5": "Conflicting records require authorized verification, not an assumption or configuration action.",
+        "G67_check6": "Related experience is background evidence; it is not proof of the different task skills.",
+        "G67_final1": "These elements make the assignment and its boundary reviewable.",
+        "G67_final2": "A drawing must be suited and current for the proposed use.",
+        "G67_final3": "Explicit unknowns preserve uncertainty for technical resolution.",
+        "G67_final4": "Consistent identifiers are useful but do not demonstrate physical performance.",
+        "G67_final5": "Calibration supports the identified measurement claim, not every connected function.",
+        "G67_final6": "Test purpose determines the evidence needed and the limits of its conclusion.",
+        "G67_final7": "Acceptance needs a defined quantity and approved basis.",
+        "G67_final8": "Desk interpretation does not confer hazardous electrical execution skills.",
+        "G67_final9": "Position, isolation, verification and release are different evidence claims.",
+        "G67_final10": "Category labels have no universal readiness meaning.",
+        "G67_final11": "Technical equivalence requires an authorized basis, not visual similarity.",
+        "G67_final12": "Original observations may reveal intermittent issues or method problems.",
+        "G67_final13": "A correction should preserve the record history.",
+        "G67_final14": "A bounded state tells the next role what remains undecided.",
+        "G67_final15": "Practical assessment needs relevant competence and a safe planned method.",
+        "G67_final16": "The fictional mismatch remains unresolved until identity evidence is supplied.",
+        "G67_final17": "A corrected pack is preparation evidence, not execution evidence.",
+        "G67_final18": "The simulator and missing cable limit what has been demonstrated.",
+        "G67_final19": "Lack of closure evidence cannot support a verified restoration claim.",
+        "G67_final20": "Original scores remain recorded and practical capability and release remain separate."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

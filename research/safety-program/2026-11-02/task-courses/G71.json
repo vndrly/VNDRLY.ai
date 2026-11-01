@@ -1,0 +1,901 @@
+{
+  "courseId": "G71",
+  "gapGroupId": "TG22",
+  "title": "Calibration reasoning, uncertainty and instrument-service evidence",
+  "description": "Teach indication-error arithmetic, correction signs, repeatability, uncertainty interpretation and decision-rule reasoning using fictional data.",
+  "purpose": "Teach indication-error arithmetic, correction signs, repeatability, uncertainty interpretation and decision-rule reasoning using fictional data.",
+  "audience": [
+    "Instrument service trainees",
+    "Calibration technicians in a theory module",
+    "Measurement result reviewers"
+  ],
+  "sources": [
+    {
+      "title": "NIST Technical Note1297 uncertainty guidance",
+      "url": "https://www.nist.gov/pml/nist-technical-note-1297"
+    },
+    {
+      "title": "NIST policy on metrological traceability",
+      "url": "https://www.nist.gov/calibrations/traceability"
+    },
+    {
+      "title": "NIST traceability questions and policy",
+      "url": "https://www.nist.gov/metrology/metrological-traceability"
+    }
+  ],
+  "practicalBoundary": "This course is not instrument-specific calibration qualification, laboratory accreditation, electrical qualification or process-connection authority. Fictional numbers and decision rules are teaching examples only, never equipment limits.",
+  "vendorEvidenceRequired": [
+    "Actual instrument/function/range and measurand",
+    "Approved method, reference chain and uncertainty model",
+    "Specified acceptance source and decision rule",
+    "As-found/as-left and instrument-history requirements",
+    "Safe contamination preparation and electrical/process interfaces"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual instrument/method preparation, reference use and faithful recording",
+    "Competent evaluation of method-specific uncertainty and results within role",
+    "Observed safe handling, anomaly recognition and technical handover"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G71_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for calibration reasoning, uncertainty and instrument-service evidence. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course is not instrument-specific calibration qualification, laboratory accreditation, electrical qualification or process-connection authority. Fictional numbers and decision rules are teaching examples only, never equipment limits.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G71_lesson1",
+        "title": "1. Define the measurand before choosing a number",
+        "body": "Metrology begins with a clear statement of what is being measured. The measurand is the quantity intended to be measured, described with enough detail for the purpose. Temperature alone may be insufficient: the temperature of which object, at which location, under what conditions and at what time? Pressure can mean different reference bases. A dimension can refer to a specified feature and condition. A useful measurement request makes these distinctions explicit before anyone compares results.\n\nSeparate the instrument indication from the measurement result. The displayed value is an input to a measurement process. Corrections, units, conditions and uncertainty may be needed before a result can be used for the intended decision. Writing down more digits does not create more information. If an instrument resolves one unit, copying a calculator output with many decimal places can imply unsupported precision.\n\nCalibration, adjustment and verification are different activities. Calibration establishes a relationship between indications and reference values under stated conditions. Adjustment changes an instrument's response. Verification assesses whether specified requirements are met. An instrument can be calibrated without being adjusted, and it can be adjusted without the final result proving fitness for a particular task. Read the service scope rather than assuming that calibrated means repaired, adjusted and accepted for every use.\n\nPaper exercise: two reports say 20 degrees, but one concerns room air near a door and the other concerns liquid in a closed sample container. Their numbers cannot be compared as if they describe the same measurand. Rewrite each result with object, location, unit and conditions. The exercise needs no actual temperature measurement.\n\nNIST uncertainty and traceability guidance supports disciplined measurement reporting. It does not approve this course as a calibration program or designate the learner a metrologist. Actual instrument service, safe connection to process or electrical systems and authority to accept equipment remain subject to their own qualified methods.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G71_lesson2",
+        "title": "2. Calculate indication error and apply a stated correction",
+        "body": "Use a declared sign convention before calculating. In this lesson, indication error equals indicated value minus reference value. Correction equals reference value minus indicated value, so it is the negative of error. Other records may use different wording; always read the definition. A correct arithmetic operation with the wrong convention can create a wrong practical result.\n\nFictional paper example: a reference value is 100.0 units and an instrument indicates 100.8 units. Error under our convention is 100.8 minus 100.0, or positive 0.8 units. The correction associated with that point is negative 0.8 units. If the approved method permits use of that correction under the relevant conditions, an indicated 100.8 plus the correction gives 100.0 units. This arithmetic is not permission to apply a correction at a different point, range or instrument.\n\nDo not confuse percent of reading with percent of span. In a fictional scale spanning 0 to 200 units, an error of 1 unit is 0.5 percent of span. At an indicated value of 50 units, the same numerical error is 2 percent of that value. These are different denominators and different statements. A specification using one cannot be assessed using the other just because both contain a percent symbol.\n\nRecord unit conversions explicitly. A result and criterion must describe compatible quantities and units before comparison. An unexplained number such as 0.5 is not interpretable. Keep the original value, conversion basis and converted value in the exercise so that another person can reconstruct the calculation. Do not convert pressure reference bases or other physically different definitions using a simple unit factor when additional information is needed.\n\nPaper exercise: at a reference of 40.0 units, a device reads 39.4. Error is negative 0.6 and correction positive 0.6 under the stated convention. Explain the sign in words: the device reads low at that point. The purpose is careful interpretation, not an instruction to adjust a real device.\n\nAdditional worked unit check: a fictional ruler report gives an indication of 12.04 millimeters against a reference 12.00 millimeters. With error defined as indication minus reference, the error is positive 0.04 millimeters, which is 40 micrometers because one millimeter equals 1000 micrometers. The associated correction is negative 40 micrometers. If a later worksheet labels the same error 0.04 micrometers, the values are not equivalent: the unit label changes the numerical meaning by a factor of 1000. Preserve the original records and request a controlled correction. This exercise teaches sign and unit discipline; it does not establish any real dimensional tolerance or authorize adjustment of an instrument.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G71_lesson3",
+        "title": "3. Distinguish repeatability, bias, resolution and drift",
+        "body": "Repeated observations reveal variation under the stated repeated conditions. They do not by themselves establish agreement with a reference. A device can give nearly identical readings that are all displaced from the reference. Conversely, readings can vary around a reference without a large average displacement. These are different problems and can require different technical investigation.\n\nFictional series A reads 10.4, 10.4 and 10.4 against a stated reference of 10.0 units. The series is tightly grouped but displaced by 0.4 under the defined comparison. Series B reads 9.8, 10.0 and 10.2; its arithmetic average is 10.0 but it has observable spread. Neither short exercise alone is a complete uncertainty evaluation or a real calibration verdict. It simply shows why good repeatability is not the same as small error and a matching average does not erase variation.\n\nResolution is the smallest distinguishable indication step in the relevant display or reading system. It limits what can be observed, but it is not the whole uncertainty. Reference quality, method, environmental effects, operator interpretation and other contributors can matter. A display showing extra decimal places does not guarantee that the underlying quantity is known to those places.\n\nDrift is change in response over time or use. Comparing suitable historical calibration results can reveal a trend, but results must be comparable in quantity, conditions and method. A shift between two reports may reflect an actual change, a different setup or incompatible definitions. The qualified technical owner evaluates the evidence and decides its consequence for the instrument and prior measurements.\n\nPaper exercise: an instrument's earlier report shows error of positive 0.1 at a specified point; a later comparable report shows positive 0.6. Record the apparent change and the need for technical evaluation. Do not set a universal recalibration interval from these two numbers or conclude that every previous result is invalid. The significance depends on actual use and the measurement-assurance program.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G71_lesson4",
+        "title": "4. Interpret uncertainty without turning it into a tolerance",
+        "body": "Measurement uncertainty describes the dispersion of values reasonably associated with the measured quantity under the stated evaluation. It is not a mistake allowance and not automatically a product tolerance. A tolerance states permitted variation or requirements for the item or task. Uncertainty describes knowledge about the result. A result can be traceable yet unsuitable for a decision if the associated uncertainty is too large for the measurement need.\n\nRead the report's uncertainty statement. Determine the quantity and units, whether the value is standard or expanded uncertainty, and what coverage factor or stated basis accompanies it. Do not compare two numbers called uncertainty without checking these definitions. NIST's guidance distinguishes evaluation and reporting concepts; an actual uncertainty budget requires the real measurement model and competent evaluation.\n\nSafe paper example: a fictional estimate is 50.0 units with a stated expanded uncertainty of 0.4 units. For visualization only, draw the interval from 49.6 to 50.4. This is not an absolute guarantee that the quantity lies inside the interval and is not a universal confidence claim. Use the report's actual coverage statement. The diagram helps the learner see why a result near a decision boundary needs an approved decision rule.\n\nDo not add unrelated uncertainty values blindly. Contributors may have different units, distributions, sensitivity coefficients or correlations. A simple sum of certificate values can be technically wrong, while ignoring them is also wrong. The role-level lesson is to identify contributors and request the approved uncertainty model when needed. This course does not authorize creating a laboratory uncertainty claim or using a guessed coverage factor.\n\nPaper exercise: a reference certificate states uncertainty in one unit while the service sheet omits uncertainty entirely. The reviewer should request the method's result evaluation, not copy the reference uncertainty as if it were the entire measurement uncertainty. The measurement process adds its own contributors.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G71_lesson5",
+        "title": "5. Apply a supplied decision rule and preserve as-found evidence",
+        "body": "A conformity decision compares evidence with specified requirements using an agreed decision rule. The rule matters especially near a limit. There is no universal online-course rule that every result inside a numerical tolerance must pass regardless of uncertainty. Identify the actual acceptance source, the defined rule and the person authorized to apply it. If the rule is absent, report the result without inventing a pass/fail claim.\n\nFictional desk example: a project supplies an exercise-only acceptance band of 9.0 to 11.0 units and a stated rule requiring the illustrated result interval to remain inside that band. A result is 10.8 with the supplied interval 10.5 to 11.1. Under this exercise's rule, the condition is not satisfied because the interval extends above 11.0. These invented numbers and rule teach logic only; they are not equipment limits or a recommended real decision rule.\n\nNow change only the fictional rule: the technical owner requests a report of measured value and uncertainty with no conformity statement. The correct deliverable is that report, not an automatic rejection. This comparison shows why the criterion and decision rule must be known before a pass mark is assigned. A laboratory or employer may use a different approved rule suited to its actual requirements.\n\nAs-found results describe condition before adjustment or repair. As-left results describe condition after the specified work. Both can matter. A satisfactory as-left result does not erase an out-of-tolerance as-found result or its possible consequence for earlier use. The responsible technical owner evaluates affected measurements through the actual program. Preserve original observations and work history so that this evaluation is possible.\n\nPaper exercise: a report gives only a passed as-left result after adjustment. Ask whether as-found data were recorded and what review is required for prior use. Do not reconstruct missing readings from the adjustment amount or assume that all historical measurements were either good or bad.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G71_lesson6",
+        "title": "6. Review traceability and instrument-specific practical capability",
+        "body": "Metrological traceability belongs to a measurement result and its documented connection to a reference through calibration links with associated uncertainty. It is not created merely by printing NIST traceable on an instrument sticker. Review the claimed result, references, relevant calibration evidence, method and assurance arrangements. Traceability also does not guarantee fitness for a particular measurement need; the purpose and uncertainty still matter.\n\nInstrument identity and function are essential. A multifunction instrument may have calibration evidence for some functions or ranges but not others. A certificate for a similar serial number cannot be assumed to cover the device in use. A result from a laboratory under stated conditions may not directly establish field performance under different temperature, contamination, vibration or installation conditions. The qualified method determines how those effects are handled.\n\nBefore actual instrument service, identify process contamination and connection hazards. A device removed from a process may retain hazardous material; an electrical instrument may involve hazardous energy. Metrology theory does not authorize opening a process line, touching electrical parts or testing an unknown sample. The employer must establish safe preparation, decontamination, approved equipment/methods and competent roles for the actual interfaces.\n\nA safe desk assessment uses fictional data and certificates. Ask the learner to calculate error under a stated convention, identify incompatible units, explain a repeatability-versus-bias example and apply a supplied decision rule. Practical assessment is different: a competent assessor must observe the actual instrument/method skills under a safe approved arrangement. It should include faithful records, appropriate handling, method use, result interpretation and recognition of limitations.\n\nThe final handoff should separate instrument condition, measurement result, acceptance decision and authorization for use. Reference as-found/as-left data, uncertainty basis, traceability evidence, limitations and the responsible technical owner. Course completion records the bounded knowledge taught here. Instrument-specific service skill, laboratory scope/accreditation where required, contamination preparation and actual technical release remain residuals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G71_case1",
+        "title": "Worked fictional case 1: the low-reading indicator",
+        "body": "Fictional facts: Harbor Workshop reviews indicator I-9. At a stated reference of 80.0 units, its as-found indication is 79.2. The report defines error as indication minus reference. The instrument is adjusted, and its as-left indication at the same stated point is 80.0. A planner wants to retain only the final pass page.\n\nFirst calculate the as-found error under the declared convention: 79.2 minus 80.0 equals negative 0.8 units. The associated correction at that point is positive 0.8. The device read low in this comparison. These are paper arithmetic results; they do not authorize applying that correction throughout the range or adjusting the real indicator.\n\nSecond, preserve both states. The as-left comparison supports the post-adjustment result at the stated point and conditions. It cannot erase the as-found condition. The technical owner needs as-found evidence to assess whether prior measurements require review. The planner should not conclude that every historical result is invalid, because actual use, criteria and other evidence matter.\n\nThird, inspect the rest of the report. If the acceptance source and uncertainty/decision basis are missing, a pass mark alone is not a complete conformity explanation. The reviewer requests those references and confirms instrument identity and relevant function/range. A single point does not establish an entire range unless the approved method and evidence support that conclusion.\n\nIn the fictional resolution, the vendor supplies the complete original report, method reference, uncertainty statement and acceptance basis. The owner evaluates prior use under the existing assurance program. Any resulting actions are documented separately from the service result. No historical measurements are silently rewritten.\n\nFinal decision: retain as-found and as-left records, calculate signs consistently and bound the conclusion. Residuals remain instrument/method practical competence, actual uncertainty evaluation and technical disposition of prior use and return to service. The learner demonstrates arithmetic and record reasoning, not hands-on calibration authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G71_case2",
+        "title": "Worked fictional case 2: a traceability label near a decision boundary",
+        "body": "Fictional facts: Cedar Lab receives a fictional dimensional result of 10.8 units with an illustrated interval of 10.5 to 11.1. The exercise criterion is 9.0 to 11.0, and its supplied decision rule requires the interval to remain inside the band. A sticker says NIST traceable. The purchaser asks for an immediate pass because the measured value is below 11.0.\n\nThe learner first applies the stated exercise rule. The interval extends to 11.1, which exceeds the upper band of 11.0. Therefore the supplied condition is not satisfied. The calculation does not create a real product requirement; all figures and the rule are fictional teaching inputs. The key is to use the actual agreed decision rule rather than a convenient alternative.\n\nNext, the learner distinguishes traceability from fitness for purpose. A sticker does not establish the result's full calibration chain, uncertainty evaluation or suitability for this decision. The reviewer requests the supporting measurement evidence and relevant method. Even a properly traceable result can have uncertainty too large for the intended decision.\n\nThe purchaser then proposes using only the reference standard's certificate uncertainty. The learner identifies why that would omit contributors from the actual measurement process. The qualified metrology authority must evaluate the real model; the learner should not build a budget by adding unrelated certificate numbers or selecting an arbitrary coverage factor.\n\nIn a second version of the exercise, the owner requests reporting value and uncertainty without a conformity statement. The correct output changes accordingly: report the evidence and limitation without inventing a pass or fail. This demonstrates that measurement and decision are connected but distinct activities.\n\nFinal decision: follow the stated fictional rule for the first version, preserve the full result and request traceability/uncertainty support. Exact residuals are actual measurement-method competence, suitable uncertainty evaluation, governing acceptance rule and authorized technical disposition. A label and an online score cannot supply those elements.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G71_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G71_check1",
+        "prompt": "What should a measurand definition identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The intended quantity with relevant object and conditions."
+          },
+          {
+            "id": "b",
+            "label": "Only a number."
+          },
+          {
+            "id": "c",
+            "label": "Only instrument color."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G71_check2",
+        "prompt": "Reference is 100.0 and indication 100.8; error is indication minus reference. What is error?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Positive 0.8 units."
+          },
+          {
+            "id": "c",
+            "label": "Negative 0.8 units."
+          },
+          {
+            "id": "d",
+            "label": "Zero."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G71_check3",
+        "prompt": "Which series shows tight grouping but displacement from a 10.0 reference?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Neither can be compared."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "10.4,10.4,10.4."
+          },
+          {
+            "id": "d",
+            "label": "9.8,10.0,10.2."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G71_check4",
+        "prompt": "Is uncertainty the same as tolerance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, always."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if units match."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; result knowledge and specified permitted variation differ."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G71_check5",
+        "prompt": "An as-left result passes after adjustment. What happens to as-found evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Retain it for technical review of prior condition and use."
+          },
+          {
+            "id": "b",
+            "label": "Delete it."
+          },
+          {
+            "id": "c",
+            "label": "Rewrite it as passing."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G71_check6",
+        "prompt": "Does a traceability sticker alone establish a results full traceability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; the documented result chain and uncertainty evidence matter."
+          },
+          {
+            "id": "c",
+            "label": "Yes, the wording suffices."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if shiny."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G71_final1",
+        "prompt": "Does a display with more digits guarantee lower uncertainty?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if digital."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; display resolution is only one contributor."
+          },
+          {
+            "id": "d",
+            "label": "Yes, always."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G71_final2",
+        "prompt": "Is calibration automatically adjustment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, by definition."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if invoiced."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; establishing relationships and changing response differ."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G71_final3",
+        "prompt": "Reference 40.0 and indication 39.4 under the taught convention give what correction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Positive 0.6 units."
+          },
+          {
+            "id": "b",
+            "label": "Negative 0.6 units."
+          },
+          {
+            "id": "c",
+            "label": "Positive 39.4 units."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G71_final4",
+        "prompt": "A 1 unit error over a 200 unit span is what percentage of span?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "0.5 percent."
+          },
+          {
+            "id": "c",
+            "label": "2 percent."
+          },
+          {
+            "id": "d",
+            "label": "200 percent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G71_final5",
+        "prompt": "The same 1 unit error relative to 50 units is what percentage?",
+        "options": [
+          {
+            "id": "a",
+            "label": "50 percent."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "2 percent."
+          },
+          {
+            "id": "d",
+            "label": "0.5 percent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G71_final6",
+        "prompt": "Can a point correction be applied anywhere automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every point is identical."
+          },
+          {
+            "id": "b",
+            "label": "Yes, to another instrument."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; relevant range, conditions and approved method govern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G71_final7",
+        "prompt": "What does an average equal to the reference fail to erase?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Variation among observations."
+          },
+          {
+            "id": "b",
+            "label": "The existence of units."
+          },
+          {
+            "id": "c",
+            "label": "The instrument identity."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G71_final8",
+        "prompt": "What does a change between comparable reports suggest?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "A change needing competent drift/consequence evaluation."
+          },
+          {
+            "id": "c",
+            "label": "A universal recalibration interval."
+          },
+          {
+            "id": "d",
+            "label": "That all past results are invalid."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G71_final9",
+        "prompt": "For 50.0 with illustrated plus/minus 0.4, what interval is drawn?",
+        "options": [
+          {
+            "id": "a",
+            "label": "49.0 to 51.0."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "49.6 to 50.4."
+          },
+          {
+            "id": "d",
+            "label": "50.0 to 50.4."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G71_final10",
+        "prompt": "Does that interval guarantee the quantity is inside it?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, absolutely."
+          },
+          {
+            "id": "b",
+            "label": "Yes, regardless of evaluation."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; use the actual uncertainty coverage statement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G71_final11",
+        "prompt": "Can a reference certificates uncertainty replace the entire process uncertainty?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual process contributors must be evaluated."
+          },
+          {
+            "id": "b",
+            "label": "Yes, always."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if smaller."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G71_final12",
+        "prompt": "Should unrelated uncertainty numbers be added blindly?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; model, units, sensitivities and correlations matter."
+          },
+          {
+            "id": "c",
+            "label": "Yes, all sums are valid."
+          },
+          {
+            "id": "d",
+            "label": "Ignore all contributors."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G71_final13",
+        "prompt": "Under the fictional inside-band rule,10.5 to 11.1 versus 9.0 to 11.0 gives what?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A real equipment prohibition."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "The supplied inside-band condition is not satisfied."
+          },
+          {
+            "id": "d",
+            "label": "Automatic pass because 10.8 is below 11.0."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G71_final14",
+        "prompt": "If no conformity decision is requested, what should be reported?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An automatic rejection."
+          },
+          {
+            "id": "b",
+            "label": "A fabricated pass."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "The required value, uncertainty and limitations without invented pass/fail."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G71_final15",
+        "prompt": "Does a certificate for one multifunction range cover every function automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; review the actual scope."
+          },
+          {
+            "id": "b",
+            "label": "Yes, all buttons are covered."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if serial matches."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G71_final16",
+        "prompt": "In Harbor Workshop, what is 79.2 minus 80.0?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Negative 0.8 units."
+          },
+          {
+            "id": "c",
+            "label": "Positive 0.8 units."
+          },
+          {
+            "id": "d",
+            "label": "Zero."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G71_final17",
+        "prompt": "Does Harbors as-left point establish the whole range automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, after adjustment."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; the method and coverage evidence determine that."
+          },
+          {
+            "id": "d",
+            "label": "Yes, any point covers all."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G71_final18",
+        "prompt": "In Cedar Lab, what does NIST traceable fail to prove by itself?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That any label exists."
+          },
+          {
+            "id": "b",
+            "label": "That units can be written."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Fitness for the actual decision and complete result evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G71_final19",
+        "prompt": "Can metrology theory authorize opening a contaminated process connection?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual safe preparation and qualified methods remain separate."
+          },
+          {
+            "id": "b",
+            "label": "Yes, for calibration."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after remediation."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G71_final20",
+        "prompt": "What must a real practical assessment observe?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Actual instrument/method skills under a qualified safe arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Only this quiz."
+          },
+          {
+            "id": "d",
+            "label": "Only an invoice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G71_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G71_lesson1",
+          "questionIds": [
+            "G71_check1"
+          ]
+        },
+        {
+          "lessonId": "G71_lesson2",
+          "questionIds": [
+            "G71_check2"
+          ]
+        },
+        {
+          "lessonId": "G71_lesson3",
+          "questionIds": [
+            "G71_check3"
+          ]
+        },
+        {
+          "lessonId": "G71_lesson4",
+          "questionIds": [
+            "G71_check4"
+          ]
+        },
+        {
+          "lessonId": "G71_lesson5",
+          "questionIds": [
+            "G71_check5"
+          ]
+        },
+        {
+          "lessonId": "G71_lesson6",
+          "questionIds": [
+            "G71_check6"
+          ]
+        },
+        {
+          "lessonId": "G71_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G71_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G71_final",
+          "questionIds": [
+            "G71_final1",
+            "G71_final2",
+            "G71_final3",
+            "G71_final4",
+            "G71_final5",
+            "G71_final6",
+            "G71_final7",
+            "G71_final8",
+            "G71_final9",
+            "G71_final10",
+            "G71_final11",
+            "G71_final12",
+            "G71_final13",
+            "G71_final14",
+            "G71_final15",
+            "G71_final16",
+            "G71_final17",
+            "G71_final18",
+            "G71_final19",
+            "G71_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G71_check1": "A result needs a sufficiently defined quantity.",
+        "G71_check2": "100.8 minus 100.0 is positive 0.8 under the stated convention.",
+        "G71_check3": "Repeatability does not establish small error.",
+        "G71_check4": "Uncertainty and requirements serve different purposes.",
+        "G71_check5": "Adjustment cannot erase historical condition.",
+        "G71_check6": "Traceability is an evidence property of the result.",
+        "G71_final1": "Extra digits do not create knowledge.",
+        "G71_final2": "Service scope must state what was actually performed.",
+        "G71_final3": "The device reads low, so the associated correction is positive.",
+        "G71_final4": "1 divided by 200 times 100 equals 0.5 percent.",
+        "G71_final5": "1 divided by 50 times 100 equals 2 percent; denominators matter.",
+        "G71_final6": "A correction is bounded by its evidence and model.",
+        "G71_final7": "Matching an average does not remove spread.",
+        "G71_final8": "Trend evidence requires use-specific interpretation.",
+        "G71_final9": "Subtract and add 0.4 for the supplied visualization.",
+        "G71_final10": "The visualization is not an absolute bound or universal probability claim.",
+        "G71_final11": "The reference is only part of the measurement process.",
+        "G71_final12": "Competent uncertainty evaluation needs the actual model.",
+        "G71_final13": "The upper interval exceeds the fictional band; these are exercise inputs only.",
+        "G71_final14": "Reporting evidence and making a conformity decision differ.",
+        "G71_final15": "Identity alone does not expand function/range scope.",
+        "G71_final16": "The declared error sign must be followed.",
+        "G71_final17": "A single comparison cannot be expanded without supporting basis.",
+        "G71_final18": "Traceability wording is not a universal suitability guarantee.",
+        "G71_final19": "Measurement knowledge does not remove process hazards.",
+        "G71_final20": "Knowledge scores cannot demonstrate hands-on method performance."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

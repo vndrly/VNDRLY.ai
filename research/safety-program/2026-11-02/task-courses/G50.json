@@ -1,0 +1,897 @@
+{
+  "courseId": "G50",
+  "gapGroupId": "G01",
+  "title": "Shipment discrepancy review: build a defensible hazardous-material handoff",
+  "description": "reconcile a shipment work packet, identify contradictions and issue an accurate hold or handoff without inventing classifications",
+  "purpose": "reconcile a shipment work packet, identify contradictions and issue an accurate hold or handoff without inventing classifications",
+  "audience": [
+    "Shipping coordinators",
+    "Assigned transport document reviewers",
+    "Loading supervisors"
+  ],
+  "practicalBoundary": "This desk course does not qualify classification, package selection or closure, tank transfer, driving, emergency response or any transport mode. Employer function/material/mode instruction, testing, certification and observed assigned handling skills remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual material identity and authorized transport classification decision, including applicable mode/jurisdiction",
+    "Approved current package/closure/loading instructions for the actual cargo",
+    "Employee-specific function/mode training, test and employer certification record",
+    "Current shipping/emergency information and discrepancy-resolution authority",
+    "Applicable driver endorsement or modal authority only where the actual duty requires it"
+  ],
+  "practicalAssessmentRequired": [
+    "Competent employer hazmat assessor observes the assigned document preparation and actual package identification against the approved shipment requirements",
+    "Qualified loading/transfer assessor observes equipment-specific containment checks, communication and safe handoff in a controlled exercise",
+    "Assessor records scope, material/mode, observed criteria, limitations and authorized corrective action"
+  ],
+  "sources": [
+    {
+      "title": "PHMSA hazardous-material training requirements",
+      "url": "https://www.phmsa.dot.gov/about-phmsa/hazardous-materials-training-requirements"
+    },
+    {
+      "title": "FMCSA — How to comply with federal hazardous materials regulations",
+      "url": "https://www.fmcsa.dot.gov/regulations/hazardous-materials/how-comply-federal-hazardous-materials-regulations"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G50_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Shipment discrepancy review: build a defensible hazardous-material handoff\n\nThis course teaches a bounded task: reconcile a shipment work packet, identify contradictions and issue an accurate hold or handoff without inventing classifications Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis desk course does not qualify classification, package selection or closure, tank transfer, driving, emergency response or any transport mode. Employer function/material/mode instruction, testing, certification and observed assigned handling skills remain separate. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.\n\nPrimary-source reading: [PHMSA hazardous-material training requirements](https://www.phmsa.dot.gov/about-phmsa/hazardous-materials-training-requirements); [FMCSA — How to comply with federal hazardous materials regulations](https://www.fmcsa.dot.gov/regulations/hazardous-materials/how-comply-federal-hazardous-materials-regulations). Read the scope and task guidance together with the actual employer procedure. These references do not issue this course's learner any license or work authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G50_lesson1",
+        "title": "1. Establish the shipment identity before comparing documents",
+        "body": "A shipment review begins with a stable identity. Collect the order reference, consignor, receiving destination, material or product reference, batch or source when relevant, package or tank identity, quantity basis and planned transport mode. Those fields describe what is actually being offered. A purchase-order line saying “fluid service” is a commercial description; it does not establish what a particular tank contains. The reviewer connects the transaction to the actual material using the employer's accepted source records.\n\nUse an identity crosswalk on paper: order 417, product reference M-8, source batch B-16, container T-62 and shipment packet revision C. Each connection should have a source, not just a repeated claim. If a dispatch email uses T-26 while the release record uses T-62, record the mismatch exactly. Do not silently transpose the digits because one arrangement seems more plausible. A corrected document must come from the person authorized to correct the underlying record.\n\nDistinguish identity from classification. The material name and safety data sheet help locate the correct information, but the reviewer must not derive a transport classification by matching a familiar word. Composition, concentration, form, transport mode and applicable rules may matter. Refer a missing or inconsistent classification to the designated qualified shipping function. An old packet for a similar product is a lead for investigation, not authority for this load.\n\nDefine your own role before approving anything. A dispatcher may check completeness, a trained preparer may create regulated documents, and an authorized loading person may verify the physical package. One signature must not imply that all three duties were demonstrated. On the review sheet, state exactly what you checked and what remains with another role. This makes a handoff useful rather than merely reassuring.\n\nThe immediate task product is a review header with a single shipment reference, a list of source revisions and any identity contradictions. If identity cannot be established, stop the affected preparation or handoff through the employer's procedure. Do not ask a loader to inspect an unidentified substance by smell, opening or sampling to resolve a desk discrepancy.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G50_lesson2",
+        "title": "2. Reconcile fields without manufacturing a shipping description",
+        "body": "Compare corresponding fields across the authorized packet, the release record and the information the assigned worker is expected to use. Read full identifiers rather than recognizing a few words. Distinguish a product's commercial name from the regulated shipping description. Where the actual shipment requires specific shipping-description elements, verify them against the approved classification record and applicable employer procedure; do not supply missing wording from memory.\n\nMark each comparison as consistent, inconsistent, absent or outside the reviewer's scope. These four outcomes prevent an empty field from being treated as agreement. A document can be internally neat yet describe the wrong load. Conversely, a changed trade name does not by itself prove that the underlying classification changed. Send the specific discrepancy to the owner of that decision and preserve the original source.\n\nQuantity review requires a stated unit and basis. If a fictional order requests 12 drums and a loading list records 10 drums, the shortage is two drums relative to that order. This arithmetic says nothing about an acceptable package, legal quantity limit, fill level or safe load. If one record states kilograms and another liters, no direct numerical comparison is valid without an authorized material-specific conversion basis. Do not assume a liquid has the density of water.\n\nReview the destination as carefully as the product. A receiving company can have several facilities with different capabilities and approved materials. An address correction can therefore alter the practical acceptance question. Resolve a changed destination through dispatch and the responsible receiving contact, then ensure the final documents agree. A driver should not have to infer which destination or contact is current while traveling.\n\nUse discrepancy language that supports action: “Loading list revision B names 12 drums; order release revision D names 10 drums; preparer to reconcile the quantity before handoff.” Avoid “paperwork wrong” or “probably fine.” Record who owns the correction and which downstream documents must be regenerated. The review is complete only when the corrected authoritative record and the associated copies are consistent, or an explicit hold preserves the unresolved issue.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G50_lesson3",
+        "title": "3. Review packaging evidence and its limits",
+        "body": "A package is a physical containment system, not just a description on a spreadsheet. The packet may include its identity, specification information, inspection status, permitted service, closure instruction and relevant maintenance or test records. The exact evidence depends on the package and task. A reviewer checks that the evidence refers to the actual package and current intended use; this course does not select a package or teach a closure method.\n\nCompare serial or container identifiers character by character. A valid inspection report for T-62 cannot establish T-26's condition. Compare dates and scope as well. A report may cover an external inspection while the actual task requires other evidence under the employer's approved process. A photograph can help document a visible condition but cannot prove an unobserved internal condition, material compatibility or correct closure.\n\nWhen reviewing a closure record, identify the instruction revision and the person authorized to perform and verify the operation. Do not substitute a verbal “we always tighten it that way” for the applicable instructions. The practical assessor must later observe the actual assigned method under controlled conditions, using the relevant package and tools. The classroom reviewer can find a missing record but cannot certify an unobserved closure by checking a box.\n\nVisible damage or suspected leakage is not a request for the desk reviewer to approach, touch or repair the package. The worker follows the site's safe reporting and isolation arrangements within their assigned role. Record what was reported, where it was observed from and what is unknown. A phone report saying “wet around base” should remain that observation until an authorized person determines its significance.\n\nCreate a package-evidence line for each relevant unit or traceable group, as allowed by the employer's process. Record matched identity, source document, status and unresolved limitation. If one unit is held, do not label the entire shipment released unless the authorized process has separated the held unit and corrected the remaining shipment information. Evidence must follow what actually moves, not the original commercial plan.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G50_lesson4",
+        "title": "4. Plan the loading interface as a responsibility handoff",
+        "body": "Loading is an interface between the shipping information, physical cargo, vehicle or container and receiving operation. A desk review prepares that interface by identifying the responsible people, approved method, communication route and the conditions that would invalidate the plan. It does not prescribe positioning, connections, transfer rates, valve sequences, pressure settings or emergency intervention.\n\nRead the proposed sequence as responsibilities: who confirms the shipment identity, who checks the assigned equipment, who controls access, who performs the loading, who receives the completed records and who releases movement. These may be different people. If every line says “driver,” ask whether the employer has actually assigned and verified those duties. A driving credential alone is not proof of package preparation or transfer competence.\n\nLook for simultaneous work that changes the interface. A maintenance job near the loading position, a blocked exit, another cargo, an unexpected receiver or a changed vehicle can invalidate assumptions. The responsible site roles decide the specific controls. The reviewer records the conflict and holds the affected handoff until the responsible authority confirms the revised arrangement. A schedule entry is not a risk-control decision.\n\nUse read-back for critical identity information: the sender states the shipment and package references, the receiver repeats them, and discrepancies are resolved before the next authorized step. Read-back is useful because it exposes transposed numbers and stale documents. It does not replace visual checks or the worker's practical duties. Record only the checks actually completed, not a broad “all safe” statement.\n\nThe handoff packet should identify its final revision and withdraw or clearly supersede conflicting working copies through the employer's process. If a last-minute correction changes the load, verify which documents, labels, instructions or receiving arrangements are affected with the qualified shipping function. Do not assume an email attachment automatically replaces the driver's printed information. Confirm receipt and understanding through the designated channel before declaring the information handoff complete.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G50_lesson5",
+        "title": "5. Turn observations into useful emergency information",
+        "body": "A discrepancy review should prepare the worker to report a problem accurately without turning an untrained person into a responder. Distinguish a document inconsistency from an actual or suspected loss of containment. Both may justify holding a handoff, but a suspected release also requires the site's emergency reporting and protective actions. Follow the approved plan and your actual role rather than trying to determine severity by approaching the material.\n\nA useful initial report contains the location, shipment and package identity if already known, what was observed, when it was observed, people possibly affected, immediate protective actions already taken and the safe callback route. Separate facts from interpretations. “A worker reports liquid beneath T-62 at bay 3” is different from “the tank has ruptured.” Include uncertainty so the designated responders can choose an appropriate assessment.\n\nKeep required emergency information accessible through the actual transport process. A record stored in an inaccessible office system may not help a driver or receiving worker at the point of need. Verify the employer's approved availability arrangements and contact route; do not publish sensitive security details into an unrestricted chat or invent a replacement emergency number.\n\nDo not transfer or open an unknown package to identify it. Do not neutralize, plug, reconnect, sample or move a suspect load unless those actions are part of your specific authorized role and training. The desk exercise is to prepare the information and hold the affected handoff, not to practice intervention. Evacuation, notification and accountability remain governed by the actual plan.\n\nAfter an event, distinguish immediate emergency control from disposition of the shipment. A report that responders have left does not itself release the cargo for transport. The responsible shipping and site authorities must establish package condition, information accuracy, any required follow-up and the next authorized action. Keep the original observation, corrected records and release decision connected. This avoids a later shift treating an old dispatch instruction as current authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G50_lesson6",
+        "title": "6. Close discrepancies with traceable, bounded decisions",
+        "body": "A discrepancy log becomes a release tool only when each item has a resolution that can be checked. Use one row per issue: source observation, affected shipment element, responsible owner, required evidence, current state and disposition. Separate “owner contacted,” “response received” and “verified against final packet.” A message saying “fixed” is not the same as seeing the corrected authoritative record.\n\nResolve in dependency order. Identity and classification questions influence package, information and mode requirements. Quantity and destination corrections may affect dispatch and receiving acceptance. A package defect can change which units are included. If the underlying material is still unresolved, polishing the loading list does not make the shipment ready. Keep preparatory administrative work separate from release.\n\nRecord the exact scope of an approval. “Document packet revision E reconciled to order 417 for ten listed units” is more defensible than “hazmat approved.” The first statement tells a downstream person what evidence was reviewed and which load it covers. It also makes a later change visible: adding an eleventh unit is outside that statement and needs the actual process's review.\n\nA job change can require different competence even when the shipment looks familiar. Moving from highway dispatch to air shipment preparation, changing material, changing package type or assigning unloading duties changes the function. PHMSA distinguishes general and function/mode-related training elements; the employer must determine and document the actual applicable program. This course does not claim to satisfy every required component or certify the employee.\n\nFinish with an explicit handoff: identify the final packet, remaining hold if any, owner of the next action and the work the receiver may perform under their existing authorization. Preserve original and corrected versions according to the employer's record controls. A reviewer who finds and maintains an honest hold has produced a useful result. A completed screen should represent the actual disposition, never pressure the reviewer to erase a material uncertainty.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G50_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: a quantity and identity conflict\n\nFictional order 417 requests twelve drums of product M-8 for receiving facility North. The shipping preparer's release revision D authorizes ten drums from batch B-16. The loading list revision B still lists twelve drums and names South receiving. Container references on the physical-check report cover drums 01 through 10 only. A dispatcher asks the reviewer to change the total to twelve because “the order proves what the customer wanted.” No actual chemicals or packages are used in this exercise.\n\nFirst establish the facts. The commercial order and the authorized release disagree by two drums. That subtraction measures a documentary difference, not permission to create additional cargo. The receiving destination also disagrees, and the available physical-check evidence identifies ten units. These are three related discrepancies with different consequences: commercial quantity, shipping release and receiving acceptance.\n\nThe correct desk response is to hold the affected handoff, reference the exact revisions and route the quantity and destination questions to the authorized shipping and dispatch roles. Do not copy the commercial request over the release record. The employer may ultimately approve ten or twelve units, but either decision needs a reconciled packet and evidence for the units actually offered. A packet for ten inspected units cannot prove two additional units suitable.\n\nSuppose the responsible preparer confirms ten units to North and issues revision E. The reviewer checks the release, loading list and receiving information against that decision, confirms the physical-check report identifies the same ten units, and verifies the old destination copy has been superseded in the actual handoff. The review statement names ten units and revision E. The original twelve-unit order remains part of the commercial history; it is not silently rewritten as though no discrepancy existed.\n\nCase B: a valid record for the wrong container\n\nA fictional bulk shipment packet names tank T-62. Its attached inspection report identifies T-26. A yard worker calls from a safe location and reports wetness below the tank at bay 3. The driver has a previously printed packet and a new email that says “same as last week.” The reviewer's job is to prepare the discrepancy and emergency-information handoff, not inspect or repair the tank.\n\nThere are two independent issues. The inspection evidence does not match the package identity, and the reported wetness may indicate a release or another condition that requires assessment. Do not treat a valid-looking inspection date as proof for a different tank. Do not dismiss the observation because the document mismatch appears clerical. The affected handoff is held, and the site's reporting and protective process is used for the reported condition.\n\nA useful report says: “Shipment packet names T-62; attached inspection identifies T-26; worker reports wetness below the bay-3 tank; cause and material are unconfirmed; handoff held; safe callback through dispatch.” It avoids declaring a rupture and avoids sending someone closer to obtain a photograph. The designated roles arrange assessment and determine the actual package condition.\n\nIf the authorized reviewer later establishes the correct tank identity and supplies matching acceptable evidence, that resolves only the record issue. The suspected-release disposition still needs the responsible site's decision. Before any movement release, the final package, condition, packet and receiving information must refer to the actual shipment and all affected holds must be resolved by the responsible authority. The driver's stale packet must be superseded through the approved communication process. Neither a successful document correction nor emergency attendance alone proves the shipment ready.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G50_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G50_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced reconcile a shipment work packet, identify contradictions and issue an accurate hold or handoff without inventing classifications Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G50_check1",
+        "prompt": "Order says fluid service; tank contents are unverified. What comes first?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Establish actual material and container identity from accepted source records."
+          },
+          {
+            "id": "b",
+            "label": "Infer identity from the customer name."
+          },
+          {
+            "id": "c",
+            "label": "Use last week's classification."
+          },
+          {
+            "id": "d",
+            "label": "Accept the order description as the final package inspection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G50_check2",
+        "prompt": "A record states 800 kg and another 800 L. What is defensible?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Declare them equal."
+          },
+          {
+            "id": "b",
+            "label": "Flag different quantity bases; obtain an authorized conversion basis if comparison is needed."
+          },
+          {
+            "id": "c",
+            "label": "Assume water density."
+          },
+          {
+            "id": "d",
+            "label": "Convert liters to kilograms using a universal cargo factor."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G50_check3",
+        "prompt": "Inspection identifies T-26 while packet names T-62. What does the report establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Both tanks are inspected."
+          },
+          {
+            "id": "b",
+            "label": "The tank digits are interchangeable."
+          },
+          {
+            "id": "c",
+            "label": "Evidence for its stated tank only; the actual package remains unresolved."
+          },
+          {
+            "id": "d",
+            "label": "Use the report because its date is recent regardless of identity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G50_check4",
+        "prompt": "The loading vehicle changes after review. What should the coordinator do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the old approval automatically."
+          },
+          {
+            "id": "b",
+            "label": "Let the driver decide every loading role."
+          },
+          {
+            "id": "c",
+            "label": "Let a revised vehicle identifier silently replace every instruction."
+          },
+          {
+            "id": "d",
+            "label": "Refer the changed interface for the actual required review before handoff."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G50_check5",
+        "prompt": "A worker reports wetness under a tank. Which initial message is best?",
+        "options": [
+          {
+            "id": "a",
+            "label": "State location, observation, identity if known and uncertainty through the approved reporting route."
+          },
+          {
+            "id": "b",
+            "label": "State that a rupture definitely occurred."
+          },
+          {
+            "id": "c",
+            "label": "Approach and smell it to identify the liquid."
+          },
+          {
+            "id": "d",
+            "label": "Tell everyone the liquid is harmless before assessment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G50_check6",
+        "prompt": "The owner writes fixed but no corrected release is available. What is the issue state?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verified closed."
+          },
+          {
+            "id": "b",
+            "label": "Response received; verification against the final record remains open."
+          },
+          {
+            "id": "c",
+            "label": "Erase the original discrepancy."
+          },
+          {
+            "id": "d",
+            "label": "Treat the reply as a new permanent transport authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G50_final1",
+        "prompt": "Why record batch and container references?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To replace transport classification."
+          },
+          {
+            "id": "b",
+            "label": "To avoid reading the release."
+          },
+          {
+            "id": "c",
+            "label": "To connect documents to the actual material and package reviewed."
+          },
+          {
+            "id": "d",
+            "label": "To prove package compatibility without technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G50_final2",
+        "prompt": "A trade name resembles a familiar hazardous material. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choose the familiar shipping description."
+          },
+          {
+            "id": "b",
+            "label": "Classify by the logo."
+          },
+          {
+            "id": "c",
+            "label": "Choose the description with the shortest shipping name."
+          },
+          {
+            "id": "d",
+            "label": "Refer classification uncertainty to the designated qualified shipping function."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G50_final3",
+        "prompt": "Which comparison status fits a required field with no evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Absent."
+          },
+          {
+            "id": "b",
+            "label": "Consistent."
+          },
+          {
+            "id": "c",
+            "label": "Approved."
+          },
+          {
+            "id": "d",
+            "label": "Not applicable simply because the field is blank."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G50_final4",
+        "prompt": "Twelve units ordered and ten released: what can arithmetic establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Two more units may be loaded."
+          },
+          {
+            "id": "b",
+            "label": "A two-unit difference between the stated records."
+          },
+          {
+            "id": "c",
+            "label": "Ten is a legal quantity limit."
+          },
+          {
+            "id": "d",
+            "label": "An automatic approval of the two extra packages."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G50_final5",
+        "prompt": "A destination changes to another facility of the same company. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Company ownership proves identical acceptance."
+          },
+          {
+            "id": "b",
+            "label": "Ignore the address."
+          },
+          {
+            "id": "c",
+            "label": "Confirm actual receiving acceptance and reconcile affected dispatch documents."
+          },
+          {
+            "id": "d",
+            "label": "Only the receiving company logo needs to match."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G50_final6",
+        "prompt": "A photograph shows a clean package exterior. What can it prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Internal compatibility and correct closure."
+          },
+          {
+            "id": "b",
+            "label": "Every required package test."
+          },
+          {
+            "id": "c",
+            "label": "The package is suitable for every material shown in the catalog."
+          },
+          {
+            "id": "d",
+            "label": "Only the visible condition captured within its limits."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G50_final7",
+        "prompt": "A closure sheet omits the instruction revision. What is a suitable action?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ask the assigned package authority for the applicable instruction and traceable completion evidence."
+          },
+          {
+            "id": "b",
+            "label": "Invent a familiar closure method."
+          },
+          {
+            "id": "c",
+            "label": "Certify closure from the sheet's neat appearance."
+          },
+          {
+            "id": "d",
+            "label": "Ask dispatch to sign for the unobserved physical closure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G50_final8",
+        "prompt": "One package is held. How can the remaining shipment be reviewed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Release the original full shipment unchanged."
+          },
+          {
+            "id": "b",
+            "label": "Only through an authorized separation and corrected packet for what actually moves."
+          },
+          {
+            "id": "c",
+            "label": "Hide the held unit from the list."
+          },
+          {
+            "id": "d",
+            "label": "Retain the original quantity while sending fewer units without correction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G50_final9",
+        "prompt": "Which loading responsibility question is useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Who has the fastest truck?"
+          },
+          {
+            "id": "b",
+            "label": "Who can sign everyone's box?"
+          },
+          {
+            "id": "c",
+            "label": "Who verifies identity, performs loading and authorizes movement under the actual procedure?"
+          },
+          {
+            "id": "d",
+            "label": "Who can take responsibility for every future delivery?"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G50_final10",
+        "prompt": "What does identity read-back accomplish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It replaces package inspection."
+          },
+          {
+            "id": "b",
+            "label": "It certifies the driver."
+          },
+          {
+            "id": "c",
+            "label": "It proves every document has the latest revision."
+          },
+          {
+            "id": "d",
+            "label": "It can expose misunderstood or transposed references before the next authorized step."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G50_final11",
+        "prompt": "A corrected packet is emailed while the driver has an old printout. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Confirm approved supersession and receipt of the current information."
+          },
+          {
+            "id": "b",
+            "label": "Assume email automatically invalidates paper."
+          },
+          {
+            "id": "c",
+            "label": "Tell the driver to choose."
+          },
+          {
+            "id": "d",
+            "label": "Tell the driver both conflicting packets remain equally authoritative."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G50_final12",
+        "prompt": "A document mismatch and suspected leak coexist. How should they be treated?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Correcting the typo resolves both."
+          },
+          {
+            "id": "b",
+            "label": "Maintain distinct record and incident issues with responsible dispositions."
+          },
+          {
+            "id": "c",
+            "label": "Only inspect documents and ignore the report."
+          },
+          {
+            "id": "d",
+            "label": "The emergency observation can be removed after a document correction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G50_final13",
+        "prompt": "Responders leave the site. Is the shipment automatically released?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, departure is transport approval."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the packet has a date."
+          },
+          {
+            "id": "c",
+            "label": "No; responsible shipping/site authorities must establish the actual next authorized disposition."
+          },
+          {
+            "id": "d",
+            "label": "Yes, responder departure certifies every transport mode."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G50_final14",
+        "prompt": "Which closure statement is bounded and testable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All hazmat is safe forever."
+          },
+          {
+            "id": "b",
+            "label": "Driver can do any task."
+          },
+          {
+            "id": "c",
+            "label": "This cargo is compatible with every available package."
+          },
+          {
+            "id": "d",
+            "label": "Revision E reconciled for the ten identified units."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G50_final15",
+        "prompt": "A highway reviewer is assigned air-shipment preparation. What changes?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The employer must establish actual function and mode requirements before that assignment."
+          },
+          {
+            "id": "b",
+            "label": "Nothing because cargo looks the same."
+          },
+          {
+            "id": "c",
+            "label": "This course supplies every modal qualification."
+          },
+          {
+            "id": "d",
+            "label": "Only the shipping-company name changes; no function review is relevant."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G50_final16",
+        "prompt": "What should be retained after a correction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the clean final answer."
+          },
+          {
+            "id": "b",
+            "label": "Original discrepancy and traceable corrected evidence under record controls."
+          },
+          {
+            "id": "c",
+            "label": "An undocumented verbal assurance."
+          },
+          {
+            "id": "d",
+            "label": "An edited history claiming the discrepancy never existed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G50_final17",
+        "prompt": "Case A has evidence for ten drums but the order wants twelve. What should not happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Holding the discrepancy."
+          },
+          {
+            "id": "b",
+            "label": "Requesting the authorized preparer's resolution."
+          },
+          {
+            "id": "c",
+            "label": "Adding two units without approved release and matching evidence."
+          },
+          {
+            "id": "d",
+            "label": "Confirming the final destination through the responsible dispatch route."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G50_final18",
+        "prompt": "Case A revision E authorizes ten to North. What is the review scope?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any future twelve-unit shipment."
+          },
+          {
+            "id": "b",
+            "label": "Both North and South facilities."
+          },
+          {
+            "id": "c",
+            "label": "Every package mentioned in any earlier commercial request."
+          },
+          {
+            "id": "d",
+            "label": "The ten identified units in that reconciled packet."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G50_final19",
+        "prompt": "Case B obtains a matching inspection report. What else remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Disposition of the reported wetness through the responsible site process."
+          },
+          {
+            "id": "b",
+            "label": "No issue can remain."
+          },
+          {
+            "id": "c",
+            "label": "The reviewer must repair the tank."
+          },
+          {
+            "id": "d",
+            "label": "The driver gains authority to investigate any future wet patch."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G50_final20",
+        "prompt": "What does passing this course establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every dangerous-goods qualification."
+          },
+          {
+            "id": "b",
+            "label": "A recorded knowledge result for the bounded review task, with separate actual qualification evidence still required."
+          },
+          {
+            "id": "c",
+            "label": "Authority to sample unknown cargo."
+          },
+          {
+            "id": "d",
+            "label": "Automatic qualification for all package closure methods."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G50_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G50_lesson1",
+          "questionIds": [
+            "G50_check1"
+          ]
+        },
+        {
+          "lessonId": "G50_lesson2",
+          "questionIds": [
+            "G50_check2"
+          ]
+        },
+        {
+          "lessonId": "G50_lesson3",
+          "questionIds": [
+            "G50_check3"
+          ]
+        },
+        {
+          "lessonId": "G50_lesson4",
+          "questionIds": [
+            "G50_check4"
+          ]
+        },
+        {
+          "lessonId": "G50_lesson5",
+          "questionIds": [
+            "G50_check5"
+          ]
+        },
+        {
+          "lessonId": "G50_lesson6",
+          "questionIds": [
+            "G50_check6"
+          ]
+        },
+        {
+          "lessonId": "G50_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G50_final",
+          "questionIds": [
+            "G50_final1",
+            "G50_final2",
+            "G50_final3",
+            "G50_final4",
+            "G50_final5",
+            "G50_final6",
+            "G50_final7",
+            "G50_final8",
+            "G50_final9",
+            "G50_final10",
+            "G50_final11",
+            "G50_final12",
+            "G50_final13",
+            "G50_final14",
+            "G50_final15",
+            "G50_final16",
+            "G50_final17",
+            "G50_final18",
+            "G50_final19",
+            "G50_final20"
+          ]
+        },
+        {
+          "lessonId": "G50_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G50_check1": "A commercial label cannot identify the actual cargo; comparison depends on a stable shipment identity.",
+        "G50_check2": "Equal numbers in different units do not establish equal quantities.",
+        "G50_check3": "Package evidence must match the actual package identity and scope.",
+        "G50_check4": "An approval covers the reviewed conditions, not every subsequent configuration.",
+        "G50_check5": "Facts and uncertainty support safe assessment; an unassigned reviewer must not investigate physically.",
+        "G50_check6": "A claim of correction is different from inspecting the authoritative corrected evidence.",
+        "G50_final1": "Identity links make the scope of evidence testable.",
+        "G50_final2": "A name resemblance is not a classification decision.",
+        "G50_final3": "An empty source cannot establish agreement.",
+        "G50_final4": "Arithmetic describes the discrepancy, not its authorized resolution.",
+        "G50_final5": "Receiving arrangements attach to the actual facility and cargo.",
+        "G50_final6": "Evidence must not be extended to conditions it cannot observe.",
+        "G50_final7": "The specific package instruction and actual performance remain essential.",
+        "G50_final8": "The actual cargo and its information must remain traceable.",
+        "G50_final9": "Explicit assignments avoid turning a signature into an unsupported claim of competence.",
+        "G50_final10": "Read-back supports communication but does not replace physical or qualification evidence.",
+        "G50_final11": "Information must be reconciled at the point of actual use.",
+        "G50_final12": "Separate problems can require separate evidence and authorities.",
+        "G50_final13": "Emergency attendance does not itself prove package condition or shipment readiness.",
+        "G50_final14": "The specific revision and unit scope make the review claim verifiable.",
+        "G50_final15": "Mode and function affect the applicable instruction and competence scope.",
+        "G50_final16": "Traceable history explains what changed and what the release actually covers.",
+        "G50_final17": "Commercial demand does not create missing physical or shipping evidence.",
+        "G50_final18": "The approval is bounded by the actual units, destination and revision.",
+        "G50_final19": "Correcting evidence identity does not assess a separate reported condition.",
+        "G50_final20": "Knowledge, observed performance and employer authorization remain different evidence."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

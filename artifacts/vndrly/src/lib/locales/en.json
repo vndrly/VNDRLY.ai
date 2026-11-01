@@ -6483,6 +6483,7 @@
     "taskGapsHelp": "Search a service to see its taught knowledge, affected roles, required vendor records and qualified practical evaluations. Course completion does not close those separate requirements.",
     "taskCourse": "Open task-specific course {{courseId}}",
     "vendorEvidence": "Vendor evidence still required",
-    "practicalEvidence": "Qualified practical evaluation or applicable credentials still required"
+    "practicalEvidence": "Qualified practical evaluation or applicable credentials still required",
+    "preservedExtensions": "Preserved services outside this master snapshot"
   }
 }

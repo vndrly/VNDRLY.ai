@@ -1,0 +1,915 @@
+{
+  "courseId": "G54",
+  "gapGroupId": "G05",
+  "title": "Camp meal preparation: control food flow, allergens and the delivery handoff",
+  "description": "keep ready-to-eat food separated from raw-food pathways, use meaningful measurements and preserve the approved time/temperature and allergen controls through service",
+  "purpose": "keep ready-to-eat food separated from raw-food pathways, use meaningful measurements and preserve the approved time/temperature and allergen controls through service",
+  "audience": [
+    "Camp food handlers",
+    "Catering shift leads",
+    "Meal transport and receiving personnel"
+  ],
+  "practicalBoundary": "This course does not issue a food-handler/manager credential or approve a kitchen, menu, recipe or local legal program. Actual adopted rules, illness policy, validated cooking/cooling/holding procedures, equipment instruction and observed food-handling skills remain separate. The fictional arithmetic is not a universal food-safety limit.",
+  "vendorEvidenceRequired": [
+    "Applicable locally adopted food rules and any required worker/manager authorization",
+    "Actual menu, ingredient labels and product-substitution/allergen control process",
+    "Approved product-specific cooking, cooling, reheating, holding and transport limits/actions",
+    "Equipment, thermometer verification, cleaning and sanitizing instructions",
+    "Actual illness-reporting/exclusion/return policy and responsible person in charge",
+    "Observed demonstration of assigned preparation, measurement, cleaning and receiving duties"
+  ],
+  "practicalAssessmentRequired": [
+    "Competent catering assessor observes raw-to-ready-to-eat separation and hand hygiene in the actual workspace",
+    "Qualified food-service assessor observes task-specific temperature measurement, instrument care and the approved corrective action",
+    "Assessor observes allergen-request handling, ingredient verification, controlled preparation and identifiable service handoff",
+    "Transport/receiving assessor exercises a delayed delivery using the actual approved limits and disposition authority"
+  ],
+  "sources": [
+    {
+      "title": "FDA — Food Code 2026, current model and adoption scope",
+      "url": "https://www.fda.gov/food/fda-food-code/food-code-2026"
+    },
+    {
+      "title": "FDA — 2026 Food Code full model, Chapters 2–4; cooling/holding §§3-501.14–.16",
+      "url": "https://www.fda.gov/media/194741/download?attachment="
+    },
+    {
+      "title": "CDC — Managing sick food workers",
+      "url": "https://www.cdc.gov/restaurant-food-safety/php/practices/sick-workers.html"
+    },
+    {
+      "title": "FDA — Sesame and the nine major food allergens",
+      "url": "https://www.fda.gov/food/food-allergies/faster-act-sesame-ninth-major-food-allergen"
+    },
+    {
+      "title": "FoodSafety.gov — consumer minimum-temperature guidance; links to USDA resources",
+      "url": "https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures"
+    },
+    {
+      "title": "USDA FSIS — food thermometer placement guidance",
+      "url": "https://ask.fsis.usda.gov/article/How-to-use-a-food-thermometer"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G54_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Camp meal preparation: control food flow, allergens and the delivery handoff\n\nThis course teaches a bounded task: keep ready-to-eat food separated from raw-food pathways, use meaningful measurements and preserve the approved time/temperature and allergen controls through service Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis course does not issue a food-handler/manager credential or approve a kitchen, menu, recipe or local legal program. Actual adopted rules, illness policy, validated cooking/cooling/holding procedures, equipment instruction and observed food-handling skills remain separate. The fictional arithmetic is not a universal food-safety limit. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.\n\nPrimary-source reading: [FDA — Food Code 2026, current model and adoption scope](https://www.fda.gov/food/fda-food-code/food-code-2026); [FDA — 2026 Food Code full model, Chapters 2–4; cooling/holding §§3-501.14–.16](https://www.fda.gov/media/194741/download?attachment=); [CDC — Managing sick food workers](https://www.cdc.gov/restaurant-food-safety/php/practices/sick-workers.html); [FDA — Sesame and the nine major food allergens](https://www.fda.gov/food/food-allergies/faster-act-sesame-ninth-major-food-allergen); [FoodSafety.gov — consumer minimum-temperature guidance; links to USDA resources](https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures); [USDA FSIS — food thermometer placement guidance](https://ask.fsis.usda.gov/article/How-to-use-a-food-thermometer). Read the scope and task guidance together with the actual employer procedure. These references do not issue this course's learner any license or work authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G54_lesson1",
+        "title": "1. Draw the food flow and keep raw pathways out of ready-to-eat work",
+        "body": "Trace a meal from receiving to storage, preparation, cooking where applicable, holding, packing, delivery and service. Identify which ingredients are raw and which foods will be eaten without another control step. A washed salad or finished sandwich can be contaminated after preparation if a worker, utensil, surface or leaking package carries material from raw food into it. The task is to interrupt that route at every transition, not merely keep the kitchen looking tidy.\n\nArrange work so raw-food packaging and preparation do not pass through the clean finished-food station. Use the actual kitchen's separation arrangements for space, equipment, storage and work order. If one area must serve multiple purposes, the approved changeover must be completed before ready-to-eat work begins. Moving a cutting board without cleaning the surface under it may leave the transfer pathway in place. A color code supports a system only when everyone uses and maintains it correctly.\n\nHands and gloves are moving contact surfaces. A worker who handles a raw-food package and then assembles a sandwich can transfer contamination even if gloves were worn. Follow the actual handwashing and glove-change requirements at the task transition. A glove change does not clean a contaminated handle, phone or utensil already touched. Each contact surface needs the applicable cleaning or handling response.\n\nReceiving and storage are part of the same flow. Protect ready-to-eat items from leakage and contaminated packaging, keep product identity and required storage conditions intact, and report damaged or uncertain deliveries to the responsible food lead. Do not decide a product is acceptable because its packaging resembles a previous delivery. The actual label, condition and approved receiving criteria matter.\n\nUse a harmless layout exercise before service. Place cards for raw packaging, preparation, finished food, handwashing, waste and delivery containers. Trace what a worker would touch while making a meal. Any route carrying raw material or dirty equipment into finished food needs correction through the actual kitchen procedure. The exercise teaches pathway recognition; the practical assessor must still observe the real station, equipment and worker sequence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G54_lesson2",
+        "title": "2. Report illness and maintain hygiene through interruptions",
+        "body": "Food handling depends on the worker's condition as well as the food's condition. Know the employer's illness-reporting procedure before the shift and use it when relevant symptoms, diagnoses or exposures occur under that procedure. The responsible person in charge applies the actual restriction, exclusion and return requirements. A worker should not privately decide that gloves or a less visible station make it acceptable to hide a relevant illness.\n\nOperational pressure must be managed through staffing rather than concealment. If a fictional breakfast shift is short of staff and a preparer reports vomiting, the lead uses the actual illness policy and replacement arrangement. They do not ask the worker to complete the meal first. CDC's sick-worker research supports clear reporting policies and active management; it does not substitute for the local adopted requirements or give this course authority to medically clear anyone.\n\nHand hygiene is a repeated task at meaningful transitions. Follow the actual procedure after activities such as using the toilet, handling contamination, touching personal items or changing from a dirty task to clean preparation. Locate the designated facilities and supplies before service. A handwashing instruction is not usable if the sink is blocked by stored equipment or lacks required supplies; report and correct that condition through the kitchen's process.\n\nInterruptions deserve an intentional restart. A worker may leave a preparation station to answer a phone, accept a delivery or remove waste, then return automatically to the unfinished meal. Pause at return and identify what was touched, what hand/glove change is needed and which surfaces or utensils may have been affected. Do not regard “I was away only briefly” as a hygiene control.\n\nThe supervisor's communication should be factual and private. Record the operational decision and necessary work status through the approved route. Do not display medical details on the meal production board. Coworkers need to know who covers the task and whether a product or station is held; they do not need an employee's full diagnosis. Safe food service and employee privacy can both be preserved by a clear reporting and staffing process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G54_lesson3",
+        "title": "3. Handle an allergen request as an ingredient-and-process problem",
+        "body": "An allergen request requires accurate ingredient information and control of unintended transfer. Start with the actual food and its current ingredients, including sauces, dressings, garnishes and processing aids identified in the supplier information. A recipe name such as plain chicken or vegetable soup is not a complete ingredient statement. A substitute brand can change the information even when the product looks the same.\n\nUse current labels and the employer's verified ingredient process. If an ingredient list is unavailable, ambiguous or changed, do not guess. Hold the affected assurance and ask the responsible food lead to establish what can be reliably served. “Probably contains none” is not a safe promise. Nor should a worker invent an absolute allergen-free claim that the actual supply chain and kitchen controls cannot support.\n\nCross-contact can occur through shared utensils, surfaces, containers, hands or other process interfaces. Removing a visible ingredient from a finished plate does not undo contact that has already happened. The responsible kitchen method must establish suitable ingredients and a controlled preparation and service route. Cleaning arrangements, dedicated equipment where required and a clear handling sequence are specific to the actual operation; an online lesson cannot approve every kitchen's capability.\n\nKeep the identity of the request connected to the meal without disclosing unnecessary personal medical information. Use the approved identification and handoff system so the person serving does not confuse the controlled meal with a visually similar standard portion. Do not rely only on memory or position on a crowded tray. If identity is lost, hold the affected service and resolve it before handing it to the customer.\n\nDistinguish allergen control from other food safety. A meal can meet its cooking requirement and still contain an unintended allergen. A correct label does not prove the preparation route prevented cross-contact. Review both questions separately. The outcome should be a truthful statement of what is known, the actual capability of the kitchen and any limitation communicated by the person authorized to make that assurance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G54_lesson4",
+        "title": "4. Measure the food state rather than trusting appearance or equipment settings",
+        "body": "Time and temperature controls depend on the actual food and process. Cooking, cooling, reheating, hot or cold holding and transport are different stages with different purposes. Use the specific approved procedure and adopted rules for the product and stage. A number learned for one food or one stage must not be copied to every other meal. This course intentionally gives no universal cooking or holding limit.\n\nA thermostat setting describes the equipment's intended control, not necessarily the food's measured condition. A display on a refrigerator, warmer or vehicle can be useful, but it does not automatically represent every container or the food's coldest or warmest relevant location. Follow the assigned thermometer and sampling procedure for the actual food. Correct probe placement, instrument suitability and verification need practical demonstration with the equipment used.\n\nA useful measurement record names the product or batch, stage, location or portion as required, time, result, instrument reference where the procedure requires it and the action taken. “Temperature okay” hides the information needed to assess a delayed delivery or a later instrument problem. Record the actual reading rather than a remembered target, and use the correct unit. A Celsius reading cannot be compared numerically with a Fahrenheit limit without the proper conversion.\n\nWhen a result is outside the approved criterion or the measurement is unreliable, use the actual corrective-action procedure and responsible person. Do not average a passing reading and a failing reading to manufacture an acceptable batch result unless an authorized validated method explicitly supports the decision. Do not return a reading to the target by editing the log. The food's actual history, not the appearance of the record, determines the disposition question.\n\nA harmless exercise can teach interpretation. If a fictional approved dispatch procedure requires a documented check before release and the check is missing, the correct result is a hold pending the responsible decision, not an invented passing value. The practical assessor later observes the actual measurement and action. Good arithmetic and honest records support food safety, but neither replaces a suitable instrument or an approved process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G54_lesson5",
+        "title": "5. Preserve time history during cooling, holding and delayed work",
+        "body": "Time is part of a process history. Record when the relevant stage begins, each required check and any transition or interruption under the approved method. Cooling a large amount, moving a batch between containers or pausing service can change the actual food conditions. Do not treat the clock as restarting merely because a label, shift or container changes. The history follows the food.\n\nDifferent processes need different controls. Cooking is not the same as cooling; a safe cooking result does not prove later storage or service was controlled. Reheating does not automatically erase every prior handling problem. The actual procedure defines what is permitted and what corrective action follows an interruption. If the history is unknown, the food lead must decide under the approved method rather than the worker guessing from smell or appearance.\n\nUse elapsed-time arithmetic carefully. In a fictional exercise, a meal is packed at 10:20 and checked at 11:05; forty-five minutes have elapsed. If another thirty minutes pass before service, the total since packing is seventy-five minutes. Those calculations describe the fictional timeline only. Whether the food may be served depends on its measured condition, the actual process and the applicable approved limits. This exercise does not create a seventy-five-minute allowance.\n\nA log gap is different from a measured failure but still creates a decision. Do not fill missing values by interpolation unless the actual approved process establishes a valid basis. A warmer may have stayed on, yet the food temperature may remain unverified. Label the gap accurately, hold the affected release as required and route the question to the responsible food lead.\n\nFor planning, work backward from service capacity and the approved process. If a remote site cannot maintain the required conditions or receive the meal at the intended time, change the plan through the responsible person before production. Do not use a delivery deadline to justify uncontrolled holding. A smaller batch, different menu or alternate delivery arrangement may be considered by the authorized kitchen team, but this course does not approve an improvised method.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G54_lesson6",
+        "title": "6. Make packing, transport and service one controlled handoff",
+        "body": "Packing is the point where a kitchen's controlled process can lose its identity and history. Keep the actual meal or batch reference, any required allergen identification, packing time, condition checks and receiving instructions connected to the containers. Select and use the actual approved food-contact and transport equipment. A clean-looking box is not automatically suitable for the food or capable of maintaining the required conditions.\n\nBefore dispatch, confirm the destination, receiving person, expected timing and what the receiver must do. A site without an available receiver or suitable holding arrangement may not be ready for the planned meal. The kitchen and receiver need an agreed response to delay, damaged packaging, missing identity, measurement problems and an allergen-request mismatch. The driver should not have to invent the food-safety disposition at the gate.\n\nTransport preserves the process; it does not complete it. Protect containers from contamination and keep the required conditions and records under the actual procedure. If a delay occurs, report the facts early through the designated route, including current location, timeline, container/batch identity and available measurements. Do not declare food safe based only on the vehicle's display or the fact that the journey is usually short.\n\nThe receiver verifies the actual handoff criteria and any special identification before service. A signature should represent the checks actually done, not merely the driver's arrival. If a controlled meal has lost its identity among standard portions, the receiver holds the affected service rather than guessing by appearance. If the timeline or condition is unresolved, use the approved decision route. Customer hunger and schedule pressure do not supply missing evidence.\n\nAt the end of service, follow the approved disposition and cleaning arrangements for leftovers, containers and equipment. Do not put unidentified returned food into the next batch. Preserve enough history for a recall or incident review to identify what was produced, where it went and which workers or processes were involved, using the employer's actual records. The practical assessment should observe the complete route from station readiness to receiving handoff, because a safe kitchen step alone cannot prove the entire meal service.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G54_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: a substituted dressing changes the meal decision\n\nA fictional camp kitchen prepares salad boxes. One customer has requested a meal avoiding a named allergen, and the kitchen has an established process for deciding whether it can meet such requests. The usual dressing is unavailable. A replacement arrives with different branding, and its ingredient label has not yet been reviewed. A worker has already placed the replacement dressing on the standard salad station. The controlled meal has not yet been assembled.\n\nBegin with ingredient identity. The usual product's information does not establish the replacement's ingredients. The worker holds the allergen assurance and brings the current label to the responsible food lead. If the label is unavailable or unclear, no one guesses that the similar flavor name means the same composition. The kitchen either establishes an appropriate controlled option through its actual process or truthfully states the limitation.\n\nNext examine cross-contact. The replacement container and shared utensils may now affect the station. Even if an ingredient check later finds the replacement suitable for the customer's request, that does not prove the shared station's condition. Conversely, cleaning a station cannot remove an allergen intentionally present in the food. Ingredient verification and process control are separate decisions.\n\nThe responsible lead establishes the actual controlled preparation route, including the applicable clean equipment and handling sequence. The worker performs the assigned method and keeps the meal's identity connected to the correct customer through packing and service. A tag that falls off creates a new identity problem; the receiver does not choose a similar-looking salad by memory.\n\nThe worked result is a truthful ingredient decision and a controlled preparation/service handoff. There is no universal allergen-free claim and no assumption that cooking or removing a visible garnish solves an ingredient or cross-contact problem. The practical assessor can observe the real label check, station changeover and handoff with safe materials.\n\nCase B: a delayed delivery with a missing food check\n\nA fictional meal batch is packed at 10:20. At 11:05, the driver reports a road delay. Service is now expected at 11:35. The vehicle's warmer display shows its normal setting, but the dispatch food-temperature entry is blank. The receiver has no separate record confirming the food's actual condition at packing. For this exercise, the employer's approved procedure requires that dispatch food check and a receiving verification before service. No numerical legal limit is being supplied.\n\nCalculate the timeline first: forty-five minutes have passed at 11:05; the planned service at 11:35 would be seventy-five minutes after packing. This is a factual duration, not a safe-time allowance. A normal warmer setting does not prove the food temperature or establish the missing check. The driver must not enter a remembered target into the blank field.\n\nThe driver reports the batch identity, packing time, current delay, available equipment indication and missing dispatch record. The responsible food lead applies the approved corrective-action and disposition process. The receiving person holds service until the actual required verification and decision are complete. The classroom learner cannot authorize reheating, extend a time limit or discard food merely by applying a guessed universal rule.\n\nIf the food lead later supplies evidence that actually resolves the missing information, record its source and the bounded disposition. If uncertainty cannot be resolved under the approved process, the responsible lead applies that process's action. An updated delivery label does not restart the food's history.\n\nFinally, review why dispatch proceeded with a blank required check: station readiness, staffing, instrument availability or a failed release step. The practical correction should demonstrate the actual measurement and dispatch decision, then the receiving handoff. A neatly completed log after the fact is not the improvement; a functioning process that records real checks before release is.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G54_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G54_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced keep ready-to-eat food separated from raw-food pathways, use meaningful measurements and preserve the approved time/temperature and allergen controls through service Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G54_check1",
+        "prompt": "A worker handles raw packaging and then assembles sandwiches in the same gloves. What is the issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A transfer pathway into ready-to-eat food."
+          },
+          {
+            "id": "b",
+            "label": "Gloves make every contact clean."
+          },
+          {
+            "id": "c",
+            "label": "Raw packaging cannot contaminate a station."
+          },
+          {
+            "id": "d",
+            "label": "The sandwich is safe because raw packaging is not itself a meal."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G54_check2",
+        "prompt": "A worker reports vomiting before breakfast preparation. What should the lead do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ask the worker to finish service first."
+          },
+          {
+            "id": "b",
+            "label": "Use the actual illness policy and staffing response through the person in charge."
+          },
+          {
+            "id": "c",
+            "label": "Treat gloves as a universal solution."
+          },
+          {
+            "id": "d",
+            "label": "Allow the worker to privately decide whether symptoms matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G54_check3",
+        "prompt": "A replacement dressing has an unread label. What can the worker promise?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It is identical to the old brand."
+          },
+          {
+            "id": "b",
+            "label": "Cooking always removes allergens."
+          },
+          {
+            "id": "c",
+            "label": "No allergen assurance until the current ingredient and process information is established."
+          },
+          {
+            "id": "d",
+            "label": "The meal is allergen-free because the customer requested it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G54_check4",
+        "prompt": "A warmer display looks normal but the food check is blank. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every meal is at the approved temperature."
+          },
+          {
+            "id": "b",
+            "label": "The blank may be filled with the target."
+          },
+          {
+            "id": "c",
+            "label": "The missing reading may be inferred from the vehicle registration."
+          },
+          {
+            "id": "d",
+            "label": "An equipment indication exists; the required food measurement remains unverified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G54_check5",
+        "prompt": "Packing is at 10:20 and planned service at 11:35. What does arithmetic establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Seventy-five minutes elapsed, without creating a safe-time allowance."
+          },
+          {
+            "id": "b",
+            "label": "A universal legal service limit."
+          },
+          {
+            "id": "c",
+            "label": "Permission to restart the clock."
+          },
+          {
+            "id": "d",
+            "label": "Seventy-five minutes automatically requires the same action for every food."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G54_check6",
+        "prompt": "A controlled meal loses its identification among standard meals. What should the receiver do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choose the most similar meal."
+          },
+          {
+            "id": "b",
+            "label": "Hold affected service and resolve identity through the actual process."
+          },
+          {
+            "id": "c",
+            "label": "Rely on the driver's guess."
+          },
+          {
+            "id": "d",
+            "label": "Ask the hungriest customer which meal looks controlled."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G54_final1",
+        "prompt": "Why map the whole food flow?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To replace the kitchen's operating instructions."
+          },
+          {
+            "id": "b",
+            "label": "To prove every meal cooked properly."
+          },
+          {
+            "id": "c",
+            "label": "To identify contamination and condition-control transitions from receiving through service."
+          },
+          {
+            "id": "d",
+            "label": "To use the receiving signature as proof of every earlier condition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G54_final2",
+        "prompt": "A cutting board is moved off a dirty surface. What remains to consider?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The entire area is now clean automatically."
+          },
+          {
+            "id": "b",
+            "label": "Only the board color matters."
+          },
+          {
+            "id": "c",
+            "label": "Board color proves the surface below it is uncontaminated."
+          },
+          {
+            "id": "d",
+            "label": "The surface and any other affected contacts under the approved changeover."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G54_final3",
+        "prompt": "A clean supply box is touched with contaminated gloves. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Apply the actual response to the affected supply interface."
+          },
+          {
+            "id": "b",
+            "label": "The box is protected by its original label."
+          },
+          {
+            "id": "c",
+            "label": "Only hands can carry contamination."
+          },
+          {
+            "id": "d",
+            "label": "The spare supplies can always be used without checking their condition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G54_final4",
+        "prompt": "What is useful before the shift begins?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume a blocked sink will be usable later."
+          },
+          {
+            "id": "b",
+            "label": "Confirm designated handwashing facilities and supplies are accessible."
+          },
+          {
+            "id": "c",
+            "label": "Replace washing with an unapproved shortcut."
+          },
+          {
+            "id": "d",
+            "label": "Assume workers will supply their own unapproved cleaning products."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G54_final5",
+        "prompt": "A worker returns from answering a phone. What needs attention?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing because the interruption was short."
+          },
+          {
+            "id": "b",
+            "label": "Only the elapsed phone-call time."
+          },
+          {
+            "id": "c",
+            "label": "The contacts made and the required hand/glove and surface transition."
+          },
+          {
+            "id": "d",
+            "label": "Nothing unless the worker touched visibly dirty food."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G54_final6",
+        "prompt": "Which information belongs on a meal production board about a sick worker?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The worker's full medical history."
+          },
+          {
+            "id": "b",
+            "label": "A guessed diagnosis."
+          },
+          {
+            "id": "c",
+            "label": "A public diagnosis copied from a private message."
+          },
+          {
+            "id": "d",
+            "label": "Necessary staffing and work status under the approved process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G54_final7",
+        "prompt": "Which ingredients matter to an allergen request?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual current recipe components including sauces and garnishes."
+          },
+          {
+            "id": "b",
+            "label": "Only the meal's title."
+          },
+          {
+            "id": "c",
+            "label": "Only visible large ingredients."
+          },
+          {
+            "id": "d",
+            "label": "Only the ingredients used for last month's brand."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G54_final8",
+        "prompt": "Can removing a visible allergen ingredient from a finished plate reverse all contact?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, always."
+          },
+          {
+            "id": "b",
+            "label": "No; the approved ingredient and cross-contact process is still needed."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the plate looks clean."
+          },
+          {
+            "id": "d",
+            "label": "Yes, a customer can scrape away any unwanted ingredient safely."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G54_final9",
+        "prompt": "A meal meets a cooking criterion. What does that establish about allergens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every allergen is absent."
+          },
+          {
+            "id": "b",
+            "label": "An ingredient label is unnecessary."
+          },
+          {
+            "id": "c",
+            "label": "It does not by itself establish ingredient or cross-contact suitability."
+          },
+          {
+            "id": "d",
+            "label": "The supplier's current label can be discarded after cooking."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G54_final10",
+        "prompt": "Who establishes the exact local food rules and operating limits?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic course for every jurisdiction."
+          },
+          {
+            "id": "b",
+            "label": "The driver from memory."
+          },
+          {
+            "id": "c",
+            "label": "The oldest food-service rule remembered by any worker."
+          },
+          {
+            "id": "d",
+            "label": "The responsible operation using the applicable adopted requirements and approved methods."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G54_final11",
+        "prompt": "A Celsius reading is compared numerically to a Fahrenheit criterion. What is wrong?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The units differ and require correct interpretation/conversion."
+          },
+          {
+            "id": "b",
+            "label": "Equal-looking numbers prove compliance."
+          },
+          {
+            "id": "c",
+            "label": "Units do not matter for food."
+          },
+          {
+            "id": "d",
+            "label": "The larger displayed number is always safer."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G54_final12",
+        "prompt": "Two readings conflict. May the worker average them to create a pass?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, averaging always makes a batch safe."
+          },
+          {
+            "id": "b",
+            "label": "Only if the actual authorized validated method supports that decision; otherwise use the responsible corrective route."
+          },
+          {
+            "id": "c",
+            "label": "Yes, delete the worse result."
+          },
+          {
+            "id": "d",
+            "label": "Yes, average readings and hide the individual values."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G54_final13",
+        "prompt": "Which log entry is more useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Okay."
+          },
+          {
+            "id": "b",
+            "label": "Target met, without a measurement."
+          },
+          {
+            "id": "c",
+            "label": "Batch, stage, actual time/reading and action under the procedure."
+          },
+          {
+            "id": "d",
+            "label": "A reconstructed value entered as though measured at dispatch."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G54_final14",
+        "prompt": "A batch changes containers. Does its previous time history vanish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, new container means new clock."
+          },
+          {
+            "id": "b",
+            "label": "Only if the label is new."
+          },
+          {
+            "id": "c",
+            "label": "Yes, changing the shift lead restarts all timing."
+          },
+          {
+            "id": "d",
+            "label": "No; the history follows the food."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G54_final15",
+        "prompt": "A food history is unknown but appearance is normal. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the approved hold/disposition route rather than guess from appearance."
+          },
+          {
+            "id": "b",
+            "label": "Normal appearance proves safe handling."
+          },
+          {
+            "id": "c",
+            "label": "Reheat automatically to erase all concerns."
+          },
+          {
+            "id": "d",
+            "label": "Use smell to reconstruct the entire temperature history."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G54_final16",
+        "prompt": "What should be confirmed before dispatch to a remote site?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the driver's route preference."
+          },
+          {
+            "id": "b",
+            "label": "Receiving person, timing, suitable holding/service arrangements and exception route."
+          },
+          {
+            "id": "c",
+            "label": "Nothing because packing completed the process."
+          },
+          {
+            "id": "d",
+            "label": "Only whether the container looks new."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G54_final17",
+        "prompt": "What should a receiving signature represent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Arrival alone proves every food-safety criterion."
+          },
+          {
+            "id": "b",
+            "label": "A replacement for all measurements."
+          },
+          {
+            "id": "c",
+            "label": "The actual required checks completed and any documented disposition."
+          },
+          {
+            "id": "d",
+            "label": "A promise that all meals remain safe for any future delay."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G54_final18",
+        "prompt": "Case A's replacement ingredient is later verified suitable. What separate issue can remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No other issue is possible."
+          },
+          {
+            "id": "b",
+            "label": "The meal must be called universally allergen-free."
+          },
+          {
+            "id": "c",
+            "label": "An automatic authorization for an absolute allergen-free claim."
+          },
+          {
+            "id": "d",
+            "label": "The preparation station and cross-contact control state."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G54_final19",
+        "prompt": "Case B dispatch check is blank. What must not happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Filling it with a remembered target as if measured."
+          },
+          {
+            "id": "b",
+            "label": "Reporting the gap."
+          },
+          {
+            "id": "c",
+            "label": "Holding affected service."
+          },
+          {
+            "id": "d",
+            "label": "Contacting the responsible food lead with the real timeline."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G54_final20",
+        "prompt": "What does a practical correction to the dispatch gap demonstrate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A clean log reconstructed from memory."
+          },
+          {
+            "id": "b",
+            "label": "Actual measurement, release decision and receiving handoff working as intended."
+          },
+          {
+            "id": "c",
+            "label": "Only successful quiz completion."
+          },
+          {
+            "id": "d",
+            "label": "Only changing the log's font and adding signatures."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G54_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G54_lesson1",
+          "questionIds": [
+            "G54_check1"
+          ]
+        },
+        {
+          "lessonId": "G54_lesson2",
+          "questionIds": [
+            "G54_check2"
+          ]
+        },
+        {
+          "lessonId": "G54_lesson3",
+          "questionIds": [
+            "G54_check3"
+          ]
+        },
+        {
+          "lessonId": "G54_lesson4",
+          "questionIds": [
+            "G54_check4"
+          ]
+        },
+        {
+          "lessonId": "G54_lesson5",
+          "questionIds": [
+            "G54_check5"
+          ]
+        },
+        {
+          "lessonId": "G54_lesson6",
+          "questionIds": [
+            "G54_check6"
+          ]
+        },
+        {
+          "lessonId": "G54_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G54_final",
+          "questionIds": [
+            "G54_final1",
+            "G54_final2",
+            "G54_final3",
+            "G54_final4",
+            "G54_final5",
+            "G54_final6",
+            "G54_final7",
+            "G54_final8",
+            "G54_final9",
+            "G54_final10",
+            "G54_final11",
+            "G54_final12",
+            "G54_final13",
+            "G54_final14",
+            "G54_final15",
+            "G54_final16",
+            "G54_final17",
+            "G54_final18",
+            "G54_final19",
+            "G54_final20"
+          ]
+        },
+        {
+          "lessonId": "G54_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G54_check1": "The task transition requires the actual hygiene and separation controls; gloves can carry contamination.",
+        "G54_check2": "Relevant illness must be managed through the actual reporting and restriction/exclusion process.",
+        "G54_check3": "Similar product appearance does not establish ingredients or cross-contact controls.",
+        "G54_check4": "Equipment settings and measured food condition answer different questions.",
+        "G54_check5": "Duration is a timeline fact; disposition depends on the actual approved process and food history.",
+        "G54_check6": "A controlled meal needs a reliable identity at service, not only at preparation.",
+        "G54_final1": "The full route reveals interfaces that a single preparation check can miss.",
+        "G54_final2": "Removing one item does not remove contamination from other surfaces.",
+        "G54_final3": "Contact surfaces include supplies and equipment, not just the food.",
+        "G54_final4": "Controls must be practically available for the actual task.",
+        "G54_final5": "Brief interruptions can change the clean/dirty state of hands and equipment.",
+        "G54_final6": "Safe staffing can be coordinated without public clinical disclosure.",
+        "G54_final7": "Hidden or substituted components can affect the actual ingredient decision.",
+        "G54_final8": "Prior contact is not undone by removing the visible item.",
+        "G54_final9": "Cooking control and allergen control are distinct questions.",
+        "G54_final10": "The Food Code is a model; actual adoption and task procedures determine the relevant rules.",
+        "G54_final11": "Meaningful comparison requires a consistent measurement basis.",
+        "G54_final12": "An unsupported average can hide a real condition or measurement problem.",
+        "G54_final13": "Traceable actual data supports later decisions and honest review.",
+        "G54_final14": "Administrative or container changes do not reverse elapsed handling history.",
+        "G54_final15": "Appearance does not establish the missing time/temperature and contamination history.",
+        "G54_final16": "The receiving interface must be capable of maintaining the actual controls.",
+        "G54_final17": "A signature must not claim checks that were not performed.",
+        "G54_final18": "Ingredient suitability does not establish the actual preparation route.",
+        "G54_final19": "An invented measurement falsifies the history and cannot resolve the food condition.",
+        "G54_final20": "The operational process must work with real observations, equipment and responsibilities."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

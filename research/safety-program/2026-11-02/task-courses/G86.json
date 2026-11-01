@@ -1,0 +1,907 @@
+{
+  "courseId": "G86",
+  "gapGroupId": "TG37",
+  "title": "Construction, utility-location and excavation methods",
+  "description": "Task-specific instruction with two worked fictional cases, six checks and twenty explained final decisions. Employer methods and observed qualification remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for construction, utility-location and excavation methods.",
+  "audience": [
+    "Construction task planners",
+    "Excavation crew members",
+    "Utility-interface coordinators",
+    "Plant-interface supervisors",
+    "Construction handover reviewers"
+  ],
+  "practicalBoundary": "Pipeline/LNG construction does not automatically include commissioning or process operation; method-specific roles activate only when supplied. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual construction responsibility matrix naming locating, inspection, plant and design roles, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual utility evidence register linking responses, revisions and planned work limits, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual excavation plan linking current ground review and applicable protective-system information, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual plant interface drawing with delivery route, work zone and assigned communications, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual inspection and change log linked to actual excavation conditions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual handover pack separating installed status, inspection evidence and commissioning exclusions, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who distinguishes construction, inspection, design and operating responsibilities; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who identifies utility-record conflicts and follows the approved verification route; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who reports actual ground, water and adjacent-load conditions to the designated competent role; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who coordinates actual plant, delivery and pedestrian interfaces within the approved plan; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who recognizes a changed condition and obtains the required inspection/reassessment; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who hands over installed status, verification limitations and outstanding acceptance decisions; records the representative task, errors, correction, limits and assessment decision.",
+    "Actual hazardous, equipment, trade or regulated duties require their own approved method assessment and applicable credentials. This online result does not satisfy those practical requirements."
+  ],
+  "sources": [
+    {
+      "title": "OSHA excavation requirements",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651",
+      "scopeLimit": "Applicable construction excavation scope and actual ground/services."
+    },
+    {
+      "title": "OSHA excavation protective systems",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.652",
+      "scopeLimit": "Actual geometry/ground and competent/qualified roles determine protection."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G86_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Construction and excavation planning links the intended work to actual ground, utilities, plant, people and protection. This course teaches those relationships through drawings, fictional inspection records and worked handovers. It does not teach digging technique, protective-system design calculations, machine operation or utility exposure methods.\n\nConstruction completion, testing, commissioning and process operation remain different stages. Qualification must follow each person's actual duty. Complete six checks and twenty final questions, retain original responses and explicitly acknowledge explained remediation. A desk result cannot establish competent-person designation, plant competence, trade qualification or authority to approve temporary works.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G86_lesson1",
+        "title": "Lesson 1 — Map construction scope and authority",
+        "body": "A construction plan should describe what will be built, where the work occurs and who supplies each function. The project manager, plant operator, utility locator, excavation inspector and protective-system designer have different responsibilities. One person can hold more than one role only when actually assigned and competent for each. A schedule title is not a technical qualification.\n\nBreak a broad work package into activities with different evidence needs. A pipeline connection can include locating, excavation, pipe installation, welding, inspection and later commissioning. Completion of an excavation inspection says nothing by itself about weld acceptance. A welding qualification says nothing by itself about utility locating. The work plan should make these interfaces visible without demanding every qualification from every person.\n\nIdentify the authority to direct work and the authority to accept technical decisions. A coordinator may arrange deliveries while a designated competent role assesses excavation conditions. A qualified designer may specify a protective arrangement while another assigned person inspects its installed condition. Where the applicable regime defines competent or qualified roles, the employer must determine and document actual applicability and designation.\n\nThe fictional project builds a short pipeline connection beside a yard. Civil construction is supplied by one contractor and process commissioning by another. The civil coordinator is asked to approve startup because the excavation is complete. The correct interpretation is that construction progress and operational release answer different questions. The coordinator supplies accurate completion and outstanding-work information to the commissioning authority.\n\nWorkers need a practical route for unclear or conflicting instructions. If a delivery contact asks for a different excavation method, the worker should identify it as a task change rather than treat the purchase order as technical approval. The responsible construction and technical authorities must review the effect on ground, utilities, plant and protection before the changed work is relied on. Clear role boundaries make coordination faster because the next decision reaches the correct person.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G86_lesson2",
+        "title": "Lesson 2 — Reconcile utility information",
+        "body": "Underground-service information is assembled from several sources: utility responses, drawings, previous work records, surface indications and the applicable locating process. These sources can differ in accuracy, age and coverage. The goal is not to select one convenient map but to establish what is known and what still needs verification for the planned disturbance.\n\nStart with the actual work footprint and compare every supplied response against it. Check dates, revisions, exclusions and the service owner's scope. A response covering one corridor may not cover an added access or support area. A record showing no service of one type is not necessarily evidence that no underground service exists. The responsible utility and excavation roles determine the actual verification and exposure method.\n\nConflicting locations are important information. Drawing U3 places a service east of the route; the current response crosses the planned route. Mark both and identify the conflict. Averaging their positions would invent a third location supported by neither. Do not dig or use equipment to test which drawing is right outside the approved method.\n\nSurface markings are part of a controlled information process, not a universal guarantee about depth, status or every service. Abandoned or unknown services and later changes can complicate the picture. The worker should report unexpected material, markings or conditions through the approved stop and reassessment route. The course supplies no digging clearance or exposure technique.\n\nFor the desk exercise, overlay the proposed trench, delivery access and the two utility records. Identify which planned activities depend on the disputed location. The worked result is a clearly marked affected area, a list of the conflicting evidence and a request to the responsible utility and excavation authority. Work elsewhere is considered only within its own approved boundary; resolving one conflict does not establish every part of the site clear.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G86_lesson3",
+        "title": "Lesson 3 — Review ground and protective-system evidence",
+        "body": "Excavation planning must account for actual ground behavior and the forces acting around the work. Soil description, water, geometry, nearby structures, stored material and traffic can affect the assessment. A generic soil label copied from another location is not a current assessment of this excavation. The designated competent and qualified roles determine the applicable inspection and protective-system decisions.\n\nDistinguish a design basis from an installed condition. A protective arrangement may be designed or selected using approved information, but the actual installation still has to match the accepted configuration and conditions. Conversely, a neat installation does not prove that its design basis fits the ground and loads. The worker's observations can reveal differences that the responsible role must assess.\n\nAdjacent loads matter because the excavation does not exist in isolation. A storage pile, vehicle route or nearby structure can introduce conditions absent from a copied design. Water can change conditions over time. This course teaches recognition of those relationships without giving slopes, load values, shield selections or structural calculations. Those technical decisions must come from the actual competent process and applicable requirements.\n\nThe fictional excavation is beside a material-storage area. Its pack reuses an assessment from an unloaded section of the yard. The reviewer identifies the adjacent storage and asks whether it was included in the basis. The worked answer is not to choose a protective system from a picture. It is to obtain a current competent assessment and qualified design input where required.\n\nFor an exercise, make two columns: conditions described in the approved basis and conditions reported for the proposed work. Add current water observations, adjacent use and geometry information. Differences become specific review questions. This gives the competent person useful facts rather than a vague statement that the ground looks fine. No worker should enter an excavation to collect missing evidence for this exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G86_lesson4",
+        "title": "Lesson 4 — Read plant and pedestrian interfaces",
+        "body": "Plant planning should show how the machine, deliveries, workers and public or site routes interact. The machine's operating envelope is only part of the picture. Material movement, blind interfaces, access to offices and receiving areas can create exposure beyond the excavation edge. Actual controls and operating methods require the approved plan and assessed personnel.\n\nSeparate operator, signal, locating and ground-support duties. A qualification for one role does not automatically qualify the others. Communications need a defined arrangement so the operator is not expected to infer instructions from several people. The employer determines the actual personnel and qualifications required for the machine, task and applicable regime.\n\nA drawing exercise can reveal interface conflicts without moving equipment. Mark the proposed plant work area, delivery unloading location, pedestrian route and material-storage position. Compare them with utility and ground constraints. If two activities occupy the same area, identify the owners who must coordinate them. The desk learner should not invent a maneuver or separation distance as a substitute for the proper technical plan.\n\nIn the fictional yard, the excavator plan and delivery plan were prepared separately. The unloading position overlaps the plant area. A booking confirmation proves the delivery time was arranged, not that the interface is safe. The coordinator brings the actual drawings to the responsible site and plant planners, who revise and approve the arrangement.\n\nWorkers should know which changes require them to report back: an unplanned delivery, altered access, unexpected people in the work area or changed ground supporting plant can invalidate assumptions. A certificate does not make those interfaces irrelevant. A competent operator still needs a task arrangement that fits the actual site. The useful worker behavior is accurate recognition and communication of the changed condition, followed by the employer's approved response.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G86_lesson5",
+        "title": "Lesson 5 — Recognize change and inspection triggers",
+        "body": "An excavation inspection is about current conditions, not the age of a signature. The applicable program determines who inspects, what triggers inspection and when reassessment is required. The designated person needs accurate information about weather, water, nearby loading, utility findings and changes to geometry or protection. A form copied from a previous shift can hide important differences.\n\nTreat a changed condition as a changed planning assumption. If water appears where the approved basis described dry conditions, identify which ground, access and protection decisions may be affected. The competent role determines the actual implications. A worker can provide a clear report without diagnosing stability or selecting a remedy. Do not continue affected work merely because the original plan remains in the folder.\n\nInspection records should identify the location, actual condition, restrictions and disposition. A check mark saying satisfactory is weak if the underlying record also notes an unresolved relevant defect. Preserve both the observation and the competent decision. If the restriction is later lifted, link the evidence and authority for that change rather than deleting the original entry.\n\nThe fictional shift sheet says conditions unchanged. A current photograph shows standing water after a weather event. The reviewer does not assume the photograph proves a particular failure, but it clearly challenges the unchanged statement. The designated inspector must receive the current information and reassess under the actual requirements.\n\nFor the desk exercise, write a report containing only observable facts: location, time, water appearance and relevant changed nearby activity. Then distinguish the technical questions for the competent role. This produces a useful handoff. Writing excavation unsafe without evidence or writing safe because yesterday was safe are both less helpful than a precise changed-condition report followed by the appropriate assessment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G86_lesson6",
+        "title": "Lesson 6 — Hand over boundaries and as-built uncertainty",
+        "body": "Construction handover should distinguish what was planned, installed, inspected and accepted. A proposed drawing records intent; an as-built record represents verified installed information to the extent stated. A photograph can illustrate a feature without establishing its exact surveyed location or every hidden detail. The basis and limitations of each handover item must remain visible.\n\nChanges during construction need traceability. If a route deviates around an obstruction, the final information should explain the verified deviation through the authorized recording process. Leaving the proposed straight route labeled as-built can mislead future excavation or maintenance. Workers who observe a deviation should report it while contemporaneous information is available rather than relying on memory months later.\n\nOutstanding tests and temporary arrangements require named owners. Construction complete might mean physical installation finished while technical acceptance or commissioning remains pending. The receiving operation needs to know which systems remain unavailable or restricted. A completed contractor invoice does not establish the operational status of the installation.\n\nKeep trade acceptance and startup authority separate. Inspection evidence may support one component of the handover without proving the entire system ready for operation. The authorized commissioning and operating roles decide the next stage under actual procedures. The construction team's responsibility is to give them accurate installed status, test evidence, limitations and unresolved work.\n\nIn the exercise, an installed pipe route bends around an obstruction but the pack contains only the original proposal. The worked response retains that drawing as proposed information and requests the required verification and record update. It also identifies an open test and a temporary excavation restriction. This is a useful completion account even though it does not give a blanket ready-for-service label. Future teams can then plan from known information rather than discover the discrepancy during live work.\n\nA drawing-quality check can be performed without entering the work area. Identify the coordinate or location basis, revision status, legend and the meaning of line styles before interpreting a plan. A dashed proposed line and a verified installed line may look similar in a small printout but represent different evidence. If the legend is missing, ask for the controlled source rather than guessing from another drawing package.\n\nRecord location uncertainty in language the receiving team can use. Saying route approximate, based on installation notes tells a later planner something materially different from surveyed as-built. The appropriate verification depends on the intended use and the organization's technical requirements. A planning sketch can remain useful for coordination while being unsuitable for an exact future disturbance decision. Preserving that distinction is a construction information skill, not merely a filing preference.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G86_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek plans a pipeline connection across a yard. Drawing U3 places an underground service beside the route, while the latest utility response crosses it. The excavation pack reuses a ground assessment from an unloaded area. The proposed work is beside stored material. A delivery plan also places an unloading vehicle inside the plant area.\n\nThe coordinator first maps the actual work package and roles. Utility verification, excavation assessment, plant operation, protective-system design where needed and later commissioning are assigned separately. The coordinator can organize their information but cannot replace their technical decisions. The crew is told that construction and operation remain different scopes.\n\nThe conflicting utility routes are marked on a planning copy. The coordinator does not average them or select the one that leaves the schedule unchanged. The affected disturbance is identified for the responsible utility and excavation review. The service response's scope and current revision are retained so the reviewers can see exactly what conflicts.\n\nThe ground comparison then identifies the stored material absent from the reused assessment. That observation does not itself calculate a protective arrangement. It tells the designated competent and qualified roles that the prior basis may not represent the actual conditions. They must assess current ground, geometry, water and adjacent loading under the applicable process.\n\nFinally, the delivery drawing is overlaid with the plant plan. The shared area is a coordination conflict between real activities, even though each has a booking or work order. The site and plant planners agree and approve a revised arrangement. The coordinator transmits that actual arrangement rather than asking the operator to work around the delivery informally.\n\nThe worked outcome identifies three different unresolved decisions and the evidence needed for each. One review cannot close all three. A resolved utility location does not validate the copied ground assessment; a revised delivery time does not establish a protective-system design. The task workers receive precise boundaries and current instructions after the designated decisions are made.\n\nThis case shows why construction planning is more than assembling signatures. Each record has a relationship to current physical conditions. The worker's reports of stored material, markings and actual movements are essential inputs, while technical acceptance remains with the assigned competent roles. No fictional drawing exercise authorizes excavation or machine movement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G86_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: excavation and pipe installation are nearing completion. The previous inspection recorded dry conditions. After a weather event, a current photograph shows standing water. The shift sheet was copied with conditions unchanged. During installation, the route also deviated around an obstruction, but the proposed drawing still shows a straight alignment. The project manager asks the civil coordinator to mark the package ready for startup.\n\nThe first worked decision concerns current excavation conditions. The photograph is evidence of a change, not a complete stability analysis. The coordinator reports its location, time and relationship to the excavation and gives it to the designated inspection role. The copied unchanged statement cannot substitute for the required current assessment. Any restrictions and later disposition are recorded rather than erased.\n\nThe second decision concerns installed information. The proposed drawing remains valid evidence of original intent but is not verified as-built information for the deviation. The crew's contemporaneous observations are preserved and routed through the authorized verification process. The coordinator does not redraw an estimated alignment from memory and label it surveyed. The final record must state what is verified and any remaining limitation.\n\nThe third decision concerns release. Physical construction completion, inspection acceptance and operating startup are different outcomes. The civil coordinator lists completed installation, current excavation restrictions, the drawing discrepancy and any outstanding tests. The commissioning authority receives this account and makes its own decision under the actual requirements. A completed invoice or schedule milestone cannot supply that authority.\n\nThe manager offers to sign a general completed cover sheet. The coordinator explains that a cover signature would not resolve changed ground, establish the installed route or accept pending tests. The package can accurately show progress while remaining incomplete for startup. This avoids falsely rejecting completed work and falsely declaring every subsequent duty authorized.\n\nOnce the competent inspection, installed-information verification and outstanding technical acceptances are resolved, the handover is updated with their evidence and dates. The original observations remain in the history. Future maintenance or excavation teams can then understand the actual route and status instead of relying on a clean but misleading summary.\n\nThe lesson is a concrete construction skill: communicate the state of the physical work and the basis of each claim. That skill supports safe next-stage decisions without asking a coordinator or worker to act as an unassigned designer, inspector or operator.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G86_final",
+        "title": "Final assessment and residual requirements",
+        "body": "The final questions apply role separation, utility evidence, current ground assessment, plant interfaces, changed-condition reporting and construction handover. Review each explanation after an error and acknowledge remediation while preserving the original answer.\n\nReal construction duties require actual method instruction and observed task competence. Design, trade, plant, competent-person and operating roles remain separately designated where applicable. This course supplies no excavation technique or design approval and cannot authorize commissioning or startup.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G86_check1",
+        "prompt": "During map construction scope and authority, the coordinator is listed as protective-system designer solely because they manage the schedule. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain an explicit qualified design assignment and maintain the coordinator boundary."
+          },
+          {
+            "id": "b",
+            "label": "Project management experience establishes protective-system design competence."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G86_check2",
+        "prompt": "During reconcile utility information, two current records show different routes for the same service. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choose the map with the clearest graphics."
+          },
+          {
+            "id": "b",
+            "label": "Raise the conflict to the responsible utility and excavation authority before affected work."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G86_check3",
+        "prompt": "During review ground and protective-system evidence, a previous site design is reused without review of changed geometry and water conditions. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A successful nearby excavation validates this excavation design."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Obtain competent review of current conditions and qualified design review where required."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G86_check4",
+        "prompt": "During read plant and pedestrian interfaces, a delivery crossing is omitted from the excavation plant plan. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Operator certification removes the need to coordinate pedestrians."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Coordinate the crossing and revise the interface arrangement before affected operations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G86_check5",
+        "prompt": "During recognize change and inspection triggers, a water condition changes but the previous inspection is copied into a new shift record. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Request the designated reassessment and preserve the earlier record as history."
+          },
+          {
+            "id": "b",
+            "label": "A new date on an old inspection proves current conditions were checked."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G86_check6",
+        "prompt": "During hand over boundaries and as-built uncertainty, a proposed route drawing is labeled as-built without field verification. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Construction handover automatically authorizes pipeline operation."
+          },
+          {
+            "id": "b",
+            "label": "Retain its proposed status and request authorized verification of the installed arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G86_final1",
+        "prompt": "Which evidence is most directly relevant to map construction scope and authority?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Construction responsibility matrix naming locating, inspection, plant and design roles."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G86_final2",
+        "prompt": "Which evidence is most directly relevant to reconcile utility information?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Utility evidence register linking responses, revisions and planned work limits."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G86_final3",
+        "prompt": "Which evidence is most directly relevant to review ground and protective-system evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Excavation plan linking current ground review and applicable protective-system information."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G86_final4",
+        "prompt": "Which evidence is most directly relevant to read plant and pedestrian interfaces?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Plant interface drawing with delivery route, work zone and assigned communications."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G86_final5",
+        "prompt": "Which evidence is most directly relevant to recognize change and inspection triggers?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Inspection and change log linked to actual excavation conditions."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G86_final6",
+        "prompt": "Which evidence is most directly relevant to hand over boundaries and as-built uncertainty?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Handover pack separating installed status, inspection evidence and commissioning exclusions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G86_final7",
+        "prompt": "A colleague argues: “Project management experience establishes protective-system design competence.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; obtain an explicit qualified design assignment and maintain the coordinator boundary."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G86_final8",
+        "prompt": "A colleague argues: “Choose the map with the clearest graphics.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; raise the conflict to the responsible utility and excavation authority before affected work."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G86_final9",
+        "prompt": "A colleague argues: “A successful nearby excavation validates this excavation design.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; obtain competent review of current conditions and qualified design review where required."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G86_final10",
+        "prompt": "A colleague argues: “Operator certification removes the need to coordinate pedestrians.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; coordinate the crossing and revise the interface arrangement before affected operations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G86_final11",
+        "prompt": "A colleague argues: “A new date on an old inspection proves current conditions were checked.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; request the designated reassessment and preserve the earlier record as history."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G86_final12",
+        "prompt": "A colleague argues: “Construction handover automatically authorizes pipeline operation.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; retain the actual construction handover within its scope and obtain the designated commissioning/operating release with required evidence."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G86_final13",
+        "prompt": "After the discrepancy in map construction scope and authority is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Evidence that addresses the actual discrepancy in the construction responsibility matrix naming locating, inspection, plant and design roles, linked to the original record."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G86_final14",
+        "prompt": "After the discrepancy in reconcile utility information is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          },
+          {
+            "id": "d",
+            "label": "Evidence that addresses the actual discrepancy in the utility evidence register linking responses, revisions and planned work limits, linked to the original record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G86_final15",
+        "prompt": "After the discrepancy in review ground and protective-system evidence is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Evidence that addresses the actual discrepancy in the excavation plan linking current ground review and applicable protective-system information, linked to the original record."
+          },
+          {
+            "id": "b",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "c",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G86_final16",
+        "prompt": "After the discrepancy in read plant and pedestrian interfaces is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "Evidence that addresses the actual discrepancy in the plant interface drawing with delivery route, work zone and assigned communications, linked to the original record."
+          },
+          {
+            "id": "c",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G86_final17",
+        "prompt": "After the discrepancy in recognize change and inspection triggers is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Evidence that addresses the actual discrepancy in the inspection and change log linked to actual excavation conditions, linked to the original record."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G86_final18",
+        "prompt": "After the discrepancy in hand over boundaries and as-built uncertainty is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          },
+          {
+            "id": "d",
+            "label": "Evidence that addresses the actual discrepancy in the handover pack separating installed status, inspection evidence and commissioning exclusions, linked to the original record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G86_final19",
+        "prompt": "Drawing U3 places a service beside the route while the current utility response crosses it. What should the construction coordinator provide for review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Both conflicting records and the affected work footprint, referred to the responsible utility and excavation authority."
+          },
+          {
+            "id": "b",
+            "label": "An averaged service location between the two routes."
+          },
+          {
+            "id": "c",
+            "label": "Only the map that leaves the delivery schedule unchanged."
+          },
+          {
+            "id": "d",
+            "label": "A new all-clear statement based on the coordinator's project-management experience."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G86_final20",
+        "prompt": "After installation deviates around an obstruction, the pack still contains only the proposed straight route. What should the handover say?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The proposed drawing becomes surveyed as-built when the contractor invoice is paid."
+          },
+          {
+            "id": "b",
+            "label": "The original drawing records intent; the installed deviation needs authorized verification and an accurately bounded record before it is called as-built."
+          },
+          {
+            "id": "c",
+            "label": "The coordinator should estimate the route from memory and label it verified."
+          },
+          {
+            "id": "d",
+            "label": "The route discrepancy disappears once a general completed cover sheet is signed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G86_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G86_lesson1",
+          "questionIds": [
+            "G86_check1"
+          ]
+        },
+        {
+          "lessonId": "G86_lesson2",
+          "questionIds": [
+            "G86_check2"
+          ]
+        },
+        {
+          "lessonId": "G86_lesson3",
+          "questionIds": [
+            "G86_check3"
+          ]
+        },
+        {
+          "lessonId": "G86_lesson4",
+          "questionIds": [
+            "G86_check4"
+          ]
+        },
+        {
+          "lessonId": "G86_lesson5",
+          "questionIds": [
+            "G86_check5"
+          ]
+        },
+        {
+          "lessonId": "G86_lesson6",
+          "questionIds": [
+            "G86_check6"
+          ]
+        },
+        {
+          "lessonId": "G86_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G86_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G86_final",
+          "questionIds": [
+            "G86_final1",
+            "G86_final2",
+            "G86_final3",
+            "G86_final4",
+            "G86_final5",
+            "G86_final6",
+            "G86_final7",
+            "G86_final8",
+            "G86_final9",
+            "G86_final10",
+            "G86_final11",
+            "G86_final12",
+            "G86_final13",
+            "G86_final14",
+            "G86_final15",
+            "G86_final16",
+            "G86_final17",
+            "G86_final18",
+            "G86_final19",
+            "G86_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G86_check1": "The correct decision is to obtain an explicit qualified design assignment and maintain the coordinator boundary. Construction planning begins with the actual activity, work area and people supplied. Pipeline construction is not process commissioning. Separate plant operation, locating, excavation inspection and protective-system design. A contract may assign coordination while another employer supplies the competent excavation role. Document these interfaces explicitly so a project-manager title does not silently become authority to approve ground conditions or temporary works. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G86_check2": "The correct decision is to raise the conflict to the responsible utility and excavation authority before affected work. Compare current utility responses, drawings, site changes and the planned disturbance footprint. Record unresolved conflicts instead of selecting the most convenient map. Surface markings are information within an agreed locating process, not proof that every underground service has been identified. The approved method must govern verification and safe exposure. This lesson uses marked-up drawings only and gives no digging distance or operating technique. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G86_check3": "The correct decision is to obtain competent review of current conditions and qualified design review where required. Ground behavior, water, nearby loads and changing conditions affect excavation planning. The responsible competent or qualified persons determine inspection and protection within the applicable regime. A generic soil label copied from a nearby job cannot establish the conditions of this excavation. Check that design information or approved protective-system data matches the proposed configuration and that departures have a defined review route. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G86_check4": "The correct decision is to coordinate the crossing and revise the interface arrangement before affected operations. The plant plan should connect equipment identity, work envelope, access routes and nearby personnel duties. A plant operator qualification does not establish a signaler or locator role automatically. Look for blind interfaces, delivery crossings and changing ground near plant. The actual separation arrangements and operating method belong to the approved task plan and assessed personnel; a drawing review cannot authorize a machine movement. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G86_check5": "The correct decision is to request the designated reassessment and preserve the earlier record as history. A plan is a decision based on conditions, not a permanent permission slip. Weather, water, nearby traffic, unexpected services or changed excavation geometry can invalidate assumptions. The designated role determines inspections and reauthorization under the applicable requirements. Record what changed and which part of the plan is affected rather than relying on a fresh signature on unchanged paperwork. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G86_check6": "The correct decision is to retain its proposed status and request authorized verification of the installed arrangement. Completion records should distinguish installed work, inspected work and unverified conditions. As-built information must identify its basis and limitations; a proposed drawing is not an as-built record. Construction release does not authorize process startup. Outstanding tests, open excavations and temporary arrangements require owners so the receiving operation knows what remains unavailable or restricted. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G86_final1": "A construction responsibility matrix naming locating, inspection, plant and design roles addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Construction planning begins with the actual activity, work area and people supplied. Pipeline construction is not process commissioning. Separate plant operation, locating, excavation inspection and protective-system design. A contract may assign coordination while another employer supplies the competent excavation role. Document these interfaces explicitly so a project-manager title does not silently become authority to approve ground conditions or temporary works.",
+        "G86_final2": "A utility evidence register linking responses, revisions and planned work limits addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Compare current utility responses, drawings, site changes and the planned disturbance footprint. Record unresolved conflicts instead of selecting the most convenient map. Surface markings are information within an agreed locating process, not proof that every underground service has been identified. The approved method must govern verification and safe exposure. This lesson uses marked-up drawings only and gives no digging distance or operating technique.",
+        "G86_final3": "A excavation plan linking current ground review and applicable protective-system information addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Ground behavior, water, nearby loads and changing conditions affect excavation planning. The responsible competent or qualified persons determine inspection and protection within the applicable regime. A generic soil label copied from a nearby job cannot establish the conditions of this excavation. Check that design information or approved protective-system data matches the proposed configuration and that departures have a defined review route.",
+        "G86_final4": "A plant interface drawing with delivery route, work zone and assigned communications addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. The plant plan should connect equipment identity, work envelope, access routes and nearby personnel duties. A plant operator qualification does not establish a signaler or locator role automatically. Look for blind interfaces, delivery crossings and changing ground near plant. The actual separation arrangements and operating method belong to the approved task plan and assessed personnel; a drawing review cannot authorize a machine movement.",
+        "G86_final5": "A inspection and change log linked to actual excavation conditions addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A plan is a decision based on conditions, not a permanent permission slip. Weather, water, nearby traffic, unexpected services or changed excavation geometry can invalidate assumptions. The designated role determines inspections and reauthorization under the applicable requirements. Record what changed and which part of the plan is affected rather than relying on a fresh signature on unchanged paperwork.",
+        "G86_final6": "A handover pack separating installed status, inspection evidence and commissioning exclusions addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Completion records should distinguish installed work, inspected work and unverified conditions. As-built information must identify its basis and limitations; a proposed drawing is not an as-built record. Construction release does not authorize process startup. Outstanding tests, open excavations and temporary arrangements require owners so the receiving operation knows what remains unavailable or restricted.",
+        "G86_final7": "That inference exceeds the evidence. Construction planning begins with the actual activity, work area and people supplied. Pipeline construction is not process commissioning. Separate plant operation, locating, excavation inspection and protective-system design. A contract may assign coordination while another employer supplies the competent excavation role. Document these interfaces explicitly so a project-manager title does not silently become authority to approve ground conditions or temporary works. The appropriate task disposition remains to obtain an explicit qualified design assignment and maintain the coordinator boundary.",
+        "G86_final8": "That inference exceeds the evidence. Compare current utility responses, drawings, site changes and the planned disturbance footprint. Record unresolved conflicts instead of selecting the most convenient map. Surface markings are information within an agreed locating process, not proof that every underground service has been identified. The approved method must govern verification and safe exposure. This lesson uses marked-up drawings only and gives no digging distance or operating technique. The appropriate task disposition remains to raise the conflict to the responsible utility and excavation authority before affected work.",
+        "G86_final9": "That inference exceeds the evidence. Ground behavior, water, nearby loads and changing conditions affect excavation planning. The responsible competent or qualified persons determine inspection and protection within the applicable regime. A generic soil label copied from a nearby job cannot establish the conditions of this excavation. Check that design information or approved protective-system data matches the proposed configuration and that departures have a defined review route. The appropriate task disposition remains to obtain competent review of current conditions and qualified design review where required.",
+        "G86_final10": "That inference exceeds the evidence. The plant plan should connect equipment identity, work envelope, access routes and nearby personnel duties. A plant operator qualification does not establish a signaler or locator role automatically. Look for blind interfaces, delivery crossings and changing ground near plant. The actual separation arrangements and operating method belong to the approved task plan and assessed personnel; a drawing review cannot authorize a machine movement. The appropriate task disposition remains to coordinate the crossing and revise the interface arrangement before affected operations.",
+        "G86_final11": "That inference exceeds the evidence. A plan is a decision based on conditions, not a permanent permission slip. Weather, water, nearby traffic, unexpected services or changed excavation geometry can invalidate assumptions. The designated role determines inspections and reauthorization under the applicable requirements. Record what changed and which part of the plan is affected rather than relying on a fresh signature on unchanged paperwork. The appropriate task disposition remains to request the designated reassessment and preserve the earlier record as history.",
+        "G86_final12": "Construction handover can establish defined physical work and supporting records. It does not automatically authorize pipeline operation. The designated commissioning and operating roles must receive and evaluate the actual installed status, outstanding tests and limitations under their applicable procedures. This question is about release authority, not a presumed proposed/as-built drawing discrepancy.",
+        "G86_final13": "The correction must address why the construction responsibility matrix naming locating, inspection, plant and design roles did not support the claim. Construction planning begins with the actual activity, work area and people supplied. Pipeline construction is not process commissioning. Separate plant operation, locating, excavation inspection and protective-system design. A contract may assign coordination while another employer supplies the competent excavation role. Document these interfaces explicitly so a project-manager title does not silently become authority to approve ground conditions or temporary works. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G86_final14": "The correction must address why the utility evidence register linking responses, revisions and planned work limits did not support the claim. Compare current utility responses, drawings, site changes and the planned disturbance footprint. Record unresolved conflicts instead of selecting the most convenient map. Surface markings are information within an agreed locating process, not proof that every underground service has been identified. The approved method must govern verification and safe exposure. This lesson uses marked-up drawings only and gives no digging distance or operating technique. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G86_final15": "The correction must address why the excavation plan linking current ground review and applicable protective-system information did not support the claim. Ground behavior, water, nearby loads and changing conditions affect excavation planning. The responsible competent or qualified persons determine inspection and protection within the applicable regime. A generic soil label copied from a nearby job cannot establish the conditions of this excavation. Check that design information or approved protective-system data matches the proposed configuration and that departures have a defined review route. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G86_final16": "The correction must address why the plant interface drawing with delivery route, work zone and assigned communications did not support the claim. The plant plan should connect equipment identity, work envelope, access routes and nearby personnel duties. A plant operator qualification does not establish a signaler or locator role automatically. Look for blind interfaces, delivery crossings and changing ground near plant. The actual separation arrangements and operating method belong to the approved task plan and assessed personnel; a drawing review cannot authorize a machine movement. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G86_final17": "The correction must address why the inspection and change log linked to actual excavation conditions did not support the claim. A plan is a decision based on conditions, not a permanent permission slip. Weather, water, nearby traffic, unexpected services or changed excavation geometry can invalidate assumptions. The designated role determines inspections and reauthorization under the applicable requirements. Record what changed and which part of the plan is affected rather than relying on a fresh signature on unchanged paperwork. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G86_final18": "The correction must address why the handover pack separating installed status, inspection evidence and commissioning exclusions did not support the claim. Completion records should distinguish installed work, inspected work and unverified conditions. As-built information must identify its basis and limitations; a proposed drawing is not an as-built record. Construction release does not authorize process startup. Outstanding tests, open excavations and temporary arrangements require owners so the receiving operation knows what remains unavailable or restricted. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G86_final19": "The conflict is evidence requiring actual utility/excavation resolution. Averaging invents a location, schedule preference is not technical evidence and coordination experience does not establish locating or design authority.",
+        "G86_final20": "Proposed and verified installed information are distinct. Preserve contemporaneous evidence of the deviation and obtain the required verification/record update. Administrative completion cannot create surveyed or otherwise verified installed geometry."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

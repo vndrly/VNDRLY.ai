@@ -6483,6 +6483,7 @@
     "taskGapsHelp": "Busque un servicio para ver los conocimientos enseñados, los roles afectados, los registros requeridos del proveedor y las evaluaciones prácticas calificadas. Completar el curso no cierra esos requisitos separados.",
     "taskCourse": "Abrir curso específico de tarea {{courseId}}",
     "vendorEvidence": "Evidencia del proveedor aún requerida",
-    "practicalEvidence": "Evaluación práctica calificada o credenciales aplicables aún requeridas"
+    "practicalEvidence": "Evaluación práctica calificada o credenciales aplicables aún requeridas",
+    "preservedExtensions": "Servicios conservados fuera de esta versión del catálogo maestro"
   }
 }

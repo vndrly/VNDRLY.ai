@@ -1,0 +1,906 @@
+{
+  "courseId": "G93",
+  "gapGroupId": "TG44",
+  "title": "Asset-specific preparation, inspection and rental handoff",
+  "description": "Six subject-specific lessons, two worked fictional cases and twenty-six explained decisions. Actual employer methods and qualified practical performance remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for asset-specific preparation, inspection and rental handoff.",
+  "audience": [
+    "Rental asset preparation and inspection personnel",
+    "Equipment dispatch and return coordinators",
+    "Customer handover supervisors",
+    "Asset condition and technical acceptance reviewers"
+  ],
+  "practicalBoundary": "Rental without an operator is supply. Preserve this boundary for tanks, compressors, aircraft, lighting, power swivels and spill booms rather than assigning every operator credential to every rental. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual rental responsibility schedule listing included setup, inspection, maintenance and operation, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual asset dossier linking serial number, model, configuration and intended use, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual condition report identifying criteria, examined features and exclusions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual defect register linking item, restriction, corrective evidence and release authority, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual handover pack separating delivery receipt, instructions, restrictions and acceptance, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual return assessment linking reported use, configuration changes and next-use disposition, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who maps included and excluded preparation, delivery, setup, maintenance and operating duties; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who matches the actual asset and configuration with current instructions and records; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who explains the examined scope and limitations without broadening a visual check into technical certification; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who preserves defect history and links actual corrective work to competent acceptance evidence; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who hands over delivery, setup and operational status as separate responsibility decisions; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Qualified assessor observes the assigned person who assesses return information through the approved process and preserves next-use restrictions; records actual representative conditions, errors, correction, restrictions and outcome.",
+    "Actual hazardous experiment, pipeline operation, equipment inspection/repair, driving, coupling, loading or recovery requires its own method-specific instruction and qualified safe practical assessment where assigned. This online result does not satisfy those requirements."
+  ],
+  "sources": [
+    {
+      "title": "OSHA recommended safety-program education and training",
+      "url": "https://www.osha.gov/safety-management/education-training",
+      "scopeLimit": "General role- and hazard-specific training guidance; not a trade license or universal legal mandate."
+    },
+    {
+      "title": "OSHA hazardous energy control",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G93_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Equipment rental can supply an asset alone or include delivery, preparation, setup, maintenance or operation. This course teaches how to identify the actual supplied duty, establish asset identity, interpret condition evidence, control defects, hand over restrictions and assess returned equipment. It does not teach equipment operation, repair, pressure testing, aviation or entry methods.\n\nUse fictional hire records and photographs only. Complete twenty-six decisions, retain first answers and acknowledge explained remediation. Actual asset-specific preparation and inspection need manufacturer/employer instruction and assessed capability. A rental contract or knowledge badge cannot establish every operator, trade or responder qualification associated with the hired item.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G93_lesson1",
+        "title": "Lesson 1 — Read the rental boundary",
+        "body": "Read the rental agreement as a responsibility boundary. The item being supplied and the activities being supplied are different information. A tank can be hired without cleaning, entry or operation. A compressor can be delivered without installation or commissioning. An aircraft can be leased without the lessor supplying a pilot. The qualification review must follow the actual included duties rather than every possible use of the asset.\n\nList preparation, inspection, delivery, setup, connection, maintenance, operation and return separately. Mark each as included, excluded or requiring clarification. Identify which party supplies the people and which party accepts the result. If the contract is silent, resolve the actual responsibility before someone relies on an assumed service. Silence is not proof that the supplier does everything or nothing.\n\nDistinguish technical acceptance from commercial custody. A delivery driver can obtain a receipt without being authorized to commission the equipment. The customer may take custody while operational acceptance remains pending. The record should say what the signature means so the next person does not interpret a commercial handoff as a technical release.\n\nAvoid irrelevant credential demands. Preparation staff for equipment-only supply need competence for their actual preparation and inspection tasks. They do not automatically need the qualifications of a pilot, tank entrant or emergency responder merely because an asset could be used in those activities. If the contract includes such a role, its actual requirements must be reviewed separately.\n\nIn the exercise, the order hires a compressor with delivery and a preparation check, while the customer supplies installation and operation. The worked role map preserves that split and identifies the handover information each party needs. A later request for the driver to connect and start the unit is a changed duty. It cannot be treated as included simply because the driver delivered the asset or the customer needs it urgently.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G93_lesson2",
+        "title": "Lesson 2 — Establish item identity and intended use",
+        "body": "Asset identity connects every preparation and inspection statement to the actual item. Start with the identifier used by the employer, model and relevant configuration. A photograph of a similar machine can illustrate a product but does not prove the condition of the scheduled unit. An inspection sheet for another serial number remains evidence for that other asset.\n\nIntended use gives identity practical meaning. The same asset may have different restrictions or preparation needs for different uses. The responsible technical process must determine suitability using the actual manufacturer information and employer criteria. A familiar model name alone cannot establish that an accessory, configuration or environment is covered.\n\nConfiguration is part of the record. Added or removed components, substituted accessories and customer modifications can change what prior evidence supports. Record the actual configuration at handover to the extent required by the adopted process. A general ready label can hide an important mismatch between the inspected arrangement and the delivered one.\n\nUse controlled instructions that match the item. A manual for a related model may not describe the actual equipment. Workers should identify the mismatch and obtain the correct information rather than copy a procedure from memory. This course does not teach physical identification checks on energized equipment or authorize testing to resolve uncertain paperwork.\n\nFor the fictional exercise, the schedule lists compressor C12 while the condition report names C21. Both share a model. The worked answer holds the affected identity claim and obtains evidence for the actual item. The customer can still receive accurate commercial information, but technical readiness must not be transferred between units for convenience. If a genuine identifier correction is established, its basis and original record are retained so the handover history remains understandable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G93_lesson3",
+        "title": "Lesson 3 — Interpret condition and inspection scope",
+        "body": "An inspection result has a scope. It identifies what was examined, against which criteria, by whom and with what limitations. A visible-condition check is different from a pressure examination, electrical test or structural assessment. The person preparing the report should not use a broad fitness statement when the actual activity established only a limited condition.\n\nRead the criterion and intended decision together. Manufacturer preparation information may define checks for delivery readiness without certifying the customer's entire installation. A customer specification may require a separate technical examination. The responsible competent role must decide whether the inspection scope supports the actual duty. A coordinator can identify missing relationships without becoming the technical inspector.\n\nCondition evidence includes restrictions as well as satisfactory findings. A cosmetic defect may have a different disposition from a technical defect, but the appropriate authority must make that determination. Do not assume harmlessness from appearance or seriousness from an unfamiliar label. Record observations accurately and use the actual defect process.\n\nPhotographs are supporting evidence, not universal tests. They can show visible condition at a stated time and location. They cannot establish every hidden feature or internal integrity. Keep images linked to the asset and explain their purpose. A clean image should not replace an unperformed examination.\n\nIn the exercise, a report states that an external panel and accessories were visually checked. The customer asks whether the report certifies pressure integrity. The worked answer confirms the recorded visual scope and refers the additional assurance question to the competent technical process. The report need not be discarded; it needs an accurate claim. If further examination is required, it must be performed and accepted by qualified personnel under the actual method, not inferred from a preparation signature.\n\nAn acceptance criterion should also be distinguished from an observation method. A photograph may document a visible feature, while the criterion determines what conclusion that feature can support. The competent inspector must understand both. A coordinator should not invent a criterion after seeing the result simply to make the item pass, and an inspector should not claim compliance with a technical requirement they did not actually evaluate.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G93_lesson4",
+        "title": "Lesson 4 — Control defects and substitutions",
+        "body": "A defect process prevents commercial urgency from becoming technical acceptance. Identify the asset, reported condition, restriction, responsible reviewer and disposition. The process should show whether the item is unavailable, limited to an accepted use or released after the required corrective evidence. The actual competent authority determines the technical decision; dispatch cannot erase a defect to make a delivery slot work.\n\nRepair activity and verified result are separate. Replacing a component can be part of a correction without proving the whole issue resolved. The relevant inspection or verification must address the defect and any changed configuration. This course supplies no repair or test procedure; the qualified method and manufacturer/employer instructions govern actual work.\n\nSubstitutions deserve explicit review. A different component or replacement asset may have different evidence needs. Do not carry forward the original acceptance merely because the substitute has a similar function. Match the actual item and configuration to the approved technical disposition and customer requirements.\n\nPreserve history. A closed defect should remain linked to the corrective and acceptance evidence rather than disappear from the register. That record can inform later preparation, recurring-fault review and customer questions. An unresolved concern should not be reclassified as cosmetic without the responsible assessment simply because the equipment still appears to work.\n\nFor the exercise, a lighting tower returns with a reported defect. A part is replaced, but the record contains no competent disposition or required verification. The worked answer preserves the original report, links the replacement activity and keeps the technical readiness decision open for the assigned role. A paid repair invoice proves a commercial transaction, not necessarily the accepted result. Workers can contribute by accurately describing the observed behavior and actual work performed without signing a broader claim than they are qualified to establish.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G93_lesson5",
+        "title": "Lesson 5 — Build a useful customer handover",
+        "body": "A useful customer handover tells the receiver what the item is, what condition evidence supports it, what restrictions apply and who supplies the next duties. It should make the actual responsibility split usable. A long folder of unrelated certificates can be less useful than a clear asset-specific pack with current instructions and limitations.\n\nSeparate receipt, setup acceptance and authorization for use. The customer can acknowledge physical delivery while an included setup or commissioning task remains pending. If the supplier provides equipment only, the handover should not imply that the supplier performed customer-controlled installation. If setup is included, its actual acceptance evidence should be identifiable rather than hidden inside the delivery receipt.\n\nCommunicate restrictions in language the receiving role understands. A technical code may need explanation by the responsible technical person. The coordinator should preserve its meaning rather than simplify away a limitation. Ask the receiver to explain the next responsibility when appropriate; a signature alone may not establish a shared understanding of who must act before use.\n\nProvide the correct instruction and maintenance relationship. The actual contract and asset program determine what the customer must do and what the supplier retains. A general rental leaflet should not replace model-specific restrictions or required service contacts. Changes during hire need a reporting route so the supplier can assess effects on return and future readiness.\n\nIn the exercise, a tank is delivered and the receipt is signed, but the contract separately includes setup acceptance. The worked handover records delivery complete and setup pending. The supplier does not ask the driver to certify commissioning outside their role, and the customer is not told that a receipt automatically authorizes operation. Accurate partial status is a useful result because it identifies exactly what remains before the next stage.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G93_lesson6",
+        "title": "Lesson 6 — Reconcile return and next-use status",
+        "body": "Return assessment asks what changed during hire and what evidence is needed before the next use. A completed rental period does not prove the asset is ready for another customer. Reported impacts, unusual behavior, contamination, missing accessories and configuration changes can affect preparation. The responsible technical process decides their significance and required action.\n\nCollect actual use information through the agreed route. The customer may know about an event that is not visible during collection. Workers should record the report without claiming that it proves a particular damage mechanism. Equally, they should not dismiss it because the equipment was working or looks clean. A factual return note gives the competent assessor the information needed to decide.\n\nCleaning, decontamination, maintenance and inspection are different activities. A clean exterior can coexist with a technical issue. A repaired component can coexist with unresolved contamination or configuration questions. The next-use record should identify the necessary status categories rather than let one successful activity stand in for all the others.\n\nNext-use suitability is tied to the proposed assignment. An accepted restriction may permit one defined use while excluding another. The technical authority must determine that scope, and dispatch must communicate it accurately. Do not convert limited release into unrestricted ready because the next customer has a different need.\n\nFor the desk exercise, the return note reports an impact, the unit looks clean and the prior customer says it operated afterward. The worked answer preserves all three facts but does not treat later operation as proof of no damage. The item remains within the actual restriction process pending competent assessment. When a disposition is made, link its basis to the return report. This creates a reliable lifecycle history instead of repeatedly issuing the same ready label without reference to what happened.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G93_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek hires a compressor with delivery and a preparation inspection. The customer supplies installation and operation. Dispatch schedules C12, but the inspection pack belongs to C21 of the same model. The driver is asked to connect and start the unit at delivery because the customer has not arranged its installer. A delivery receipt includes a broad ready for operation checkbox.\n\nThe rental coordinator first checks the responsibility boundary. Delivery and preparation do not include the customer's installation and operation duties. The driver may communicate the missing arrangement but does not become an installer or operator through urgency. The changed request needs the actual technical and competence review if the service is to be expanded.\n\nThe asset mismatch is reviewed separately. The C21 report remains evidence for C21. It cannot be transferred to C12 because the model is familiar. The coordinator obtains the actual item identity and correct preparation evidence or resolves a genuine record error through the authorized process. No live startup is used to demonstrate that C12 is probably satisfactory.\n\nThe inspection scope is then read accurately. It covers specified preparation and visible condition, not the customer's installation or a universal technical certification. Any additional examination or commissioning requirement must be established through the actual competent process. The report's useful evidence is preserved without broadening its claim.\n\nAt handover, the driver records physical delivery only within their authority. The broad checkbox is clarified through the authorized record process so it cannot misrepresent an unperformed commissioning. The customer receives the correct item, instructions, restrictions and responsibility for the next stage. If installation remains unarranged, that limitation is explicit.\n\nThe worked result may be delivery complete while operational acceptance remains pending. That is not a failure to finish the paperwork; it is the truthful state of the service. A commercial signature cannot create the missing technical work or qualify the driver to do it.\n\nThe case teaches preparation staff to distinguish three concrete questions: is this the inspected asset, what did the inspection establish, and which party supplies the next activity? Correct answers prevent both irrelevant credential demands on supply-only personnel and unsupported readiness claims for the actual equipment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G93_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: a lighting tower returns from hire with an impact report and a note about unusual behavior. Its exterior is cleaned, and a workshop invoice records replacement of a component. The defect register is then cleared without a technical verification record. Dispatch books it for another customer and says the successful previous hire proves the unit is reliable.\n\nThe return reviewer reconstructs the actual status from the records. Cleaning confirms an activity, not the absence of technical damage. The replacement invoice confirms reported work, not necessarily the accepted result. The customer's impact and behavior observations remain relevant even if the asset operated afterward. The competent assessor must decide what those facts mean for readiness.\n\nThe defect history is restored through the authorized process and linked to the corrective activity. The actual technical authority determines the required verification and disposition under the manufacturer's and employer's method. The reviewer does not diagnose the fault from a photograph or prescribe a test. Their useful contribution is ensuring that the readiness claim has a real evidence basis.\n\nThe proposed next use is compared with any resulting restriction. A limited release for one accepted application cannot automatically support every customer need. If the next assignment requires a different configuration or duty, the appropriate suitability review must address it. Dispatch transmits the actual restriction rather than deleting it to preserve the booking.\n\nThe handover also checks accessory identity and instructions. If the repaired configuration differs from the prior one, the current pack must reflect the accepted arrangement. Old photographs and manuals can remain history but must not misdescribe what is delivered. The receiver needs clear current information.\n\nThe worked outcome separates return facts, cleaning, repair, verification and next-use acceptance. Each completed activity is credited accurately. The asset is not declared universally unsafe merely because an impact was reported, but it is not declared ready merely because one component was replaced. The competent disposition supplies the actual technical decision.\n\nThis case demonstrates lifecycle discipline in practical terms. Workers record observed behavior and configuration; technical roles assess it; coordinators preserve restrictions; customers receive usable status. A clean register achieved by deleting history would weaken every one of those functions. A traceable record supports the next hire without inventing a qualification or claiming an unperformed examination.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G93_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Apply the final decisions to contractual duties, asset identity, inspection scope, defects, customer acceptance and returned-item readiness. Retain original answers and acknowledge explained remediation.\n\nReal preparation, inspection, repair, setup and operation require actual asset-specific instruction and qualified assessment where assigned. Pilot, entry, responder or operator requirements apply only to confirmed supplied roles. This knowledge result does not authorize equipment use or certify an asset fit for every purpose.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G93_check1",
+        "prompt": "During read the rental boundary, an equipment-only hire is treated as if the supplier also operates it. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Clarify responsibilities and require operator evidence only from the party actually supplying operation."
+          },
+          {
+            "id": "b",
+            "label": "Every rental automatically includes an operator."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G93_check2",
+        "prompt": "During establish item identity and intended use, inspection paperwork identifies another asset of the same model. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Same-model inspection records are interchangeable."
+          },
+          {
+            "id": "b",
+            "label": "Hold the affected handoff and obtain evidence for the actual item."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G93_check3",
+        "prompt": "During interpret condition and inspection scope, a cosmetic inspection is represented as proof of pressure integrity. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A clean appearance proves pressure integrity."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Correct the claim and obtain the actual required technical examination."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G93_check4",
+        "prompt": "During control defects and substitutions, a defect entry is removed after an undocumented part substitution. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Deleting a defect entry establishes that repair was completed."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Restore traceability and require competent disposition of the substitution."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G93_check5",
+        "prompt": "During build a useful customer handover, a delivery signature is used as proof that technical commissioning was completed. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record delivery accurately and obtain separate commissioning acceptance where contracted."
+          },
+          {
+            "id": "b",
+            "label": "A delivery receipt proves operational commissioning."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G93_check6",
+        "prompt": "During reconcile return and next-use status, a returned item is labeled ready while a reported impact remains unassessed. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A completed rental period proves readiness for the next customer."
+          },
+          {
+            "id": "b",
+            "label": "Retain the restriction pending competent assessment of the reported condition."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G93_final1",
+        "prompt": "Which evidence is most directly relevant to read the rental boundary?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Rental responsibility schedule listing included setup, inspection, maintenance and operation."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G93_final2",
+        "prompt": "Which evidence is most directly relevant to establish item identity and intended use?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Asset dossier linking serial number, model, configuration and intended use."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G93_final3",
+        "prompt": "Which evidence is most directly relevant to interpret condition and inspection scope?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Condition report identifying criteria, examined features and exclusions."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G93_final4",
+        "prompt": "Which evidence is most directly relevant to control defects and substitutions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Defect register linking item, restriction, corrective evidence and release authority."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G93_final5",
+        "prompt": "Which evidence is most directly relevant to build a useful customer handover?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Handover pack separating delivery receipt, instructions, restrictions and acceptance."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G93_final6",
+        "prompt": "Which evidence is most directly relevant to reconcile return and next-use status?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Return assessment linking reported use, configuration changes and next-use disposition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G93_final7",
+        "prompt": "A colleague argues: “Every rental automatically includes an operator.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; clarify responsibilities and require operator evidence only from the party actually supplying operation."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G93_final8",
+        "prompt": "A colleague argues: “Same-model inspection records are interchangeable.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; hold the affected handoff and obtain evidence for the actual item."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G93_final9",
+        "prompt": "A colleague argues: “A clean appearance proves pressure integrity.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; correct the claim and obtain the actual required technical examination."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G93_final10",
+        "prompt": "A colleague argues: “Deleting a defect entry establishes that repair was completed.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; restore traceability and require competent disposition of the substitution."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G93_final11",
+        "prompt": "A colleague argues: “A delivery receipt proves operational commissioning.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; record delivery accurately and obtain separate commissioning acceptance where contracted."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G93_final12",
+        "prompt": "A colleague argues: “A completed rental period proves readiness for the next customer.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; retain the restriction pending competent assessment of the reported condition."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G93_final13",
+        "prompt": "A rental includes delivery but excludes installation. What is a request for the driver to start the unit?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An automatic part of every receipt."
+          },
+          {
+            "id": "b",
+            "label": "Proof the driver is an operator."
+          },
+          {
+            "id": "c",
+            "label": "A changed duty requiring actual responsibility, authority and competence review."
+          },
+          {
+            "id": "d",
+            "label": "A way to avoid customer commissioning."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G93_final14",
+        "prompt": "C12 is scheduled while the report names C21 of the same model. What is missing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A matching model name, which is already enough."
+          },
+          {
+            "id": "b",
+            "label": "Only a newer date."
+          },
+          {
+            "id": "c",
+            "label": "A trial startup by the coordinator."
+          },
+          {
+            "id": "d",
+            "label": "Evidence that the actual scheduled asset has the required preparation and inspection basis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G93_final15",
+        "prompt": "A visual check is called pressure certification. What should be corrected?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The claim must remain within the actual examined scope, with any additional technical examination separately established."
+          },
+          {
+            "id": "b",
+            "label": "The photograph brightness."
+          },
+          {
+            "id": "c",
+            "label": "The asset number to match another certificate."
+          },
+          {
+            "id": "d",
+            "label": "Nothing if the exterior is clean."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G93_final16",
+        "prompt": "A component was replaced, but the defect has no acceptance evidence. What is the status?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every defect is automatically closed after an invoice."
+          },
+          {
+            "id": "b",
+            "label": "Repair activity is recorded while the required technical disposition remains to be established."
+          },
+          {
+            "id": "c",
+            "label": "The register should delete the original report."
+          },
+          {
+            "id": "d",
+            "label": "Dispatch can certify the technical result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G93_final17",
+        "prompt": "The receiver signs delivery while setup acceptance is pending. What does the signature establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Universal operating authorization."
+          },
+          {
+            "id": "b",
+            "label": "Proof of every technical test."
+          },
+          {
+            "id": "c",
+            "label": "Receipt within its defined meaning, not automatic completion of the separate setup duty."
+          },
+          {
+            "id": "d",
+            "label": "A transfer of all supplier qualifications."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G93_final18",
+        "prompt": "Returned equipment operated after an impact. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The impact can be ignored."
+          },
+          {
+            "id": "b",
+            "label": "A clean exterior certifies integrity."
+          },
+          {
+            "id": "c",
+            "label": "The next customer must diagnose it by trying the unit."
+          },
+          {
+            "id": "d",
+            "label": "Preserve the impact and use history for competent assessment; operation alone does not prove absence of damage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G93_final19",
+        "prompt": "C12 is delivered, but its preparation pack names C21 of the same model. What evidence supports a technical handoff for C12?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual C12 preparation/inspection evidence or a traceably established correction connecting the record to C12."
+          },
+          {
+            "id": "b",
+            "label": "The shared model name alone."
+          },
+          {
+            "id": "c",
+            "label": "A broad ready-for-operation checkbox signed by the driver."
+          },
+          {
+            "id": "d",
+            "label": "Starting C12 at delivery to see whether the paperwork probably fits."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G93_final20",
+        "prompt": "The returned lighting tower is clean and a workshop invoice records component replacement, but no technical verification/disposition is linked. What readiness claim is supported?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Unrestricted readiness because a paid invoice proves the defect is eliminated."
+          },
+          {
+            "id": "b",
+            "label": "Cleaning and reported repair activity are documented; technical readiness for the actual next use still requires competent disposition/evidence."
+          },
+          {
+            "id": "c",
+            "label": "Proof that the reported impact caused no damage because the unit operated afterward."
+          },
+          {
+            "id": "d",
+            "label": "Permission to delete the impact/defect history before the next customer sees it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G93_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G93_lesson1",
+          "questionIds": [
+            "G93_check1"
+          ]
+        },
+        {
+          "lessonId": "G93_lesson2",
+          "questionIds": [
+            "G93_check2"
+          ]
+        },
+        {
+          "lessonId": "G93_lesson3",
+          "questionIds": [
+            "G93_check3"
+          ]
+        },
+        {
+          "lessonId": "G93_lesson4",
+          "questionIds": [
+            "G93_check4"
+          ]
+        },
+        {
+          "lessonId": "G93_lesson5",
+          "questionIds": [
+            "G93_check5"
+          ]
+        },
+        {
+          "lessonId": "G93_lesson6",
+          "questionIds": [
+            "G93_check6"
+          ]
+        },
+        {
+          "lessonId": "G93_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G93_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G93_final",
+          "questionIds": [
+            "G93_final1",
+            "G93_final2",
+            "G93_final3",
+            "G93_final4",
+            "G93_final5",
+            "G93_final6",
+            "G93_final7",
+            "G93_final8",
+            "G93_final9",
+            "G93_final10",
+            "G93_final11",
+            "G93_final12",
+            "G93_final13",
+            "G93_final14",
+            "G93_final15",
+            "G93_final16",
+            "G93_final17",
+            "G93_final18",
+            "G93_final19",
+            "G93_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G93_check1": "The correct decision is to clarify responsibilities and require operator evidence only from the party actually supplying operation. A rental can provide an item alone, delivery, setup, maintenance or an operator. These are different contracts and qualification questions. A tank rental does not automatically provide tank entry; aircraft rental does not establish pilot supply. Record included and excluded responsibilities before assigning people or credentials. The review should preserve the supply boundary while identifying any actual preparation or inspection work. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G93_check2": "The correct decision is to hold the affected handoff and obtain evidence for the actual item. Preparation evidence belongs to a specific asset and intended use. Match the physical identifier described in the paperwork to the item scheduled for delivery. A photograph of a similar model is not proof of the condition of this item. Manufacturer criteria and restrictions must correspond to the actual model and configuration. Desk reviewers should resolve identity discrepancies without testing or modifying the asset themselves. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G93_check3": "The correct decision is to correct the claim and obtain the actual required technical examination. An inspection record should say what was examined, by whom, against which criteria and with what limitations. A visual preparation check is not pressure testing, electrical certification or structural analysis. Do not turn a clean appearance into a fitness claim. The responsible technical assessor determines whether the inspection scope supports the intended duty and whether further specialist examination is required. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G93_check4": "The correct decision is to restore traceability and require competent disposition of the substitution. Defects need clear status and disposition so an item cannot be released merely because the delivery date approaches. A replacement part or substituted asset can change the evidence needed. Preserve the original defect history and link the corrective evidence rather than deleting the entry. Technical acceptance belongs to the designated competent authority, not the person trying to complete dispatch. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G93_check5": "The correct decision is to record delivery accurately and obtain separate commissioning acceptance where contracted. The receiving party needs identity, condition, limitations, instructions and responsibility for ongoing inspection or maintenance. A signed delivery receipt proves transfer, not necessarily suitability for every intended operation. Explain exclusions in language the receiving role can use. If setup or commissioning is included, keep its acceptance evidence separate from delivery and record who authorizes use. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G93_check6": "The correct decision is to retain the restriction pending competent assessment of the reported condition. Returned equipment may have changed configuration, damage or contamination that affects subsequent preparation. Record reported use and known limitations without assuming the item is ready because the prior hire ended. Cleaning, decontamination, repair and inspection can require different competent roles. The next-use decision should rely on current evidence for the intended use rather than a recurring ready label. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G93_final1": "A rental responsibility schedule listing included setup, inspection, maintenance and operation addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A rental can provide an item alone, delivery, setup, maintenance or an operator. These are different contracts and qualification questions. A tank rental does not automatically provide tank entry; aircraft rental does not establish pilot supply. Record included and excluded responsibilities before assigning people or credentials. The review should preserve the supply boundary while identifying any actual preparation or inspection work.",
+        "G93_final2": "A asset dossier linking serial number, model, configuration and intended use addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Preparation evidence belongs to a specific asset and intended use. Match the physical identifier described in the paperwork to the item scheduled for delivery. A photograph of a similar model is not proof of the condition of this item. Manufacturer criteria and restrictions must correspond to the actual model and configuration. Desk reviewers should resolve identity discrepancies without testing or modifying the asset themselves.",
+        "G93_final3": "A condition report identifying criteria, examined features and exclusions addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. An inspection record should say what was examined, by whom, against which criteria and with what limitations. A visual preparation check is not pressure testing, electrical certification or structural analysis. Do not turn a clean appearance into a fitness claim. The responsible technical assessor determines whether the inspection scope supports the intended duty and whether further specialist examination is required.",
+        "G93_final4": "A defect register linking item, restriction, corrective evidence and release authority addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Defects need clear status and disposition so an item cannot be released merely because the delivery date approaches. A replacement part or substituted asset can change the evidence needed. Preserve the original defect history and link the corrective evidence rather than deleting the entry. Technical acceptance belongs to the designated competent authority, not the person trying to complete dispatch.",
+        "G93_final5": "A handover pack separating delivery receipt, instructions, restrictions and acceptance addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. The receiving party needs identity, condition, limitations, instructions and responsibility for ongoing inspection or maintenance. A signed delivery receipt proves transfer, not necessarily suitability for every intended operation. Explain exclusions in language the receiving role can use. If setup or commissioning is included, keep its acceptance evidence separate from delivery and record who authorizes use.",
+        "G93_final6": "A return assessment linking reported use, configuration changes and next-use disposition addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Returned equipment may have changed configuration, damage or contamination that affects subsequent preparation. Record reported use and known limitations without assuming the item is ready because the prior hire ended. Cleaning, decontamination, repair and inspection can require different competent roles. The next-use decision should rely on current evidence for the intended use rather than a recurring ready label.",
+        "G93_final7": "That inference exceeds the evidence. A rental can provide an item alone, delivery, setup, maintenance or an operator. These are different contracts and qualification questions. A tank rental does not automatically provide tank entry; aircraft rental does not establish pilot supply. Record included and excluded responsibilities before assigning people or credentials. The review should preserve the supply boundary while identifying any actual preparation or inspection work. The appropriate task disposition remains to clarify responsibilities and require operator evidence only from the party actually supplying operation.",
+        "G93_final8": "That inference exceeds the evidence. Preparation evidence belongs to a specific asset and intended use. Match the physical identifier described in the paperwork to the item scheduled for delivery. A photograph of a similar model is not proof of the condition of this item. Manufacturer criteria and restrictions must correspond to the actual model and configuration. Desk reviewers should resolve identity discrepancies without testing or modifying the asset themselves. The appropriate task disposition remains to hold the affected handoff and obtain evidence for the actual item.",
+        "G93_final9": "That inference exceeds the evidence. An inspection record should say what was examined, by whom, against which criteria and with what limitations. A visual preparation check is not pressure testing, electrical certification or structural analysis. Do not turn a clean appearance into a fitness claim. The responsible technical assessor determines whether the inspection scope supports the intended duty and whether further specialist examination is required. The appropriate task disposition remains to correct the claim and obtain the actual required technical examination.",
+        "G93_final10": "That inference exceeds the evidence. Defects need clear status and disposition so an item cannot be released merely because the delivery date approaches. A replacement part or substituted asset can change the evidence needed. Preserve the original defect history and link the corrective evidence rather than deleting the entry. Technical acceptance belongs to the designated competent authority, not the person trying to complete dispatch. The appropriate task disposition remains to restore traceability and require competent disposition of the substitution.",
+        "G93_final11": "That inference exceeds the evidence. The receiving party needs identity, condition, limitations, instructions and responsibility for ongoing inspection or maintenance. A signed delivery receipt proves transfer, not necessarily suitability for every intended operation. Explain exclusions in language the receiving role can use. If setup or commissioning is included, keep its acceptance evidence separate from delivery and record who authorizes use. The appropriate task disposition remains to record delivery accurately and obtain separate commissioning acceptance where contracted.",
+        "G93_final12": "That inference exceeds the evidence. Returned equipment may have changed configuration, damage or contamination that affects subsequent preparation. Record reported use and known limitations without assuming the item is ready because the prior hire ended. Cleaning, decontamination, repair and inspection can require different competent roles. The next-use decision should rely on current evidence for the intended use rather than a recurring ready label. The appropriate task disposition remains to retain the restriction pending competent assessment of the reported condition.",
+        "G93_final13": "A changed duty requiring actual responsibility, authority and competence review. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G93_final14": "Evidence that the actual scheduled asset has the required preparation and inspection basis. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G93_final15": "The claim must remain within the actual examined scope, with any additional technical examination separately established. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G93_final16": "Repair activity is recorded while the required technical disposition remains to be established. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G93_final17": "Receipt within its defined meaning, not automatic completion of the separate setup duty. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G93_final18": "Preserve the impact and use history for competent assessment; operation alone does not prove absence of damage. The lesson and worked case separate this actual evidence/authority question from unrelated completed categories. Preserve the original response and acknowledge the corrected reasoning after an error.",
+        "G93_final19": "Asset identity is part of evidence applicability. A same-model report remains bounded to its actual item until a supported reconciliation exists. Delivery or an improvised startup cannot replace preparation evidence or expand the driver's role.",
+        "G93_final20": "Credit completed activities without promoting them into technical acceptance. The impact, unusual behavior, replacement and actual next-use requirements remain relevant to the competent assessment and traceable release."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

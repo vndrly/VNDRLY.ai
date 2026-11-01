@@ -1,0 +1,901 @@
+{
+  "courseId": "G78",
+  "gapGroupId": "TG29",
+  "title": "Survey reference systems, residuals and seismic evidence limits",
+  "description": "Teach coordinate/reference discipline, independent-check reasoning, residual arithmetic and model-dependent seismic interpretation.",
+  "purpose": "Teach coordinate/reference discipline, independent-check reasoning, residual arithmetic and model-dependent seismic interpretation.",
+  "audience": [
+    "Survey/seismic trainees in a theory module",
+    "Field-data coordinators",
+    "Technical deliverable reviewers"
+  ],
+  "sources": [
+    {
+      "title": "NOAA NGS datums/reference frames",
+      "url": "https://geodesy.noaa.gov/datums/index.shtml"
+    },
+    {
+      "title": "EPA seismic reflection concepts",
+      "url": "https://www.epa.gov/environmental-geophysics/seismic-reflection"
+    },
+    {
+      "title": "OSHA construction blaster qualifications: actual explosive scope only",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.901"
+    }
+  ],
+  "practicalBoundary": "This course grants no survey professional license, instrument/source operation, geotechnical drilling, explosive, aviation, marine or excavation-clearance authority. All figures are fictional teaching data, never project tolerances.",
+  "vendorEvidenceRequired": [
+    "Actual survey/geophysical method, source and deliverable scope",
+    "Project reference/frame, units, epoch where relevant and quality criteria",
+    "Instrument/control/receiver identity and actual acquisition geometry",
+    "Applicable professional/source/access qualifications",
+    "Approved processing/model, limitations and technical sign-off basis"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed actual instrument/source method skills under qualified safe assessment",
+    "Method-specific reference/control checks, data identity and quality recording",
+    "Separate drilling/explosive/aircraft/water-access practical capability where actually used"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G78_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for survey reference systems, residuals and seismic evidence limits. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course grants no survey professional license, instrument/source operation, geotechnical drilling, explosive, aviation, marine or excavation-clearance authority. All figures are fictional teaching data, never project tolerances.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G78_lesson1",
+        "title": "1. Define the survey question and actual field method",
+        "body": "Survey and seismic services cover distinct technical tasks. A topographic position survey, geotechnical investigation, seismic acquisition and interpretation of subsurface data do not share one universal field qualification. Begin with the client's question, required deliverable, method, location, accuracy/quality basis and actual roles. A service label cannot tell you whether the work includes drilling, explosive sources, aircraft, water access or only ground measurements.\n\nDistinguish observation, processing and interpretation. Field observations are recorded data under identified conditions. Processing transforms them using stated methods. Interpretation connects the processed evidence to a model or decision. A visually convincing map is not proof that each stage is valid. The work plan should identify who owns each stage and what evidence supports the final claim.\n\nFor positioning, identify the reference system, units and required metadata. For seismic work, identify the actual source and receiver method and the geological question. Nonexplosive seismic sources exist; a seismic label must not automatically trigger an explosives role. Conversely, if explosive work is actually included, its specialist requirements and applicable legal framework remain separate. This course provides no source deployment or explosive instruction.\n\nBuild a paper scope table with included methods and explicit exclusions. Ground survey may exclude boundary certification; a geophysical image may exclude a guarantee of every buried object; a desk interpretation may exclude field acquisition. These limits must be retained in the deliverable instead of lost in a generic survey-complete status.\n\nPaper exercise: a proposal says site survey but combines a map, shallow drilling and aerial images without naming which party performs each. Identify the three different method/role questions and ask for actual allocation and qualifications. Do not assign drilling, UAS or explosive credentials to every survey employee. Match each requirement only to duties that are actually supplied.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G78_lesson2",
+        "title": "2. Understand coordinate reference, units and height definitions",
+        "body": "A coordinate is meaningful only within its reference system. Latitude/longitude, projected eastings/northings and local grid values are different representations. A datum or reference frame supplies a basis for locating points. Units, axis order, realization and epoch where relevant can affect interpretation. NOAA's geodetic guidance illustrates these concepts; it does not mean every job must use the same national system or that this course establishes current datum migration rules for every project.\n\nDo not treat a conversion and a transformation as identical tasks. Reformatting degrees or converting units changes representation; relating positions between different reference systems may require additional models and information. A software dropdown does not prove that the chosen transformation is appropriate. The qualified survey authority must establish the actual reference and method for the project.\n\nHeight also needs a definition. A height relative to an ellipsoid and an elevation tied to a vertical datum are not automatically the same quantity. A GNSS display may provide information different from the elevation required by a design. The learner should identify the reference basis rather than subtract a remembered constant. Actual transformations and geoid models require appropriate technical selection.\n\nPaper exercise: file A gives coordinates in meters on a named project grid; file B gives unlabeled numbers described as GPS. The values cannot be overlaid confidently until B's reference, units and axis order are established. The correct response is a metadata query, not shifting one layer until it looks aligned. A visually good fit can conceal a systematic error.\n\nA second exercise gives the same numeric height with two different reference labels. State that equal numbers do not establish equal physical elevation. Preserve the original metadata and ask the responsible surveyor for the approved relationship. This lesson teaches reference discipline without granting boundary-survey, engineering or geodetic certification authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G78_lesson3",
+        "title": "3. Use independent checks, closure and residual reasoning",
+        "body": "Repeated measurements and independent checks serve different purposes. Repeating the same setup can reveal variation, but it may repeat a systematic error. An independent check uses a sufficiently different known basis to challenge an assumption. The actual survey plan defines control, check observations and acceptance criteria. This course does not prescribe a field setup or universal closure tolerance.\n\nClosure is a consistency check in a defined measurement sequence or network. A nonzero closure can indicate accumulated differences, blunders or other issues requiring qualified analysis. A small closure does not prove every point is correct; errors can cancel or affect the entire reference basis. Treat closure as one quality indicator, not a universal certificate of accuracy.\n\nSafe paper example: a fictional coordinate loop begins at east 100.0, north 200.0 and returns in the calculation to east 100.3, north 199.6. The difference is positive 0.3 east and negative 0.4 north. The length of that difference is 0.5 in the supplied units, using the right-triangle relationship. These invented figures teach vector/residual interpretation. They establish no real survey tolerance or acceptance verdict.\n\nThe next question is whether the difference satisfies the project's approved criteria and whether the observations/reference are valid. Without those criteria, report the residual and limitation rather than choosing a customary pass value. Do not distribute the difference among points merely to make the loop close; adjustment requires the actual model, weights and competent evaluation.\n\nPaper exercise: a spreadsheet gives zero closure because someone forced the last point to equal the first. The raw observations show a difference. Identify the lost evidence and request the actual processing method and original data. A neat zero is not automatically better than an honest residual. Record corrections and adjustments with reasons so that the quality conclusion can be reconstructed.\n\nWorked residual wording: the fictional loop's east difference is positive because the computed return lies east of the start; its north difference is negative because it lies south. Reporting only 0.5 loses those directions. A useful review retains both components and the length, along with units and the original observations. If the project criterion is absent, write residual recorded; acceptance not evaluated against an identified criterion. Do not call 0.5 good or bad from intuition. The example teaches transparent arithmetic and evidence scope; its invented values describe no real survey and imply no acceptable field tolerance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G78_lesson4",
+        "title": "4. Understand seismic evidence as a model-dependent measurement",
+        "body": "Seismic methods examine how mechanical waves travel and interact with the subsurface. Source, receivers, timing, positions and ground conditions affect the recorded data. Reflection and refraction involve different travel paths and interpretation approaches. The physical concept is useful for task workers: a seismic image is an inference from measured responses and a model, not a direct photograph of every underground feature.\n\nVelocity and travel time are related to interpreted distance/depth, but the relationship depends on assumptions and geometry. A change in an assumed velocity can change an interpreted depth without changing the recorded arrival time. This course does not provide an acquisition design, source energy, receiver spacing or field operating method. Qualified geophysicists establish the actual approach and uncertainty assessment.\n\nDistinguish signal from interfering observations. Traffic, machinery, poor coupling or other conditions can affect data quality depending on the method. A field log should record relevant events and deviations so that later processing can evaluate them. Do not delete an unusual trace merely because it complicates the final image. Original records and a traceable processing history support technical review.\n\nPaper exercise: two interpretations use the same fictional timing data but different stated velocity models and produce different depth estimates. The learner should identify the model difference rather than accuse one team of changing the original observation. Ask what evidence supports each model and what uncertainty/limitations belong in the result. The exercise deliberately uses no real source settings or geological approval claim.\n\nA geophysical result should state the surveyed area, method, model assumptions, resolution/limitations and intended use. It should not be expanded into guaranteed absence of every buried service or hazard. Utility clearance, excavation and drilling have their own actual information and authorization requirements. A survey worker should recognize those interfaces without claiming that a geophysical image replaces them.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G78_lesson5",
+        "title": "5. Plan field access, communications and data identity",
+        "body": "Field work combines technical measurement with terrain and site interfaces. Access permissions, weather, traffic, vegetation, water, livestock or active industrial operations may affect the actual method. The planning task is to identify the relevant conditions and responsible controls, not impose every possible hazard on every survey. A desk analyst and a field acquisition worker have different exposure and qualification needs.\n\nPosition and time identity matter to data. A receiver or point number must connect field notes, instrument files, coordinates and final interpretation. A clock or identifier mismatch can associate an observation with the wrong event or location. The actual acquisition program determines synchronization and checks. The learner should recognize the consequences without changing instrument settings or running a source for training.\n\nCommunications should identify team locations, work boundaries, changed conditions and the responsible decision route. A remote field crew needs an actual emergency/contact arrangement appropriate to its work, not simply a generic phone list copied from an office. Where the task involves aircraft, drilling, explosives or marine operations, those specialist roles retain separate methods and practical qualifications.\n\nPaper exercise: a receiver log lists R-12 at point P-8, while the coordinate file places R-12 at P-18. The processed image looks plausible. Record the identity conflict and preserve original files. A plausible image cannot establish which location was actually used. The competent acquisition/processing owners must reconcile the record and evaluate consequences.\n\nAnother exercise changes a planned line because access permission is unavailable. The revised geometry may affect coverage and interpretation, not only walking distance. The qualified method owner must assess the technical consequence and update the record. Do not silently move points on the final map to match the intended line. Actual field deviations must remain visible to the people interpreting the data.\n\nWorked data-chain exercise: a fictional observation O-6 belongs to receiver R-2 during event E-9. The location table links R-2 to point P-4, and the reference metadata define P-4's coordinates. Draw those links as separate boxes. If the receiver-to-point link is missing, the observation may exist but its location is not established. If the reference label is missing, a point number may exist but common-map placement is uncertain. These are different gaps and need different owners. The acquisition team can address event/receiver identity; the survey reference owner can address coordinate metadata. A final image cannot repair either missing link by appearance alone. Preserve the raw identifiers and ask for controlled reconciliation rather than renumbering records to make them agree.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G78_lesson6",
+        "title": "6. Establish method-specific competence and deliverable limitations",
+        "body": "Competence review should distinguish field positioning, instrument operation, geophysical acquisition, processing, interpretation and professional certification. A worker may have strong measurement skills but no authority to certify a property boundary or engineering design. A survey service may use a licensed professional where the jurisdiction and task require one; do not invent a universal license for every helper or desk role.\n\nRequest evidence for the actual instrument/source method, project reference system, terrain/work context and assigned duties. Practical assessment should identify the assessor's relevant scope, conditions, criteria, outcome and limitations. A certificate for one instrument family or method is background evidence for another, not automatic proof of capability. Employer/site authorization remains separate from previous experience.\n\nA safe paper assessment can test reference metadata, residual arithmetic, source/receiver identity and model limitations. Give fictional files with a unit mismatch, a forced closure and a changed acquisition line. Ask for a traceable technical query and bounded deliverable statement. No field source, drilling or access to hazardous terrain is needed to demonstrate these reasoning skills.\n\nActual practical assessment must use an appropriately qualified safe arrangement for the real method. It should observe relevant instrument preparation, reference/control identification, systematic recording, quality checks, communications and response to changed conditions. Specialized source or access duties need their own qualified program. This course teaches no explosive handling, aircraft operation, drilling technique or marine deployment.\n\nThe final handoff should include raw/processed data identity, reference/units, control and checks, actual acquisition geometry, deviations, processing/model basis, limitations and authorized technical sign-off. Preserve what was observed separately from what was inferred. Knowledge completion closes only this bounded theory component with original answers and remediation retained. Actual field method capability, applicable professional credentials and permission to conduct or certify the work remain residuals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G78_case1",
+        "title": "Worked fictional case 1: a map aligned by eye",
+        "body": "Fictional facts: Rowan Survey receives file A in a named project grid using meters and file B labelled GPS with no reference metadata. An analyst shifts B until the layers look aligned. A final report says all locations verified. A coordinate loop was also forced to close by replacing the final value with the starting value.\n\nThe reviewer separates reference and quality issues. File B's units, axis order and reference are not established. A visual shift can hide a systematic mismatch and is not an approved transformation. The original coordinates and metadata must be retained while the qualified survey owner establishes the correct relationship.\n\nThe forced closure is a different problem. Replacing the final value removes the observed residual from view. The reviewer requests raw observations and the actual adjustment method. A zero in a final spreadsheet cannot prove accuracy when the processing deliberately made it zero. Any legitimate adjustment must have its model, basis and history preserved.\n\nThe reviewer writes a bounded status: the files have been received and an illustrative overlay exists, but verified common-reference positions are not established. This avoids both claiming all data are false and presenting an attractive map as technical validation. The responsible survey authority determines the actual processing and acceptance.\n\nIn the fictional resolution, the missing metadata are supplied and approved processing is performed with traceable records. The loop residual and its evaluation remain documented. The final deliverable states reference, units, method, checks and limitations. Professional certification, where required for the actual use, is separately established.\n\nFinal decision: reject the initial all-locations-verified claim. Exact residuals are qualified reference transformation, original-data quality evaluation, actual method capability and authorized deliverable acceptance. The paper learner demonstrates metadata and closure reasoning, not field surveying or legal boundary authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G78_case2",
+        "title": "Worked fictional case 2: a plausible seismic image with mismatched receiver identity",
+        "body": "Fictional facts: Willow Geophysics acquires a nonexplosive seismic line. The receiver log places R-12 at P-8, while the coordinate file says P-18. Access restrictions caused part of the planned line to move. The processing report omits the change and presents a plausible image with a guarantee that no buried services exist in the area.\n\nThe reviewer starts with actual method scope. Nonexplosive acquisition does not require inventing an explosives role. It still needs its actual instrument/source competence and safe field arrangements. The receiver identity mismatch affects location evidence independently of whether the displayed image looks plausible.\n\nThe original field and coordinate files are preserved. The acquisition and processing owners must reconcile the receiver location and assess the consequence. The reviewer does not select the location that makes the image smoother or move points silently to the intended line. The access-driven geometry change must also be recorded and evaluated against the actual survey question.\n\nThe final guarantee is then challenged. A geophysical image has method/model, coverage and resolution limitations. It is not universal proof that every buried utility is absent. The responsible technical owner must provide a bounded conclusion, and actual excavation/utility-clearance requirements remain separate. The learner does not authorize digging based on the image.\n\nIn the fictional resolution, location and geometry records are reconciled, processing is reviewed and the deliverable states its actual limitations. Any additional investigation is determined by competent owners for the intended use. No source is operated as part of this paper exercise.\n\nFinal decision: the initial result has identity, geometry and conclusion-scope gaps. Exact residuals are method-specific practical capability, corrected/reviewed technical evidence, professional sign-off where applicable and actual field/use authorization. A theory course cannot certify the image, qualify a source operator or clear excavation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G78_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G78_check1",
+        "prompt": "Does a site-survey label identify every field method?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual positioning, drilling, aerial or seismic scope must be defined."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every survey includes all methods."
+          },
+          {
+            "id": "c",
+            "label": "Yes, all workers need every credential."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G78_check2",
+        "prompt": "Can unlabeled GPS numbers be overlaid confidently on a named grid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; reference, units and axis information are needed."
+          },
+          {
+            "id": "c",
+            "label": "Yes, shift until aligned."
+          },
+          {
+            "id": "d",
+            "label": "Yes, all coordinates are identical."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G78_check3",
+        "prompt": "A return difference is 0.3 east and 0.4 south. What is its length?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Zero because the loop should close."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "0.5 in the supplied exercise units."
+          },
+          {
+            "id": "d",
+            "label": "0.7 always."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G78_check4",
+        "prompt": "Is a seismic image a direct photograph of every buried feature?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every object appears."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if colorful."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; it depends on measured responses, models and limitations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G78_check5",
+        "prompt": "Receiver R-12 has two location records. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Traceable reconciliation and consequence evaluation."
+          },
+          {
+            "id": "b",
+            "label": "Choose the smoother image."
+          },
+          {
+            "id": "c",
+            "label": "Delete one file."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G78_check6",
+        "prompt": "Does paper reference reasoning qualify field acquisition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; actual method skills and authorization remain separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after a quiz."
+          },
+          {
+            "id": "d",
+            "label": "Yes, after one map."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G78_final1",
+        "prompt": "Does seismic automatically mean explosive sources?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, every surveyor is a blaster."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; actual source type must be identified."
+          },
+          {
+            "id": "d",
+            "label": "Yes, always."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G78_final2",
+        "prompt": "What differs between observation and interpretation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing."
+          },
+          {
+            "id": "b",
+            "label": "Only file format."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Recorded response versus a supported model/conclusion from it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G78_final3",
+        "prompt": "Can identical height numbers with different references be assumed equivalent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; height definitions and reference relationship matter."
+          },
+          {
+            "id": "b",
+            "label": "Yes, numbers prove equality."
+          },
+          {
+            "id": "c",
+            "label": "Yes, ignore labels."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G78_final4",
+        "prompt": "Does a software dropdown prove a transformation suitable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; qualified project basis and metadata are needed."
+          },
+          {
+            "id": "c",
+            "label": "Yes, any selection is valid."
+          },
+          {
+            "id": "d",
+            "label": "Yes, if output looks right."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G78_final5",
+        "prompt": "Is repeated use of one setup necessarily an independent check?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if three readings."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; it may repeat the same systematic error."
+          },
+          {
+            "id": "d",
+            "label": "Yes, every repeat is independent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G78_final6",
+        "prompt": "Does small closure prove every point correct?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, automatically."
+          },
+          {
+            "id": "b",
+            "label": "Yes, any zero is perfect."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; errors can cancel or affect the reference."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G78_final7",
+        "prompt": "Can a learner distribute residuals arbitrarily to close a network?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; adjustment needs the actual model and competent evaluation."
+          },
+          {
+            "id": "b",
+            "label": "Yes, make the spreadsheet neat."
+          },
+          {
+            "id": "c",
+            "label": "Yes, divide by any number."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G78_final8",
+        "prompt": "Does this course provide a universal closure tolerance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "No; the actual project criterion governs."
+          },
+          {
+            "id": "c",
+            "label": "Yes,0.5 always passes."
+          },
+          {
+            "id": "d",
+            "label": "Yes, any small number passes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G78_final9",
+        "prompt": "Can different velocity models change interpreted depth from the same timing data?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No, only file names matter."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Yes; model assumptions affect the inference."
+          },
+          {
+            "id": "d",
+            "label": "No, depth is a direct photograph."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G78_final10",
+        "prompt": "Should an unusual trace be deleted because it complicates the image?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, remove inconvenient data."
+          },
+          {
+            "id": "b",
+            "label": "Yes, without a record."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; retain original data and qualified processing rationale."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G78_final11",
+        "prompt": "Does a geophysical result universally clear buried utilities?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; method/coverage limitations and actual clearance rules remain."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every utility is excluded."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the client asks."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G78_final12",
+        "prompt": "Why record actual acquisition geometry changes?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "They can affect coverage and interpretation."
+          },
+          {
+            "id": "c",
+            "label": "Only walking distance changes."
+          },
+          {
+            "id": "d",
+            "label": "To hide access issues."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G78_final13",
+        "prompt": "Does a professional survey credential automatically cover aircraft operation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if collecting images."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; aviation duties retain their own qualification."
+          },
+          {
+            "id": "d",
+            "label": "Yes, all field work is equivalent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G78_final14",
+        "prompt": "What should a final data handoff preserve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a final image."
+          },
+          {
+            "id": "b",
+            "label": "Only a completion badge."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Raw/processed identity, reference, checks, deviations, model and limitations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G78_final15",
+        "prompt": "Should a trainee operate a field source to complete this course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; the exercises are paper only."
+          },
+          {
+            "id": "b",
+            "label": "Yes, for realism."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if nonexplosive."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G78_final16",
+        "prompt": "In Rowan, what is wrong with alignment by eye?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "It conceals an unestablished reference relationship."
+          },
+          {
+            "id": "c",
+            "label": "It is always a valid transformation."
+          },
+          {
+            "id": "d",
+            "label": "It proves every point."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G78_final17",
+        "prompt": "In Rowan, what does forced zero closure fail to prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That numbers can be edited."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Accuracy of original observations and processing."
+          },
+          {
+            "id": "d",
+            "label": "That a spreadsheet exists."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G78_final18",
+        "prompt": "In Willow, why retain both receiver files?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To pick a convenient answer later."
+          },
+          {
+            "id": "b",
+            "label": "To avoid any review."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "To reconcile actual identity and evaluate consequences honestly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G78_final19",
+        "prompt": "In Willow, does nonexplosive scope remove all method competence needs?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual source/instrument and field skills remain."
+          },
+          {
+            "id": "b",
+            "label": "Yes, no training is needed."
+          },
+          {
+            "id": "c",
+            "label": "Yes, all hazards disappear."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G78_final20",
+        "prompt": "What remains after knowledge completion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Actual method performance, applicable professional authority and job authorization."
+          },
+          {
+            "id": "c",
+            "label": "All survey certification."
+          },
+          {
+            "id": "d",
+            "label": "Only badge printing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G78_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G78_lesson1",
+          "questionIds": [
+            "G78_check1"
+          ]
+        },
+        {
+          "lessonId": "G78_lesson2",
+          "questionIds": [
+            "G78_check2"
+          ]
+        },
+        {
+          "lessonId": "G78_lesson3",
+          "questionIds": [
+            "G78_check3"
+          ]
+        },
+        {
+          "lessonId": "G78_lesson4",
+          "questionIds": [
+            "G78_check4"
+          ]
+        },
+        {
+          "lessonId": "G78_lesson5",
+          "questionIds": [
+            "G78_check5"
+          ]
+        },
+        {
+          "lessonId": "G78_lesson6",
+          "questionIds": [
+            "G78_check6"
+          ]
+        },
+        {
+          "lessonId": "G78_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G78_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G78_final",
+          "questionIds": [
+            "G78_final1",
+            "G78_final2",
+            "G78_final3",
+            "G78_final4",
+            "G78_final5",
+            "G78_final6",
+            "G78_final7",
+            "G78_final8",
+            "G78_final9",
+            "G78_final10",
+            "G78_final11",
+            "G78_final12",
+            "G78_final13",
+            "G78_final14",
+            "G78_final15",
+            "G78_final16",
+            "G78_final17",
+            "G78_final18",
+            "G78_final19",
+            "G78_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G78_check1": "Actual duties determine applicable methods and roles.",
+        "G78_check2": "Coordinates depend on their reference metadata.",
+        "G78_check3": "The right-triangle calculation gives 0.5; it establishes no tolerance.",
+        "G78_check4": "Interpretation is model dependent.",
+        "G78_check5": "Identity links observations to actual positions.",
+        "G78_check6": "Theory cannot observe field performance.",
+        "G78_final1": "Nonexplosive methods exist and scope must be literal.",
+        "G78_final2": "Processing and inference must remain traceable to observations.",
+        "G78_final3": "Reference basis is part of the quantity.",
+        "G78_final4": "Software availability cannot establish technical applicability.",
+        "G78_final5": "Independence concerns the basis, not just count.",
+        "G78_final6": "Closure is one consistency indicator.",
+        "G78_final7": "A forced result can conceal evidence.",
+        "G78_final8": "Fictional arithmetic is not an acceptance limit.",
+        "G78_final9": "Observation and model-derived result are distinct.",
+        "G78_final10": "Original evidence supports technical review.",
+        "G78_final11": "A bounded image cannot replace all utility/excavation requirements.",
+        "G78_final12": "Field deviations matter to the technical result.",
+        "G78_final13": "Specialist access/source roles are separate.",
+        "G78_final14": "Traceable evidence makes the conclusion assessable.",
+        "G78_final15": "Source operation still requires actual instruction and safe assessment.",
+        "G78_final16": "Visual fit cannot replace the actual geodetic basis.",
+        "G78_final17": "A manufactured zero is not independent quality evidence.",
+        "G78_final18": "Original records preserve the basis for correction.",
+        "G78_final19": "Absence of explosives does not establish acquisition proficiency.",
+        "G78_final20": "The module cannot grant field or legal certification authority."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

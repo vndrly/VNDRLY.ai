@@ -18,4 +18,12 @@ describe('remaining task qualification evidence',()=>{
   expect(screen.getByText('trainingPolicy.vendorEvidence')).toBeTruthy();
   expect(screen.getByText('trainingPolicy.practicalEvidence')).toBeTruthy();
  });
+ it('shows a preserved H2S service without inventing a master catalog match',async()=>{
+  vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({data:{catalogServices:963,total:0,offset:0,pageSize:20,baselineProvisional:true,services:[],extensions:[{id:'h2s_monitoring_safety_trailer',name:'H2S Monitoring & Safety Trailer',deliveryMode:'site',roleMappings:[],sourceUrls:[],scopeNotes:['Existing service111; no invented VMS identifier.'],gapTopics:[],residualRequirements:[{groupId:'H2S-role-6',title:'Detector calibration/repair technician',courseId:'G71',role:'Actual calibration staff only',trainingItemId:'own-calibration-course',vendorEvidenceRequired:['Manufacturer/model service instructions.'],practicalAssessmentRequired:['Model-competent assessor observes calibration.'],scopeConfirmation:'Only actual calibration or repair duties.'}]}]}})})));
+  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><TrainingServiceConnections familyId="G71"/></QueryClientProvider>);
+  expect(await screen.findByText('H2S Monitoring & Safety Trailer')).toBeTruthy();
+  expect(screen.getByText('trainingPolicy.preservedExtensions')).toBeTruthy();
+  expect(screen.getByRole('link',{name:'trainingPolicy.taskCourse'}).getAttribute('href')).toBe('/work-hub/library/own-calibration-course');
+  expect(screen.getByText('Manufacturer/model service instructions.')).toBeTruthy();
+ });
 });

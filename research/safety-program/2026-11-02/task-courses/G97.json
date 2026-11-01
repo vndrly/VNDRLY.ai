@@ -1,0 +1,912 @@
+{
+  "courseId": "G97",
+  "gapGroupId": "TG48",
+  "title": "Industrial fire brigade and specialist emergency response",
+  "description": "Six subject-specific lessons and two worked fictional cases with twenty-six explained decisions. Actual method instruction and qualified practical capability remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for industrial fire brigade and specialist emergency response.",
+  "audience": [
+    "Assigned industrial emergency-response coordinators",
+    "Brigade supervisors and readiness reviewers",
+    "Incident-command liaison personnel",
+    "Exercise planners and evaluators within confirmed scope"
+  ],
+  "practicalBoundary": "Fire-system maintenance does not make the technician a firefighter. Recognition/notification, defensive response and hazardous intervention have different roles. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Employer response organization statement identifying actual duty levels, limitations and assigned personnel; maintenance and notification roles distinguished.",
+    "Actual command, accountability, external-response and confirmed transfer/communication arrangements.",
+    "Role-specific training and practical assessment with applicable health/respiratory prerequisites confirmed through authorized confidential processes.",
+    "Actual equipment identities, current assurance/availability and site hazard-information basis supporting the declared capability.",
+    "Safe exercise objectives, qualified evaluators, observed outcomes, limitations and corrective-action evidence; tabletop separated from physical assessment.",
+    "Post-response equipment/personnel status, residual site restrictions, authorized release and effectiveness evidence for actual corrective actions."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who classifies the actual response duty without treating maintenance or awareness as hazardous intervention qualification; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who uses the actual command/accountability and transfer-confirmation arrangement in a safe tabletop; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who matches duty-specific readiness evidence and authorized prerequisite status to the actual roster; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who reconciles declared capability with equipment availability and current site information; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who evaluates a safe exercise against observable objectives while separating discussion from physical performance; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Qualified assessor observes the assigned person who hands over residual readiness/site conditions and verifies action effectiveness before making broader capability claims; records representative conditions, errors, correction, limitations and assessment outcome.",
+    "Actual language/equipment skill, hazardous response, protective-system servicing or other supplied execution requires the relevant method-specific practical evaluation and applicable credentials. This online knowledge result does not establish those qualifications."
+  ],
+  "sources": [
+    {
+      "title": "OSHA fire brigades",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.156",
+      "scopeLimit": "Actual employer-established brigade and duties; system maintenance is distinct.",
+      "verificationNote": "Retained from the source register as previously primary-checked; this authoring pass could not refresh the page (unexpected status); eCFR returned access challenge. No detailed numerical obligation is inferred."
+    },
+    {
+      "title": "OSHA hazardous waste operations and emergency response",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120",
+      "scopeLimit": "Coverage and actual response role must be determined; not every waste service is covered."
+    },
+    {
+      "title": "OSHA fire safety overview",
+      "url": "https://www.osha.gov/fire-safety",
+      "scopeLimit": "Primary overview of differing sector requirements and prevention/response references; not a brigade qualification or tactical method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G97_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "Industrial emergency response requires a declared duty level, an organized response system and evidence that people and equipment can perform the assigned role. This course teaches duty classification, command interfaces, readiness categories, equipment/hazard information, exercise evaluation and recovery status. It provides no firefighting tactics, hazardous-material intervention, extinguishing-agent selection, breathing-apparatus method or entry technique.\n\nUse fictional plans and tabletop information only. Complete twenty-six decisions, retain original answers and acknowledge explained remediation. Actual employer response programs, professional requirements and qualified practical assessment govern real intervention. Awareness completion cannot establish fire-brigade or specialist-response qualification.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G97_lesson1",
+        "title": "Lesson 1 — Define the response duty level",
+        "body": "Define the response organization by the duties it is expected to perform. Recognition and notification, evacuation support, defensive response, hazardous intervention and structural firefighting are not interchangeable capabilities. A broad emergency-services contract does not establish which roles are supplied. The employer must determine the actual response scope and applicable requirements before counting people as ready.\n\nSeparate prevention and system maintenance from response. A technician who services alarms may know the equipment well without being assigned as a firefighter. A worker who can report a release may not be qualified to approach and control it. The actual hazard, task and program determine what additional preparation is needed. Do not infer intervention authority merely because someone is nearby or wears a safety title.\n\nDifferent response disciplines can coexist but should not be merged. A fire brigade is not automatically a hazardous-material response team, and a rescue capability may have its own scope. The organization should state what it can provide, what it cannot and which external arrangements supplement it. That statement must match actual personnel, equipment and availability.\n\nRole definitions should be understandable to ordinary workers as well as responders. People need the actual alarm, reporting and evacuation instructions appropriate to their assignment. The organization should not rely on spontaneous intervention by unassigned staff to make a response plan appear complete. Awareness is valuable precisely because it can support recognition and notification without pretending to qualify hazardous action.\n\nIn the fictional exercise, maintenance technicians appear on an interior-firefighting roster solely because they service the alarm system. The worked review preserves their maintenance competence and removes the unsupported response claim through the authorized roster process. The employer's qualified response authority determines any training and assessment needed if those duties are actually proposed. The course learner identifies the mismatch without deciding tactics or assigning people to hazardous entry.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G97_lesson2",
+        "title": "Lesson 2 — Read command and accountability arrangements",
+        "body": "Command arrangements establish who directs the response and how organizations coordinate. They must be understood before an event, not inferred from who arrives first or speaks most confidently. The actual incident-management system defines authority, reporting and transfer. A radio call or vehicle arrival does not automatically establish a mutually understood change of command.\n\nAccountability is the ability to know which people are assigned, where responsibility lies and how status is communicated under the system. It is not just a list of names printed before the event. Changes in assignment, personnel status or organization must reach the responsible role through the approved process. The course teaches planning and communication, not a field accountability tactic.\n\nExternal responders need useful site information and coordination. The site may know assets, hazards, access and operating contacts that an external team does not. The external organization may provide capabilities the site lacks. A mutual-aid name on a plan does not alone prove availability, accepted responsibilities or knowledge of the actual site. The responsible organizations must establish those relationships.\n\nKeep technical and command information distinct. A maintenance specialist can explain a system within their competence without becoming incident commander. A site manager can provide operational facts without selecting a hazardous intervention method outside their role. The response organization determines how specialist advice informs its actual decisions.\n\nFor a safe tabletop, two organizations arrive in a fictional scenario and each assumes the other has accepted command. Participants identify current authority, required information and the approved transfer/confirmation route. No live dispatch or emergency call occurs. The worked result is an explicit responsibility agreement and an identified communication gap, not proof of physical response capability. The exercise should record what was understood and corrected rather than merely count attendees.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G97_lesson3",
+        "title": "Lesson 3 — Verify readiness prerequisites separately",
+        "body": "Readiness has several dimensions: assigned duty training, demonstrated practical capability, applicable health or fitness prerequisites, respiratory-program requirements where relevant, equipment preparation and site instruction. One certificate rarely answers every dimension. The actual employer and professional program determine which requirements apply and who is qualified to verify them.\n\nMatch the evidence to the declared role. A general emergency-awareness result may support recognition and reporting knowledge. It does not show that a person can work in protective equipment or perform physical firefighting. A practical record for one role should not be extended automatically to another. Scope and restrictions are part of the evidence, not inconvenient notes to omit from a roster.\n\nSeparate prerequisites from performance. Satisfying an applicable health requirement does not demonstrate a response technique, and successful technical training does not establish a missing prerequisite. The readiness matrix should identify the owner and status of each required category. A green all complete field is credible only when the underlying conditions are actually met.\n\nProtect confidential information. A coordinator may need an authorized readiness status without unrestricted medical details. The proper occupational-health or professional process should provide the necessary confirmation. Do not copy private records into a broadly accessible response roster merely to make the file look comprehensive.\n\nIn the exercise, every person is marked ready because an online awareness course was completed. The worked review retains that useful awareness result and identifies which duty-specific training, safe practical assessment and applicable prerequisites remain open. The qualified response authority determines actual qualification, not the course administrator. The goal is an honest capability statement that ordinary workers and managers can rely on when planning, rather than a roster that appears complete by combining unrelated evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G97_lesson4",
+        "title": "Lesson 4 — Check equipment and hazard information interfaces",
+        "body": "Response equipment must support the declared capability in its actual current condition. A procurement list shows what was requested or purchased; it does not establish readiness, suitability or trained use. The responsible technical and response roles determine the required equipment for the actual duty and verify its status through the employer's program.\n\nConnect equipment identity and availability to the capability statement. An item can exist but be unavailable because of maintenance, location or another commitment. A replacement promised for later does not supply capability now. If a declared response role depends on that item, its readiness status must reflect the actual limitation until an authorized arrangement resolves it.\n\nSite hazard information also needs current context. Material inventories, process information, access and protective-system status can affect planning. A familiar map may omit a changed area or temporary condition. The response organization needs the actual information through its approved route. This course does not interpret that information into firefighting tactics or select an extinguishing agent.\n\nEquipment training must match the items and duty supplied. Familiarity with one model or purpose does not automatically establish competence with every configuration. Actual use and emergency performance require safe instruction and observed assessment by qualified people. A desk inventory review can identify missing relationships but cannot prove physical performance.\n\nFor the fictional exercise, the capability statement relies on equipment set E4, while the assurance register shows E4 unavailable. The manager points to a purchase order for a replacement. The worked answer records the present capability limitation and routes it to the responsible authority. It does not claim the organization is incapable of every response, nor treat future procurement as current readiness. The actual available scope and any approved alternative arrangements must be communicated accurately.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G97_lesson5",
+        "title": "Lesson 5 — Evaluate exercises against the declared role",
+        "body": "An exercise should test defined objectives through a safe method. Notification, command coordination, equipment recognition and physical response are different objectives. A tabletop is well suited to discussing decisions and information flow, but it cannot by itself establish physical firefighting or hazardous-intervention performance. The evaluator should state what the method can and cannot demonstrate.\n\nChoose a scenario that represents the actual duty without creating uncontrolled exposure. Qualified instructors determine practical exercise design, controls and evaluation. This online course uses fictional records and dialogue only. Do not introduce smoke, fire, chemicals, pressurized equipment or real emergency calls to make a desk exercise feel realistic.\n\nEvaluation needs observable criteria. For a communication tabletop, participants might identify the responsible authority, communicate the correct location and recognize a capability limitation. Record the actual response, error and correction. Attendance alone does not show that the objectives were met. A participant can complete an exercise while still needing further instruction or assessment.\n\nPractical evidence must remain bounded. A successful demonstration in one representative arrangement may support that scope while leaving other configurations unassessed. The employer's qualified program determines applicability. Do not rewrite a limited exercise result as universal responder qualification or assume that experience removes the need to address a new duty.\n\nIn the exercise-review task, a report says tabletop attendance equals successful physical response assessment. The worked correction separates participation, demonstrated coordination decisions and untested physical skills. Deficiencies become specific corrective actions with owners and follow-up evidence. The organization then knows what to improve instead of counting a broad completed label. This is useful training governance because it protects the credibility of actual practical assessments as well as the value of safe desk learning.\n\nAn evaluator should distinguish a communication error from a missing organizational arrangement. If a participant cannot name the command authority because the organizations never agreed on one, another reminder to that participant will not resolve the underlying gap. The corrective action needs the responsible organizations to establish and communicate the arrangement, followed by a suitable check. If the arrangement exists but the participant misunderstood it, instruction and reassessment may be appropriate. Accurate diagnosis of the exercise deficiency makes the response useful instead of defaulting to retrain everyone regardless of cause.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G97_lesson6",
+        "title": "Lesson 6 — Keep recovery and reentry decisions explicit",
+        "body": "Response closeout includes people, equipment, site restrictions and learning. Ending an event or exercise does not automatically restore every capability or authorize all other work. The actual response and site authorities must identify what conditions remain and who accepts the next stage. A crew departure is not a universal all-clear.\n\nDistinguish the response task from operational recovery. A response organization may complete its assigned action while maintenance, environmental review, clinical follow-up or operating release remains pending. Each belongs to the appropriate qualified role. The handover should communicate actual status rather than imply that one organization's completion answers every question.\n\nEquipment used or found deficient may need inspection, maintenance or other disposition before the declared capability is restored. Record the actual restriction and owner. Personnel readiness can also require review through the appropriate program. The course does not prescribe medical decisions or equipment restoration methods; it teaches why those categories must remain visible.\n\nLearning actions need evidence beyond a meeting. If an exercise reveals conflicting command assumptions, issuing a reminder may be one activity but effectiveness needs a later check that the organizations understand the arrangement. If equipment availability failed, an attendance list cannot repair it. Corrective actions should address the actual deficiency and have an appropriate verification method.\n\nFor the desk exercise, the drill ends while one equipment item remains unavailable and the command-transfer action is still open. The worked handover records both limitations and the responsible next decisions. The manager can accurately credit the completed drill without declaring the full response capability restored. A later correction updates only the category it actually resolves. This preserves operational confidence by making the capability statement truthful rather than merely reassuring.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G97_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: North Creek advertises an onsite brigade capability. Its roster includes alarm-maintenance technicians who completed emergency awareness. There is no evidence that they were assigned or assessed for the advertised physical response role. The equipment list contains set E4, but the readiness register shows it unavailable. A replacement order is pending. The manager wants to keep the capability dashboard green because the team is experienced.\n\nThe qualified response reviewer first identifies the actual declared duty and separates it from maintenance and notification. The technicians' genuine knowledge remains valuable. It does not establish interior firefighting or another hazardous role. The roster must reflect actual assignment, role-specific preparation and demonstrated capability under the employer's program.\n\nThe awareness results are retained as awareness results. The reviewer does not erase completed training or claim the personnel know nothing. Instead, the matrix identifies which specific duty and prerequisite evidence is required for the proposed response scope. Appropriate health or respiratory categories are handled through the authorized programs without distributing confidential records to everyone using the roster.\n\nEquipment availability is a separate readiness question. E4's listing in procurement records does not make it available. The pending replacement may support a future plan, but the current capability statement must reflect the actual situation and any authorized alternative. The reviewer does not select tactical substitutes from a catalog.\n\nThe manager's appeal to experience is considered within scope. Prior relevant performance can inform the qualified assessment, but a general statement cannot replace missing actual role and equipment evidence. The responsible authority determines what capability can truthfully be declared now and what additional preparation is needed for the proposed service.\n\nThe worked result is a precise capability record, not a blanket declaration that the site has no useful response arrangements. Notification and other established duties may remain supported. The advertised hazardous response scope stays limited until its own requirements are met. Ordinary workers receive the actual instructions applicable to them rather than being expected to improvise the missing brigade function.\n\nThis case teaches readiness reasoning without teaching intervention. The learner can identify the false equivalence between maintenance skill, awareness, equipment ownership and response performance. Qualified practical assessment and actual program authority must establish the real hazardous capability before the organization relies on it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G97_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: North Creek and an external response organization conduct a tabletop. When the second organization arrives in the scenario, each assumes the other has command. Participants use two different site nicknames for the same area. The exercise ends with a signed attendance list. The draft report says every participant passed physical response assessment and the site is cleared for unrestricted operations.\n\nThe evaluator begins with the actual exercise objectives. The tabletop can assess communication and coordination decisions. It did not demonstrate physical firefighting, hazardous-material intervention or equipment performance. The report must describe what happened, including the command ambiguity and location-language issue. Attendance does not erase those findings or establish untested skills.\n\nThe command issue is resolved through the responsible organizations' actual arrangement. Participants identify who holds authority, what information must transfer and how acceptance is confirmed. The evaluator records the corrected understanding and any further action. No real emergency is dispatched, and no tactical entry is performed in the course exercise.\n\nThe site-name issue is addressed with approved location information and a repeat fictional communication check. The response organization needs unambiguous information, not a promise that local staff will explain it during a real event. A corrected map or contact sheet is implementation evidence; a later successful understanding check provides a different kind of evidence about effectiveness.\n\nCloseout then separates exercise completion from capability restoration and operational release. One equipment item used in another training activity is unavailable, and its technical disposition remains pending. That limitation belongs in the readiness record. Ending the tabletop does not restore the item or authorize unrelated production work.\n\nThe final report records participation, observed coordination performance, errors, correction and outstanding actions. Practical response qualification remains with the separate qualified assessment program. The designated site authority decides any actual operational release using the relevant technical and response information, rather than a general all-clear generated from the attendance sheet.\n\nThe case demonstrates that a useful exercise can reveal gaps without being a failure of the organization. Honest findings support improvement. Relabeling participation as universal qualification would hide the very lessons the exercise was meant to expose. The learner practices evaluation and handover decisions while remaining outside hazardous execution and clinical judgment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G97_final",
+        "title": "Final assessment and residual requirements",
+        "body": "Apply the final decisions to declared response duties, command, readiness evidence, equipment availability, exercise validity and recovery status. Preserve first answers and acknowledge explained remediation.\n\nActual fire-brigade, hazardous-response, rescue, respiratory and clinical duties require their relevant programs, prerequisites and qualified practical evaluation. This course establishes bounded planning knowledge only and supplies no permission or tactics for hazardous intervention.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G97_check1",
+        "prompt": "During define the response duty level, maintenance personnel are counted as interior firefighters without response-role qualification. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Correct the duty roster and require actual role-specific readiness evidence."
+          },
+          {
+            "id": "b",
+            "label": "Fire-alarm maintenance qualification establishes interior firefighting capability."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G97_check2",
+        "prompt": "During read command and accountability arrangements, two organizations assume the other has accepted command without confirmation. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Command transfers automatically when another vehicle arrives."
+          },
+          {
+            "id": "b",
+            "label": "Resolve command responsibility through the approved coordination arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G97_check3",
+        "prompt": "During verify readiness prerequisites separately, the roster marks all prerequisites satisfied from one online awareness certificate. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "One awareness certificate establishes every response prerequisite."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Retain awareness completion but leave role readiness open for the missing evidence."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G97_check4",
+        "prompt": "During check equipment and hazard information interfaces, the declared response capability depends on unavailable equipment. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Equipment listed in a budget is available response capability."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Resolve the capability mismatch before relying on the roster."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G97_check5",
+        "prompt": "During evaluate exercises against the declared role, tabletop attendance is entered as successful physical response assessment. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Correct the assessment claim and arrange the required qualified practical evaluation."
+          },
+          {
+            "id": "b",
+            "label": "Tabletop attendance proves physical firefighting performance."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G97_check6",
+        "prompt": "During keep recovery and reentry decisions explicit, a crew departure is treated as proof that unrestricted reentry is authorized. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Responder departure automatically authorizes unrestricted reentry."
+          },
+          {
+            "id": "b",
+            "label": "Obtain the designated release decision and preserve outstanding restrictions."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G97_final1",
+        "prompt": "Which evidence is most directly relevant to define the response duty level?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Brigade organization statement naming duty levels and assigned personnel."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G97_final2",
+        "prompt": "Which evidence is most directly relevant to read command and accountability arrangements?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Incident command interface plan showing authority and accountability responsibilities."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G97_final3",
+        "prompt": "Which evidence is most directly relevant to verify readiness prerequisites separately?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Response readiness matrix separating duty training, assessed performance and prerequisites."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G97_final4",
+        "prompt": "Which evidence is most directly relevant to check equipment and hazard information interfaces?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Capability record linking declared duty, equipment readiness and site hazard information."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G97_final5",
+        "prompt": "Which evidence is most directly relevant to evaluate exercises against the declared role?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Exercise report separating discussion objectives and observed practical capabilities."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G97_final6",
+        "prompt": "Which evidence is most directly relevant to keep recovery and reentry decisions explicit?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Post-response handover identifying restrictions, equipment disposition and release authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G97_final7",
+        "prompt": "A colleague argues: “Fire-alarm maintenance qualification establishes interior firefighting capability.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; correct the duty roster and require actual role-specific readiness evidence."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G97_final8",
+        "prompt": "A colleague argues: “Command transfers automatically when another vehicle arrives.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; resolve command responsibility through the approved coordination arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G97_final9",
+        "prompt": "A colleague argues: “One awareness certificate establishes every response prerequisite.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; retain awareness completion but leave role readiness open for the missing evidence."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G97_final10",
+        "prompt": "A colleague argues: “Equipment listed in a budget is available response capability.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; resolve the capability mismatch before relying on the roster."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G97_final11",
+        "prompt": "A colleague argues: “Tabletop attendance proves physical firefighting performance.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; correct the assessment claim and arrange the required qualified practical evaluation."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G97_final12",
+        "prompt": "A colleague argues: “Responder departure automatically authorizes unrestricted reentry.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; obtain the designated release decision and preserve outstanding restrictions."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G97_final13",
+        "prompt": "Alarm-maintenance technicians completed emergency awareness. What hazardous-response claim remains unsupported?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That they can retain maintenance knowledge."
+          },
+          {
+            "id": "b",
+            "label": "That awareness can support recognition and reporting."
+          },
+          {
+            "id": "c",
+            "label": "That they are assigned and practically qualified for the declared firefighting/intervention duty."
+          },
+          {
+            "id": "d",
+            "label": "That actual duties should be identified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G97_final14",
+        "prompt": "Two organizations each assume the other accepted command. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A guess based on vehicle arrival."
+          },
+          {
+            "id": "b",
+            "label": "A broad attendance signature."
+          },
+          {
+            "id": "c",
+            "label": "An assumption that louder instructions determine command."
+          },
+          {
+            "id": "d",
+            "label": "An explicit current authority and transfer/confirmation arrangement under the actual system."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G97_final15",
+        "prompt": "One awareness certificate marks every readiness category complete. What should the reviewer do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep awareness evidence and separately verify actual duty training, practical capability and applicable prerequisites."
+          },
+          {
+            "id": "b",
+            "label": "Erase all useful awareness results."
+          },
+          {
+            "id": "c",
+            "label": "Treat the certificate as proof of every physical skill."
+          },
+          {
+            "id": "d",
+            "label": "Publish confidential medical records to the full roster."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G97_final16",
+        "prompt": "Equipment E4 is unavailable, but its replacement is ordered. What can the current capability claim rely on?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The purchase order as physical availability."
+          },
+          {
+            "id": "b",
+            "label": "Actual available accepted capability and authorized arrangements, not future procurement alone."
+          },
+          {
+            "id": "c",
+            "label": "An unchanged green dashboard."
+          },
+          {
+            "id": "d",
+            "label": "The equipment name on an old list."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G97_final17",
+        "prompt": "A tabletop tests command and notification. What may its assessment establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Universal firefighting competence."
+          },
+          {
+            "id": "b",
+            "label": "Every respiratory equipment skill."
+          },
+          {
+            "id": "c",
+            "label": "The coordination decisions actually demonstrated, with physical response performance separately assessed."
+          },
+          {
+            "id": "d",
+            "label": "Authority for unassigned workers to intervene."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G97_final18",
+        "prompt": "An exercise ends with a key item unavailable and a corrective action open. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Declare every capability restored."
+          },
+          {
+            "id": "b",
+            "label": "Erase the defect because the drill ended."
+          },
+          {
+            "id": "c",
+            "label": "Treat crew departure as unrestricted site release."
+          },
+          {
+            "id": "d",
+            "label": "Record completed exercise activity while keeping actual readiness limitations and follow-up decisions visible."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G97_final19",
+        "prompt": "In case one, maintenance experience is genuine. How should it be used?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Within its actual scope, without substituting it for the proposed response-role evidence."
+          },
+          {
+            "id": "b",
+            "label": "As universal interior firefighting qualification."
+          },
+          {
+            "id": "c",
+            "label": "As proof replacement equipment has arrived."
+          },
+          {
+            "id": "d",
+            "label": "As authority to skip the response program."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G97_final20",
+        "prompt": "In case two, the location-language issue is corrected. What can still remain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing; one map correction closes all categories."
+          },
+          {
+            "id": "b",
+            "label": "Command coordination, physical assessment and equipment/release issues, each with its own evidence."
+          },
+          {
+            "id": "c",
+            "label": "Only the attendance list layout."
+          },
+          {
+            "id": "d",
+            "label": "Every exercise observation must be deleted."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G97_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G97_lesson1",
+          "questionIds": [
+            "G97_check1"
+          ]
+        },
+        {
+          "lessonId": "G97_lesson2",
+          "questionIds": [
+            "G97_check2"
+          ]
+        },
+        {
+          "lessonId": "G97_lesson3",
+          "questionIds": [
+            "G97_check3"
+          ]
+        },
+        {
+          "lessonId": "G97_lesson4",
+          "questionIds": [
+            "G97_check4"
+          ]
+        },
+        {
+          "lessonId": "G97_lesson5",
+          "questionIds": [
+            "G97_check5"
+          ]
+        },
+        {
+          "lessonId": "G97_lesson6",
+          "questionIds": [
+            "G97_check6"
+          ]
+        },
+        {
+          "lessonId": "G97_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G97_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G97_final",
+          "questionIds": [
+            "G97_final1",
+            "G97_final2",
+            "G97_final3",
+            "G97_final4",
+            "G97_final5",
+            "G97_final6",
+            "G97_final7",
+            "G97_final8",
+            "G97_final9",
+            "G97_final10",
+            "G97_final11",
+            "G97_final12",
+            "G97_final13",
+            "G97_final14",
+            "G97_final15",
+            "G97_final16",
+            "G97_final17",
+            "G97_final18",
+            "G97_final19",
+            "G97_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G97_check1": "The correct decision is to correct the duty roster and require actual role-specific readiness evidence. Recognition and notification, defensive response, hazardous intervention and structural firefighting are different roles. A fire-system technician is not automatically a brigade member. The employer-established organization should identify duties and limits before assigning training. This course supports document review and command-interface rehearsal; it provides no firefighting tactics, extinguishing-agent selection or entry technique. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G97_check2": "The correct decision is to resolve command responsibility through the approved coordination arrangement. Response plans need defined authority, reporting relationships and personnel accountability. A radio call does not by itself establish command transfer. Review how the employer coordinates external responders and communicates known hazards. Desk rehearsal can identify contradictory reporting routes without dispatching anyone or simulating a hazardous intervention. The qualified response organization determines operational tactics and safe exercise design. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G97_check3": "The correct decision is to retain awareness completion but leave role readiness open for the missing evidence. Role training, practical assessment, medical requirements where applicable, respiratory protection and equipment preparation are separate evidence categories. A strong score on emergency awareness does not prove capability in protective equipment. Respect confidentiality by recording necessary readiness status through authorized channels rather than collecting unrestricted medical records. Qualified assessors and the employer program decide whether the actual duty can be assigned. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G97_check4": "The correct decision is to resolve the capability mismatch before relying on the roster. Response capability depends on equipment that matches the declared duty and on current information about the site hazards. A procurement list is not evidence of maintained readiness or trained use. The learner compares the declared capability with the equipment assurance and training scope. Specialists determine technical suitability and tactics; the course does not prescribe equipment deployment or hazardous material intervention. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G97_check5": "The correct decision is to correct the assessment claim and arrange the required qualified practical evaluation. A useful exercise has objectives, safe boundaries, assigned evaluators and a record of what was demonstrated. A desk discussion can test notifications and decisions but cannot prove physical firefighting performance. Record deficiencies and corrective practice without representing participation as successful assessment. More hazardous practical evaluation belongs to qualified instructors using an approved safe facility and method. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G97_check6": "The correct decision is to obtain the designated release decision and preserve outstanding restrictions. After an event or exercise, equipment status, personnel readiness and site restrictions need formal handover. An all-clear message should come from the designated authority and apply to a defined condition; completion of one response task does not prove the site is safe for all work. Capture lessons and verify corrective actions before restoring the declared response capability. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G97_final1": "A brigade organization statement naming duty levels and assigned personnel addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Recognition and notification, defensive response, hazardous intervention and structural firefighting are different roles. A fire-system technician is not automatically a brigade member. The employer-established organization should identify duties and limits before assigning training. This course supports document review and command-interface rehearsal; it provides no firefighting tactics, extinguishing-agent selection or entry technique.",
+        "G97_final2": "A incident command interface plan showing authority and accountability responsibilities addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Response plans need defined authority, reporting relationships and personnel accountability. A radio call does not by itself establish command transfer. Review how the employer coordinates external responders and communicates known hazards. Desk rehearsal can identify contradictory reporting routes without dispatching anyone or simulating a hazardous intervention. The qualified response organization determines operational tactics and safe exercise design.",
+        "G97_final3": "A response readiness matrix separating duty training, assessed performance and prerequisites addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Role training, practical assessment, medical requirements where applicable, respiratory protection and equipment preparation are separate evidence categories. A strong score on emergency awareness does not prove capability in protective equipment. Respect confidentiality by recording necessary readiness status through authorized channels rather than collecting unrestricted medical records. Qualified assessors and the employer program decide whether the actual duty can be assigned.",
+        "G97_final4": "A capability record linking declared duty, equipment readiness and site hazard information addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Response capability depends on equipment that matches the declared duty and on current information about the site hazards. A procurement list is not evidence of maintained readiness or trained use. The learner compares the declared capability with the equipment assurance and training scope. Specialists determine technical suitability and tactics; the course does not prescribe equipment deployment or hazardous material intervention.",
+        "G97_final5": "A exercise report separating discussion objectives and observed practical capabilities addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A useful exercise has objectives, safe boundaries, assigned evaluators and a record of what was demonstrated. A desk discussion can test notifications and decisions but cannot prove physical firefighting performance. Record deficiencies and corrective practice without representing participation as successful assessment. More hazardous practical evaluation belongs to qualified instructors using an approved safe facility and method.",
+        "G97_final6": "A post-response handover identifying restrictions, equipment disposition and release authority addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. After an event or exercise, equipment status, personnel readiness and site restrictions need formal handover. An all-clear message should come from the designated authority and apply to a defined condition; completion of one response task does not prove the site is safe for all work. Capture lessons and verify corrective actions before restoring the declared response capability.",
+        "G97_final7": "That inference exceeds the evidence. Recognition and notification, defensive response, hazardous intervention and structural firefighting are different roles. A fire-system technician is not automatically a brigade member. The employer-established organization should identify duties and limits before assigning training. This course supports document review and command-interface rehearsal; it provides no firefighting tactics, extinguishing-agent selection or entry technique. The appropriate task disposition remains to correct the duty roster and require actual role-specific readiness evidence.",
+        "G97_final8": "That inference exceeds the evidence. Response plans need defined authority, reporting relationships and personnel accountability. A radio call does not by itself establish command transfer. Review how the employer coordinates external responders and communicates known hazards. Desk rehearsal can identify contradictory reporting routes without dispatching anyone or simulating a hazardous intervention. The qualified response organization determines operational tactics and safe exercise design. The appropriate task disposition remains to resolve command responsibility through the approved coordination arrangement.",
+        "G97_final9": "That inference exceeds the evidence. Role training, practical assessment, medical requirements where applicable, respiratory protection and equipment preparation are separate evidence categories. A strong score on emergency awareness does not prove capability in protective equipment. Respect confidentiality by recording necessary readiness status through authorized channels rather than collecting unrestricted medical records. Qualified assessors and the employer program decide whether the actual duty can be assigned. The appropriate task disposition remains to retain awareness completion but leave role readiness open for the missing evidence.",
+        "G97_final10": "That inference exceeds the evidence. Response capability depends on equipment that matches the declared duty and on current information about the site hazards. A procurement list is not evidence of maintained readiness or trained use. The learner compares the declared capability with the equipment assurance and training scope. Specialists determine technical suitability and tactics; the course does not prescribe equipment deployment or hazardous material intervention. The appropriate task disposition remains to resolve the capability mismatch before relying on the roster.",
+        "G97_final11": "That inference exceeds the evidence. A useful exercise has objectives, safe boundaries, assigned evaluators and a record of what was demonstrated. A desk discussion can test notifications and decisions but cannot prove physical firefighting performance. Record deficiencies and corrective practice without representing participation as successful assessment. More hazardous practical evaluation belongs to qualified instructors using an approved safe facility and method. The appropriate task disposition remains to correct the assessment claim and arrange the required qualified practical evaluation.",
+        "G97_final12": "That inference exceeds the evidence. After an event or exercise, equipment status, personnel readiness and site restrictions need formal handover. An all-clear message should come from the designated authority and apply to a defined condition; completion of one response task does not prove the site is safe for all work. Capture lessons and verify corrective actions before restoring the declared response capability. The appropriate task disposition remains to obtain the designated release decision and preserve outstanding restrictions.",
+        "G97_final13": "That they are assigned and practically qualified for the declared firefighting/intervention duty. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G97_final14": "An explicit current authority and transfer/confirmation arrangement under the actual system. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G97_final15": "Keep awareness evidence and separately verify actual duty training, practical capability and applicable prerequisites. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G97_final16": "Actual available accepted capability and authorized arrangements, not future procurement alone. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G97_final17": "The coordination decisions actually demonstrated, with physical response performance separately assessed. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G97_final18": "Record completed exercise activity while keeping actual readiness limitations and follow-up decisions visible. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G97_final19": "Within its actual scope, without substituting it for the proposed response-role evidence. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error.",
+        "G97_final20": "Command coordination, physical assessment and equipment/release issues, each with its own evidence. The relevant lesson and worked case distinguish the actual evidence and authority categories. Keep the first response and explicitly acknowledge the corrected reasoning after an error."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

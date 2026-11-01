@@ -1,0 +1,906 @@
+{
+  "courseId": "G83",
+  "gapGroupId": "TG34",
+  "title": "Safety audit, incident investigation and evidence methods",
+  "description": "Task-specific instruction with two worked fictional cases, six checks and twenty explained final decisions. Employer methods and observed qualification remain separate.",
+  "purpose": "Teach task-specific planning, evidence interpretation and safe desk practice for safety audit, incident investigation and evidence methods.",
+  "audience": [
+    "Assigned incident investigators",
+    "Safety auditors",
+    "Investigation team members",
+    "Corrective-action reviewers"
+  ],
+  "practicalBoundary": "An investigator is not automatically an emergency responder, electrical inspector or licensed professional. No live operating method, clinical treatment, hazardous intervention, equipment design or unrestricted qualification is granted. Actual method instruction and qualified practical assessment remain required.",
+  "vendorEvidenceRequired": [
+    "Actual investigation terms of reference naming event, period, criteria and scene-access authority, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual image register linking original filenames, collector, location and clock limitations, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual interview notes separating direct observation, recalled speech and investigator interpretation, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual timeline and causal map linking each material assertion to an evidence reference, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual audit finding with criterion revision, sampled asset list and evidence, with item/person/task identity, applicable revision, acceptance authority and limitations.",
+    "Actual action register linking finding, owner, implementation evidence and effectiveness review, with item/person/task identity, applicable revision, acceptance authority and limitations."
+  ],
+  "practicalAssessmentRequired": [
+    "Qualified assessor observes the assigned person who defines a bounded investigation question and distinguishes audit criteria from preference; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who preserves original evidence and explains provenance and time limitations; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who conducts a neutral representative interview and distinguishes observation from inference; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who tests a causal explanation against contrary evidence; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who writes a criterion-based finding with an accurate sample boundary; records the representative task, errors, correction, limits and assessment decision.",
+    "Qualified assessor observes the assigned person who distinguishes action implementation from effectiveness evidence; records the representative task, errors, correction, limits and assessment decision.",
+    "Actual hazardous, equipment, trade or regulated duties require their own approved method assessment and applicable credentials. This online result does not satisfy those practical requirements."
+  ],
+  "sources": [
+    {
+      "title": "OSHA recommended safety-program education and training",
+      "url": "https://www.osha.gov/safety-management/education-training",
+      "scopeLimit": "General role- and hazard-specific training guidance; not a trade license or universal legal mandate."
+    },
+    {
+      "title": "OSHA incident investigation",
+      "url": "https://www.osha.gov/incident-investigation",
+      "scopeLimit": "Bounded primary reference; confirm actual duty, sector and jurisdiction. It does not certify the learner or supply a manufacturer-approved operating method."
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G83_intro",
+        "title": "Start here — actual task, evidence and performance boundaries",
+        "body": "This course teaches incident fact collection, causal reasoning and bounded safety audit findings. Investigations ask how an event happened and how recurrence can be prevented. Audits ask whether defined arrangements meet named criteria. These activities can inform each other, but they are not interchangeable. A near miss can provide useful learning even when no injury occurred.\n\nThe exercises use fictional records and interviews. Nobody should enter a restricted scene, disturb equipment or obtain confidential information to complete them. Technical examination, clinical conclusions and legal determinations require the appropriate separately authorized specialists. Complete six checks and twenty final questions; retain original responses and acknowledge any remediation. Knowledge completion establishes neither scene-access authority nor investigator competence in every technical discipline.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G83_lesson1",
+        "title": "Lesson 1 — Define the investigation question",
+        "body": "A sound investigation starts with a question that can be answered from evidence. “Who caused this?” presumes an individual cause. “What conditions allowed the vehicle and barrier to occupy the same space?” invites examination of the event, equipment, traffic arrangements and information available to people. Write the event boundary, period and intended learning before collecting material. Identify immediate response responsibilities separately: care, scene control and hazard stabilization take priority under the site arrangements. Investigators do not assume control merely because they have a camera or investigation form.\n\nDetermine the difference between factual inquiry and technical certification. An investigator can establish that a warning lamp was visible in an image. Whether the lamp met an electrical design requirement is a different question. Assign the latter to the competent specialist and record the question and evidence supplied. This prevents an unsupported technical conclusion from becoming the foundation of a causal story.\n\nFor an audit, name the criterion before looking for compliance. A company procedure, contract clause and adopted legal requirement have different authority. Record the exact applicable revision. A preference for another company's practice is not a nonconformity against the audited criterion. If the audit identifies a useful improvement beyond the criterion, describe it as an observation or recommendation under the audit method rather than disguising it as a mandatory failure.\n\nConsider a fictional gate-contact event. The review concerns the delivery sequence and traffic controls during one shift. It may need logs from an earlier route change, but that does not automatically make every previous delivery part of the event investigation. The scope can be amended when evidence justifies it, with the reason recorded. A clear boundary limits premature blame while allowing evidence-led expansion.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G83_lesson2",
+        "title": "Lesson 2 — Preserve originals and provenance",
+        "body": "Evidence preservation begins with explaining where an item came from. For a photograph, record collector, location, subject and known time limitations. For a log, identify the system, authorized extraction method and period covered. For a document, retain its version and provenance. The goal is not an impressive quantity of attachments; it is the ability to connect a material assertion to an understandable source.\n\nKeep originals and create working copies for annotation. An arrow added to an image can help explain a feature, but it should be clear that the arrow was added later. Cropping can remove relevant context, so retain the complete image and describe the crop. A reconstructed diagram should be labeled as a reconstruction and should identify the information used. It must not masquerade as a contemporaneous record.\n\nTime requires special care. A camera may display precise seconds while its clock is inaccurate. A handwritten log may use approximate time. Treat precision and reliability as separate properties. When ordering events, use supported relationships such as before the delivery call or after the barrier alarm if exact synchronization is unavailable. Do not force uncertain records into a false second-by-second sequence.\n\nUse an evidence register with an identifier, short description, origin, collection details, restrictions and relationships to other records. A transfer record explains who handled an item and why. Do not claim forensic integrity beyond the actual preservation method. Sensitive personal information should be accessible only to authorized roles for the legitimate review purpose.\n\nIn a safe exercise, compare original image P17, an annotated copy P17-A and gate log L04. P17 shows the aftermath, not the impact. Its camera clock was not checked. L04 has a verified system time. The appropriate result preserves P17 as evidence of the visible condition while leaving its exact place in the timeline uncertain.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G83_lesson3",
+        "title": "Lesson 3 — Interview without manufacturing agreement",
+        "body": "Interviewing is an evidence skill, not a contest to obtain agreement. Ask the witness to describe their own experience before asking narrow follow-up questions. Establish where they were, what they could see or hear and what they did. Distinguish direct perception from what someone else told them. A witness may confidently recall an interpretation that was never directly observed; confidence alone does not establish the underlying fact.\n\nAvoid questions that embed the desired answer. “Why did the driver ignore the warning?” assumes both awareness and disregard. “What warning information did you observe?” leaves those questions open. Ask about work conditions and available information as well as actions. This can reveal obstructed sightlines, inconsistent instructions, competing demands or unfamiliar equipment without assuming any of them caused the event.\n\nRecord important wording accurately and distinguish quotation from summary. Give the witness an opportunity to correct the account through the agreed process. Record uncertainty rather than pressuring a person to choose a time or detail they cannot remember. Do not combine several accounts into one narrative and ask everyone to sign it; that can erase differences that matter to interpretation.\n\nDifferences between witnesses may reflect viewpoint rather than dishonesty. Ana at the office window saw the truck stop but could not hear its cab radio. Ben behind the vehicle heard a warning sound but could not see the barrier indicator. The investigator should map their positions and compare each statement with what that position could support. Neither account should be stretched to fill the other's sensory limits.\n\nFor the desk exercise, draft three neutral follow-up questions about Ana's view, the timing relative to a known call, and what instruction she personally gave. Then identify a technical question she cannot answer from observation. This produces a more useful interview than asking whether she agrees with the investigator's preferred cause.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G83_lesson4",
+        "title": "Lesson 4 — Construct and test a causal explanation",
+        "body": "A timeline organizes evidence; it does not itself prove causation. An event can precede harm without contributing to it. Construct a sequence with source references and mark estimated or disputed entries. Separate events, continuing conditions and missing information. A diagram can display the relationships, but every arrow in a causal map should have an explainable basis rather than merely look plausible.\n\nDevelop more than one plausible explanation when the evidence is incomplete. Ask what evidence each explanation predicts and what would contradict it. For example, a barrier-contact event might involve unclear routing, a control malfunction, a communication failure or several interacting conditions. These are hypotheses to test, not causes to publish because they fit a familiar story.\n\nTreat human error as a description that needs explanation. If a procedure was not followed, ask whether it was available, current, usable and compatible with actual conditions. Determine what information people had at the time rather than judging solely with hindsight. This does not erase accountability; it makes the explanation capable of supporting prevention. Replacing worker blame with supervisor blame is not a systems investigation either.\n\nCompare contradictory evidence explicitly. If a maintenance record shows the control was changed before the incident but an interview describes the old configuration, investigate the discrepancy. Do not quietly remove the inconvenient record. The conclusion may be that configuration status cannot yet be established, which is a truthful and useful limitation.\n\nA supported causal statement connects a condition to an event and explains the evidence. “The temporary sign was obscured, and the briefing did not describe the changed route” is more informative than “poor communication.” It still requires evidence of sign position and briefing content. Technical questions about controller behavior remain with the designated specialist until their findings are available.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G83_lesson5",
+        "title": "Lesson 5 — Write bounded audit findings",
+        "body": "Audit findings work best when they distinguish criterion, condition, evidence and extent. The criterion says what should apply. The condition says what was found. Evidence identifies the records, observations or interviews supporting that condition. Extent states the sample and known boundary. This structure allows a reviewer to test the finding without relying on the auditor's authority alone.\n\nSuppose procedure Q7 requires a documented inspection before equipment release. An auditor samples four releases and cannot retrieve one inspection record. The defensible finding is that evidence of the required documented inspection could not be verified for that sampled release. It is not automatically proof that no physical inspection occurred, that all releases were defective or that every asset is unsafe. Additional evidence may justify a wider finding, but the wider claim needs its own basis.\n\nDifferentiate absence of evidence from evidence of absence. A missing record can itself violate a documentation requirement; it does not automatically establish every possible underlying failure. If an interview says an inspection occurred, preserve that account but do not treat it as equivalent to the required record without checking the criterion. Avoid weakening the criterion merely to close the finding.\n\nReport uncertainty with useful specificity. “Unable to verify the release inspection for asset A4 from the supplied records” tells the owner what to address. “The system is bad” supplies little actionable information. Identify conflicts of interest or limitations on access that may affect the audit. Do not imply independent assurance if the review arrangement did not provide it.\n\nIn the exercise, write a finding for the four-release sample, name Q7's applicable revision and list the missing evidence. Then draft a separate improvement observation about retrievability across the release system. Keeping these distinct prevents a sensible improvement proposal from becoming an unsupported universal compliance claim.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G83_lesson6",
+        "title": "Lesson 6 — Choose actions that can be verified",
+        "body": "Corrective action should follow the supported contributing condition. If an instruction is confusing because two routes share the same name, another attendance briefing may leave the confusion intact. Consider whether design, equipment, procedure, supervision or information changes address the identified problem. The investigator recommends within their authority; the responsible organization selects and authorizes the actual control.\n\nAn action record needs an owner, a defined result and evidence for implementation. It also needs a way to evaluate effectiveness. Issuing a revised form proves that a form was issued. It does not prove the form is used correctly or that the relevant confusion has decreased. Choose an effectiveness check related to the original condition, such as reviewing subsequent delivery briefings and asking recipients to explain the route.\n\nKeep implementation and effectiveness dates distinguishable. An action can be implemented while effectiveness review is still pending. If a measure fails, record that result and revisit the response instead of repeatedly closing the same issue after reminders. Preserve the original finding so later reviewers can see whether the response addresses it.\n\nClosure authority matters. The action owner may supply evidence, while a separately assigned reviewer accepts closure under the organization's process. A completion signature should not substitute for examining the evidence. Overdue actions and unresolved high-consequence conditions need the agreed escalation; an investigator should not invent permission to continue affected work merely to keep the register tidy.\n\nFor the gate example, the proposed action renames the delivery routes, updates the briefing and identifies who controls temporary changes. Implementation evidence includes the approved revision and communication record. Effectiveness evidence checks actual later briefings and recipient understanding. This is stronger than staff reminded because it addresses the information structure and tests whether the new arrangement works.\n\nA further causal test uses a counterexample. Suppose two drivers received the same briefing but approached from different routes. Their different outcomes may help identify which information or physical condition mattered, but they do not by themselves prove a cause. Compare relevant similarities and differences and look for other explanations. Small samples are particularly vulnerable to coincidence and unrecorded conditions. State the limitation instead of turning a useful comparison into a statistical claim.\n\nFor audit sampling, also distinguish selection method from sample size. A targeted sample of previously problematic releases can reveal whether those problems persist, but it cannot automatically estimate the defect rate of all releases. A randomly selected sample addresses a different question and still requires an appropriate method and interpretation. The auditor should explain why the sample was selected and avoid a numerical population claim unsupported by the design. These distinctions help management use findings for improvement without overstating what the review demonstrated.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G83_case1",
+        "title": "Worked fictional case 1 — receiving a disputed task pack",
+        "body": "Fictional case: a delivery vehicle contacts a gate arm at North Creek Yard. There is no injury. The review team receives a driver statement, two witness accounts, a photograph taken after the event and the gate event log. A manager's draft says driver ignored sign. The assigned investigator first defines the review question as the event sequence and the controls for the changed delivery route, not a verdict about the driver's character.\n\nThe investigator preserves the draft as a received opinion but does not adopt it as a finding. The photograph shows a temporary sign partly obscured by stored material. It does not show the driver's approach or exactly where the material stood before contact. Its camera time is unverified. The gate log has a verified clock, but its event labels require explanation by the system specialist. These limitations are entered beside the records.\n\nAna saw the vehicle stop from the office. Ben heard a warning from behind it. The driver recalls receiving an earlier route instruction. Separate neutral interviews establish where each person was and which instruction they directly received. The investigator does not merge the accounts. The route-change message identifies an afternoon change, while the driver's briefing sheet still shows the earlier route.\n\nThe worked timeline therefore supports a mismatch between current routing information and the driver's supplied briefing. It leaves the exact barrier control behavior open for technical examination. The investigator tests whether sign visibility, briefing ownership and change communication could explain the mismatch. They do not conclude that the driver ignored an instruction that the evidence has not shown the driver received.\n\nThe interim report distinguishes confirmed records, supported interpretations and unresolved technical questions. A specialist is asked to examine the control evidence within their authority. The recommended information action addresses route naming and change ownership. Staff reminded is rejected as an incomplete response because it would not resolve two competing versions of the route.\n\nThe learning outcome is a better factual and causal account. It is not a declaration that nobody bears responsibility or that the control system is compliant. The manager receives a bounded conclusion and specific next evidence, while the original photograph, accounts and draft remain available to explain how the conclusion developed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G83_case2",
+        "title": "Worked fictional case 2 — a changed handover and release decision",
+        "body": "Fictional case: North Creek's audit samples four equipment releases against procedure Q7. Three contain the required inspection record. For asset A4, the supplied pack includes a delivery receipt and a supervisor statement that the equipment looked satisfactory, but no retrievable inspection record. A proposed finding says all equipment released without inspection. The auditor rejects that wording because it exceeds the sample and conflates missing documentation with proof of no physical inspection.\n\nThe worked finding names Q7, its applicable revision and the four sampled releases. It states that the required documented inspection could not be verified for A4 from the supplied evidence. The delivery receipt remains useful evidence of transfer; it is not reclassified as an inspection merely to remove the finding. The supervisor statement remains an account of observation with its own limited scope.\n\nThe owner later supplies an authentic inspection sheet, but its asset identifier is A14. The correct date alone does not resolve identity. The auditor asks the owner to establish which asset the sheet belongs to through the authorized records process. They do not change the identifier based on memory or accept a new cover letter as proof.\n\nThe eventual review confirms that A4's record was filed under a mistaken index while retaining the original identifier and inspection evidence. The finding disposition records the supplied correction and the original retrieval failure. Whether the audit method permits closure of the documentation finding is decided against Q7 and the agreed process, not convenience. The owner also proposes improving retrieval checks.\n\nImplementation evidence for that improvement is the revised filing control and assigned responsibility. Effectiveness evidence is a later sample showing that users can retrieve the correct asset records. A training attendance list alone would not demonstrate retrieval performance. If the later sample still fails, the action remains ineffective despite a completed briefing.\n\nThis case illustrates proportionality. One correction does not prove the entire fleet compliant, and one retrieval failure does not prove every asset unsafe. A precise criterion and sample boundary make the result more useful to both workers and management. The history shows the original evidence gap, the later correction and the effectiveness question separately.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G83_final",
+        "title": "Final assessment and residual requirements",
+        "body": "The final assessment asks you to distinguish observation from inference, criterion from preference, sample extent from universal claims, and action implementation from effectiveness. Review every explanation after an error and explicitly acknowledge remediation while preserving the first response.\n\nBefore assigning real investigations or audits, the employer must verify the actual method, access rules, evidence handling, privacy arrangements and observed capability. Qualified technical specialists remain responsible for conclusions outside the investigator's scope. Completion of this course does not establish electrical, clinical, engineering or forensic authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G83_check1",
+        "prompt": "During define the investigation question, the request asks the investigator to certify electrical compliance without a technical specialist. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Restrict the factual review and refer electrical conclusions to the appropriately qualified specialist."
+          },
+          {
+            "id": "b",
+            "label": "An investigator title authorizes electrical certification."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G83_check2",
+        "prompt": "During preserve originals and provenance, an annotated export has replaced the only original photograph. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An annotated image is always a complete substitute for its original."
+          },
+          {
+            "id": "b",
+            "label": "Recover and preserve the original if available and disclose the limitation if it is not."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G83_check3",
+        "prompt": "During interview without manufacturing agreement, a supervisor has combined several witness accounts into one signed narrative. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A majority vote establishes the exact event sequence."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Retain individual accounts and resolve material differences with neutral follow-up questions."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G83_check4",
+        "prompt": "During construct and test a causal explanation, the proposed cause conflicts with a timestamped maintenance record. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The first plausible cause should be reported as confirmed."
+          },
+          {
+            "id": "b",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "c",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          },
+          {
+            "id": "d",
+            "label": "Record the conflict and test alternative explanations before issuing a causal finding."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G83_check5",
+        "prompt": "During write bounded audit findings, one missing inspection sheet is reported as proof that the entire fleet is unsafe. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Write a bounded finding and request proportionate follow-up evidence."
+          },
+          {
+            "id": "b",
+            "label": "One sampled defect proves the same defect exists everywhere."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G83_check6",
+        "prompt": "During choose actions that can be verified, the closure note says staff reminded but the confusing form remains in use. What is the appropriate disposition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An attendance sheet proves the contributing condition was eliminated."
+          },
+          {
+            "id": "b",
+            "label": "Keep the action open until the form issue and effectiveness evidence are addressed."
+          },
+          {
+            "id": "c",
+            "label": "Accept the current pack because the delivery date is close."
+          },
+          {
+            "id": "d",
+            "label": "Replace the disputed evidence with a new signature and no further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G83_final1",
+        "prompt": "Which evidence is most directly relevant to define the investigation question?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Investigation terms of reference naming event, period, criteria and scene-access authority."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G83_final2",
+        "prompt": "Which evidence is most directly relevant to preserve originals and provenance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Image register linking original filenames, collector, location and clock limitations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G83_final3",
+        "prompt": "Which evidence is most directly relevant to interview without manufacturing agreement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Interview notes separating direct observation, recalled speech and investigator interpretation."
+          },
+          {
+            "id": "b",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G83_final4",
+        "prompt": "Which evidence is most directly relevant to construct and test a causal explanation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "Timeline and causal map linking each material assertion to an evidence reference."
+          },
+          {
+            "id": "c",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G83_final5",
+        "prompt": "Which evidence is most directly relevant to write bounded audit findings?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "Audit finding with criterion revision, sampled asset list and evidence."
+          },
+          {
+            "id": "d",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G83_final6",
+        "prompt": "Which evidence is most directly relevant to choose actions that can be verified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commercial invoice without the relevant technical or role evidence."
+          },
+          {
+            "id": "b",
+            "label": "A completion badge from an unrelated service."
+          },
+          {
+            "id": "c",
+            "label": "A verbal assurance that the same approach worked elsewhere."
+          },
+          {
+            "id": "d",
+            "label": "Action register linking finding, owner, implementation evidence and effectiveness review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G83_final7",
+        "prompt": "A colleague argues: “An investigator title authorizes electrical certification.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; restrict the factual review and refer electrical conclusions to the appropriately qualified specialist."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G83_final8",
+        "prompt": "A colleague argues: “An annotated image is always a complete substitute for its original.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; recover and preserve the original if available and disclose the limitation if it is not."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G83_final9",
+        "prompt": "A colleague argues: “A majority vote establishes the exact event sequence.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Reject that inference; retain individual accounts and resolve material differences with neutral follow-up questions."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G83_final10",
+        "prompt": "A colleague argues: “The first plausible cause should be reported as confirmed.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "c",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          },
+          {
+            "id": "d",
+            "label": "Reject that inference; record the conflict and test alternative explanations before issuing a causal finding."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G83_final11",
+        "prompt": "A colleague argues: “One sampled defect proves the same defect exists everywhere.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reject that inference; write a bounded finding and request proportionate follow-up evidence."
+          },
+          {
+            "id": "b",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G83_final12",
+        "prompt": "A colleague argues: “An attendance sheet proves the contributing condition was eliminated.” Which response correctly applies the lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the conclusion if the colleague is experienced."
+          },
+          {
+            "id": "b",
+            "label": "Reject that inference; keep the action open until the form issue and effectiveness evidence are addressed."
+          },
+          {
+            "id": "c",
+            "label": "Treat a familiar service name as proof of the missing capability."
+          },
+          {
+            "id": "d",
+            "label": "Remove the limitation from the summary so the next team can proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G83_final13",
+        "prompt": "After the discrepancy in define the investigation question is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Evidence that addresses the actual discrepancy in the investigation terms of reference naming event, period, criteria and scene-access authority, linked to the original record."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G83_final14",
+        "prompt": "After the discrepancy in preserve originals and provenance is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          },
+          {
+            "id": "d",
+            "label": "Evidence that addresses the actual discrepancy in the image register linking original filenames, collector, location and clock limitations, linked to the original record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G83_final15",
+        "prompt": "After the discrepancy in interview without manufacturing agreement is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Evidence that addresses the actual discrepancy in the interview notes separating direct observation, recalled speech and investigator interpretation, linked to the original record."
+          },
+          {
+            "id": "b",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "c",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G83_final16",
+        "prompt": "After the discrepancy in construct and test a causal explanation is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "Evidence that addresses the actual discrepancy in the timeline and causal map linking each material assertion to an evidence reference, linked to the original record."
+          },
+          {
+            "id": "c",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G83_final17",
+        "prompt": "After the discrepancy in write bounded audit findings is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Evidence that addresses the actual discrepancy in the audit finding with criterion revision, sampled asset list and evidence, linked to the original record."
+          },
+          {
+            "id": "d",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G83_final18",
+        "prompt": "After the discrepancy in choose actions that can be verified is identified, which correction would support a meaningful review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A newer date on the same unresolved record."
+          },
+          {
+            "id": "b",
+            "label": "A broader ready label without changed supporting evidence."
+          },
+          {
+            "id": "c",
+            "label": "Deletion of the original discrepancy so only the latest summary remains."
+          },
+          {
+            "id": "d",
+            "label": "Evidence that addresses the actual discrepancy in the action register linking finding, owner, implementation evidence and effectiveness review, linked to the original record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G83_final19",
+        "prompt": "The gate-contact investigation finds that the driver received the earlier route briefing. What does that evidence support?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A briefing/current-route mismatch, while the actual barrier-control behavior still needs its own technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "A confirmed finding that the driver deliberately ignored the current route."
+          },
+          {
+            "id": "c",
+            "label": "Proof that the barrier controller complied with every electrical requirement."
+          },
+          {
+            "id": "d",
+            "label": "A conclusion that the aftermath photograph establishes the exact approach sequence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G83_final20",
+        "prompt": "In the four-release audit, an inspection sheet is later supplied for A14 rather than A4. What should the auditor do before treating A4's missing-record finding as resolved?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept it because the inspection date matches."
+          },
+          {
+            "id": "b",
+            "label": "Obtain traceable asset-identity reconciliation through the authorized records process and assess closure against Q7."
+          },
+          {
+            "id": "c",
+            "label": "Change A14 to A4 from memory and discard the received sheet."
+          },
+          {
+            "id": "d",
+            "label": "Declare that every asset in the fleet was physically uninspected."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G83_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G83_lesson1",
+          "questionIds": [
+            "G83_check1"
+          ]
+        },
+        {
+          "lessonId": "G83_lesson2",
+          "questionIds": [
+            "G83_check2"
+          ]
+        },
+        {
+          "lessonId": "G83_lesson3",
+          "questionIds": [
+            "G83_check3"
+          ]
+        },
+        {
+          "lessonId": "G83_lesson4",
+          "questionIds": [
+            "G83_check4"
+          ]
+        },
+        {
+          "lessonId": "G83_lesson5",
+          "questionIds": [
+            "G83_check5"
+          ]
+        },
+        {
+          "lessonId": "G83_lesson6",
+          "questionIds": [
+            "G83_check6"
+          ]
+        },
+        {
+          "lessonId": "G83_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G83_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G83_final",
+          "questionIds": [
+            "G83_final1",
+            "G83_final2",
+            "G83_final3",
+            "G83_final4",
+            "G83_final5",
+            "G83_final6",
+            "G83_final7",
+            "G83_final8",
+            "G83_final9",
+            "G83_final10",
+            "G83_final11",
+            "G83_final12",
+            "G83_final13",
+            "G83_final14",
+            "G83_final15",
+            "G83_final16",
+            "G83_final17",
+            "G83_final18",
+            "G83_final19",
+            "G83_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G83_check1": "The correct decision is to restrict the factual review and refer electrical conclusions to the appropriately qualified specialist. An incident timeline explains what is known about events; an audit compares evidence with named criteria. Neither starts with a verdict about an individual. Separate immediate response, fact collection, technical examination and management decisions. Scene release belongs to the responsible authority, not the author of an investigation form. An interview cannot establish whether an electrical protective device met its design requirements. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G83_check2": "The correct decision is to recover and preserve the original if available and disclose the limitation if it is not. A photograph is useful only when its relationship to the scene can be explained. Record who obtained it, when, where and by what authorized route. Preserve original files; make annotated working copies. Record an uncertain camera clock as uncertain. A later diagram can explain a scene but must not be represented as an image taken at the event. Privacy restrictions govern distribution, not permission to silently alter evidence. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G83_check3": "The correct decision is to retain individual accounts and resolve material differences with neutral follow-up questions. Use open questions to establish what the witness directly saw, heard or did. Record inference separately from direct observation. Ask about conditions, information, workload and available controls without supplying the desired answer. Give the witness an opportunity to correct the account. Two witnesses may describe different locations or moments; disagreement is an evidence issue rather than proof that one is dishonest. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G83_check4": "The correct decision is to record the conflict and test alternative explanations before issuing a causal finding. Build a sequence with supporting references and explicit gaps. Distinguish an event preceding harm from a condition that contributed to it. Test a proposed explanation against contrary evidence and other plausible pathways. Human error is a description requiring further inquiry into task design and information; it is not a complete causal method. Technical uncertainty remains open until an appropriately qualified review addresses it. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G83_check5": "The correct decision is to write a bounded finding and request proportionate follow-up evidence. A useful finding names the applicable criterion, observed condition, supporting evidence and extent of the sample. Failure to produce a record during an interview is not automatically proof that the underlying work never occurred. State what could and could not be verified. Avoid expanding a sampled defect into an unsupported statement about every site. An auditor should identify conflicts of interest before accepting a review. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G83_check6": "The correct decision is to keep the action open until the form issue and effectiveness evidence are addressed. An action should address a supported contributing condition, identify an owner and specify evidence of implementation and effectiveness. Training alone does not repair an unsuitable interface or unavailable equipment. Closing an action because a meeting occurred confuses activity with improvement. Preserve the original finding and show how the response changed the risk control. Escalate overdue or ineffective actions through the agreed governance route. The selected record must support the actual claim, and the original discrepancy must remain traceable.",
+        "G83_final1": "A investigation terms of reference naming event, period, criteria and scene-access authority addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. An incident timeline explains what is known about events; an audit compares evidence with named criteria. Neither starts with a verdict about an individual. Separate immediate response, fact collection, technical examination and management decisions. Scene release belongs to the responsible authority, not the author of an investigation form. An interview cannot establish whether an electrical protective device met its design requirements.",
+        "G83_final2": "A image register linking original filenames, collector, location and clock limitations addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A photograph is useful only when its relationship to the scene can be explained. Record who obtained it, when, where and by what authorized route. Preserve original files; make annotated working copies. Record an uncertain camera clock as uncertain. A later diagram can explain a scene but must not be represented as an image taken at the event. Privacy restrictions govern distribution, not permission to silently alter evidence.",
+        "G83_final3": "A interview notes separating direct observation, recalled speech and investigator interpretation addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Use open questions to establish what the witness directly saw, heard or did. Record inference separately from direct observation. Ask about conditions, information, workload and available controls without supplying the desired answer. Give the witness an opportunity to correct the account. Two witnesses may describe different locations or moments; disagreement is an evidence issue rather than proof that one is dishonest.",
+        "G83_final4": "A timeline and causal map linking each material assertion to an evidence reference addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. Build a sequence with supporting references and explicit gaps. Distinguish an event preceding harm from a condition that contributed to it. Test a proposed explanation against contrary evidence and other plausible pathways. Human error is a description requiring further inquiry into task design and information; it is not a complete causal method. Technical uncertainty remains open until an appropriately qualified review addresses it.",
+        "G83_final5": "A audit finding with criterion revision, sampled asset list and evidence addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. A useful finding names the applicable criterion, observed condition, supporting evidence and extent of the sample. Failure to produce a record during an interview is not automatically proof that the underlying work never occurred. State what could and could not be verified. Avoid expanding a sampled defect into an unsupported statement about every site. An auditor should identify conflicts of interest before accepting a review.",
+        "G83_final6": "A action register linking finding, owner, implementation evidence and effectiveness review addresses this lesson decision. It still needs the correct identity, scope, authority and limitations. An action should address a supported contributing condition, identify an owner and specify evidence of implementation and effectiveness. Training alone does not repair an unsuitable interface or unavailable equipment. Closing an action because a meeting occurred confuses activity with improvement. Preserve the original finding and show how the response changed the risk control. Escalate overdue or ineffective actions through the agreed governance route.",
+        "G83_final7": "That inference exceeds the evidence. An incident timeline explains what is known about events; an audit compares evidence with named criteria. Neither starts with a verdict about an individual. Separate immediate response, fact collection, technical examination and management decisions. Scene release belongs to the responsible authority, not the author of an investigation form. An interview cannot establish whether an electrical protective device met its design requirements. The appropriate task disposition remains to restrict the factual review and refer electrical conclusions to the appropriately qualified specialist.",
+        "G83_final8": "That inference exceeds the evidence. A photograph is useful only when its relationship to the scene can be explained. Record who obtained it, when, where and by what authorized route. Preserve original files; make annotated working copies. Record an uncertain camera clock as uncertain. A later diagram can explain a scene but must not be represented as an image taken at the event. Privacy restrictions govern distribution, not permission to silently alter evidence. The appropriate task disposition remains to recover and preserve the original if available and disclose the limitation if it is not.",
+        "G83_final9": "That inference exceeds the evidence. Use open questions to establish what the witness directly saw, heard or did. Record inference separately from direct observation. Ask about conditions, information, workload and available controls without supplying the desired answer. Give the witness an opportunity to correct the account. Two witnesses may describe different locations or moments; disagreement is an evidence issue rather than proof that one is dishonest. The appropriate task disposition remains to retain individual accounts and resolve material differences with neutral follow-up questions.",
+        "G83_final10": "That inference exceeds the evidence. Build a sequence with supporting references and explicit gaps. Distinguish an event preceding harm from a condition that contributed to it. Test a proposed explanation against contrary evidence and other plausible pathways. Human error is a description requiring further inquiry into task design and information; it is not a complete causal method. Technical uncertainty remains open until an appropriately qualified review addresses it. The appropriate task disposition remains to record the conflict and test alternative explanations before issuing a causal finding.",
+        "G83_final11": "That inference exceeds the evidence. A useful finding names the applicable criterion, observed condition, supporting evidence and extent of the sample. Failure to produce a record during an interview is not automatically proof that the underlying work never occurred. State what could and could not be verified. Avoid expanding a sampled defect into an unsupported statement about every site. An auditor should identify conflicts of interest before accepting a review. The appropriate task disposition remains to write a bounded finding and request proportionate follow-up evidence.",
+        "G83_final12": "That inference exceeds the evidence. An action should address a supported contributing condition, identify an owner and specify evidence of implementation and effectiveness. Training alone does not repair an unsuitable interface or unavailable equipment. Closing an action because a meeting occurred confuses activity with improvement. Preserve the original finding and show how the response changed the risk control. Escalate overdue or ineffective actions through the agreed governance route. The appropriate task disposition remains to keep the action open until the form issue and effectiveness evidence are addressed.",
+        "G83_final13": "The correction must address why the investigation terms of reference naming event, period, criteria and scene-access authority did not support the claim. An incident timeline explains what is known about events; an audit compares evidence with named criteria. Neither starts with a verdict about an individual. Separate immediate response, fact collection, technical examination and management decisions. Scene release belongs to the responsible authority, not the author of an investigation form. An interview cannot establish whether an electrical protective device met its design requirements. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G83_final14": "The correction must address why the image register linking original filenames, collector, location and clock limitations did not support the claim. A photograph is useful only when its relationship to the scene can be explained. Record who obtained it, when, where and by what authorized route. Preserve original files; make annotated working copies. Record an uncertain camera clock as uncertain. A later diagram can explain a scene but must not be represented as an image taken at the event. Privacy restrictions govern distribution, not permission to silently alter evidence. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G83_final15": "The correction must address why the interview notes separating direct observation, recalled speech and investigator interpretation did not support the claim. Use open questions to establish what the witness directly saw, heard or did. Record inference separately from direct observation. Ask about conditions, information, workload and available controls without supplying the desired answer. Give the witness an opportunity to correct the account. Two witnesses may describe different locations or moments; disagreement is an evidence issue rather than proof that one is dishonest. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G83_final16": "The correction must address why the timeline and causal map linking each material assertion to an evidence reference did not support the claim. Build a sequence with supporting references and explicit gaps. Distinguish an event preceding harm from a condition that contributed to it. Test a proposed explanation against contrary evidence and other plausible pathways. Human error is a description requiring further inquiry into task design and information; it is not a complete causal method. Technical uncertainty remains open until an appropriately qualified review addresses it. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G83_final17": "The correction must address why the audit finding with criterion revision, sampled asset list and evidence did not support the claim. A useful finding names the applicable criterion, observed condition, supporting evidence and extent of the sample. Failure to produce a record during an interview is not automatically proof that the underlying work never occurred. State what could and could not be verified. Avoid expanding a sampled defect into an unsupported statement about every site. An auditor should identify conflicts of interest before accepting a review. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G83_final18": "The correction must address why the action register linking finding, owner, implementation evidence and effectiveness review did not support the claim. An action should address a supported contributing condition, identify an owner and specify evidence of implementation and effectiveness. Training alone does not repair an unsuitable interface or unavailable equipment. Closing an action because a meeting occurred confuses activity with improvement. Preserve the original finding and show how the response changed the risk control. Escalate overdue or ineffective actions through the agreed governance route. Preserve original evidence and link the disposition rather than rewriting history.",
+        "G83_final19": "The supplied briefing can support the information mismatch. It cannot establish deliberate disregard of an instruction not shown to have been received, electrical compliance or the complete event sequence. Preserve the separate technical question.",
+        "G83_final20": "The sheet may be genuine but its identifier does not yet establish the A4 relationship. A documented reconciliation and criterion-based disposition are needed; matching dates, silent edits and fleet-wide conclusions do not supply that evidence."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  },
+  "contentStatus": "independently_authored_subject_instruction"
+}

@@ -1,0 +1,910 @@
+{
+  "courseId": "G60",
+  "gapGroupId": "G11",
+  "title": "Power-work preparation: energy state, clearances and task boundaries",
+  "description": "understand actual power-system energy dependencies and communicate equipment, qualification and restoration boundaries",
+  "purpose": "understand actual power-system energy dependencies and communicate equipment, qualification and restoration boundaries",
+  "audience": [
+    "Power-work support coordinators",
+    "Employees preparing for task-specific power instruction",
+    "Host/contractor supervisors"
+  ],
+  "practicalBoundary": "This course qualifies no switching, live-line, testing, grounding, line-clearance or rescue role. It supplies no voltage threshold, approach distance, arc calculation, switching/test/grounding sequence or restoration instruction. Actual power regime, equipment/task instruction, qualified designation and demonstrated proficiency remain separate.",
+  "vendorEvidenceRequired": [
+    "Actual installation/activity and applicable power versus general electrical regime",
+    "Current system information and equipment identifiers",
+    "Task-specific qualification, designation and any applicable license",
+    "Actual clearance/energy-control/grounding and operating authority procedures",
+    "Work-specific hazard assessment, approach/protective arrangements and briefing",
+    "Emergency/rescue resources and restoration/accountability process"
+  ],
+  "practicalAssessmentRequired": [
+    "Competent power-program assessor observes actual task/equipment identification, work methods and abnormal decisions",
+    "Qualified operating authority assesses actual switching/clearance communication only for the assigned role",
+    "Specialist assessor observes applicable protective equipment, grounding/testing or rescue skills in an authorized controlled program"
+  ],
+  "sources": [
+    {
+      "title": "OSHA electric power generation/transmission/distribution",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.269"
+    },
+    {
+      "title": "OSHA — Electric power eTool",
+      "url": "https://www.osha.gov/etools/electric-power"
+    },
+    {
+      "title": "OSHA — Power hazard assessment and job briefing",
+      "url": "https://www.osha.gov/etools/electric-power/hazard-assessment-job-briefing"
+    },
+    {
+      "title": "OSHA — Energized versus deenergized work",
+      "url": "https://www.osha.gov/etools/electric-power/energized-deenergized-work"
+    },
+    {
+      "title": "OSHA — Deenergizing lines and equipment",
+      "url": "https://www.osha.gov/etools/electric-power/hazardous-energy-control/deenergizing-lines-equipment-employee-protection"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G60_intro",
+        "title": "Start here: task, records and passing standard",
+        "body": "Power-work preparation: energy state, clearances and task boundaries\n\nThis course teaches a bounded task: understand actual power-system energy dependencies and communicate equipment, qualification and restoration boundaries Work only with the fictional records supplied in the lessons and cases. No learner needs to enter a hazardous area, connect equipment, handle material or perform a live test. Read each of the six lessons, answer its check, then work both cases before completing the twenty final questions.\n\nAll twenty-six decisions require a response. The passing standard is 100 percent after explicit remediation. Preserve every original response, first-attempt correct count and original percentage. When an answer is incorrect, study its explanation and acknowledge the specific correction; retain the corrected response, remediation time and remediated score separately. A corrected score does not replace the original evidence.\n\nThis course qualifies no switching, live-line, testing, grounding, line-clearance or rescue role. It supplies no voltage threshold, approach distance, arc calculation, switching/test/grounding sequence or restoration instruction. Actual power regime, equipment/task instruction, qualified designation and demonstrated proficiency remain separate. The course uses primary sources as bounded authority for the concepts stated, and original fictional exercises to teach review and communication. A document that is acceptable in a classroom is not approval of a real job. Actual applicability, equipment, materials, procedures and responsibilities must be confirmed by the employer. No model example establishes a universal legal requirement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G60_lesson1",
+        "title": "1. Recognize the actual power-system task and qualification scope",
+        "body": "Electric-power generation, transmission and distribution work is not interchangeable with every general electrical service. The actual installation, activity and governing regime matter. A building's supplementary standby equipment, construction activity and operation of a power-distribution installation can have different applicable provisions. The employer must determine the actual scope rather than assigning a qualification from the word electrical on an invoice.\n\nIdentify the equipment, location, intended work and worker role. Operating, maintaining, testing, switching, working on lines and performing nearby support duties are different activities. A person may be qualified for a specific task and equipment without being qualified for every voltage, installation or work method. A general electrician license or previous utility employment must be evaluated against the actual assignment, not treated as universal proof.\n\nRead a power system as connections and possible sources. Generation supplies energy, transformation changes system characteristics, and transmission/distribution arrangements connect equipment and customers. The actual system can include alternate supplies, customer generation and automatic or remote actions. A simplified diagram teaches relationships, but only current approved information and competent verification support actual work decisions.\n\nSupport workers need their own clear boundary. They may coordinate access, deliver material or communicate site conditions, but that does not authorize switching, testing, grounding or energized work. A scheduler's request for equipment availability is not an operating order. The person controlling the actual system and the qualified work leader must connect their responsibilities through the employer's established process.\n\nIn a harmless exercise, describe a proposed task using concrete equipment identifiers and verbs, then identify who determines applicability and qualification. If a worker's evidence covers only a different installation or work method, name that gap. Do not make the task appear covered by shortening its description. This course supplies preparatory interpretation and communication; actual task proficiency requires qualified instruction and observed performance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G60_lesson2",
+        "title": "2. Understand why off is not the same as safe electrical state",
+        "body": "An electrical system can retain or acquire hazardous energy despite an apparently open switch. Alternate supply, backfeed, automatic operation, stored energy and induction are examples the actual qualified assessment must consider. The worker must not assume a quiet machine or dark indicator proves the equipment safe to touch. Human senses do not verify absence of hazardous voltage.\n\nThe actual governing procedure determines how equipment may be treated for employee protection. Generation and transmission/distribution arrangements can use different specified energy-control processes. A generic lockout awareness course cannot be substituted for every power-system clearance and grounding requirement. This lesson deliberately provides no switching, testing or grounding sequence.\n\nBackfeed means energy can arrive through a path not treated as the normal source in the immediate work assumption. Induced energy can arise through coupling with nearby energized systems. A worker who understands these concepts knows why the full system and worksite conditions matter. They must not use this explanation to design an isolation or choose a test point. Qualified system information and the actual procedure establish those decisions.\n\nProtective grounding and bonding have defined engineering and work-practice purposes. An earth connection visible nearby is not a universal assurance for the worker's location. Grounding equipment, connections and work arrangement must be selected, installed and managed by competent people under the actual method. Improvised placement can create rather than remove danger. No learner attaches or removes grounds for this course.\n\nDescribe state evidence precisely. A control-room indication, an operating order, a field verification and acceptance of a work clearance are different pieces of information. Each has an identity, time, scope and responsible person. Do not compress them into power off if that phrase hides unfinished requirements. The qualified work leader determines the actual protected state and the worker's permitted actions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G60_lesson3",
+        "title": "3. Preserve equipment identity and the authority of clearances",
+        "body": "Power-system work depends on correct equipment identification. Similar panels, line names, feeder references or switches can be confused. A valid action on the wrong equipment cannot establish the intended work condition. Compare the actual identifiers in the work instruction, approved system information and communicated clearance. If they conflict, stop the affected action and resolve the mismatch through the authorized operating process.\n\nA work clearance or equivalent arrangement has a defined scope. It may cover specific equipment, work, people and conditions. The worker must understand what it actually permits and what remains outside it. A clearance for one feeder does not automatically protect an adjacent circuit or a changed work location. A contractor cannot extend it by adding a note to their own job sheet.\n\nSwitching authority, work leadership and physical task performance may belong to different roles. Use the employer's actual communication and confirmation requirements so every role knows the relevant state. A telephone conversation is not automatically an operating order, and a message from a familiar colleague is not automatically permission to change system configuration. Unexpected or ambiguous instructions need verification through the designated route.\n\nSystem drawings and operating-status records serve different purposes. A drawing may show how equipment is connected, while a current status record describes the actual configuration recognized by the operating process. Neither should be assumed to contain the other's information. A training diagram is especially limited: its simplified lines can omit alternate sources, protection and installation details. The qualified person must connect the approved system information to the actual field identifiers and conditions. A support worker can identify conflicting references without attempting to verify voltage or determine a switching plan.\n\nRead a fictional evidence set by asking identity, function, time and scope. A record for feeder F-8 yesterday does not necessarily describe F-8 after a later configuration change. A functional test of an indicator does not establish the actual electrical state of every connected conductor. A control-room message can be correct for its stated equipment while irrelevant to another work location. Preserve those limitations when relaying information. The receiving person should be able to tell whether a statement is an observation, an operating instruction or a completed verification under the actual procedure. Do not silently promote an observation into authorization. This discipline is useful to every role, including workers who never operate a switch, because their accurate relay can prevent another person relying on the wrong state claim.\n\nMultiple crews create additional dependencies. Completion by one crew does not prove all personnel, tools and grounds are accounted for or that another clearance has ended. The actual system-control process manages those relationships. An individual should report their own status accurately and avoid signing for an unobserved condition belonging to another group.\n\nUse a fictional diagram exercise with feeder F-8 and F-18. Give the learner one work instruction and a conflicting communication. The correct action is to identify the mismatch and responsible authority, not guess from location or operate a switch to see which equipment stops. Practical assessment later observes the actual employee's authorized identification and communication skills under the real power program, without manufacturing live hazards.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G60_lesson4",
+        "title": "4. Recognize shock, arc and work-envelope hazards",
+        "body": "Electric shock and arc-related hazards are distinct concerns. Contact with an energized part can create a current path through a person. An electrical arc can produce intense thermal and other harmful effects without a worker deliberately touching a conductor. The actual task assessment determines relevant exposure and controls. Ordinary clothing, a dry-looking surface or an insulated-looking handle is not a general protective basis.\n\nApproach limits and protective arrangements depend on the actual system and work. This course gives no numerical minimum approach distance, arc-energy calculation or clothing category. The qualified employer process establishes applicable boundaries, methods, PPE and insulating equipment, then trains and assesses the worker. A learner must not copy a distance from another voltage or site and declare the new job acceptable.\n\nConsider the whole work envelope. A tool, ladder, vehicle, boom, branch or carried material can reach beyond a person's body position. A worker standing outside one boundary can still introduce an object into it. The actual plan must address movement, equipment geometry, adjacent energized parts and environmental conditions. A general traffic plan alone does not establish electrical clearance.\n\nProtective equipment is specific and maintained. Its appearance, age or brand does not prove current suitability. The actual program defines selection, inspection, tests, use and limitations for the assigned task. A damaged or uncertain item requires the instructed response; do not improvise repairs or layer unrelated items to claim equivalent protection. PPE does not expand the employee's qualification or operating authority.\n\nWeather, terrain, access and other work can change the practical exposure. Wet conditions, unstable footing, poor visibility or a moving vehicle may affect the safe task arrangement. The qualified team evaluates these conditions in the actual briefing and reassesses changes. A worker reports specific observations rather than continuing because the electrical diagram has not changed. The worksite includes physical conditions as well as the circuit.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G60_lesson5",
+        "title": "5. Use the job briefing to connect technical and human readiness",
+        "body": "A power-job briefing should communicate the actual hazards, procedures, special precautions, energy-control arrangements and protective equipment relevant to the task. It supplements rather than replaces qualification. A worker needs enough understanding to perform their role and recognize when the conditions no longer match the plan. A signature is not evidence that the worker knows which circuit or boundary applies.\n\nConnect host and contractor information. The host may know existing system conditions and operating arrangements; the contractor may introduce tools, equipment or methods that affect the worksite. Both need to exchange the information required by the actual program. A contractor's generic risk sheet cannot supply unknown system facts, and a host's permit cannot qualify unfamiliar contractor machinery.\n\nSpeak in actual identifiers and observed conditions. Which equipment is involved? Who controls the relevant operating action? Which nearby parts remain energized? What work is excluded? How is a changed condition reported? The qualified work leader provides the real answers. If the worker cannot explain the relevant restriction, obtain clarification before the affected task rather than relying on confidence or seniority.\n\nCommunication needs verification. Repeat critical equipment identifiers and scope through the actual required process. Do not use informal abbreviations that can be confused with another circuit. A failed or unclear communication link is a condition requiring the prescribed response, not permission to infer agreement from silence. The actual operating rules establish the alternate route and stop arrangements.\n\nChanges require a fresh look. New equipment, a different crew, a shifted work area, unexpected weather or an unanticipated energized part can invalidate the original assessment. The responsible roles reassess and rebrief under the actual program. A safe simulation can test whether workers recognize the change and engage the correct authority. It must not create live electrical exposure to make the assessment realistic.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G60_lesson6",
+        "title": "6. Preserve the emergency and restoration boundary",
+        "body": "An electrical incident requires prompt reporting and the actual trained response. An unqualified coworker must not touch an affected person or equipment while an electrical hazard may remain. Rescue, first aid, pole/manhole response and system control need the relevant trained capabilities and arrangements. This course does not teach a live rescue method or grant permission to approach a downed conductor.\n\nProvide accurate emergency information from a safe position: location, equipment identity if known, observed event, people involved and actions actually taken. Do not delay the designated emergency contact to obtain a photograph or an exact diagnosis. A fallen line or damaged installation remains a matter for the responsible utility/emergency roles; appearance does not prove it is deenergized.\n\nAfter work, restoration is a controlled system decision. The actual process accounts for personnel, tools, equipment, protective arrangements and other crews/clearances before relevant operating changes. A completed repair or a worker leaving the site does not authorize another person to remove grounds, release a clearance or energize equipment. Those actions require their assigned authority and actual procedure.\n\nA handover must state mixed conditions honestly: repair complete, inspection pending, clearance still active or another crew not yet accounted for. Do not replace those facts with equipment ready because the production schedule expects service. A test result covers its actual function and conditions; it is not a universal readiness certificate for every connected system.\n\nThe practical assessment must observe actual role proficiency through a competent power-program assessor and safe controlled conditions. It should include identification, communication and abnormal decisions as well as the physical skills of the specific task. An online knowledge record cannot establish switching, live-line, grounding or rescue competence. Each residual requirement named with this course stays open until the actual authorized evidence exists.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G60_cases",
+        "title": "Two fictional worked desk cases",
+        "body": "Case A: open switch, unknown alternate supply\n\nA fictional maintenance task concerns feeder F-8. A control display shows its normal supply switch open. The work instruction mentions a possible alternate connection, but the crew has not received the actual clearance or qualified verification for the task. An employee with general lockout awareness says the open indication proves the feeder is safe and proposes beginning work.\n\nThe correct interpretation is that an indication does not establish every requirement for treating the equipment as deenergized for employee protection. The possible alternate path is a specific unresolved system fact. Backfeed, induction and other energy questions must be addressed through the actual qualified process, not by the learner inventing a switching or test sequence.\n\nThe worker holds the affected task and identifies the missing evidence to the qualified work leader and operating authority. The report names F-8, the displayed indication, the alternate-connection reference and the absent actual clearance/verification. It does not state that voltage definitely exists or that the system is definitely safe. Uncertainty is preserved for the competent assessment.\n\nSuppose the operating role later supplies a clearance referring to F-18. That creates a separate identity mismatch rather than solving the original issue. The crew must resolve the actual equipment scope before relying on the arrangement. A recent date and familiar sender do not make a wrong identifier acceptable. The classroom result is a precise hold and communication handoff; no live test or grounding action is performed.\n\nCase B: repair finished, another crew and weather change unresolved\n\nA fictional line-work crew finishes its assigned repair. Another crew remains under a related work arrangement, and a storm has changed access and visibility. The supervisor is asked to send ready for service so the customer can resume operations. The person completing the repair is not the operating authority and has not verified the other crew's status.\n\nSeparate repair completion from restoration. The repair crew can report its actual work, location and outstanding items. It cannot certify another crew's accountability or authorize removal of protective arrangements outside its role. The changed weather also affects the current worksite and any remaining tasks; the old briefing cannot automatically represent the new conditions.\n\nThe correct handover identifies the completed repair scope, the separate crew/status gap, active arrangements and changed access/visibility. The qualified responsible roles use the actual restoration and reassessment process. The learner does not remove grounds, change switches or instruct people to cross a hazardous area to settle the uncertainty.\n\nIf a test later passes, it answers only the function and conditions actually tested. It does not account for the other crew or establish every restoration prerequisite. The final operating release must come from the actual authorized process with real evidence. An administrative ready label cannot manufacture missing accountability.\n\nThe safe practical exercise can simulate conflicting crew messages and a weather change, then assess whether the worker names the right equipment and authority. Actual equipment and rescue skills need their separate qualified assessment. The worked outcome is a bounded truthful status that allows the repair record to close while preserving the independent operating and safety decisions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G60_final",
+        "title": "Final assessment: twenty task decisions",
+        "body": "Answer all twenty questions using the taught review methods. Identify the record, discrepancy, responsible decision and unresolved prerequisite rather than guessing operating values. Review the explanation for each incorrect response and record remediation while preserving the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G60_finish",
+        "title": "Finish: evidence and practical assessment remain distinct",
+        "body": "Knowledge completion and actual work release\n\nYou have practiced understand actual power-system energy dependencies and communicate equipment, qualification and restoration boundaries Preserve the actual exercise result and the mistakes corrected. Use those mistakes to identify what the supervisor must verify in the real work packet. Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.\n\nBefore the actual assignment, obtain the specific evidence listed with this course. The practical assessment must use a suitable controlled setting, an assessor competent in the actual task and equipment, explicit observable criteria and an honest result. The assessor records conditions, limitations and any required reassessment. No worker should manufacture an unsafe situation to demonstrate readiness. Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G60_check1",
+        "prompt": "Does every electrical service fall under the same power-work regime?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; actual installation, activity and applicability must be established."
+          },
+          {
+            "id": "b",
+            "label": "Yes universally."
+          },
+          {
+            "id": "c",
+            "label": "Only the invoice matters."
+          },
+          {
+            "id": "d",
+            "label": "All construction is identical to operation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G60_check2",
+        "prompt": "A switch appears open. What does that not alone prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An indication was observed."
+          },
+          {
+            "id": "b",
+            "label": "The complete protected deenergized state for the actual task."
+          },
+          {
+            "id": "c",
+            "label": "Equipment identity matters."
+          },
+          {
+            "id": "d",
+            "label": "The qualified procedure applies."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G60_check3",
+        "prompt": "Instruction names F-8 but clearance names F-18. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choose the nearest."
+          },
+          {
+            "id": "b",
+            "label": "Assume a typo."
+          },
+          {
+            "id": "c",
+            "label": "Hold affected action and resolve actual identity through the authorized process."
+          },
+          {
+            "id": "d",
+            "label": "Operate to see what stops."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G60_check4",
+        "prompt": "A long tool extends past the worker. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only boot location."
+          },
+          {
+            "id": "b",
+            "label": "Only tool color."
+          },
+          {
+            "id": "c",
+            "label": "Only job duration."
+          },
+          {
+            "id": "d",
+            "label": "The full work envelope and actual electrical boundaries."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G60_check5",
+        "prompt": "A briefing signature exists but circuit understanding is missing. What remains?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Clarify actual role, equipment and restrictions before affected work."
+          },
+          {
+            "id": "b",
+            "label": "Signature resolves it."
+          },
+          {
+            "id": "c",
+            "label": "Seniority replaces it."
+          },
+          {
+            "id": "d",
+            "label": "Any coworker may guess."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G60_check6",
+        "prompt": "Repair is complete but another crew is not accounted for. What may be claimed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All equipment ready."
+          },
+          {
+            "id": "b",
+            "label": "Only the actual completed repair/status; restoration remains with the responsible process."
+          },
+          {
+            "id": "c",
+            "label": "All clearances released."
+          },
+          {
+            "id": "d",
+            "label": "Every ground removable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G60_final1",
+        "prompt": "A general electrician license proves what automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All live-line work."
+          },
+          {
+            "id": "b",
+            "label": "All grounding."
+          },
+          {
+            "id": "c",
+            "label": "No universal competence for every power task and method."
+          },
+          {
+            "id": "d",
+            "label": "All switching."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G60_final2",
+        "prompt": "Can a scheduler issue every operating order?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes by deadline."
+          },
+          {
+            "id": "b",
+            "label": "Yes by email."
+          },
+          {
+            "id": "c",
+            "label": "Yes if the customer asks."
+          },
+          {
+            "id": "d",
+            "label": "No; actual assigned operating authority governs."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G60_final3",
+        "prompt": "What is backfeed conceptually?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Energy arriving through a path outside the normal-source assumption."
+          },
+          {
+            "id": "b",
+            "label": "A guarantee of no voltage."
+          },
+          {
+            "id": "c",
+            "label": "Only a paperwork issue."
+          },
+          {
+            "id": "d",
+            "label": "A universal switch position."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G60_final4",
+        "prompt": "What does nearby induction require?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ignoring because supply is open."
+          },
+          {
+            "id": "b",
+            "label": "Qualified consideration under the actual system/work procedure."
+          },
+          {
+            "id": "c",
+            "label": "An improvised ground."
+          },
+          {
+            "id": "d",
+            "label": "A generic online distance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G60_final5",
+        "prompt": "Does visible earth connection prove the worker's protection?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes always."
+          },
+          {
+            "id": "b",
+            "label": "Yes if rusty."
+          },
+          {
+            "id": "c",
+            "label": "No; actual grounding/bonding arrangement and method matter."
+          },
+          {
+            "id": "d",
+            "label": "Yes if the diagram has a symbol."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G60_final6",
+        "prompt": "A generic lockout course replaces which power clearance process?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every transmission process."
+          },
+          {
+            "id": "b",
+            "label": "Every generation method."
+          },
+          {
+            "id": "c",
+            "label": "Every grounding procedure."
+          },
+          {
+            "id": "d",
+            "label": "None automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G60_final7",
+        "prompt": "A clearance covers one circuit. What about another?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It needs its own actual scope/control determination."
+          },
+          {
+            "id": "b",
+            "label": "Automatically included."
+          },
+          {
+            "id": "c",
+            "label": "Covered if adjacent."
+          },
+          {
+            "id": "d",
+            "label": "Covered if similar name."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G60_final8",
+        "prompt": "One crew leaves. What does that establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All tools removed."
+          },
+          {
+            "id": "b",
+            "label": "Only its actual status, not all groups/arrangements."
+          },
+          {
+            "id": "c",
+            "label": "Every clearance ended."
+          },
+          {
+            "id": "d",
+            "label": "Restoration approved."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G60_final9",
+        "prompt": "Which hazards are distinct?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Invoice and receipt."
+          },
+          {
+            "id": "b",
+            "label": "Paint and labels."
+          },
+          {
+            "id": "c",
+            "label": "Shock and arc-related effects."
+          },
+          {
+            "id": "d",
+            "label": "Only direct touch matters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G60_final10",
+        "prompt": "What numerical approach limit does this course provide?",
+        "options": [
+          {
+            "id": "a",
+            "label": "One universal distance."
+          },
+          {
+            "id": "b",
+            "label": "A visual guess."
+          },
+          {
+            "id": "c",
+            "label": "Any remembered figure."
+          },
+          {
+            "id": "d",
+            "label": "None; actual qualified assessment and applicable rules establish it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G60_final11",
+        "prompt": "A protective item looks new. What still matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual suitability, inspection/test status and instructed use."
+          },
+          {
+            "id": "b",
+            "label": "Only appearance."
+          },
+          {
+            "id": "c",
+            "label": "Only branding."
+          },
+          {
+            "id": "d",
+            "label": "Only age."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G60_final12",
+        "prompt": "Does PPE expand worker qualification?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes every task."
+          },
+          {
+            "id": "b",
+            "label": "No; role competence and authority remain separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes if expensive."
+          },
+          {
+            "id": "d",
+            "label": "Yes if layered."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G60_final13",
+        "prompt": "Weather worsens. What follows?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Diagram unchanged means no effect."
+          },
+          {
+            "id": "b",
+            "label": "Ignore until failure."
+          },
+          {
+            "id": "c",
+            "label": "Reassess affected site conditions through the actual program."
+          },
+          {
+            "id": "d",
+            "label": "Only customer timing matters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G60_final14",
+        "prompt": "What host/contractor exchange is useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only company logos."
+          },
+          {
+            "id": "b",
+            "label": "Only billing information."
+          },
+          {
+            "id": "c",
+            "label": "Only staff headcount."
+          },
+          {
+            "id": "d",
+            "label": "Actual system conditions and introduced work/equipment interfaces."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G60_final15",
+        "prompt": "An essential communication fails. What should not be assumed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Silence means agreement or unchanged safe state."
+          },
+          {
+            "id": "b",
+            "label": "The actual failure procedure applies."
+          },
+          {
+            "id": "c",
+            "label": "Identifiers matter."
+          },
+          {
+            "id": "d",
+            "label": "A qualified role must resolve it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G60_final16",
+        "prompt": "A person may remain in electrical contact. What must an unqualified coworker avoid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Calling the designated emergency route."
+          },
+          {
+            "id": "b",
+            "label": "Touching them/equipment while the hazard may remain."
+          },
+          {
+            "id": "c",
+            "label": "Reporting location."
+          },
+          {
+            "id": "d",
+            "label": "Providing safe-source observations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G60_final17",
+        "prompt": "A fallen conductor looks quiet. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Definitely dead."
+          },
+          {
+            "id": "b",
+            "label": "Safe to move."
+          },
+          {
+            "id": "c",
+            "label": "No safe electrical state merely from appearance."
+          },
+          {
+            "id": "d",
+            "label": "Safe to cross."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G60_final18",
+        "prompt": "Case A clearance arrives for F-18. What does it resolve for F-8?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All F-8 prerequisites."
+          },
+          {
+            "id": "b",
+            "label": "Every alternate supply."
+          },
+          {
+            "id": "c",
+            "label": "All worker qualifications."
+          },
+          {
+            "id": "d",
+            "label": "No automatic equipment-scope resolution."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G60_final19",
+        "prompt": "Case B a repair test passes. What remains independent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Other crew accountability and actual restoration prerequisites."
+          },
+          {
+            "id": "b",
+            "label": "Nothing."
+          },
+          {
+            "id": "c",
+            "label": "Automatic energization."
+          },
+          {
+            "id": "d",
+            "label": "Universal release."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G60_final20",
+        "prompt": "What does passing this course establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Switching qualification."
+          },
+          {
+            "id": "b",
+            "label": "Preparatory knowledge only, with actual power skills/authority separate."
+          },
+          {
+            "id": "c",
+            "label": "Live-line competence."
+          },
+          {
+            "id": "d",
+            "label": "Rescue proficiency."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G60_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G60_lesson1",
+          "questionIds": [
+            "G60_check1"
+          ]
+        },
+        {
+          "lessonId": "G60_lesson2",
+          "questionIds": [
+            "G60_check2"
+          ]
+        },
+        {
+          "lessonId": "G60_lesson3",
+          "questionIds": [
+            "G60_check3"
+          ]
+        },
+        {
+          "lessonId": "G60_lesson4",
+          "questionIds": [
+            "G60_check4"
+          ]
+        },
+        {
+          "lessonId": "G60_lesson5",
+          "questionIds": [
+            "G60_check5"
+          ]
+        },
+        {
+          "lessonId": "G60_lesson6",
+          "questionIds": [
+            "G60_check6"
+          ]
+        },
+        {
+          "lessonId": "G60_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G60_final",
+          "questionIds": [
+            "G60_final1",
+            "G60_final2",
+            "G60_final3",
+            "G60_final4",
+            "G60_final5",
+            "G60_final6",
+            "G60_final7",
+            "G60_final8",
+            "G60_final9",
+            "G60_final10",
+            "G60_final11",
+            "G60_final12",
+            "G60_final13",
+            "G60_final14",
+            "G60_final15",
+            "G60_final16",
+            "G60_final17",
+            "G60_final18",
+            "G60_final19",
+            "G60_final20"
+          ]
+        },
+        {
+          "lessonId": "G60_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G60_check1": "Power scope and general electrical work must not be conflated.",
+        "G60_check2": "Alternate, stored and induced energy and actual control requirements remain relevant.",
+        "G60_check3": "Correct action on wrong equipment cannot protect the intended work.",
+        "G60_check4": "Objects can introduce exposure beyond the person's position.",
+        "G60_check5": "Attendance is not demonstrated understanding.",
+        "G60_check6": "Work completion and system restoration are separate decisions.",
+        "G60_final1": "Evidence must match actual equipment, role and method.",
+        "G60_final2": "Commercial scheduling is not system-control authority.",
+        "G60_final3": "System connections can introduce unanticipated supply paths.",
+        "G60_final4": "Induced energy cannot be dismissed by normal-source isolation alone.",
+        "G60_final5": "Protection is specific to the actual engineered/work arrangement.",
+        "G60_final6": "Actual governing procedures remain task and installation specific.",
+        "G60_final7": "Authority cannot be silently extended.",
+        "G60_final8": "Multi-crew dependencies require the actual accountability process.",
+        "G60_final9": "An arc can create harm without deliberate conductor contact.",
+        "G60_final10": "Boundaries depend on actual system and method.",
+        "G60_final11": "Equipment protection is specific and maintained.",
+        "G60_final12": "A barrier does not grant operational competence.",
+        "G60_final13": "Electrical worksite hazards include physical/environmental conditions.",
+        "G60_final14": "Both organizations contribute different necessary task information.",
+        "G60_final15": "Communication loss is an unresolved condition.",
+        "G60_final16": "Rescue needs actual trained capabilities and hazard control.",
+        "G60_final17": "Appearance cannot establish absence of hazardous energy.",
+        "G60_final18": "An identifier mismatch remains a specific critical issue.",
+        "G60_final19": "A test is bounded by its actual function and conditions.",
+        "G60_final20": "Online understanding cannot prove unobserved specialist execution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

@@ -1,0 +1,897 @@
+{
+  "courseId": "G68",
+  "gapGroupId": "TG19",
+  "title": "HVAC and refrigerant service principles, scope and acceptance",
+  "description": "Interpret refrigeration-cycle evidence, actual service scope and bounded technical acceptance.",
+  "purpose": "Interpret refrigeration-cycle evidence, actual service scope and bounded technical acceptance.",
+  "audience": [
+    "HVAC technicians learning service planning",
+    "Facility service coordinators",
+    "Vendor evidence reviewers"
+  ],
+  "sources": [
+    {
+      "title": "EPA Section 608 technician certification",
+      "url": "https://www.epa.gov/section608/section-608-technician-certification-requirements"
+    },
+    {
+      "title": "EPA stationary refrigeration service practices",
+      "url": "https://www.epa.gov/section608/stationary-refrigeration-service-practice-requirements"
+    }
+  ],
+  "practicalBoundary": "This course is not EPA technician certification or a refrigerant, electrical, pressure or appliance-service practical qualification. It authorizes no circuit connection, recovery, charging, live diagnosis or appliance release.",
+  "vendorEvidenceRequired": [
+    "Actual appliance/model, refrigerant and jurisdiction",
+    "Applicable technician credential category and issuing evidence",
+    "Manufacturer-approved method and configuration",
+    "Service equipment/material traceability and acceptance basis",
+    "Named operating owner and service conditions"
+  ],
+  "practicalAssessmentRequired": [
+    "Observed appliance/refrigerant method skills under qualified safe assessment",
+    "Demonstrated material/equipment identification and documentation use",
+    "Observed result interpretation and service handover"
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G68_intro",
+        "title": "Start here: scope and completion",
+        "body": "This course teaches the document interpretation and planning decisions needed for hvac and refrigerant service principles, scope and acceptance. It is intended for the assigned roles listed in the course record. A service catalog label is a starting point for identifying a task; it is not evidence that every employee performs every specialist activity associated with that label. Work through the six lessons, six checks, two fictional worked cases and twenty final questions. The exercises use paper records only and require no equipment operation, live connection or hazardous exposure.\n\nThis course is not EPA technician certification or a refrigerant, electrical, pressure or appliance-service practical qualification. It authorizes no circuit connection, recovery, charging, live diagnosis or appliance release.\n\nAll twenty-six answers must be recorded. Complete every lesson and answer every question correctly, or review and explicitly acknowledge the question-specific remediation. Retain the original selections and first-attempt score alongside corrected answers and the remediation record. Completion documents this knowledge component only. It does not close any unobserved performance requirement or employer authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G68_lesson1",
+        "title": "1. Identify the actual HVAC task and refrigerant boundary",
+        "body": "An HVAC service request can describe many different jobs: reviewing comfort complaints, inspecting an accessible filter, servicing an electrical drive, assessing airflow, opening a refrigerant circuit or disposing of equipment. Begin with the exact activity and appliance. The relevant certification and practical skills follow that activity, equipment and jurisdiction. A desk designer does not become a refrigerant technician merely because the drawing includes a chiller; a worker who connects gauges may cross a refrigerant-service boundary even if the purchase order calls the task inspection.\n\nCreate a task inventory with the appliance identifier, manufacturer/model, installed location, stated refrigerant, service purpose and proposed actions. Mark information from a nameplate or approved asset record separately from information inferred from an old invoice. Refrigerants and equipment can change during approved modifications; the reviewer should not choose a gas by appearance, hose color or a remembered model family. A contradictory record is a technical query, not an invitation to sample or connect equipment during training.\n\nThe EPA Section 608 page is a United States example of function-specific certification. It distinguishes equipment-related certification categories and identifies certain refrigerant activities. Read it to understand why HVAC trained is not enough to establish scope, while avoiding a blanket claim that every HVAC worker needs the same credential. Motor vehicle air conditioning and other regimes require their own applicability review. Credentials also do not establish electrical qualification, pressure-system competence or permission to disturb an occupied building's ventilation.\n\nWrite the desk role clearly. Review asset AC-12's service pack and identify unresolved scope questions permits document interpretation. It does not authorize attaching gauges, breaking a joint, testing a live circuit, changing a controller or deciding a charge quantity. Each proposed activity needs its actual method, personnel and approvals. In a paper exercise, a general building-maintenance certificate accompanies refrigerant removal work. Request equipment-appropriate credential evidence where applicable and separate observed service skills. A generic badge cannot establish this duty.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G68_lesson2",
+        "title": "2. Read appliance and refrigerant information as a linked set",
+        "body": "An appliance file should connect identity, design information, service history and current condition. Start with the identifier and model, then match manufacturer instructions, approved modifications, refrigerant records and service reports. Do not treat a manual for a similar model as a substitute without appropriate technical determination. Some instructions cover multiple variants; identify which configuration is actually present before applying a table or requirement.\n\nRead a safety data sheet for what it is: substance hazard and handling information for the identified product. It is not an appliance service manual, an engineering determination that a refrigerant is suitable, or a recovery-machine compatibility approval. Record the exact product identity and whether it agrees with the asset file. If a cylinder label and service record disagree, the issue is unresolved identity. Preserve both observations and ask the responsible specialist for controlled disposition; this course does not teach identification by experimental mixing or release.\n\nBuild a compatibility question list. It may include the appliance's approved refrigerant, service-equipment suitability, cylinder identification, lubricant/material compatibility and treatment of uncertain or contaminated material. Qualified technical personnel use actual manufacturer information and applicable requirements to answer it. The reviewer checks that answers have sources and owners rather than supplying chemistry or pressure limits from memory.\n\nService history can reveal unresolved work. Repeated additions without a clear diagnosis may be relevant to technical review, but the planner should not diagnose a leak solely from invoices. Distinguish an observation, a technician's interpretation and a confirmed repair. A line saying system topped up does not explain cause, amount validity or final condition. Record what the evidence actually says and request missing details.\n\nPaper exercise: the register names one refrigerant, the compressor replacement record names another and the current report says gas added. The file does not establish a coherent current configuration. Create a discrepancy entry with all three sources and ask the responsible HVAC authority to reconcile the approved configuration before method selection.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G68_lesson3",
+        "title": "3. Review service planning without prescribing a circuit procedure",
+        "body": "A service plan should identify the result sought: diagnosis, repair, recovery, replacement, commissioning or disposal. These purposes are not interchangeable. A diagnostic observation can support a maintenance recommendation without establishing a repaired circuit. A recovery record can document material handling without proving an appliance ready for operation. Read the planned conclusion before checking whether the listed evidence supports it.\n\nAt desk level, review the work boundary, manufacturer method, responsible personnel, equipment identity, environmental handling arrangements and building operational interface. Ask who owns electrical isolation, pressure control, ventilation changes and occupant communication where those interfaces apply. Do not assume the HVAC technician holds every associated qualification. Do not add irrelevant requirements to a purely documentary assignment either. Connect each real interface with an accountable competent role.\n\nThe plan should explain how refrigerant identity and destination remain traceable. Review whether proposed equipment and containers are identified and supported by relevant suitability evidence. This is not instruction to select cylinder fill levels, connect recovery hoses, evacuate circuits, charge appliances or set pressures. These are practical service activities requiring the actual qualified method. No universal sequence in this course is suitable for every refrigerant and appliance combination.\n\nLook for abnormal-condition decisions. A useful plan identifies who decides what happens when asset identity is uncertain, a component differs from the manual, material is suspect or planned verification cannot be completed. The reviewer should see a disposition route, preservation of evidence and a clear limitation on the result. Technician to use judgment does not supply a technical basis for an unreviewed substitution.\n\nPaper exercise: a method lists recover, repair, recharge and commission with no appliance-specific reference or acceptance source. Identify the four intended outcomes and request referenced methods and evidence for each. Do not fill the gap with an internet recipe or guessed charge amount. The appropriate technical authority must approve the actual service arrangements before execution evidence can exist.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G68_lesson4",
+        "title": "4. Interpret measurements and material records",
+        "body": "An HVAC report contains observations taken under particular conditions. Read the asset, configuration, date, operating state and measurement basis before interpreting numbers. A temperature reading from one location cannot establish the condition of an entire building, just as a pressure observation cannot establish every aspect of appliance safety. The report must say what was measured, where, with what instrument and for what decision. Units and context belong with the result.\n\nDistinguish test results from acceptance. A manufacturer requirement, approved commissioning specification or adopted project criterion supplies the basis for a technical conclusion. The technician's measurement is evidence considered against that basis. A green tick without the criterion source is an unsupported acceptance claim. The reviewer may identify that omission; they should not invent a criterion by comparing unrelated equipment or selecting a familiar value from memory.\n\nMeasurement assurance has scope. A thermometer's calibration evidence should match its intended function and range; a sticker alone cannot establish suitability for every purpose. An instrument outside its demonstrated use or in suspect condition needs competent disposition. Ask how affected results will be evaluated, rather than simply replacing the instrument and declaring previous measurements valid.\n\nFor material records, check whether quantities and units can be reconciled within the approved process. A discrepancy such as incompatible units or an unidentified container needs explanation by responsible personnel. Do not infer an acceptable mass balance or allowable loss from this course. Reporting and material accounting depend on actual equipment, substances, activities and jurisdiction. Original records should remain available when corrections are made.\n\nPaper exercise: a report says within specification but gives no model-specific reference and no operating conditions. Write that a measurement may have been recorded while acceptance has not been demonstrated in the file. Request the technical basis and conditions. This is more accurate than calling the appliance defective or compliant without evidence. The document reviewer identifies the unsupported conclusion; the assigned technical authority interprets the full result.\n\nA refrigeration-cycle diagram helps technicians avoid one-cause assumptions. The evaporator absorbs heat from the cooled space; the compressor provides the pressure difference needed for circulation; the condenser rejects heat; the metering device regulates the transition toward the evaporator. Reduced cooling can arise from airflow, heat exchange, controls or refrigerant-circuit conditions. On paper, trace air and heat paths separately from refrigerant flow. If a fictional report says a filter is obstructed and the room is warm, the obstruction is evidence of an airflow issue, not proof of a refrigerant shortage. Label the supported observation and competing hypotheses, then identify which approved diagnostic evidence a qualified technician would need. Do not add refrigerant as a substitute for diagnosis.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G68_lesson5",
+        "title": "5. Plan maintenance interfaces and return to service",
+        "body": "HVAC work can affect people away from the appliance. An occupied control room may depend on cooling or ventilation; a storage area may contain temperature-sensitive contents; a food or care facility may have hygiene requirements. Identify the actual consequence of taking the system out of service. Do not assume all comfort equipment is safety critical, but do not dismiss a critical dependency because the equipment resembles an ordinary air conditioner.\n\nA planning record identifies affected users, the operating owner, permitted service conditions, temporary arrangements and who communicates changes. Temporary fans, portable cooling or altered ventilation can introduce electrical, air-quality and access issues. Their approval requires appropriate technical and site review. This lesson teaches identification of dependencies and evidence routes, not design of emergency ventilation or selection of substitute equipment.\n\nReturn to service is a distinct decision. Review physical completion, controlled material handling, final configuration, relevant verification and unresolved defects. An invoice marked paid establishes a commercial event, not technical readiness. A service technician may hold authority for a defined technical conclusion while the building or process owner controls use. Record those roles rather than assuming one signature covers both.\n\nDisposal and replacement need traceability. Removing an appliance from the register should connect to the actual disposition record, including material handling where required. A missing appliance is not proof that refrigerant was appropriately managed. The paperwork reviewer requests service/disposal evidence without opening a retired appliance to investigate.\n\nPaper exercise: a chiller is repaired, but agreed post-repair verification is deferred because an area is inaccessible. Work may be physically complete while technical acceptance remains limited. Record the deferred verification and named decision owner. Any approved interim use retains its scope and conditions; it cannot be rewritten as unrestricted completed commissioning. The next shift needs to know the specific unverified area and the agreed owner of that remaining decision, rather than receiving a reassuring but unsupported all-good message.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G68_lesson6",
+        "title": "6. Match vendor evidence and practical assessments to duties",
+        "body": "Evaluate vendor capability against the actual service offered. Identify the person performing regulated or specialist activities, not only the company logo. Where a credential is required, verify its equipment/task category and acceptable issuing evidence. A credential is one capability element, not proof of proficiency on every appliance, refrigerant or service method. Do not invent an expiration rule where the actual issuing regime does not have one; employer refresher and practical reassessment are distinct from credential validity.\n\nReview manufacturer or method-specific instruction and relevant experience. Ask what appliance family, refrigerant type, recovery equipment, diagnostic method and commissioning task were included. A person skilled at one type may need additional instruction and assessment for another. The gap statement should describe the new requirement specifically. Needs HVAC training is too vague to select an assessor or judge evidence.\n\nA practical assessment must be planned and observed by someone with relevant competence under a safe arrangement. It should address assigned service skills, equipment identification, approved documentation, material control, result interpretation and handover. This course supplies no hazardous demonstration recipe. An assessor must not ask an unqualified learner to connect to a charged circuit merely to test confidence.\n\nFor the desk planner, use a fictional document set. Ask the learner to detect a refrigerant identity conflict, identify missing acceptance evidence and distinguish a credential from observed method capability. Score reasoning and source traceability. This assesses a useful planning skill while preserving the boundary between paper review and service execution.\n\nThe final handoff states activities the vendor will perform, whose credentials were verified, which practical skills were observed, which methods apply and what remains conditional. Preserve unresolved configuration, operational and jurisdiction questions. Completion can satisfy this knowledge lesson after correct responses or recorded remediation. It cannot supply missing appliance-specific observation, technical approval or building release. Keep each residual attached to a named owner so that a general course completion cannot accidentally close it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G68_case1",
+        "title": "Worked fictional case 1: a contradictory chiller file",
+        "body": "Fictional facts: Meadow Services investigates poor cooling on CH-8. The purchase order says routine HVAC check. The method includes attaching gauges and removing refrigerant. The register lists refrigerant R-A, while a replacement invoice mentions R-B. The vendor submits a general mechanical-safety course and service brochure. No learner connects equipment in this exercise.\n\nThe planner identifies actual proposed activities: diagnostic review, refrigerant-circuit service and relevant electrical/operational interfaces. Routine does not remove those activities. The refrigerant identity is recorded as unresolved, citing both records. The planner does not choose R-A because it is in the register or R-B because the invoice is newer. The responsible HVAC authority must reconcile the approved configuration.\n\nNext, vendor evidence is reviewed. The safety course supports only the knowledge taught. It is not an equipment-appropriate refrigerant credential where required; the brochure is not observed service competence. The planner requests the proposed technician's applicable credential, appliance/method instruction and practical evidence. Electrical or pressure duties are separately matched to qualified roles.\n\nThe method proposes service without the actual manufacturer reference, equipment suitability evidence or acceptance basis. The planner requests those sources rather than adding generic pressures or charge quantities. Material identity and destination remain part of the pack. The building owner is identified because CH-8 serves an occupied records room with an agreed cooling requirement.\n\nIn the fictional resolution, an approved modification record establishes configuration. The vendor supplies personnel evidence and a method for the actual model and equipment. Planned verification has a defined acceptance source, and the building owner approves maintenance conditions. The pack supports the next controlled step; it does not show service has occurred.\n\nFinal decision: initially the proposal cannot support execution readiness or finished repair. The desk deliverable is reconciled scope and traceable evidence. Residuals remain actual practical service, original readings, material records, technical acceptance and operating handover. Obtain them from real work under the approved arrangement. A corrected document must never be substituted for an observed field result.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G68_case2",
+        "title": "Worked fictional case 2: an invoice with incomplete verification",
+        "body": "Fictional facts: North Archive replaces an HVAC component. The invoice says repair complete; a sheet says temperatures normal with no measurement locations, conditions or acceptance source. A technician notes that verification of one occupied zone was deferred. The owner asks the planner to mark the entire system commissioned.\n\nThe planner separates three claims. The invoice supports commercial completion. The sheet reports some observations. Full commissioning is not established because context is missing and verification was explicitly deferred. The planner preserves these distinctions rather than claiming either nothing happened or everything passed.\n\nThe planner requests the approved commissioning basis and original observations. The question is not whether a temperature sounds normal; it is what the measurement was intended to prove under actual conditions. The missing zone remains unverified. The planner does not invent a criterion from a comfort article or conduct an improvised measurement to close paperwork.\n\nThe operating owner considers any defined interim arrangement through the site's authority. If approved, its conditions must be separate from outstanding commissioning evidence. Limited use does not convert an unmeasured zone into a passed test. The planner carries the distinction into the maintenance register and incoming handover.\n\nThe fictional vendor later supplies original readings and the manufacturer/project basis for assessed zones. The deferred zone is scheduled for competent verification. The planner links evidence to the asset and retains the initial limitation until missing results and technical disposition arrive. The original entry is not deleted for a cleaner report.\n\nFinal decision: record completed component work and bounded verified results, with the deferred zone and acceptance review open. Exact residuals are zone verification, competent technical acceptance and final operating conditions. A paper-course pass, paid invoice and normal display cannot satisfy them. The handoff identifies the zone and responsible owner so that an incoming planner can continue without guessing what the initial service report excluded.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G68_final",
+        "title": "Final assessment and evidence handoff",
+        "body": "Complete the twenty final decisions using the methods taught above. For each error, read the explanation and identify the document or reasoning step that would have prevented it. An acknowledgment records reviewed remediation; it does not erase the original answer or imply that a practical task was demonstrated. Your next handoff should name the actual assignment, the documents interpreted, unresolved discrepancies and the person responsible for each decision. Supply the listed vendor evidence and arrange the listed practical assessments separately. Where a credential is legally or contractually required, verify its exact role, method and current scope with acceptable issuing evidence. A course score supplies no new operating, inspection or release authority.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G68_check1",
+        "prompt": "A routine HVAC check includes gauge attachment. What determines competence scope?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual activity and appliance."
+          },
+          {
+            "id": "b",
+            "label": "The word routine."
+          },
+          {
+            "id": "c",
+            "label": "The vendor logo."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G68_check2",
+        "prompt": "Asset and modification records name different refrigerants. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "An unresolved configuration conflict."
+          },
+          {
+            "id": "c",
+            "label": "The newer record must be right."
+          },
+          {
+            "id": "d",
+            "label": "Either material is acceptable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G68_check3",
+        "prompt": "A plan lacks appliance-specific references. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A familiar pressure value."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Approved methods and evidence for the intended outcomes."
+          },
+          {
+            "id": "d",
+            "label": "A universal charging recipe."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G68_check4",
+        "prompt": "A warm room and obstructed filter are reported. What is supported?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A proven refrigerant shortage."
+          },
+          {
+            "id": "b",
+            "label": "An automatic need to recharge."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "An airflow concern requiring proper diagnosis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G68_check5",
+        "prompt": "Repair is complete but verification is deferred. What belongs in the register?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Completed work with the specific verification limitation open."
+          },
+          {
+            "id": "b",
+            "label": "Fully commissioned."
+          },
+          {
+            "id": "c",
+            "label": "No work happened."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G68_check6",
+        "prompt": "What does a credential alone establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Its credential scope, while method proficiency needs evidence."
+          },
+          {
+            "id": "c",
+            "label": "Skill on every appliance."
+          },
+          {
+            "id": "d",
+            "label": "Electrical authority everywhere."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G68_final1",
+        "prompt": "Who automatically needs refrigerant certification because a drawing exists?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every occupant."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No one; review actual duties and applicable regime."
+          },
+          {
+            "id": "d",
+            "label": "Every office worker."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G68_final2",
+        "prompt": "Which task defines a desk boundary?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Do HVAC as needed."
+          },
+          {
+            "id": "b",
+            "label": "Fix anything unusual."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Review AC-12 records without opening or connecting equipment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G68_final3",
+        "prompt": "Is a safety data sheet an appliance repair method?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; it supplies identified substance information."
+          },
+          {
+            "id": "b",
+            "label": "Yes, it replaces the manual."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the product matches."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G68_final4",
+        "prompt": "A manual covers several variants. What must be identified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "The actual configuration and applicable instructions."
+          },
+          {
+            "id": "c",
+            "label": "The longest procedure."
+          },
+          {
+            "id": "d",
+            "label": "Any convenient variant."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G68_final5",
+        "prompt": "What does gas added on an invoice establish alone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A commissioning pass."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "A reported action, without a full diagnosis or acceptance basis."
+          },
+          {
+            "id": "d",
+            "label": "A confirmed leak repair."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G68_final6",
+        "prompt": "Why is a brochure insufficient as personnel evidence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All brochures are false."
+          },
+          {
+            "id": "b",
+            "label": "No vendor can qualify."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Product information does not observe a persons service skills."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G68_final7",
+        "prompt": "Which component normally rejects heat in the taught conceptual cycle?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The condenser."
+          },
+          {
+            "id": "b",
+            "label": "The room thermostat alone."
+          },
+          {
+            "id": "c",
+            "label": "The asset register."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G68_final8",
+        "prompt": "What should abnormal-condition planning identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Responsible disposition when assumptions or methods fail."
+          },
+          {
+            "id": "c",
+            "label": "Permission for any substitution."
+          },
+          {
+            "id": "d",
+            "label": "A promise nothing unusual occurs."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G68_final9",
+        "prompt": "A thermometer has a calibration sticker. What still matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether all instruments interchange."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Suitability for the intended function, range and condition."
+          },
+          {
+            "id": "d",
+            "label": "Sticker color."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G68_final10",
+        "prompt": "Can one temperature reading establish all building conditions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, all zones are identical."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if comfortable."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "No; location, conditions and purpose bound it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G68_final11",
+        "prompt": "Material records use incompatible units. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Traceable reconciliation by responsible personnel."
+          },
+          {
+            "id": "b",
+            "label": "An invented allowable loss."
+          },
+          {
+            "id": "c",
+            "label": "Ignore the discrepancy."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G68_final12",
+        "prompt": "Who manages actual building service dependencies?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "The assigned operating owner with relevant technical roles."
+          },
+          {
+            "id": "c",
+            "label": "Only the invoice clerk."
+          },
+          {
+            "id": "d",
+            "label": "Any course graduate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G68_final13",
+        "prompt": "Does payment establish return-to-service readiness?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, after this quiz."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "No; technical evidence and release are separate."
+          },
+          {
+            "id": "d",
+            "label": "Yes, payment proves safety."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G68_final14",
+        "prompt": "What does removal from an asset register prove about refrigerant disposal?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Correct recovery."
+          },
+          {
+            "id": "b",
+            "label": "An empty appliance."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Nothing alone; disposition evidence is needed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G68_final15",
+        "prompt": "Should an unqualified learner connect a charged circuit for realism?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; assessment requires a safe qualified arrangement."
+          },
+          {
+            "id": "b",
+            "label": "Yes, confidence suffices."
+          },
+          {
+            "id": "c",
+            "label": "Yes, after the case."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G68_final16",
+        "prompt": "Why is Meadow initially unable to identify the refrigerant?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Records conflict without approved current configuration evidence."
+          },
+          {
+            "id": "c",
+            "label": "R-A is always wrong."
+          },
+          {
+            "id": "d",
+            "label": "R-B is always right."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G68_final17",
+        "prompt": "Meadow receives a corrected pack. What remains unproved?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That scope was reviewed."
+          },
+          {
+            "id": "b",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "c",
+            "label": "Actual execution, results and acceptance."
+          },
+          {
+            "id": "d",
+            "label": "That documents exist."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G68_final18",
+        "prompt": "What does North Archives normal temperatures omit?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any evidence of an invoice."
+          },
+          {
+            "id": "b",
+            "label": "Every possible observation."
+          },
+          {
+            "id": "c",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "d",
+            "label": "Context and full agreed verification coverage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "d"
+        ]
+      },
+      {
+        "id": "G68_final19",
+        "prompt": "Does interim use close deferred verification?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; use conditions remain separate from the missing result."
+          },
+          {
+            "id": "b",
+            "label": "Yes, it rewrites measurement history."
+          },
+          {
+            "id": "c",
+            "label": "Yes, erase the limitation."
+          },
+          {
+            "id": "d",
+            "label": "Treat the online course score as the missing technical evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G68_final20",
+        "prompt": "What remains after quiz remediation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the online course score as the missing technical evidence."
+          },
+          {
+            "id": "b",
+            "label": "Original response and score alongside remediation."
+          },
+          {
+            "id": "c",
+            "label": "Only the final answer."
+          },
+          {
+            "id": "d",
+            "label": "A practical qualification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G68_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G68_lesson1",
+          "questionIds": [
+            "G68_check1"
+          ]
+        },
+        {
+          "lessonId": "G68_lesson2",
+          "questionIds": [
+            "G68_check2"
+          ]
+        },
+        {
+          "lessonId": "G68_lesson3",
+          "questionIds": [
+            "G68_check3"
+          ]
+        },
+        {
+          "lessonId": "G68_lesson4",
+          "questionIds": [
+            "G68_check4"
+          ]
+        },
+        {
+          "lessonId": "G68_lesson5",
+          "questionIds": [
+            "G68_check5"
+          ]
+        },
+        {
+          "lessonId": "G68_lesson6",
+          "questionIds": [
+            "G68_check6"
+          ]
+        },
+        {
+          "lessonId": "G68_case1",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G68_case2",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G68_final",
+          "questionIds": [
+            "G68_final1",
+            "G68_final2",
+            "G68_final3",
+            "G68_final4",
+            "G68_final5",
+            "G68_final6",
+            "G68_final7",
+            "G68_final8",
+            "G68_final9",
+            "G68_final10",
+            "G68_final11",
+            "G68_final12",
+            "G68_final13",
+            "G68_final14",
+            "G68_final15",
+            "G68_final16",
+            "G68_final17",
+            "G68_final18",
+            "G68_final19",
+            "G68_final20"
+          ]
+        }
+      ],
+      "explanations": {
+        "G68_check1": "Proposed actions determine the task boundary.",
+        "G68_check2": "The specialist must reconcile approved identity.",
+        "G68_check3": "Methods must fit actual equipment and task.",
+        "G68_check4": "Airflow evidence does not establish a refrigerant-circuit fault.",
+        "G68_check5": "Physical completion and full verification differ.",
+        "G68_check6": "Credentials and observed skill answer different questions.",
+        "G68_final1": "A topic does not assign regulated work to everyone.",
+        "G68_final2": "A bounded task identifies activity and limits.",
+        "G68_final3": "Hazard information does not establish repair procedures.",
+        "G68_final4": "Variant differences affect method suitability.",
+        "G68_final5": "A reported action cannot support every technical conclusion.",
+        "G68_final6": "Equipment information is separate from capability.",
+        "G68_final7": "Cycle understanding distinguishes heat rejection from other functions.",
+        "G68_final8": "Plans must handle uncertainty without improvisation.",
+        "G68_final9": "Assurance must fit the measurement.",
+        "G68_final10": "Context limits the supported claim.",
+        "G68_final11": "Coherent records are needed for valid conclusions.",
+        "G68_final12": "Maintenance impacts require operational coordination.",
+        "G68_final13": "Commercial status is not technical evidence.",
+        "G68_final14": "Administrative changes do not prove physical handling.",
+        "G68_final15": "Training cannot justify uncontrolled exposure.",
+        "G68_final16": "Recency alone cannot reconcile identity.",
+        "G68_final17": "Planning evidence is not completed performance.",
+        "G68_final18": "A vague phrase cannot close an excluded zone.",
+        "G68_final19": "Authorization cannot manufacture evidence.",
+        "G68_final20": "Remediation records learning without rewriting history."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

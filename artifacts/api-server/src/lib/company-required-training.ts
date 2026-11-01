@@ -13,9 +13,10 @@ type Course={id:string;title:string;purpose:string;practicalBoundary:string;sour
 type LegacyService={existingCanonicalId:number;code:string;name:string;canonicalDefinition:string;relation:string;rationale:string;roleMappings:ReviewedTrainingRoleRule[];masterServiceIds:string[];resolutionMode?:string};
 type MasterService={id:string;name:string;deliveryMode:string;roleRuleIds:string[];conditionalRuleIds:string[];gapTopicIds:string[];sourceUrls:string[];scopeNotes:string[]};
 type ConditionalRoleRule={trigger:string;familyIds:string[];roles:string[];rationale:string};
-type AdditionalRule=ReviewedTrainingRoleRule&{masterServiceIds:string[];requiresExposureConfirmation:boolean;sourceUrls:string[]};
-export type TrainingResidual={groupId:string;title:string;courseId:string|null;role:string;serviceIds:string[];vendorEvidenceRequired:string[];practicalAssessmentRequired:string[];scopeConfirmation:string;sourceUrls:string[]};
-export const trainingCatalog=safetyTrainingCatalog as {residuals?:{groups:TrainingResidual[]};curriculum:Course[];legacy:{entries:LegacyService[]};common:{rules:CommonTrainingRoleRule[]};additional:{courses:{courseId:string;title:string;masterServiceIds:string[];roleMappings:AdditionalRule[]}[]};catalog:{catalogSha256:string;services:MasterService[];roleRules:Record<string,ReviewedTrainingRoleRule>;conditionalRules:Record<string,ConditionalRoleRule>;gapTopics:Record<string,unknown>}};
+type AdditionalRule=ReviewedTrainingRoleRule&{masterServiceIds:string[];legacyServiceCodes?:string[];requiresExposureConfirmation:boolean;sourceUrls:string[]};
+export type TrainingResidual={serviceEvidence?:{serviceId:string;sourceContext:string;vendorEvidenceRequired:string[];practicalAssessmentRequired:string[]}[];groupId:string;title:string;courseId:string|null;role:string;serviceIds:string[];vendorEvidenceRequired:string[];practicalAssessmentRequired:string[];scopeConfirmation:string;sourceUrls:string[]};
+export const trainingCatalog=safetyTrainingCatalog as {residuals?:{groups:TrainingResidual[];extensions?:{id:string;name:string;sourceUrls:string[];scopeNotes:string[];roleMappings:ReviewedTrainingRoleRule[];residualRequirements:TrainingResidual[]}[]};curriculum:Course[];legacy:{entries:LegacyService[]};common:{rules:CommonTrainingRoleRule[]};additional:{courses:{courseId:string;title:string;masterServiceIds:string[];legacyServiceCodes?:string[];roleMappings:AdditionalRule[]}[]};catalog:{catalogSha256:string;services:MasterService[];roleRules:Record<string,ReviewedTrainingRoleRule>;conditionalRules:Record<string,ConditionalRoleRule>;gapTopics:Record<string,unknown>}};
+export function additionalTrainingApplies(rule:{masterServiceIds:string[];legacyServiceCodes?:string[]},service:{code:string;masterServiceIds:string[]}){return !!rule.legacyServiceCodes?.includes(service.code)||rule.masterServiceIds.some(id=>service.masterServiceIds.includes(id));}
 const normalize=(value:string|null)=>String(value??'').trim().toLowerCase().replace(/\s+/g,' ');
 export async function selectedTrainingServices(reader:Reader,owner:WorkHubOwner){
  if(owner.type!=='vendor')return {services:[] as LegacyService[],unmapped:[] as string[]};
@@ -92,8 +93,8 @@ export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner){
    rules.push({serviceId:service.code,roleIds:[personalRole],familyIds:matches.familyIds});
    for(const value of matches.unresolvedRoles)unresolved.push({userId:person.userId,serviceId:service.code,...value});
    for(const additional of trainingCatalog.additional.courses){
-    if(!additional.masterServiceIds.some(id=>service.masterServiceIds.includes(id)))continue;
-    const candidates=additional.roleMappings.filter(rule=>rule.masterServiceIds.some(id=>service.masterServiceIds.includes(id)));
+    if(!additionalTrainingApplies(additional,service))continue;
+    const candidates=additional.roleMappings.filter(rule=>additionalTrainingApplies(rule,service));
     const matched=matchSafetyTrainingRoles(input,candidates,[]);
     if(!matched.matchedRoleRules.length)continue;
     const decision=scopeDecisions.get(`${additional.courseId}:${service.code}`);
@@ -112,4 +113,5 @@ export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner){
  const scopeMissing=owner.type==='vendor'&&selected.services.length===0;
  return {...coverage,serviceScopeMissing:scopeMissing,provisional:coverage.unavailable>0||scopeMissing||!!(selected.unmapped.length||unresolved.length||scopeIssues.length||conditionalCourseGaps.length),services:selected.services.map(({existingCanonicalId,code,name,masterServiceIds,relation,rationale})=>({id:existingCanonicalId,code,name,masterServiceIds,relation,rationale})),unmappedServiceIds:selected.unmapped,unresolvedRoles:unresolved,scopeIssues,conditionalCourseGaps,people:coveragePeople,audience:people,curriculum,items:trusted,rules};
 }
+
 
