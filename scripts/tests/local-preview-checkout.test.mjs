@@ -48,3 +48,9 @@ test("a later published release invalidates the older local selection", t => {
   f.git("checkout", "--detach", f.shipped);
   assert.throws(() => previewCheckout(f.root), /behind or diverges/);
 });
+
+test("CI uses its exact candidate without requiring an origin main ref", t => {
+ const f = fixture(t); f.git("update-ref", "-d", "refs/remotes/origin/main");
+ assert.equal(previewCheckout(f.root,{GITHUB_ACTIONS:"true",GITHUB_SHA:f.shipped}).commit,f.shipped);
+ assert.throws(()=>previewCheckout(f.root,{GITHUB_ACTIONS:"true",GITHUB_SHA:f.old}),/does not match/);
+});

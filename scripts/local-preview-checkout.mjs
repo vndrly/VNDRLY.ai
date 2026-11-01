@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 const git = (cwd, ...args) => execFileSync("git", ["-C", cwd, ...args], { encoding: "utf8", windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }).trim();
 
 // A machine-local selection shared by all worktrees. Never change Git history here.
-export function previewCheckout(repoRoot) {
+export function previewCheckout(repoRoot, env = process.env) {
+  // CI validates the candidate checkout, not the workstation-selected published preview.
+  if (env.GITHUB_ACTIONS === "true") {
+    const root = realpathSync(repoRoot), commit = git(root, "rev-parse", "HEAD");
+    if (commit !== env.GITHUB_SHA) throw new Error("CI preview checkout does not match GITHUB_SHA");
+    return { root, commit };
+  }
   const common = path.resolve(repoRoot, git(repoRoot, "rev-parse", "--git-common-dir"));
   const configFile = path.join(common, "local-preview.json");
   const config = existsSync(configFile) ? JSON.parse(readFileSync(configFile, "utf8")) : {};
