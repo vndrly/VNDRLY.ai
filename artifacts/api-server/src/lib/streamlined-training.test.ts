@@ -10,6 +10,7 @@ const courses=read('research/safety-program/2026-11-02/prepared-course-publicati
 describe('streamlined training requirements',()=>{
  it('removes added accreditation disclaimers from all published teaching without changing stored content, assessments or legal duties',()=>{
   const core=read('research/safety-program/energy-safety-core/course.json');
+  expect(removeAccreditationDisclaimers({...core.content,description:'Includes the actual PEC benchmark crosswalk, OSHA applicability/evidence register and exact independent-review/partner-acceptance status.'}).description).toBe('');
   const coreView=removeAccreditationDisclaimers(core.content);
   expect(coreView.training.lessons).toHaveLength(11);
   expect(JSON.stringify(coreView)).not.toMatch(/\bPEC\b|Outreach|benchmark|crosswalk|internal knowledge|unproctored|universal operator acceptance/i);

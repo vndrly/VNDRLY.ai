@@ -22,6 +22,7 @@ export function legalBoundary(id){return courseLegalRequirements(id).map(r=>`${r
 // Keep their stored identities, answers and earned results intact.
 export function removeAccreditationDisclaimers(content){
  const replacements=[
+  ['Includes the actual PEC benchmark crosswalk, OSHA applicability/evidence register and exact independent-review/partner-acceptance status.',''],
   ['This lesson is awareness education, not legal advice, a PEC credential, or an independent authorization to perform regulated work.',''],
   ['VNDRLY internal knowledge credential','VNDRLY Energy Safety Core credential'],
   ['VNDRLY internal course credential','VNDRLY Energy Safety Core credential'],
