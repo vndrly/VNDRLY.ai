@@ -76,7 +76,7 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  await submitGuidedTraining(learner,id,command({action:'exam_submit',attemptId:attempt2.id},read.version));read=await getAssignedLibrary(learner,id);
  expect(read.assignment.status).toBe('completed');expect(read.assignment.progress.guided).toEqual(learning);
  const personal=await personalEnergySafetyCredentials({...learner,vendorId:999999,activeMembershipId:999999});
- expect(personal.credentials).toHaveLength(1);expect(personal.credentials[0]).toMatchObject({familyId:'G99',courseSha256:'a'.repeat(64),proctored:false,accredited:false});
+ expect(personal.credentials).toHaveLength(1);expect(personal.credentials[0]).toMatchObject({familyId:'G99',courseSha256:'a'.repeat(64),credentialType:'VNDRLY Energy Safety Core credential'});expect(personal.credentials[0]).not.toHaveProperty('proctored');expect(personal.credentials[0]).not.toHaveProperty('accredited');
  expect(personal.credentials[0]).not.toHaveProperty('vendorId');expect(personal.credentials[0]).not.toHaveProperty('instanceId');
  expect((await personalEnergySafetyCredentials(foreign)).credentials).toEqual([]);
  expect(read.assignment.progress.certificationExam?.attempts.map(a=>[a.score,a.passed])).toEqual([[0,false],[100,true]]);
