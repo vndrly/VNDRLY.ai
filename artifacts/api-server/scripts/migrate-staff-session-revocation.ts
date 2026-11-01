@@ -1,7 +1,8 @@
+import { guardAdditiveReplay } from '../../../scripts/guard-additive-replay.mjs';
 import { pool } from "@workspace/db";
 import { STAFF_SESSION_REVOCATION_SCHEMA } from "../src/lib/staff-session-revocation";
 
-pool.query(STAFF_SESSION_REVOCATION_SCHEMA).then(() => {
+pool.query(guardAdditiveReplay(STAFF_SESSION_REVOCATION_SCHEMA)).then(() => {
   console.log("Staff session revocation additive migration complete");
 }).catch(() => {
   console.error("Staff session revocation migration failed");

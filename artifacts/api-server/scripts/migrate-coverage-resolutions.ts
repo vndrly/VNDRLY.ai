@@ -1,3 +1,4 @@
+import { guardAdditiveReplay } from '../../../scripts/guard-additive-replay.mjs';
 import {readFile} from "node:fs/promises";
 import {pool} from "@workspace/db";
 
@@ -9,7 +10,7 @@ async function main() {
     await client.query("SELECT pg_advisory_xact_lock(hashtext('coverage-resolutions-migration'))");
     for(const name of ["site_shift_pattern_names.sql","coverage_resolutions.sql"]){
       const source=await readFile(new URL(`../../../lib/db/drizzle/${name}`,import.meta.url),"utf8");
-      await client.query(source);
+      await client.query(guardAdditiveReplay(source));
     }
     await client.query("COMMIT");
     console.log("Coverage storage ready; existing shifts and assignments unchanged.");
