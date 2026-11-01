@@ -33,7 +33,7 @@ export function streamlineBody(body,{administrative=false}={}){
   // applicable statutory duty is supplied once, separately, with its citation.
   const sentences=paragraph.split(/(?<=[.!?])\s+(?=[A-Z])/);
   const kept=sentences.filter(s=>!extraSentence.test(s));
-  let text=kept.join(' ').replace(/Those roles require separate practical evaluation and employer\/site authorization\./g,'').trim();
+  let text=kept.join(' ').replace(/Those roles require separate practical evaluation and employer\/site authorization\./g,'').replace(/legally or contractually required/g,'legally required').trim();
   if(text)parts.push(text);
  }
  return parts.join('\n\n').replace(/\n{3,}/g,'\n\n');

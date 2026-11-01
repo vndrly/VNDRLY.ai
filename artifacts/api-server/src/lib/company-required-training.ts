@@ -66,14 +66,14 @@ export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner){
  ]);
  const people=members.filter(p=>p.vendorPeopleId===null||staff.some(w=>w.id===p.vendorPeopleId));
  const trusted=new Map<string,{record:typeof templates.$inferSelect;metadata:ReturnType<typeof LibraryMetadataSchema.parse>}>();
- const trustedVersionFamilies=new Map<string,{familyId:string;contentVersion:number}>();
+ const trustedVersionFamilies=new Map<string,{familyId:string;contentVersion:number;compatible:boolean}>();
  for(const record of published){
   const parsed=LibraryMetadataSchema.safeParse(record.libraryMetadata);if(!parsed.success)continue;const metadata=parsed.data;
   if(metadata.kind!=='training'||metadata.state!=='published'||!metadata.content||!metadata.safetyResource)continue;
   const course=trainingCatalog.curriculum.find(c=>c.id===metadata.safetyResource!.familyId);if(!course)continue;
   const version=[course,...(course.compatibleVersions??[])].find(v=>v.sourceSha256===metadata.safetyResource!.sourceSha256);if(!version)continue;
   const hash=safetyTrainingContentHash(LibraryDraftSchema.parse(metadata.content));if(hash!==version.contentSha256)continue;
-  trustedVersionFamilies.set(record.id,{familyId:course.id,contentVersion:metadata.contentVersion});
+  trustedVersionFamilies.set(record.id,{familyId:course.id,contentVersion:metadata.contentVersion,compatible:!!course.compatibleVersions?.some(v=>v.sourceSha256===metadata.safetyResource!.sourceSha256&&v.contentSha256===hash)});
   if(!trusted.has(course.id)||trusted.get(course.id)!.metadata.contentVersion<metadata.contentVersion)trusted.set(course.id,{record,metadata});
  }
   const positions=vendorRows[0]?.catalog?.entries??[];
@@ -110,7 +110,7 @@ export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner){
  });
  const curriculum=trainingCatalog.curriculum.map(course=>{const item=trusted.get(course.id);return {familyId:course.id,itemId:item?.record.id??'',contentVersion:item?.metadata.contentVersion??0,sourceSha256:item?.metadata.safetyResource?.sourceSha256??course.sourceSha256,available:!!item};});
  const completionSchema=AssignmentMetadataSchema.pick({status:true,membershipId:true,contentVersion:true,refresherDueAt:true});
- const completions=assigned.flatMap(row=>{const a=completionSchema.safeParse(row.assignment),userId=row.assigneeUserId;if(!userId||!a.success||!row.sourceSha256)return[];const version=trustedVersionFamilies.get(row.templateId),current=version?.contentVersion===a.data.contentVersion?trusted.get(version.familyId):undefined;return [{userId,membershipId:a.data.membershipId,itemId:current?.record.id??row.templateId,contentVersion:current?.metadata.contentVersion??a.data.contentVersion,sourceSha256:current?.metadata.safetyResource?.sourceSha256??row.sourceSha256,status:a.data.status,refresherDueAt:a.data.refresherDueAt}];});
+ const completions=assigned.flatMap(row=>{const a=completionSchema.safeParse(row.assignment),userId=row.assigneeUserId;if(!userId||!a.success||!row.sourceSha256)return[];const version=trustedVersionFamilies.get(row.templateId),current=version?.compatible&&version.contentVersion===a.data.contentVersion?trusted.get(version.familyId):undefined;return [{userId,membershipId:a.data.membershipId,itemId:current?.record.id??row.templateId,contentVersion:current?.metadata.contentVersion??a.data.contentVersion,sourceSha256:current?.metadata.safetyResource?.sourceSha256??row.sourceSha256,status:a.data.status,refresherDueAt:a.data.refresherDueAt}];});
  const coverage=requiredTrainingCoverage({selectedServiceIds:selected.services.map(s=>s.code),rules,people:coveragePeople,curriculum,completions});
   const scopeIssues=selected.services.filter(s=>s.roleMappings.some(rule=>rule.scopeMustBeConfirmed)||(['scope_unresolved','material_not_service'].includes(s.relation)&&s.resolutionMode!=='dedicated_extension_roles')).map(s=>({serviceId:s.code,reason:s.roleMappings.some(rule=>rule.scopeMustBeConfirmed)?`${s.rationale} Actual legacy component scope remains unconfirmed; reviewed role rules explicitly require scope confirmation.`:s.rationale}));
  const scopeMissing=owner.type==='vendor'&&selected.services.length===0;
