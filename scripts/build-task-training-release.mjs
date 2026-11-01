@@ -9,12 +9,13 @@ const priorRoot='research/safety-program/2026-11-01',root='research/safety-progr
 const previousVersions=JSON.parse(fs.readFileSync('research/safety-program/regulatory-streamlining/previous-course-identities.json'));
 const sourceVersion=(id,sha)=>{const previous=previousVersions.find(c=>c.id===id);return previous.sourceSha256===sha?previous.sourceVersion:`${Number.parseInt(previous.sourceVersion,10)+1}.0`;};
 const identities=JSON.parse(fs.readFileSync(`${root}/preserved-course-identities.json`));
+function streamlineDescription(content){if(content.description)content.description=streamlineBody(content.description.replace(/;\s*practical competence and work authorization remain separate\./i,'.'));return content;}
 const prior={courses:identities.map(({contentSha256,...identity})=>{
  const raw=identity.id==='H03'?originalH03:JSON.parse(fs.readFileSync(`${priorRoot}/${identity.id.startsWith('G')?'gap-courses':'complete-courses'}/${identity.id}.json`));
  const content=LibraryDraftSchema.parse({...raw,kind:'training',title:identity.title,safetyRelated:true});
  if(identity.id!=='H03')content.training.lessons.at(-1).links=[...new Set((raw.sources??[]).map(source=>source.url))].slice(0,20);
  if(safetyTrainingContentHash(content)!==contentSha256)throw Error(`${identity.id}:preserved content changed`);
- const streamlined=LibraryDraftSchema.parse(streamlineCourseContent(content,identity.id,identity.practicalBoundary));
+ const streamlined=LibraryDraftSchema.parse(streamlineDescription(streamlineCourseContent(content,identity.id,identity.practicalBoundary)));
  const sourceSha256=crypto.createHash('sha256').update(JSON.stringify(streamlined)).digest('hex');
  return {...identity,sourceVersion:sourceVersion(identity.id,sourceSha256),sourceSha256,content:streamlined,practicalBoundary:legalBoundary(identity.id).join('\n')};
 })};
@@ -47,7 +48,7 @@ for(let n=1;n<=49;n++){
  }
  residualGroups.push(residual);
  if(!raw)continue;
- const content=LibraryDraftSchema.parse(streamlineCourseContent({...raw,kind:'training',title:`${id} — ${raw.title}`,safetyRelated:true},id,raw.practicalBoundary));
+ const content=LibraryDraftSchema.parse(streamlineDescription(streamlineCourseContent({...raw,kind:'training',title:`${id} — ${raw.title}`,safetyRelated:true},id,raw.practicalBoundary)));
  content.training.lessons.at(-1).links=[...new Set((raw.sources??[]).map(s=>s.url))].slice(0,20);
  LibraryDraftSchema.parse(content);
  const words=raw.training.lessons.slice(1,9).map(l=>l.body).join(' ').split(/\s+/).length;
