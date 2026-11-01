@@ -2,6 +2,7 @@ import React from 'react';
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import TrainingPolicy from './training-policy';
+vi.mock('./training-course-guide',()=>({default:()=>null}));
 
 const mock=vi.hoisted(()=>({api:{data:null as any,busy:false,uncertain:false,error:'',send:vi.fn(),reload:vi.fn(),retryOriginal:vi.fn()},assignment:vi.fn()}));
 vi.mock('react-i18next',()=>({useTranslation:()=>({t:(key:string,options?:{number?:number})=>options?.number?`${key} ${options.number}`:key})}));

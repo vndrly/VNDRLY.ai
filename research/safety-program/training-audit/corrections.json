@@ -3469,6 +3469,236 @@
         "G01"
       ],
       "reason": "Removed generic additional-qualification caveat from the course purpose."
+    },
+    {
+      "from": "Finish — separate practical qualification",
+      "to": "Completion and scores",
+      "courses": [
+        "L01",
+        "L02",
+        "L04",
+        "L05",
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C08",
+        "I01",
+        "I02",
+        "I03",
+        "I04",
+        "I05",
+        "I06"
+      ]
+    },
+    {
+      "from": "Completion and separate practical qualification",
+      "to": "Completion and scores",
+      "courses": [
+        "L03"
+      ]
+    },
+    {
+      "from": "Completion and separately assessed practical competence",
+      "to": "Completion and scores",
+      "courses": [
+        "H01",
+        "H02",
+        "H04",
+        "H05",
+        "H06",
+        "H07",
+        "H08",
+        "H09",
+        "H10",
+        "H11",
+        "H12",
+        "H13",
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E05",
+        "E06",
+        "E07"
+      ]
+    },
+    {
+      "from": "Finish H03 -",
+      "to": "Completion and scores",
+      "courses": [
+        "H03"
+      ]
+    },
+    {
+      "from": "Finish - Practical evaluation and work authorization",
+      "to": "Completion and scores",
+      "courses": [
+        "H14",
+        "H15",
+        "H16",
+        "H17",
+        "H18",
+        "H19",
+        "H20",
+        "H21",
+        "H22",
+        "H23",
+        "H24",
+        "E08",
+        "E09",
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07"
+      ]
+    },
+    {
+      "from": "Complete the knowledge component; confirm the next task",
+      "to": "Completion and scores",
+      "courses": [
+        "G01"
+      ]
+    },
+    {
+      "from": "Finish the knowledge course; preserve the open requirements",
+      "to": "Completion and scores",
+      "courses": [
+        "G02"
+      ]
+    },
+    {
+      "from": "Finish — plant-specific competence remains separate",
+      "to": "Completion and scores",
+      "courses": [
+        "G03"
+      ]
+    },
+    {
+      "from": "Finish — employer implementation",
+      "to": "Completion and scores",
+      "courses": [
+        "G04"
+      ]
+    },
+    {
+      "from": "Finish — qualification and operating boundaries",
+      "to": "Completion and scores",
+      "courses": [
+        "G05"
+      ]
+    },
+    {
+      "from": "Finish — chemical hygiene and method competence are separate",
+      "to": "Completion and scores",
+      "courses": [
+        "G06"
+      ]
+    },
+    {
+      "from": "Finish — approved training and practical authorization remain separate",
+      "to": "Completion and scores",
+      "courses": [
+        "G15"
+      ]
+    },
+    {
+      "from": "Finish — knowledge completion and the remaining qualified work",
+      "to": "Completion and scores",
+      "courses": [
+        "G21"
+      ]
+    },
+    {
+      "from": "Finish — retain the employer, operator and clinical boundaries",
+      "to": "Completion and scores",
+      "courses": [
+        "G22"
+      ]
+    },
+    {
+      "from": "Finish — confirm the actual next duty",
+      "to": "Completion and scores",
+      "courses": [
+        "G23"
+      ]
+    },
+    {
+      "from": "Finish: evidence and practical assessment remain distinct",
+      "to": "Completion and scores",
+      "courses": [
+        "G50",
+        "G51",
+        "G52",
+        "G53",
+        "G54",
+        "G55",
+        "G56",
+        "G57",
+        "G58",
+        "G59",
+        "G60",
+        "G61",
+        "G62",
+        "G63",
+        "G64"
+      ]
+    },
+    {
+      "from": "Final assessment — evidence and technical authority",
+      "to": "Completion and scores",
+      "courses": [
+        "G65"
+      ]
+    },
+    {
+      "from": "Final assessment and evidence handoff",
+      "to": "Completion and scores",
+      "courses": [
+        "G67",
+        "G68",
+        "G69",
+        "G70",
+        "G71",
+        "G72",
+        "G73",
+        "G74",
+        "G75",
+        "G76",
+        "G77",
+        "G78",
+        "G79",
+        "G80",
+        "G81",
+        "G82"
+      ]
+    },
+    {
+      "from": "Final assessment and residual requirements",
+      "to": "Completion and scores",
+      "courses": [
+        "G83",
+        "G84",
+        "G85",
+        "G86",
+        "G87",
+        "G88",
+        "G89",
+        "G90",
+        "G91",
+        "G92",
+        "G93",
+        "G95",
+        "G96",
+        "G97",
+        "G98"
+      ]
     }
   ],
   "questions": [

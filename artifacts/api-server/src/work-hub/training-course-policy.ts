@@ -8,6 +8,7 @@ import {trainingCatalog,selectedTrainingServices,additionalTrainingApplies}from'
 import {trainingPositionIds,type TrainingPosition as Position} from '../lib/safety-training-position';
 import {trainingReadContent} from './library-policy';
 import {cleanTrainingText} from '../../../../scripts/lib/streamlined-training.mjs';
+import {buildTrainingCourseGuide} from '../lib/training-course-guide';
 export {trainingPositionIds} from '../lib/safety-training-position';
 
 const normalized=(value:string)=>value.trim().replace(/\s+/g,' ').toLowerCase();
@@ -41,8 +42,14 @@ export async function readTrainingPolicy(actor:LibraryActor,id:string){
  const course=await linkedTraining(db,owner,own.metadata.safetyResource!.familyId);
  const options=await libraryOptions(actor),staff=await companyPositions(db,owner);
  const reference=trainingCatalog.curriculum.find(item=>item.id===own.metadata.safetyResource!.familyId);
- const courseContent=course?.libraryMetadata?trainingReadContent(LibraryMetadataSchema.parse(course.libraryMetadata)):trainingReadContent(own.metadata);
- const policy=TrainingPolicyDetailsSchema.parse(own.metadata.trainingPolicy??{title:course?.name??own.record.name,description:courseContent?.description??'',purpose:cleanTrainingText(reference?.purpose??courseContent?.description??'')});
+ const courseMetadata=course?.libraryMetadata?LibraryMetadataSchema.parse(course.libraryMetadata):undefined;
+ const courseContent=courseMetadata?trainingReadContent(courseMetadata):trainingReadContent(own.metadata);
+ const guide=courseContent?.training?buildTrainingCourseGuide(courseContent,own.metadata.safetyResource!.familyId,cleanTrainingText(reference?.purpose??'')):null;
+ const saved=own.metadata.trainingPolicy;
+ const policy=TrainingPolicyDetailsSchema.parse(saved?{...saved,
+  description:guide&&[courseContent?.description,courseMetadata?.content?.description,own.metadata.content?.description].includes(saved.description)?guide.description:saved.description,
+  purpose:guide&&[reference?.purpose,cleanTrainingText(reference?.purpose??''),courseContent?.description].includes(saved.purpose)?guide.purpose:saved.purpose,
+ }:{title:course?.name??own.record.name,description:guide?.description??courseContent?.description??'',purpose:guide?.purpose??cleanTrainingText(reference?.purpose??courseContent?.description??'')});
  const requiredPeopleIds=options.people.filter(person=>{const worker=staff.rows.find(row=>row.id===person.vendorPeopleId||row.userId===person.userId);return policy.requiredUserIds.includes(person.userId)||(worker&&policy.requiredStaffRoleIds.some(role=>trainingPositionIds(worker,staff.positions).includes(role)));}).map(person=>person.userId);
  const selected=await selectedTrainingServices(db,owner),additional=trainingCatalog.additional.courses.find(item=>item.courseId===own.metadata.safetyResource!.familyId);
  const applicabilityOptions=additional?selected.services.filter(service=>additionalTrainingApplies(additional,service)).map(service=>({serviceId:service.code,label:service.name,roleDescriptions:additional.roleMappings.filter(rule=>additionalTrainingApplies(rule,service)).map(rule=>rule.trigger??rule.rationale)})):[];
