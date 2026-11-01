@@ -1,0 +1,27 @@
+/* Library views share the current dark page, card and mini-card treatment. */
+.library-page { color-scheme:dark; }
+.library-page [data-library-card] { min-width:0; background:#242426; color:#ececec; border-style:solid; }
+.library-page .library-card-title { margin:0; font-size:16px; font-weight:700; }
+.library-page .library-action {
+  align-self:flex-start; display:inline-flex; align-items:center; justify-content:center;
+  min-height:32px !important; height:auto !important; max-height:none !important;
+  max-width:100%; padding:6px 10px; border:1px solid var(--brand-primary);
+  border-radius:6px; background:transparent; color:#ececec;
+  font-size:12px; line-height:1.4; white-space:normal; box-shadow:none;
+}
+.library-page .library-action [data-pill-background] { display:none; }
+.library-page .library-action > span { color:inherit; text-shadow:none; white-space:normal; }
+.library-page .library-action:hover,
+.library-page .library-action-selected { background:color-mix(in srgb,var(--brand-primary) 14%,transparent); }
+.library-page .library-action-selected { color:var(--brand-primary); box-shadow:none; }
+.library-page .library-action:focus-visible { outline:2px solid #ececec; outline-offset:3px; }
+.library-page :is(input,textarea,select):not([type=checkbox]):not([type=radio]) {
+  min-width:0; max-width:100%; background:#303236; color:#ececec;
+  border:1px solid var(--brand-primary) !important; box-shadow:none;
+  outline:none; font-size:14px;
+}
+.library-page input:not([type=checkbox]):not([type=radio]) { border-radius:999px !important; }
+.library-page :is(input,textarea,select):focus { outline:none; box-shadow:none; }
+.library-page :is(input,textarea)::placeholder { color:#b3b3b3; opacity:1; }
+.library-page [role=switch][data-state=checked] { background:var(--brand-primary); }
+.library-page p { overflow-wrap:anywhere; }

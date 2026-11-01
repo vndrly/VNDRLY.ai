@@ -12,6 +12,8 @@ import LibraryDetail from "@/components/work-hub/library/library-detail";
 import BundleDetail from "@/components/work-hub/library/bundle-detail";
 import EmployeeResponse from "@/components/work-hub/library/employee-response";
 import { z } from "zod/v4";
+import "@/components/current-theme-page.css";
+import "@/components/work-hub/library/library-theme.css";
 export default function LibraryPage({
   kind = "library",
   id,
@@ -27,7 +29,7 @@ export default function LibraryPage({
       (kind === "bundle" && id === "new");
   return (
     <WorkHubSurface>
-      <div className="space-y-4">
+      <div className="current-theme-page library-page space-y-4">
         <WorkHubPageHeading
           module="tasks"
           title={t(

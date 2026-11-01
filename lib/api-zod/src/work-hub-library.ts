@@ -136,6 +136,13 @@ export const LibraryDraftSchema = z
       c.addIssue({ code: "custom", message: "Poll requires valid options" });
   });
 export const LibraryMetadataSchema = z.object({
+  safetyResource: z.object({
+    familyId: z.string().regex(/^[LHCEIR][0-9]{2}$/),
+    categoryId: z.enum(["leadership", "hazards", "competence", "equipment", "learning", "emergency"]),
+    resourceType: z.enum(["policy", "form", "training", "evidence-examples"]),
+    sourceVersion: z.string().min(1),
+    sourceSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  }).optional(),
   kind: z.enum(["policy", "form", "poll", "training", "bundle"]),
   seriesId: z.uuid(),
   contentVersion: z.number().int().positive(),

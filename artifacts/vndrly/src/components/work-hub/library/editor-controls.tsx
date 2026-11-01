@@ -2,6 +2,10 @@ import React from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CardHeading } from "@/components/ui/card-heading";
+export function Heading({ children }: { children: React.ReactNode }) {
+  return <CardHeading as="h2" className="library-card-title">{children}</CardHeading>;
+}
 export function usePalette() {
   return {
     primary: "var(--brand-primary)",
@@ -18,6 +22,7 @@ export function Frame({
 }) {
   return (
     <div
+      data-library-card={style?.borderWidth ? "" : undefined}
       style={
         {
           display: "flex",
@@ -105,7 +110,7 @@ export function Pill({
       tone={color}
       disabled={disabled}
       aria-pressed={solid}
-      className={solid ? "ring-2 ring-[color:var(--brand-primary)]" : ""}
+      className={`library-action${solid ? " library-action-selected ring-2 ring-[color:var(--brand-primary)]" : ""}`}
       onClick={onPress}
     >
       {children}

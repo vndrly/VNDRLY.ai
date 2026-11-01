@@ -4,6 +4,7 @@ import {
   Frame as View,
   Pill as TogglePillButton,
   usePalette as useColors,
+  Heading,
 } from "./editor-controls";
 import { useLocation } from "wouter";
 import { z } from "zod/v4";
@@ -17,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useLibrary as useFormCampaigns } from "./use-library";
 import LibraryEditor from "./library-editor";
 import AssignmentReview from "./assignment-review";
+import { LibraryBody } from "./library-body";
 const schema = z.object({
   itemId: z.uuid(),
   title: z.string(),
@@ -96,9 +98,9 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
   return (
     <View style={{ gap: 12 }}>
       <View style={card}>
-        <Text style={{ ...label, fontSize: 20, fontWeight: "700" }}>
+        <Heading>
           {data.title}
-        </Text>
+        </Heading>
         <Text style={label}>
           {t(`workHubLibrary.state_${m.state}`)} · {t("workHubLibrary.version")}{" "}
           {m.contentVersion}
@@ -236,8 +238,8 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
       )}
       {!edit && m.content && (
         <View style={card}>
-          {m.kind === "policy" && (
-            <Text style={label}>{m.content.policyText}</Text>
+            {(m.kind === "policy" || m.kind === "form") && (
+            <LibraryBody text={m.content.policyText} color={colors.text} />
           )}
           {m.content.fields.map((field) => (
             <Text key={field.id} style={label}>
@@ -251,7 +253,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
               <Text style={{ ...label, fontWeight: "700" }}>
                 {lesson.title}
               </Text>
-              <Text style={label}>{lesson.body}</Text>
+              <LibraryBody text={lesson.body} color={colors.text} />
             </View>
           ))}
           {m.content.training?.questions.map((q) => (
