@@ -24,7 +24,15 @@ export function parseAskVGreetingMigration(sqlText) {
 
 export async function runAskVGreetingMigration(client, sqlText) {
   const statements = parseAskVGreetingMigration(sqlText);
+  const verify = async () => client.query("SELECT data_type,is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name='users' AND column_name='askv_last_full_greeting_on'");
+  const before = await verify();
+  if (before.rows.length) {
+    if (before.rows.length !== 1 || before.rows[0].data_type !== "text" || before.rows[0].is_nullable !== "YES") throw new Error("AskV greeting column has an incompatible definition");
+    return; // Already applied: do not acquire an unnecessary users table DDL lock.
+  }
   for (const statement of statements) {
     await client.query(statement);
   }
+  const after = await verify();
+  if (after.rows.length !== 1 || after.rows[0].data_type !== "text" || after.rows[0].is_nullable !== "YES") throw new Error("AskV greeting migration verification failed");
 }
