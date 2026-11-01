@@ -1,0 +1,1697 @@
+{
+  "version": 1,
+  "reviewDate": "2026-11-01",
+  "scope": "US onshore energy general safety knowledge; applicability of every standard depends on actual employer, task, exposure and jurisdiction. No claim to satisfy all OSHA standards through one online course.",
+  "statePlanReview": "OPEN for actual work locations",
+  "rows": [
+    {
+      "id": "OSHA_01",
+      "citation": "1904.35(b)(1)",
+      "topic": "Injury reporting and non-deterrence",
+      "lessonIds": [
+        "ESC01",
+        "ESC10"
+      ],
+      "appliesTo": "Covered employer reporting procedures",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Reasonable actual reporting procedure, worker information and non-retaliation practice.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1904/1904.35"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC01",
+          "lessonTitle": "Worker responsibilities, speaking up, and reliable communication"
+        },
+        {
+          "lessonId": "ESC10",
+          "lessonTitle": "Organizational safety, personal readiness, and integrated jobsite decisions"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_02",
+      "citation": "OSH Act sections 5 and 11(c)",
+      "topic": "Duties, protected reporting and worker rights",
+      "lessonIds": [
+        "ESC01"
+      ],
+      "appliesTo": "Workers and covered employers; refusal rights have specific conditions",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual complaint/reporting access and employer training; no unconditional legal right to refuse every disputed task is asserted.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/workers"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC01",
+          "lessonTitle": "Worker responsibilities, speaking up, and reliable communication"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_03",
+      "citation": "1926.21(b)(2)-(5)",
+      "topic": "Construction hazard recognition and education",
+      "lessonIds": [
+        "ESC02",
+        "ESC05",
+        "ESC06"
+      ],
+      "appliesTo": "Employees doing covered construction work",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Instruction on actual site conditions, harmful substances, plants/animals and flammable/toxic materials; task applicability.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.21"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC02",
+          "lessonTitle": "Hazard recognition, job analysis, and critical control verification"
+        },
+        {
+          "lessonId": "ESC05",
+          "lessonTitle": "Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
+        },
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_04",
+      "citation": "1926.20(b)",
+      "topic": "Construction safety program and inspections",
+      "lessonIds": [
+        "ESC02",
+        "ESC10"
+      ],
+      "appliesTo": "Construction employer and designated competent personnel",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual accident-prevention program, regular inspections and assigned competent-person capability.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.20"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC02",
+          "lessonTitle": "Hazard recognition, job analysis, and critical control verification"
+        },
+        {
+          "lessonId": "ESC10",
+          "lessonTitle": "Organizational safety, personal readiness, and integrated jobsite decisions"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_05",
+      "citation": "1910.119(g),(h)",
+      "topic": "Process safety training and contractor interface",
+      "lessonIds": [
+        "ESC03",
+        "ESC10"
+      ],
+      "appliesTo": "Covered processes and employees/contractors performing covered duties; determine exclusions under (a)(2), including oil/gas well drilling/servicing and normally unoccupied remote facilities",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Covered-process determination, operating/emergency procedures, contractor hazard information, understanding records and required refresher evaluation.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC03",
+          "lessonTitle": "Permits, simultaneous operations, and hazardous energy boundaries"
+        },
+        {
+          "lessonId": "ESC10",
+          "lessonTitle": "Organizational safety, personal readiness, and integrated jobsite decisions"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_06",
+      "citation": "1910.147(c)(7)",
+      "topic": "Authorized, affected and other employee energy training",
+      "lessonIds": [
+        "ESC03"
+      ],
+      "appliesTo": "Covered general-industry servicing; this standard excludes construction and oil/gas well drilling and servicing",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Equipment-specific procedures, assigned role training, isolation skills, retraining and employer certification; determine the correct regime for excluded activities.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC03",
+          "lessonTitle": "Permits, simultaneous operations, and hazardous energy boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_07",
+      "citation": "1926.417",
+      "topic": "Construction circuit controls",
+      "lessonIds": [
+        "ESC03"
+      ],
+      "appliesTo": "Construction electrical circuit work",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual circuit identification, de-energization/lock/tag controls and qualified role procedures.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.417"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC03",
+          "lessonTitle": "Permits, simultaneous operations, and hazardous energy boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_08",
+      "citation": "1910.332(b)",
+      "topic": "Electrical qualified/nonqualified instruction",
+      "lessonIds": [
+        "ESC03"
+      ],
+      "appliesTo": "Employees facing electrical risk within this standard scope",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual job risks and qualified-person knowledge/skills; this core does not establish qualified electrical status.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.332"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC03",
+          "lessonTitle": "Permits, simultaneous operations, and hazardous energy boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_09",
+      "citation": "1910.333",
+      "topic": "Electrical work practices",
+      "lessonIds": [
+        "ESC03"
+      ],
+      "appliesTo": "Covered electrical work",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Qualified assessment of electrical hazards, de-energization verification, applicable procedures and equipment.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC03",
+          "lessonTitle": "Permits, simultaneous operations, and hazardous energy boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_10",
+      "citation": "1910.335",
+      "topic": "Electrical protective equipment and safeguards",
+      "lessonIds": [
+        "ESC03",
+        "ESC08"
+      ],
+      "appliesTo": "Electrical exposure work",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Task-appropriate protective equipment, inspection and use skills; no universal arc-flash rating supplied.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.335"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC03",
+          "lessonTitle": "Permits, simultaneous operations, and hazardous energy boundaries"
+        },
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_11",
+      "citation": "1910.146(g),(k)",
+      "topic": "Permit-space duties and rescue",
+      "lessonIds": [
+        "ESC04",
+        "ESC09"
+      ],
+      "appliesTo": "Covered general-industry permit spaces",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual spaces, permit program, entrant/attendant/supervisor training certification, rescue capability, practice and required medical/first-aid capability.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_12",
+      "citation": "1926.1207",
+      "topic": "Construction confined-space training",
+      "lessonIds": [
+        "ESC04",
+        "ESC09"
+      ],
+      "appliesTo": "Covered construction spaces and assigned personnel",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Understandable actual duty training and proficiency records; entry and rescue arrangements under construction rules.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1207"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_13",
+      "citation": "1910.252",
+      "topic": "Welding and cutting fire/exposure controls",
+      "lessonIds": [
+        "ESC04"
+      ],
+      "appliesTo": "Covered general-industry hot work",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual combustibles, atmosphere, ventilation, fire prevention/watch and equipment-specific welding/cutting instruction.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.252"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_14",
+      "citation": "1926.350-.354",
+      "topic": "Construction welding and cutting",
+      "lessonIds": [
+        "ESC04"
+      ],
+      "appliesTo": "Construction welding, cutting and related operations",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual cylinders, equipment, fire protection, ventilation and coating exposure controls; trained designated roles.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.352"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_15",
+      "citation": "1910.30(a),(b)",
+      "topic": "Fall and equipment training",
+      "lessonIds": [
+        "ESC04",
+        "ESC08"
+      ],
+      "appliesTo": "Employees exposed to covered general-industry falls/equipment",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Qualified-person training for actual hazards, protection systems, use/inspection and retraining triggers.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.30"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_16",
+      "citation": "1910.28-.29",
+      "topic": "General-industry fall systems",
+      "lessonIds": [
+        "ESC04",
+        "ESC08"
+      ],
+      "appliesTo": "Actual general-industry fall exposures",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Correct system selection, competent installation, safe access, actual fall protection and rescue.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.28"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_17",
+      "citation": "1926.503",
+      "topic": "Construction fall training",
+      "lessonIds": [
+        "ESC04"
+      ],
+      "appliesTo": "Construction workers exposed to fall hazards",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Competent-person instruction, actual system limitations/use and written training certification.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.503"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_18",
+      "citation": "1926.454",
+      "topic": "Scaffold training",
+      "lessonIds": [
+        "ESC04"
+      ],
+      "appliesTo": "Scaffold users and persons erecting/dismantling/altering scaffolds",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Role-specific qualified/competent-person training, scaffold hazard instruction and actual task skills.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.454"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_19",
+      "citation": "1926.651-.652",
+      "topic": "Excavation inspection and protection",
+      "lessonIds": [
+        "ESC04"
+      ],
+      "appliesTo": "Construction excavation/trench work",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Competent-person inspections, utility assessment, applicable protective system/access and actual changing-condition evaluation.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_20",
+      "citation": "1910.179,1910.184",
+      "topic": "Hoists, overhead cranes and slings",
+      "lessonIds": [
+        "ESC04"
+      ],
+      "appliesTo": "Actual lifting equipment and assigned general-industry roles",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Equipment inspection, load/rigging planning and applicable operator/rigger capability and authorization.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.184"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_21",
+      "citation": "1926.1427",
+      "topic": "Construction crane operators",
+      "lessonIds": [
+        "ESC04",
+        "ESC07"
+      ],
+      "appliesTo": "Operators of equipment covered by construction crane rules",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Applicable operator certification/licensing, training and employer evaluation; no replacement by core exam.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC07",
+          "lessonTitle": "Journey management, driving, and mobile-equipment interfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_22",
+      "citation": "1926.1428,1926.1430",
+      "topic": "Signalpersons and crane-related training",
+      "lessonIds": [
+        "ESC04"
+      ],
+      "appliesTo": "Assigned signalpersons, riggers and affected construction crane workers",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Role-specific qualification documentation and required training/demonstration.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1430"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_23",
+      "citation": "1910.1200(h)",
+      "topic": "Workplace Hazard Communication",
+      "lessonIds": [
+        "ESC05"
+      ],
+      "appliesTo": "Employees exposed to hazardous workplace chemicals",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual chemical hazards, labels/SDS access, detection methods, program location, protective measures and understandable initial/new-hazard instruction.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC05",
+          "lessonTitle": "Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_24",
+      "citation": "1926.59",
+      "topic": "Construction Hazard Communication",
+      "lessonIds": [
+        "ESC05"
+      ],
+      "appliesTo": "Construction chemical exposures",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Apply the incorporated HazCom requirements to actual materials and workplace arrangements.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.59"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC05",
+          "lessonTitle": "Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_25",
+      "citation": "1910.134(k)",
+      "topic": "Respirator training and program",
+      "lessonIds": [
+        "ESC05"
+      ],
+      "appliesTo": "Required respirator users and applicable voluntary-use arrangements",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual respirator selection, medical evaluation, fit testing when required, use/care instruction, annual retraining and program evaluation.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC05",
+          "lessonTitle": "Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_26",
+      "citation": "1910.1000",
+      "topic": "Air contaminants and exposure controls",
+      "lessonIds": [
+        "ESC05",
+        "ESC06"
+      ],
+      "appliesTo": "Covered airborne exposures",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual exposure assessment, applicable limits, engineering/work-practice controls and verification; no guessed safe concentration.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1000"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC05",
+          "lessonTitle": "Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
+        },
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_27",
+      "citation": "1910.1053(j)",
+      "topic": "General-industry silica information/training",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Workers under covered respirable crystalline silica exposure",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Task exposure assessment, written control plan, competent implementation, respiratory/medical measures and actual hazard training.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1053"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_28",
+      "citation": "1926.1153(i)",
+      "topic": "Construction silica information/training",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Covered construction silica work",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual task/Table1 or assessment route, competent person, controls, respiratory measures and medical arrangements as applicable.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1153"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_29",
+      "citation": "1910.1001(j)",
+      "topic": "General-industry asbestos information/training",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Covered asbestos work/exposure",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Material identification, actual exposure class/task, required specialized instruction and medical/control arrangements.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1001"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_30",
+      "citation": "1926.1101(k)(9)",
+      "topic": "Construction asbestos training",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Covered asbestos construction work and exposure classes",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Exact work class, required licensed/accredited instruction where applicable and observed actual task competence.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1101"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_31",
+      "citation": "1910.1025(l)",
+      "topic": "General-industry lead information/training",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Covered lead exposure",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual lead risk, exposure monitoring, controls, hygiene and medical surveillance/removal arrangements as applicable.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1025"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_32",
+      "citation": "1926.62(l)",
+      "topic": "Construction lead training",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Covered construction lead exposure",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Task/material exposure assessment, applicable initial protection, program and specialized instruction.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.62"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_33",
+      "citation": "1910.1026(l)",
+      "topic": "Hexavalent chromium",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Covered chromium exposure including relevant welding/coating tasks",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual material/exposure identification, controls and required hazard communication and medical measures.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1026"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_34",
+      "citation": "1910.95(k)",
+      "topic": "Hearing conservation",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Employees in applicable hearing-conservation program; (o) excludes oil/gas well drilling and servicing from (c)-(n), but applicable noise protection and other duties still require evaluation",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual noise assessment, suitable protection and use training, audiometry, annual instruction and records.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.95"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_35",
+      "citation": "1910.1030(g)(2)",
+      "topic": "Bloodborne-pathogen information/training",
+      "lessonIds": [
+        "ESC06",
+        "ESC09"
+      ],
+      "appliesTo": "Occupational exposure roles, not automatically every employee",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Interactive accessible initial/annual role training, actual exposure-control plan, vaccine offer, PPE and confidential post-exposure process.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        },
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_36",
+      "citation": "1910.1020(g)",
+      "topic": "Access to exposure/medical records",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Employees subject to covered records",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual employer records access notice/procedure, required availability and privacy-preserving record handling.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1020"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_37",
+      "citation": "1910.1096(i)",
+      "topic": "Ionizing radiation instruction",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Covered radiation exposure roles",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual radiation program, dosimetry/areas and specialized instruction; NORM awareness is not source-handling authorization.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1096"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_38",
+      "citation": "General Duty Clause / state heat rules",
+      "topic": "Heat, cold and severe weather",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "appliesTo": "Actual climate/workload; state-plan obligations may exceed federal rules",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Site prevention/acclimatization, water/rest/shade/cooling, emergency arrangements and applicable state requirements. Federal heat rulemaking is not treated as a final universal rule.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/heat-exposure"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_39",
+      "citation": "1910.141",
+      "topic": "Sanitation and hygiene",
+      "lessonIds": [
+        "ESC06",
+        "ESC10"
+      ],
+      "appliesTo": "Covered workplaces",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual potable water, washing, sanitation and hygiene facilities/arrangements.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.141"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        },
+        {
+          "lessonId": "ESC10",
+          "lessonTitle": "Organizational safety, personal readiness, and integrated jobsite decisions"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_40",
+      "citation": "1910.178(l)",
+      "topic": "Powered industrial trucks",
+      "lessonIds": [
+        "ESC07"
+      ],
+      "appliesTo": "Assigned forklift/PIT operators in covered workplaces",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Formal instruction plus trainer demonstration, trainee practical exercises, workplace evaluation, employer certification and required reevaluation/refresher.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC07",
+          "lessonTitle": "Journey management, driving, and mobile-equipment interfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_41",
+      "citation": "1926.602(d)",
+      "topic": "Construction PIT operators",
+      "lessonIds": [
+        "ESC07"
+      ],
+      "appliesTo": "Covered construction PIT operation",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Applicable incorporated operator training and evaluation for actual trucks and workplace.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.602"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC07",
+          "lessonTitle": "Journey management, driving, and mobile-equipment interfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_42",
+      "citation": "1926.601(b)",
+      "topic": "Construction motor vehicles",
+      "lessonIds": [
+        "ESC07"
+      ],
+      "appliesTo": "Vehicles within construction motor-vehicle scope",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual equipment inspection, passenger/driver/visibility controls and applicable job instructions; on-road DOT rules are separate.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.601"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC07",
+          "lessonTitle": "Journey management, driving, and mobile-equipment interfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_43",
+      "citation": "1926.201(a)",
+      "topic": "Construction signaling",
+      "lessonIds": [
+        "ESC07"
+      ],
+      "appliesTo": "Workers controlling covered construction traffic",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual flagging/signaling arrangements, training and applicable traffic-control standards.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.201"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC07",
+          "lessonTitle": "Journey management, driving, and mobile-equipment interfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_44",
+      "citation": "1910.132(f)",
+      "topic": "PPE understanding and ability",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "appliesTo": "Employees required to use PPE",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Hazard assessment and selection, fit/use/limitations/care instruction, demonstration of understanding/ability, retraining when needed.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.132"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_45",
+      "citation": "1910.133-.138",
+      "topic": "Task-specific PPE",
+      "lessonIds": [
+        "ESC05",
+        "ESC08"
+      ],
+      "appliesTo": "Applicable eye/face/head/foot/electrical/hand/respiratory exposures",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual selected protective equipment and task-specific competence; generic PPE receipt is insufficient.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.133"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC05",
+          "lessonTitle": "Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
+        },
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_46",
+      "citation": "1926.95-.106",
+      "topic": "Construction PPE",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "appliesTo": "Applicable construction personal protection including water exposure",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual suitable fitting equipment, task instruction and applicable lifesaving arrangements.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.95"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_47",
+      "citation": "1910.212",
+      "topic": "Machine guarding",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "appliesTo": "Covered machinery exposure",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual guarding/hazard assessment, safe methods, maintenance and authorized personnel; no improvised bypass.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.212"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_48",
+      "citation": "1910.215",
+      "topic": "Abrasive wheels",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "appliesTo": "Abrasive-wheel machinery/tasks",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Correct actual wheel/machine compatibility, guards, inspection, setup and trained operator practices.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.215"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_49",
+      "citation": "1910.242-.243",
+      "topic": "Hand/portable powered tools",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "appliesTo": "Applicable hand/powered tool use",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual tool condition, guards, source energy, intended use, exposure controls and task instruction.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.243"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_50",
+      "citation": "1926.300-.307",
+      "topic": "Construction tools",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "appliesTo": "Applicable construction tool operations",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual tool-specific instruction, guards, protective equipment, qualified operation where required.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.300"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_51",
+      "citation": "1910.22-.23",
+      "topic": "Walking surfaces and ladders",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "appliesTo": "Covered general-industry walking surfaces/ladders",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual inspections, safe condition, load/access suitability and use instruction.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.23"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_52",
+      "citation": "1926.1060",
+      "topic": "Construction stairway/ladder training",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "appliesTo": "Construction employees using covered stairs/ladders",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Competent-person instruction on actual fall hazards, correct use, placement and limitations.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1060"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_53",
+      "citation": "1910.38(e),(f)",
+      "topic": "Emergency action plan review",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "appliesTo": "Workplaces requiring an emergency action plan under applicable standards",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual alarm/reporting/evacuation/accountability procedures, designated evacuation assistants and review at assignment/change.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.38"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_54",
+      "citation": "1910.39(d)",
+      "topic": "Fire-prevention plan information",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "appliesTo": "Workplaces requiring a fire-prevention plan",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual fire hazards and the assigned duties in the workplace plan.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.39"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_55",
+      "citation": "1910.36-.37",
+      "topic": "Exit routes",
+      "lessonIds": [
+        "ESC08",
+        "ESC09"
+      ],
+      "appliesTo": "Applicable workplaces",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual clear, suitable exit routes, maintenance, signs and emergency safeguards.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.37"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC08",
+          "lessonTitle": "Tools, guarding, PPE, and walking-working surfaces"
+        },
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_56",
+      "citation": "1910.157(g)",
+      "topic": "Extinguisher education and designated-user training",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "appliesTo": "Depending on employer extinguisher-use/evacuation policy",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual policy determines education/training and annual duties; designated-user instruction and safe demonstration as required by task.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_57",
+      "citation": "1910.151",
+      "topic": "Medical services and first aid",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "appliesTo": "Actual workplace medical/first-aid arrangements",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Suitable availability and trained first aiders when required; corrosive exposure flushing facilities; recognized practical first-aid/CPR training separately.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.151"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_58",
+      "citation": "1926.50",
+      "topic": "Construction medical/first aid",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "appliesTo": "Construction workplace arrangements",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual response arrangements, first-aid personnel/certificates where required, supplies and emergency communication.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.50"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_59",
+      "citation": "1910.120(e),(q)(6)",
+      "topic": "Hazardous waste and emergency-response roles",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "appliesTo": "Only applicable operations and assigned response levels",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Correct role/operation classification, specified training/hours/field experience, annual competencies and employer certification; this core is not HAZWOPER qualification.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_60",
+      "citation": "1926.65",
+      "topic": "Construction hazardous waste/emergency response",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "appliesTo": "Covered construction hazardous-waste/response activities",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual applicable HAZWOPER arrangements, role-specific instruction, field experience and certification.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.65"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_61",
+      "citation": "1910.106,1910.101",
+      "topic": "Flammable and compressed materials",
+      "lessonIds": [
+        "ESC04",
+        "ESC05",
+        "ESC09"
+      ],
+      "appliesTo": "Actual flammable-liquid or compressed-gas duties",
+      "coreCoverage": "Knowledge and scenario decisions only",
+      "remainingEmployerEvidence": "Actual storage/handling/process instructions, equipment compatibility, fire and pressure controls.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.106"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC05",
+          "lessonTitle": "Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
+        },
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_62",
+      "citation": "1910.109",
+      "topic": "Explosives",
+      "lessonIds": [
+        "ESC04",
+        "ESC10"
+      ],
+      "appliesTo": "Actual explosives handling/use",
+      "coreCoverage": "Scope boundary and referral only; specialist instruction and qualification are not delivered by this core",
+      "remainingEmployerEvidence": "Specialist licensing/qualification, storage and operational procedures; core awareness grants no explosives authority.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.109"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC10",
+          "lessonTitle": "Organizational safety, personal readiness, and integrated jobsite decisions"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_63",
+      "citation": "1910.269 / 1926 Subpart V",
+      "topic": "Electric power work",
+      "lessonIds": [
+        "ESC03"
+      ],
+      "appliesTo": "Covered generation/transmission/distribution or construction power work",
+      "coreCoverage": "Scope boundary and referral only; specialist instruction and qualification are not delivered by this core",
+      "remainingEmployerEvidence": "Specialized job/role training and demonstrated proficiency in the applicable power-work regime.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.269"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC03",
+          "lessonTitle": "Permits, simultaneous operations, and hazardous energy boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_64",
+      "citation": "1910 Subpart T",
+      "topic": "Commercial diving",
+      "lessonIds": [
+        "ESC04",
+        "ESC09"
+      ],
+      "appliesTo": "Actual covered commercial diving",
+      "coreCoverage": "Scope boundary and referral only; specialist instruction and qualification are not delivered by this core",
+      "remainingEmployerEvidence": "Qualified dive team, safe-practices manual and actual medical/equipment/emergency competence; no core diving credential.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.410"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_65",
+      "citation": "1915 / 1917 / 1918",
+      "topic": "Maritime work regimes",
+      "lessonIds": [
+        "ESC04",
+        "ESC09"
+      ],
+      "appliesTo": "Actual shipyard/marine-terminal/longshoring work; identify correct jurisdiction",
+      "coreCoverage": "Scope boundary and referral only; specialist instruction and qualification are not delivered by this core",
+      "remainingEmployerEvidence": "Separate current maritime duty-by-duty review and specialist training; neither SafeGulf nor maritime competence claimed by this onshore core.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/maritime/standards"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_66",
+      "citation": "1928",
+      "topic": "Agricultural work regime",
+      "lessonIds": [
+        "ESC02",
+        "ESC07"
+      ],
+      "appliesTo": "Actual covered agriculture rather than assumed oilfield classification",
+      "coreCoverage": "Scope boundary and referral only; specialist instruction and qualification are not delivered by this core",
+      "remainingEmployerEvidence": "Separate agriculture applicability review and equipment/task instruction when the service actually enters this scope.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1928"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC02",
+          "lessonTitle": "Hazard recognition, job analysis, and critical control verification"
+        },
+        {
+          "lessonId": "ESC07",
+          "lessonTitle": "Journey management, driving, and mobile-equipment interfaces"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_67",
+      "citation": "OSHA State Plans",
+      "topic": "State-specific requirements",
+      "lessonIds": [
+        "ESC01",
+        "ESC06"
+      ],
+      "appliesTo": "The worker’s actual state, industry and coverage",
+      "coreCoverage": "Scope boundary and referral only; specialist instruction and qualification are not delivered by this core",
+      "remainingEmployerEvidence": "Jurisdiction review, additional heat/violence/other training requirements and approved state rules; no national blanket completion.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/stateplans"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC01",
+          "lessonTitle": "Worker responsibilities, speaking up, and reliable communication"
+        },
+        {
+          "lessonId": "ESC06",
+          "lessonTitle": "Occupational health, exposure prevention, and worker hygiene"
+        }
+      ],
+      "automaticallySatisfied": false
+    },
+    {
+      "id": "OSHA_68",
+      "citation": "Non-OSHA authorities",
+      "topic": "Transport, offshore, mine, aviation and licensed duties",
+      "lessonIds": [
+        "ESC04",
+        "ESC07",
+        "ESC09"
+      ],
+      "appliesTo": "Actual DOT/PHMSA/FMCSA/BSEE/USCG/MSHA/FAA and licensed work",
+      "coreCoverage": "Scope boundary and referral only; specialist instruction and qualification are not delivered by this core",
+      "remainingEmployerEvidence": "Separate regulator/operator requirements, licenses, OQ, H2S specialty standards and accredited courses as actually required.",
+      "practicalStatus": "Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them",
+      "status": "Employer applicability and independent review remain open",
+      "sourceUrls": [
+        "https://www.osha.gov/oil-and-gas-extraction/standards"
+      ],
+      "knowledgeEvidence": [
+        {
+          "lessonId": "ESC04",
+          "lessonTitle": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+        },
+        {
+          "lessonId": "ESC07",
+          "lessonTitle": "Journey management, driving, and mobile-equipment interfaces"
+        },
+        {
+          "lessonId": "ESC09",
+          "lessonTitle": "Emergency action, first aid, fire, and spill boundaries"
+        }
+      ],
+      "automaticallySatisfied": false
+    }
+  ]
+}

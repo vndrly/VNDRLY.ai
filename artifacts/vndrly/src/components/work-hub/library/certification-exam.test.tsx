@@ -1,0 +1,20 @@
+import React from 'react';
+import {it,expect,vi,afterEach} from 'vitest';
+import {render,screen,fireEvent,cleanup,waitFor} from '@testing-library/react';
+import CertificationExam from './certification-exam';
+vi.mock('@/components/brand-pill-button',()=>({default:({children,tone,...props}:any)=><button {...props}>{children}</button>}));
+afterEach(cleanup);
+const base:any={assignment:{status:'completed',progress:{}},certificationExam:{questionCount:1,passingPercent:80,maximumAttempts:100,attempt:null,questions:[],review:[]}};
+it('starts only after learning and submits explicitly without revealing answers',async()=>{
+ const send=vi.fn().mockResolvedValue({});const {rerender}=render(<CertificationExam data={{...base,assignment:{...base.assignment,status:'in_progress'}}} busy={false} uncertain={false} send={send}/>);
+ expect(screen.queryByRole('button',{name:'Start certification exam'})).toBeNull();
+ rerender(<CertificationExam data={base} busy={false} uncertain={false} send={send}/>);fireEvent.click(screen.getByRole('button',{name:'Start certification exam'}));await waitFor(()=>expect(send).toHaveBeenCalledWith({action:'exam_start'}));
+ const attempt={id:'attempt',questionIds:['q'],answers:{},submittedAt:null};
+ const data={...base,certificationExam:{...base.certificationExam,attempt,questions:[{id:'q',prompt:'Choose',options:[{id:'a',label:'Verify'},{id:'b',label:'Assume'}],multiple:false}]}};
+ rerender(<CertificationExam data={data} busy={false} uncertain={false} send={send}/>);
+ expect((screen.getByRole('button',{name:'Submit certification exam'}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(screen.getByLabelText('Verify'));await waitFor(()=>expect(send).toHaveBeenCalledWith({action:'exam_answer',attemptId:'attempt',questionId:'q',optionIds:['a']}));
+ expect(screen.queryByText(/Correct answer:/)).toBeNull();
+ rerender(<CertificationExam data={{...data,certificationExam:{...data.certificationExam,attempt:{...attempt,answers:{q:['a']}}}}} busy={false} uncertain={false} send={send}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Submit certification exam'}));await waitFor(()=>expect(send).toHaveBeenCalledWith({action:'exam_submit',attemptId:'attempt'}));
+});

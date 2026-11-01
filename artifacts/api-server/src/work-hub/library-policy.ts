@@ -13,10 +13,11 @@ export function assignmentDeadline(
   return new Date(now.getTime() + hours * 3600000);
 }
 export function publicTraining<
-  T extends { questions: { correctOptionIds: string[] }[]; guided?: {steps: unknown; explanations:unknown} },
+  T extends { questions: { correctOptionIds: string[] }[]; guided?: {steps: unknown; explanations:unknown}; certificationExam?: {questionCount:number;passingPercent:number;maximumAttempts:number} },
 >(training: T) {
   return {
     ...training,
+    ...(training.certificationExam ? {certificationExam:{questionCount:training.certificationExam.questionCount,passingPercent:training.certificationExam.passingPercent,maximumAttempts:training.certificationExam.maximumAttempts}} : {}),
     ...(training.guided ? {guided:{steps:training.guided.steps}} : {}),
     questions: training.questions.map(
       ({ correctOptionIds: _, ...question }) => question,

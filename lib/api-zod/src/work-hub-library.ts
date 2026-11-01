@@ -56,8 +56,33 @@ export const GuidedTrainingProgressSchema = z.object({
   responses: z.record(key, z.object({ originalOptionIds: z.array(key), correctedOptionIds: z.array(key), correct: z.boolean(), answeredAt: z.iso.datetime(), remediatedAt: z.iso.datetime().nullable() })).default({}),
   scores: z.object({ total: z.number(), originalCorrect: z.number(), remediatedCorrect: z.number(), originalPercent: z.number(), remediatedPercent: z.number(), remediationCount: z.number() }).nullable().default(null),
 });
+export const CertificationExamDefinitionSchema = z.object({
+  questions: z.array(TrainingQuestionSchema.and(z.object({domainId:key, explanation:z.string().min(1).max(4000)}))).min(1).max(300),
+  questionCount:z.number().int().min(1).max(200),
+  questionsPerDomain:z.number().int().min(1).max(30).optional(),
+  passingPercent:z.number().min(1).max(100).default(80),
+  maximumAttempts:z.number().int().min(1).max(100).default(100),
+}).superRefine((d,c)=>{
+  const domains=[...new Set(d.questions.map(q=>q.domainId))];
+  if(new Set(d.questions.map(q=>q.id)).size!==d.questions.length||d.questionCount>d.questions.length||
+    (d.questionsPerDomain&&(domains.length*d.questionsPerDomain!==d.questionCount||domains.some(id=>d.questions.filter(q=>q.domainId===id).length<d.questionsPerDomain!))))
+    c.addIssue({code:'custom',message:'Exam bank requires unique IDs and enough questions for the configured balanced draw'});
+});
+export const CertificationExamAttemptSchema=z.object({
+ credential:z.object({courseSha256:z.string().regex(/^[a-f0-9]{64}$/),contentVersion:z.number().int().positive(),familyId:z.literal('G99')}).optional(),
+ id:z.uuid(),startedAt:z.iso.datetime(),submittedAt:z.iso.datetime().nullable(),questionIds:z.array(key),
+ answers:z.record(key,z.array(key)),score:z.number().nullable(),correctCount:z.number().int().nullable(),passed:z.boolean().nullable(),
+});
+export const CertificationExamProgressSchema=z.object({attempts:z.array(CertificationExamAttemptSchema).max(100).default([])});
+export const EmployeeExamQuestionSchema=z.object({id:key,prompt:z.string(),options:z.array(LibraryOptionSchema),multiple:z.boolean(),domainId:key});
+export const CertificationExamReadSchema=z.object({
+ questionCount:z.number(),passingPercent:z.number(),maximumAttempts:z.number(),
+ attempt:CertificationExamAttemptSchema.nullable(),questions:z.array(EmployeeExamQuestionSchema),
+ review:z.array(z.object({questionId:key,correctOptionIds:z.array(key),explanation:z.string()})).default([]),
+});
 export const TrainingDefinitionSchema = z
   .object({
+    certificationExam: CertificationExamDefinitionSchema.optional(),
     guided: z.object({ steps: GuidedTrainingStepsSchema, explanations: z.record(key,z.string().min(1).max(4000)) }).optional(),
     lessons: z.array(TrainingLessonSchema).max(50).default([]),
     completionMode: z.enum(["checkoff", "quiz", "both"]).default("both"),
@@ -297,6 +322,7 @@ export const AssignmentMetadataSchema = z.object({
       lessonIds: z.array(key).default([]),
       answers: z.record(key, z.array(key)).default({}),
       guided: GuidedTrainingProgressSchema.optional(),
+      certificationExam: CertificationExamProgressSchema.optional(),
     })
     .default({ lessonIds: [], answers: {} }),
   attemptResetAt: z.iso.datetime().nullable().default(null),
@@ -312,6 +338,7 @@ export type TrainingDefinition = z.infer<typeof TrainingDefinitionSchema>;
 
 // Employee contracts explicitly exclude author answer keys and private object locators.
 export const EmployeeTrainingSchema = z.object({
+  certificationExam:z.object({questionCount:z.number(),passingPercent:z.number(),maximumAttempts:z.number()}).optional(),
   guided: z.object({ steps: GuidedTrainingStepsSchema }).optional(),
   lessons: z.array(TrainingLessonSchema),
   completionMode: z.enum(["checkoff", "quiz", "both"]),
@@ -329,6 +356,7 @@ export const EmployeeTrainingSchema = z.object({
   refresherDays: z.number().nullable(),
 });
 export const AssignedLibraryReadSchema = z.object({
+  certificationExam:CertificationExamReadSchema.nullable().optional(),
   guidedFeedback: z.object({questionId:key,correctOptionIds:z.array(key),explanation:z.string()}).nullable().optional(),
   instanceId: z.uuid(),
   title: z.string(),
@@ -377,3 +405,5 @@ export const AssignedLibraryReadSchema = z.object({
 export type AssignedLibraryRead = z.infer<typeof AssignedLibraryReadSchema>;
 
 export const LibraryEntryNoticeSchema=z.object({present:z.array(z.object({instanceId:z.uuid(),title:z.string(),kind:z.string(),assignment:z.object({version:z.number().int().nonnegative()})}))});
+
+

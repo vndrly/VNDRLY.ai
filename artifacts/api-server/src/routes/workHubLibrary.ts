@@ -27,6 +27,7 @@ import {
   resetTrainingAttempts,
   assignedLibraryFile,
   submitGuidedTraining,
+  personalEnergySafetyCredentials,
 } from "../work-hub/training-service";
 import {
   ensureOnboarding,
@@ -67,6 +68,7 @@ function handle(run: (r: Request, a: LibraryActor) => Promise<unknown>) {
     }
   };
 }
+router.get('/work-hub/library/personal-energy-safety-credentials',handle((_r,a)=>personalEnergySafetyCredentials(a)));
 router.get(
   "/work-hub/library",
   handle((r, a) =>

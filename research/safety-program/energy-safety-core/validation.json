@@ -1,0 +1,17 @@
+{
+  "courseId": "G99",
+  "instructionWords": 16411,
+  "chapters": 10,
+  "sections": 14,
+  "workedScenarios": 22,
+  "learningChecks": 48,
+  "examBank": 74,
+  "examQuestions": 40,
+  "examDomains": 10,
+  "benchmarkObjectives": 42,
+  "oshaRows": 68,
+  "openReviewItems": 9,
+  "preservedCourses": 116,
+  "sourceSha256": "92dbe93c3eea0410c4cf3a432cfc7812f5d47dd29e139d03d3adb6a67b8eba14",
+  "contentSha256": "331592924da191bd603d0a3083468e9e430ff3dce3d709d39dd32959ff597bf2"
+}

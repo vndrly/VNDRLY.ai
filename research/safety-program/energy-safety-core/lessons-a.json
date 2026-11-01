@@ -1,0 +1,627 @@
+[
+  {
+    "id": "ESC01",
+    "title": "Worker responsibilities, speaking up, and reliable communication",
+    "objectives": [
+      "Explain the difference between employer duties, worker responsibilities, and site stop-work arrangements.",
+      "Use a specific stop-work message, protect people, and confirm conditions before an authorized restart.",
+      "Report injuries, near misses, and uncertainty without guessing at causes or assigning blame.",
+      "Recognize human performance pressures and use closed-loop communication during handoffs."
+    ],
+    "body": "Purpose and boundaries\nThis lesson teaches the decisions every worker can make before specialized work begins. Completion does not appoint you as a supervisor, qualified electrician, rescuer, or permit issuer. Your employer must establish the procedures, training, equipment, and supervision for your actual assignment. Know who controls your work, who operates the facility, how to contact emergency assistance, and where to assemble. If these answers are missing, resolve them before entering the work area. A badge, induction card, or course score cannot establish that a particular task is safe today.\n\nEmployers and workers have different responsibilities\nOSHA's worker-rights guidance describes employer responsibilities for a safe workplace, understandable training, and required protective equipment. Workers contribute by following applicable procedures, using provided protection correctly, reporting hazards promptly, and staying within their training and authorization. Do not accept a hazardous shortcut simply because a contractor, customer, or experienced coworker requests it. Multiple employers may be present; identify both your own supervisor and the person coordinating the site. General industry requirements in 29 CFR 1910 and construction requirements in 29 CFR 1926 depend on the work and circumstances. A worker should raise a concern rather than try to resolve legal applicability at the point of exposure.\n\nSpeak up with observable facts\nA useful concern has four parts: the location, what you observed, who could be exposed, and what needs to pause. For example: “Stop the lift. A delivery driver is inside the marked landing area behind the east skid. Keep the load stationary in a safe condition and clear that area before the lift supervisor authorizes movement.” Compare this with “Be careful over there,” which does not identify an action or a person. If you cannot safely approach, use the established radio channel or alarm method. Do not step into the hazard to deliver a better explanation. Ask for acknowledgment and confirm that the message reached the people controlling the work.\n\nStop-work is a process\nLearn the site's stop-work policy before the shift. When danger or uncertainty appears, pause your own exposed activity, alert those affected, and move to a safe position without creating another exposure. A sudden shutdown may itself release energy or remove ventilation; use the applicable emergency or controlled-stop procedure and trained operator. State what you know and what you do not know. Notify the responsible supervisor, preserve the area where safe, and have the controlling person evaluate the condition. Restart requires the hazard to be corrected or controlled, affected workers briefed, and required permits or authorizations renewed. The person who first spoke up should hear how the concern was resolved. Silence after a pause is not restart permission.\n\nUnderstand the legal limit separately\nA company's stop-work policy can be broader than the legal protection for refusing dangerous work. OSHA's right-to-refuse guidance describes specific conditions: a good-faith belief of imminent danger, a reasonable person's agreement that serious injury or death is a real danger, insufficient time for normal enforcement channels, and, where possible, a request that the employer correct the condition. OSHA recommends seeking correction, requesting other work, and remaining at the worksite unless ordered to leave. Do not promise that every refusal under every circumstance has identical legal protection. Workers may report hazards to OSHA and raise retaliation concerns; federal OSH Act section 11(c) complaints generally have a 30-day filing period. State-plan processes and other laws can differ. Contact OSHA promptly about the applicable process rather than delaying while seeking certainty from coworkers.\n\nHuman performance affects good people\nA capable person can make a mistake when the task is unfamiliar, interruptions are frequent, labels are similar, or the schedule discourages questions. Fatigue can slow recognition and increase reliance on habit. Familiarity can make a missing barrier seem normal. A production target can turn “just this once” into an accepted routine. Treat these as signals to strengthen the work process, not as proof that a worker is careless. Before a consequential action, stop, identify the exact equipment, compare it with the instruction, and confirm the expected result. If the instruction does not match the field, do not improvise a correction from memory. Obtain clarification and update the work plan through the responsible person.\n\nBehavior-based safety and human performance\nBehavior-based safety uses agreed observations of work, respectful feedback, and follow-up to reinforce safe actions and identify obstacles. For example, observing that workers step over a hose should prompt discussion of the route, staging space, and practical alternatives, not a competition to count unsafe people. Human performance also examines how task design, information, fatigue, competing goals, and organizational conditions shape actions. Together these approaches can reveal why a method is difficult to follow and support stronger defenses. Neither makes observation a replacement for engineering controls, nor makes the nearest worker the automatic cause of an incident. Use observations to ask questions, correct immediate exposure, and improve the work system.\n\nCommunicate so the receiver can verify\nUse equipment identifiers and locations rather than “that valve” or “the usual pump.” In closed-loop communication, the sender gives the instruction, the receiver repeats the critical details, and the sender confirms or corrects them. For example, “Hold vehicle entry at Gate Two” is repeated as “Gate Two entry held,” followed by confirmation. Poor reception, language differences, hearing protection, and simultaneous radio traffic can defeat a message. Stop movement if a critical instruction is uncertain. Agree on the communication method and loss-of-communication response before work. During shift handover, transfer outstanding hazards, isolation status, incomplete permits, abnormal conditions, and who currently holds responsibility. A signature alone does not demonstrate understanding.\n\nReport to learn and protect\nReport an injury or illness through the employer's process promptly, including symptoms that appear later. Obtain needed medical attention first. Report a near miss even when no equipment is damaged: the event can reveal a failed barrier before the next person is harmed. Separate observations from assumptions. Record the time, location, task, actual sequence, conditions, and witnesses; describe uncertainty honestly. Do not alter equipment or clean a scene if that would interfere with emergency control or the employer's investigation. A learning-focused discussion asks why the action made sense at the time, what information was available, and which safeguards failed. This supports accountability for correcting conditions without declaring blame before evidence exists.\n\nWorked scenario: interrupted handoff\nNia arrives to relieve a contractor at a compressor facility. The departing worker says, “Everything is normal; maintenance is almost done.” Nia sees an open barricade and a maintenance tag but cannot identify the equipment on the tag from her position. A radio call asks her to let a delivery truck use the access lane. The tempting response is to rely on the departing worker's reassurance and clear the truck quickly. Instead, Nia holds access from a safe location and asks for the current isolation boundary, the maintenance lead, and the designated route. She repeats the lane closure over the radio and gets acknowledgment from dispatch. The maintenance lead explains that a hose crosses the lane behind the skid and the barricade was displaced. The crew restores the boundary and selects another delivery route. Nia's handoff record now identifies the remaining maintenance and route restriction. Restarting vehicle entry on the alternate route follows the site coordinator's confirmation. The lesson is that “normal” is an opinion; a handoff needs verifiable conditions.\n\nWorked scenario: a near miss without damage\nLuis sees a suspended fitting swing close to a coworker's shoulder when a tag line catches on scrap. Nobody is struck. A coworker suggests skipping the report because the lift succeeded. Luis first confirms the load is in a stable safe condition and keeps people out of the potential swing path. He tells the lift supervisor the observed sequence, including the scrap location, without claiming that the operator caused it. The team discovers that the landing area inspection covered the load's final footprint but omitted the tag-line travel path. They remove obstructions using an approved method, revise the briefing, and confirm responsibilities before another lift. The near-miss report records the barrier gap and corrective action. It does not claim that luck proves the method was acceptable. This report helps another crew recognize the same exposure during its next job.\n\nIOGP Life-Saving Rules: purpose and field application\nIOGP's nine-rule framework targets recurring fatal exposures. Its subjects are controlled safety-system overrides, confined spaces, driving, energy isolation, hot work, line of fire, mechanical lifting, work authorization, and work at height. Use these subjects as prompts before starting: which apply, which safeguards are present, and what must stop if a safeguard fails? For a pump repair beside a delivery lane, consider isolation, authorization, vehicle movement, ignition, lifting, and your position together. If a required safeguard cannot be met, pause and involve supervision. The framework complements competent people and site procedures; it does not replace them. This is VNDRLY's original educational explanation, not an official IOGP rule card, altered rule statement, or endorsement. Consult IOGP's official materials and the employer's implementation for the exact rules.\n\nPersonal preparation\nBefore starting, practice the exact words you would use to stop an unsafe action. Find the emergency contact method and assembly location. Ask how concerns reach both your supervisor and the host site. Confirm that training is understandable to you, including technical words and emergency signals. If you are pressured to hurry, name the unfinished safety decision rather than arguing about attitude. Reliable work begins when uncertainty becomes shared information that the team can resolve.\n\nSource notes: OSHA Workers' Rights guidance; OSHA Workers' Right to Refuse Dangerous Work; OSH Act section 11(c), including its complaint timing. Human-performance examples and the two scenarios are original learning applications, not regulatory quotations or a guarantee about individual legal claims.",
+    "sourceUrls": [
+      "https://www.osha.gov/workers",
+      "https://www.osha.gov/workers/right-to-refuse",
+      "https://www.osha.gov/laws-regs/oshact/section_11",
+      "https://www.iogp.org/workstreams/safety/safety/life-savingrules/"
+    ],
+    "questions": [
+      {
+        "id": "ESC01-K1",
+        "prompt": "During handoff, a maintenance boundary is unclear. What is the best next action?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Accept the outgoing worker's statement that conditions are normal."
+          },
+          {
+            "id": "B",
+            "label": "Hold affected activity safely and clarify the boundary with the responsible person."
+          },
+          {
+            "id": "C",
+            "label": "Remove the tag so the next shift starts with current information."
+          },
+          {
+            "id": "D",
+            "label": "Proceed slowly until someone objects."
+          }
+        ],
+        "correctOptionIds": [
+          "B"
+        ],
+        "explanation": "An unclear boundary is unresolved exposure. Hold the affected work and obtain a specific, verified handoff; speed and reassurance cannot establish the equipment state."
+      },
+      {
+        "id": "ESC01-K2",
+        "prompt": "Which statement accurately describes legal refusal protection?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Every task a worker dislikes qualifies."
+          },
+          {
+            "id": "B",
+            "label": "A course certificate authorizes refusal without reporting the condition."
+          },
+          {
+            "id": "C",
+            "label": "OSHA describes specific imminent-danger conditions; site stop-work policies may be broader."
+          },
+          {
+            "id": "D",
+            "label": "Only supervisors may report imminent danger."
+          }
+        ],
+        "correctOptionIds": [
+          "C"
+        ],
+        "explanation": "Company stop-work arrangements and legal refusal protection are different. OSHA describes specific conditions, and workers can report concerns directly."
+      },
+      {
+        "id": "ESC01-K3",
+        "prompt": "What makes a near-miss report useful?",
+        "options": [
+          {
+            "id": "A",
+            "label": "It identifies a person to blame immediately."
+          },
+          {
+            "id": "B",
+            "label": "It omits uncertainty so the report appears decisive."
+          },
+          {
+            "id": "C",
+            "label": "It records only incidents that caused damage."
+          },
+          {
+            "id": "D",
+            "label": "It separates observed sequence and conditions from assumptions."
+          }
+        ],
+        "correctOptionIds": [
+          "D"
+        ],
+        "explanation": "Evidence about the sequence and failed barriers supports prevention. Neither blame nor lack of damage establishes the cause."
+      },
+      {
+        "id": "ESC01-K4",
+        "prompt": "A critical radio instruction is partly obscured. What should the receiver do?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Pause the affected movement and repeat the instruction for confirmation."
+          },
+          {
+            "id": "B",
+            "label": "Infer the missing words from yesterday's work."
+          },
+          {
+            "id": "C",
+            "label": "Continue because radio traffic suggests urgency."
+          },
+          {
+            "id": "D",
+            "label": "Ask an unrelated bystander to guess."
+          }
+        ],
+        "correctOptionIds": [
+          "A"
+        ],
+        "explanation": "Closed-loop communication resolves uncertainty before a consequential action. Loss of clear communication must trigger the agreed safe response."
+      }
+    ]
+  },
+  {
+    "id": "ESC02",
+    "title": "Hazard recognition, job analysis, and critical control verification",
+    "objectives": [
+      "Describe hazards as sources of harm, exposure paths, and possible consequences.",
+      "Break a task into meaningful steps and identify changing and simultaneous hazards.",
+      "Choose stronger controls using the hierarchy and verify critical controls before exposure.",
+      "Reassess the job when people, equipment, environment, or scope changes."
+    ],
+    "body": "Start with how harm could occur\nA hazard is a source or situation with the potential to cause injury or illness. Exposure connects the hazard to a person. A moving truck can strike someone through a shared travel path; a chemical can reach a worker through breathing, skin contact, or ingestion; stored pressure can eject a fitting into a worker's position. Name the energy or material, the route to the person, and the credible consequence. “Watch your hands” is too vague to control a pinch point. “Keep hands out of the coupling gap while the suspended spool can rotate” identifies both exposure and the condition that creates it.\n\nLook beyond what is visible\nWalk the job from a safe location with people who understand the process. Look above for overhead services and falling objects, below for buried utilities and unstable ground, around for vehicles and other crews, and inside the task for pressure, electricity, chemicals, heat, and stored movement. Consider exposures that develop over time, such as noise, vibration, repetitive force, heat strain, or dust. A clean-looking area can contain an oxygen-deficient atmosphere, hazardous vapor, or energized equipment. Absence of odor, symptoms, or previous incidents is not evidence of control. Ask what credible failure could place someone in the path of harm, including during setup, testing, cleaning, troubleshooting, and departure.\n\nIndustrial hygiene: anticipate, recognize, evaluate, and control\nIndustrial hygiene prevents harmful exposures before illness appears. Anticipation asks what a new material, process, or work method could release. Recognition identifies sources and routes, such as respirable dust from cutting, vapor from cleaning, or noise at a compressor. Evaluation uses appropriate professional assessment and representative measurements to determine the nature and extent of exposure. Control changes the source, pathway, or work arrangement and verifies that protection works. For example, changing a cleaning task from wiping to spraying should trigger review of airborne exposure and nearby people before the change occurs. Workers provide accurate task details, report failed controls, and follow the resulting instructions. They do not calculate an exposure limit from odor or select a sampling strategy without competence. Qualified industrial-hygiene and engineering expertise, exposure monitoring, medical provisions where applicable, and employer implementation remain separate from this awareness lesson.\n\nBuild a usable job safety analysis\nA JSA or JHA breaks work into steps, identifies hazards for each step, and assigns controls. The name and form vary by employer. Useful steps are specific enough to reveal changes: unload the skid, position it, connect piping, test the connection, and return the system to service. “Complete repair safely” hides all those exposures. Involve workers who will do the task and people affected by it. Identify the person responsible for each control and the point at which it must be checked. A JSA supports planning; it does not replace a required permit, equipment-specific isolation procedure, atmospheric assessment, lift plan, or specialist training. Read it against actual field conditions instead of signing it from the truck.\n\nUse the hierarchy to improve the plan\nElimination removes the hazard, such as arranging inspection from outside a vessel. Substitution replaces the hazard with a less hazardous option, but the replacement must be evaluated for new risks. Engineering controls physically separate people or contain the hazard, such as fixed guarding or a designed remote connection. Administrative controls organize work through procedures, restricted access, scheduling, and training. PPE reduces particular exposure when properly selected and used. Lower levels often depend more heavily on perfect human behavior. A sign and gloves do not prevent a moving machine from crushing a hand. Several controls may be necessary; choose them for how they interrupt the exposure path rather than how easy they are to list.\n\nCompare consequences before probability\nPeople commonly rate familiar work as low risk because they have performed it many times. Repetition does not make an uncontrolled fatal exposure acceptable. First identify the credible severe outcome, then ask which barriers prevent it and what could defeat them. A risk matrix can support prioritization but cannot authorize bypassing a mandatory safeguard. Do not lower a risk score simply because everyone signs the form. For a pressure release, the key questions include who establishes a safe energy state, how that state is verified, and how workers remain out of the release path. The answer cannot be “experienced crew” alone.\n\nCritical controls need evidence\nA critical control is a safeguard whose absence or failure could permit a serious event in the particular task. Your employer defines its critical controls and verification process. Examples can include verified energy isolation, a suitable excavation protective system, a maintained exclusion zone, or functioning atmosphere monitoring. Convert each control into an observable question: Is the correct equipment identified? Has the authorized person completed the required verification? Is the physical barrier present throughout the exposed area? Who will monitor the condition? A completed box is a record, not the control itself. If you cannot verify a control within your role, obtain confirmation from the authorized person and do not enter the exposure while the answer is missing.\n\nRecognize change as a new decision\nStop and reassess when equipment, personnel, sequence, location, weather, materials, or surrounding activities change. A substitute hose may have a different rating. A new worker may not know the agreed signal. Rain may affect ground support and electrical conditions. A delivery can block an escape route. A test may introduce pressure that was absent during installation. The significance is not whether the change seems small; it is whether assumptions or controls are affected. Tell the work leader what changed, pause affected exposure, revise the assessment and permits as required, brief everyone affected, and obtain the appropriate authorization before resuming.\n\nWorked scenario: hose replacement beside a traffic route\nA crew plans to replace a process hose at a production facility. The initial JSA lists gloves, eye protection, and “be aware of traffic.” During the walkdown, Sam notices that the hose connection faces the walkway and a forklift route passes behind the mechanic. A small gauge is visible, but Sam is not authorized to isolate or prove the pressure state. The crew identifies two different severe outcomes: fluid release toward the mechanic and vehicle impact from behind. They ask the authorized process operator to apply and verify the equipment-specific energy-control arrangement. They arrange a physical traffic separation and a controlled alternative pedestrian route. They consider whether the task can be repositioned or performed remotely to reduce time near the connection. PPE is selected for the actual material and remains supplementary. Before starting, Sam confirms the route barrier is in place and asks the work leader to explain the verified isolation boundary. When a forklift driver asks to move a barrier for one delivery, the crew pauses. The revised route must be approved and briefed before either activity proceeds. The original JSA was inadequate because it named precautions without interrupting both exposure paths.\n\nWorked scenario: rain changes an excavation task\nA cable crew has a plan for work near a shallow excavation. Overnight rain leaves pooled water, the access track is rutted, and spoil has shifted toward the edge. A worker suggests proceeding because the permit is still dated for today and the task will take ten minutes. Maya stays outside the excavation and reports the changed conditions. The responsible competent person must evaluate the excavation under the applicable construction requirements; Maya does not decide that the soil is stable by looking at it. Equipment positioning, edge loads, access, protective measures, and possible utility exposure are reviewed. The crew also reassesses the vehicle route so a reversing truck will not approach the edge. Water removal itself requires a controlled plan because pumps, hoses, and discharge can introduce hazards. The work resumes only after the required inspections and controls are in place and the crew understands the revised boundaries. The lesson is not that rain always closes every excavation. It is that weather invalidates assumptions and creates a defined need for reassessment by the responsible people.\n\nPut the analysis into a conversation\nAt the briefing, each worker should be able to identify the task boundary, the worst credible exposure, their safe position, their responsibility, and the trigger for stopping. Ask a coworker to explain the plan in their own words. A language barrier is a planning issue, not a reason to collect a signature without understanding. Include nearby contractors whose work could affect the task. Repeat the briefing for arrivals and relief personnel. If production changes the sequence, the assessment must follow the work rather than the form remaining frozen.\n\nClose the learning loop\nAfter the task, note controls that were difficult to maintain, missing tools, unexpected conditions, and successful improvements. Feed these observations into the next planning cycle. A control that repeatedly requires workers to stretch across a hazard may need redesign. A recurring temporary barrier conflict may indicate that the work area or schedule is unsuitable. OSHA's safety-management guidance supports ongoing hazard identification and control; those recommended practices complement, rather than replace, specific enforceable standards. Learning from routine work is how a JSA becomes a useful prediction instead of a document written only after an incident.\n\nSource notes: OSHA Recommended Practices, Hazard Identification and Assessment and Hazard Prevention and Control, especially their action items on inspections, changes, hierarchy, control plans, and effectiveness. OSHA Job Hazard Analysis publication 3071 supports step-based analysis. These planning examples are original and do not prescribe engineering designs or qualify a person to perform specialist inspections.",
+    "sourceUrls": [
+      "https://www.osha.gov/safety-management/hazard-identification",
+      "https://www.osha.gov/safety-management/hazard-prevention",
+      "https://www.osha.gov/sites/default/files/publications/osha3071.pdf",
+      "https://www.osha.gov/publications/OSHA3143"
+    ],
+    "questions": [
+      {
+        "id": "ESC02-K1",
+        "prompt": "Which JSA statement best identifies an exposure?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Use common sense throughout the job."
+          },
+          {
+            "id": "B",
+            "label": "Keep hands outside the coupling gap while the suspended spool can rotate."
+          },
+          {
+            "id": "C",
+            "label": "Remember that all equipment can be dangerous."
+          },
+          {
+            "id": "D",
+            "label": "Experienced workers should take extra care."
+          }
+        ],
+        "correctOptionIds": [
+          "B"
+        ],
+        "explanation": "The statement names the body part, hazard location, and condition that can cause injury, making a specific control possible."
+      },
+      {
+        "id": "ESC02-K2",
+        "prompt": "Which option usually provides the strongest control?",
+        "options": [
+          {
+            "id": "A",
+            "label": "A reminder sign beside the access hatch."
+          },
+          {
+            "id": "B",
+            "label": "Extra gloves for everyone entering the vessel."
+          },
+          {
+            "id": "C",
+            "label": "Performing the inspection with a suitable method from outside the vessel."
+          },
+          {
+            "id": "D",
+            "label": "A longer briefing about entry hazards."
+          }
+        ],
+        "correctOptionIds": [
+          "C"
+        ],
+        "explanation": "Avoiding entry eliminates that entry exposure when the alternative method is suitable. PPE and reminders remain dependent on continued exposure."
+      },
+      {
+        "id": "ESC02-K3",
+        "prompt": "A critical control is listed but cannot be confirmed. What next?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Begin low-risk steps inside the exposure area."
+          },
+          {
+            "id": "B",
+            "label": "Assume the signature verifies it."
+          },
+          {
+            "id": "C",
+            "label": "Reduce the risk score because the crew is experienced."
+          },
+          {
+            "id": "D",
+            "label": "Keep people out of the exposure and obtain verification from the responsible authorized person."
+          }
+        ],
+        "correctOptionIds": [
+          "D"
+        ],
+        "explanation": "A documented intention does not establish a physical safeguard. Unverified critical controls require resolution before exposure."
+      },
+      {
+        "id": "ESC02-K4",
+        "prompt": "A delivery blocks the escape route after the briefing. What does that mean?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Pause affected work and reassess the changed condition."
+          },
+          {
+            "id": "B",
+            "label": "The JSA remains valid because no tools changed."
+          },
+          {
+            "id": "C",
+            "label": "Only the delivery driver needs to know."
+          },
+          {
+            "id": "D",
+            "label": "The route can be ignored if the task is almost finished."
+          }
+        ],
+        "correctOptionIds": [
+          "A"
+        ],
+        "explanation": "Changes in surrounding activities can defeat controls. Restore or revise the route, communicate the change, and obtain required authorization before resuming."
+      }
+    ]
+  },
+  {
+    "id": "ESC03",
+    "title": "Permits, simultaneous operations, and hazardous energy boundaries",
+    "objectives": [
+      "Explain permit limits and changed-condition review.",
+      "Recognize interacting operations and a controlling coordinator.",
+      "Identify multiple hazardous energy sources.",
+      "Distinguish affected-worker recognition, authorized energy control, and qualified electrical work."
+    ],
+    "body": "The permit is a controlled agreement\nA permit-to-work system records who may perform a defined activity, where and when it may occur, what conditions must exist, and who authorizes it. Permit names vary by employer: hot work, confined space, excavation, line opening, electrical work, and other high-risk activities may have separate controls. A permit does not create isolation, remove vapor, or make a damaged barrier effective. Read its scope against the actual equipment and work. Confirm the work location, duration, responsible persons, required safeguards, linked permits, and suspension conditions. If you do not understand a condition or cannot identify the work area, ask before beginning.\n\nAuthorization has limits\nA permit for replacing one component does not automatically authorize testing, entry into connected equipment, or a different repair. A permit issued for daylight work may depend on visibility that disappears after dark. A permit that requires ventilation cannot remain a basis for entry after the fan fails. Report changes, make the work safe within your role, and have the responsible issuer reassess, suspend, cancel, or reissue as the site system requires. Do not alter a condition or extend an expiry yourself. At handback, account for people, tools, guards, open connections, and remaining restrictions through the established process. Work completion and readiness to energize are different decisions.\n\nSIMOPS means interactions matter\nSimultaneous operations occur when activities share space, equipment, utilities, access, atmosphere, or emergency arrangements. A welding crew and a transfer crew may each have a valid task plan while their combination creates ignition exposure. A crane can block an evacuation route without entering another crew's immediate workspace. A shutdown can remove ventilation needed by another permit. Identify who coordinates these interactions and which employers must communicate. Share the timing, energy changes, exclusion zones, route needs, and foreseeable emissions of your task. Scheduling activities separately can remove conflicts more reliably than asking both crews to be especially careful.\n\nControlled bypass: a managed exception, not a shortcut\nA safety control may need a proposed temporary override for defined testing, maintenance, or fault diagnosis. Repeated trips, inconvenient access, or a production deadline do not authorize it. Keep the control effective while the responsible authority evaluates whether any bypass is legally and technically permissible. The employer's controlled process must identify the affected safeguard, reason, hazards, authorized decision maker, people exposed, and necessary compensating controls. It must define a limited scope and time, monitoring and communication, stop conditions, and responsibility for restoration. Record approval and the actual status so the next shift cannot assume normal protection. Only appropriately authorized personnel implement an approved change; a general worker must not operate the override. Before normal service, responsible personnel verify restoration and document closure. No internal approval can waive a required legal safeguard. If no permissible adequately controlled method exists, the task must be redesigned or remain stopped.\n\nRecognize energy before touching\nElectrical supply is only one energy source. A spring may move a mechanism after power is removed. Gravity can lower a raised component. A hydraulic accumulator can retain pressure. A hot line can burn after flow stops. Chemical reaction or trapped process pressure can continue in a closed section. Remote controls, automatic sequences, alternate feeds, and connected systems can reintroduce energy. The question is not merely whether the switch is off. Ask what sources could move, release, heat, energize, or otherwise harm someone at this point. An untrained worker reports these possibilities and stays outside the exposure; an authorized person follows the equipment-specific energy-control procedure.\n\nUnderstand roles without claiming qualification\nWhere 1910.147 applies, an authorized employee performs the energy-control functions, an affected employee operates or uses equipment being serviced or works in the area, and other employees need instruction relevant to their exposure. An affected worker must not restart or defeat a locked or tagged condition. Do not borrow a key, interfere with another person's lock, operate an isolated control, or assume an unattended lock is abandoned. Exceptional lock-removal procedures belong to the employer's controlled program. Group work and shift changes need continuity of protection. This lesson does not teach a complete isolation sequence or authorize you to apply a personal lock without the required task-specific training.\n\nApply the correct legal framework\n1910.147(a)(1)(ii) expressly excludes construction and oil and gas well drilling and servicing, among other activities. Electrical work on utilization installations is addressed separately under general industry Subpart S, including 1910.333. Construction electrical controls include 1926.417; additional construction requirements may also apply. The exclusion from one standard is not an exemption from controlling a serious energy hazard. Your employer must identify the applicable requirements and safe procedures for the actual operation. Do not transfer a general industry factory procedure to well servicing merely because both use pumps. Site programs may require robust isolation beyond a particular standard's minimum applicability.\n\nWhat verification means to an affected worker\nThe authorized team must establish the required safe energy state and verify it using appropriate procedures. Seeing a lock, hearing a motor stop, or reading a single gauge does not independently prove every source is controlled. A stopped machine may still be connected to an automatic start signal. A pressure gauge may be isolated from the section being opened. Ask the work leader which equipment is covered, which sources are addressed, and how the authorized verification is documented or communicated. Do not loosen a fitting or reach into equipment to check for yourself. If the field identifier differs from the permit or isolation record, stop and resolve that mismatch before anyone is exposed.\n\nElectrical recognition and nonqualified boundaries\nExposed conductors, broken covers, damaged plugs, wet electrical equipment, arcing, burning odor, and repeated protective-device trips require attention from the responsible qualified person. Do not open a panel, reset a device repeatedly, test for voltage, or improvise an insulated tool because you completed this core course. Under 1910.333, equipment not properly deenergized and controlled must be treated as energized; qualified persons perform required electrical verification and specified energized work. Maintain the employer's established approach boundaries, respect barricades, and keep conductive tools or materials from entering them. Around overhead lines, do not estimate safety by eye or assume a line is insulated. Have the operation planned using the applicable voltage, equipment, and clearance requirements. If equipment contacts an electrical line, keep others away and activate the site emergency plan; do not touch the equipment or attempt an improvised rescue.\n\nWorked scenario: a permit conflict during transfer\nA maintenance crew has a hot-work permit for a bracket on the north side of a tank area. A contractor arrives to begin a previously scheduled transfer on an adjacent connection. The maintenance helper sees a hose being positioned and asks whether the permit coordinator knows. The transfer driver says their paperwork is valid, so the jobs should be independent. The helper pauses the affected hot work and reports the new transfer, location, and timing. The coordinator brings the responsible operators together and evaluates possible vapor release, ignition sources, shared access, and emergency routes. They decide to separate the activities in time and reassess the hot-work area before issuing the restart. Nobody treats one permit as permission to ignore the other crew. The resolution is an interaction decision made by responsible people; the helper's contribution is recognizing the changed condition and preventing exposure while it is resolved.\n\nWorked scenario: the quiet pump\nA contractor is asked to clear a jam at a pump. The operator has selected OFF at the local control and the machine is silent. A coworker proposes reaching through the removed guard because the task will be quick. Elena declines to enter the hazard area and tells the work leader that the proposed access exposes moving parts. The team identifies possible automatic control, stored pressure, and mechanical movement. An authorized person must establish the appropriate equipment-specific isolation under the applicable site program; a qualified electrical worker handles any required electrical work or testing. Elena also notices that the tag number on the permit differs by one digit from the pump plate. Work stays paused until the identification is reconciled. Only after the correct equipment and controls are verified and the task is authorized can trained personnel perform the repair. Silence was a machine condition, not proof of an isolated safe state.\n\nPressure systems and line opening\nPressure may be trapped between closures, retained in an accumulator, or reintroduced through connected equipment. A pinhole leak can inject fluid through skin; a small-looking wound after a pressure release needs immediate medical assessment under the emergency plan. Never search for a leak with a hand or try to tighten or disconnect a live leaking fitting. Hose identity, pressure and temperature rating, material compatibility, condition, connections, and required restraint arrangements must be verified by responsible competent personnel for the actual service. Appearance and outside diameter do not prove suitability. Line opening requires its specific authorization, isolation and verification arrangements, material information, release-path control, and protection for nearby people. A general worker's decision is to stay outside the possible jet, whip, ejection, and spray paths and report missing evidence. This lesson does not teach valve sequences, depressurization, pressure testing, or connection-breaking techniques.\n\nA practical release question\nBefore returning equipment, ask who has authority to accept it and who could still be exposed. A shift change, absent coworker, or remote team is a reason to confirm accountability, not to assume everyone is clear. Communicate remaining defects and restrictions explicitly. The final handback should leave the next operator with an accurate equipment state, rather than a vague message that maintenance is finished.\n\nSource notes: 1910.147(a), (b), (c)(7), (d), (e), and (f) for applicability, roles, training, energy control, restoration, and coordination; 1910.333(a), (b), and (c) for electrical practices; 1926.417(a)-(c) for construction circuits. The permit and SIMOPS examples are original planning applications and are not substitutes for a facility's written programs.\n\nSupplemental pressure sources: BSEE Safety Alert 465 (June 29, 2023), hose application, compatibility, inspection, and barriers; UK HSE hydraulic-injection safety alert FOD 4-2014, injury recognition and immediate medical treatment. These agencies' recommendations support hazard education; they are not represented as additional US OSHA regulations.",
+    "sourceUrls": [
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.417",
+      "https://www.bsee.gov/sites/bsee.gov/files/2023-06/BSEE%20Safety%20Alert%20465%20-%20Improper%20Use%20High%20Pressure%20Hoses%20Leads%20to%20Injuries.pdf",
+      "https://www.hse.gov.uk/safetybulletins/hydraulic-injection-injury.htm"
+    ],
+    "questions": [
+      {
+        "id": "ESC03-K1",
+        "prompt": "A pump is silent after its local switch is set OFF. What does that establish?",
+        "options": [
+          {
+            "id": "A",
+            "label": "All stored energy is released."
+          },
+          {
+            "id": "B",
+            "label": "Isolation is complete."
+          },
+          {
+            "id": "C",
+            "label": "Only that it is currently stopped; required energy-control verification is still needed."
+          },
+          {
+            "id": "D",
+            "label": "Any worker can briefly reach through its guard."
+          }
+        ],
+        "correctOptionIds": [
+          "C"
+        ],
+        "explanation": "A stop control does not prove isolation or control stored and alternate energy. Authorized personnel establish and verify the required state."
+      },
+      {
+        "id": "ESC03-K2",
+        "prompt": "Two valid permits now involve transfer beside hot work. What next?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Continue because separate permits prevent interaction."
+          },
+          {
+            "id": "B",
+            "label": "Pause affected work and coordinate through the responsible permit authority."
+          },
+          {
+            "id": "C",
+            "label": "Let the newest crew choose which permit wins."
+          },
+          {
+            "id": "D",
+            "label": "Add an extinguisher without further review."
+          }
+        ],
+        "correctOptionIds": [
+          "B"
+        ],
+        "explanation": "The interaction can create ignition exposure and requires coordinated reassessment of actual conditions."
+      },
+      {
+        "id": "ESC03-K3",
+        "prompt": "Which applicability statement is correct?",
+        "options": [
+          {
+            "id": "A",
+            "label": "1910.147 covers every oilfield activity."
+          },
+          {
+            "id": "B",
+            "label": "Construction is always covered by 1910.147."
+          },
+          {
+            "id": "C",
+            "label": "An exclusion means energy needs no control."
+          },
+          {
+            "id": "D",
+            "label": "1910.147 excludes oil and gas well drilling and servicing; the employer must establish applicable requirements and safe procedures."
+          }
+        ],
+        "correctOptionIds": [
+          "D"
+        ],
+        "explanation": "Explicit exclusions do not authorize uncontrolled energy or replace other applicable duties."
+      },
+      {
+        "id": "ESC03-K4",
+        "prompt": "A nonqualified worker sees an open energized panel. What should the worker do?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Stay outside established boundaries, keep others clear, and notify the qualified person."
+          },
+          {
+            "id": "B",
+            "label": "Use a wooden stick on an internal disconnect."
+          },
+          {
+            "id": "C",
+            "label": "Test voltage with a borrowed meter."
+          },
+          {
+            "id": "D",
+            "label": "Repeatedly reset the protective device."
+          }
+        ],
+        "correctOptionIds": [
+          "A"
+        ],
+        "explanation": "Recognition does not qualify someone for electrical testing or panel work. Protect the boundary and report."
+      }
+    ]
+  },
+  {
+    "id": "ESC04",
+    "title": "Fatal-risk recognition: spaces, ignition, falls, loads, and excavations",
+    "objectives": [
+      "Recognize fatal exposure paths and stay within authorization.",
+      "Explain confined-space entry boundaries and prevent improvised rescue.",
+      "Identify missing hot-work, fall, lifting, and excavation controls.",
+      "Choose a safe pause and responsible specialist reassessment."
+    ],
+    "body": "Recognize a fatal exposure early\nSome tasks can cause multiple deaths after a single failed barrier. Confined-space entry, hot work around flammable materials, falls, suspended loads, excavations, and uncontrolled release paths deserve explicit decisions before a person enters the exposure. This lesson teaches recognition and escalation. It does not qualify you as an entrant, attendant, rescue worker, competent person, rigger, crane operator, scaffold inspector, or fall-protection designer. Know the employer's authorization process for your role. If a boundary or required specialist is missing, keep people outside the exposure and obtain a decision through the responsible supervisor.\n\nConfined spaces are defined by configuration and hazards\nUnder general industry 1910.146(b), a confined space is large enough to bodily enter and work, has limited or restricted entry or exit, and is not designed for continuous occupancy. A permit-required space has specified serious hazards, including a hazardous atmosphere, engulfment potential, a trapping configuration, or another recognized serious hazard. An open top does not make a pit safe. Entry occurs when any body part crosses the opening into the permit space; reaching inside is not a harmless alternative. General industry 1910.146 and construction Subpart AA have different applicability and coordination provisions. The employer must evaluate and classify the actual space and establish entry controls. You cannot classify a vessel by its appearance or yesterday's readings.\n\nEntry requires a complete system\nBefore authorized entry, the applicable program must address isolation, acceptable conditions, testing and monitoring, ventilation where appropriate, communication, entry supervision, attendant duties, and rescue arrangements. These are connected safeguards: a ventilation failure can change a previously acceptable atmosphere; an upstream process change can introduce material. Do not enter on the strength of a signed permit alone. If an entrant collapses, raise the alarm and follow the emergency plan from a safe position. Do not become an unprotected would-be rescuer. Rescue capability must be selected and arranged for the actual space and hazards; simply knowing an emergency telephone number does not establish that the needed rescue can be performed in time.\n\nHot work changes the ignition picture\nWelding, cutting, grinding, and other spark- or heat-producing work can ignite vapor, deposits, insulation, or material on the opposite side of a surface. Look for drains, openings, connected lines, hidden combustible material, and nearby transfers. A vessel that once contained a flammable material can remain hazardous when apparently empty. The responsible persons must establish preparation, authorization, fire protection, and atmosphere controls for the actual work. General industry 1910.252(a) addresses fire prevention for welding and cutting, including restrictions where flammable atmospheres exist and safeguards for used containers. A fire watch, when required, must be trained, positioned, equipped, and maintained for the required conditions and duration. A convenient extinguisher is not permission to weld on an unknown tank.\n\nFall hazards are more than height\nEdges, floor holes, fragile surfaces, poor access, falling objects, and a fall into dangerous equipment all require assessment. General industry 1910.28 and construction 1926.501 have different provisions; four feet and six feet are common thresholds for particular unprotected-edge situations, not universal safe-height rules. Special activities and hazards have other requirements. Ask which protection applies rather than deciding that anything below a remembered number is safe. Prefer avoiding elevated work or using suitable collective protection where feasible. Personal fall-arrest use requires suitable equipment, anchorage, clearance, compatibility, inspection, training, and rescue planning. A harness without an appropriate system does not prevent a fall. Do not select an anchor by appearance or attach to convenient piping.\n\nSuspended loads and line of fire\nLine of fire describes the path of moving equipment, falling or swinging loads, released pressure, snapping tensioned material, or objects ejected by stored energy. Consider where a load could travel if it shifts, where a hose could whip, and what could trap a person against a fixed surface. Stay outside the established lift and travel zones. Do not walk under a suspended load or stand between a moving load and a structure. Only designated, trained persons should rig, signal, or guide within the approved plan. Construction 1926.1425 restricts fall-zone exposure and addresses load routes; limited task-specific exceptions are not general permission to approach. If a barrier is breached or communication is lost, call the agreed stop and have the responsible lift team restore control.\n\nExcavation recognition\nA trench can collapse without a useful warning and can also contain hazardous atmospheres, utilities, water, and vehicle hazards. Under construction 1926.651, utility locations, access, edge conditions, water, and competent-person inspections are among the required considerations. Protective-system requirements are addressed by 1926.652. Do not enter an unassessed excavation because it looks shallow or the task is brief. A competent person's daily inspection and inspections after rain or other hazard-increasing events are important triggers for stopping and reassessing. Spoil, equipment, or vibration at the edge can add loading. Remain outside barricades and use designated crossings; never leap a trench with tools. If you see cracking, water entry, falling material, or a damaged protective system, alert the crew and keep out while responsible personnel act.\n\nWorked scenario: a tool inside a tank\nOwen drops a measuring device through a tank opening while working on an external platform. A coworker offers to lean through the manway and retrieve it because nobody will climb all the way in. Owen recognizes that crossing the opening with part of the body can be entry under the permit-space definition. He keeps clear, prevents others from reaching in, and contacts the responsible space authority. The tank's status is not established by its open hatch or the absence of odor. The authorized team reviews the space evaluation, connected process conditions, and whether retrieval can be completed from outside without creating another exposure. They select an appropriate external method under their procedure. If entry had been necessary, it would have required the applicable entry program and authorized personnel. The correct result is the recovered tool without an improvised entry. The critical decision occurred before anyone crossed the opening, not after a gas detector alarm.\n\nWorked scenario: a lift over an excavation route\nAt a construction site, a crane is moving a pipe spool toward a rack. The planned pedestrian route passes beside an excavation, and a temporary barrier has been moved to make room for delivery. A helper sees two workers taking the shortcut while the load approaches. The helper uses the agreed stop signal and remains outside the load path. The lift team brings the operation to a controlled safe state. The site coordinator closes the shortcut, establishes a separated route, and asks the excavation competent person to assess changed edge loading and access conditions before anyone uses the area. The rigging team confirms its landing zone and communications before resuming. It would be wrong to solve only the lifting problem by diverting pedestrians through the excavation or to solve only the traffic problem by standing beneath the load to direct people. The team considers the combined exposures and verifies both boundaries.\n\nWorked scenario: sparks beside a hidden drain\nA mechanic has authorization to grind a support outside a process building. During the walkdown, Priya notices a grated drain behind the support and a hose connected to nearby equipment. She does not decide that outdoor air makes ignition impossible. She pauses the proposed grinding and identifies the drain and hose to the permit issuer. Operations determines what may enter the drainage system and whether another task can release vapor. The responsible team adjusts scheduling, preparation, testing, and protection according to the actual hazard and applicable permit program. Work remains suspended until authorization reflects those conditions. The useful observation was not a complete chemical diagnosis; it was recognizing a possible route between an ignition source and material outside the mechanic's immediate view.\n\nSpecialist work and different jurisdictions\nExplosives and perforating systems, commercial diving, and electric-power generation or transmission work require their own specialist programs, competent personnel, equipment, and task authorization. Keep outside identified blast, dive-support, and electrical exclusion zones. Do not handle unfamiliar explosive devices, disturb dive equipment, or assist power work on the assumption that a general safety credential authorizes it. Marine transfers and work over water also require an assessment of drowning, access, weather, vessel movement, suitable flotation and recovery arrangements under the actual operator and regulatory requirements. Shipyard, marine-terminal, longshoring, offshore, agriculture, mining, and aviation duties can fall under different regimes. Identify that boundary before accepting the assignment. These statements provide a referral boundary only; they do not teach the specialist tasks, satisfy their training requirements, or grant a marine, diving, explosives, or power-work qualification.\n\nYour decision sequence\nName the severe event, identify the physical boundary, and determine who controls authorization. Ask what evidence establishes that critical safeguards are in place now. Stay out when a required condition is unknown. Report the exact deficiency and keep others informed without entering to demonstrate it. If conditions change, use the same sequence again. These habits allow a general worker to prevent exposure while the specialist team performs the evaluation that this core course cannot replace.\n\nSource notes: 1910.146(a), (b), (d), and (k); construction 1926.1203(a) and coordination provisions (h)-(i); 1910.252(a); 1910.28(b); 1926.501(b); 1926.1425; 1926.651(b), (c), (h), (j), and (k); and 1926.652(a). Applicability and exceptions must be resolved for the actual task by the employer. Scenarios are original decision practice.\n\nScaffold and cylinder recognition\nA scaffold is a planned access structure, not an arrangement a user may alter to improve reach. Before access, use the site inspection and release system, check the designated access route and visible condition, and report missing decking, rails, ties, damaged components or an uncertain status. Stay out of an unreleased or suspect scaffold. Users need the actual scaffold hazard training; erection, alteration and inspection involve different competent or qualified roles. Adding a ladder or removing a brace can change the structure and is not authorized by this course.\n\nCompressed-gas cylinders can create pressure, projectile, fire, oxygen-enrichment or asphyxiation hazards depending on their contents. Confirm identity from reliable labeling, use the approved secured storage and movement method, protect valves as required, and separate incompatible materials under the actual procedure. Do not identify a gas by cylinder color, use a damaged cylinder, improvise adapters, or put oil/grease on oxygen equipment. The actual regulator, connections, handling equipment and task require trained evaluation. An uncontrolled release needs the emergency response, not an untrained attempt to tighten a leaking connection.\n",
+    "sourceUrls": [
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1203",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.252",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.28",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.501",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1425",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.652",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.454",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.101"
+    ],
+    "questions": [
+      {
+        "id": "ESC04-K1",
+        "prompt": "A tool falls inside a permit-space tank. What is the correct response?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Reach through without placing feet inside."
+          },
+          {
+            "id": "B",
+            "label": "Assume an open hatch makes retrieval safe."
+          },
+          {
+            "id": "C",
+            "label": "Prevent improvised entry and have the responsible team evaluate an external method or authorized entry."
+          },
+          {
+            "id": "D",
+            "label": "Ask an untrained coworker to hold a rope."
+          }
+        ],
+        "correctOptionIds": [
+          "C"
+        ],
+        "explanation": "Crossing the opening with any body part can be entry. The responsible team must evaluate the space and retrieval method."
+      },
+      {
+        "id": "ESC04-K2",
+        "prompt": "What does wearing a harness establish?",
+        "options": [
+          {
+            "id": "A",
+            "label": "That any nearby pipe is a suitable anchor."
+          },
+          {
+            "id": "B",
+            "label": "That the worker needs no rescue plan."
+          },
+          {
+            "id": "C",
+            "label": "That fall clearance no longer matters."
+          },
+          {
+            "id": "D",
+            "label": "Only one component is present; the complete appropriate system and training still must be established."
+          }
+        ],
+        "correctOptionIds": [
+          "D"
+        ],
+        "explanation": "Harnesses do not independently prevent or safely arrest a fall. Anchorage, clearance, compatibility, inspection and rescue must be addressed."
+      },
+      {
+        "id": "ESC04-K3",
+        "prompt": "Rain has changed an excavation. What should a general worker do?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Enter briefly to see whether the bottom is firm."
+          },
+          {
+            "id": "B",
+            "label": "Keep out and obtain the required competent-person reassessment."
+          },
+          {
+            "id": "C",
+            "label": "Assume yesterday's inspection remains sufficient."
+          },
+          {
+            "id": "D",
+            "label": "Pump water while standing in the excavation."
+          }
+        ],
+        "correctOptionIds": [
+          "B"
+        ],
+        "explanation": "Changed conditions can increase hazards. Required reassessment belongs to the competent person, and water removal also needs appropriate controls."
+      },
+      {
+        "id": "ESC04-K4",
+        "prompt": "A hot-work area contains an unexplained drain. What next?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Pause and have operations and the permit authority evaluate potential vapor or material pathways."
+          },
+          {
+            "id": "B",
+            "label": "Ignore it because the work is outdoors."
+          },
+          {
+            "id": "C",
+            "label": "Cover the drain with scrap and start."
+          },
+          {
+            "id": "D",
+            "label": "Rely on absence of odor."
+          }
+        ],
+        "correctOptionIds": [
+          "A"
+        ],
+        "explanation": "A drain may connect an ignition source with hidden flammable material. Outdoor location and lack of odor do not establish safety."
+      }
+    ]
+  },
+  {
+    "id": "ESC05",
+    "title": "Chemical information, H2S, atmosphere alarms, and respiratory boundaries",
+    "objectives": [
+      "Use labels and SDS sections to identify task-specific chemical questions.",
+      "Recognize H2S and other atmosphere hazards without relying on odor.",
+      "Explain detector limitations and follow alarm, escape, and reentry arrangements.",
+      "Distinguish awareness from employer exposure evaluation, medical evaluation, fit testing, and respirator authorization."
+    ],
+    "body": "Chemicals create several exposure paths\nA chemical can harm through inhalation, skin or eye contact, ingestion from contaminated hands, or injection from a high-pressure release. Some effects are immediate; others develop after repeated exposure or a delay. A clear liquid may be corrosive or flammable. A familiar product can create a different hazard when heated, sprayed, mixed, or used in a poorly ventilated location. Begin by identifying the exact product and task. Do not substitute a similar product name or rely on container color. If a label is missing or does not match the work instruction, isolate the uncertainty through your supervisor before use.\n\nRead a label as a decision aid\nUnder 1910.1200(f), shipped-container information includes product identification, signal word, hazard statements, pictograms, precautionary statements, and supplier information. Workplace labeling arrangements can differ under the written program. Learn the site's system and do not assume every workplace container uses the full shipped label. A pictogram groups hazards; it does not tell you every condition for safe use. “Danger” and “Warning” indicate different relative severity categories within the labeling system, not a complete ranking across every chemical. Read the actual hazard and precaution statements. Do not remove or obscure a label. An exception for certain portable containers under the immediate-use provision is narrow, not permission to leave unidentified chemicals for the next person.\n\nFind information before the emergency\nThe employer's hazard communication program must address chemical information and training. Safety data sheets must be readily accessible during the shift; know the backup arrangement if an electronic system is unavailable. Construction 1926.59 incorporates the same hazard communication requirements as 1910.1200. An SDS supports a task assessment but does not itself authorize the work or select the complete site control system. Match its product identifier to the container and check that it is the relevant supplier document. Tell the responsible person if information is missing, conflicting, or difficult to understand.\n\nUse the SDS sections efficiently\nSection 1 identifies the product and supplier; Section 2 summarizes hazards. Section 4 addresses first aid, 5 firefighting, and 6 accidental release. Section 7 covers handling and storage; Section 8 addresses exposure controls and personal protection. Sections 9 and 10 help identify properties and dangerous reactions. Section 11 addresses toxicological information, and Section 16 includes preparation or revision information. The standardized format has 16 sections; OSHA does not enforce the content of Sections 12 through 15. Read the sections needed for the decision rather than searching only for a glove recommendation. For example, storage incompatibility can make a perfectly fitted glove irrelevant to a reaction between two materials.\n\nTranslate information into the actual task\nConsider amount, concentration, temperature, duration, application method, ventilation, and nearby people. Brushing a small quantity outdoors and spraying the same product inside a tank are different exposures. Check that selected gloves resist the actual chemical for the expected contact, rather than choosing gloves because they look thick. Eye and face protection, clothing, ventilation, and hygiene must address the identified routes together. Do not mix products unless the authorized procedure explicitly calls for it. Keep food and drink out of contaminated work areas and wash before eating. A general worker should identify a discrepancy and obtain the employer's assessment instead of inventing compatibility or exposure limits.\n\nRecognize hydrogen sulfide without using smell\nHydrogen sulfide, H2S, can occur in oil and gas operations, wastewater, and other processes. It is toxic and flammable and can accumulate in low or poorly ventilated areas. Odor is unreliable because smell can fatigue or be lost; at dangerous concentrations a person can be overcome rapidly. Never approach a release to smell-test it. Symptoms, absence of odor, and the fact that another person is still standing are not safe-air measurements. Learn the facility's alarm signals, escape routes, wind indicators, muster locations, and accountability process before entering a designated area. These arrangements must reflect the actual process and possible release paths.\n\nTesting is a defined responsibility\nThe employer must evaluate atmospheric hazards and arrange suitable monitoring, controls, and trained personnel for the work. A personal detector is not a universal clearance instrument. Know which gases its sensors detect, the alarm response, where it must be worn, and the pre-use checks required by the manufacturer's instructions and employer procedure. Bump testing checks sensor and alarm response; calibration adjusts instrument response using the prescribed method. A powered display alone establishes neither. Only trained authorized personnel should interpret task-clearance measurements or change settings. Oxygen, flammable gas, and toxic contaminants are separate concerns; a reading for one does not establish the others. Unknown conditions require the prescribed safe response, not a guess at what the detector would have shown.\n\nRespond to alarms and suspected releases\nOn an alarm or suspected hazardous atmosphere, stop exposed activity and follow the emergency plan to a safe location, avoiding the plume and low areas. Use the designated escape route and wind guidance, and report to muster for accountability. Warn others from safety and provide the location, observed conditions, and missing-person information to responders. Do not investigate the source or reenter because the alarm becomes quiet. Only the responsible team can authorize reentry after appropriate evaluation. If someone collapses near a suspected release, raise the alarm; do not enter without the required rescue capability and authorization. Escape equipment, where provided, is for its designated escape function and does not turn the wearer into a rescuer.\n\nRespiratory protection is an employer program\nWhere required, 1910.134(c)-(f) requires a written, worksite-specific program administered by a qualified person, hazard-based respirator selection, a medical evaluation before required use or fit testing, and fit testing for tight-fitting facepieces before use, at least annually, and when specified changes occur. Required protection, training, and medical evaluations are provided without employee cost. A user seal check each donning is separate from a fit test. Facial hair cannot interfere with the seal or valve function. The employer must address maintenance, cartridge service life, training, and program effectiveness. An air-purifying respirator does not supply oxygen and is not suitable for an oxygen-deficient or unknown atmosphere. IDLH entry requires the specified atmosphere-supplying protection and arrangements. Construction 1926.103 incorporates 1910.134. This course provides recognition, not medical clearance, a fit test, respirator selection, or rescue qualification.\n\nWorked scenario: the unmarked wash bottle\nA new worker, Jalen, is handed a reused beverage bottle containing a clear liquid for cleaning a part. A coworker says it is the same solvent used every week. Jalen sets it down safely without opening it and reports the missing identification. The supervisor traces the material to its original container and supplier SDS, arranges appropriate labeled equipment, and reviews the cleaning task. The SDS indicates flammability and splash concerns, while the proposed work area has a nearby ignition source. The team selects an authorized cleaning location and controls, confirms suitable gloves and eye protection, and explains disposal and spill arrangements. Jalen does not identify the material by smelling it or pouring a sample. The lesson is that the label problem revealed a broader task-assessment gap; merely writing “solvent” on the bottle would not resolve the exposure.\n\nWorked scenario: a detector alarm near a low point\nRosa is walking a designated route beside a process area when her assigned detector alarms near a depressed drain area. Another worker suggests that the instrument is oversensitive because nobody smells anything. Rosa follows the site's alarm response, moves by the planned safe route away from the affected area, warns nearby people from safety, and reports at muster. She gives responders the location and alarm information without claiming she knows the leak source. A coworker left tools behind, but retrieving them is deferred. The response team evaluates the atmosphere and process using its authorized procedure. Workers remain out until the responsible authority communicates reentry conditions. Rosa's detector helped trigger evacuation; it did not authorize her to investigate or prove that adjacent low spots were safe.\n\nWorked scenario: a borrowed respirator\nA task leader asks Ben to wear a coworker's half-mask for a dusty task. Ben has completed this awareness course but has not received the required medical evaluation or fit test for that facepiece. He explains the missing prerequisites and does not begin the exposure. The employer reviews whether the task can be controlled by another method and, if respirator use remains required, supplies the appropriate program steps and equipment. Ben cannot solve the problem by tightening the straps or performing a seal check alone. The correct response connects the identified hazard to the employer's protection process rather than treating a respirator as ordinary shared clothing.\n\nSource notes: 1910.1200(e)-(h), especially (f)(1), (f)(6), (f)(8), and (g)(8); OSHA Safety Data Sheets brief; OSHA H2S Hazards and Evaluating and Controlling Exposure guidance; 1910.134(c)-(k), especially (d), (e), (f), and (g); 1926.59 and 1926.103. The scenarios are original. Product-specific SDS information, employer exposure evaluation, medical clearance, fit testing, instrument training, and emergency arrangements remain separate requirements.",
+    "sourceUrls": [
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200",
+      "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+      "https://www.osha.gov/hydrogen-sulfide/hazards",
+      "https://www.osha.gov/hydrogen-sulfide/evaluating-controlling-exposure",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.59",
+      "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.103"
+    ],
+    "questions": [
+      {
+        "id": "ESC05-K1",
+        "prompt": "A clear cleaning liquid arrives in an unidentified bottle. What should you do?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Smell it to confirm the usual solvent."
+          },
+          {
+            "id": "B",
+            "label": "Use it outdoors so identification is unnecessary."
+          },
+          {
+            "id": "C",
+            "label": "Stop use and have the exact product and appropriate labeling established."
+          },
+          {
+            "id": "D",
+            "label": "Write cleaner on it and continue."
+          }
+        ],
+        "correctOptionIds": [
+          "C"
+        ],
+        "explanation": "Appearance and odor cannot establish identity. Exact product information and appropriate task controls must be available before use."
+      },
+      {
+        "id": "ESC05-K2",
+        "prompt": "A detector alarms but nobody smells H2S. What is the correct response?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Wait for symptoms to confirm the alarm."
+          },
+          {
+            "id": "B",
+            "label": "Follow the alarm and escape plan, warn from safety, and report at muster."
+          },
+          {
+            "id": "C",
+            "label": "Approach the suspected source to check."
+          },
+          {
+            "id": "D",
+            "label": "Silence it if nearby workers feel normal."
+          }
+        ],
+        "correctOptionIds": [
+          "B"
+        ],
+        "explanation": "Smell is unreliable for H2S and symptoms can come too late. An alarm triggers the planned protective response."
+      },
+      {
+        "id": "ESC05-K3",
+        "prompt": "Which statement about required tight-fitting respirators is correct?",
+        "options": [
+          {
+            "id": "A",
+            "label": "A user seal check replaces initial and annual fit tests."
+          },
+          {
+            "id": "B",
+            "label": "Completing awareness training provides medical clearance."
+          },
+          {
+            "id": "C",
+            "label": "One fit test covers every facepiece model."
+          },
+          {
+            "id": "D",
+            "label": "Employer medical evaluation, suitable selection, fit testing, and training are separate program duties."
+          }
+        ],
+        "correctOptionIds": [
+          "D"
+        ],
+        "explanation": "Awareness, medical suitability, facepiece fit, and task selection answer different questions. A seal check each donning does not replace fit testing."
+      },
+      {
+        "id": "ESC05-K4",
+        "prompt": "Which SDS sections most directly support a planned check of storage incompatibility and exposure controls?",
+        "options": [
+          {
+            "id": "A",
+            "label": "Sections 7 and 10 for handling/reactivity, and Section 8 for exposure controls."
+          },
+          {
+            "id": "B",
+            "label": "Only Section 1 because supplier identity establishes safety."
+          },
+          {
+            "id": "C",
+            "label": "Only Section 16 because the date is sufficient."
+          },
+          {
+            "id": "D",
+            "label": "Sections 12 through 15 alone."
+          }
+        ],
+        "correctOptionIds": [
+          "A"
+        ],
+        "explanation": "Handling, stability/reactivity and exposure-control information must be considered together for the actual task. An SDS supports the employer's assessment."
+      }
+    ]
+  }
+]

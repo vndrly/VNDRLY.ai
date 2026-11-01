@@ -4,6 +4,7 @@ import {AssignedLibraryReadSchema} from '@workspace/api-zod';
 import {useTranslation} from 'react-i18next';
 import TogglePillButton from '@/components/brand-pill-button';
 import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@/components/ui/dialog';
+import CertificationExam from './certification-exam';
 import {LibraryBody} from './library-body';
 type Data=z.infer<typeof AssignedLibraryReadSchema>;
 export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Data;busy:boolean;uncertain:boolean;send:(payload:unknown)=>Promise<unknown>;retry:()=>Promise<unknown>}) {
@@ -30,6 +31,7 @@ export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Da
     <TogglePillButton tone="brand" disabled={busy||uncertain||!selected.length||!!responses[question.id]} onClick={()=>void action({action:'answer',questionId:question.id,optionIds:selected})}>{t('h03Course.submitAnswer')}</TogglePillButton>
    </fieldset>:<TogglePillButton tone="brand" disabled={busy||uncertain} onClick={()=>void action({action:'advance',acknowledged:true})}>{t(index===guided.steps.length-1?'h03Course.finish':'h03Course.continue')}</TogglePillButton>}
   </article>}
+  {training.certificationExam&&<CertificationExam data={data} busy={busy} uncertain={uncertain} send={send}/>}
   {Object.entries(responses).length>0&&<details><summary>{t('h03Course.answerRecord')}</summary>{Object.entries(responses).map(([id,r])=>{const q=training.questions.find(q=>q.id===id)!;return <div key={id} className="border-t py-3"><p>{q.prompt}</p><p>{t('h03Course.originalAnswer')}: {q.options.filter(o=>r.originalOptionIds.includes(o.id)).map(o=>o.label).join(', ')}</p><p>{t('h03Course.currentAnswer')}: {q.options.filter(o=>r.correctedOptionIds.includes(o.id)).map(o=>o.label).join(', ')}</p><p>{t(r.remediatedAt?'h03Course.corrected':r.correct?'h03Course.correct':'h03Course.needsCorrection')}</p></div>})}</details>}
   {!!notice&&<p role="alert">{notice}</p>}
   {uncertain&&<TogglePillButton tone="brand" disabled={busy} onClick={()=>void retry().catch(e=>setNotice(String(e)))}>{t('workHubLibrary.retry')}</TogglePillButton>}

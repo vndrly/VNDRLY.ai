@@ -7,9 +7,9 @@ describe('task instruction and residual qualification contract',()=>{
   const prior=JSON.parse(readFileSync(new URL('../../../../research/safety-program/2026-11-02/preserved-course-identities.json',import.meta.url),'utf8')) as {id:string;sourceSha256:string;contentSha256:string}[];
   expect(prior).toHaveLength(69);
   for(const course of prior)expect(trainingCatalog.curriculum.find(c=>c.id===course.id)).toMatchObject(course);
-  expect(trainingCatalog.curriculum).toHaveLength(116);
+  expect(trainingCatalog.curriculum).toHaveLength(117);
   expect(trainingCatalog.residuals?.groups).toHaveLength(49);
-  const taskIds=new Set(trainingCatalog.curriculum.filter(c=>c.id.startsWith('G')&&Number(c.id.slice(1))>=50).map(c=>c.id));
+  const taskIds=new Set(trainingCatalog.curriculum.filter(c=>c.id.startsWith('G')&&Number(c.id.slice(1))>=50&&Number(c.id.slice(1))<=98).map(c=>c.id));
   expect(taskIds.size).toBe(47);
   for(const group of trainingCatalog.residuals!.groups){
    expect(group.vendorEvidenceRequired.length).toBeGreaterThan(0);

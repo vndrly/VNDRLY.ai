@@ -69,3 +69,5 @@ fs.writeFileSync(`${root}/prepared-course-publication.json`,JSON.stringify({vers
 const data={catalog:master,legacy:JSON.parse(fs.readFileSync(`${priorRoot}/legacy-service-training-crosswalk.json`)),common:JSON.parse(fs.readFileSync(`${priorRoot}/common-training-role-rules.json`)),additional,residuals,curriculum:courses.map(({content,...c})=>({...c,contentSha256:safetyTrainingContentHash(content)}))};
 fs.writeFileSync('artifacts/api-server/src/data/safety-training-catalog.ts',`// Generated from source-linked original VNDRLY training and explicit residual evidence.\nimport {gunzipSync}from'node:zlib';\nexport const safetyTrainingCatalog: unknown = JSON.parse(gunzipSync(Buffer.from(${JSON.stringify(gzipSync(Buffer.from(JSON.stringify(data))).toString('base64'))},'base64')).toString('utf8'));\n`);
 console.log(JSON.stringify({priorCourses:69,newTaskCourses:taskCourses.length,totalCourses:courses.length,residualGroups:residualGroups.length,services:master.services.length,practicalGapsFalselyClosed:0}));
+// The separately assessed flagship adds its own immutable identity after this baseline.
+await import('./build-energy-safety-core.mjs');

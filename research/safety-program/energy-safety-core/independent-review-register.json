@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "reviewDate": "2026-11-01",
+  "status": "VNDRLY-authored training and internal exam; external validation and acceptance pending",
+  "items": [
+    {
+      "id": "IR01",
+      "owner": "Independent occupational safety reviewer",
+      "status": "OPEN",
+      "required": "Check all 42 benchmark mappings against actual lesson paragraphs, scenarios and assessment coverage, document omissions and resolve them before any external equivalence claim."
+    },
+    {
+      "id": "IR02",
+      "owner": "Qualified regulatory reviewers for actual industry/jurisdiction",
+      "status": "OPEN",
+      "required": "Validate applicability, current federal/state requirements and task exclusions in every OSHA row; review actual employer/site evidence. This is an author-prepared coverage register, not a compliance determination."
+    },
+    {
+      "id": "IR03",
+      "owner": "Assessment specialist independent of course sales",
+      "status": "OPEN",
+      "required": "Job/knowledge analysis, examination blueprint and item review, defensible passing standard, accessibility/fairness, item statistics, retest exposure and retention study. Current 80% threshold is provisional VNDRLY policy."
+    },
+    {
+      "id": "IR04",
+      "owner": "Qualified instructors and learner pilot reviewers",
+      "status": "OPEN",
+      "required": "Evaluate teaching accuracy, comprehension, learner duration, accessibility and delivery. Self-paced publication is not evidence of eight instructional hours or equivalence to instructor-led delivery."
+    },
+    {
+      "id": "IR05",
+      "owner": "VNDRLY credential governance and independent auditor",
+      "status": "OPEN",
+      "required": "Validate identity assurance/proctoring, security, privacy, records, complaints/appeals, conflicts of interest, version changes, suspension/revocation and any chosen accreditation route. Current exam is account-authenticated, not independently proctored."
+    },
+    {
+      "id": "IR06",
+      "owner": "Each accepting partner/operator",
+      "status": "OPEN",
+      "required": "Written acceptance naming the VNDRLY course/version, delivery method, assessment, location/service/role, required additions and validity. No PEC/SafeLand/SafeGulf/IADC approval or universal partner acceptance is claimed."
+    },
+    {
+      "id": "IR07",
+      "owner": "Accrediting body if accreditation is pursued",
+      "status": "OPEN",
+      "required": "External application, curriculum/delivery/instructor audits and formal approval. Published objective coverage does not grant accreditation or permission to issue another organization’s credential."
+    },
+    {
+      "id": "IR08",
+      "owner": "Qualified practical assessors and responsible employer",
+      "status": "OPEN",
+      "required": "Observe actual applicable PPE, vehicle/equipment, isolation, gas testing, rescue and other task skills; identify worker/assessor/competence basis/equipment/method/criteria/result/date/limitations/reassessment, then employer authorization."
+    },
+    {
+      "id": "IR09",
+      "owner": "Qualified language/accessibility reviewers",
+      "status": "OPEN",
+      "required": "This release is English. Validate translations and alternative accessible instruction/assessment for learners needing them; do not treat English completion as proof of understanding in another language."
+    }
+  ]
+}

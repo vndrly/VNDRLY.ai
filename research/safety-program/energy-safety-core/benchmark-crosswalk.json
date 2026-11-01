@@ -1,0 +1,915 @@
+{
+  "version": 1,
+  "reviewDate": "2026-11-01",
+  "benchmark": "Veriforce Basic Orientation 7.0 published syllabus, January 8 2025",
+  "sourceUrl": "https://veriforce.com/wp-content/uploads/2025/01/Basic-Version-7.0-Syllabus-01.08.2025.pdf",
+  "scope": "42 published Basic7 objectives. Core Compliance legacy2016 is a separate benchmark requiring a current specification; this course claims no Core Compliance, offshore, H2S Clear or accredited equivalence.",
+  "independentValidation": "OPEN",
+  "objectives": [
+    {
+      "objective": "1.1",
+      "topic": "Safety participation",
+      "lessonIds": [
+        "ESC01"
+      ],
+      "learningChecks": [
+        "ESC01-K1"
+      ],
+      "examDomain": "ESC01",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC01",
+        "heading": "Employers and workers have different responsibilities",
+        "paragraphSha256": "cc780690bc2eda8584dafe5d5a18d4c4a9507eb0a5da571e4016d806a1b6e8e5"
+      },
+      "examQuestionIds": [
+        "ESC_EX_01_1"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "1.2",
+      "topic": "Human performance",
+      "lessonIds": [
+        "ESC01"
+      ],
+      "learningChecks": [
+        "ESC01-K3"
+      ],
+      "examDomain": "ESC01",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC01",
+        "heading": "Behavior-based safety and human performance",
+        "paragraphSha256": "059a1654721f8e5cbe78a7728ef6498ce3f9b82bdd1b0a17a9ec8963a56a51e3"
+      },
+      "examQuestionIds": [
+        "ESC_EX_01_2"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "1.3",
+      "topic": "Life-saving decisions",
+      "lessonIds": [
+        "ESC01"
+      ],
+      "learningChecks": [
+        "ESC01-K5"
+      ],
+      "examDomain": "ESC01",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC01",
+        "heading": "IOGP Life-Saving Rules: purpose and field application",
+        "paragraphSha256": "73b119812b6e3d63bcd54c1e511c3b5508ccf987d5a71bd6feb1df886d78c05e"
+      },
+      "examQuestionIds": [
+        "ESC_EX_01_7"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "2.1",
+      "topic": "Hazard versus risk",
+      "lessonIds": [
+        "ESC02"
+      ],
+      "learningChecks": [
+        "ESC02-K1"
+      ],
+      "examDomain": "ESC02",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC02",
+        "heading": "Start with how harm could occur",
+        "paragraphSha256": "22d46f9970856a1265ff0ecda6f1752c3deee33f40aafc8383277d651b393d46"
+      },
+      "examQuestionIds": [
+        "ESC_EX_02_1"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "2.2",
+      "topic": "Exposure assessment",
+      "lessonIds": [
+        "ESC02"
+      ],
+      "learningChecks": [
+        "ESC02-K5"
+      ],
+      "examDomain": "ESC02",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC02",
+        "heading": "Industrial hygiene: anticipate, recognize, evaluate, and control",
+        "paragraphSha256": "4e5f68e2f098b1e90c79fa63fff6098f75b46c824a15409398c8c55cc6a443ae"
+      },
+      "examQuestionIds": [
+        "ESC_EX_02_7"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "2.3",
+      "topic": "Task assessment",
+      "lessonIds": [
+        "ESC02"
+      ],
+      "learningChecks": [
+        "ESC02-K1",
+        "ESC02-K4"
+      ],
+      "examDomain": "ESC02",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC02",
+        "heading": "Build a usable job safety analysis",
+        "paragraphSha256": "755486d7f2f162c904ccfc9b7e1e7432963b554989b8ce52bfaf00d45dd4d4f0"
+      },
+      "examQuestionIds": [
+        "ESC_EX_02_1",
+        "ESC_EX_02_4"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "3.1",
+      "topic": "Control hierarchy",
+      "lessonIds": [
+        "ESC02"
+      ],
+      "learningChecks": [
+        "ESC02-K2"
+      ],
+      "examDomain": "ESC02",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC02",
+        "heading": "Use the hierarchy to improve the plan",
+        "paragraphSha256": "22dbe94b5b59fb844501c478f2bccef18bd0c641d76c6510fef612e03e9a1ca7"
+      },
+      "examQuestionIds": [
+        "ESC_EX_02_2",
+        "ESC_EX_02_5"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "3.2",
+      "topic": "Administrative defenses",
+      "lessonIds": [
+        "ESC02"
+      ],
+      "learningChecks": [
+        "ESC02-K2"
+      ],
+      "examDomain": "ESC02",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC02",
+        "heading": "Use the hierarchy to improve the plan",
+        "paragraphSha256": "22dbe94b5b59fb844501c478f2bccef18bd0c641d76c6510fef612e03e9a1ca7"
+      },
+      "examQuestionIds": [
+        "ESC_EX_02_6"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "3.3",
+      "topic": "PPE responsibilities",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "learningChecks": [
+        "ESC08-KC3"
+      ],
+      "examDomain": "ESC08",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC08",
+        "heading": "PPE as a fitted, maintained barrier",
+        "paragraphSha256": "0fb99c535c1f194f4b7fadb5217bd839fed666fac35dadd8e5ab32b0ef7bcb63"
+      },
+      "examQuestionIds": [
+        "ESC_EX_08_6"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "3.4",
+      "topic": "PPE barriers",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "learningChecks": [
+        "ESC08-KC3"
+      ],
+      "examDomain": "ESC08",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC08",
+        "heading": "PPE as a fitted, maintained barrier",
+        "paragraphSha256": "0fb99c535c1f194f4b7fadb5217bd839fed666fac35dadd8e5ab32b0ef7bcb63"
+      },
+      "examQuestionIds": [
+        "ESC_EX_08_3",
+        "ESC_EX_08_6"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "3.5",
+      "topic": "PPE selection",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "learningChecks": [
+        "ESC08-KC3"
+      ],
+      "examDomain": "ESC08",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC08",
+        "heading": "PPE as a fitted, maintained barrier",
+        "paragraphSha256": "0fb99c535c1f194f4b7fadb5217bd839fed666fac35dadd8e5ab32b0ef7bcb63"
+      },
+      "examQuestionIds": [
+        "ESC_EX_08_3",
+        "ESC_EX_08_6"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "3.6",
+      "topic": "Controlled bypass",
+      "lessonIds": [
+        "ESC03"
+      ],
+      "learningChecks": [
+        "ESC03-K5"
+      ],
+      "examDomain": "ESC03",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC03",
+        "heading": "Controlled bypass: a managed exception, not a shortcut",
+        "paragraphSha256": "e05541f211166c2fba770ff3f5783bb02a2363fc0c6ffe9a9fa908b7c3efbc28"
+      },
+      "examQuestionIds": [
+        "ESC_EX_03_5"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "4.1",
+      "topic": "Chemical communication",
+      "lessonIds": [
+        "ESC05"
+      ],
+      "learningChecks": [
+        "ESC05-K1"
+      ],
+      "examDomain": "ESC05",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC05",
+        "heading": "Read a label as a decision aid",
+        "paragraphSha256": "523af180e5a1450d899536001c4e5842eccb729b40736bc3faf3a1b6004c7900"
+      },
+      "examQuestionIds": [
+        "ESC_EX_05_1"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "4.2",
+      "topic": "SDS exercise",
+      "lessonIds": [
+        "ESC05"
+      ],
+      "learningChecks": [
+        "ESC05-K4"
+      ],
+      "examDomain": "ESC05",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC05",
+        "heading": "Use the SDS sections efficiently",
+        "paragraphSha256": "5456c1568ec6dc92063de3f84dd692938657a8ed9b8c528db7391401529c25f8"
+      },
+      "examQuestionIds": [
+        "ESC_EX_05_2"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "5.1",
+      "topic": "Exposure pathways",
+      "lessonIds": [
+        "ESC05"
+      ],
+      "learningChecks": [
+        "ESC05-K1"
+      ],
+      "examDomain": "ESC05",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC05",
+        "heading": "Chemicals create several exposure paths",
+        "paragraphSha256": "41284cb0b95667d24f31268de4c942457b93750aae958862a96fb5fdf12bca08"
+      },
+      "examQuestionIds": [
+        "ESC_EX_05_7"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "5.2",
+      "topic": "H2S exposure",
+      "lessonIds": [
+        "ESC05"
+      ],
+      "learningChecks": [
+        "ESC05-K2"
+      ],
+      "examDomain": "ESC05",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC05",
+        "heading": "Recognize hydrogen sulfide without using smell",
+        "paragraphSha256": "b90e6938cd195bd69fbc759d7bf7ff55deea149ec7f86fe0b0eec18aa6b9a109"
+      },
+      "examQuestionIds": [
+        "ESC_EX_05_3",
+        "ESC_EX_05_4"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "5.3",
+      "topic": "Silica exposure",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "learningChecks": [
+        "ESC06-KC1"
+      ],
+      "examDomain": "ESC06",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC06",
+        "heading": "Silica, asbestos, and lead",
+        "paragraphSha256": "cfe808819ae1cd792d6210402d9cb2b38cbbc0cfcab2b3657775f9ffa34cd6f2"
+      },
+      "examQuestionIds": [
+        "ESC_EX_06_1"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "5.4",
+      "topic": "Dangerous atmospheres",
+      "lessonIds": [
+        "ESC05"
+      ],
+      "learningChecks": [
+        "ESC05-K2",
+        "ESC05-K3"
+      ],
+      "examDomain": "ESC05",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC05",
+        "heading": "Testing is a defined responsibility",
+        "paragraphSha256": "f5c12039023d2c55c3bdc3965d955621b38268bcf48535b4649ec6d66b874bd8"
+      },
+      "examQuestionIds": [
+        "ESC_EX_05_6"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "6.1",
+      "topic": "Blood exposure",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "learningChecks": [
+        "ESC09-KC4"
+      ],
+      "examDomain": "ESC06",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC09",
+        "heading": "Bloodborne pathogens",
+        "paragraphSha256": "53a0209ae879a7454e0c0072d9b8a8d0df7358631a50eeadbced3891c1fca0d5"
+      },
+      "examQuestionIds": [
+        "ESC_EX_06_5",
+        "ESC_EX_09_5"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "6.2",
+      "topic": "Infection prevention",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "learningChecks": [
+        "ESC06-KC6"
+      ],
+      "examDomain": "ESC06",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC06",
+        "heading": "Additional exposure decisions: radiation, infection, and coatings",
+        "paragraphSha256": "1aa611e6de233d2eb67dc2568f2f11b1330b12076e7c782a407f1ffefcba9307"
+      },
+      "examQuestionIds": [
+        "ESC_EX_06_8"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "6.3",
+      "topic": "Hygiene",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "learningChecks": [
+        "ESC06-KC6"
+      ],
+      "examDomain": "ESC05",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC06",
+        "heading": "Biological hazards, ergonomics, and hygiene",
+        "paragraphSha256": "526d644dc8ca4e7d7d37f18cf2c3b1f2cb8048884415f21e88d100a386fd76cc"
+      },
+      "examQuestionIds": [
+        "ESC_EX_05_7",
+        "ESC_EX_06_8"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "7.1",
+      "topic": "Pressure energy",
+      "lessonIds": [
+        "ESC03"
+      ],
+      "learningChecks": [
+        "ESC03-K1"
+      ],
+      "examDomain": "ESC04",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC03",
+        "heading": "Pressure systems and line opening",
+        "paragraphSha256": "2474df6049b3dd2f718d757e24ba53b2446913983440989d140c0bc6dea9849a"
+      },
+      "examQuestionIds": [
+        "ESC_EX_04_6"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "7.2",
+      "topic": "Noise exposure",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "learningChecks": [
+        "ESC06-KC2"
+      ],
+      "examDomain": "ESC06",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC06",
+        "heading": "Noise, radiation, and temperature",
+        "paragraphSha256": "db655d147a55220530f5811d3e918ccf3f70e4627d2c5ecef8c73a2b40570b83"
+      },
+      "examQuestionIds": [
+        "ESC_EX_06_4"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "7.3",
+      "topic": "Natural radiation",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "learningChecks": [
+        "ESC06-KC5"
+      ],
+      "examDomain": "ESC06",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC06",
+        "heading": "Additional exposure decisions: radiation, infection, and coatings",
+        "paragraphSha256": "1aa611e6de233d2eb67dc2568f2f11b1330b12076e7c782a407f1ffefcba9307"
+      },
+      "examQuestionIds": [
+        "ESC_EX_06_7"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "7.4",
+      "topic": "Thermal exposure",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "learningChecks": [
+        "ESC06-KC4"
+      ],
+      "examDomain": "ESC06",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC06",
+        "heading": "Noise, radiation, and temperature",
+        "paragraphSha256": "db655d147a55220530f5811d3e918ccf3f70e4627d2c5ecef8c73a2b40570b83"
+      },
+      "examQuestionIds": [
+        "ESC_EX_06_3",
+        "ESC_EX_06_9"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "8.1",
+      "topic": "Handling decisions",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "learningChecks": [
+        "ESC08-KC5"
+      ],
+      "examDomain": "ESC06",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC06",
+        "heading": "Additional exposure decisions: radiation, infection, and coatings",
+        "paragraphSha256": "1aa611e6de233d2eb67dc2568f2f11b1330b12076e7c782a407f1ffefcba9307"
+      },
+      "examQuestionIds": [
+        "ESC_EX_06_6",
+        "ESC_EX_08_7"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "8.2",
+      "topic": "Tool ergonomics",
+      "lessonIds": [
+        "ESC06"
+      ],
+      "learningChecks": [
+        "ESC08-KC5"
+      ],
+      "examDomain": "ESC08",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC06",
+        "heading": "Additional exposure decisions: radiation, infection, and coatings",
+        "paragraphSha256": "1aa611e6de233d2eb67dc2568f2f11b1330b12076e7c782a407f1ffefcba9307"
+      },
+      "examQuestionIds": [
+        "ESC_EX_08_8"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "9.1",
+      "topic": "Workplace restrictions",
+      "lessonIds": [
+        "ESC10"
+      ],
+      "learningChecks": [
+        "ESC10-KC5"
+      ],
+      "examDomain": "ESC10",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC10",
+        "heading": "Prohibited items and searches: understand the actual policy",
+        "paragraphSha256": "205b9d03062b03949d5d06742865082e8b164aa9538435440fcb58410fc4857e"
+      },
+      "examQuestionIds": [
+        "ESC_EX_10_7"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "9.2",
+      "topic": "Substance impairment",
+      "lessonIds": [
+        "ESC10"
+      ],
+      "learningChecks": [
+        "ESC10-KC1"
+      ],
+      "examDomain": "ESC10",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC10",
+        "heading": "Drugs, alcohol, and work readiness",
+        "paragraphSha256": "d217d77abe745bf1b3ef4208c0c5af826e2afe60cba4f14001cc113b90577e8a"
+      },
+      "examQuestionIds": [
+        "ESC_EX_10_9"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "9.3",
+      "topic": "Respectful conduct",
+      "lessonIds": [
+        "ESC10"
+      ],
+      "learningChecks": [
+        "ESC10-KC6"
+      ],
+      "examDomain": "ESC10",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC10",
+        "heading": "Respectful work and violence prevention",
+        "paragraphSha256": "95d404fa0f03c7eb35b1930b90a61dd6d6b7e90a47860a72541be137efdf3f7f"
+      },
+      "examQuestionIds": [
+        "ESC_EX_10_10"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "9.4",
+      "topic": "Violence prevention",
+      "lessonIds": [
+        "ESC10"
+      ],
+      "learningChecks": [
+        "ESC10-KC4"
+      ],
+      "examDomain": "ESC10",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC10",
+        "heading": "Respectful work and violence prevention",
+        "paragraphSha256": "95d404fa0f03c7eb35b1930b90a61dd6d6b7e90a47860a72541be137efdf3f7f"
+      },
+      "examQuestionIds": [
+        "ESC_EX_10_3"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "9.5",
+      "topic": "Armed threats",
+      "lessonIds": [
+        "ESC10"
+      ],
+      "learningChecks": [
+        "ESC10-KC4"
+      ],
+      "examDomain": "ESC10",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC10",
+        "heading": "Respectful work and violence prevention",
+        "paragraphSha256": "95d404fa0f03c7eb35b1930b90a61dd6d6b7e90a47860a72541be137efdf3f7f"
+      },
+      "examQuestionIds": [
+        "ESC_EX_10_11"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "9.6",
+      "topic": "Psychological wellbeing",
+      "lessonIds": [
+        "ESC10"
+      ],
+      "learningChecks": [
+        "ESC10-KC6"
+      ],
+      "examDomain": "ESC10",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC10",
+        "heading": "Stress, mental wellbeing, and short-service workers",
+        "paragraphSha256": "95767bb34f962beff86d27ead1f8e306df2195b86818bec5026ef84bb7b735a1"
+      },
+      "examQuestionIds": [
+        "ESC_EX_10_8"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "10.1",
+      "topic": "Emergency planning",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "learningChecks": [
+        "ESC09-KC1"
+      ],
+      "examDomain": "ESC09",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC09",
+        "heading": "Learn the plan before an alarm",
+        "paragraphSha256": "1dbb47d4026ee953b57241fae8a3ba5da1a779937cda9c328576d7fa6ed76c4c"
+      },
+      "examQuestionIds": [
+        "ESC_EX_09_1"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "10.2",
+      "topic": "Medical response",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "learningChecks": [
+        "ESC09-KC1",
+        "ESC09-KC4"
+      ],
+      "examDomain": "ESC09",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC09",
+        "heading": "Medical first aid and rescue limits",
+        "paragraphSha256": "7600425a6e4f7c2d5d31f3351255047e1ad649bdaf9e1977a17aa9f6f1aa84a6"
+      },
+      "examQuestionIds": [
+        "ESC_EX_09_4",
+        "ESC_EX_09_5"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "10.3",
+      "topic": "Evacuation",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "learningChecks": [
+        "ESC09-KC1"
+      ],
+      "examDomain": "ESC09",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC09",
+        "heading": "Alarm, move, and account",
+        "paragraphSha256": "e5eb7a9002f66a2a3bd0af531969a809c547228af22069e4bce6c97a13fd0f29"
+      },
+      "examQuestionIds": [
+        "ESC_EX_09_1"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "11.1",
+      "topic": "Orderly workspaces",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "learningChecks": [
+        "ESC08-KC4"
+      ],
+      "examDomain": "ESC08",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC08",
+        "heading": "Housekeeping and walking-working surfaces",
+        "paragraphSha256": "bfcf85c4e2a9bf58f7fc24e1b9d45f5bff5988d6861857fe2c9347b51014382e"
+      },
+      "examQuestionIds": [
+        "ESC_EX_08_4"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "11.2",
+      "topic": "Environmental care",
+      "lessonIds": [
+        "ESC09"
+      ],
+      "learningChecks": [
+        "ESC09-KC3"
+      ],
+      "examDomain": "ESC09",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC09",
+        "heading": "Spills and environmental interfaces",
+        "paragraphSha256": "2cc4953c64be419a70e58f131ce9ff0ebd8ec68c2d490b2e6c526e92df2ebe1d"
+      },
+      "examQuestionIds": [
+        "ESC_EX_09_3",
+        "ESC_EX_09_7"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "11.3",
+      "topic": "Walking surfaces",
+      "lessonIds": [
+        "ESC08"
+      ],
+      "learningChecks": [
+        "ESC08-KC4"
+      ],
+      "examDomain": "ESC08",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC08",
+        "heading": "Housekeeping and walking-working surfaces",
+        "paragraphSha256": "bfcf85c4e2a9bf58f7fc24e1b9d45f5bff5988d6861857fe2c9347b51014382e"
+      },
+      "examQuestionIds": [
+        "ESC_EX_08_4",
+        "ESC_EX_08_5"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "11.4",
+      "topic": "Road decisions",
+      "lessonIds": [
+        "ESC07"
+      ],
+      "learningChecks": [
+        "ESC07-KC2"
+      ],
+      "examDomain": "ESC07",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC07",
+        "heading": "Driving with changing conditions",
+        "paragraphSha256": "49db8d5107a1bbbb61f62269e1209f05e1dcef81ae2fe74564028bd0bdd8802d"
+      },
+      "examQuestionIds": [
+        "ESC_EX_07_1",
+        "ESC_EX_07_2",
+        "ESC_EX_07_3"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "11.5",
+      "topic": "Specialist exposures",
+      "lessonIds": [
+        "ESC04"
+      ],
+      "learningChecks": [
+        "ESC04-K1",
+        "ESC04-K2",
+        "ESC04-K3",
+        "ESC04-K4"
+      ],
+      "examDomain": "ESC04",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC04",
+        "heading": "Recognize a fatal exposure early",
+        "paragraphSha256": "65af2da66952143a5650ebada30d6b10be96f1106e23558fc495e27a823e073d"
+      },
+      "examQuestionIds": [
+        "ESC_EX_04_1",
+        "ESC_EX_04_2",
+        "ESC_EX_04_3",
+        "ESC_EX_04_5"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    },
+    {
+      "objective": "11.6",
+      "topic": "Crush trajectories",
+      "lessonIds": [
+        "ESC04"
+      ],
+      "learningChecks": [
+        "ESC07-KC4"
+      ],
+      "examDomain": "ESC04",
+      "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
+      "instruction": {
+        "lessonId": "ESC04",
+        "heading": "Suspended loads and line of fire",
+        "paragraphSha256": "14e8dc5beab1aade62bcaaeb00b80e3d52e0471653b9996ddf14faf2290858f9"
+      },
+      "examQuestionIds": [
+        "ESC_EX_04_4"
+      ],
+      "assessmentNote": "Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open."
+    }
+  ]
+}
