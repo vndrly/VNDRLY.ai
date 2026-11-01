@@ -668,11 +668,11 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/30 to-transparent" />
         <div className="relative z-10 flex items-end justify-start p-12 w-full h-full">
           <div data-card-layout
-            className={cn("bg-white/10 backdrop-blur-md rounded-xl p-8 max-w-md border-2", branded ? "" : "border-amber-500")}
+            className={cn("bg-white/10 text-white [--app-card-heading-color:#fff] backdrop-blur-md rounded-xl p-8 max-w-md border-2", branded ? "" : "border-amber-500")}
             style={branded ? { borderColor: brand.primary } : undefined}
           >
             <CardHeading as="h2" className="text-xl font-bold text-white mb-2">{t("login.heroTitle")}</CardHeading>
-            <p className="text-sm text-white/85 leading-relaxed font-normal">
+            <p className="text-sm text-white leading-relaxed font-normal">
               {t("login.heroDescription")}
             </p>
           </div>
