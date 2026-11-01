@@ -54,6 +54,7 @@ const course={id:'G99',categoryId:'competence',title:content.title,purpose:'Teac
 fs.writeFileSync(`${root}/course.json`,JSON.stringify(course,null,2));
 const prior=JSON.parse(fs.readFileSync('research/safety-program/2026-11-02/prepared-course-publication.json')).courses;
 if(prior.length!==116||prior.some(c=>c.id==='G99'))throw Error('Expected116preservedcourses');
+fs.writeFileSync(`${root}/preserved-course-identities.json`,JSON.stringify(prior.map(c=>({id:c.id,sourceSha256:c.sourceSha256,contentSha256:safetyTrainingContentHash(LibraryDraftSchema.parse(c.content))})),null,2));
 const dataFile='artifacts/api-server/src/data/safety-training-catalog.ts',dataText=fs.readFileSync(dataFile,'utf8'),encoded=dataText.match(/Buffer\.from\(("[A-Za-z0-9+/=]+")/)[1];
 const catalog=JSON.parse(gunzipSync(Buffer.from(JSON.parse(encoded),'base64')).toString('utf8'));
 catalog.curriculum=catalog.curriculum.filter(c=>c.id!=='G99');

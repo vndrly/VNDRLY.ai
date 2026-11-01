@@ -12,8 +12,8 @@ describe('finished Energy Safety Core and honest benchmark coverage',()=>{
   expect(exam.questions.every(q=>!t.questions.some(l=>l.id===q.id||l.prompt===q.prompt))).toBe(true);
   expect(t.lessons[0].body).toContain('not independently proctored');expect(t.lessons[0].body).toContain('not issue a PEC');
   expect(trainingCatalog.curriculum.find(c=>c.id==='G99')).toMatchObject({contentSha256:course.contentSha256});
-  const prior=JSON.parse(readFileSync(new URL('../../../../research/safety-program/2026-11-02/prepared-course-publication.json',import.meta.url),'utf8')).courses;
-  for(const c of prior)expect(trainingCatalog.curriculum.find(x=>x.id===c.id)).toMatchObject({sourceSha256:c.sourceSha256,contentSha256:safetyTrainingContentHash(LibraryDraftSchema.parse(c.content))});
+  const prior=read('preserved-course-identities.json');expect(prior).toHaveLength(116);
+  for(const c of prior)expect(trainingCatalog.curriculum.find(x=>x.id===c.id)).toMatchObject(c);
   expect(trainingCatalog.additional.courses.some(c=>c.courseId==='G99')).toBe(false);
  });
  it('links42actual objectives to real instruction and assessment and leaves workplace/external evidence open',()=>{
