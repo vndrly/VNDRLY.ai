@@ -14,7 +14,16 @@ async function main() {
   const c = await pool.connect();
   try {
     await c.query("BEGIN");
-    for (const sql of nativeOperationsMigration) await c.query(sql);
+    for (const sql of nativeOperationsMigration) {
+      const [, table, column] = sql.match(/^ALTER TABLE (\w+) ADD COLUMN IF NOT EXISTS (\w+) /)!;
+      // IF NOT EXISTS inside ALTER still takes AccessExclusiveLock. Check the
+      // catalog first so an already applied migration does not stop live work.
+      const existing = await c.query(
+        "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=$1 AND column_name=$2",
+        [table, column],
+      );
+      if (!existing.rowCount) await c.query(sql);
+    }
     await c.query("COMMIT");
     console.log("Native operations additive columns ready");
   } catch (e) {
