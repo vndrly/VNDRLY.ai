@@ -1,7 +1,7 @@
 import {it,expect}from'vitest';
 import {randomUUID}from'node:crypto';
 import {eq}from'drizzle-orm';
-import {db,usersTable as users,vendorsTable as vendors,vendorPeopleTable as workers,userOrgMembershipsTable as memberships,workHubFormTemplatesTable as templates,vendorCrewPresetsTable as crews}from'@workspace/db';
+import {db,usersTable as users,vendorsTable as vendors,vendorPeopleTable as workers,userOrgMembershipsTable as memberships,workHubFormTemplatesTable as templates,workHubCrewsTable as groups}from'@workspace/db';
 import {LibraryMetadataSchema}from'@workspace/api-zod';
 import {saveLibrary,changeLibraryState}from'./library-service';
 import {employeeChecklist}from'./library-assignments';
@@ -31,8 +31,8 @@ it('saves tenant-scoped policy details, assigns new hires and changed roles, and
  const initial=await readTrainingPolicy(admin.actor,policyId);expect(initial.trainingItemId).toBe(trainingId);
  // A catalog position can be required before its first employee is hired.
  await db.update(vendors).set({staffRoleCatalog:{version:1,entries:[{id:'gas',label:'Gas Technician',group:'Technical'}]}}).where(eq(vendors.id,vendor.id));
- const[emptyCrew]=await db.insert(crews).values({vendorId:vendor.id,name:'Empty synthetic crew',memberEmployeeIds:[]}).returning();
- const policy={...initial.policy,title:'Gas technician training',description:'Required knowledge for assigned gas work',purpose:'Teach measurement limits and escalation',requiredStaffRoleIds:['staff:gas'],requiredGroupIds:[`crew:${emptyCrew.id}`],requiredUserIds:[existing.actor.userId],newHireRequired:true,roleChangeRequired:false};
+ const[emptyCrew]=await db.insert(groups).values({ownerOrgType:'vendor',ownerOrgId:vendor.id,createdById:admin.actor.userId,name:'Empty synthetic group'}).returning();
+ const policy={...initial.policy,requiredStaffRoleIds:['staff:gas'],requiredGroupIds:[emptyCrew.id],requiredUserIds:[existing.actor.userId],newHireRequired:true,roleChangeRequired:false};
  await saveTrainingPolicy(admin.actor,policyId,command(policy,initial.version));
  expect((await readTrainingPolicy(admin.actor,policyId)).policy.purpose).toBe(policy.purpose);
  await expect(readTrainingPolicy(existing.actor,policyId)).rejects.toBeTruthy();
@@ -51,7 +51,7 @@ it('saves tenant-scoped policy details, assigns new hires and changed roles, and
  expect((await employeeChecklist(concurrent.actor)).items).toHaveLength(1);
  await db.update(users).set({suspendedAt:new Date()}).where(eq(users.id,existing.actor.userId));
  const unavailable=await readTrainingPolicy(admin.actor,policyId);expect(unavailable.people.some(p=>p.userId===existing.actor.userId)).toBe(false);
- await saveTrainingPolicy(admin.actor,policyId,command({...unavailable.policy,purpose:'Retain a visible unavailable historical selection'},unavailable.version));
+ await saveTrainingPolicy(admin.actor,policyId,command({...unavailable.policy},unavailable.version));
  const retained=await readTrainingPolicy(admin.actor,policyId);expect(retained.policy.requiredUserIds).toContain(existing.actor.userId);
  await saveTrainingPolicy(admin.actor,policyId,command({...retained.policy,requiredUserIds:[]},retained.version));
  expect((await readTrainingPolicy(admin.actor,policyId)).policy.requiredUserIds).toEqual([]);

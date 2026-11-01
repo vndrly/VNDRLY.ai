@@ -5089,6 +5089,10 @@
       "roster_access_denied": "No tienes permiso para ver este personal.",
       "invalid_request": "La solicitud de personal no es válida.",
       "internal_error": "No se pudo completar la solicitud de personal."
+    },
+    "equipment": {
+      "invalid_request": "Solicitud de equipo no válida. Revise los datos ingresados.",
+      "internal_error": "No se pudo procesar el equipo. Inténtelo de nuevo."
     }
   },
   "fieldNav": {

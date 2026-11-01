@@ -42,7 +42,7 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  expect(study.guide.studyUrl).toBe(`/api/work-hub/library/${itemId}/study-guide.pdf`);
  expect((await trainingStudyGuide(foreign,itemId)).guide.itemId).toBe(itemId);
  await expect(trainingStudyGuide({...foreign,vendorId:v.id+1},itemId)).rejects.toBeTruthy();
- expect(ownerCourse.metadata.content?.training).not.toHaveProperty('certificationExam');
+ expect(ownerCourse.metadata.content?.training?.certificationExam).toEqual({questionCount:1,passingPercent:80,maximumAttempts:3});
  expect(JSON.stringify(ownerCourse)).not.toContain('Exam-only hidden rationale');
  const ownerBefore=await ownerAssignmentDetail(admin,id);expect(ownerBefore.content.training).not.toHaveProperty('certificationExam');
  expect(JSON.stringify(ownerBefore)).not.toContain('Exam-only hidden rationale');

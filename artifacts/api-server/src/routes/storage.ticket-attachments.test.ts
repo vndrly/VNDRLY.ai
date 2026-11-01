@@ -1,3 +1,5 @@
+// Equipment authorization is covered by equipment tests; no equipment references in these fixtures.
+vi.mock("../services/equipment",()=>({createEquipmentService:()=>({canReadPhoto:async()=>false})}));
 // Ordinary ticket attachments never grant access to reserved Gate identity objects.
 vi.mock("../services/gate-identity",()=>({canReadGateIdentityObject:vi.fn(async()=>false)}));
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -72,6 +74,7 @@ vi.mock("@workspace/db", () => {
     return (row[condition.column] ?? null) === condition.value;
   }
   return {
+    pool: { query: async () => ({ rows: [] }) },
     db: {
       select: () => ({
         from: (table: Row) => {

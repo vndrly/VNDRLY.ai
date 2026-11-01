@@ -17,7 +17,7 @@ const groupId='11111111-1111-4111-8111-111111111111';
 const actor:any={userId:1142};
 beforeEach(()=>{state.sources=[];state.groups=[];state.people=[];state.members=[];});
 it('returns no groups when no defined Groups exist, without reading channels or work-crew presets',async()=>{
- expect((await libraryOptions(actor)).groups.map(group=>group.name)).toEqual(['Admin','All Hands','Office Staff','Gatekeepers']);
+ expect((await libraryOptions(actor)).groups.map(group=>group.name)).toEqual(['Admin','All Hands','Office Staff','Gate Supervisor','Gatekeepers']);
  expect(state.sources).toEqual(['groups','memberships','files']);
 });
 it('expands defined Group members only within eligible company staff',async()=>{

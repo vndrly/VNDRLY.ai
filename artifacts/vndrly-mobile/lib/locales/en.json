@@ -1884,6 +1884,10 @@
       "roster_access_denied": "You do not have permission to view this workforce.",
       "invalid_request": "The workforce request is invalid.",
       "internal_error": "The workforce request could not be completed."
+    },
+    "equipment": {
+      "invalid_request": "Invalid equipment request. Review the entered details.",
+      "internal_error": "Equipment could not be processed. Please try again."
     }
   },
   "toasts": {
