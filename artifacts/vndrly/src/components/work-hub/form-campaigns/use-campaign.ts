@@ -42,7 +42,10 @@ export function useCampaign<T>(path: string, parse: (value: unknown) => T) {
   }, [identity, path]);
   const query = useQuery({
     queryKey: ["form-campaign", path, identity],
-    queryFn: async () => parse(await workHubRequest(path)),
+    queryFn: async () => workHubRequest(path),
+    // Observers may validate different projections of the same endpoint.
+    // Cache the response intact; one view must not strip another view's fields.
+    select: parse,
     enabled: !!owner,
     refetchInterval: () =>
       document.visibilityState === "visible" ? 15000 : false,

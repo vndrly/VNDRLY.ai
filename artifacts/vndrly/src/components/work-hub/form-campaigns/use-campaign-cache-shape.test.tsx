@@ -1,0 +1,31 @@
+import React from 'react';
+import {afterEach,describe,expect,it,vi} from 'vitest';
+import {cleanup,renderHook,waitFor} from '@testing-library/react';
+import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
+import {z} from 'zod/v4';
+import {useCampaign} from './use-campaign';
+const mock=vi.hoisted(()=>({request:vi.fn()}));
+vi.mock('@/hooks/use-auth',()=>({useAuth:()=>({user:{userId:1,activeMembershipId:3,vendorId:7}})}));
+vi.mock('@/lib/work-hub-client',()=>({workHubRequest:mock.request,commandEnvelope:vi.fn()}));
+afterEach(()=>{cleanup();vi.clearAllMocks();});
+describe('shared Library options across views',()=>{
+ it('keeps files and assignment audiences available when each view validates a different projection',async()=>{
+  const options={files:[{id:'file-1',fileName:'Procedure'}],people:[{userId:17,name:'Alex'}],groups:[{id:'crew-1',name:'Crew'}]};
+  mock.request.mockImplementation(async()=>structuredClone(options));
+  const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
+  const wrapper=({children}:{children:React.ReactNode})=><QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  const filesSchema=z.object({files:z.array(z.object({id:z.string(),fileName:z.string()}))});
+  const audienceSchema=z.object({people:z.array(z.object({userId:z.number(),name:z.string()})),groups:z.array(z.object({id:z.string(),name:z.string()}))});
+  const files=renderHook(()=>useCampaign('/library/options',value=>filesSchema.parse(value)),{wrapper});
+  await waitFor(()=>expect(files.result.current.data?.files).toEqual(options.files));
+  const audience=renderHook(()=>useCampaign('/library/options',value=>audienceSchema.parse(value)),{wrapper});
+  await waitFor(()=>expect(audience.result.current.data?.groups).toEqual(options.groups));
+  expect(audience.result.current.data?.people).toEqual(options.people);
+  expect(files.result.current.data?.files).toEqual(options.files);
+  await audience.result.current.query.refetch();
+  await waitFor(()=>expect(files.result.current.data?.files).toEqual(options.files));
+  expect(audience.result.current.data?.groups).toEqual(options.groups);
+  expect(client.getQueryData(['form-campaign','/library/options','1:3:vendor:7'])).toEqual(options);
+  client.clear();
+ });
+});
