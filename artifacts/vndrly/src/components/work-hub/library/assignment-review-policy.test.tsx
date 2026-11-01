@@ -17,6 +17,14 @@ beforeEach(()=>{vi.clearAllMocks();mock.context='company:user:1';mock.request.mo
 afterEach(cleanup);
 
 describe('Policy-preselected assignment recipients',()=>{
+ it('expands the selected staff position to its people without changing the course or requiring a policy change',async()=>{
+  render(<AssignmentReview kind="training" initialItemId={itemId} positions={[{id:'staff:driver',label:'Driver',userIds:[17,23]}]} onSaved={vi.fn()}/>);
+  fireEvent.click(screen.getByRole('button',{name:'Driver (2)'}));
+  fireEvent.click(screen.getByRole('button',{name:'workHubLibrary.review'}));
+  await waitFor(()=>expect(mock.request).toHaveBeenCalled());
+  expect(JSON.parse(mock.request.mock.calls[0][1].body).audience).toEqual({mode:'selected',userIds:[17,23],groupIds:[]});
+  expect(JSON.parse(mock.request.mock.calls[0][1].body).itemId).toBe(itemId);
+ });
  it('retains the preselected person and group through mount and sends them to preview and confirmation',async()=>{
   const onSaved=vi.fn().mockResolvedValue(undefined);
   render(<AssignmentReview kind="training" initialItemId={itemId} initialUserIds={[17]} initialGroupIds={['crew:1']} onSaved={onSaved}/>);

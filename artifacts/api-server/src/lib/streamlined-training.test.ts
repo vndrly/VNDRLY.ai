@@ -26,10 +26,10 @@ describe('streamlined training requirements',()=>{
   expect(JSON.stringify(shown)).not.toMatch(/accredit/i);
   expect(shown.training!.guided!.steps).toHaveLength(10);
  });
- it('keeps the actual historical assessment wording while current revisions remove the unsupported assessment demand',()=>{
+ it('cleans current and historical course views while keeping stored grading identities intact',()=>{
   const raw=read('research/safety-program/2026-11-02/task-courses/G71.json'),content=LibraryDraftSchema.parse({...raw,kind:'training',safetyRelated:true});
   const historical=streamlineCourseContent(content,'G71','',true),current=streamlineCourseContent(content,'G71');
-  expect(historical.training!.questions).toEqual(content.training!.questions);expect(historical.training!.guided!.explanations).toEqual(content.training!.guided!.explanations);
+  expect(historical.training!.questions.map(q=>[q.id,q.correctOptionIds,q.options.map(o=>o.id)])).toEqual(content.training!.questions.map(q=>[q.id,q.correctOptionIds,q.options.map(o=>o.id)]));
   expect(current.training!.questions.find(q=>q.id==='G71_final20')!.prompt).toBe('What should a calibration record identify?');
  });
  it('retains all116 existing course families, their actual teaching, questions and worked scenarios without blanket evidence/assessor appendices',()=>{
@@ -50,7 +50,7 @@ describe('streamlined training requirements',()=>{
   const content=LibraryDraftSchema.parse(h03),before=safetyTrainingContentHash(content),identity=read('research/safety-program/regulatory-streamlining/previous-course-identities.json').find((x:any)=>x.id==='H03');
   const metadata={content,safetyResource:{familyId:'H03',sourceVersion,sourceSha256:identity.sourceSha256}} as LibraryMetadata;
   const shown=trainingReadContent(metadata)!;
-  expect(safetyTrainingContentHash(content)).toBe(before);expect(shown.training!.questions).toEqual(content.training!.questions);
+  expect(safetyTrainingContentHash(content)).toBe(before);expect(shown.training!.questions.map(q=>[q.id,q.correctOptionIds,q.options.map(o=>o.id)])).toEqual(content.training!.questions.map(q=>[q.id,q.correctOptionIds,q.options.map(o=>o.id)]));
   expect(shown.training!.lessons.map(l=>l.body).join(' ')).not.toContain('must separately observe');
   expect(shown.training!.lessons.map(l=>l.body).join(' ')).toContain('SIMOPS');
  });

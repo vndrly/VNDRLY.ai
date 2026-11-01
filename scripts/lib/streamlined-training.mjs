@@ -1,3 +1,4 @@
+import audit from '../../research/safety-program/training-audit/corrections.json' with {type:'json'};
 // Only the cited, role-specific legal duties below may add physical evaluation
 // or records. None is an extra VNDRLY online-course completion condition.
 export const legalTaskRequirements = [
@@ -17,6 +18,7 @@ export const legalTaskRequirements = [
 
 export function courseLegalRequirements(id){return legalTaskRequirements.filter(r=>r.courses.includes(id));}
 export function legalBoundary(id){return courseLegalRequirements(id).map(r=>`${r.citation} — ${r.appliesTo}: ${r.requirement} Source: ${r.url}`);}
+export function cleanTrainingText(text){return removeAccreditationDisclaimers({description:text}).description;}
 
 // Presentation-only corrections also cover immutable, already-assigned versions.
 // Keep their stored identities, answers and earned results intact.
@@ -53,14 +55,15 @@ export function removeAccreditationDisclaimers(content){
   ['Exact work class, required licensed/accredited instruction where applicable and observed actual task competence.','Training specified for the actual asbestos work class.'],
   ['Separate regulator/operator requirements, licenses, OQ, H2S specialty standards and accredited courses as actually required.','Applicable legal requirements for the actual transport, offshore, mine, aviation or licensed work.'],
  ];
- const clean=value=>{let text=value;for(const [from,to]of replacements)text=text.replaceAll(from,to);return text.replace(/ {2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();};
+ const clean=value=>{let depth=0;const lines=[];for(const line of value.split('\n')){const h=line.match(/^(#{1,6})\s+(.+)$/);if(h&&depth&&h[1].length<=depth)depth=0;if(h&&['Primary reference context',...audit.removeSections].includes(h[2].trim()))depth=h[1].length;if(!depth)lines.push(line);}let text=lines.join('\n');for(const [from,to]of replacements)text=text.replaceAll(from,to);for(const {from,to}of audit.textCorrections)text=text.replaceAll(from,to);return text.replace(/ {2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();};
  const result=structuredClone(content);
  const removed=new Set(['ESC_BENCHMARK','ESC_OSHA','ESC_REVIEW']);
  if(result.training){result.training.lessons=result.training.lessons.filter(l=>!removed.has(l.id));if(result.training.guided)result.training.guided.steps=result.training.guided.steps.filter(s=>!removed.has(s.lessonId));}
  if(result.description)result.description=clean(result.description);
- for(const lesson of result.training?.lessons??[]){lesson.title=clean(lesson.title);lesson.body=clean(lesson.body);}
+ for(const lesson of result.training?.lessons??[]){lesson.title=clean(lesson.title);lesson.body=clean(lesson.body)||'Answer the final questions. Your original and remediated scores are recorded separately.';}
  for(const question of result.training?.questions??[]){question.prompt=clean(question.prompt);for(const option of question.options)option.label=clean(option.label);}
  for(const [id,value]of Object.entries(result.training?.guided?.explanations??{}))result.training.guided.explanations[id]=clean(value);
+ for(const edit of audit.questions){const q=result.training?.questions.find(q=>q.id===edit.id);if(!q)continue;q.prompt=edit.prompt;const correct=q.correctOptionIds[0];let i=0;for(const option of q.options)option.label=option.id===correct?edit.answer:edit.distractors[i++];if(result.training.guided)result.training.guided.explanations[q.id]=edit.explanation;}
  return result;
 }
 

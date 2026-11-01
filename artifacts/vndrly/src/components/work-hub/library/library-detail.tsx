@@ -6,7 +6,7 @@ import {
   usePalette as useColors,
   Heading,
 } from "./editor-controls";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { z } from "zod/v4";
 import {
   LibraryMetadataSchema,
@@ -20,6 +20,9 @@ import LibraryEditor from "./library-editor";
 import AssignmentReview from "./assignment-review";
 import { LibraryBody } from "./library-body";
 import TrainingPolicy from './training-policy';
+import {TrainingActions,type TrainingView} from './training-actions';
+import TrainingCourseReview from './training-course-review';
+import TrainingCourseAssign from './training-course-assign';
 const schema = z.object({
   itemId: z.uuid(),
   title: z.string(),
@@ -38,6 +41,8 @@ const schema = z.object({
 });
 export default function LibraryDetail({ itemId }: { itemId: string }) {
   const [, navigate] = useLocation();
+  const search=useSearch(),requested=new URLSearchParams(search).get('view');
+  const trainingView:TrainingView=['policy','review','assign'].includes(requested??'')?requested as TrainingView:'training';
   const router = { push: (path: string) => navigate(path) };
   const { t } = useTranslation(),
     colors = useColors(),
@@ -109,7 +114,8 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
         {!!(m.trainingPolicy?.description??m.content?.description) && (
           <Text style={label}>{m.trainingPolicy?.description??m.content?.description}</Text>
         )}
-        {data.canManage && (
+        {m.kind==='training'&&<TrainingActions itemId={itemId} selected={trainingView} canManage={data.canManage}/>}
+        {data.canManage && m.kind!=='training' && (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {m.state === "draft" && (
               <TogglePillButton
@@ -218,7 +224,9 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
           </TogglePillButton>
         )}
       </View>
-      {data.canManage&&m.safetyResource&&(m.kind==='policy'||(m.kind==='training'&&m.safetyResource.familyId.startsWith('G')))&&<TrainingPolicy itemId={itemId} onSaved={api.reload}/>}
+      {data.canManage&&m.safetyResource&&(m.kind==='policy'||(m.kind==='training'&&trainingView==='policy'))&&<TrainingPolicy itemId={itemId} onSaved={api.reload}/>}
+      {data.canManage&&m.kind==='training'&&trainingView==='review'&&<TrainingCourseReview itemId={itemId}/>}
+      {data.canManage&&m.kind==='training'&&trainingView==='assign'&&<TrainingCourseAssign itemId={itemId} onSaved={async()=>{navigate(`/work-hub/library/${itemId}?view=review`);}}/>}
       {edit && m.content && data.canManage && m.state === "draft" && (
         <View style={card}>
           <LibraryEditor
@@ -238,7 +246,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
           />
         </View>
       )}
-      {!edit && m.content && (
+      {!edit && m.content && (m.kind!=='training'||trainingView==='training'||!data.canManage) && (
         <View style={card}>
             {(m.kind === "policy" || m.kind === "form") && (
             <LibraryBody text={m.content.policyText} color={colors.text} />
@@ -269,6 +277,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
                     : ""}
                 </Text>
               ))}
+              {data.canManage&&m.content?.training?.guided?.explanations[q.id]&&<LibraryBody text={m.content.training.guided.explanations[q.id]} color={colors.text}/>}
             </View>
           ))}
           {m.content.poll?.choices.map((o) => (
@@ -289,7 +298,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
           />
         </View>
       )}
-      <View style={card}>
+      {m.kind!=='training'&&<View style={card}>
         <Text style={{ ...label, fontWeight: "700" }}>
           {t("workHubLibrary.versionHistory")}
         </Text>
@@ -304,7 +313,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
             {h.title} · {h.contentVersion}
           </TogglePillButton>
         ))}
-      </View>
+      </View>}
     </View>
   );
 }

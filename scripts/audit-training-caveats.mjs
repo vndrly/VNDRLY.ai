@@ -1,0 +1,24 @@
+import fs from 'node:fs';
+import {LibraryDraftSchema} from '../lib/api-zod/src/work-hub-library.ts';
+import {removeAccreditationDisclaimers,courseLegalRequirements,legalTaskRequirements} from './lib/streamlined-training.mjs';
+const root='research/safety-program/training-audit';
+const corrections=JSON.parse(fs.readFileSync(`${root}/corrections.json`));
+const courses=[...JSON.parse(fs.readFileSync('research/safety-program/2026-11-02/prepared-course-publication.json')).courses,JSON.parse(fs.readFileSync('research/safety-program/energy-safety-core/course.json'))];
+if(courses.length!==117)throw Error('Expected all117 course families');
+const identities=t=>t.questions.map(q=>[q.id,q.options.map(o=>o.id),q.correctOptionIds]);
+const report=courses.map(course=>{
+ const original=course.content,shown=LibraryDraftSchema.parse(removeAccreditationDisclaimers(original)),a=original.training,b=shown.training;
+ if(JSON.stringify(identities(a))!==JSON.stringify(identities(b)))throw Error(course.id+': grading identity changed');
+ if(a.passingPercent!==b.passingPercent||a.allowRetries!==b.allowRetries||a.maximumAttempts!==b.maximumAttempts||a.refresherDays!==b.refresherDays)throw Error(course.id+': assessment rules changed');
+ if(b.questions.length!==(course.id==='G99'?48:26)||b.guided.steps.length!==(course.id==='G99'?11:10))throw Error(course.id+': incomplete learning');
+ for(const q of b.questions)if(q.options.some(o=>!o.label)||!b.guided.explanations[q.id])throw Error(q.id+': missing question or explanation');
+ for(const lesson of b.lessons.filter(l=>/_lesson\d+$|^ESC\d+$/.test(l.id)))if(lesson.body.split(/\s+/).length<120)throw Error(lesson.id+': teaching was removed');
+ const legal=courseLegalRequirements(course.id);for(const law of legal)if(!b.lessons.some(l=>l.body.includes(law.citation)))throw Error(course.id+': legal duty removed:'+law.id);
+ const before=a.lessons.map(l=>l.body).join('\n'),after=b.lessons.map(l=>l.body).join('\n');
+ const editedQuestions=corrections.questions.filter(q=>b.questions.some(x=>x.id===q.id)).map(q=>q.id);
+ const review=corrections.textCorrections.filter(e=>before.includes(e.from));
+ return {courseId:course.id,title:course.title,reviewed:true,legalDuties:legal.map(l=>l.citation),teachingWordsBefore:before.split(/\s+/).length,teachingWordsAfter:after.split(/\s+/).length,reviewedTextChanges:review.length,subjectQuestionsRewritten:editedQuestions,questions:b.questions.length,requiredSections:b.guided.steps.length,gradingIdentitiesPreserved:true,passingAndRetryRulesPreserved:true};
+});
+const ids=new Set(courses.flatMap(c=>c.content.training.questions.map(q=>q.id)));if(corrections.questions.some(q=>!ids.has(q.id)))throw Error('Correction has no matching course question');
+const result={reviewDate:corrections.reviewDate,coursesReviewed:117,textCorrections:corrections.textCorrections.length,sectionsRemoved:corrections.removeSections,subjectQuestionsRewritten:corrections.questions.length,courseCompletionConditions:'The existing lesson/question sequence, acknowledged remediation and separate exam remain unchanged. No evidence upload, external review, practical-assessor or qualification gate was added.',legalSources:[...legalTaskRequirements.map(l=>({id:l.id,citation:l.citation,appliesTo:l.appliesTo,url:l.url})),...corrections.legalSources],courses:report};
+fs.writeFileSync(`${root}/report.json`,JSON.stringify(result,null,2));console.log(JSON.stringify({coursesReviewed:117,textCorrections:result.textCorrections,subjectQuestionsRewritten:result.subjectQuestionsRewritten,gradingIdentitiesPreserved:true,legalSourceProfiles:result.legalSources.length}));

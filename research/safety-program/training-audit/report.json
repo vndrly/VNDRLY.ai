@@ -1,0 +1,1929 @@
+{
+  "reviewDate": "2026-11-01",
+  "coursesReviewed": 117,
+  "textCorrections": 425,
+  "sectionsRemoved": [
+    "What needs separate assessment",
+    "What must be assessed separately",
+    "What a practical observer should see",
+    "Separate practical preparation",
+    "Separate technical and practical requirements",
+    "What completing this course demonstrates",
+    "Research and scope"
+  ],
+  "subjectQuestionsRewritten": 75,
+  "courseCompletionConditions": "The existing lesson/question sequence, acknowledged remediation and separate exam remain unchanged. No evidence upload, external review, practical-assessor or qualification gate was added.",
+  "legalSources": [
+    {
+      "id": "PPE",
+      "citation": "29 CFR 1910.132(f)(2), (g)",
+      "appliesTo": "Employees using the eye/face, head, foot, hand or personal fall protection covered by paragraph (g)",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.132"
+    },
+    {
+      "id": "RESP",
+      "citation": "29 CFR 1910.134(e), (f), (k)(1)",
+      "appliesTo": "Required respirator users; tight-fitting facepieces require the applicable fit test",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+    },
+    {
+      "id": "PIT",
+      "citation": "29 CFR 1910.178(l)(2), (4), (6)",
+      "appliesTo": "Operators of powered industrial trucks covered by this standard",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178"
+    },
+    {
+      "id": "CRANE",
+      "citation": "29 CFR 1926.1427(a), (f)",
+      "appliesTo": "Operators of construction cranes/equipment covered by Subpart CC, subject to the stated exceptions",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427"
+    },
+    {
+      "id": "SIGNAL",
+      "citation": "29 CFR 1926.1428(a), (c)(5)",
+      "appliesTo": "Construction crane signal persons covered by Subpart CC",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1428"
+    },
+    {
+      "id": "RESCUE",
+      "citation": "29 CFR 1910.146(k)(2)(iv)",
+      "appliesTo": "Employer-designated employees performing covered permit-space rescue",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+    },
+    {
+      "id": "HAZWOPER",
+      "citation": "29 CFR 1910.120(e)(3), (e)(4), (q)(6)",
+      "appliesTo": "Workers whose actual hazardous-waste or emergency-response duties fall within the cited provisions",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
+    },
+    {
+      "id": "POWER",
+      "citation": "29 CFR 1910.269(a)(2)(viii)",
+      "appliesTo": "Employees doing covered electric-power generation, transmission or distribution work",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.269"
+    },
+    {
+      "id": "ASBESTOS",
+      "citation": "29 CFR 1926.1101(k)(9)(iii)-(v)",
+      "appliesTo": "Workers performing the particular construction asbestos work classes covered by these provisions",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1101"
+    },
+    {
+      "id": "RADIOGRAPHY",
+      "citation": "10 CFR 34.43(b)(4), (c)(3), (f)",
+      "appliesTo": "Radiographers and radiographer assistants using licensed material in covered NRC industrial-radiography operations",
+      "url": "https://www.govinfo.gov/content/pkg/CFR-2025-title10-vol1/pdf/CFR-2025-title10-vol1-sec34-43.pdf"
+    },
+    {
+      "id": "HAZMAT_RECORD",
+      "citation": "49 CFR 172.702(d), 172.704(a), (d)",
+      "appliesTo": "Hazmat employees performing functions covered by the Hazardous Materials Regulations",
+      "url": "https://www.phmsa.dot.gov/training/hazmat/training-requirements-industry"
+    },
+    {
+      "id": "ISOLATION_RECORD",
+      "citation": "29 CFR 1910.147(c)(7)(i), (iv)",
+      "appliesTo": "Employees with the specified roles in covered general-industry energy-control work; excludes oil/gas well drilling/servicing and the other exclusions in (a)(1)(ii)",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147"
+    },
+    {
+      "topic": "Bloodborne pathogen training for occupationally exposed employees",
+      "citation": "29 CFR 1910.1030(g)(2)(vii)(N)",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030",
+      "decision": "Retain the scoped interactive-training duty; remove blanket practical-observer demands."
+    }
+  ],
+  "courses": [
+    {
+      "courseId": "L01",
+      "title": "L01 — Leadership commitment and accountable safety roles",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4522,
+      "teachingWordsAfter": 4397,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "L02",
+      "title": "L02 — Worker participation and safety meetings",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4495,
+      "teachingWordsAfter": 4370,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "L03",
+      "title": "L03 — Stop-work and safe restart",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3997,
+      "teachingWordsAfter": 3927,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [
+        "L03_final13",
+        "L03_final19"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "L04",
+      "title": "L04 — Subcontractor selection and safety bridging",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4505,
+      "teachingWordsAfter": 4380,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "L05",
+      "title": "L05 — Service applicability, legal obligations and controlled documents",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4545,
+      "teachingWordsAfter": 4420,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H01",
+      "title": "H01 — Task risk assessment and JSA/JHA",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2346,
+      "teachingWordsAfter": 2336,
+      "reviewedTextChanges": 1,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H02",
+      "title": "H02 — Critical-control checks and line of fire",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2255,
+      "teachingWordsAfter": 2237,
+      "reviewedTextChanges": 2,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H03",
+      "title": "H03 — Permit to work and SIMOPS coordination — Training",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3054,
+      "teachingWordsAfter": 2906,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [
+        "H03_q19"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H04",
+      "title": "H04 — Hazardous energy isolation / LOTO",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.147(c)(7)(i), (iv)"
+      ],
+      "teachingWordsBefore": 2456,
+      "teachingWordsAfter": 2431,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [
+        "H04_check2"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H05",
+      "title": "H05 — Confined-space entry",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.146(k)(2)(iv)"
+      ],
+      "teachingWordsBefore": 2348,
+      "teachingWordsAfter": 2285,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H06",
+      "title": "H06 — Hot work and fire watch",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2288,
+      "teachingWordsAfter": 2248,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [
+        "H06_final_6_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H07",
+      "title": "H07 — Lifting, rigging and suspended loads",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.178(l)(2), (4), (6)",
+        "29 CFR 1926.1427(a), (f)",
+        "29 CFR 1926.1428(a), (c)(5)"
+      ],
+      "teachingWordsBefore": 2426,
+      "teachingWordsAfter": 2377,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [
+        "H07_final_1_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H08",
+      "title": "H08 — Work at height, scaffolds and dropped objects",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.132(f)(2), (g)"
+      ],
+      "teachingWordsBefore": 2314,
+      "teachingWordsAfter": 2265,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [
+        "H08_final_6_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H09",
+      "title": "H09 — Excavation and underground services",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2251,
+      "teachingWordsAfter": 2217,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H10",
+      "title": "H10 — Pressure pumping, testing and exclusion zones",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2252,
+      "teachingWordsAfter": 2218,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [
+        "H10_final_6_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H11",
+      "title": "H11 — Breaking containment and process handback",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2228,
+      "teachingWordsAfter": 2183,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [
+        "H11_final_6_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H12",
+      "title": "H12 — Electrical work and arc-flash controls",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.269(a)(2)(viii)"
+      ],
+      "teachingWordsBefore": 2292,
+      "teachingWordsAfter": 2237,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [
+        "H12_final_6_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H13",
+      "title": "H13 — H2S and hazardous-atmosphere awareness",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.134(e), (f), (k)(1)"
+      ],
+      "teachingWordsBefore": 2253,
+      "teachingWordsAfter": 2152,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [
+        "H13_final_6_2"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H14",
+      "title": "H14 — Chemicals, SDS and exposure assessment",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.132(f)(2), (g)"
+      ],
+      "teachingWordsBefore": 2977,
+      "teachingWordsAfter": 2883,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H15",
+      "title": "H15 — Respiratory protection",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.134(e), (f), (k)(1)"
+      ],
+      "teachingWordsBefore": 2734,
+      "teachingWordsAfter": 2600,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H16",
+      "title": "H16 — Silica, asbestos, lead and coating hazards",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1926.1101(k)(9)(iii)-(v)"
+      ],
+      "teachingWordsBefore": 2797,
+      "teachingWordsAfter": 2693,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H17",
+      "title": "H17 — Noise and hearing conservation",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2689,
+      "teachingWordsAfter": 2612,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H18",
+      "title": "H18 — Heat, cold and severe weather",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2686,
+      "teachingWordsAfter": 2595,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H19",
+      "title": "H19 — Driving, journey planning and fatigue",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2675,
+      "teachingWordsAfter": 2573,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H20",
+      "title": "H20 — Traffic, gate access and pedestrian separation",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3248,
+      "teachingWordsAfter": 3167,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H21",
+      "title": "H21 — Lone work, workplace violence and remote check-ins",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3429,
+      "teachingWordsAfter": 3341,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H22",
+      "title": "H22 — Manual handling and ergonomics",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2672,
+      "teachingWordsAfter": 2597,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H23",
+      "title": "H23 — Machine guarding, hand tools and housekeeping",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2654,
+      "teachingWordsAfter": 2555,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "H24",
+      "title": "H24 — Specialist hazards: radiation, explosives, diving, marine and rail",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2761,
+      "teachingWordsAfter": 2584,
+      "reviewedTextChanges": 9,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "C01",
+      "title": "C01 — Role/task competence matrix and authorization",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.178(l)(2), (4), (6)"
+      ],
+      "teachingWordsBefore": 4428,
+      "teachingWordsAfter": 4281,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [
+        "C01_check1",
+        "C01_check2"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "C02",
+      "title": "C02 — Induction, orientation and understandable communication",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4444,
+      "teachingWordsAfter": 4319,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "C03",
+      "title": "C03 — Short-service workers and supervision",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4389,
+      "teachingWordsAfter": 4264,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "C04",
+      "title": "C04 — Training delivery and practical assessor assurance",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.178(l)(2), (4), (6)"
+      ],
+      "teachingWordsBefore": 4335,
+      "teachingWordsAfter": 4163,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "C05",
+      "title": "C05 — Commercial drivers and transport authorization",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4465,
+      "teachingWordsAfter": 4332,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "C06",
+      "title": "C06 — Mobile equipment, forklift and lifting-role assessment",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4364,
+      "teachingWordsAfter": 4201,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "C07",
+      "title": "C07 — Permit, isolation, gas-test and electrical role endorsements",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.147(c)(7)(i), (iv)"
+      ],
+      "teachingWordsBefore": 4544,
+      "teachingWordsAfter": 4317,
+      "reviewedTextChanges": 11,
+      "subjectQuestionsRewritten": [
+        "C07_check2"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "C08",
+      "title": "C08 — Emergency responders and occupational first aid",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4451,
+      "teachingWordsAfter": 4282,
+      "reviewedTextChanges": 7,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "E01",
+      "title": "E01 — Asset register and preventive maintenance",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2237,
+      "teachingWordsAfter": 2200,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [
+        "E01_final_6_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "E02",
+      "title": "E02 — Pre-use inspections, defects and out-of-service control",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.178(l)(2), (4), (6)"
+      ],
+      "teachingWordsBefore": 2275,
+      "teachingWordsAfter": 2255,
+      "reviewedTextChanges": 2,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "E03",
+      "title": "E03 — Vehicles, trailers, load securement and recovery",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2172,
+      "teachingWordsAfter": 2123,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [
+        "E03_final_6_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "E04",
+      "title": "E04 — Gas detectors and measurement assurance",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2173,
+      "teachingWordsAfter": 2163,
+      "reviewedTextChanges": 1,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "E05",
+      "title": "E05 — Pressure equipment, hoses and relief devices",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2220,
+      "teachingWordsAfter": 2193,
+      "reviewedTextChanges": 2,
+      "subjectQuestionsRewritten": [
+        "E05_final_6_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "E06",
+      "title": "E06 — Lifting gear, access equipment and fall protection inspection",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2169,
+      "teachingWordsAfter": 2143,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "E07",
+      "title": "E07 — PPE assessment, issue and care",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2151,
+      "teachingWordsAfter": 2091,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "E07_final_6_3"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "E08",
+      "title": "E08 — Shop and facility readiness",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2707,
+      "teachingWordsAfter": 2626,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "E09",
+      "title": "E09 — Vacuum, hydroblasting and specialist service equipment",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.178(l)(2), (4), (6)",
+        "29 CFR 1926.1427(a), (f)"
+      ],
+      "teachingWordsBefore": 2820,
+      "teachingWordsAfter": 2679,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "I01",
+      "title": "I01 — Incident, near-miss and hazard reporting",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4516,
+      "teachingWordsAfter": 4391,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "I02",
+      "title": "I02 — Investigation and causal analysis",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4507,
+      "teachingWordsAfter": 4382,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "I03",
+      "title": "I03 — Corrective actions and effectiveness verification",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4495,
+      "teachingWordsAfter": 4370,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "I04",
+      "title": "I04 — Learning alerts and post-job review",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4488,
+      "teachingWordsAfter": 4363,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "I05",
+      "title": "I05 — Incident history and exposure-data integrity",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4502,
+      "teachingWordsAfter": 4353,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "I06",
+      "title": "I06 — Medical response, restricted records and return-to-work interfaces",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4526,
+      "teachingWordsAfter": 4401,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "R01",
+      "title": "R01 — Emergency plan and site interface",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2705,
+      "teachingWordsAfter": 2586,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "R02",
+      "title": "R02 — Rescue plans and emergency equipment readiness",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.146(k)(2)(iv)"
+      ],
+      "teachingWordsBefore": 2733,
+      "teachingWordsAfter": 2579,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "R03",
+      "title": "R03 — Drills, exercises and after-action improvement",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2704,
+      "teachingWordsAfter": 2609,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [
+        "R03_check6",
+        "R03_final18"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "R04",
+      "title": "R04 — Assurance audits and critical-control observations",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2707,
+      "teachingWordsAfter": 2626,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "R05",
+      "title": "R05 — Management review and improvement objectives",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2646,
+      "teachingWordsAfter": 2535,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "R06",
+      "title": "R06 — Management of change and renewal review",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2674,
+      "teachingWordsAfter": 2555,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [
+        "R06_check4"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "R07",
+      "title": "R07 — Environmental release and spill emergency interface",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2724,
+      "teachingWordsAfter": 2608,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G01",
+      "title": "G01 — Hazardous-material transportation: recognition and safe handoff",
+      "reviewed": true,
+      "legalDuties": [
+        "49 CFR 172.702(d), 172.704(a), (d)"
+      ],
+      "teachingWordsBefore": 2725,
+      "teachingWordsAfter": 2646,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [
+        "G01_final19"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G02",
+      "title": "G02 — Hazardous waste and spill response: role limits and safe handoffs",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.134(e), (f), (k)(1)",
+        "29 CFR 1910.120(e)(3), (e)(4), (q)(6)"
+      ],
+      "teachingWordsBefore": 2700,
+      "teachingWordsAfter": 2560,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [
+        "G02_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G03",
+      "title": "G03 — Process safety and operating-procedure competence",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3406,
+      "teachingWordsAfter": 3362,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [
+        "G03_final5"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G04",
+      "title": "G04 — Bloodborne pathogens and occupational exposure controls",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.132(f)(2), (g)",
+        "29 CFR 1910.134(e), (f), (k)(1)"
+      ],
+      "teachingWordsBefore": 3862,
+      "teachingWordsAfter": 3574,
+      "reviewedTextChanges": 13,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G05",
+      "title": "G05 — Food hygiene, allergens and catering controls",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3786,
+      "teachingWordsAfter": 3667,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G06",
+      "title": "G06 — Laboratory chemical hygiene and analytical task safety",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3379,
+      "teachingWordsAfter": 3299,
+      "reviewedTextChanges": 5,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G15",
+      "title": "G15 — Pesticide handling and application task safety",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3448,
+      "teachingWordsAfter": 3295,
+      "reviewedTextChanges": 11,
+      "subjectQuestionsRewritten": [
+        "G15_final2"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G21",
+      "title": "G21 — Nitrogen and inert-gas hazards: recognition, separation and safe handoff",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 4200,
+      "teachingWordsAfter": 4051,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G22",
+      "title": "G22 — Facility support, water hygiene and biological task safety",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3686,
+      "teachingWordsAfter": 3494,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G23",
+      "title": "G23 — OT/cyber operational safety: defensive work boundaries and safe change",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3413,
+      "teachingWordsAfter": 3266,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G50",
+      "title": "G50 — Shipment discrepancy review: build a defensible hazardous-material handoff",
+      "reviewed": true,
+      "legalDuties": [
+        "49 CFR 172.702(d), 172.704(a), (d)"
+      ],
+      "teachingWordsBefore": 2984,
+      "teachingWordsAfter": 2894,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G50_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G51",
+      "title": "G51 — Waste and release work packets: determine response scope before assigning people",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.132(f)(2), (g)",
+        "29 CFR 1910.134(e), (f), (k)(1)",
+        "29 CFR 1910.120(e)(3), (e)(4), (q)(6)"
+      ],
+      "teachingWordsBefore": 3153,
+      "teachingWordsAfter": 3018,
+      "reviewedTextChanges": 10,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G52",
+      "title": "G52 — Process procedure use: interpret states, deviations and restart readiness",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2953,
+      "teachingWordsAfter": 2877,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G53",
+      "title": "G53 — Blood exposure prevention: clean-to-dirty work and immediate exposure actions",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.132(f)(2), (g)",
+        "29 CFR 1910.134(e), (f), (k)(1)"
+      ],
+      "teachingWordsBefore": 3166,
+      "teachingWordsAfter": 3015,
+      "reviewedTextChanges": 11,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G54",
+      "title": "G54 — Camp meal preparation: control food flow, allergens and the delivery handoff",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3000,
+      "teachingWordsAfter": 2867,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G55",
+      "title": "G55 — Analytical bench preparation: identity, compatibility and trustworthy results",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2816,
+      "teachingWordsAfter": 2744,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G56",
+      "title": "G56 — Commercial dive preparation: understand the team, interfaces and unresolved hazards",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2940,
+      "teachingWordsAfter": 2847,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G57",
+      "title": "G57 — UAS mission preparation: permissions, aircraft and ground interfaces",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2920,
+      "teachingWordsAfter": 2812,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G57_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G58",
+      "title": "G58 — Railway work preparation: track identity, protection and crew interfaces",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2844,
+      "teachingWordsAfter": 2706,
+      "reviewedTextChanges": 7,
+      "subjectQuestionsRewritten": [
+        "G58_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G59",
+      "title": "G59 — Radiation work interfaces: method identity, exposure concepts and abnormal reporting",
+      "reviewed": true,
+      "legalDuties": [
+        "10 CFR 34.43(b)(4), (c)(3), (f)"
+      ],
+      "teachingWordsBefore": 2961,
+      "teachingWordsAfter": 2857,
+      "reviewedTextChanges": 7,
+      "subjectQuestionsRewritten": [
+        "G59_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G60",
+      "title": "G60 — Power-work preparation: energy state, clearances and task boundaries",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.269(a)(2)(viii)"
+      ],
+      "teachingWordsBefore": 2906,
+      "teachingWordsAfter": 2767,
+      "reviewedTextChanges": 9,
+      "subjectQuestionsRewritten": [
+        "G60_final10",
+        "G60_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G61",
+      "title": "G61 — Marine work interfaces: access, deck energy and vessel handover",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2826,
+      "teachingWordsAfter": 2719,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G61_final6",
+        "G61_final15"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G62",
+      "title": "G62 — Explosive-work interfaces: scope, accountability and specialist boundaries",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2888,
+      "teachingWordsAfter": 2789,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G62_final3",
+        "G62_final9"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G63",
+      "title": "G63 — Well-service preparation: barriers, monitoring and operating handover",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2833,
+      "teachingWordsAfter": 2714,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G63_final10",
+        "G63_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G64",
+      "title": "G64 — Pesticide task preparation: labeling, exposure pathways and entry handover",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2857,
+      "teachingWordsAfter": 2718,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [
+        "G64_final6",
+        "G64_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G65",
+      "title": "G65 — Engineering requirements, design assumptions and technical review decisions",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 3137,
+      "teachingWordsAfter": 3074,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [
+        "G65_final17"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G67",
+      "title": "G67 — Electrical and instrument work-pack interpretation and commissioning evidence",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2981,
+      "teachingWordsAfter": 2907,
+      "reviewedTextChanges": 7,
+      "subjectQuestionsRewritten": [
+        "G67_final8",
+        "G67_final15"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G68",
+      "title": "G68 — HVAC and refrigerant service principles, scope and acceptance",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2684,
+      "teachingWordsAfter": 2546,
+      "reviewedTextChanges": 11,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G69",
+      "title": "G69 — Aviation ground interfaces, loading concepts and role assurance",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2680,
+      "teachingWordsAfter": 2571,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [
+        "G69_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G70",
+      "title": "G70 — NDT method limitations, coverage and technical acceptance",
+      "reviewed": true,
+      "legalDuties": [
+        "10 CFR 34.43(b)(4), (c)(3), (f)"
+      ],
+      "teachingWordsBefore": 2715,
+      "teachingWordsAfter": 2597,
+      "reviewedTextChanges": 7,
+      "subjectQuestionsRewritten": [
+        "G70_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G71",
+      "title": "G71 — Calibration reasoning, uncertainty and instrument-service evidence",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2636,
+      "teachingWordsAfter": 2578,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G71_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G72",
+      "title": "G72 — Fabrication process principles, welding variables and joint traceability",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2653,
+      "teachingWordsAfter": 2593,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G72_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G73",
+      "title": "G73 — Hazardous-material survey limits and exposure-pathway planning",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.132(f)(2), (g)",
+        "29 CFR 1910.134(e), (f), (k)(1)",
+        "29 CFR 1926.1101(k)(9)(iii)-(v)"
+      ],
+      "teachingWordsBefore": 2813,
+      "teachingWordsAfter": 2614,
+      "reviewedTextChanges": 13,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G74",
+      "title": "G74 — Nitrogen, cryogenic and catalyst work-interface planning",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2665,
+      "teachingWordsAfter": 2570,
+      "reviewedTextChanges": 9,
+      "subjectQuestionsRewritten": [
+        "G74_check6",
+        "G74_final6",
+        "G74_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G75",
+      "title": "G75 — Lifting geometry, conditional capacity and role planning",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.178(l)(2), (4), (6)",
+        "29 CFR 1926.1427(a), (f)",
+        "29 CFR 1926.1428(a), (c)(5)"
+      ],
+      "teachingWordsBefore": 2824,
+      "teachingWordsAfter": 2720,
+      "reviewedTextChanges": 9,
+      "subjectQuestionsRewritten": [
+        "G75_final8",
+        "G75_final11",
+        "G75_final14",
+        "G75_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G76",
+      "title": "G76 — Machine and trade fault reasoning, parts and process acceptance",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2682,
+      "teachingWordsAfter": 2629,
+      "reviewedTextChanges": 7,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G77",
+      "title": "G77 — Pressure-test evidence, stored-energy concepts and live-intervention boundaries",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2575,
+      "teachingWordsAfter": 2477,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G78",
+      "title": "G78 — Survey reference systems, residuals and seismic evidence limits",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2630,
+      "teachingWordsAfter": 2547,
+      "reviewedTextChanges": 7,
+      "subjectQuestionsRewritten": [
+        "G78_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G79",
+      "title": "G79 — Security post boundaries, factual observation and nonphysical conflict communication",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2615,
+      "teachingWordsAfter": 2517,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [
+        "G79_final13",
+        "G79_final20",
+        "G79_check6"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G80",
+      "title": "G80 — Facility water-program evidence and hygiene workflow analysis",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2594,
+      "teachingWordsAfter": 2444,
+      "reviewedTextChanges": 12,
+      "subjectQuestionsRewritten": [
+        "G80_check6",
+        "G80_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G81",
+      "title": "G81 — IT/OT change-validation matrices and recovery evidence",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2620,
+      "teachingWordsAfter": 2576,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [
+        "G81_check6",
+        "G81_final20",
+        "G81_final19"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G82",
+      "title": "G82 — Subject-specific teaching design and practical-assessment reasoning",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2438,
+      "teachingWordsAfter": 2325,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G82_final6",
+        "G82_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G83",
+      "title": "G83 — Safety audit, incident investigation and evidence methods",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2850,
+      "teachingWordsAfter": 2837,
+      "reviewedTextChanges": 1,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G84",
+      "title": "G84 — Waste characterization, environmental sampling and treatment methods",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.120(e)(3), (e)(4), (q)(6)"
+      ],
+      "teachingWordsBefore": 2855,
+      "teachingWordsAfter": 2781,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G85",
+      "title": "G85 — Hydroblasting, hydrovac and specialist cleaning methods",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2857,
+      "teachingWordsAfter": 2748,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G86",
+      "title": "G86 — Construction, utility-location and excavation methods",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2849,
+      "teachingWordsAfter": 2823,
+      "reviewedTextChanges": 2,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G87",
+      "title": "G87 — Confined-space entry and rescue practical roles",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.146(k)(2)(iv)"
+      ],
+      "teachingWordsBefore": 2820,
+      "teachingWordsAfter": 2744,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G87_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G88",
+      "title": "G88 — Fall protection, scaffold and rope-access practical roles",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2667,
+      "teachingWordsAfter": 2588,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G88_final7"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G89",
+      "title": "G89 — Clinical professional scope and medical deployment",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2674,
+      "teachingWordsAfter": 2592,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [
+        "G89_check6",
+        "G89_final14",
+        "G89_final20"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G90",
+      "title": "G90 — Host-task, staffing and logistics role instruction",
+      "reviewed": true,
+      "legalDuties": [
+        "29 CFR 1910.178(l)(2), (4), (6)"
+      ],
+      "teachingWordsBefore": 2753,
+      "teachingWordsAfter": 2663,
+      "reviewedTextChanges": 6,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G91",
+      "title": "G91 — Research-method and experimental protocol competence",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2630,
+      "teachingWordsAfter": 2607,
+      "reviewedTextChanges": 2,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G92",
+      "title": "G92 — Pipeline operating, pigging and inline-inspection methods",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2709,
+      "teachingWordsAfter": 2664,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G93",
+      "title": "G93 — Asset-specific preparation, inspection and rental handoff",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2716,
+      "teachingWordsAfter": 2670,
+      "reviewedTextChanges": 3,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G95",
+      "title": "G95 — Vehicle, combination, cargo and driver practical qualification",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2650,
+      "teachingWordsAfter": 2600,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G96",
+      "title": "G96 — Language, travel and media equipment task instruction",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2668,
+      "teachingWordsAfter": 2624,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G97",
+      "title": "G97 — Industrial fire brigade and specialist emergency response",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2562,
+      "teachingWordsAfter": 2451,
+      "reviewedTextChanges": 8,
+      "subjectQuestionsRewritten": [
+        "G97_check3",
+        "G97_final3",
+        "G97_final9",
+        "G97_final13",
+        "G97_final15",
+        "G97_final17"
+      ],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G98",
+      "title": "G98 — Fire/protection-system service and impairment methods",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 2679,
+      "teachingWordsAfter": 2619,
+      "reviewedTextChanges": 4,
+      "subjectQuestionsRewritten": [],
+      "questions": 26,
+      "requiredSections": 10,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    },
+    {
+      "courseId": "G99",
+      "title": "VNDRLY Energy Safety Core",
+      "reviewed": true,
+      "legalDuties": [],
+      "teachingWordsBefore": 22287,
+      "teachingWordsAfter": 16685,
+      "reviewedTextChanges": 18,
+      "subjectQuestionsRewritten": [],
+      "questions": 48,
+      "requiredSections": 11,
+      "gradingIdentitiesPreserved": true,
+      "passingAndRetryRulesPreserved": true
+    }
+  ]
+}

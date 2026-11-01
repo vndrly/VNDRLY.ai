@@ -16,6 +16,7 @@ import {getLibrary,saveLibrary,changeLibraryState} from './library-service';
 import {previewLibraryAssignment,assignLibrary,employeeChecklist,ownerAssignmentDetail} from './library-assignments';
 import {getAssignedLibrary,submitAssignedLibrary,submitGuidedTraining,personalEnergySafetyCredentials} from './training-service';
 import {companySafetyReadiness} from '../lib/company-safety-readiness';
+import {trainingCourseReview} from './training-review';
 it('separates certification, guards ownership and prerequisite, locks attempts, and preserves learning history',async()=>{
  const familyId='G99' as const;
  if(process.env.VNDRLY_TEST_DB_MODE!=='fresh-local'||new URL(process.env.DATABASE_URL!).hostname!=='127.0.0.1')throw Error('Fresh isolated database required');
@@ -29,6 +30,10 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  (safetyTrainingCatalog as {curriculum:{id:string;contentSha256:string}[]}).curriculum.find(c=>c.id==='G99')!.contentSha256=safetyTrainingContentHash(LibraryDraftSchema.parse(metadata.content));
  const request={itemId,audience:{mode:'selected',userIds:[learner.userId],groupIds:[]}};const preview=await previewLibraryAssignment(admin,request);await assignLibrary(admin,command({...request,previewFingerprint:preview.previewFingerprint},preview.version));
  const id=(await employeeChecklist(learner)).items[0].instanceId;
+ const complianceBefore=await trainingCourseReview(admin,itemId);
+ expect(complianceBefore.people.find(p=>p.userId===learner.userId)).toMatchObject({status:'assigned',instanceId:id});
+ expect(complianceBefore.people.find(p=>p.userId===foreign.userId)).toMatchObject({status:'not_assigned',instanceId:null});
+ await expect(trainingCourseReview(learner,itemId)).rejects.toBeTruthy();
  const ownerCourse=await getLibrary(admin,itemId);
  expect(ownerCourse.metadata.content?.training).not.toHaveProperty('certificationExam');
  expect(JSON.stringify(ownerCourse)).not.toContain('Exam-only hidden rationale');

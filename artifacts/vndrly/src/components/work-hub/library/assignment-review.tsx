@@ -49,11 +49,13 @@ export default function LibraryAssignmentReview({
   initialItemId = "",
   initialUserIds = [],
   initialGroupIds = [],
+  positions = [],
 }: {
   kind: "form" | "policy" | "training" | "poll" | "bundle";
   initialItemId?: string;
   initialUserIds?: number[];
   initialGroupIds?: string[];
+  positions?: {id:string;label:string;userIds:number[]}[];
   onSaved: () => Promise<unknown>;
 }) {
   const { t } = useTranslation(),
@@ -70,7 +72,7 @@ export default function LibraryAssignmentReview({
     [search, setSearch] = useState(""),
     [notice, setNotice] = useState(""),
     [review, setReview] = useState<z.infer<typeof previewSchema> | null>(null),
-    [reviewing, setReviewing] = useState(false);
+    [reviewing, setReviewing] = useState(false),[positionIds,setPositionIds]=useState<string[]>([]);
   const [renew, setRenew] = useState(false),
     [required, setRequired] = useState(false);
   const context = library.contextKey;
@@ -86,13 +88,14 @@ export default function LibraryAssignmentReview({
     setUsers(initialUserIds);
     setGroups(initialGroupIds);
     setReview(null);
+    setPositionIds([]);
     setNotice("");
   }, [kind, context, initialItemId]);
   const selected = library.data?.items.find((i) => i.itemId === itemId);
   const frozen = library.busy || library.uncertain || reviewing;
   const request = {
     itemId,
-    audience: { mode: "selected", userIds, groupIds },
+    audience: { mode: "selected", userIds:[...new Set([...userIds,...positions.filter(p=>positionIds.includes(p.id)).flatMap(p=>p.userIds)])], groupIds },
     renew,
     requiredBeforeWork: required,
     presentation: "immediate",
@@ -103,7 +106,7 @@ export default function LibraryAssignmentReview({
     setReview(null);
   };
   const preview = async () => {
-    if (!selected || (!userIds.length && !groupIds.length)) {
+    if (!selected || (!request.audience.userIds.length && !groupIds.length)) {
       setNotice(t("workHubLibrary.chooseAudience"));
       return;
     }
@@ -170,13 +173,13 @@ export default function LibraryAssignmentReview({
         {t("workHubLibrary.choosePublished")}
       </Text>
       {library.data?.items
-        .filter((i) => i.kind === kind && i.state === "published")
+        .filter((i) => i.kind === kind && i.state === "published"&&(!initialItemId||i.itemId===initialItemId))
         .map((i) => (
           <TogglePillButton
             key={i.itemId}
             color="brand"
             solid={itemId === i.itemId}
-            disabled={frozen}
+            disabled={frozen||!!initialItemId}
             onPress={() => change(() => setItemId(i.itemId))}
           >
             {i.title}
@@ -197,6 +200,7 @@ export default function LibraryAssignmentReview({
         onChangeText={setSearch}
         style={field}
       />
+      {!!positions.length&&<><Text style={{color:colors.text}}>Staff positions</Text><View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{positions.map(p=><TogglePillButton key={p.id} color="brand" solid={positionIds.includes(p.id)} disabled={frozen} onPress={()=>toggle(p.id,positionIds,setPositionIds)}>{p.label} ({p.userIds.length})</TogglePillButton>)}</View></>}
       <Text style={{ color: colors.text }}>{t("workHubLibrary.groups")}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {options.data?.groups

@@ -1,0 +1,4313 @@
+{
+  "reviewDate": "2026-11-01",
+  "coursesReviewed": 117,
+  "textCorrections": [
+    {
+      "from": "Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization.",
+      "to": "",
+      "courses": [
+        "L01",
+        "L02",
+        "L04",
+        "L05",
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C08",
+        "I01",
+        "I02",
+        "I03",
+        "I04",
+        "I05",
+        "I06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.",
+      "to": "",
+      "courses": [
+        "L01",
+        "L02",
+        "L04",
+        "L05",
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C08",
+        "I01",
+        "I02",
+        "I03",
+        "I04",
+        "I05",
+        "I06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course teaches safe intervention and restart judgment; it does not authorize technical work or restart.",
+      "to": "This course teaches safe intervention and restart judgment.",
+      "courses": [
+        "L03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not waive those requirements.",
+      "to": "",
+      "courses": [
+        "L03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not promise that a course can prevent retaliation or decide a legal claim.",
+      "to": "",
+      "courses": [
+        "L03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Likewise, finishing this course provides evidence of learning; it does not automatically prove company implementation, confer work authorization, or increase a VNDRLY maturity score.",
+      "to": "",
+      "courses": [
+        "L03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Its shape and size must follow the actual activity and approved technical plan; this course does not invent a universal distance.",
+      "to": "Its shape and size must follow the actual activity and approved technical plan.",
+      "courses": [
+        "H02"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not authorize permit issuing, isolation, gas testing, equipment operation, or return to service.",
+      "to": "",
+      "courses": [
+        "H03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not set a separation distance or atmospheric limit because that decision depends on the actual plant, task and governing procedures.",
+      "to": "",
+      "courses": [
+        "H03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not use the outgoing shift's completion of this course as evidence that the incoming crew knows the job's actual conditions.",
+      "to": "",
+      "courses": [
+        "H03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The worked cases, learning sequence and assessment here are original VNDRLY teaching material; the course does not claim regulator or external provider approval.",
+      "to": "The worked cases, learning sequence and assessment here are original VNDRLY teaching material.",
+      "courses": [
+        "H03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "They are not additional steps for completing this online course.",
+      "to": "",
+      "courses": [
+        "H04",
+        "H05",
+        "H07",
+        "H08",
+        "H12",
+        "H13",
+        "H14",
+        "H15",
+        "H16",
+        "C01",
+        "C04",
+        "C07",
+        "E02",
+        "E09",
+        "R02",
+        "G01",
+        "G02",
+        "G04",
+        "G50",
+        "G51",
+        "G53",
+        "G59",
+        "G60",
+        "G70",
+        "G73",
+        "G75",
+        "G84",
+        "G87",
+        "G90"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Written awareness completion does not grant that authority.",
+      "to": "",
+      "courses": [
+        "H05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A written course supports understanding but does not create an entry team.",
+      "to": "",
+      "courses": [
+        "H05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The written course establishes awareness and assessed knowledge only.",
+      "to": "",
+      "courses": [
+        "H05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This is a rescue-team duty, not a practical test required of every awareness-course learner.",
+      "to": "",
+      "courses": [
+        "H05",
+        "R02",
+        "G87"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not invent a universal acceptable gas number or permit duration.",
+      "to": "",
+      "courses": [
+        "H06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not replace them with an invented duration.",
+      "to": "",
+      "courses": [
+        "H06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A quiz cannot demonstrate those field skills.",
+      "to": "",
+      "courses": [
+        "H06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general awareness learner does not acquire these roles through a quiz.",
+      "to": "",
+      "courses": [
+        "H07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Written awareness alone cannot establish those skills.",
+      "to": "",
+      "courses": [
+        "H07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Applicable rules differ by sector and activity; this course does not impose one universal trigger height.",
+      "to": "Applicable rules differ by sector and activity.",
+      "courses": [
+        "H08"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Awareness learners can recognize holds and communicate; they do not classify soil, design shoring or declare a buried utility safe solely from this course.",
+      "to": "Recognize unsafe conditions, communicate the hold, and obtain the responsible technical review.",
+      "courses": [
+        "H09"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A written awareness score cannot establish field judgment of soil or structures.",
+      "to": "",
+      "courses": [
+        "H09"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not supply a universal test pressure, hold time or exclusion distance.",
+      "to": "",
+      "courses": [
+        "H10"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Written awareness does not demonstrate safe setup, control or interpretation.",
+      "to": "",
+      "courses": [
+        "H10"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This awareness course does not provide a universal flange-loosening technique or authorize a worker to improvise one.",
+      "to": "",
+      "courses": [
+        "H11"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The competent procedure establishes the actual sequence; this course deliberately does not offer a universal loosening technique that could be unsafe on a different connection.",
+      "to": "The competent procedure establishes the actual sequence.",
+      "courses": [
+        "H11"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not invent universal approach distances or incident-energy values.",
+      "to": "",
+      "courses": [
+        "H12"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Written awareness cannot establish hands-on electrical testing, repair or rescue skills.",
+      "to": "",
+      "courses": [
+        "H12"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This awareness course does not assign a universal alarm number, safe exposure duration, evacuation threshold or re-entry criterion.",
+      "to": "",
+      "courses": [
+        "H13"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Written awareness completion does not demonstrate those field testing skills.",
+      "to": "",
+      "courses": [
+        "H13"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A completed online module does not fill either practical gap.",
+      "to": "",
+      "courses": [
+        "H13"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The written course supports recognition of the change, not approval to test or open the tank.",
+      "to": "",
+      "courses": [
+        "H13"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not substitute for a site assessment, permit or employer authorization.",
+      "to": "",
+      "courses": [
+        "H14",
+        "H15",
+        "H16",
+        "H17",
+        "H18",
+        "H19",
+        "H20",
+        "H21",
+        "H22",
+        "H23",
+        "H24",
+        "E08",
+        "E09",
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Client procedures are examples of client requirements, not universal law or endorsement of this course.",
+      "to": "",
+      "courses": [
+        "H14",
+        "H15",
+        "H16",
+        "H17",
+        "H18",
+        "H19",
+        "H20",
+        "H21",
+        "H22",
+        "H23",
+        "H24",
+        "E08",
+        "E09",
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An online lesson is only one element of that program.",
+      "to": "",
+      "courses": [
+        "H15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not invent a common expiry period for every respirator and role.",
+      "to": "",
+      "courses": [
+        "H15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The online course supports understanding but does not clear these prerequisites.",
+      "to": "",
+      "courses": [
+        "H15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This awareness lesson is not a diagnostic or first-aid certification and does not tell untrained workers to give fluids to a person unable to drink safely.",
+      "to": "Do not give fluids to a person unable to drink safely.",
+      "courses": [
+        "H18"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course can teach journey judgment, but it cannot observe vehicle control, maneuvering or defensive driving.",
+      "to": "This course can teach journey judgment.",
+      "courses": [
+        "H19"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An online journey course cannot observe reversing, braking, load response or defensive driving.",
+      "to": "",
+      "courses": [
+        "H19"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Follow site restrictions on electronic equipment in hazardous areas; this awareness course does not approve a device for an explosive atmosphere.",
+      "to": "Follow site restrictions on electronic equipment in hazardous areas.",
+      "courses": [
+        "H21"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Temporary defeat of a protective device is not authorized by this course.",
+      "to": "",
+      "courses": [
+        "H23"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A generic tool course does not authorize every machine.",
+      "to": "",
+      "courses": [
+        "H23"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This awareness course deliberately does not teach initiation, charge preparation, magazine design or misfire handling.",
+      "to": "",
+      "courses": [
+        "H24"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not provide safe approach distances, initiation instructions or misfire waiting periods.",
+      "to": "",
+      "courses": [
+        "H24"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A course may legitimately cover awareness only if that boundary is explicit and the employer arranges the additional required qualification separately.",
+      "to": "",
+      "courses": [
+        "C04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Course completion supports employer decisions but does not itself grant work authority or establish company effectiveness.",
+      "to": "",
+      "courses": [
+        "C04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not replace that jurisdiction-specific mapping.",
+      "to": "",
+      "courses": [
+        "C05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not count a video or online quiz as observed operation.",
+      "to": "",
+      "courses": [
+        "C06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A written quiz cannot stand in for practical performance.",
+      "to": "",
+      "courses": [
+        "C06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course supplies no load-chart instruction or rigging-selection qualification.",
+      "to": "",
+      "courses": [
+        "C06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach an isolation method, gas-testing technique or electrical work procedure.",
+      "to": "",
+      "courses": [
+        "C07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The resulting record needs task and system boundaries, not only a course name.",
+      "to": "",
+      "courses": [
+        "C07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not guess technical limits from this course or treat an earlier reading as automatically valid under changed conditions.",
+      "to": "",
+      "courses": [
+        "C07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Competent emergency planning determines appropriate first-aid, CPR, medical and rescue provisions; this course does not prescribe a universal response time or staffing ratio.",
+      "to": "Competent emergency planning determines appropriate first-aid, CPR, medical and rescue provisions.",
+      "courses": [
+        "C08"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general awareness course does not confer responder competence.",
+      "to": "",
+      "courses": [
+        "C08"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The appropriate equipment owner determines technical readiness requirements; this course does not substitute a generic visual glance for those checks.",
+      "to": "The appropriate equipment owner determines technical readiness requirements.",
+      "courses": [
+        "C08"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Course completion can support the equipment program’s training evidence; it does not sign a maintenance release or certify machinery.",
+      "to": "",
+      "courses": [
+        "E01"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course supplies knowledge, not a machinery release.",
+      "to": "",
+      "courses": [
+        "E01"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Written awareness cannot replace those requirements.",
+      "to": "",
+      "courses": [
+        "E03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not invent a universal strap count or working-load ratio.",
+      "to": "",
+      "courses": [
+        "E03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Defensive driving, licensing and commercial requirements remain separate from this written course.",
+      "to": "",
+      "courses": [
+        "E03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A written course pass supports awareness only; it does not certify a pressure vessel or relief valve.",
+      "to": "",
+      "courses": [
+        "E05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A written awareness score cannot establish all those roles.",
+      "to": "",
+      "courses": [
+        "E06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not replace those programs.",
+      "to": "",
+      "courses": [
+        "E07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A written general PPE course cannot substitute for them.",
+      "to": "",
+      "courses": [
+        "E07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The general course and issue receipt remain learning and delivery evidence only.",
+      "to": "",
+      "courses": [
+        "E07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Any proposed alternative requires appropriate technical review and authorization; this online course cannot approve a bypass.",
+      "to": "",
+      "courses": [
+        "E09"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general specialist-service course cannot establish nozzle control, vacuum loading competence or technical maintenance capability.",
+      "to": "",
+      "courses": [
+        "E09"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not invent a universal formula or compare unrelated rates.",
+      "to": "",
+      "courses": [
+        "I05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course deliberately does not provide one rate formula for every comparison.",
+      "to": "",
+      "courses": [
+        "I05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The applicable site plan establishes the response, not a universal instruction invented in this course.",
+      "to": "",
+      "courses": [
+        "R01"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Online learning can teach the process, but cannot show that a person recognizes the local alarm, reaches the right shelter or gives usable directions from that entrance.",
+      "to": "",
+      "courses": [
+        "R01"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach rope systems, entry techniques or medical treatment.",
+      "to": "",
+      "courses": [
+        "R02"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Online learning, first-aid cards and the existence of a kit are separate evidence items and do not collectively imply a feasible rescue.",
+      "to": "",
+      "courses": [
+        "R02"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The review frequency and triggers follow the organization's assessed needs and governing requirements; this course invents no common renewal period.",
+      "to": "The review frequency and triggers follow the organization's assessed needs and governing requirements.",
+      "courses": [
+        "R05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Completing this course helps a participant understand that process but cannot substitute for the actual leadership decision or verification of the company’s controls.",
+      "to": "",
+      "courses": [
+        "R05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The exact verification follows the change scope; do not invent a generic technical test from this awareness lesson.",
+      "to": "",
+      "courses": [
+        "R06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The competent employer/site process establishes the boundary; this course does not invent a universal spill-volume threshold.",
+      "to": "The competent employer/site process establishes the boundary.",
+      "courses": [
+        "R07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Online learning and a completed spill form remain separate from specialist cleanup and technical handback.",
+      "to": "",
+      "courses": [
+        "R07"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Any loading, unloading, cargo-securement or bulk-transfer qualification beyond this awareness course must be assessed on the actual equipment and task.",
+      "to": "",
+      "courses": [
+        "G01"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This foundation course contributes to recognition and safe handoff; it is not a blanket statement that those elements have all been completed.",
+      "to": "",
+      "courses": [
+        "G01"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A perfect remediated score means the course’s questions have been resolved; it does not prove equipment skill or qualify every function.",
+      "to": "",
+      "courses": [
+        "G01"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course is not that evaluation.",
+      "to": "",
+      "courses": [
+        "G01"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Passing this course does not represent a time-based HAZWOPER program, supervised field experience, a specialist response qualification or an employer’s site-specific authorization.",
+      "to": "",
+      "courses": [
+        "G02"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An online quiz cannot simulate all of the decisions and physical demands of response.",
+      "to": "",
+      "courses": [
+        "G02"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not record this course as a 24-hour, 40-hour, response-level or annual refresher program.",
+      "to": "",
+      "courses": [
+        "G02"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course supplies no operating limits, startup sequence, isolation method, bypass permission or plant qualification.",
+      "to": "",
+      "courses": [
+        "G03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not specify which valve to move or which device to reset.",
+      "to": "",
+      "courses": [
+        "G03"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A written course cannot supply the employer-specific exposure-control plan, equipment practice, vaccination arrangements, medical follow-up or the opportunity for interactive questions with a knowledgeable trainer.",
+      "to": "",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Completing this course does not demonstrate that those employer arrangements exist or are current.",
+      "to": "",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An automated quiz cannot inspect the site, explain an employer's particular sharps system or answer every job-specific question.",
+      "to": "",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not authorize Mason to handle the sharp; it teaches why an improvised receptacle does not establish safe readiness.",
+      "to": "",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Respiratory hazards require their own assessment and program; this course does not prescribe a respirator for every blood cleanup or equate bloodborne transmission with airborne exposure.",
+      "to": "Respiratory hazards require their own assessment and program.",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Reading these words or choosing a correct quiz answer does not establish that the worker can perform removal without contaminating themselves.",
+      "to": "",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Vaccination history does not justify ignoring a new exposure, and this course cannot declare someone immune or clear them to continue.",
+      "to": "",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An assigned duty cannot be made ready by adding a course-complete label to a roster while those arrangements remain absent.",
+      "to": "",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not qualify first aid, injections, clinical waste treatment, medical testing, vaccine administration or post-exposure prescribing.",
+      "to": "",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The employer's practical and legal review remains separate from VNDRLY's knowledge course, and no universal certification or renewal period is claimed here.",
+      "to": "",
+      "courses": [
+        "G04"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Staff should act only within their training and applicable authorization; this course neither diagnoses anaphylaxis nor qualifies administration of medication.",
+      "to": "Staff should act only within their training and applicable authorization.",
+      "courses": [
+        "G05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Some products have specific receiving provisions; this course does not assign one receiving temperature to every food.",
+      "to": "Some products have specific receiving provisions.",
+      "courses": [
+        "G05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A driver's food-hygiene quiz alone does not establish that the equipment, recipes and receiving arrangements are suitable.",
+      "to": "",
+      "courses": [
+        "G05"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Its chemical hygiene plan, methods, technical limits and qualified roles must reflect the real work; this generic course cannot implement them by itself.",
+      "to": "",
+      "courses": [
+        "G06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A sash position, airflow indication, alarm or certification label has meaning only within that actual system; this course gives no universal face velocity or sash height.",
+      "to": "A sash position, airflow indication, alarm or certification label has meaning only within that actual system.",
+      "courses": [
+        "G06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "These examples require their own specific procedures; this course supplies no universal pressure setting, centrifuge speed or gas-regulator assembly method.",
+      "to": "These examples require their own specific procedures.",
+      "courses": [
+        "G06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe a closure type for every reaction or waste; a universal instruction could itself create a hazard.",
+      "to": "",
+      "courses": [
+        "G06"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general chemical course does not confer an applicator category, and a credential for one category or jurisdiction cannot be assumed to cover another.",
+      "to": "",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course teaches how to recognize the dependency, not an application recipe.",
+      "to": "",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Where respirators are required, their separate medical, fit, training and program prerequisites must be met as applicable; this course supplies none of those results.",
+      "to": "Where respirators are required, their separate medical, fit, training and program prerequisites must be met as applicable.",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe medical treatment.",
+      "to": "",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not claim that one general course, a different jurisdiction's credential or agricultural awareness automatically establishes the required authority.",
+      "to": "",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Keep the required legal/approved training evidence and employer authorization separate from a knowledge-course result.",
+      "to": "",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A closed repair ticket or another awareness quiz alone does not prove those operational protections.",
+      "to": "",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not record this course as that approval.",
+      "to": "",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A completed course or high company score cannot make an unsupported application or entry safe.",
+      "to": "",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An awareness learner can identify an uncertain label or proposed substitution, stop the affected use and report it; that learner is not qualified to test or certify breathing-air quality through this course.",
+      "to": "",
+      "courses": [
+        "G21"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "When those duties cannot be identified, the affected field work remains held rather than being assigned to whoever has completed this online module.",
+      "to": "",
+      "courses": [
+        "G21"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The boundary and release conditions come from the approved assessment; this course does not provide a generic distance.",
+      "to": "The boundary and release conditions come from the approved assessment.",
+      "courses": [
+        "G21"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not authorize selecting a transfer container, changing a regulator or repairing a cryogenic system.",
+      "to": "",
+      "courses": [
+        "G21"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The lesson is not that every nearby person should learn a rescue technique online.",
+      "to": "",
+      "courses": [
+        "G21"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A completed knowledge course can help a worker recognize this boundary; it cannot supply atmospheric clearance or make an unsafe job ready.",
+      "to": "",
+      "courses": [
+        "G21"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A breathing apparatus or course certificate alone does not establish any of those roles.",
+      "to": "",
+      "courses": [
+        "G21"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not clear an alarm, approve a purge change, certify breathing air or authorize return to service.",
+      "to": "",
+      "courses": [
+        "G21"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not tell an unqualified worker which assembly to install or certify.",
+      "to": "",
+      "courses": [
+        "G22"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Boiling is not a universal remedy for every chemical or biological concern, and this course supplies no substitute treatment procedure.",
+      "to": "",
+      "courses": [
+        "G22"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not enter, lean into an unassessed opening or attempt a rescue on the basis of this hygiene course.",
+      "to": "Do not enter or lean into an unassessed opening or attempt an unplanned rescue.",
+      "courses": [
+        "G22"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Clinical advice about immunization or health conditions belongs with appropriate professionals; this course does not prescribe vaccines or decide individual fitness for sewage duties.",
+      "to": "Clinical advice about immunization or health conditions belongs with appropriate professionals.",
+      "courses": [
+        "G22"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A course pass, a busy camp or a favorable company score cannot authorize an unsupported drinking-water or facility all-clear.",
+      "to": "",
+      "courses": [
+        "G22"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The references provide defensive guidance and an investigation context, not automatic local legal requirements, approval of a system design or endorsement of this course.",
+      "to": "",
+      "courses": [
+        "G23"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "These references do not issue this course's learner any license or work authorization.",
+      "to": "",
+      "courses": [
+        "G50",
+        "G51",
+        "G53",
+        "G54"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A reviewer checks that the evidence refers to the actual package and current intended use; this course does not select a package or teach a closure method.",
+      "to": "A reviewer checks that the evidence refers to the actual package and current intended use.",
+      "courses": [
+        "G50"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not claim to satisfy every required component or certify the employee.",
+      "to": "",
+      "courses": [
+        "G50"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not substitute an online score for a demonstration, a current product document, an assigned responsibility or an approval by the person who holds it.",
+      "to": "",
+      "courses": [
+        "G50",
+        "G51",
+        "G52",
+        "G53",
+        "G54",
+        "G55",
+        "G56",
+        "G57",
+        "G58",
+        "G59",
+        "G60",
+        "G61",
+        "G62",
+        "G63",
+        "G64"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An online course title, a customer demand for a certificate or a vendor's broad marketing claim is not that determination.",
+      "to": "",
+      "courses": [
+        "G51"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A person's previous course or job title does not automatically match the role now needed.",
+      "to": "",
+      "courses": [
+        "G51"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not prescribe zone distances from this course.",
+      "to": "",
+      "courses": [
+        "G51"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course cannot make that technical determination.",
+      "to": "",
+      "courses": [
+        "G51"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An online knowledge course cannot supply familiarity with an unseen plant configuration.",
+      "to": "",
+      "courses": [
+        "G52"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach a clinical instrument technique or a universal sharp-retrieval method.",
+      "to": "",
+      "courses": [
+        "G53"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course explains the objective but does not replace an observed demonstration of the exact equipment being used.",
+      "to": "",
+      "courses": [
+        "G53"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not convert a corrected quiz into a statement that a clinical skill was performed or a vaccination was provided.",
+      "to": "",
+      "courses": [
+        "G53"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "CDC's sick-worker research supports clear reporting policies and active management; it does not substitute for the local adopted requirements or give this course authority to medically clear anyone.",
+      "to": "",
+      "courses": [
+        "G54"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Cleaning arrangements, dedicated equipment where required and a clear handling sequence are specific to the actual operation; an online lesson cannot approve every kitchen's capability.",
+      "to": "",
+      "courses": [
+        "G54"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A smaller batch, different menu or alternate delivery arrangement may be considered by the authorized kitchen team, but this course does not approve an improvised method.",
+      "to": "",
+      "courses": [
+        "G54"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The assigned worker follows the actual method and disposition instructions; specialist transport or regulated-waste duties may require additional scope and competence beyond this course.",
+      "to": "",
+      "courses": [
+        "G55"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course cannot choose an experimental preparation.",
+      "to": "",
+      "courses": [
+        "G55"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course can teach that planning discipline; only the qualified program can establish actual diver and team capability.",
+      "to": "",
+      "courses": [
+        "G56"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The relevant qualified authorities decide the actual separation and controls; this course does not prescribe distances or vessel maneuvers.",
+      "to": "The relevant qualified authorities decide the actual separation and controls.",
+      "courses": [
+        "G56"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not invent universal diver signals or emergency phrases.",
+      "to": "",
+      "courses": [
+        "G56"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "It does not claim that the online course closes any of those execution requirements.",
+      "to": "",
+      "courses": [
+        "G56"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe exclusion distances or authorize support staff to direct traffic beyond their actual role.",
+      "to": "",
+      "courses": [
+        "G57"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not invent emergency phrases or flight commands; actual terminology must be consistent with the trained crew and equipment.",
+      "to": "",
+      "courses": [
+        "G57"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A corrected quiz score preserves learning but cannot issue regulator permission or manufacture a physical skill.",
+      "to": "",
+      "courses": [
+        "G57"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course teaches the questions and communication; it does not establish working limits, grant track authority or qualify a worker to protect others.",
+      "to": "",
+      "courses": [
+        "G58"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach how to obtain authority, place devices, act as a lookout or release working limits.",
+      "to": "",
+      "courses": [
+        "G58"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not invent universal rail signals or emergency radio words.",
+      "to": "",
+      "courses": [
+        "G58"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course gives no universal movement or evacuation maneuver; the actual program must teach the worker's specific response.",
+      "to": "",
+      "courses": [
+        "G58"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Knowledge completion in this course cannot supply the actual railroad qualification, observed machinery skill or authority to protect others; each remains a specifically identified requirement.",
+      "to": "",
+      "courses": [
+        "G58"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general laboratory or transport course does not authorize source handling.",
+      "to": "",
+      "courses": [
+        "G59"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Course completion records knowledge and remediation only; it cannot qualify a radiographer, logging supervisor, source-recovery specialist or radiation medical professional.",
+      "to": "",
+      "courses": [
+        "G59"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A generic lockout awareness course cannot be substituted for every power-system clearance and grounding requirement.",
+      "to": "",
+      "courses": [
+        "G60"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach a live rescue method or grant permission to approach a downed conductor.",
+      "to": "",
+      "courses": [
+        "G60"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Each residual requirement named with this course stays open until the actual authorized evidence exists.",
+      "to": "",
+      "courses": [
+        "G60"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course supplies no line-handling sequence, tension setting, knot instruction or mooring design.",
+      "to": "",
+      "courses": [
+        "G61"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A generic course cannot safely replace those details with a universal signal or route.",
+      "to": "",
+      "courses": [
+        "G61"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general hazardous-material course does not establish shot-firing or well-perforating competence, and a commercial job title does not demonstrate practical proficiency.",
+      "to": "",
+      "courses": [
+        "G62"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not select packaging, prescribe storage construction or teach loading/handling methods.",
+      "to": "",
+      "courses": [
+        "G62"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course records knowledge and explicit remediation only.",
+      "to": "",
+      "courses": [
+        "G62"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general pressure-awareness course or a job title such as technician cannot establish the actual well-control competence.",
+      "to": "",
+      "courses": [
+        "G63"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course teaches interpretation, not a generic sequence for controlling a well.",
+      "to": "This course teaches interpretation.",
+      "courses": [
+        "G63"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not certify PPE selection or fit, and it does not provide a donning/removal sequence for every design.",
+      "to": "",
+      "courses": [
+        "G64"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course is not a clinical treatment protocol or a rescue qualification.",
+      "to": "",
+      "courses": [
+        "G64"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The general course also does not establish the relevant applicator authority or product/equipment skill.",
+      "to": "",
+      "courses": [
+        "G64"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Course completion records the learner's understanding; it does not certify an actual applicator, issue medical clearance or release a real treated site.",
+      "to": "",
+      "courses": [
+        "G64"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Neither this course nor a successful software download authorizes startup or return to service.",
+      "to": "",
+      "courses": [
+        "G65"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A job title, course score or company administrator account does not establish authority to make every engineering decision.",
+      "to": "",
+      "courses": [
+        "G65"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not issue a license, validate an individual credential or decide whether a specific project may legally proceed.",
+      "to": "",
+      "courses": [
+        "G65"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course records the learner's reasoning, not a software release approval.",
+      "to": "",
+      "courses": [
+        "G65"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Completion documents this knowledge component only.",
+      "to": "",
+      "courses": [
+        "G67",
+        "G68",
+        "G69",
+        "G70",
+        "G71",
+        "G72",
+        "G73",
+        "G74",
+        "G75",
+        "G76",
+        "G77",
+        "G78",
+        "G79",
+        "G80",
+        "G81",
+        "G82"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach connections, test voltages, live measurements, approach distances or switching sequences.",
+      "to": "",
+      "courses": [
+        "G67"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Their use, control and removal require the appropriate technical and operational authority; this course does not authorize creating or removing them.",
+      "to": "Their use, control and removal require the appropriate technical and operational authority.",
+      "courses": [
+        "G67"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe an assessment involving live parts, and a supervisor should not create one merely to make training realistic.",
+      "to": "",
+      "courses": [
+        "G67"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The paper exercise closes none of those residuals.",
+      "to": "",
+      "courses": [
+        "G67"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Preserve both observations and ask the responsible specialist for controlled disposition; this course does not teach identification by experimental mixing or release.",
+      "to": "Preserve both observations and ask the responsible specialist for controlled disposition.",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not infer an acceptable mass balance or allowable loss from this course.",
+      "to": "",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Keep each residual attached to a named owner so that a general course completion cannot accidentally close it.",
+      "to": "",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The safety course supports only the knowledge taught.",
+      "to": "",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A paper-course pass, paid invoice and normal display cannot satisfy them.",
+      "to": "",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "It does not establish that a generic aviation course qualifies a helicopter pilot, mechanic or ground marshal.",
+      "to": "",
+      "courses": [
+        "G69"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The ground coordinator should know the agreed communications route for requests and uncertainty, but this course does not teach radio clearances, standard marshalling signals or aircraft maneuver instructions.",
+      "to": "",
+      "courses": [
+        "G69"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not establish legal applicability across jurisdictions or determine airworthiness; competent aviation authorities and operators retain those decisions.",
+      "to": "",
+      "courses": [
+        "G69"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A course score closes only Sam's taught coordination knowledge.",
+      "to": "",
+      "courses": [
+        "G69"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The customer dispatcher cannot clear an aircraft maintenance issue merely by accepting schedule risk, and the course graduate does not inspect or repair it.",
+      "to": "Route the aircraft maintenance issue to the responsible aviation maintenance authority.",
+      "courses": [
+        "G69"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not select chemical dwell times, magnetizing settings, probe configurations, radiation exposures or defect limits from this course.",
+      "to": "",
+      "courses": [
+        "G70"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not train a learner to interpret a real scan or image, and a planner should not diagnose a discontinuity from an isolated screenshot without context.",
+      "to": "",
+      "courses": [
+        "G70"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe live inspection of operating equipment, chemical use, radiation work or access to hazardous structures as a training exercise.",
+      "to": "",
+      "courses": [
+        "G70"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "It does not approve this course as a calibration program or designate the learner a metrologist.",
+      "to": "",
+      "courses": [
+        "G71"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not authorize creating a laboratory uncertainty claim or using a guessed coverage factor.",
+      "to": "",
+      "courses": [
+        "G71"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "There is no universal online-course rule that every result inside a numerical tolerance must pass regardless of uncertainty.",
+      "to": "Apply the specified decision rule and account for measurement uncertainty when judging a result against tolerance.",
+      "courses": [
+        "G71"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A label and an online score cannot supply those elements.",
+      "to": "",
+      "courses": [
+        "G71"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe baking temperatures, exposure times or substitute consumable selections.",
+      "to": "",
+      "courses": [
+        "G72"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not specify a universal exclusion radius, ventilation design or cleaning method.",
+      "to": "",
+      "courses": [
+        "G72"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A course completion can close only this bounded theory component after all correct answers or acknowledged remediation.",
+      "to": "",
+      "courses": [
+        "G72"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A knowledge-course pass cannot make the three methods interchangeable.",
+      "to": "",
+      "courses": [
+        "G72"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course record cannot authorize fabrication, repair or operation of the spool.",
+      "to": "",
+      "courses": [
+        "G72"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach collection from suspect material, cutting samples or field identification tests.",
+      "to": "",
+      "courses": [
+        "G73"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe an abatement enclosure, ventilation rate, respirator selection or removal sequence.",
+      "to": "",
+      "courses": [
+        "G73"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach how to remove the newly encountered material or rescue a contaminated worker.",
+      "to": "",
+      "courses": [
+        "G73"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A worker's old course record may not address the current material, work class or method.",
+      "to": "",
+      "courses": [
+        "G73"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Course completion supplies only this bounded theory and planning component, retaining original quiz results and acknowledged remediation.",
+      "to": "",
+      "courses": [
+        "G73"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The reviewer does not design ventilation, select a respirator or prescribe a cleanup sequence from this course.",
+      "to": "",
+      "courses": [
+        "G73"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An online score cannot turn an unreviewed dry-abrasion method into an approved hazardous-material operation.",
+      "to": "",
+      "courses": [
+        "G73"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not calculate a safe dispersion area from this course or move a vent experimentally.",
+      "to": "Use the approved dispersion assessment; do not move a vent experimentally.",
+      "courses": [
+        "G74"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach sensor setup, sample-line design, alarm settings or entry-clearance thresholds.",
+      "to": "",
+      "courses": [
+        "G74"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course learner cannot issue a clearance by reusing the earlier result.",
+      "to": "",
+      "courses": [
+        "G74"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not train rescue entry or breathing-apparatus use.",
+      "to": "",
+      "courses": [
+        "G74"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Mark uncertain contents and configuration explicitly; do not add a universal safety percentage from this course.",
+      "to": "Mark uncertain contents and configuration explicitly.",
+      "courses": [
+        "G75"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe discard thresholds or repairs.",
+      "to": "",
+      "courses": [
+        "G75"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Preserve practical limitations and work authorization separately from the course score.",
+      "to": "",
+      "courses": [
+        "G75"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Knowledge completion closes this bounded theory component only.",
+      "to": "",
+      "courses": [
+        "G75"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course supplies no operating settings or universal acceptance values.",
+      "to": "",
+      "courses": [
+        "G76"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not specify machining fits or repair dimensions.",
+      "to": "",
+      "courses": [
+        "G76"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The actual qualified process specification defines the required variables and acceptance; this course supplies no temperature, dwell, cooling or chemical-treatment recipe.",
+      "to": "The actual qualified process specification defines the required variables and acceptance.",
+      "courses": [
+        "G76"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Knowledge completion closes only this taught component, retaining original answers and acknowledged remediation.",
+      "to": "",
+      "courses": [
+        "G76"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A theory score cannot supply missing data or qualify a thermal-treatment operator.",
+      "to": "",
+      "courses": [
+        "G76"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Neither source makes this course a pressure-test qualification or universally applicable legal determination.",
+      "to": "",
+      "courses": [
+        "G77"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not convert this distinction into a claim that every liquid test is safe or that this course provides a stored-energy calculation.",
+      "to": "",
+      "courses": [
+        "G77"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach connecting gauges or selecting operating ranges.",
+      "to": "",
+      "courses": [
+        "G77"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not provide an exclusion distance, enclosure design, pressure sequence or depressurization instruction.",
+      "to": "",
+      "courses": [
+        "G77"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The actual qualified team decides safe action and whether evidence remains valid; the course does not teach a universal emergency manipulation sequence.",
+      "to": "The actual qualified team decides safe action and whether evidence remains valid.",
+      "courses": [
+        "G77"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course learner does not select a clamp, drill a fitting, inject material or choose pressure/temperature limits.",
+      "to": "",
+      "courses": [
+        "G77"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course teaches the distinction and planning questions; it cannot approve or execute live-leak sealing.",
+      "to": "",
+      "courses": [
+        "G77"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "NOAA's geodetic guidance illustrates these concepts; it does not mean every job must use the same national system or that this course establishes current datum migration rules for every project.",
+      "to": "Use the reference system specified for the project and confirm its datum, units and epoch.",
+      "courses": [
+        "G78"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe a field setup or universal closure tolerance.",
+      "to": "",
+      "courses": [
+        "G78"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not provide an acquisition design, source energy, receiver spacing or field operating method.",
+      "to": "",
+      "courses": [
+        "G78"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Knowledge completion closes only this bounded theory component with original answers and remediation retained.",
+      "to": "",
+      "courses": [
+        "G78"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A theory course cannot certify the image, qualify a source operator or clear excavation.",
+      "to": "",
+      "courses": [
+        "G78"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general safety course does not create a guard license, and a guard credential does not automatically cover unrelated traffic or technical work.",
+      "to": "",
+      "courses": [
+        "G79"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not set a universal check-in interval or emergency code.",
+      "to": "",
+      "courses": [
+        "G79"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An online conflict-management score does not establish lawful authority for physical intervention.",
+      "to": "",
+      "courses": [
+        "G79"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Course completion closes only the bounded nonphysical knowledge taught here after correct responses or acknowledged remediation.",
+      "to": "",
+      "courses": [
+        "G79"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A course pass cannot create search powers or turn a colleague's informal request into lawful duty.",
+      "to": "",
+      "courses": [
+        "G79"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This module does not authorize collecting water samples, operating a device or interpreting clinical tests.",
+      "to": "",
+      "courses": [
+        "G80"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach hand sorting, sharps retrieval or chemical treatment.",
+      "to": "",
+      "courses": [
+        "G80"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Knowledge completion cannot establish occupational health clearance or qualify a person for clinical exposure assessment.",
+      "to": "",
+      "courses": [
+        "G80"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general accommodation service does not automatically assign food handling, and a food-handler course does not qualify water-treatment or clinical work.",
+      "to": "",
+      "courses": [
+        "G80"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course record is then separated from technical readiness.",
+      "to": "",
+      "courses": [
+        "G80"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A hygiene quiz cannot replace those outcomes.",
+      "to": "",
+      "courses": [
+        "G80"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The helper's course score cannot create that authority.",
+      "to": "",
+      "courses": [
+        "G80"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe indiscriminate disconnection, live investigation commands, forensic collection or process shutdown.",
+      "to": "",
+      "courses": [
+        "G81"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The theory learner demonstrates evidence distinctions and safe role routing, not recovery execution or incident-response qualification.",
+      "to": "",
+      "courses": [
+        "G81"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Their citation does not make this a CDC-approved course or an OSHA-authorized provider program.",
+      "to": "",
+      "courses": [
+        "G82"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This module improves instructional reasoning; it does not authorize teaching or certifying every hazardous trade.",
+      "to": "",
+      "courses": [
+        "G82"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Completion of this course does not establish electrical, clinical, engineering or forensic authority.",
+      "to": "",
+      "courses": [
+        "G83"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe collection patterns, access methods, quantities or preservation recipes.",
+      "to": "",
+      "courses": [
+        "G84"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course provides no blending, neutralization or treatment recipe; the appropriate technical process must review the actual proposal before affected work proceeds.",
+      "to": "",
+      "courses": [
+        "G84"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not authorize cleanup, entry or emergency intervention.",
+      "to": "",
+      "courses": [
+        "G84"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Applicable permits and legal declarations remain separate from this course.",
+      "to": "",
+      "courses": [
+        "G84"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The manufacturer instructions and competent technical selection process establish the applicable equipment relationships; this course does not provide assembly instructions or substitute engineering approval.",
+      "to": "The manufacturer instructions and competent technical selection process establish the applicable equipment relationships.",
+      "courses": [
+        "G85"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A generic course can teach why a mismatch matters, but it cannot establish that a person can identify, use and verify the correct function on every unit.",
+      "to": "",
+      "courses": [
+        "G85"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not select chemical mixtures, ventilation settings or respiratory equipment.",
+      "to": "",
+      "courses": [
+        "G85"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not prescribe emergency communications equipment; it teaches why a number on paper is insufficient evidence.",
+      "to": "Confirm that emergency communications can reach the intended contact from the actual work location.",
+      "courses": [
+        "G85"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course provides no hazardous execution method or unrestricted cleaning qualification.",
+      "to": "",
+      "courses": [
+        "G85"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course supplies no excavation technique or design approval and cannot authorize commissioning or startup.",
+      "to": "",
+      "courses": [
+        "G86"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A trade qualification does not establish attendant capability, and an entry course does not establish the trade.",
+      "to": "",
+      "courses": [
+        "G87"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Knowledge completion cannot establish competent scaffold examination, rope-access skill or fall-system design authority.",
+      "to": "",
+      "courses": [
+        "G88"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course teaches selection questions, not a fitting sequence or a physical demonstration.",
+      "to": "This course teaches selection questions.",
+      "courses": [
+        "G88"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course deliberately supplies no universal distance or calculation formula; the qualified review must use the actual system, manufacturer information and applicable requirements.",
+      "to": "",
+      "courses": [
+        "G88"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach casualty handling, rope rigging, suspension techniques or improvised recovery.",
+      "to": "",
+      "courses": [
+        "G88"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not assess the clinical correctness of treatment content.",
+      "to": "",
+      "courses": [
+        "G89"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not choose a transfer mode or assess a patient's condition.",
+      "to": "",
+      "courses": [
+        "G89"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course participants do not select a vehicle or make a patient-specific transport decision.",
+      "to": "",
+      "courses": [
+        "G89"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course grants none of those qualifications and supplies no treatment instruction.",
+      "to": "",
+      "courses": [
+        "G89"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not invent a universal stop procedure; the employer must teach the real response and assess the person's ability to use it.",
+      "to": "",
+      "courses": [
+        "G90"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not prescribe how to operate, inspect or test the forklift.",
+      "to": "",
+      "courses": [
+        "G90"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The decision cannot be supplied by an online staffing quiz or a promise from the billing contact.",
+      "to": "",
+      "courses": [
+        "G90"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course establishes only the bounded coordination knowledge taught here.",
+      "to": "",
+      "courses": [
+        "G90"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "An online method-review course cannot supply practical chemical handling skill.",
+      "to": "",
+      "courses": [
+        "G91"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not authorize experimentation or operational application of a research result.",
+      "to": "",
+      "courses": [
+        "G91"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course teaches how to identify a mismatch; it does not supply dimensions, operating settings or a compatibility calculation.",
+      "to": "Identify and resolve mismatches in the equipment, method and supporting information.",
+      "courses": [
+        "G92"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach physical identification checks on energized equipment or authorize testing to resolve uncertain paperwork.",
+      "to": "",
+      "courses": [
+        "G93"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course supplies no repair or test procedure; the qualified method and manufacturer/employer instructions govern actual work.",
+      "to": "",
+      "courses": [
+        "G93"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not decide a legal classification for an unspecified vehicle.",
+      "to": "",
+      "courses": [
+        "G95"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not prescribe routes, driving tactics or hours limits for an unspecified assignment.",
+      "to": "",
+      "courses": [
+        "G95"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Passing this course does not authorize a vehicle movement or specialist intervention.",
+      "to": "",
+      "courses": [
+        "G95"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The responsible planner selects actual controls; this course does not specify electrical connections, hazardous-area equipment ratings or exclusion distances.",
+      "to": "The responsible planner selects actual controls.",
+      "courses": [
+        "G96"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not prescribe flight behavior or electrical setup.",
+      "to": "",
+      "courses": [
+        "G96"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course authorizes none of those activities and cannot replace site-specific instruction.",
+      "to": "",
+      "courses": [
+        "G96"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course teaches planning and communication, not a field accountability tactic.",
+      "to": "",
+      "courses": [
+        "G97"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not interpret that information into firefighting tactics or select an extinguishing agent.",
+      "to": "",
+      "courses": [
+        "G97"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course does not prescribe medical decisions or equipment restoration methods; it teaches why those categories must remain visible.",
+      "to": "",
+      "courses": [
+        "G97"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course establishes bounded planning knowledge only and supplies no permission or tactics for hazardous intervention.",
+      "to": "",
+      "courses": [
+        "G97"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course teaches how to interpret the relationship between a claim and the evidence; it does not supply a test sequence or acceptance threshold.",
+      "to": "",
+      "courses": [
+        "G98"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A general course badge cannot certify a particular test.",
+      "to": "",
+      "courses": [
+        "G98"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "The course participant does not choose a substitute precaution or bypass a function.",
+      "to": "",
+      "courses": [
+        "G98"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course grants no permission to disable, bypass, operate or certify a protective system.",
+      "to": "",
+      "courses": [
+        "G98"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "A badge, induction card, or course score cannot establish that a particular task is safe today.",
+      "to": "",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Qualified industrial-hygiene and engineering expertise, exposure monitoring, medical provisions where applicable, and employer implementation remain separate from this awareness lesson.",
+      "to": "",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Do not open a panel, reset a device repeatedly, test for voltage, or improvise an insulated tool because you completed this core course.",
+      "to": "When electrical equipment is uncertain, stop the affected task and involve the responsible qualified person.",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "These habits allow a general worker to prevent exposure while the specialist team performs the evaluation that this core course cannot replace.",
+      "to": "",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Adding a ladder or removing a brace can change the structure and is not authorized by this course.",
+      "to": "Adding a ladder or removing a brace can change the structure; report the proposed change before continuing.",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course provides recognition, not medical clearance, a fit test, respirator selection, or rescue qualification.",
+      "to": "",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "OSHA radiation standards and other agencies' radiation rules may apply; this course grants no radiation-worker or source-handling qualification.",
+      "to": "OSHA radiation standards and other agencies' radiation rules may apply.",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "HAZWOPER 1910.120 has specific scope and responder levels; this core course does not confer them.",
+      "to": "",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "Requirements can vary; this course does not claim a single universal testing schedule, automatic dismissal rule, or statutory waiting period after drinking.",
+      "to": "Requirements can vary.",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not teach tactical response or authorize weapon use.",
+      "to": "",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This awareness lesson cannot diagnose illness or replace professional mental-health care.",
+      "to": "",
+      "courses": [
+        "G99"
+      ],
+      "reason": "Removed added course limitation, qualification disclaimer or blanket follow-up demand; not an additional legal duty."
+    },
+    {
+      "from": "This course does not characterize that event as a cyberattack.",
+      "to": "The available facts do not establish the cause.",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "No company records, field inspection, operating equipment, or paid external material is needed for the written course.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "Read the teaching before answering; no live hazardous activity is needed to complete this course.",
+      "to": "Read the teaching before answering.",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "No equipment operation is required to complete the online learning.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "It does not issue a food-handler card, certified-manager credential, health permit, clinical clearance, allergen-free guarantee or authorization for specialized processing.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "This is not EPA-approved Worker Protection Standard training, an applicator certification, a state-approved continuing-education course or a legal license.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "No online completion authorizes entry or rescue.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "Completion does not appoint you as a supervisor, qualified electrician, rescuer, or permit issuer.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "Completion here does not prove any hands-on competency.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "General asbestos awareness does not impose these abatement-training requirements on a worker who does not perform that work.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "This does not impose the power-industry rule on every employee taking electrical awareness.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "These duties apply to the actual respirator assignment, not everyone taking awareness training.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "These are radiography-role duties, not requirements for every NDT method or an awareness-course learner.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "The online learner must still demonstrate the actual product/equipment skills through the qualified program.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "Unresolved items stay open against their named owner; an administrative completion label cannot authorize hazardous execution.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "The remaining evidence is named with this course: exposure determination, plan, interactive instruction, real controls, confidential follow-up and observed actual skills.",
+      "to": "For employees with occupational exposure to blood or other potentially infectious materials, 29 CFR 1910.1030(g)(2)(vii)(N) requires an opportunity for interactive questions and answers with the trainer. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "For this course, all questions must be correct or have explicitly acknowledged remediation; practical or credential requirements remain separate regardless of the final quiz score.",
+      "to": "All questions must be correct or have explicitly acknowledged remediation.",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "The final handoff should preserve the actual subject, learner role, teaching evidence, assessment conditions, original/remediated results and residual practical/credential requirements.",
+      "to": "The training record identifies the subject, learner role, material version, original results and acknowledged corrections.",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "Actual machine/task instruction, observed performance, required credentials and employer/site assignment are tracked separately.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "Residuals are the supported specialist method, observed role-specific performance, applicable medical/respiratory or credential requirements and actual work authorization.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "Exact residuals are exposure/method determination, supported clean/dirty and food/chemical controls, applicable role credentials, observed practical performance and assignment authorization.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "This is not a separate independent certification requirement.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "An outside assessor is not universally required.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed added course caveat or blanket follow-up requirement."
+    },
+    {
+      "from": "These are functional roles, not permissions created by a job title or an online score.",
+      "to": "These roles describe the duties assigned in the energy-control procedure.",
+      "courses": [
+        "H04"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Awareness supports recognition but cannot replace role-specific demonstration and authorization.",
+      "to": "",
+      "courses": [
+        "H07"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Awareness knowledge supports it but cannot replace safe demonstration and employer designation.",
+      "to": "",
+      "courses": [
+        "H08"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "The training administrator merely records course evidence; that administrator does not clear the tank.",
+      "to": "",
+      "courses": [
+        "H13"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Do not issue a single specialist-qualified label to everyone who attended an awareness briefing.",
+      "to": "",
+      "courses": [
+        "H24"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "An awareness result can support interface readiness but must never be presented as those qualifications.",
+      "to": "",
+      "courses": [
+        "H24"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A broad safety-program score must never be used to override a specialist hold or claim that online awareness has qualified radiation, explosives, diving, marine or rail operations.",
+      "to": "",
+      "courses": [
+        "H24"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "The record preserves the distinction between awareness, specialist qualification and operational authorization.",
+      "to": "",
+      "courses": [
+        "H24"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A certificate may demonstrate a course result without covering the workplace task.",
+      "to": "",
+      "courses": [
+        "C01"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Training in awareness may explain a hazard without qualifying the person to implement its control.",
+      "to": "",
+      "courses": [
+        "C07"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Separate awareness of a hazard from ability to implement its control.",
+      "to": "",
+      "courses": [
+        "C07"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks.",
+      "to": "Apply the assigned-role training, applicable procedure and designated responsibilities for the actual energy-control task.",
+      "courses": [
+        "C07"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "This is important because awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks.",
+      "to": "",
+      "courses": [
+        "C07"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "This course teaches coordination boundaries, not medical treatment or rescue techniques.",
+      "to": "",
+      "courses": [
+        "C08"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Ownership and written awareness are not substitutes.",
+      "to": "",
+      "courses": [
+        "E06"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A general PPE receipt or quiz must never be relabeled as those results.",
+      "to": "",
+      "courses": [
+        "E07"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "General awareness and ownership do not establish those conditions.",
+      "to": "",
+      "courses": [
+        "E07"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Keep practical operator records separate from online scores.",
+      "to": "",
+      "courses": [
+        "E09"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Online awareness does not authorize the helper as a technical operator.",
+      "to": "",
+      "courses": [
+        "E09"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Written course scores, exercise participation and qualified technical assessment each remain identifiable evidence with distinct limits.",
+      "to": "",
+      "courses": [
+        "R02"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Technical, employer and site authorities retain their respective decisions, while online learning remains evidence of understanding the process.",
+      "to": "",
+      "courses": [
+        "R06"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Ordinary awareness training does not authorize those technical decisions.",
+      "to": "",
+      "courses": [
+        "R07"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Never convert this foundation’s completion into a specialist response endorsement or erase a practical requirement because the learner achieved a corrected score of 100%.",
+      "to": "",
+      "courses": [
+        "G02"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A completion certificate must not be renamed to imply hours, field experience or endorsements that were not provided.",
+      "to": "",
+      "courses": [
+        "G02"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A software completion status is useful evidence of this teaching; it cannot resolve an unidentified substance, provide field experience or make an unsupported entry safe.",
+      "to": "",
+      "courses": [
+        "G02"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "This course issues no operator license, bypass permit, change approval, isolation authorization or technical certification.",
+      "to": "",
+      "courses": [
+        "G03"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Agricultural approved training, applicator certification and this foundation course must remain distinct records.",
+      "to": "",
+      "courses": [
+        "G15"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A completed G22 quiz helps knowledge; it does not establish that the facility system has been corrected or that anyone is qualified for entry, treatment or clinical work.",
+      "to": "",
+      "courses": [
+        "G22"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "First and remediated online scores remain learning evidence; they do not turn the operator into a recovery or functional-safety specialist.",
+      "to": "",
+      "courses": [
+        "G23"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "The lesson is to distinguish the roles of the information, not to teach an online generic reaction to rising pressure, temperature or level.",
+      "to": "",
+      "courses": [
+        "G52"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "An online arithmetic exercise cannot replace that assessment.",
+      "to": "",
+      "courses": [
+        "G59"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "An online knowledge record cannot establish switching, live-line, grounding or rescue competence.",
+      "to": "",
+      "courses": [
+        "G60"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Actual execution remains outside this course and requires the relevant qualified program and observed role competence.",
+      "to": "",
+      "courses": [
+        "G62"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "The useful result is a specific competence map that matches the real well/service method, rather than a universal certificate demand or a claim that general online completion qualifies execution.",
+      "to": "",
+      "courses": [
+        "G63"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A green course-completion screen must not be used to erase a real product or site restriction.",
+      "to": "",
+      "courses": [
+        "G64"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Do not mark the learner qualified for exposed electrical work because they completed this paper exercise.",
+      "to": "",
+      "courses": [
+        "G67"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Credentials also do not establish electrical qualification, pressure-system competence or permission to disturb an occupied building's ventilation.",
+      "to": "",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Request equipment-appropriate credential evidence where applicable and separate observed service skills.",
+      "to": "",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A credential is one capability element, not proof of proficiency on every appliance, refrigerant or service method.",
+      "to": "",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Ask the learner to detect a refrigerant identity conflict, identify missing acceptance evidence and distinguish a credential from observed method capability.",
+      "to": "",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "It is not an equipment-appropriate refrigerant credential where required; the brochure is not observed service competence.",
+      "to": "",
+      "courses": [
+        "G68"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Preserve applicable credential verification separately from practical results and work authorization.",
+      "to": "",
+      "courses": [
+        "G69"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "This is a specific scope question, not a demand that every passenger obtain an aviation credential.",
+      "to": "",
+      "courses": [
+        "G69"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "This course's desk exercises assess inspection reasoning, not method performance.",
+      "to": "",
+      "courses": [
+        "G70"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Metrology theory does not authorize opening a process line, touching electrical parts or testing an unknown sample.",
+      "to": "",
+      "courses": [
+        "G71"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "It cannot issue specialist credentials, establish actual exposure, approve an abatement method or authorize reoccupation of a real work area.",
+      "to": "",
+      "courses": [
+        "G73"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Actual manufacturer/site instruction remains necessary even after a successful theory assessment.",
+      "to": "",
+      "courses": [
+        "G74"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "The online record may support recognition but not catalyst method skill, inert-entry capability or rescue proficiency.",
+      "to": "",
+      "courses": [
+        "G74"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "The theory learner's accomplishment is accurate planning, not permission to perform catalyst or inert-atmosphere work.",
+      "to": "",
+      "courses": [
+        "G74"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "This course teaches how to recognize that dependency, not how to set up or operate the machine.",
+      "to": "",
+      "courses": [
+        "G75"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "This course teaches closed-loop understanding of assigned roles and uncertainty, not crane hand signals or radio operating instructions.",
+      "to": "",
+      "courses": [
+        "G75"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A general crane or forklift theory badge cannot supply observed performance on the changed arrangement.",
+      "to": "",
+      "courses": [
+        "G75"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Actual field method capability, applicable professional credentials and permission to conduct or certify the work remain residuals.",
+      "to": "",
+      "courses": [
+        "G78"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Credentials where required and practical performance remain separate evidence.",
+      "to": "",
+      "courses": [
+        "G79"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Exact residuals are actual jurisdiction/post authority, applicable credentials, site-system instruction and observed practical post performance.",
+      "to": "",
+      "courses": [
+        "G79"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "A diagram produced by this course is a learning artifact, not validation of a real water-management program or evidence that a building can reopen.",
+      "to": "",
+      "courses": [
+        "G80"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "It cannot validate water safety, issue a food/professional credential, establish actual exposure status or authorize clinical/facility operation.",
+      "to": "",
+      "courses": [
+        "G80"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "This course teaches the boundary and planning evidence, not retrieval rigging, breathing-apparatus use or casualty treatment.",
+      "to": "",
+      "courses": [
+        "G87"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "An online height-awareness result does not establish physical rope skill.",
+      "to": "",
+      "courses": [
+        "G88"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Scaffold design and examination remain specialist duties distinct from user awareness.",
+      "to": "",
+      "courses": [
+        "G88"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "The administrator should not be expected to fill the gap through an online safety course.",
+      "to": "",
+      "courses": [
+        "G89"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "An occupational safety course should retain its own result without extending it into a clinical qualification claim.",
+      "to": "",
+      "courses": [
+        "G89"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "This course can rehearse communication using fictional status information but must never issue a live operating command.",
+      "to": "",
+      "courses": [
+        "G92"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Awareness completion cannot establish fire-brigade or specialist-response qualification.",
+      "to": "",
+      "courses": [
+        "G97"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "Awareness is valuable precisely because it can support recognition and notification without pretending to qualify hazardous action.",
+      "to": "",
+      "courses": [
+        "G97"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "The qualified response authority determines actual qualification, not the course administrator.",
+      "to": "",
+      "courses": [
+        "G97"
+      ],
+      "reason": "Removed additional course-limit disclaimer or unsupported blanket follow-up demand."
+    },
+    {
+      "from": "They still need actual vessel familiarization, assigned-role instruction, applicable credentials and observed access, deck, transfer or survival skills.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed a course caveat while retaining the actual safety instruction."
+    },
+    {
+      "from": "IOGP training guidance emphasizes role-specific preparation and practice; it does not issue a credential to the learner or prove legal applicability for every jurisdiction.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed a course caveat while retaining the actual safety instruction."
+    },
+    {
+      "from": "The cited OSHA training provision connects training to job assignments and distinguishes additional skills for qualified persons; it does not convert an online score into those skills.",
+      "to": "The cited OSHA training provision connects training to job assignments and specifies the skills for qualified electrical workers.",
+      "courses": [],
+      "reason": "Removed a course caveat while retaining the actual safety instruction."
+    },
+    {
+      "from": "Temporary guards, bypasses or altered controls require their actual technical/site process; this course authorizes none.",
+      "to": "Use the actual technical/site process for temporary guards, bypasses or altered controls.",
+      "courses": [],
+      "reason": "Removed a course caveat while retaining the actual safety instruction."
+    },
+    {
+      "from": "The actual program owner determines the response, required follow-up and any consequences for use; the course supplies no numerical limits or treatment method.",
+      "to": "The program owner determines the response and follow-up from the actual conditions and governing requirements.",
+      "courses": [],
+      "reason": "Removed a course caveat while retaining the actual safety instruction."
+    },
+    {
+      "from": "The course assesses test reasoning; actual technical tests need specific authorization and safe conditions.",
+      "to": "Assess whether the proposed checks address the actual changed functions and operating conditions.",
+      "courses": [],
+      "reason": "Removed a course caveat while retaining the actual safety instruction."
+    },
+    {
+      "from": "The absence of a universal number in this course is intentional: the actual applicable criteria and competent method must govern the real task.",
+      "to": "Use the criteria specified for the actual equipment, method and task.",
+      "courses": [],
+      "reason": "Removed a course caveat while retaining the actual safety instruction."
+    },
+    {
+      "from": "The worker should neither conclude “I am infected” nor “I feel fine, so nothing happened.” Different pathogens and circumstances can require different follow-up; this course gives no medication, timing regimen or self-clearance rule.",
+      "to": "Report the possible exposure promptly and follow the designated medical evaluation process.",
+      "courses": [],
+      "reason": "Removed a course caveat while retaining the actual safety instruction."
+    },
+    {
+      "from": "No course completion, score or VNDRLY company score grants permission to perform a task.",
+      "to": "",
+      "courses": [],
+      "reason": "Removed a course caveat while retaining the actual safety instruction."
+    },
+    {
+      "from": "Execution roles require their own qualifications and practical authorization.",
+      "to": "",
+      "courses": [
+        "E03"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Clinical, biological, radiation and specialized instrument duties may need additional programs and qualifications.",
+      "to": "",
+      "courses": [
+        "G06"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Actual aircraft control and emergency performance require qualified instruction and observed proficiency.",
+      "to": "",
+      "courses": [
+        "G57"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "This course supplies preparatory interpretation and communication; actual task proficiency requires qualified instruction and observed performance.",
+      "to": "",
+      "courses": [
+        "G60"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "The employer must verify the actual applicable credential, training, medical and practical requirements rather than requesting an invented universal marine certificate.",
+      "to": "",
+      "courses": [
+        "G61"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Those duties need actual method instruction and assessed capability.",
+      "to": "",
+      "courses": [
+        "G84"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Actual equipment operation, utility exposure, material handling, entry and emergency intervention need approved method instruction and observed qualification.",
+      "to": "",
+      "courses": [
+        "G85"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Workers need actual instruction and assessed practice under the employer's safe evaluation method.",
+      "to": "",
+      "courses": [
+        "G85"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Actual work requires equipment- and task-specific instruction, safe observed assessment and site authorization.",
+      "to": "",
+      "courses": [
+        "G85"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Real construction duties require actual method instruction and observed task competence.",
+      "to": "",
+      "courses": [
+        "G86"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "The employer and host must verify actual task instruction and observed competence before assigning hands-on work.",
+      "to": "",
+      "courses": [
+        "G90"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Real launcher, receiver, pigging, recovery and pipeline operating duties require approved method instruction and applicable operator qualification with observed competence.",
+      "to": "",
+      "courses": [
+        "G92"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Actual asset-specific preparation and inspection need manufacturer/employer instruction and assessed capability.",
+      "to": "",
+      "courses": [
+        "G93"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Actual inspection and operation require the employer's instruction and assessed competence.",
+      "to": "",
+      "courses": [
+        "G95"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Additional duties require their own qualification and authorization review.",
+      "to": "",
+      "courses": [
+        "G96"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Actual use and emergency performance require safe instruction and observed assessment by qualified people.",
+      "to": "",
+      "courses": [
+        "G97"
+      ],
+      "reason": "Removed unsupported blanket observed-performance or additional qualification requirement."
+    },
+    {
+      "from": "Close the transport-recognition teaching gap while preserving separate function-specific, mode-specific and practical qualification requirements.",
+      "to": "Teach transport hazard recognition and accurate shipment handoffs.",
+      "courses": [
+        "G01"
+      ],
+      "reason": "Removed generic additional-qualification caveat from the course purpose."
+    }
+  ],
+  "questions": [
+    {
+      "id": "L03_final13",
+      "prompt": "When should affected work be stopped?",
+      "answer": "When a safeguard needed for the work is absent, uncertain or failing.",
+      "distractors": [
+        "Only after an injury occurs.",
+        "Only when the shift ends.",
+        "Only after receiving a written complaint."
+      ],
+      "explanation": "Stopping at the missing safeguard prevents the crew from relying on an unverified control."
+    },
+    {
+      "id": "L03_final19",
+      "prompt": "Which information supports a clear restart handover?",
+      "answer": "The changed conditions, restored controls, verification results and responsible restart decision.",
+      "distractors": [
+        "Only the planned finish time.",
+        "Only the number of workers waiting.",
+        "Only the previous shift's production total."
+      ],
+      "explanation": "The receiving crew needs the actual conditions and controls to understand the restart decision."
+    },
+    {
+      "id": "H03_q19",
+      "prompt": "19. Which record supports an accurate handback?",
+      "answer": "Equipment identity, completed work, remaining restrictions and required verification results.",
+      "distractors": [
+        "A general statement that the crew is finished.",
+        "The invoice total alone.",
+        "An unsigned list with no equipment identity."
+      ],
+      "explanation": "Handback must connect the work and remaining restrictions to the equipment being returned."
+    },
+    {
+      "id": "H04_check2",
+      "prompt": "How should authorized and affected energy-control roles be distinguished?",
+      "answer": "Identify who applies the assigned energy-control procedure and who operates or works near the affected equipment.",
+      "distractors": [
+        "Treat every job title as the same role.",
+        "Let any nearby worker remove a lock.",
+        "Ignore the distinction when work is delayed."
+      ],
+      "explanation": "The role distinction makes responsibilities clear for applying controls and respecting the controlled equipment."
+    },
+    {
+      "id": "H06_final_6_3",
+      "prompt": "What should happen when conditions change during hot work?",
+      "answer": "Stop the affected work and recheck the permit conditions and protective controls.",
+      "distractors": [
+        "Continue until the original permit time expires.",
+        "Rely on the first gas reading indefinitely.",
+        "Move the fire watch to unrelated work."
+      ],
+      "explanation": "A change can invalidate the conditions on which the hot-work controls were based."
+    },
+    {
+      "id": "H07_final_1_3",
+      "prompt": "What should a crew clarify before a lift begins?",
+      "answer": "The lift roles, agreed communication and controls for the actual load and location.",
+      "distractors": [
+        "Only the delivery time.",
+        "Only the color of the lifting equipment.",
+        "Only who signed the invoice."
+      ],
+      "explanation": "Clear roles and communication help prevent conflicting movements around a suspended load."
+    },
+    {
+      "id": "H10_final_6_3",
+      "prompt": "The test pressure in a work pack conflicts with the approved test plan. What is the correct response?",
+      "answer": "Hold the test and resolve the conflicting limits against the approved plan.",
+      "distractors": [
+        "Use whichever pressure is higher.",
+        "Average the two pressures.",
+        "Start testing and ask later."
+      ],
+      "explanation": "An unresolved pressure conflict leaves the crew without a reliable test limit."
+    },
+    {
+      "id": "H11_final_6_3",
+      "prompt": "What should a containment-work handback identify?",
+      "answer": "The equipment, completed work, verification results and remaining isolations or restrictions.",
+      "distractors": [
+        "Only the number of bolts fitted.",
+        "Only that the crew has left.",
+        "Only the planned restart time."
+      ],
+      "explanation": "The next operating decision depends on the actual integrity and restriction status."
+    },
+    {
+      "id": "H12_final_6_3",
+      "prompt": "A worker finds damaged electrical equipment with uncertain energy status. What should happen?",
+      "answer": "Stop using it, keep people clear and report it to the responsible qualified electrical person.",
+      "distractors": [
+        "Reset it repeatedly.",
+        "Open it to look for a fault.",
+        "Cover the damage and continue."
+      ],
+      "explanation": "Uncertain energy and damage need controlled electrical assessment rather than improvised handling."
+    },
+    {
+      "id": "H13_final_6_2",
+      "prompt": "What is the appropriate response to an H2S alarm?",
+      "answer": "Follow the site's evacuation route, reach the designated safe location and report for accountability.",
+      "distractors": [
+        "Stay to identify the leak by smell.",
+        "Return for personal belongings.",
+        "Silence the alarm and continue working."
+      ],
+      "explanation": "The alarm calls for the planned protective response before further exposure occurs."
+    },
+    {
+      "id": "E01_final_6_3",
+      "prompt": "What makes an equipment-defect closeout record useful?",
+      "answer": "It identifies the asset, defect, repair and verification actually completed.",
+      "distractors": [
+        "It lists only the purchase price.",
+        "It records only that the request is closed.",
+        "It gives a new color to the asset label."
+      ],
+      "explanation": "A useful closeout links the corrective work and checks to the affected asset."
+    },
+    {
+      "id": "E03_final_6_3",
+      "prompt": "What should be checked before a loaded vehicle leaves?",
+      "answer": "The actual load, vehicle suitability, restraints and planned journey conditions.",
+      "distractors": [
+        "Only whether the delivery is late.",
+        "Only the customer's preferred arrival time.",
+        "Only whether a tarp is available."
+      ],
+      "explanation": "Vehicle and load conditions must be considered together before the journey starts."
+    },
+    {
+      "id": "E05_final_6_3",
+      "prompt": "A pressure asset cannot be matched to its inspection record. What should happen?",
+      "answer": "Hold the affected use and reconcile the asset identity with the inspection evidence.",
+      "distractors": [
+        "Use a similar asset's record.",
+        "Assume a green sticker resolves the mismatch.",
+        "Change the asset number to fit the report."
+      ],
+      "explanation": "The inspection evidence must refer to the actual equipment being used."
+    },
+    {
+      "id": "E07_final_6_3",
+      "prompt": "What information guides PPE selection for a task?",
+      "answer": "The assessed hazards, equipment instructions, fit and compatibility with other protection.",
+      "distractors": [
+        "Color preference alone.",
+        "The lowest purchase price alone.",
+        "What was issued for an unrelated task."
+      ],
+      "explanation": "PPE needs to address the actual exposure and work effectively with the rest of the protective arrangement."
+    },
+    {
+      "id": "R03_check6",
+      "prompt": "A tabletop covered only the day shift's notification decisions. What should its report describe?",
+      "answer": "The participants, decisions rehearsed, communication gaps and follow-up actions actually identified.",
+      "distractors": [
+        "Every shift's activities as though all attended.",
+        "An untested response time as a measured result.",
+        "Only the attendance total with no findings."
+      ],
+      "explanation": "Reporting the actual exercise scope makes its findings usable without inventing results."
+    },
+    {
+      "id": "R03_final18",
+      "prompt": "Which closeout best captures a tabletop's communication findings?",
+      "answer": "Record the messages tested, ambiguities found, action owners and follow-up dates.",
+      "distractors": [
+        "Mark every emergency arrangement tested.",
+        "Delete the unresolved communication gaps.",
+        "Report attendance as the only finding."
+      ],
+      "explanation": "Named findings and follow-up responsibilities turn the exercise into actionable learning."
+    },
+    {
+      "id": "G01_final19",
+      "prompt": "How should a result be recorded after a learner acknowledges a correction?",
+      "answer": "Keep the original answer score and the remediated result as separate values.",
+      "distractors": [
+        "Replace the original result with a perfect first-attempt score.",
+        "Delete the original answer.",
+        "Record only that a page was opened."
+      ],
+      "explanation": "Separate values preserve both the initial response and the completed learning correction."
+    },
+    {
+      "id": "G02_final20",
+      "prompt": "Which training record accurately describes the learning completed?",
+      "answer": "The actual course and version, original result and acknowledged corrections.",
+      "distractors": [
+        "Hours that were never delivered.",
+        "A response level that was never taught.",
+        "An attendance date copied from another person."
+      ],
+      "explanation": "The record should describe the material and results actually completed."
+    },
+    {
+      "id": "G03_final5",
+      "prompt": "An abnormal plant indication persists after a routine check. What should happen?",
+      "answer": "Use the actual operating procedure and notify the responsible operator for a controlled response.",
+      "distractors": [
+        "Reset the device repeatedly without review.",
+        "Ignore it because another display looks normal.",
+        "Change a setting to clear the message."
+      ],
+      "explanation": "A persistent abnormal indication needs the plant's defined response and a clear operating handoff."
+    },
+    {
+      "id": "G15_final2",
+      "prompt": "Which information controls pesticide application limits?",
+      "answer": "The actual registered product label and applicable requirements for that use.",
+      "distractors": [
+        "A dilution remembered from a different product.",
+        "The customer's preferred strength.",
+        "A supplier's unrelated sales brochure."
+      ],
+      "explanation": "Application decisions depend on the product and use specified by its label and governing requirements."
+    },
+    {
+      "id": "G50_final20",
+      "prompt": "Which set of information supports a traceable shipment handoff?",
+      "answer": "The matching order, product, batch, container and shipment documents.",
+      "distractors": [
+        "Only the container color.",
+        "Only the driver's name.",
+        "Only the approximate delivery time."
+      ],
+      "explanation": "Matching identities lets the next person connect the physical shipment to the correct information."
+    },
+    {
+      "id": "G57_final20",
+      "prompt": "What should a UAS mission handoff identify?",
+      "answer": "The planned mission area, airspace permissions, aircraft status and ground coordination.",
+      "distractors": [
+        "Only the camera brand.",
+        "Only the requested photograph.",
+        "Only the client's deadline."
+      ],
+      "explanation": "The mission depends on the airspace, aircraft and people sharing the intended work area."
+    },
+    {
+      "id": "G58_final20",
+      "prompt": "What information is essential in a rail-work handover?",
+      "answer": "The exact track location, protection limits, current work status and responsible contacts.",
+      "distractors": [
+        "Only the nearest town.",
+        "Only the invoice reference.",
+        "Only the crew's general job title."
+      ],
+      "explanation": "Accurate location and protection information prevents the next group from assuming it is covered elsewhere."
+    },
+    {
+      "id": "G59_final20",
+      "prompt": "An unexpected radiation-area boundary is unclear. What should a support worker do?",
+      "answer": "Stay clear, prevent unintended access and notify the designated radiation-protection contact.",
+      "distractors": [
+        "Move the source to investigate.",
+        "Enter briefly to read the label.",
+        "Assume the boundary has expired."
+      ],
+      "explanation": "Uncertainty around a radiation boundary needs the designated response without disturbing the source."
+    },
+    {
+      "id": "G60_final10",
+      "prompt": "Where should the operating limits for a power-system task come from?",
+      "answer": "The actual system procedure, equipment information and applicable work rules.",
+      "distractors": [
+        "A value remembered from another system.",
+        "A convenient rounded number.",
+        "A value chosen to avoid delay."
+      ],
+      "explanation": "Operating limits need to match the system and task being controlled."
+    },
+    {
+      "id": "G60_final20",
+      "prompt": "What should a restoration handover reconcile?",
+      "answer": "Personnel, tools, grounds, clearances and the actual equipment status.",
+      "distractors": [
+        "Only the repair finish time.",
+        "Only the number of replacement parts.",
+        "Only the customer's requested start time."
+      ],
+      "explanation": "Restoration requires an accurate account of the conditions left by each affected work group."
+    },
+    {
+      "id": "G61_final6",
+      "prompt": "A vessel transfer route differs from the one briefed. What should happen?",
+      "answer": "Pause the affected transfer and clarify the actual route and controls with the responsible marine contact.",
+      "distractors": [
+        "Use the nearest available route without checking.",
+        "Follow an earlier vessel's arrangement.",
+        "Continue because the destination is unchanged."
+      ],
+      "explanation": "A route change can alter access, vessel movement and the controls needed for the transfer."
+    },
+    {
+      "id": "G61_final15",
+      "prompt": "What should a worker do first on seeing a person overboard?",
+      "answer": "Raise the alarm and follow the assigned actions in the vessel's emergency plan.",
+      "distractors": [
+        "Jump into the water without a plan.",
+        "Wait to see whether the person can swim.",
+        "Leave without reporting the location."
+      ],
+      "explanation": "Prompt notification gives the designated response team usable information and avoids an unplanned second casualty."
+    },
+    {
+      "id": "G62_final3",
+      "prompt": "Why identify the explosives method and assigned roles before planning work?",
+      "answer": "The custody, exclusion, communication and abnormal-response controls depend on the actual method.",
+      "distractors": [
+        "Every method uses identical controls.",
+        "The customer name determines every control.",
+        "The delivery deadline replaces method information."
+      ],
+      "explanation": "Different methods have different hazards and control interfaces that must be understood before work is arranged."
+    },
+    {
+      "id": "G62_final9",
+      "prompt": "What should determine an explosives-work exclusion boundary?",
+      "answer": "The actual method, site conditions and applicable approved controls.",
+      "distractors": [
+        "A radius guessed by a nearby worker.",
+        "The shortest convenient walking distance.",
+        "A boundary copied from an unrelated job."
+      ],
+      "explanation": "An exclusion boundary must address the conditions and hazards of the particular work."
+    },
+    {
+      "id": "G63_final10",
+      "prompt": "What should establish the response limits used for well work?",
+      "answer": "The current well procedure, equipment configuration and approved operating limits.",
+      "distractors": [
+        "A generic pressure remembered from another well.",
+        "The fastest available pump setting.",
+        "A number chosen by dispatch."
+      ],
+      "explanation": "A well's configuration and condition determine which operating information applies."
+    },
+    {
+      "id": "G63_final20",
+      "prompt": "What should a well-service handover make clear?",
+      "answer": "The current barrier status, changes, monitoring information and unresolved restrictions.",
+      "distractors": [
+        "Only the service ticket total.",
+        "Only the number of crew on site.",
+        "Only the planned departure time."
+      ],
+      "explanation": "The receiving team needs the actual barrier and restriction status to understand the work left behind."
+    },
+    {
+      "id": "G64_final6",
+      "prompt": "Where should a pesticide mixing instruction come from?",
+      "answer": "The actual product label and the approved method for that use.",
+      "distractors": [
+        "A ratio used with a different chemical.",
+        "A stronger mixture requested informally.",
+        "A rough estimate based on container color."
+      ],
+      "explanation": "The product and intended use determine the applicable mixing instruction."
+    },
+    {
+      "id": "G64_final20",
+      "prompt": "What should be communicated before a treated area is handed back?",
+      "answer": "The product and area treated, current access restrictions and the basis for release.",
+      "distractors": [
+        "Only that the applicator has left.",
+        "Only the invoice date.",
+        "Only whether an odor remains."
+      ],
+      "explanation": "The next users need the actual treatment and restriction information for that area."
+    },
+    {
+      "id": "G65_final17",
+      "prompt": "What should a traceable technical decision record identify?",
+      "answer": "The task, inputs, assumptions, method, decision and applicable limits.",
+      "distractors": [
+        "Only the author's job title.",
+        "Only a polished chart.",
+        "Only the scheduled completion date."
+      ],
+      "explanation": "A decision can be reviewed only when another person can follow its basis and limits."
+    },
+    {
+      "id": "G67_final8",
+      "prompt": "What should an electrical work-pack review reconcile?",
+      "answer": "The equipment identity, current drawings, intended work and verification points.",
+      "distractors": [
+        "Only the folder name.",
+        "Only the spare-part delivery date.",
+        "Only the number of printed pages."
+      ],
+      "explanation": "Consistent equipment and drawing information is needed to understand the intended work and checks."
+    },
+    {
+      "id": "G69_final20",
+      "prompt": "What information should accompany an aviation loading handoff?",
+      "answer": "The actual aircraft configuration, load identity, weight units and intended load location.",
+      "distractors": [
+        "Only that the item physically fits.",
+        "Only the requested departure time.",
+        "Only the customer's general cargo description."
+      ],
+      "explanation": "Loading information must correspond to the actual aircraft and load arrangement."
+    },
+    {
+      "id": "G70_final20",
+      "prompt": "What should an inspection report identify?",
+      "answer": "The method, examined area, findings and stated coverage limits.",
+      "distractors": [
+        "An unrestricted all-clear with no coverage information.",
+        "Only the inspection company's logo.",
+        "Only the invoice total."
+      ],
+      "explanation": "The report's meaning depends on what was examined, how it was examined and the limits of that examination."
+    },
+    {
+      "id": "G72_final20",
+      "prompt": "What supports joint traceability in a fabrication handover?",
+      "answer": "The material and joint identities, applicable procedure and inspection results.",
+      "distractors": [
+        "Only a photograph of a neat weld.",
+        "Only the welder's arrival time.",
+        "Only the purchase order total."
+      ],
+      "explanation": "Traceability connects each joint to the material, method and results that support its acceptance."
+    },
+    {
+      "id": "G74_check6",
+      "prompt": "An inert-atmosphere area develops an unexpected alarm. What should nearby workers do?",
+      "answer": "Keep clear, warn others and notify the planned response contact.",
+      "distractors": [
+        "Enter to recover a dropped tool.",
+        "Change a vent setting to clear the alarm.",
+        "Assume normal air has returned."
+      ],
+      "explanation": "An unexpected atmosphere alarm needs the planned protective response before anyone approaches the affected area."
+    },
+    {
+      "id": "G74_final6",
+      "prompt": "What should establish a pressure-relief setting for the actual equipment?",
+      "answer": "The applicable engineered method and equipment information.",
+      "distractors": [
+        "A setting copied from a similar-looking unit.",
+        "The lowest setting that avoids interruption.",
+        "A value chosen by the delivery crew."
+      ],
+      "explanation": "Relief settings need to match the actual equipment and its approved design basis."
+    },
+    {
+      "id": "G74_final20",
+      "prompt": "Which information matters when planning work on a spent catalyst bed?",
+      "answer": "Its actual service history, current condition and supported chemical-hazard information.",
+      "distractors": [
+        "Only the fresh-product brochure.",
+        "Only the bed's approximate age.",
+        "Only the supplier's delivery schedule."
+      ],
+      "explanation": "Use and contamination can change the hazards from those described for fresh material."
+    },
+    {
+      "id": "G75_final8",
+      "prompt": "What should be checked when interpreting a lifting-capacity figure?",
+      "answer": "The actual equipment configuration, chart notes and planned lift arrangement.",
+      "distractors": [
+        "Only the largest number printed on the chart.",
+        "Only the load's outside dimensions.",
+        "Only the previous lift's outcome."
+      ],
+      "explanation": "A capacity figure is meaningful only with the configuration and conditions attached to it."
+    },
+    {
+      "id": "G75_final11",
+      "prompt": "What makes lift communication effective?",
+      "answer": "Agreed signals, clear responsibilities and a stop when communication is lost.",
+      "distractors": [
+        "Different signals chosen by each person.",
+        "Continuing when a message is uncertain.",
+        "Relying only on a guessed gesture."
+      ],
+      "explanation": "Shared communication and a response to uncertainty prevent conflicting movements."
+    },
+    {
+      "id": "G75_final14",
+      "prompt": "The load mass is uncertain. What should the crew do before lifting?",
+      "answer": "Resolve the mass and contents against reliable load information and the lift plan.",
+      "distractors": [
+        "Perform a trial lift to estimate the mass.",
+        "Use the empty mass despite possible contents.",
+        "Choose the nearest convenient capacity figure."
+      ],
+      "explanation": "The lift plan needs the actual load information before a movement is attempted."
+    },
+    {
+      "id": "G75_final20",
+      "prompt": "What should a lifting-hardware check connect?",
+      "answer": "The actual hardware identity, ratings, condition and planned use.",
+      "distractors": [
+        "Only its paint color.",
+        "Only whether it arrived on time.",
+        "Only whether it was used successfully last year."
+      ],
+      "explanation": "Hardware needs to match both the load arrangement and its current condition."
+    },
+    {
+      "id": "G78_final20",
+      "prompt": "What should a survey handover identify?",
+      "answer": "The coordinate system, datum, units, epoch where relevant and control/check results.",
+      "distractors": [
+        "Only a map screenshot.",
+        "Only the approximate point location.",
+        "Only the number of observations."
+      ],
+      "explanation": "Coordinates cannot be used reliably without knowing their reference system and supporting control."
+    },
+    {
+      "id": "G79_final13",
+      "prompt": "How should security video needed for an incident be handled?",
+      "answer": "Use the company's evidence process, controlled access and an accurate record of transfer.",
+      "distractors": [
+        "Copy it to a personal device for convenience.",
+        "Post it to a public group.",
+        "Delete the original after viewing it."
+      ],
+      "explanation": "Controlled handling preserves the record and limits unnecessary disclosure."
+    },
+    {
+      "id": "G79_final20",
+      "prompt": "What should a gate or security-post handover communicate?",
+      "answer": "Active alarms, visitor exceptions, key status and unresolved events.",
+      "distractors": [
+        "Only the shift finish time.",
+        "Only the total vehicles counted.",
+        "Only the next guard's name."
+      ],
+      "explanation": "The incoming person needs the exceptions and active conditions that require attention."
+    },
+    {
+      "id": "G80_check6",
+      "prompt": "A water-sample location cannot be reconciled to the outlet being used. What does that mean?",
+      "answer": "The result cannot yet be linked to that outlet; clarify the sampling record.",
+      "distractors": [
+        "Every outlet is cleared by the result.",
+        "The mismatch can be ignored if the water looks clear.",
+        "Change the sample label without checking."
+      ],
+      "explanation": "The sample identity and location determine which use condition its result can describe."
+    },
+    {
+      "id": "G80_final20",
+      "prompt": "What should a facility-support handover make clear?",
+      "answer": "Current water, food, waste and access issues, their controls and responsible contacts.",
+      "distractors": [
+        "Only that the building is occupied.",
+        "Only the number of beds available.",
+        "Only the day's purchase total."
+      ],
+      "explanation": "Facility users need the current conditions and contacts for the services they depend on."
+    },
+    {
+      "id": "G81_check6",
+      "prompt": "A proposed software change affects an alarm interface and a report. What should its check plan address?",
+      "answer": "Both changed functions and their relevant operating conditions.",
+      "distractors": [
+        "Only whether the report opens.",
+        "Only whether the update downloads.",
+        "Only whether the login screen appears."
+      ],
+      "explanation": "A successful check of one function does not address another changed dependency."
+    },
+    {
+      "id": "G81_final20",
+      "prompt": "What is the difference between a backup record and recovery evidence?",
+      "answer": "A backup record identifies saved data; recovery evidence shows what was restored and checked.",
+      "distractors": [
+        "A backup filename proves every function is restored.",
+        "A saved copy guarantees current operating values.",
+        "A completed download proves the recovery was tested."
+      ],
+      "explanation": "Recovery evidence connects the restored data and functions to actual verification results."
+    },
+    {
+      "id": "G82_final6",
+      "prompt": "How should a learning objective and its knowledge check align?",
+      "answer": "The question should test the decision or understanding stated in the objective.",
+      "distractors": [
+        "Use an unrelated definition because it is easy to mark.",
+        "Use difficulty alone as evidence of alignment.",
+        "Treat attendance as the answer to every objective."
+      ],
+      "explanation": "Alignment makes the assessment result meaningful for the learning the objective describes."
+    },
+    {
+      "id": "G82_final20",
+      "prompt": "What should a training handoff record identify?",
+      "answer": "The subject, learner role, material version, assessment results and acknowledged corrections.",
+      "distractors": [
+        "Only the provider's name.",
+        "Only the page count.",
+        "Only the date the course was advertised."
+      ],
+      "explanation": "A useful training record connects the learner and material to the results actually achieved."
+    },
+    {
+      "id": "G87_final20",
+      "prompt": "Which message best resolves an ambiguous vessel location during a desk exercise?",
+      "answer": "State the exact vessel identifier and location and obtain a matching readback.",
+      "distractors": [
+        "Refer only to the tank near the gate.",
+        "Assume everyone means the same vessel.",
+        "Repeat the original ambiguous name more loudly."
+      ],
+      "explanation": "A specific identifier and readback show whether both people are discussing the same location."
+    },
+    {
+      "id": "G88_final7",
+      "prompt": "A scaffold user notices a missing guardrail. What should happen?",
+      "answer": "Stop using the affected access and report the defect to the responsible scaffold contact.",
+      "distractors": [
+        "Alter the scaffold without arranging the work.",
+        "Step around the opening.",
+        "Cover the gap with a loose board."
+      ],
+      "explanation": "The missing barrier needs correction through the scaffold arrangement before the affected access is used."
+    },
+    {
+      "id": "G89_check6",
+      "prompt": "A remote-clinic roster lists a service but does not identify who covers it this shift. What should the coordinator do?",
+      "answer": "Resolve the service coverage and responsible clinical contact before reporting it available.",
+      "distractors": [
+        "Assume the previous shift's name still applies.",
+        "Ask an administrator to fill an unidentified clinical role.",
+        "Advertise the service without checking the roster."
+      ],
+      "explanation": "The service description must match the people and arrangements actually available on the shift."
+    },
+    {
+      "id": "G89_final14",
+      "prompt": "Professional registration has been verified. What should the site handover also identify?",
+      "answer": "The relevant equipment, site communications, coverage and transfer arrangements.",
+      "distractors": [
+        "Only the registration document's color.",
+        "Only the provider's invoice.",
+        "Only the previous project's location."
+      ],
+      "explanation": "Professional registration and the site's working arrangements describe different facts needed for a usable handover."
+    },
+    {
+      "id": "G89_final20",
+      "prompt": "Which information supports an accurate remote-site transfer handoff?",
+      "answer": "The responsible clinical contact, confirmed location, receiving contact and agreed transfer arrangements.",
+      "distractors": [
+        "Only the nearest town.",
+        "Only a generic emergency number with no location detail.",
+        "Only the patient's employer name."
+      ],
+      "explanation": "The transfer team needs an unambiguous location and coordinated receiving arrangements."
+    },
+    {
+      "id": "G97_check3",
+      "prompt": "What should an emergency-response roster identify?",
+      "answer": "The actual shift roles, reporting contacts and assigned response responsibilities.",
+      "distractors": [
+        "Only a list of certificate names.",
+        "Only the service contract total.",
+        "Only the number of people normally employed."
+      ],
+      "explanation": "A usable roster shows who performs the planned duties on the actual shift."
+    },
+    {
+      "id": "G97_final3",
+      "prompt": "Which record best clarifies response coverage?",
+      "answer": "A current shift matrix connecting named roles, contacts and response arrangements.",
+      "distractors": [
+        "A list of unrelated course titles.",
+        "A blank plan with a recent cover date.",
+        "A count of vehicles without assigned roles."
+      ],
+      "explanation": "Coverage depends on the people and arrangements available for the defined response."
+    },
+    {
+      "id": "G97_final9",
+      "prompt": "How should an emergency plan allocate duties?",
+      "answer": "Identify the specific notification, accountability and response roles for the actual service.",
+      "distractors": [
+        "Assign every duty to every person.",
+        "Assume all technicians perform firefighting.",
+        "Leave responsibilities implicit."
+      ],
+      "explanation": "Specific responsibilities prevent assumptions about who will act when an alarm occurs."
+    },
+    {
+      "id": "G97_final13",
+      "prompt": "What information can alarm-maintenance personnel contribute to an emergency handover?",
+      "answer": "The system's impairment status, actual location and relevant observations.",
+      "distractors": [
+        "An unverified statement that every system is restored.",
+        "A guess about the incident's medical outcome.",
+        "Only the planned invoice date."
+      ],
+      "explanation": "Accurate system-status information helps the responsible response team understand the conditions."
+    },
+    {
+      "id": "G97_final15",
+      "prompt": "What should an exercise follow-up record connect?",
+      "answer": "The current plan, roles involved, communication findings and named follow-up actions.",
+      "distractors": [
+        "Only the attendance count.",
+        "Every untested duty marked complete.",
+        "Only the customer's satisfaction score."
+      ],
+      "explanation": "The follow-up should connect identified gaps to the people and actions needed to address them."
+    },
+    {
+      "id": "G97_final17",
+      "prompt": "Which tabletop finding needs a follow-up action?",
+      "answer": "A repeated lost message and unclear contact, with a named owner to resolve them.",
+      "distractors": [
+        "A known ambiguity omitted from the report.",
+        "A failed message relabeled successful.",
+        "An attendance list with no discussion of the failed message."
+      ],
+      "explanation": "Following up a concrete communication failure improves the arrangement the exercise was meant to examine."
+    },
+    {
+      "id": "H08_final_6_3",
+      "prompt": "What should happen if a work position cannot be reached while maintaining the fall-protection arrangement?",
+      "answer": "Stop and have the work method reviewed before continuing.",
+      "distractors": [
+        "Treat the written score as permission to proceed.",
+        "Extend the connector without checking compatibility."
+      ],
+      "explanation": "The intended protection must remain effective throughout the task. An improvised extension can change the fall and impact risks."
+    },
+    {
+      "id": "C01_check1",
+      "prompt": "A worker marked operator is assigned a powered industrial truck outside the scope of the recorded operator evaluation. What should happen next?",
+      "answer": "Hold the unmatched assignment and verify task-specific competence and authorization.",
+      "distractors": [
+        "Treat the operator title as authorization for all equipment.",
+        "Ask the worker to sign a waiver for the unfamiliar task."
+      ],
+      "explanation": "A job title cannot establish the boundaries of assessed performance; the actual task and equipment must match."
+    },
+    {
+      "id": "C01_check2",
+      "prompt": "A forklift operator has course attendance evidence but lacks the workplace performance evaluation required by 29 CFR 1910.178(l). What should happen next?",
+      "answer": "Obtain the required practical evaluation or assign a person already authorized for that task.",
+      "distractors": [
+        "Record attendance as practical competence.",
+        "Delete the assessment prerequisite because the job is urgent."
+      ],
+      "explanation": "Knowledge and observed performance are different evidence; attendance does not establish the missing practical prerequisite."
+    },
+    {
+      "id": "C07_check2",
+      "prompt": "A worker's isolation-awareness certificate is presented as evidence of practical isolator authorization. What should happen next?",
+      "answer": "Verify the assigned-role training, applicable isolation procedure and employer designation before assigning isolator duties.",
+      "distractors": [
+        "Treat any isolation course as full isolator competence.",
+        "Let the worker learn isolation by acting alone on the first live job."
+      ],
+      "explanation": "Awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks."
+    },
+    {
+      "id": "R06_check4",
+      "prompt": "A new control system is commissioned before night operators receive instruction for the changed controls. What should happen next?",
+      "answer": "Hold affected startup until the approved readiness actions and operator requirements are verified",
+      "distractors": [
+        "Start and let night staff learn from the live process",
+        "Use the design meeting attendance as operator qualification"
+      ],
+      "explanation": "Hold affected startup until the approved readiness actions and operator requirements are verified. Design approval does not establish that the operating shift can safely use the changed system."
+    },
+    {
+      "id": "G67_final15",
+      "prompt": "Which information controls the limits used for the actual instrument task?",
+      "answer": "The applicable current equipment instructions and approved task limits.",
+      "distractors": [
+        "The document reviewer’s memory alone.",
+        "Any value used in a fictional course example.",
+        "The online course score."
+      ],
+      "explanation": "Use the actual equipment information and task limits; fictional course values do not establish operating limits."
+    },
+    {
+      "id": "G71_final20",
+      "prompt": "What should a calibration record identify?",
+      "answer": "The actual instrument, method, reference, results and applicable limitations.",
+      "distractors": [
+        "Only the online course score.",
+        "Only this quiz.",
+        "Only an invoice."
+      ],
+      "explanation": "A traceable record connects the result to the instrument and method. A quiz or invoice cannot supply missing measurement information."
+    },
+    {
+      "id": "G79_check6",
+      "prompt": "Is a surprise uncontrolled confrontation an appropriate training exercise?",
+      "answer": "No; use a planned, safe fictional exercise.",
+      "distractors": [
+        "An online score makes it acceptable.",
+        "Yes, bravery is the goal.",
+        "Yes, after a quiz."
+      ],
+      "explanation": "A learning exercise must not create an uncontrolled confrontation. The fictional course scenario is sufficient for this knowledge check."
+    },
+    {
+      "id": "G81_final19",
+      "prompt": "Should a training exercise introduce uncontrolled production-system changes?",
+      "answer": "No; use fictional data or an approved isolated exercise environment.",
+      "distractors": [
+        "Yes, realism is enough.",
+        "Yes, if reversible in theory.",
+        "An online course score authorizes production changes."
+      ],
+      "explanation": "Practice with fictional data or an isolated environment so learning does not alter a live operation."
+    }
+  ],
+  "removeSections": [
+    "What needs separate assessment",
+    "What must be assessed separately",
+    "What a practical observer should see",
+    "Separate practical preparation",
+    "Separate technical and practical requirements",
+    "What completing this course demonstrates",
+    "Research and scope"
+  ],
+  "legalSources": [
+    {
+      "topic": "Bloodborne pathogen training for occupationally exposed employees",
+      "citation": "29 CFR 1910.1030(g)(2)(vii)(N)",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030",
+      "decision": "Retain the scoped interactive-training duty; remove blanket practical-observer demands."
+    }
+  ]
+}

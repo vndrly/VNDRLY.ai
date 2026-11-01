@@ -12,6 +12,7 @@ import {
 } from "../work-hub/library-service";
 import { libraryOptions } from "../work-hub/library-audience";
 import {readTrainingPolicy,saveTrainingPolicy} from '../work-hub/training-course-policy';
+import {trainingCourseReview} from '../work-hub/training-review';
 import {
   previewLibraryAssignment,
   assignLibrary,
@@ -80,6 +81,7 @@ router.get(
   handle((_r, a) => libraryOptions(a)),
 );
 router.get('/work-hub/library/:itemId/training-policy',handle((r,a)=>readTrainingPolicy(a,item(r))));
+router.get('/work-hub/library/:itemId/training-review',handle((r,a)=>trainingCourseReview(a,item(r))));
 router.post('/work-hub/library/:itemId/training-policy',handle((r,a)=>saveTrainingPolicy(a,item(r),body(r))));
 router.get(
   "/work-hub/library/to-complete",

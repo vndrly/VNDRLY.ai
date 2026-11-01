@@ -12,6 +12,7 @@ import { AssignmentMetadataSchema } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
 import { useLibrary as useFormCampaigns } from "./use-library";
 import LibraryEditor from "./library-editor";
+import {TrainingActions} from './training-actions';
 const itemsSchema = z.object({
   items: z.array(
     z.object({
@@ -254,7 +255,7 @@ export default function LibraryWorkspace({
                 {t(`workHubLibrary.state_${item.state}`)} ·{" "}
                 {t("workHubLibrary.version")} {item.contentVersion}
               </Text>
-              <TogglePillButton
+              {item.kind==='training'?<TrainingActions itemId={item.itemId} canManage={canManage}/>:<TogglePillButton
                 color="brand"
                 onPress={() =>
                   router.push(
@@ -263,7 +264,7 @@ export default function LibraryWorkspace({
                 }
               >
                 {t("workHubLibrary.view")}
-              </TogglePillButton>
+              </TogglePillButton>}
             </View>
           ))}
       {tab === "assignments" &&
