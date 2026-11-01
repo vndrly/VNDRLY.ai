@@ -85,7 +85,7 @@ export function orderWorkHubItems(items: WorkHubNavItem[], order: string[]) {
   );
 }
 export function isWorkHubPath(path: string) {
-  return path === "/work-hub" || path.startsWith("/work-hub/");
+  return path === "/work-hub" || path.startsWith("/work-hub/") || path === "/safety-score";
 }
 export function getWorkHubNavItems(
   _role?: string | null,
