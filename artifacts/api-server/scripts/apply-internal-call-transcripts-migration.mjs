@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { runInternalCallTranscriptsMigration } from "../../../scripts/internal-call-transcripts-migration.mjs";
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
 if (!databaseUrl)
@@ -14,7 +15,7 @@ const migrationPath = fileURLToPath(
 const client = new pg.Client({ connectionString: databaseUrl });
 try {
   await client.connect();
-  await client.query(await readFile(migrationPath, "utf8"));
+  await runInternalCallTranscriptsMigration(client, await readFile(migrationPath, "utf8"));
   process.stdout.write("Work Hub calls migration passed\n");
 } finally {
   await client.end().catch(() => undefined);

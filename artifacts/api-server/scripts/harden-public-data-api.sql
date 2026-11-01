@@ -28,14 +28,14 @@ BEGIN
   END LOOP;
 
   FOR item IN
-    SELECT c.oid, c.relname, c.relkind FROM pg_class c
+    SELECT c.oid, c.relname, c.relkind, c.relrowsecurity FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public' AND c.relkind IN ('r','p','v','m','S','f')
       AND NOT EXISTS (SELECT FROM pg_depend d WHERE d.classid = 'pg_class'::regclass
         AND d.objid = c.oid AND d.deptype = 'e')
   LOOP
     target_name := format('public.%I', item.relname);
-    IF item.relkind IN ('r','p') THEN
+    IF item.relkind IN ('r','p') AND NOT item.relrowsecurity THEN
       EXECUTE format('ALTER TABLE %s ENABLE ROW LEVEL SECURITY', target_name);
     END IF;
     FOR blocked_role IN SELECT 'PUBLIC' UNION ALL SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated') LOOP
