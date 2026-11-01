@@ -82,6 +82,8 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
     );
   const data = api.data,
     m = data.metadata;
+  const guided=m.content?.training?.guided;
+  const explanations:Record<string,string>=guided&&'explanations' in guided?guided.explanations:{};
   const action = async (name: "publish" | "archive" | "revise") => {
     try {
       const result = await api.send(
@@ -277,7 +279,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
                     : ""}
                 </Text>
               ))}
-              {data.canManage&&m.content?.training?.guided?.explanations[q.id]&&<LibraryBody text={m.content.training.guided.explanations[q.id]} color={colors.text}/>}
+              {data.canManage&&explanations[q.id]&&<LibraryBody text={explanations[q.id]} color={colors.text}/>}
             </View>
           ))}
           {m.content.poll?.choices.map((o) => (
