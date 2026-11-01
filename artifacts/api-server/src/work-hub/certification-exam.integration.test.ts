@@ -46,7 +46,10 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  expect(JSON.stringify(ownerCourse)).not.toContain('Exam-only hidden rationale');
  const ownerBefore=await ownerAssignmentDetail(admin,id);expect(ownerBefore.content.training).not.toHaveProperty('certificationExam');
  expect(JSON.stringify(ownerBefore)).not.toContain('Exam-only hidden rationale');
- LibraryMetadataSchema.parse({...ownerCourse.metadata,fileSnapshots:{}});
+ // Stored author metadata is complete; tenant reads intentionally omit answer keys.
+ LibraryMetadataSchema.parse(metadata);
+ expect(JSON.stringify(ownerCourse.metadata)).not.toContain('correctOptionIds');
+ expect(ownerCourse.metadata.content?.training?.guided).not.toHaveProperty('explanations');
  const before=(await companySafetyReadiness(admin)).categories.find(c=>c.id==='training')!;
  let read=await getAssignedLibrary(learner,id);
  await expect(submitGuidedTraining(learner,id,command({action:'exam_start'},read.version))).rejects.toThrow('Complete all learning');
