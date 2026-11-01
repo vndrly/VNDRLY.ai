@@ -54,6 +54,9 @@ export const DEFAULT_COMMON_TRAINING_ROLE_RULES: readonly CommonTrainingRoleRule
   { id: 'assurance', roles: ['assurance_reviewer'], familyIds: ['R04'], purpose: 'Assigned assurance review duties.' },
   { id: 'medical_interface', roles: ['medical_return_to_work_coordinator'], familyIds: ['I06'], purpose: 'Assigned restricted-record and medical referral interface.' },
   { id: 'training_assurance', roles: ['trainer','practical_assessor','training_program_owner'], familyIds: ['C04'], purpose: 'Assigned teaching, assessment or training governance.' },
+  { id: 'driving_task', roles: ['driver'], familyIds: ['H19','E03','H20'], purpose: 'Actual driving, delivery or towing duties need journey, vehicle/trailer and traffic knowledge regardless of the selected service. Office dispatch is excluded; practical authorization remains separate.' },
+  { id: 'commercial_driving_task', roles: ['commercial_driver'], familyIds: ['C05'], purpose: 'Only actual regulated/commercial driving; ordinary drivers are excluded and no licence or endorsement is granted.' },
+  { id: 'gate_task', roles: ['gate'], familyIds: ['H20','H21'], purpose: 'Actual gate, admission, access-control or roadblock duties need traffic and lone-work/conflict knowledge regardless of the selected service; practical authorization remains separate.' },
 ];
 
 // Exact vocabulary after case/whitespace normalization. No substring, fuzzy,
@@ -398,6 +401,9 @@ export function matchSafetyTrainingRoles(
   }
   if ([...(person.roles ?? []), ...(person.operationalRoles ?? []), person.jobTitle ?? ''].some(label => ['equipment operator','mobile equipment operator'].includes(normalize(label)))) {
     result.unresolvedRoles.push({ role: 'equipment operator', reason: 'Operating duty is identified but machine/method scope is unspecified; confirm the actual equipment role before claiming complete applicability.' });
+  }
+  if (held.has('field') && [...held].every(cue => cue === 'field' || cue === 'office')) {
+    result.unresolvedRoles.push({ role: 'field', reason: 'Actual field duties are unspecified; field attendance alone cannot establish the applicable service/task knowledge or verified complete coverage.' });
   }
   if (!held.size) result.unresolvedRoles.push({ role: person.jobTitle || person.membershipRole || 'unspecified', reason: 'No actual safety duty established; membership permissions alone cannot establish service-role coverage.' });
   result.familyIds = [...new Set(result.familyIds)].sort();

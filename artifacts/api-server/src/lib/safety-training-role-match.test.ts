@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { matchSafetyTrainingRoles, type ReviewedTrainingRoleRule } from './safety-training-role-match';
+import { DEFAULT_COMMON_TRAINING_ROLE_RULES, matchSafetyTrainingRoles, type ReviewedTrainingRoleRule } from './safety-training-role-match';
 
 const rule = (role: string, familyIds: string[]): ReviewedTrainingRoleRule => ({ role, familyIds, rationale: 'Reviewed actual-role knowledge requirement.', trigger: 'Actual assigned duty only.' });
 const gate = rule('Site guard, gate attendant or security worker', ['H18','H20','H21','R01']);
@@ -92,7 +92,7 @@ describe('matchSafetyTrainingRoles: knowledge applicability, never qualification
     const got = matchSafetyTrainingRoles(person, rules);
     expect(got.familyIds.filter(id => id === 'H20')).toHaveLength(1);
     expect(person.roles).toEqual(['driver','gatekeeper']);
-    expect(got.matchedRoleRules).toHaveLength(3); // common worker + two traced source rules
+    expect(got.matchedRoleRules).toHaveLength(5); // common worker + driver + gate + two traced source rules
   });
   it('matches actual legacy Gatekeeping labels without promoting all attendants to supervisors/responders/H2S users', () => {
     const map = JSON.parse(readFileSync(new URL('../../../../research/safety-program/2026-11-01/legacy-service-training-crosswalk.json', import.meta.url), 'utf8'));
@@ -175,5 +175,36 @@ describe('matchSafetyTrainingRoles: knowledge applicability, never qualification
     const lab = rule('Laboratory instrument service technicians', ['G06']);
     expect(matchSafetyTrainingRoles({ jobTitle: 'Instrument Technician' }, [lab]).familyIds).not.toContain('G06');
     expect(matchSafetyTrainingRoles({ jobTitle: 'Laboratory Instrument Technician' }, [lab]).familyIds).toContain('G06');
+  });
+  it('supplies driving and gate minimums within an H2S-only service without awarding gas or commercial specialties', () => {
+    const source = JSON.parse(readFileSync(new URL('../../../../research/safety-program/2026-11-01/h2s-service-role-mapping.json', import.meta.url), 'utf8'));
+    const driver = matchSafetyTrainingRoles({ jobTitle: 'Driver', vendorRole: 'field' }, source.roleMappings);
+    expect(driver.familyIds).toEqual(expect.arrayContaining(['H19','E03','H20']));
+    for (const family of ['C05','H13','C07','H15','R02','C08']) expect(driver.familyIds).not.toContain(family);
+    expect(driver.unresolvedRoles).toEqual([]);
+    const commercial = matchSafetyTrainingRoles({ jobTitle: 'CDL Driver', vendorRole: 'field' }, source.roleMappings);
+    expect(commercial.familyIds).toEqual(expect.arrayContaining(['H19','E03','H20','C05']));
+    const gateWorker = matchSafetyTrainingRoles({ vendorRole: 'gatekeeper' }, source.roleMappings);
+    expect(gateWorker.familyIds).toEqual(expect.arrayContaining(['H20','H21']));
+    expect(gateWorker.familyIds).not.toContain('H19');
+    expect(gateWorker.familyIds).not.toContain('H13');
+    const office = matchSafetyTrainingRoles({ jobTitle: 'Office Dispatcher', vendorRole: 'office' }, source.roleMappings);
+    expect(office.familyIds).toEqual(['C02','H22','I01','L02','L03','R01']);
+    expect(office.unresolvedRoles).toEqual([]);
+  });
+  it('keeps generic field-only attendance unresolved without inferring a specialty or flagging a known unheld trade', () => {
+    for (const person of [{vendorRole:'field'}, {vendorRole:'both'}, {vendorRole:'field',roles:['Field Worker','field_employee']}]) {
+      const got = matchSafetyTrainingRoles(person, h2s);
+      expect(got.unresolvedRoles).toEqual(expect.arrayContaining([expect.objectContaining({role:'field',reason:expect.stringContaining('Actual field duties are unspecified')})]));
+      for (const family of ['H13','C07','H15','R02','C08','C06','H19']) expect(got.familyIds).not.toContain(family);
+    }
+    const named = matchSafetyTrainingRoles({vendorRole:'field',jobTitle:'Backhoe Operator'}, h2s);
+    expect(named.unresolvedRoles).toEqual([]);
+    for (const family of ['H13','C07','H15','R02','C08']) expect(named.familyIds).not.toContain(family);
+  });
+  it('keeps the executable common task minima aligned with the reviewed source rules', () => {
+    const source = JSON.parse(readFileSync(new URL('../../../../research/safety-program/2026-11-01/common-training-role-rules.json', import.meta.url), 'utf8'));
+    const identity = (rules: typeof DEFAULT_COMMON_TRAINING_ROLE_RULES) => rules.map(({id,roles,familyIds})=>({id,roles,familyIds}));
+    expect(identity(DEFAULT_COMMON_TRAINING_ROLE_RULES)).toEqual(identity(source.rules));
   });
 });

@@ -62,7 +62,7 @@ describe('platform-owned required training against isolated persistence',()=>{
  it('requires a supplemental exposure decision, adds only the matched role when true, and excludes false despite retained completion history',async()=>{
   const c=await company(),gate=await c.person('Gate attendant'),untargeted=await c.person('Gate supervisor'),office=await c.person('Office Staff');
   const selected=await selectService(c),masterServiceId=`TEST-MASTER-${randomUUID()}`;
-  const legacy=trainingCatalog.legacy.entries.find(e=>e.existingCanonicalId===selected.service.id)!;
+  const legacy=trainingCatalog.legacy.entries.find(e=>e.existingCanonicalId===selected.service.id&&e.code===selected.service.code)!;
   // G99 is exclusively supplemental in this test, not already required through
   // the ordinary service-role baseline. All altered entries are synthetic.
   legacy.roleMappings=[];legacy.masterServiceIds=[masterServiceId];
@@ -107,7 +107,7 @@ describe('platform-owned required training against isolated persistence',()=>{
 
  it('exposes a required service-scope confirmation explicitly rather than hiding it behind common-course unavailability',async()=>{
   const c=await company();await c.person('Gate attendant');const selected=await selectService(c);await publish(c);
-  const legacy=trainingCatalog.legacy.entries.find(entry=>entry.existingCanonicalId===selected.service.id)!;
+  const legacy=trainingCatalog.legacy.entries.find(entry=>entry.existingCanonicalId===selected.service.id&&entry.code===selected.service.code)!;
   legacy.relation='related_scope';legacy.rationale='Synthetic related component requires confirmation of the actual accepted job scope';
   legacy.roleMappings=legacy.roleMappings.map(rule=>({...rule,scopeMustBeConfirmed:true}));
   const plan=await companyRequiredTraining(db,c.owner);

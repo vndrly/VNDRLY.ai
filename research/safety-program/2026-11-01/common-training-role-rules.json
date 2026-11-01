@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "authority": "Proposed VNDRLY baseline derived from the agreed safety-program scope; these VNDRLY course identifiers are not legal course designations.",
   "status": "Saved for integration; not activated in production.",
   "purpose": "Apply common knowledge once per company member, then add service/task requirements for the roles actually held. A service's flattened family union must never become an all-person assignment list.",
@@ -11,7 +11,10 @@
     {"id":"investigation","roles":["incident_investigator"],"familyIds":["I02"],"purpose":"Only people assigned investigation duties; general reporting remains I01."},
     {"id":"assurance","roles":["assurance_reviewer"],"familyIds":["R04"],"purpose":"Only people assigned audit/critical-control assurance duties; course completion is not professional inspector qualification."},
     {"id":"medical_interface","roles":["medical_return_to_work_coordinator"],"familyIds":["I06"],"purpose":"Only assigned referral/restriction/record-interface duties, preserving clinician authority and confidentiality."},
-    {"id":"training_assurance","roles":["trainer","practical_assessor","training_program_owner"],"familyIds":["C04"],"purpose":"Only assigned instruction, assessment or training-governance duties; specialist assessor qualifications remain separate."}
+    {"id":"training_assurance","roles":["trainer","practical_assessor","training_program_owner"],"familyIds":["C04"],"purpose":"Only assigned instruction, assessment or training-governance duties; specialist assessor qualifications remain separate."},
+    {"id":"driving_task","roles":["driver"],"familyIds":["H19","E03","H20"],"purpose":"Actual driving, delivery or towing duties require journey, vehicle/trailer and traffic-interface knowledge even when the selected service has no separate transport bundle. Office dispatch alone is excluded; practical vehicle/load authorization remains separate."},
+    {"id":"commercial_driving_task","roles":["commercial_driver"],"familyIds":["C05"],"purpose":"Only an actual regulated/commercial-driver role. Ordinary driving does not establish this duty or grant a licence/endorsement; verify the actual vehicle, function and jurisdiction separately."},
+    {"id":"gate_task","roles":["gate"],"familyIds":["H20","H21"],"purpose":"Actual gate, admission, access-control or roadblock duties require traffic separation and lone-work/conflict knowledge even when supplied within another service. Office membership and unrelated field attendance are excluded; actual task and practical authorization remain separate."}
   ],
   "serviceRuleReconciliation": "The individual source reviews retain their original role descriptions. During executable bundle integration, replace their generic company-worker/manager blocks with these shared common rules and retain the service-specific specialist blocks, task conditions and provenance. This prevents inconsistent core assignments across service subsets.",
   "scoring": "Deduplicate each current member/course across all selected services and held roles. A completed applicable, trusted-version course contributes once. Missing course material remains outstanding; vendor extras never enlarge the denominator or numerator. Unmapped service scope and unresolved role/exposure applicability prevent a verified-complete claim.",
