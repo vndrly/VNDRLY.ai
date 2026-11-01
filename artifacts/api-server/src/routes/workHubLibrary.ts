@@ -25,6 +25,7 @@ import {
   submitAssignedLibrary,
   resetTrainingAttempts,
   assignedLibraryFile,
+  submitGuidedTraining,
 } from "../work-hub/training-service";
 import {
   ensureOnboarding,
@@ -120,6 +121,10 @@ router.get(
 router.post(
   "/work-hub/library/instances/:instanceId/presented",
   handle((r, a) => markLibraryPresented(a, instance(r), body(r))),
+);
+router.post(
+  "/work-hub/library/instances/:instanceId/guided",
+  handle((r,a)=>submitGuidedTraining(a,instance(r),body(r))),
 );
 router.post(
   "/work-hub/library/instances/:instanceId/progress",

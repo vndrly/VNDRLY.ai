@@ -6417,5 +6417,27 @@
     "checkRequest": "Check saved watch request",
     "withdraw": "Withdraw saved handoff",
     "independent": "Saving a handoff keeps watch custody and paid shift unchanged. Sign-in and sign-out remain independent."
+  },
+  "h03Course": {
+    "completed": "Course completed",
+    "section": "Section {{current}} of {{total}}",
+    "originalScore": "Original score (before remediation)",
+    "remediatedScore": "Score after remediation",
+    "corrections": "Acknowledged corrections",
+    "credit": "Completion counts toward the company training requirement. Practical competence and work authorization are separate.",
+    "submitAnswer": "Submit answer",
+    "continue": "Continue to next section",
+    "finish": "Complete course",
+    "answerRecord": "Your original and corrected answers",
+    "originalAnswer": "Original answer",
+    "currentAnswer": "Current answer",
+    "corrected": "Corrected through acknowledged remediation",
+    "correct": "Correct on first answer",
+    "needsCorrection": "Correction acknowledgment required",
+    "reviewCorrection": "Review the correct answer",
+    "originalPreserved": "Your original answer stays recorded. Read the explanation and acknowledge the correct answer to continue.",
+    "correctAnswer": "Correct answer",
+    "acknowledge": "I understand and acknowledge the correct answer",
+    "coverage": "Company H03 training requirement: {{completed}} of {{required}} completed"
   }
 }

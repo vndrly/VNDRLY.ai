@@ -27,6 +27,7 @@ import {
 import { validateLibraryValues } from "./library-policy";
 import { validateCampaignResponse } from "./form-campaign-policy";
 import { getObjectStore } from "../lib/objectStore";
+import { guidedResult } from './guided-training';
 const response = z.object({
   acknowledged: z.boolean().default(false),
   lessonIds: z.array(z.string()).max(50).default([]),
@@ -54,6 +55,14 @@ export async function getAssignedLibrary(actor: LibraryActor, id: string) {
     assignment: own.assignment,
     version: own.assignment.version,
     history,
+    guidedFeedback: (()=>{
+      const training=own.metadata.content?.training, progress=own.assignment.progress.guided;
+      if(!training?.guided||!progress)return null;
+      const pending=Object.entries(progress.responses).find(([,r])=>!r.correct&&!r.remediatedAt);
+      if(!pending)return null;
+      const q=training.questions.find(q=>q.id===pending[0])!;
+      return {questionId:q.id,correctOptionIds:q.correctOptionIds,explanation:training.guided.explanations[q.id]};
+    })(),
     attachments: Object.entries(own.metadata.fileSnapshots).map(
       ([fileId, { storageKey: _, checksumSha256: __, ...f }]) => ({
         fileId,
@@ -110,6 +119,7 @@ export async function submitAssignedLibrary(
         .limit(100);
       if (m.kind === "training") {
         const training = m.content!.training!;
+        if(training.guided)throw new LibraryError('Use the guided course steps to complete this assignment',400);
         if (
           payload.lessonIds.some(
             (id) => !training.lessons.some((l) => l.id === id),
@@ -269,6 +279,26 @@ export async function submitAssignedLibrary(
     false,
   );
 }
+export async function submitGuidedTraining(actor:LibraryActor,id:string,e:WorkHubCommandEnvelope) {
+  return libraryCommand(actor,e,'library.guided-training',id,async tx=>{
+    const own=await readAssignedLibrary(tx,actor,id,true), a=own.assignment, training=own.metadata.content?.training;
+    if(own.metadata.safetyResource?.familyId!=='H03'||!training?.guided)throw new LibraryError('Guided H03 assignment required',400);
+    if(a.version!==e.expectedVersion)throw new LibraryError('Assignment changed; refresh',409);
+    if(['completed','cancelled','exempted'].includes(a.status))throw new LibraryError('Assignment is not accepting responses',409);
+    const now=new Date();let result:ReturnType<typeof guidedResult>;
+    try{result=guidedResult(training,a.progress.guided,e.payload,now.toISOString());}catch(error){throw new LibraryError(error instanceof Error?error.message:'Invalid course step',400);}
+    const history=await tx.select({id:submissions.id,version:submissions.version}).from(submissions).where(eq(submissions.instanceId,id)).orderBy(desc(submissions.version)).limit(1);
+    await tx.insert(submissions).values({instanceId:id,version:(history[0]?.version??0)+1,priorSubmissionId:history[0]?.id??null,submittedById:actor.userId,submittedAt:now,values:{type:'guided_training',action:e.payload,progress:result.progress,completed:result.complete}});
+    a.progress.guided=result.progress;
+    a.progress.lessonIds=training.guided.steps.slice(0,result.progress.step).map(s=>s.lessonId);
+    a.progress.answers=Object.fromEntries(Object.entries(result.progress.responses).map(([id,r])=>[id,r.correctedOptionIds]));
+    a.status=result.complete?'completed':'in_progress';a.version++;
+    if(result.complete&&training.refresherDays)a.refresherDueAt=new Date(now.getTime()+training.refresherDays*86400000).toISOString();
+    await tx.update(instances).set({assignmentMetadata:a}).where(eq(instances.id,id));
+    return {instanceId:id,version:a.version,status:a.status,scores:result.progress.scores,feedback:result.feedback};
+  },false);
+}
+
 export async function resetTrainingAttempts(
   actor: LibraryActor,
   id: string,

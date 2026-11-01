@@ -1,0 +1,16 @@
+import {course as original,assessment} from './course-content.mjs';
+export const course=structuredClone(original);
+const answers=['b','c','b','a','b','c'];
+const checks=course.training.lessons.filter(l=>/^H03_(scope|controls|simops|change|handover|handback)$/.test(l.id)).map((lesson,i)=>{
+ const match=lesson.body.match(/## Knowledge check \d+\n\n([\s\S]*?)\n\nA\. ([\s\S]*?)\n\nB\. ([\s\S]*?)\n\nC\. ([\s\S]*?)\n\n\*\*Answer: [ABC]\.\*\* ([\s\S]*)$/);
+ if(!match)throw Error('Missing H03 knowledge check '+lesson.id);
+ lesson.body=lesson.body.split('## Knowledge check')[0].trim();
+ return {id:`H03_check${i+1}`,prompt:match[1],options:[{id:'a',label:match[2]},{id:'b',label:match[3]},{id:'c',label:match[4]}],multiple:false,correctOptionIds:[answers[i]],explanation:match[5],lessonId:lesson.id};
+});
+const all=[...checks,...assessment];
+course.description='Complete H03 guided course. Answer six lesson knowledge checks and 20 final questions. A wrong answer requires reading the explanation and explicitly acknowledging the correct answer. Original and remediated scores remain separate. Completion contributes to the company training requirement; practical competence and work authorization remain separate.';
+course.training.lessons[0].body=`# H03 - Your assigned course\n\nWork through each section in order. There are six lesson checks and 20 final assessment questions: 26 questions in total. Submit your answer to each question. If it is incorrect, a popup explains the correct answer and why. You must acknowledge that correction before continuing. The course retains your first answer, the acknowledged correction, and both scores.\n\nCompletion requires all sections and questions to be accomplished, either correctly on the first answer or through acknowledged remediation. Your original score is never replaced with the remediated score. Completing the course contributes to the company training requirement as part of its existing metric, not the entire safety assessment.\n\nAll scenarios are fictional. This course does not authorize permit issuing, isolation, gas testing, equipment operation, or return to service. Those roles require separate practical evaluation and employer/site authorization. Continue to the first lesson when ready.`;
+course.training.lessons.find(l=>l.id==='H03_assessment').body='## Final assessment\n\nAnswer the following 20 questions individually. Your first answer is recorded. Incorrect answers require an explicit acknowledgment of the correct answer and explanation before you can continue. The final result shows both the original and remediated scores across all 26 course questions.';
+const closing=course.training.lessons.find(l=>l.id==='H03_feedback');closing.title='Finish H03 - Completion and practical boundaries';closing.body=closing.body.slice(closing.body.indexOf('## What needs a separate practical evaluation'));
+course.training.questions=all.map(({explanation,lessonId,...question})=>question);
+course.training.guided={steps:course.training.lessons.map(lesson=>({lessonId:lesson.id,questionIds:lesson.id==='H03_assessment'?assessment.map(q=>q.id):checks.filter(q=>q.lessonId===lesson.id).map(q=>q.id)})),explanations:Object.fromEntries(all.map(q=>[q.id,q.explanation]))};

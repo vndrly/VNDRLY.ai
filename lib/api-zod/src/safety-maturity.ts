@@ -54,6 +54,7 @@ export const SafetyMaturitySummarySchema = z.object({
     resources: z.array(z.object({ id: z.string(), title: z.string() })).default([]),
     requirements: z.array(z.object({
       id: z.string(), title: z.string(), applicability: z.string(),
+      trainingRequirement: z.object({required:z.number(),completed:z.number()}).optional(),
       resources: z.array(z.object({ id: z.string(), title: z.string(), type: z.enum(["policy", "form", "training", "evidence-examples"]) })),
     })).default([]),
   })),

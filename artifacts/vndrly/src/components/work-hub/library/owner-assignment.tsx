@@ -97,6 +97,11 @@ export default function OwnerAssignment({
         {!!data.assignment.reason && (
           <Text style={label}>{data.assignment.reason}</Text>
         )}
+        {data.assignment.progress.guided?.scores&&<View style={{gap:8}}>
+          <Text>{t('h03Course.originalScore')}: {data.assignment.progress.guided.scores.originalCorrect}/{data.assignment.progress.guided.scores.total} ({data.assignment.progress.guided.scores.originalPercent.toFixed(1)}%)</Text>
+          <Text>{t('h03Course.remediatedScore')}: {data.assignment.progress.guided.scores.remediatedCorrect}/{data.assignment.progress.guided.scores.total} ({data.assignment.progress.guided.scores.remediatedPercent.toFixed(1)}%)</Text>
+          <Text>{t('h03Course.corrections')}: {data.assignment.progress.guided.scores.remediationCount}</Text>
+        </View>}
         {["assigned", "in_progress"].includes(data.assignment.status) && (
           <>
             <TextInput

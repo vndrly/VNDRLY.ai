@@ -6417,5 +6417,27 @@
     "checkRequest": "Comprobar solicitud de guardia guardada",
     "withdraw": "Retirar entrega guardada",
     "independent": "Guardar una entrega mantiene la custodia de la guardia y el turno remunerado. La entrada y la salida siguen siendo independientes."
+  },
+  "h03Course": {
+    "completed": "Curso completado",
+    "section": "Sección {{current}} de {{total}}",
+    "originalScore": "Puntuación original (antes de la corrección)",
+    "remediatedScore": "Puntuación después de la corrección",
+    "corrections": "Correcciones reconocidas",
+    "credit": "La finalización cuenta para el requisito de capacitación de la empresa. La competencia práctica y la autorización de trabajo son independientes.",
+    "submitAnswer": "Enviar respuesta",
+    "continue": "Continuar a la siguiente sección",
+    "finish": "Completar el curso",
+    "answerRecord": "Sus respuestas originales y corregidas",
+    "originalAnswer": "Respuesta original",
+    "currentAnswer": "Respuesta actual",
+    "corrected": "Corregida mediante reconocimiento de la corrección",
+    "correct": "Correcta en el primer intento",
+    "needsCorrection": "Debe reconocer la corrección",
+    "reviewCorrection": "Revise la respuesta correcta",
+    "originalPreserved": "Se conserva su respuesta original. Lea la explicación y reconozca la respuesta correcta para continuar.",
+    "correctAnswer": "Respuesta correcta",
+    "acknowledge": "Entiendo y reconozco la respuesta correcta",
+    "coverage": "Requisito H03 de la empresa: {{completed}} de {{required}} completados"
   }
 }

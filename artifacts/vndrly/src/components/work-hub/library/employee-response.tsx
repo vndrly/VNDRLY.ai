@@ -6,6 +6,7 @@ import { useCampaign } from "../form-campaigns/use-campaign";
 import TogglePillButton from "@/components/brand-pill-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import GuidedTraining from './guided-training';
 const card =
   "rounded-xl border-2 border-[color:var(--brand-primary)] bg-card p-4 space-y-3";
 export default function EmployeeResponse({
@@ -94,6 +95,7 @@ export default function EmployeeResponse({
         },
       },
     );
+  if(training?.guided)return <GuidedTraining data={data} busy={api.mutation.isPending} uncertain={api.uncertain} send={payload=>api.sendAsync({path:`/library/instances/${instanceId}/guided`,payload,version:data.version})} retry={()=>api.retryAsync()} />;
   return (
     <div className="space-y-4">
       <section className={card}>

@@ -50,8 +50,15 @@ export const TrainingLessonSchema = z.object({
     .max(20)
     .default([]),
 });
+export const GuidedTrainingStepsSchema = z.array(z.object({ lessonId: key, questionIds: z.array(key).max(50) })).min(1).max(50);
+export const GuidedTrainingProgressSchema = z.object({
+  step: z.number().int().min(0).default(0),
+  responses: z.record(key, z.object({ originalOptionIds: z.array(key), correctedOptionIds: z.array(key), correct: z.boolean(), answeredAt: z.iso.datetime(), remediatedAt: z.iso.datetime().nullable() })).default({}),
+  scores: z.object({ total: z.number(), originalCorrect: z.number(), remediatedCorrect: z.number(), originalPercent: z.number(), remediatedPercent: z.number(), remediationCount: z.number() }).nullable().default(null),
+});
 export const TrainingDefinitionSchema = z
   .object({
+    guided: z.object({ steps: GuidedTrainingStepsSchema, explanations: z.record(key,z.string().min(1).max(4000)) }).optional(),
     lessons: z.array(TrainingLessonSchema).max(50).default([]),
     completionMode: z.enum(["checkoff", "quiz", "both"]).default("both"),
     questions: z.array(TrainingQuestionSchema).max(50).default([]),
@@ -61,6 +68,10 @@ export const TrainingDefinitionSchema = z
     refresherDays: z.number().int().min(1).max(3650).nullable().default(null),
   })
   .superRefine((d, c) => {
+    if(d.guided){
+      const ids=d.guided.steps.flatMap(s=>s.questionIds);
+      if(new Set(ids).size!==ids.length||ids.length!==d.questions.length||d.questions.some(q=>!ids.includes(q.id)||!d.guided!.explanations[q.id])||d.guided.steps.some(s=>!d.lessons.some(l=>l.id===s.lessonId))||new Set(d.guided.steps.map(s=>s.lessonId)).size!==d.guided.steps.length)c.addIssue({code:'custom',message:'Guided steps must cover every question once with a lesson and explanation'});
+    }
     if (
       new Set(d.lessons.map((x) => x.id)).size !== d.lessons.length ||
       new Set(d.questions.map((x) => x.id)).size !== d.questions.length
@@ -269,6 +280,7 @@ export const AssignmentMetadataSchema = z.object({
     .object({
       lessonIds: z.array(key).default([]),
       answers: z.record(key, z.array(key)).default({}),
+      guided: GuidedTrainingProgressSchema.optional(),
     })
     .default({ lessonIds: [], answers: {} }),
   attemptResetAt: z.iso.datetime().nullable().default(null),
@@ -283,6 +295,7 @@ export type TrainingDefinition = z.infer<typeof TrainingDefinitionSchema>;
 
 // Employee contracts explicitly exclude author answer keys and private object locators.
 export const EmployeeTrainingSchema = z.object({
+  guided: z.object({ steps: GuidedTrainingStepsSchema }).optional(),
   lessons: z.array(TrainingLessonSchema),
   completionMode: z.enum(["checkoff", "quiz", "both"]),
   questions: z.array(
@@ -299,6 +312,7 @@ export const EmployeeTrainingSchema = z.object({
   refresherDays: z.number().nullable(),
 });
 export const AssignedLibraryReadSchema = z.object({
+  guidedFeedback: z.object({questionId:key,correctOptionIds:z.array(key),explanation:z.string()}).nullable().optional(),
   instanceId: z.uuid(),
   title: z.string(),
   version: z.number(),
