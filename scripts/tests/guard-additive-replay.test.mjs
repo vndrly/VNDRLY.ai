@@ -19,8 +19,9 @@ test('single and multi-statement additions get stable guards without changing DD
   const original = '-- comment\nALTER TABLE "public"."probe"\nADD COLUMN IF NOT EXISTS "note" text DEFAULT \'a;b\';\nCREATE UNIQUE INDEX IF NOT EXISTS "probe_id_idx" ON probe(id);';
   const guarded = guardAdditiveReplay(original);
   assert.ok(guarded.includes(original.split(';\n')[0]));
-  assert.match(guarded, /attrelid='public.probe'::regclass AND attname='note'/);
-  assert.match(guarded, /to_regclass\('public.probe_id_idx'\) IS NULL/);
+  assert.match(guarded, /attrelid='"public"\."probe"'::regclass AND attname='note'/);
+  assert.match(guarded, /oid='probe'::regclass/);
+  assert.match(guarded, /existing_index.relname='probe_id_idx'/);
   assert.equal(guardAdditiveReplay(guarded), guarded);
 });
 
@@ -43,6 +44,20 @@ test('missing objects install, existing columns/indexes replay under live read/w
       await assert.rejects(admin.query(sql), e => e.code === '55P03');
       await admin.query(guardAdditiveReplay(sql));
       assert.deepEqual((await admin.query('SELECT * FROM probe')).rows, [{ id: 7, note: 'keep;me' }]);
+      await worker.query('ROLLBACK');
+      // Identical public names must not mask objects in the target schema.
+      await admin.query('CREATE SCHEMA custom; CREATE TABLE custom.probe(id integer PRIMARY KEY)');
+      await admin.query('SET search_path=custom,public');
+      await admin.query(guardAdditiveReplay(sql));
+      await admin.query('INSERT INTO probe(id) VALUES(8)');
+      assert.deepEqual((await admin.query('SELECT * FROM probe')).rows, [{ id: 8, note: 'keep;me' }]);
+      assert.equal((await admin.query("SELECT count(*)::int AS n FROM pg_indexes WHERE schemaname='custom' AND indexname='probe_note_idx'")).rows[0].n, 1);
+      await admin.query('SET search_path=public');
+      await admin.query(guardAdditiveReplay('ALTER TABLE custom.probe ADD COLUMN IF NOT EXISTS qualified text; CREATE INDEX IF NOT EXISTS probe_qualified_idx ON custom.probe(qualified);'));
+      assert.equal((await admin.query("SELECT count(*)::int AS n FROM pg_indexes WHERE schemaname='custom' AND indexname='probe_qualified_idx'")).rows[0].n, 1);
+      await worker.query('SET search_path=custom,public; BEGIN; SELECT * FROM probe; LOCK TABLE probe IN ROW EXCLUSIVE MODE');
+      await admin.query('SET search_path=custom,public');
+      await admin.query(guardAdditiveReplay(sql));
     } finally {
       await worker.query('ROLLBACK').catch(() => {}); await worker.end(); await admin.end();
     }

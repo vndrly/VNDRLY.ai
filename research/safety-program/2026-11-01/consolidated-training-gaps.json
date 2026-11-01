@@ -21,7 +21,7 @@
     "inputChangeNote": "Live compiler added navigation-mode scope record gap_11f7520cae6f4bff for two services during consolidation; original128/1072 baseline and the added record are all preserved.",
     "servicesWithCompiledGaps": 779,
     "consolidatedTopicGroupCount": 49,
-    "authoredFoundationCourseCount": 7,
+    "authoredFoundationCourseCount": 10,
     "authoredFoundationCourseIds": [
       "G01",
       "G02",
@@ -29,19 +29,18 @@
       "G04",
       "G05",
       "G06",
-      "G15"
+      "G15",
+      "G21",
+      "G22",
+      "G23"
     ],
-    "publicationStatus": "seven_authored_foundations_local_not_published",
-    "scopedUnwrittenOnlineTeachingOpportunityGroupIds": [
-      "TG25",
-      "TG31",
-      "TG32"
-    ],
+    "publicationStatus": "ten_authored_foundations_local_not_published",
+    "scopedUnwrittenOnlineTeachingOpportunityGroupIds": [],
     "primaryDispositionGroupCounts": {
-      "employer_method_specific_instruction": 15,
+      "employer_method_specific_instruction": 18,
       "external_credential_or_practical_evaluation": 29,
       "unresolved_actual_scope": 2,
-      "missing_online_teaching": 3
+      "missing_online_teaching": 0
     },
     "closedSpecialistQualificationCount": 0
   },
@@ -13610,7 +13609,7 @@
     {
       "groupId": "TG25",
       "title": "Nitrogen, inert-atmosphere, cryogenic and catalyst specialist tasks",
-      "primaryDisposition": "missing_online_teaching",
+      "primaryDisposition": "employer_method_specific_instruction",
       "overallStatus": "open_employer_scope_or_specialist_requirements",
       "isMissingCourseCount": false,
       "groupingRationale": "Semantic aliases and source-specific wording are grouped by the capability or scope decision they describe. Compound original text is preserved; grouping does not make all alternative subskills mandatory for every listed service.",
@@ -13712,13 +13711,25 @@
       ],
       "initialRegisterEntry": null,
       "initialStatusRetainedAsHistory": null,
-      "authoredCourse": null,
+      "authoredCourse": {
+        "courseId": "G21",
+        "title": "Nitrogen and inert-gas hazards: recognition, separation and safe handoff",
+        "file": "research/safety-program/2026-11-01/gap-courses/G21.json",
+        "sha256": "f82168a8622edb3f7d7696a97f912566441e463aebd7beb6348af1c01b85e04b",
+        "localFileExists": true,
+        "publicationStatus": "local_not_published",
+        "publicationEvidence": "Completed native teaching material inspected before the separately authorized Library publication.",
+        "lessons": 10,
+        "questions": 26,
+        "practicalBoundary": "Knowledge foundation only. Actual nitrogen/pressure/cryogenic/catalyst operating methods, technical gas testing, respiratory use, inert entry and atmospheric rescue require their own qualified programs, supervised practical evaluation and employer/site authorization. This course certifies none of those roles and provides no universal operating or alarm limits."
+      },
       "workstreams": [
         {
           "classification": "missing_online_teaching",
-          "status": "scoped_authoring_opportunity_not_authored",
-          "action": "A scoped nitrogen/inert-gas and cryogenic foundation is an identified authoring opportunity; H13 H2S awareness is not a complete substitute. No such new course is claimed authored here.",
-          "scope": "Foundation only; not a promised complete trade or professional qualification."
+          "status": "foundation_authored_local_not_published",
+          "action": "Publish the finished G21 foundation; employer procedures, actual applicability and practical/credential requirements remain separate.",
+          "scope": "Knowledge foundation only. Actual nitrogen/pressure/cryogenic/catalyst operating methods, technical gas testing, respiratory use, inert entry and atmospheric rescue require their own qualified programs, supervised practical evaluation and employer/site authorization. This course certifies none of those roles and provides no universal operating or alarm limits.",
+          "initialStatusRetainedAsHistory": "scoped_authoring_opportunity_not_authored"
         },
         {
           "classification": "employer_method_specific_instruction",
@@ -13744,7 +13755,9 @@
       "originalReferenceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
       ],
-      "relatedQualificationBoundary": "G01..G15 and TG grouping identifiers describe different scopes; do not infer one role from another. Source-classification documents support service provenance, not legal training mandates."
+      "relatedQualificationBoundary": "G01..G15 and TG grouping identifiers describe different scopes; do not infer one role from another. Source-classification documents support service provenance, not legal training mandates.",
+      "initialPrimaryDispositionRetainedAsHistory": "missing_online_teaching",
+      "initialIsMissingCourseCountRetainedAsHistory": false
     },
     {
       "groupId": "TG26",
@@ -17817,7 +17830,7 @@
     {
       "groupId": "TG31",
       "title": "Facility support, water hygiene and biological task methods",
-      "primaryDisposition": "missing_online_teaching",
+      "primaryDisposition": "employer_method_specific_instruction",
       "overallStatus": "open_employer_scope_or_specialist_requirements",
       "isMissingCourseCount": false,
       "groupingRationale": "Semantic aliases and source-specific wording are grouped by the capability or scope decision they describe. Compound original text is preserved; grouping does not make all alternative subskills mandatory for every listed service.",
@@ -18354,13 +18367,25 @@
       ],
       "initialRegisterEntry": null,
       "initialStatusRetainedAsHistory": null,
-      "authoredCourse": null,
+      "authoredCourse": {
+        "courseId": "G22",
+        "title": "Facility support, water hygiene and biological task safety",
+        "file": "research/safety-program/2026-11-01/gap-courses/G22.json",
+        "sha256": "e02a324816c962167c7305f554c1495e3172c8e1e114e672541d8be0e2fe36de",
+        "localFileExists": true,
+        "publicationStatus": "local_not_published",
+        "publicationEvidence": "Completed native teaching material inspected before the separately authorized Library publication.",
+        "lessons": 10,
+        "questions": 26,
+        "practicalBoundary": "Foundation only: not a licensed water/treatment operator, plumbing/backflow, clinical, laboratory, confined-space or specialist cleanup qualification. Actual exposure confirmation, system/product methods, appropriate practical assessment and jurisdiction-specific requirements remain separate."
+      },
       "workstreams": [
         {
           "classification": "missing_online_teaching",
-          "status": "scoped_authoring_opportunity_not_authored",
-          "action": "Food hygiene G05 and bloodborne G04 are authored foundations; broader water-hygiene/communicable-exposure teaching remains a scoped authoring opportunity, not a claimed course or license.",
-          "scope": "Foundation only; not a promised complete trade or professional qualification."
+          "status": "foundation_authored_local_not_published",
+          "action": "Publish the finished G22 foundation; employer procedures, actual applicability and practical/credential requirements remain separate.",
+          "scope": "Foundation only: not a licensed water/treatment operator, plumbing/backflow, clinical, laboratory, confined-space or specialist cleanup qualification. Actual exposure confirmation, system/product methods, appropriate practical assessment and jurisdiction-specific requirements remain separate.",
+          "initialStatusRetainedAsHistory": "scoped_authoring_opportunity_not_authored"
         },
         {
           "classification": "employer_method_specific_instruction",
@@ -18385,12 +18410,14 @@
         "program_training"
       ],
       "originalReferenceUrls": [],
-      "relatedQualificationBoundary": "G01..G15 and TG grouping identifiers describe different scopes; do not infer one role from another. Source-classification documents support service provenance, not legal training mandates."
+      "relatedQualificationBoundary": "G01..G15 and TG grouping identifiers describe different scopes; do not infer one role from another. Source-classification documents support service provenance, not legal training mandates.",
+      "initialPrimaryDispositionRetainedAsHistory": "missing_online_teaching",
+      "initialIsMissingCourseCountRetainedAsHistory": false
     },
     {
       "groupId": "TG32",
       "title": "IT/OT cybersecurity and safety-critical change assurance",
-      "primaryDisposition": "missing_online_teaching",
+      "primaryDisposition": "employer_method_specific_instruction",
       "overallStatus": "open_employer_scope_or_specialist_requirements",
       "isMissingCourseCount": false,
       "groupingRationale": "Semantic aliases and source-specific wording are grouped by the capability or scope decision they describe. Compound original text is preserved; grouping does not make all alternative subskills mandatory for every listed service.",
@@ -18812,13 +18839,25 @@
       ],
       "initialRegisterEntry": null,
       "initialStatusRetainedAsHistory": null,
-      "authoredCourse": null,
+      "authoredCourse": {
+        "courseId": "G23",
+        "title": "OT/cyber operational safety: defensive work boundaries and safe change",
+        "file": "research/safety-program/2026-11-01/gap-courses/G23.json",
+        "sha256": "ddf052a9d12387fc0a02dc14abde90672ec4ff2a39a39095557f4ee393c646fc",
+        "localFileExists": true,
+        "publicationStatus": "local_not_published",
+        "publicationEvidence": "Completed native teaching material inspected before the separately authorized Library publication.",
+        "lessons": 10,
+        "questions": 26,
+        "practicalBoundary": "This defensive knowledge foundation qualifies no operator, OT administrator, cyber incident responder, recovery engineer, electrical technician or functional-safety engineer. It grants no permission to scan, probe, bypass controls, alter configuration, operate equipment, collect intrusive evidence, restore production or authorize restart. Actual system/task instruction, qualified technical and safe practical assessment, employer/site approval and any applicable credentials remain separate."
+      },
       "workstreams": [
         {
           "classification": "missing_online_teaching",
-          "status": "scoped_authoring_opportunity_not_authored",
-          "action": "Scoped OT/cybersecurity safety-interface teaching is an identified authoring opportunity; no new course is claimed authored. General IT service is not automatically process-safety engineering.",
-          "scope": "Foundation only; not a promised complete trade or professional qualification."
+          "status": "foundation_authored_local_not_published",
+          "action": "Publish the finished G23 foundation; employer procedures, actual applicability and practical/credential requirements remain separate.",
+          "scope": "This defensive knowledge foundation qualifies no operator, OT administrator, cyber incident responder, recovery engineer, electrical technician or functional-safety engineer. It grants no permission to scan, probe, bypass controls, alter configuration, operate equipment, collect intrusive evidence, restore production or authorize restart. Actual system/task instruction, qualified technical and safe practical assessment, employer/site approval and any applicable credentials remain separate.",
+          "initialStatusRetainedAsHistory": "scoped_authoring_opportunity_not_authored"
         },
         {
           "classification": "employer_method_specific_instruction",
@@ -18842,7 +18881,9 @@
         "ot"
       ],
       "originalReferenceUrls": [],
-      "relatedQualificationBoundary": "G01..G15 and TG grouping identifiers describe different scopes; do not infer one role from another. Source-classification documents support service provenance, not legal training mandates."
+      "relatedQualificationBoundary": "G01..G15 and TG grouping identifiers describe different scopes; do not infer one role from another. Source-classification documents support service provenance, not legal training mandates.",
+      "initialPrimaryDispositionRetainedAsHistory": "missing_online_teaching",
+      "initialIsMissingCourseCountRetainedAsHistory": false
     },
     {
       "groupId": "TG33",

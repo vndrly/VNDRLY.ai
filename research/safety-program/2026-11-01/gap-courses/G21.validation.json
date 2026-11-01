@@ -1,0 +1,23 @@
+{
+  "courseId": "G21",
+  "groupId": "TG25",
+  "sha256": "f82168a8622edb3f7d7696a97f912566441e463aebd7beb6348af1c01b85e04b",
+  "bodyWords": 4288,
+  "sixTeachingLessonsWords": 2893,
+  "sections": 10,
+  "lessonChecks": 6,
+  "workedCases": 2,
+  "finalQuestions": 20,
+  "totalQuestions": 26,
+  "explanations": 26,
+  "mappingCoverage": "every question exactly once",
+  "publicationStatus": "local_not_published",
+  "practicalQualificationGranted": false,
+  "sourceCount": 11,
+  "limitations": [
+    "Foundation awareness and handoff only; specialist execution and rescue remain open.",
+    "No registry, publisher, app or database files changed."
+  ],
+  "nativeLibraryDraftSchemaPassed": true,
+  "nativeAdaptationContentSha256": "64f6bf19edd402539d92c0ff25ba265e7d4bbac22b58e86df9c39597b376abc5"
+}

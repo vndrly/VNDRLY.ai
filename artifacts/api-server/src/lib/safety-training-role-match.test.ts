@@ -141,7 +141,7 @@ describe('matchSafetyTrainingRoles: knowledge applicability, never qualification
   it('preserves every supplemental service, source and exposure gate from its exact consolidated group', () => {
     const additional = JSON.parse(readFileSync(new URL('../../../../research/safety-program/2026-11-01/additional-course-service-rules.json', import.meta.url), 'utf8'));
     const gaps = JSON.parse(readFileSync(new URL('../../../../research/safety-program/2026-11-01/consolidated-training-gaps.json', import.meta.url), 'utf8'));
-    expect(additional.courses.map((c: { courseId: string }) => c.courseId)).toEqual(['G01','G02','G03','G04','G05','G06','G15']);
+    expect(additional.courses.map((c: { courseId: string }) => c.courseId)).toEqual(['G01','G02','G03','G04','G05','G06','G15','G21','G22','G23']);
     for (const course of additional.courses) {
       const group = gaps.groups.find((g: { groupId: string }) => g.groupId === course.groupId);
       expect(course.masterServiceIds).toEqual(group.affectedServiceIds);

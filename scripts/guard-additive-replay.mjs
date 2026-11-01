@@ -18,11 +18,15 @@ export function guardAdditiveReplay(source) {
   statements.push(source.slice(start));
   return statements.map(statement => {
     const ddl = statement.replace(/^(?:\s|--[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)+/, '').trim();
-    const column = ddl.match(/^ALTER\s+TABLE\s+(?:"?public"?\.)?"?(\w+)"?\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+"?(\w+)"?\s/i);
-    const index = ddl.match(/^CREATE\s+(?:UNIQUE\s+)?INDEX\s+IF\s+NOT\s+EXISTS\s+"?(\w+)"?\s/i);
+    const identifier = '(?:"(?:""|[^"])+"|[A-Za-z_][A-Za-z_0-9$]*)';
+    const relation = `${identifier}(?:\\s*\\.\\s*${identifier})?`;
+    const column = ddl.match(new RegExp(`^ALTER\\s+TABLE\\s+(${relation})\\s+ADD\\s+COLUMN\\s+IF\\s+NOT\\s+EXISTS\\s+(${identifier})\\s`, 'i'));
+    const index = ddl.match(new RegExp(`^CREATE\\s+(?:UNIQUE\\s+)?INDEX\\s+IF\\s+NOT\\s+EXISTS\\s+(${identifier})\\s+ON\\s+(?:ONLY\\s+)?(${relation})\\s*(?:\\(|USING\\s)`, 'i'));
+    const literal = value => `'${value.replaceAll("'", "''")}'`;
+    const name = value => value.startsWith('"') ? value.slice(1, -1).replaceAll('""', '"') : value.toLowerCase();
     const condition = column
-      ? `NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.${column[1]}'::regclass AND attname='${column[2]}' AND NOT attisdropped)`
-      : index ? `to_regclass('public.${index[1]}') IS NULL` : null;
+      ? `NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid=${literal(column[1])}::regclass AND attname=${literal(name(column[2]))} AND NOT attisdropped)`
+      : index ? `NOT EXISTS (SELECT 1 FROM pg_class existing_index WHERE existing_index.relnamespace=(SELECT relnamespace FROM pg_class WHERE oid=${literal(index[2])}::regclass) AND existing_index.relname=${literal(name(index[1]))})` : null;
     if (!condition) return statement;
     // Keep the original statement, including its types, defaults and references.
     // DO bodies are deliberately not rewritten, including existing guards.

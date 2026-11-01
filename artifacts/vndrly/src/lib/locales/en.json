@@ -5333,6 +5333,10 @@
       "injury": "Injury",
       "property_damage": "Property damage",
       "observation": "Observation"
+    },
+    "readiness": {
+      "unavailable": "Company safety readiness is unavailable. Please try again.",
+      "companyRequirement": "Company-wide safety requirement"
     }
   },
   "mapCompliance": {

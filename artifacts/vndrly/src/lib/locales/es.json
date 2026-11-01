@@ -5333,6 +5333,10 @@
       "injury": "Lesión",
       "property_damage": "Daño a propiedad",
       "observation": "Observación"
+    },
+    "readiness": {
+      "unavailable": "La preparación de seguridad de la empresa no está disponible. Inténtalo de nuevo.",
+      "companyRequirement": "Requisito de seguridad para toda la empresa"
     }
   },
   "mapCompliance": {

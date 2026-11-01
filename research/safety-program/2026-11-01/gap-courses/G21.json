@@ -1,0 +1,817 @@
+{
+  "courseId": "G21",
+  "title": "Nitrogen and inert-gas hazards: recognition, separation and safe handoff",
+  "description": "Complete original TG25 foundation: six substantive lessons, two worked cases, six checks and twenty final questions. Preserve first-answer and remediated scores; incorrect answers require explicit correction acknowledgment. No operating, entry, gas-testing or rescue qualification is granted.",
+  "purpose": "Recognize nitrogen/oxygen-displacement, cryogenic and catalyst interfaces; prevent unprotected exposure and hand off to the qualified operating and emergency roles.",
+  "audience": [
+    "Workers actually exposed to nitrogen or inert-gas interfaces",
+    "Supervisors coordinating affected work",
+    "Nitrogen supply and equipment-handoff personnel within their assigned duties",
+    "Engineering and catalyst-service personnel needing role-boundary awareness"
+  ],
+  "practicalBoundary": "Knowledge foundation only. Actual nitrogen/pressure/cryogenic/catalyst operating methods, technical gas testing, respiratory use, inert entry and atmospheric rescue require their own qualified programs, supervised practical evaluation and employer/site authorization. This course certifies none of those roles and provides no universal operating or alarm limits.",
+  "sources": [
+    {
+      "title": "CSB — Hazards of Nitrogen Asphyxiation",
+      "url": "https://www.csb.gov/hazards-of-nitrogen-asphyxiation/"
+    },
+    {
+      "title": "CSB — Valero Delaware City nitrogen asphyxiation case study",
+      "url": "https://www.csb.gov/assets/1/20/valero_case_study.pdf"
+    },
+    {
+      "title": "CSB — Foundation Food Group investigation and recommendations",
+      "url": "https://www.csb.gov/foundation-food-group-fatal-chemical-release-/"
+    },
+    {
+      "title": "Air Products — Safetygram2: Gaseous nitrogen",
+      "url": "https://www.airproducts.com.cn/-/media/files/en/900/900-13-093-us-gaseous-nitrogen-safetygram-2.pdf"
+    },
+    {
+      "title": "Compressed Gas Association — Liquid Nitrogen Safety",
+      "url": "https://www.cganet.com/liquid-nitrogen-safety/"
+    },
+    {
+      "title": "NIH — Oxygen monitoring devices and oxygen-deficiency hazards",
+      "url": "https://ors.od.nih.gov/sr/ds/safety/Pages/oxygen.aspx"
+    },
+    {
+      "title": "OSHA — Permit-required confined spaces, bounded general-industry scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+    },
+    {
+      "title": "OSHA — Respiratory protection",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+    },
+    {
+      "title": "OSHA — Calibrating and testing direct-reading portable gas monitors",
+      "url": "https://www.osha.gov/publications/shib093013"
+    },
+    {
+      "title": "OSHA — Compressed gases, general requirements",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.101"
+    },
+    {
+      "title": "Netherlands Labour Authority — Catalyst change-outs; hazard reference, not universal jurisdictional requirements",
+      "url": "https://www.nllabourauthority.nl/topics/working-conditions-act-hazardous-substances/catalyst-change-outs"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G21_intro",
+        "title": "Start here — inert for the process does not mean breathable",
+        "body": "# G21 — Nitrogen and inert-gas hazards: recognition, separation and safe handoff\n\nA maintenance crew arrives to reconnect pipework near a reactor. The previous crew has finished loading catalyst, but a nitrogen purge remains active. The opening looks quiet, the gas has no warning smell and the work order says external maintenance. A helper proposes reaching through the opening to retrieve a dropped item. The dangerous assumption is that a nonflammable process atmosphere is suitable for a person to breathe, including just outside the opening.\n\nThis original VNDRLY foundation addresses the TG25 teaching gap: nitrogen, oxygen displacement, inert-atmosphere interfaces, cryogenic hazards and catalyst-work handoffs. It is for people who may encounter those hazards and supervisors coordinating their work. A desk nitrogen engineer, a supply-only rental custodian, a nitrogen operator and an inert-entry specialist do not have interchangeable duties. Assign this learning to the actual exposure or interface; its catalog association is not a company-wide operating qualification.\n\nRead six substantive lessons, answer one knowledge check per lesson, then work through two fictional cases and twenty final questions. All 26 questions require a correct response or explicit acknowledgment of the supplied correction. First answers remain in the original score; the remediated score is separate. Acknowledgment records learning after feedback, not practical field performance.\n\nNo purge rate, oxygen alarm setting, exclusion distance, pressure limit, ventilation recipe or permitted exposure duration is invented here. Actual product information, engineering, procedures and qualified assessment govern them. This course grants no gas-testing, respiratory, entry, catalyst-handling, pressure-operation or rescue authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G21_lesson1",
+        "title": "Lesson 1 — understand oxygen displacement and misleading reassurance",
+        "body": "## Separate process purpose from human breathing needs\n\nNitrogen is widely used to displace air, purge equipment and maintain a process atmosphere. Its lack of flammability and its useful process behavior do not make concentrated nitrogen breathable. When nitrogen replaces oxygen in the air reaching a worker, the person can be deprived of the oxygen needed to remain conscious and function. The relevant harm mechanism is oxygen displacement, not the presence of a recognizable bad smell. Ordinary air already contains nitrogen; that fact does not make a nitrogen-enriched atmosphere safe. The mixture and actual exposure matter.\n\nNitrogen provides no dependable sensory warning. Do not use smell, color, lack of irritation or another person's willingness to enter as a test. Oxygen deprivation can impair judgment and the ability to escape, and severe exposure can incapacitate rapidly. A worker may not receive a useful period in which to recognize symptoms and make a careful decision. Dizziness, unusual behavior or collapse near an affected system is an emergency clue, not a reason to approach and ask the person how they feel. Treat unexplained symptoms through the emergency process from safety.\n\n## The hazard does not stop at a vessel wall\n\nGas discharged through an opening or vent can affect nearby work. A person can be exposed while leaning over an opening, reconnecting external pipework or using an adjacent platform without planning a full-body entry. A space-entry boundary and an oxygen-deficiency exposure boundary answer different questions. Being outside the vessel does not automatically place someone outside the gas hazard. The qualified task assessment must address where the released gas can reach people and how that changes with configuration, ventilation and nearby work. Do not invent a safe distance by taking a step back from the hatch.\n\nThe CSB's Valero refinery case study concerns two contractor deaths during work around a nitrogen-purged reactor, including a fatal attempted rescue. One important lesson is that an oxygen-deficient atmosphere may occur near an opening outside the vessel. The case is evidence of a hazard pathway, not a universal description of every catalyst job. In this course's fictional work, use that lesson to ask whether external tasks, access routes and helpers have been included in the assessment before anyone approaches the opening.\n\n## Worked comparison\n\nConsider three statements: the gas is nonflammable; the equipment is purged; and the surrounding air is acceptable for this person's work. Each describes a different condition. The first concerns an ignition property. The second concerns a process action whose purpose may be to remove oxygen. The third requires an appropriate assessment of the worker's actual atmosphere and other hazards. Neither of the first two establishes the third. A useful intervention is specific: the active purge and open discharge have not been assessed for the external maintenance position. Hold that exposure and involve the responsible operating and technical roles.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G21_lesson2",
+        "title": "Lesson 2 — identify the actual gas, equipment and assigned role",
+        "body": "## Read the assignment before assuming the method\n\nThe TG25 source services include nitrogen-unit engineering and several forms of catalyst handling, including explicitly inert-atmosphere work. Those labels are a reason to review scope; they do not prove that every engineer operates a nitrogen unit or every catalyst worker enters a reactor. Establish the actual person, task, equipment, location and limits. Desk design or document review requires professional competence but does not create field operating authority. A supply-only provider establishes the accepted condition and handoff of the asset; it does not automatically supply a qualified operator. A field technician needs equipment- and method-specific instruction and assessment beyond this foundation.\n\nIdentify the gas from controlled product information, labels and the approved system, not cylinder color, hose appearance or a familiar connection. Confirm that the information applies to the actual supply and destination. An unidentified container or temporary line is an unresolved hazard. Other gases described casually as inert or protective may have different properties; do not apply every nitrogen assumption to carbon dioxide, a mixed gas or an unknown process stream. Oxygen measurement alone does not characterize every possible toxic or flammable contaminant. The competent assessment identifies the actual substances and the necessary controls.\n\n## Keep breathing air separate from process gas\n\nProcess nitrogen must never be assumed to be breathing air. A connector fitting physically into a hose does not establish the gas identity, quality or approved use. Do not swap adapters, borrow a nearby supply or connect respiratory equipment to an unverified line to save time. Breathing-air systems and their verification belong to the qualified respiratory and operating programs. An awareness learner can identify an uncertain label or proposed substitution, stop the affected use and report it; that learner is not qualified to test or certify breathing-air quality through this course.\n\nThe gas supply can also introduce mechanical and pressure hazards. Compressed containers, regulators, hoses and connected equipment must suit the approved pressure, temperature and service. A supply valve that is shut is not proof that all connected equipment is depressurized or isolated. An operator who can start a unit is not automatically qualified to design its pressure arrangement or authorize opening containment. The actual task determines which qualified person must establish the safe state, measurement, connection or release decision.\n\n## Worked handoff\n\nA rental supplier delivers a nitrogen unit with identified equipment records. The customer's engineer has reviewed a proposed process application, and a maintenance helper is available to connect hoses. None of those facts, individually, establishes that the connection method, operator qualification, destination, vent route or atmosphere controls are ready. The responsible supervisor identifies who accepts the equipment, who approves the technical arrangement and who performs each task. The helper does not become the operator because they are nearby. When those duties cannot be identified, the affected field work remains held rather than being assigned to whoever has completed this online module.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G21_lesson3",
+        "title": "Lesson 3 — establish separation and understand monitoring limits",
+        "body": "## Assess the release and the people it can reach\n\nBefore exposure, the responsible technical and site roles assess credible sources, discharge points, process configuration, affected work positions and changing conditions. Include vents, open equipment, temporary hoses, adjacent enclosures, access routes and work by other employers. The plan establishes suitable isolation or containment, ventilation where appropriate, controlled access, monitoring and emergency arrangements. A sign communicates danger but does not prevent a release. An open door does not by itself establish adequate ventilation, and outdoor work is not an automatic exemption from local oxygen-deficiency exposure near a release.\n\nSeparation has to work for helpers, delivery staff and other crews as well as the team operating the gas system. Identify all credible approaches and who controls them. Do not route another task through the affected area simply because its own permit is complete. The boundary and release conditions come from the approved assessment; this course does not provide a generic distance. Workers should be able to explain where they may wait, whom to contact and what change requires a hold. They must not enter the uncertain area to install a barrier while gas exposure remains uncontrolled.\n\n## Measure the hazard with the right system\n\nAn H2S-only detector cannot establish oxygen concentration. A suitable oxygen sensor addresses an oxygen measurement, within the complete instrument's capabilities and condition. Other hazards may need other sensors and controls. The qualified program selects personal, area or remote sampling arrangements and determines locations, timing and repeated or continuous monitoring. A reading applies to its device, place, time and method. An earlier result at a hatch does not automatically represent a different work position after flow, opening or ventilation changes.\n\nUsers perform only the checks and interpretation for which they are trained. Startup indications, functional challenge testing and calibration have different purposes. A device turning on does not establish that its sensor and alarms respond correctly. Follow the manufacturer and program's required checks; a failed check, blocked sampling path or unexplained fault removes the instrument from reliance. Technical gas testing and clearance require separately assessed sampling and interpretation skills. Do not carry an instrument into an unknown atmosphere to find out whether it is safe to enter.\n\n## Worked changed-condition decision\n\nA qualified test supports an external task while a particular ventilation arrangement is operating. Later, another crew closes an access panel and changes the vent path. The old test record may be accurate, but its assumptions no longer describe the work. Pause the affected task, inform the operating authority and obtain reassessment of the changed release and monitoring arrangement. Do not edit the record to say conditions remained acceptable. Alarm settings, occupational definitions and site entry criteria have different functions; the governing program establishes the actual protective response and acceptance criteria. A favorable number is not a universal permission to remain, and a fault is not evidence of good air.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G21_lesson4",
+        "title": "Lesson 4 — recognize cryogenic and pressure hazards without improvising operation",
+        "body": "## Liquid nitrogen adds more than an atmosphere hazard\n\nLiquid nitrogen is extremely cold and converts to gas as it absorbs heat. Contact with liquid or sufficiently cold equipment can cause severe cold injury. Materials may also behave differently at cryogenic temperatures, including loss of suitable strength or flexibility. A component selected only for its pressure rating may still be wrong for the temperature or service. The equipment and product instructions, technical design and qualified assessment determine what is suitable. This course does not authorize selecting a transfer container, changing a regulator or repairing a cryogenic system.\n\nConversion from liquid to gas can create a pressure hazard if the expanding gas is trapped. Use only the approved equipment and arrangement for the actual service; do not seal an unsuitable container or cap a required relief or vent path. A vessel that looks like a convenient storage container is not necessarily designed for cryogenic use. Frost, leakage, unusual discharge or a changed component requires the responsible technical assessment. A worker must not chip, heat, strike or dismantle equipment as an improvised response to an abnormal condition.\n\n## Treat the whole release path\n\nA cold release can form a visible cloud from condensed atmospheric moisture. That cloud is not a complete map of the nitrogen hazard. Its disappearance does not prove that oxygen has returned to an acceptable condition, and being outdoors does not establish that a person near the release can breathe safely. Follow the approved escape and reporting response instead of walking through the edge of the cloud to test it. Keep others clear from safety and report the source and observed direction without inventing a concentration or a safe boundary.\n\nPPE must match the actual cold, splash and mechanical exposures and must be taught for the task. Protective gloves or a face shield do not supply oxygen. A dust mask or air-purifying respirator cannot make an oxygen-deficient atmosphere breathable. Even supplied-air or self-contained respiratory equipment belongs to a qualified program with user prerequisites, suitable selection, practical competence and an authorized method; possession does not authorize entry or rescue. Do not improvise pure-oxygen injection as a way to clear an area. Ventilation and atmosphere restoration require the approved technical method, not an improvised gas substitution.\n\n## Worked equipment concern\n\nA worker sees frost and unexpected discharge at a temporary nitrogen connection. Their assignment is to observe the loading area, not operate the unit. The worker follows the site's stop/escape communication, stays outside the release path and contacts the designated operator and supervisor from safety. They do not put a hand over the connection, tighten it under pressure or move a relief outlet toward another crew. The qualified team establishes a safe equipment state and the atmosphere before intervention. If a cold-contact injury or other exposure is suspected, activate the established emergency and medical route promptly. Do not delay care while trying to prove the equipment fault or diagnose the injury yourself.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G21_lesson5",
+        "title": "Lesson 5 — coordinate catalyst work, openings and changes",
+        "body": "## One protective action can create another hazard\n\nSome catalyst materials can have reactive, self-heating or pyrophoric properties, depending on their type and service history. A qualified process assessment may require an inert atmosphere to control a material hazard. That same atmosphere can be incompatible with human breathing. Do not assume that stopping the purge or adding air is an acceptable way to make a catalyst task safe. Introducing oxygen can change the material or process hazard, so atmosphere changes require the designated competent technical and operating decision. The actual catalyst information, operating history and approved method determine what is needed; not every catalyst has identical properties.\n\nCatalyst change-out can also involve movement of material, dust, vacuum equipment, pressure, access restrictions and potential engulfment or falling lumps. A breathing system does not prevent burial or mechanical injury, and a controlled atmosphere does not stabilize material. Specialist planning must address the combined task. The Netherlands Labour Authority's catalyst guidance describes these distinct hazards; its role is a source of technical hazard understanding, not a declaration that another jurisdiction's terminology or qualification applies automatically to every VNDRLY service.\n\n## Distinguish the teams and the work boundary\n\nThe catalyst contractor, operations owner, maintenance crew and entry/rescue provider may have separate responsibilities. Finishing catalyst loading does not necessarily mean the nitrogen system is off or the reactor is ready for ordinary maintenance. Handover needs the actual equipment state: supply and purge status, openings and discharge points, isolation boundaries, remaining material hazards, atmosphere restrictions, access controls and who can authorize each next stage. A summary saying catalyst work complete can conceal all of those conditions. Confirm understanding with the receiving crew rather than relying on the same employer or a shared job number.\n\nExternal work can become a different task when a person reaches through an opening, retrieves debris, changes a cover or introduces a tool. Apply the site's entry boundary and permit system before crossing it. A quick retrieval is not cleared by an external-work authorization. Intentional work in an inert atmosphere is a specialist activity with its own qualified method, respiratory program, communication, rescue and other controls. This foundation does not teach that execution. Neither an online H05 pass nor a personal monitor turns an ordinary maintenance crew into an inert-entry team.\n\n## Worked reassessment\n\nA crew arrives to fit an external pipe after catalyst loading. Their permit describes tools and lifting but omits the continuing nitrogen purge. A worker identifies the mismatch and holds the affected access. Operations and the competent catalyst/entry authorities resolve the actual state and whether the proposed positions can be exposed to the discharge. They establish the required barriers, method and monitoring before rebriefing the crew. If an item is dropped inside, retrieval becomes a separately assessed change. No one leans in because the original task was almost complete, and no one stops a protective purge casually to make the permit description easier to satisfy.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G21_lesson6",
+        "title": "Lesson 6 — escape, summon qualified help and control re-entry",
+        "body": "## Respond before investigating\n\nOn an atmosphere alarm, suspected release, unexplained collapse or other defined stop trigger, follow the site's protective response promptly. Stop the affected activity only as the trained response allows without delaying escape or creating exposure. Move to the designated safe area and use the emergency communication and accountability system. Do not delay to finish a connection, collect tools or compare detectors. From safety, give the location, equipment or gas if known, observed alarm or symptoms, potentially affected people and last known casualty position. Distinguish facts from assumptions: report an oxygen alarm rather than inventing an oxygen concentration.\n\nAn ordinary worker's most important rescue action can be preventing another unprotected entry. Do not enter a vessel, enclosure or release area to retrieve someone while holding your breath. Do not assume a dust mask, filter respirator, escape-only unit or personal monitor provides the capability to perform rescue. Raise the designated response and keep others clear where this can be done safely. Only the trained, equipped and authorized rescue organization uses its approved method. A coworker's collapse is not permission to ignore the hazards that may have caused it.\n\n## An emergency response is a planned capability\n\nThe site must establish the response arrangements before exposure, including access, communications, accountability and a feasible rescue for any authorized entry task. A telephone number alone does not demonstrate that responders have the right equipment or can reach the casualty. Support workers need to know their safe reporting and access-control actions without being assigned hazardous entry. Clinical treatment, respiratory use and first aid have their own training and scene-safety prerequisites. Never expose a second person in order to move the first casualty into a safer place; the qualified response must first control the rescue exposure.\n\nThe CSB's Foundation Food Group investigation found that a liquid-nitrogen release created an oxygen-deficient atmosphere and that inadequate preparedness contributed to additional people entering to investigate or help. Use that event to test the local plan's assumptions: do nearby workers know the gas hazard, recognize the alarm and know where to summon the correct capability? The lesson is not that every nearby person should learn a rescue technique online. It is that effective prevention, warning and a qualified response must be established before a release creates an urgent emotional decision.\n\n## Re-entry is a separate decision\n\nSilence after an alarm, disappearance of a cloud, a closed supply valve or a worker feeling better does not authorize re-entry. The designated operating/site authority coordinates qualified assessment of the atmosphere, equipment and cause, verifies required safeguards and communicates any permitted return. If the original task or configuration changed, reassess that work as well. Preserve the alarm and the later measurements as separate observations with their times and conditions. Handback identifies continuing restrictions and the responsible next role. A completed knowledge course can help a worker recognize this boundary; it cannot supply atmospheric clearance or make an unsafe job ready.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G21_scenarios",
+        "title": "Two applied cases — complete worked decisions",
+        "body": "## Case 1: the external pipe job and the dropped socket\n\nAt fictional Birch Unit, a catalyst contractor hands a reactor back for external pipe reconnection. The loading task is finished, but the approved process arrangement still requires a nitrogen purge. A top opening remains available for the planned connection. The maintenance permit says external work and lists lifting and hand-tool controls. It does not address nitrogen near the opening. A helper drops a socket inside and offers to reach in with a hook while another worker watches. The supervisor has an H2S-only monitor and says its zero display shows that the air is good.\n\n**Step 1 — identify the conflicting assumptions.** Loading completion is not confirmation that the purge stopped. External work does not establish safe air at the opening. The H2S-only measurement does not establish oxygen concentration. Reaching through the opening can change the entry and exposure scope. A watcher does not provide an entry system or rescue capability.\n\n**Step 2 — control the immediate exposure.** Hold the affected approach and retrieval, keep the crew at the designated safe location and notify operations and the responsible supervisor. Nobody leans over the opening to inspect the socket, uses smell as a test or takes the monitor into the vessel to obtain a better result. The helper describes the dropped item and last known position without converting it into an emergency requiring personal entry.\n\n**Step 3 — obtain the right technical handoff.** Operations and the competent catalyst/entry authorities establish the actual purge, material and equipment state. They determine the approved atmosphere and monitoring method, separation and permit requirements for the external task. The team does not stop the purge or add air casually, because the purge may control a material hazard. Any retrieval method receives its own assessment, including whether it can be done through an approved non-entry method without exposure.\n\n**Step 4 — verify before authorized restart.** The designated roles verify actual safeguards and communicate the accepted task limits. The crew is rebriefed about the nitrogen source, opening, safe positions and stop response. If entry is necessary, the qualified entry and rescue program establishes its prerequisites separately; this written foundation supplies none of those permissions. The record preserves the initial mismatch, corrective decisions and actual authorization rather than backdating a permit as if nitrogen had already been addressed.\n\n## Case 2: a cold cloud during a temporary nitrogen supply\n\nAt fictional Cedar Yard, a nitrogen supplier supports a temporary service. A delivery coordinator sees unexpected discharge and a white cloud near the connection. The coordinator is trained to control deliveries, not operate the nitrogen equipment. A nearby worker says the cloud is only water and proposes walking through it to reach a shutoff. Someone else brings a filter respirator. The fixed oxygen alarm activates. A subcontractor then reports that one person may still be near the work area.\n\n**Step 1 — act on the protective signal.** The coordinator follows the site stop and evacuation procedure, warns others from safety and uses the emergency/accountability system. The white appearance cannot establish the cloud's full hazard boundary, and the oxygen alarm must not be dismissed because nitrogen is nonflammable. The coordinator does not walk toward the source or delay while deciding whether the instrument is faulty.\n\n**Step 2 — reject inadequate protection and improvised intervention.** A filter respirator does not supply oxygen. The coordinator does not assign an untrained worker to close a valve through the release. Only the designated operator or emergency team acts under the approved safe response. Pressure and cold hazards remain relevant as well as atmosphere; tightening the connection, capping a vent or touching frost-covered equipment is not an awareness-level troubleshooting method.\n\n**Step 3 — provide useful rescue information without entering.** Report the person's name if known, last known location, the alarm, gas supply involved and safe responder access point. State clearly that the person's current location is unconfirmed. Do not lead a group back to search. The designated response establishes its own safe access and rescue capability, while muster staff continue accounting for people.\n\n**Step 4 — require verified clearance and handback.** When the cloud disappears and the alarm later stops, the crew remains at the designated safe area. The site authority obtains qualified atmosphere and equipment assessment, resolves the fault and verifies required controls before communicating a return. The record keeps the first alarm and later findings distinct. Arrival of a replacement connection or a favorable later reading alone does not establish that the complete temporary arrangement is ready for the next task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G21_assessment",
+        "title": "Final assessment — twenty decisions about nitrogen and inert-gas interfaces",
+        "body": "Answer each final question individually using the hazard pathway, actual role and stated conditions. First answers remain recorded. An incorrect answer requires reading and explicitly acknowledging the specific correction before completion. The six lesson checks and twenty final questions all require a correct response or acknowledged remediation. Your remediated result records learning after feedback and does not replace the original score. No assessment answer authorizes a live test, entry, catalyst intervention or rescue.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G21_finish",
+        "title": "Finish — knowledge completion and the remaining qualified work",
+        "body": "## What this result establishes\n\nComplete every section and all 26 questions correctly or through acknowledged remediation. Keep original and remediated scores separate. The result supports recognition of oxygen displacement, instrument and respiratory limits, cold/pressure hazards, catalyst interfaces and safe stop/handoff decisions. It is not evidence that you have operated a real nitrogen unit or performed hazardous work safely.\n\n## What the employer and technical owner must establish\n\nDetermine the actual service and each person's duties: desk engineering, equipment supply, transport, operation, catalyst handling, work near an opening, technical testing, entry or emergency response. Use the actual products, material history, equipment information, approved procedures and applicable jurisdiction to establish controls and training. The source service labels do not make every alternative activity part of the contract. OSHA entry and respiratory standards have defined scopes; the employer must determine the applicable requirements rather than applying a catalog label as law.\n\n## Separate practical evaluation and authorization\n\nA suitably qualified assessor must separately evaluate the actual assigned skills using safe representative tasks: equipment and gas identification, user-level instrument checks where assigned, safe positions and barriers, communications, alarm recognition, escape/accountability and accurate handoff. Operating, pressure-system, cryogenic, catalyst and technical gas-testing duties need their own task-specific qualification and supervised practical assessment. Respiratory use requires its applicable program prerequisites, including medical and fit requirements where applicable. Inert entry and atmospheric rescue require their own specialist team, equipment, method and feasible emergency capability. A breathing apparatus or course certificate alone does not establish any of those roles.\n\nRecord the role, method, equipment, conditions, assessor, observed criteria, limitations and any unassessed steps. Do not create a live gas release, oxygen-deficient environment, cryogenic splash or process upset to test a learner. Use controlled simulation and qualified training arrangements. Keep restrictions in place until the actual competence and employer/site authorization are established. This course does not clear an alarm, approve a purge change, certify breathing air or authorize return to service.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G21_check1",
+        "prompt": "A nitrogen-purged reactor is nonflammable. What does that establish about air at its opening?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It does not establish a breathable atmosphere; the actual exposure needs qualified assessment."
+          },
+          {
+            "id": "b",
+            "label": "It proves the air is safe because nitrogen is familiar."
+          },
+          {
+            "id": "c",
+            "label": "It clears external work as long as nobody fully enters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G21_check2",
+        "prompt": "A hose connector fits an available nitrogen line. May it be used as a breathing-air supply?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the line looks like the previous breathing-air line."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after someone briefly tries breathing from it."
+          },
+          {
+            "id": "c",
+            "label": "No; gas identity, quality and approved breathing-air arrangements must be established by the qualified program."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G21_check3",
+        "prompt": "An H2S-only detector reads zero beside a nitrogen vent. What has been established about oxygen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The area is safe until the H2S instrument alarms."
+          },
+          {
+            "id": "b",
+            "label": "Nothing; the measurement does not address oxygen concentration."
+          },
+          {
+            "id": "c",
+            "label": "The atmosphere contains enough oxygen."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G21_check4",
+        "prompt": "A liquid-nitrogen cloud disappears after a release. What is the appropriate conclusion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Atmospheric safety is still unestablished; remain clear until authorized qualified assessment."
+          },
+          {
+            "id": "b",
+            "label": "The nitrogen has completely vanished."
+          },
+          {
+            "id": "c",
+            "label": "Any nearby worker may now inspect the leak."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G21_check5",
+        "prompt": "External maintenance near a catalyst reactor now requires retrieving an item through an opening. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat it as covered because the original permit is still valid."
+          },
+          {
+            "id": "b",
+            "label": "Stop the purge informally so the helper can reach in."
+          },
+          {
+            "id": "c",
+            "label": "Hold the changed task and obtain the appropriate scope, atmosphere and entry assessment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G21_check6",
+        "prompt": "A coworker collapses in a suspected oxygen-deficient area. What is the awareness-level response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter with a filter respirator and a monitor."
+          },
+          {
+            "id": "b",
+            "label": "Raise the designated emergency response from safety and prevent further unprotected entry where safe."
+          },
+          {
+            "id": "c",
+            "label": "Enter immediately while holding your breath."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G21_final1",
+        "prompt": "Why can concentrated nitrogen cause asphyxiation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It can displace oxygen needed for human breathing."
+          },
+          {
+            "id": "b",
+            "label": "Its nonflammability supplies oxygen."
+          },
+          {
+            "id": "c",
+            "label": "Its normal presence in air makes every concentration harmless."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G21_final2",
+        "prompt": "Which sensory observation can establish acceptable oxygen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No unusual smell."
+          },
+          {
+            "id": "b",
+            "label": "Clear air without a visible cloud."
+          },
+          {
+            "id": "c",
+            "label": "None of smell, appearance or lack of irritation can establish it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G21_final3",
+        "prompt": "Can a person outside a vessel still be exposed to its nitrogen purge?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only after the person climbs fully inside."
+          },
+          {
+            "id": "b",
+            "label": "Yes; gas near openings or discharge points can affect external work."
+          },
+          {
+            "id": "c",
+            "label": "No; a vessel wall contains every atmosphere hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G21_final4",
+        "prompt": "A source label says nitrogen-unit engineering. What should determine an individual’s training and authorization?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual assigned desk, supply or field duties and applicable scope."
+          },
+          {
+            "id": "b",
+            "label": "Every engineer should automatically operate the unit."
+          },
+          {
+            "id": "c",
+            "label": "The service title alone grants all nitrogen qualifications."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G21_final5",
+        "prompt": "How should an unknown gas line be identified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "By cylinder or hose color alone."
+          },
+          {
+            "id": "b",
+            "label": "By using a connector that happens to fit."
+          },
+          {
+            "id": "c",
+            "label": "Through controlled product/system information and the responsible qualified process before use."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G21_final6",
+        "prompt": "Does an acceptable oxygen reading rule out every toxic or flammable hazard?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; inert service cannot contain other hazards."
+          },
+          {
+            "id": "b",
+            "label": "No; the actual substances may require other measurements and controls."
+          },
+          {
+            "id": "c",
+            "label": "Yes; oxygen measures all contaminants indirectly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G21_final7",
+        "prompt": "What should happen if another crew changes the vent path after a supporting atmosphere test?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Pause affected work and obtain reassessment of the changed conditions."
+          },
+          {
+            "id": "b",
+            "label": "Use the old reading for the remaining shift."
+          },
+          {
+            "id": "c",
+            "label": "Copy the reading to the new position without testing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G21_final8",
+        "prompt": "What does an instrument powering up prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every sensor is accurate for every gas."
+          },
+          {
+            "id": "b",
+            "label": "Calibration and functional challenge are no longer needed."
+          },
+          {
+            "id": "c",
+            "label": "Only the functions established by that startup; required sensor/alarm assurance remains separate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G21_final9",
+        "prompt": "Who performs technical atmosphere testing or clearance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any worker who owns a multi-gas instrument."
+          },
+          {
+            "id": "b",
+            "label": "Personnel qualified and authorized for the actual sampling and interpretation task."
+          },
+          {
+            "id": "c",
+            "label": "Any graduate of this awareness foundation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G21_final10",
+        "prompt": "Why can liquid nitrogen create an overpressure hazard?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It can convert to gas and build pressure if expansion is trapped in unsuitable equipment."
+          },
+          {
+            "id": "b",
+            "label": "Cold liquid removes the need for pressure protection."
+          },
+          {
+            "id": "c",
+            "label": "Only flammable liquids can create pressure hazards."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G21_final11",
+        "prompt": "A required vent or relief path is discharging. What should an awareness worker do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cap it until the shift ends."
+          },
+          {
+            "id": "b",
+            "label": "Move its outlet toward another crew without review."
+          },
+          {
+            "id": "c",
+            "label": "Follow the approved reporting/protective response and obtain qualified disposition; do not cap it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G21_final12",
+        "prompt": "What should PPE selection for cold/splash exposure establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That a face shield qualifies the wearer for nitrogen entry."
+          },
+          {
+            "id": "b",
+            "label": "Suitability for the actual task, compatibility and taught use; it does not establish breathable air."
+          },
+          {
+            "id": "c",
+            "label": "That thick gloves provide oxygen protection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G21_final13",
+        "prompt": "Can a dust mask or air-purifying respirator supply missing oxygen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if it has a new filter."
+          },
+          {
+            "id": "c",
+            "label": "Yes, when used only briefly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G21_final14",
+        "prompt": "Why must a proposed purge shutdown during catalyst work receive technical review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All catalysts become safe as soon as nitrogen stops."
+          },
+          {
+            "id": "b",
+            "label": "Only the maintenance schedule matters."
+          },
+          {
+            "id": "c",
+            "label": "The purge may control a material/process hazard that changes when air is introduced."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G21_final15",
+        "prompt": "Does suitable breathing equipment by itself control catalyst burial or falling material?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; an inert atmosphere stabilizes catalyst."
+          },
+          {
+            "id": "b",
+            "label": "No; mechanical, material-movement and engulfment hazards need separate controls."
+          },
+          {
+            "id": "c",
+            "label": "Yes; breathing protection prevents all entry injury."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G21_final16",
+        "prompt": "What should a catalyst-to-maintenance handover communicate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual purge/supply state, openings, restrictions, material hazards and responsible next-stage authority."
+          },
+          {
+            "id": "b",
+            "label": "Only that catalyst loading is finished."
+          },
+          {
+            "id": "c",
+            "label": "Only the number of workers leaving."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G21_final17",
+        "prompt": "What is useful to report from safety after an atmosphere alarm?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A guessed oxygen number."
+          },
+          {
+            "id": "b",
+            "label": "An unsupported claim that the monitor is faulty."
+          },
+          {
+            "id": "c",
+            "label": "Actual location, equipment/gas if known, alarm or symptoms, affected people and uncertainties."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G21_final18",
+        "prompt": "Who may authorize re-entry after an alarm ends?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Anyone who resets the display."
+          },
+          {
+            "id": "b",
+            "label": "The designated site/operating authority through required qualified assessment and verified conditions."
+          },
+          {
+            "id": "c",
+            "label": "The first worker who notices silence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G21_final19",
+        "prompt": "In the Birch Unit case, what is the best response to the dropped socket?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold retrieval and resolve the changed scope through the qualified operating/entry process."
+          },
+          {
+            "id": "b",
+            "label": "Reach in with a hook while another worker watches."
+          },
+          {
+            "id": "c",
+            "label": "Use the H2S-only zero as oxygen clearance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G21_final20",
+        "prompt": "In the Cedar Yard case, what should happen when a person’s location is uncertain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Send several coworkers back through the cloud."
+          },
+          {
+            "id": "b",
+            "label": "Assume the person left because the cloud is fading."
+          },
+          {
+            "id": "c",
+            "label": "Give the last known location through emergency/accountability channels from safety; do not launch an unprotected search."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G21_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G21_lesson1",
+          "questionIds": [
+            "G21_check1"
+          ]
+        },
+        {
+          "lessonId": "G21_lesson2",
+          "questionIds": [
+            "G21_check2"
+          ]
+        },
+        {
+          "lessonId": "G21_lesson3",
+          "questionIds": [
+            "G21_check3"
+          ]
+        },
+        {
+          "lessonId": "G21_lesson4",
+          "questionIds": [
+            "G21_check4"
+          ]
+        },
+        {
+          "lessonId": "G21_lesson5",
+          "questionIds": [
+            "G21_check5"
+          ]
+        },
+        {
+          "lessonId": "G21_lesson6",
+          "questionIds": [
+            "G21_check6"
+          ]
+        },
+        {
+          "lessonId": "G21_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G21_assessment",
+          "questionIds": [
+            "G21_final1",
+            "G21_final2",
+            "G21_final3",
+            "G21_final4",
+            "G21_final5",
+            "G21_final6",
+            "G21_final7",
+            "G21_final8",
+            "G21_final9",
+            "G21_final10",
+            "G21_final11",
+            "G21_final12",
+            "G21_final13",
+            "G21_final14",
+            "G21_final15",
+            "G21_final16",
+            "G21_final17",
+            "G21_final18",
+            "G21_final19",
+            "G21_final20"
+          ]
+        },
+        {
+          "lessonId": "G21_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G21_check1": "Process inerting and breathable air are different conditions. Gas escaping near an opening can expose external workers, and lack of flammability does not establish adequate oxygen. The responsible assessment must address the actual work position.",
+        "G21_check2": "Physical fit cannot establish gas identity or breathing-air suitability. Nitrogen is not breathing air. Do not improvise adapters or test by exposure; hold use and obtain the designated qualified verification and arrangement.",
+        "G21_check3": "A target-gas reading applies only within that instrument’s capabilities. An H2S-only sensor cannot measure oxygen, and a zero display cannot clear oxygen displacement or other unmeasured hazards.",
+        "G21_check4": "The visible cloud is not a reliable boundary or clearance test. Gas conditions can remain hazardous after visible moisture clears, and pressure or cold equipment hazards may also remain. Follow the site response and clearance process.",
+        "G21_check5": "Retrieval can change both exposure and entry scope. The purge may control a catalyst hazard, so neither the existing external-work permit nor an improvised purge change establishes a safe method.",
+        "G21_check6": "The atmosphere that incapacitated one person can incapacitate an unprotected rescuer. A monitor warns but does not provide breathing protection, and a filter respirator does not supply oxygen. The designated qualified team conducts rescue under its plan.",
+        "G21_final1": "The hazard is the air mixture reaching the worker. Nitrogen’s normal presence in air does not make a nitrogen-enriched atmosphere life-supporting; oxygen displacement can impair judgment, consciousness and escape.",
+        "G21_final2": "Oxygen deficiency is not reliably detected by human senses. Suitable assessment and measurement are required; a worker must not use symptoms or an experimental breath as the test.",
+        "G21_final3": "The atmospheric exposure pathway can extend beyond the physical entry boundary. External pipework, leaning over an opening or adjacent access must be included in the actual assessment.",
+        "G21_final4": "A catalog label identifies a service category, not each person’s duties. Engineering, rental custody, operation and hazardous entry require distinct competence and authorization decisions.",
+        "G21_final5": "Color and fit cannot establish the actual gas and approved destination. An uncertain supply remains held until identity and suitability are resolved without exposing someone to test it.",
+        "G21_final6": "Oxygen measurement addresses a particular atmospheric property. Other contaminants and process residues need their own assessed detection and controls; one favorable channel is not universal clearance.",
+        "G21_final7": "The earlier result may be accurate for its original conditions but not representative after a configuration change. The responsible roles must establish the changed release, monitoring and authorization basis.",
+        "G21_final8": "Startup indications do not necessarily demonstrate actual response to a target atmosphere. Follow the distinct manufacturer/program checks and remove failed or unsuitable devices from reliance.",
+        "G21_final9": "Technical testing requires task-specific instrument, sampling, timing and interpretation competence. Written awareness and instrument possession do not demonstrate those field skills or grant clearance authority.",
+        "G21_final10": "Cryogenic service involves both cold and expanding gas. The approved design must address the actual equipment and protective paths; workers must not seal unsuitable containers or defeat required vents.",
+        "G21_final11": "A discharge may indicate normal or abnormal conditions requiring the responsible assessment. Capping or redirecting a protective path can create pressure or exposure elsewhere and is not an awareness-level repair.",
+        "G21_final12": "PPE has specific protective functions. Cold and splash protection cannot replace atmospheric controls or qualified respiratory, entry and rescue programs.",
+        "G21_final13": "Filtering ambient air does not supply oxygen. Oxygen-deficient work requires the applicable qualified respiratory and task-control system; this foundation does not authorize such work with any respirator.",
+        "G21_final14": "Some catalyst materials and service histories create reactive or self-heating hazards. Do not casually trade an oxygen-deficiency hazard for a different process hazard; the competent method must address both.",
+        "G21_final15": "Breathing and material stability are different harm pathways. Specialist planning must address all relevant hazards rather than treating a respiratory system as a complete task method.",
+        "G21_final16": "A completed loading activity can leave an active purge and continuing hazards. The receiving crew needs the actual equipment and restriction state, not a reassuring summary that implies unrestricted readiness.",
+        "G21_final17": "Responders need reliable observations and accountability information. Distinguish known facts from uncertainties; invented measurements or premature fault conclusions can misdirect the response.",
+        "G21_final18": "Ending a signal does not establish the atmosphere, equipment cause or safeguards. Re-entry is a separate controlled decision supported by the actual technical and emergency process.",
+        "G21_final19": "The retrieval changes the task near an active nitrogen opening. Neither a watcher nor an irrelevant sensor reading supplies the missing exposure, entry and authorization safeguards.",
+        "G21_final20": "Accurate information helps the designated qualified response. Uncoordinated entry can create more casualties, while an unsupported assumption about location can leave the response incomplete."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

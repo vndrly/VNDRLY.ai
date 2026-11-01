@@ -1,0 +1,794 @@
+{
+  "courseId": "G23",
+  "title": "OT/cyber operational safety: defensive work boundaries and safe change",
+  "description": "Original TG32 knowledge foundation: six fully taught lessons, two worked cases and twenty-six explained decisions on authorized access, physical safety, controlled change, incident reporting, recovery and handover.",
+  "purpose": "Recognize when digital work can affect physical safeguards and preserve authorized, coordinated defensive behavior without claiming technical operation or engineering competence.",
+  "audience": [
+    "Assigned OT/IT support personnel",
+    "Automation and instrument technicians",
+    "Operational-interface supervisors",
+    "Technical change reviewers",
+    "Assigned system/access/recovery coordinators"
+  ],
+  "practicalBoundary": "This defensive knowledge foundation qualifies no operator, OT administrator, cyber incident responder, recovery engineer, electrical technician or functional-safety engineer. It grants no permission to scan, probe, bypass controls, alter configuration, operate equipment, collect intrusive evidence, restore production or authorize restart. Actual system/task instruction, qualified technical and safe practical assessment, employer/site approval and any applicable credentials remain separate.",
+  "sources": [
+    {
+      "title": "NIST SP 800-82 Revision 3 — Guide to Operational Technology Security (final guidance)",
+      "url": "https://csrc.nist.gov/pubs/sp/800/82/r3/final"
+    },
+    {
+      "title": "CISA — Primary mitigations to reduce cyber threats to operational technology",
+      "url": "https://www.cisa.gov/sites/default/files/2025-05/fact-sheet-primary-mitigations-to-reduce-cyber-threats-to-operational-technology-508c.pdf"
+    },
+    {
+      "title": "NIST SP 1339 — OT Backup Quick Start Guide",
+      "url": "https://csrc.nist.gov/pubs/sp/1339/final"
+    },
+    {
+      "title": "CSB — Bayer CropScience pesticide waste tank explosion investigation",
+      "url": "https://www.csb.gov/bayer-cropscience-pesticide-waste-tank-explosion/"
+    },
+    {
+      "title": "CSB — Bayer report findings on computer-control training and safeguards",
+      "url": "https://www.csb.gov/csb-issues-report-on-2008-bayer-cropscience-explosion-finds-multiple-deficiencies-led-to-runaway-chemical-reaction-recommends-state-create-chemical-plant-oversight-regulation/"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G23_intro",
+        "title": "Start here — digital support has a physical safety boundary",
+        "body": "# G23 — OT/cyber operational safety foundation\n\nA service name such as software support, telecommunications or automation does not identify every employee’s duty. This course applies when the actual assigned work has a confirmed interface with an operational system or its safety-related information, access, change or recovery arrangements. Desk-only work unrelated to those functions is a different scope.\n\nWork through six taught lessons and their six knowledge checks, two fully worked fictional cases and twenty final questions. All twenty-six questions need a recorded response. Completion requires correct responses or explicitly acknowledged remediation after reviewing the specific explanation. Preserve the original response and first-attempt score alongside the remediated result. A correction never rewrites what was first understood.\n\nThis defensive knowledge foundation qualifies no operator, OT administrator, cyber incident responder, recovery engineer, electrical technician or functional-safety engineer. It grants no permission to scan, probe, bypass controls, alter configuration, operate equipment, collect intrusive evidence, restore production or authorize restart. Actual system/task instruction, qualified technical and safe practical assessment, employer/site approval and any applicable credentials remain separate.\n\nThe cases are fictional and require no live system access. Do not connect devices, conduct tests or change equipment to complete them. The references provide defensive guidance and an investigation context, not automatic local legal requirements, approval of a system design or endorsement of this course. NIST’s cited Revision 3 is final guidance; the existence of a later draft does not turn draft material into an operating instruction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G23_lesson1",
+        "title": "Lesson 1 — Recognize when a digital task can change physical safety",
+        "body": "Operational technology includes programmable equipment that monitors or influences a physical activity. A terminal loading system, building access controller, pump control display, gas-monitoring link or protective instrument interface can have consequences beyond the computer screen. Ordinary business software can also connect to these systems through reporting, identity, communications or shared support services. The important question is what the actual task can affect.\n\nStart by identifying the asset, location, operating function, owner and boundaries of your assignment. A request saying “fix the network” does not tell you whether the affected connection carries office email, loading authorization, an alarm or a control function. Ask the responsible operations and technical contacts before changing it. A helpdesk account or engineering title establishes neither permission to operate equipment nor authority to alter a protective function.\n\nKeep information and control functions distinct. A dashboard may show a process value without being the approved operating interface. A drawing or three-dimensional visualization may be planning information rather than the current configuration. Conversely, a device that looks like an ordinary workstation can provide commands to physical equipment. Appearance and convenience are poor ways to decide the boundary.\n\nFor this course, identify three responsibilities in every affected job: the person accountable for the physical operation, the person responsible for the digital work, and the authority approving changes that may affect safeguards. One person may hold more than one responsibility only when the employer has explicitly assigned it and the person has the appropriate competence. Do not infer those duties from membership-admin access.\n\nIn a fictional yard, a technician is asked to move an access-control connection while a fuel delivery is arriving. The technician first establishes whether the connection controls only an office door or also a gate interlock used by the loading arrangement. They coordinate the affected admission and operating state with the site. They do not unplug the device to see what stops.\n\n[NIST SP 800-82 Revision 3](https://csrc.nist.gov/pubs/sp/800/82/r3/final) supplies OT security guidance that explicitly considers performance, reliability and safety. Apply the employer’s actual architecture and procedures; this foundation supplies no approved network design or operating method.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G23_lesson2",
+        "title": "Lesson 2 — Use authorized access without creating an informal bypass",
+        "body": "Access should be connected to an identified person, an approved purpose and the minimum duties needed for the task. Use the employer’s authorized access route and the privileges approved for your assignment. A password that works, an account saved on a contractor laptop or an invitation from a familiar colleague is not by itself an authorization decision.\n\nBefore a support session, confirm the system, person requesting work, permitted actions, responsible local contact and the period or conditions of access. Use the agreed verification channel when a request is unexpected. Do not approve a new connection or disclose credentials because a caller knows equipment names or says production will stop. Escalate pressure to the accountable contact while maintaining the safe operating arrangement.\n\nRemote access needs coordinated boundaries. Operations must know when a support session could affect the physical system, who is supervising the work and how the session will be ended. A temporary connection should not become an undocumented permanent path. Do not create a private workaround around the approved access arrangement, even when the official route is inconvenient.\n\nUse assigned accounts and approved authentication. Do not share a colleague’s identity to avoid waiting for access, and do not accept an unsolicited authentication request as a routine maintenance step. Report unexpected prompts through the established security route. The employer’s specialists determine the appropriate technical controls and exceptions; this lesson does not prescribe commands for changing authentication or network settings.\n\nEquipment and removable media need their own approved handling process. An unfamiliar USB device or personal laptop should not be connected to an operational asset to “check what is on it.” Keep it unconnected and contact the responsible role. A file can be legitimate while the device or connection is outside the reviewed arrangement.\n\nIn a fictional monitoring job, a vendor offers an alternative remote-support tool after its approved account fails. The local technician holds the new connection and contacts the designated operations and security owners. They verify the proposed route and task through the change process rather than accepting a successful login as proof of safety.\n\n[CISA’s primary OT mitigations](https://www.cisa.gov/sites/default/files/2025-05/fact-sheet-primary-mitigations-to-reduce-cyber-threats-to-operational-technology-508c.pdf) support reducing unnecessary exposure and controlling necessary remote access. Exact access design and implementation require the authorized specialists.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G23_lesson3",
+        "title": "Lesson 3 — Control configuration, software and maintenance changes",
+        "body": "A digital change can alter a physical process without moving a pipe or machine. Software, firmware, network connections, user rights, alarm displays, data scaling and configuration files can affect how people see or control equipment. A small-looking edit can therefore require more than a routine office support ticket.\n\nDescribe the proposed change precisely. Identify the affected asset and version, the reason for work, the expected behavior, the people and systems affected, and the authority required. Ask whether the task touches an operating limit, protective function, alarm, permissive, interlock, safety-related communication or recovery capability. Refer technical uncertainty to the appropriate engineer or system owner; do not guess a safe setting.\n\nThe approved process should establish preparation, suitable testing, operational coordination, verification and a safe contingency. Testing on an office machine does not prove compatibility with the actual operational environment. Equally, a vendor saying a package is current does not establish that it is appropriate for this installed configuration. The responsible authority determines the needed evidence and conditions.\n\nDo not perform intrusive investigation, active scanning, unscheduled rebooting or exploratory configuration changes on production equipment as an awareness exercise. Activities acceptable in a separate approved test environment can disturb an operational system. This course gives no permission to probe, exploit, bypass or test live defenses. Report the concern and obtain the specific authorized technical method.\n\nTemporary measures need an owner and a defined path to restoration or reviewed continuation. A disabled feature, temporary account or alternate route must not remain simply because production appears stable. Record the actual state and the limits of the approval. A work order waiting in a queue does not extend an expired authorization.\n\nIn a fictional tank-farm update, a programmer proposes changing an alarm display during loading because the change is “only visual.” The responsible team checks how operators interpret that display, what information is relied upon and what verification and instruction are required. If those questions remain unresolved, the affected change is held. They do not use live loading to discover whether the operator understands the new display.\n\nA safe change record links the actual configuration to the decision, verification, affected-person briefing and handback. Completion of a download is an activity; accepted safe operation is a separate decision.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G23_lesson4",
+        "title": "Lesson 4 — Respond to suspicious behavior and uncertain indications safely",
+        "body": "A cyber-related concern may appear as unexpected remote activity, unexplained account prompts, changed configuration, repeated communication failure or an indication that does not match other available information. These observations can also have nonmalicious causes. The worker’s first job is to report the facts and protect the operation through the assigned procedure, rather than prove an attack.\n\nUse the established operations and security reporting routes together where physical behavior could be affected. Give the asset, location, time, observed message or behavior, current work and known consequences. Distinguish what you saw from what someone suggested. Do not delay an urgent operational alarm while collecting a complete technical diagnosis.\n\nIf an indication is uncertain, do not assume either that it is trustworthy because it looks normal or that it can be ignored because a computer may be compromised. The qualified operating role determines the required safe response using the actual process information and procedures. Do not improvise manual operation, defeat an alarm or continue hazardous work on an unverified assumption.\n\nPreserve useful information through the approved incident process. Record what can be captured safely within your role, such as an observed message and time. Do not install an unapproved investigation tool, run experiments on the live asset or remove equipment needed for safe control. Technical responders decide what evidence collection, containment or disconnection is appropriate.\n\nAvoid an automatic “unplug everything” reaction. An abrupt loss of communications or power can itself affect a physical operation. The designated operations and cyber responders coordinate the safe response, including any approved isolation. A general worker who recognizes a concern does not acquire technical shutdown or network-isolation authority.\n\nIn a fictional loading area, the display freezes while a remote-access notification appears. The attendant reports both observations and the actual loading state to the assigned coordinator. They follow the operating instruction for loss of reliable indication and keep people clear as directed. They do not click through the remote prompt, reboot the controller or diagnose the event from a personal phone.\n\nThe same discipline applies when the event appears minor. A support worker should not quietly clear logs or close a ticket simply because the display recovers. The responsible roles need to know the uncertainty, actions and resulting condition before deciding whether work can continue.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G23_lesson5",
+        "title": "Lesson 5 — Recover deliberately and verify the whole safety function",
+        "body": "Recovery means more than making a screen respond again. The operation may depend on the correct configuration, trustworthy data, required communications, protective functions and people who understand the restored state. A successful login or a green status indicator cannot independently establish all of those conditions.\n\nA backup is useful only within a managed recovery arrangement. The responsible team identifies what was saved, which configuration and time it represents, how it is protected and whether restoration has been tested under suitable conditions. A file named “latest” is not reliable evidence that it matches the approved installed state. Do not restore a device from a convenient copy found on a personal drive.\n\nChanges and backups should be coordinated so the recovery team understands what state it may return to. A backup taken before an authorized modification may omit a required correction. One taken after a suspected compromise may not be an appropriate recovery source. Qualified technical and operational roles determine the source and verification; the awareness learner reports the available information without choosing independently.\n\nRecovery planning also considers dependencies. Restoring one server may not restore its field communications, alarm path, time reference, user access or related equipment. The team verifies the actual functions needed for the work and any limitations that remain. Do not release an entire facility from a successful test of one display.\n\nThe responsible authority controls return to service. Confirm the required technical checks, operational state, personnel briefing and safe handback. Where a function cannot be verified, maintain the appropriate restriction and communicate it to the next shift. A contractor finishing a repair is not automatically the person authorized to restart the process.\n\nIn a fictional gate-and-loading system, the support team restores an approved configuration after an incident. The gate display works, but the loading operator has not received confirmation that the required interface and protective behavior were checked. The gate remains under the approved restricted arrangement while the responsible people complete the verification and handover. The ticket is not closed as “fully operational” based only on the gate screen.\n\n[NIST’s OT Backup Quick Start Guide](https://csrc.nist.gov/pubs/sp/1339/final) connects backups with change management, testing and recovery exercises. This foundation does not teach live restoration or certify a recovery design.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G23_lesson6",
+        "title": "Lesson 6 — Make handover, competence and improvement evidence usable",
+        "body": "A handover should describe the current state, not a reassuring summary. Identify work completed, changes still pending, active support sessions, temporary arrangements, defects, restrictions and the people who own the next decisions. The receiving role confirms responsibility and access to the information before the outgoing role leaves.\n\nCommunicate changes in the way people perform the task. A new display, alarm presentation or access method may require updated instruction and practical assessment. Sending release notes is not the same as verifying that an operator understands the relevant change. The employer determines the appropriate controlled exercise and technical training for the actual role.\n\nThe U.S. Chemical Safety Board’s Bayer CropScience investigation described incomplete training on a new computer control system and weaknesses in startup and safeguards. Its [investigation record](https://www.csb.gov/bayer-cropscience-pesticide-waste-tank-explosion/) provides a process-safety lesson about readiness and human-system interfaces. This course does not characterize that event as a cyberattack. The relevant connection is that software-related change can affect a hazardous operation even when equipment appears ready.\n\nA safe foundation exercise can use a fictional support request, a simulated uncertain indication and a handover record. The learner identifies the responsible roles, protects access information, reports facts and explains the hold. Do not use a live production system, real malicious device or uncontrolled change to make the exercise realistic.\n\nKeep learning, technical performance and authorization as separate records. A corrected quiz answer shows remediated understanding. A safe practical observation addresses specific actions under recorded conditions. An employer’s authorization assigns a bounded duty. None automatically creates the others, and a general IT credential does not establish process-operation or functional-safety engineering competence.\n\nReview repeated workarounds and weak signals with the affected workers and technical owners. If remote support repeatedly bypasses the approved route, investigate access availability and work organization as well as behavior. Assign a correction with a real verification outcome. Counting closed tickets or reporting no recent incidents does not establish that the original control weakness is resolved.\n\nPreserve the original event, decision and verification history. If an action fails, reopen it and communicate the current restriction. The company can improve its knowledge foundation while technical qualification and site readiness remain visibly outstanding. No universal renewal interval or automatic approval is created by this course.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G23_cases",
+        "title": "Two applied cases with worked solutions",
+        "body": "## Case 1 — the urgent remote-support shortcut\n\nA fictional terminal has a loading-automation fault. The local display intermittently stops updating, while the physical process is still under the operating team’s control. An outside support technician says their approved account is unavailable. They send a link to a different remote-support tool and ask the local service worker to install it on a connected workstation. The caller says a reboot will probably clear the fault and asks the worker to approve any authentication prompts. A delivery queue is building and a supervisor wants the ticket closed before shift change.\n\nThe local worker has completed ordinary IT support training. Their assignment permits reporting faults and coordinating approved support, not modifying the loading control system. They do not know whether the proposed workstation is only a reporting display or provides control functions.\n\n### Work through the decision\n\nIdentify what the worker can do immediately, what information is needed, and who must authorize further action. Decide whether queue pressure, a known caller or a working alternative connection changes the boundary.\n\n### Worked solution\n\nThe worker holds the proposed installation, authentication approval and reboot. They report the unreliable display and current loading state through the operations route and follow the assigned instruction for loss of trustworthy indication. They do not declare the operation safe or unsafe from the computer symptom alone; the qualified operating role makes the necessary physical-operation decision.\n\nThey verify the support request through the established contact and involve the designated technical and security owners. The team identifies the actual workstation, its control and reporting functions, dependencies, approved access route, proposed actions and responsible local contact. The alternative tool is a new connection requiring review, not a harmless substitute because the caller is familiar.\n\nThe worker records the observed fault, times, requested actions and what was held. They do not run an unapproved diagnostic, remove logs or disconnect devices to collect more evidence. If operations requires a restriction while indication is uncertain, that restriction remains clear to the gate and receiving teams so the queue is managed safely.\n\nAny authorized technical repair follows the applicable change and verification process. Recovery includes the necessary operating and protective functions, not only a responsive screen. The receiving shift is told what was changed, which checks were performed and what remains restricted. The ticket accurately distinguishes a reported issue, completed technical activity and authorized return to service. Urgency is communicated, but it does not create a new access or operating permission.\n\n## Case 2 — the restored screen and incomplete handback\n\nAt a fictional service facility, a contractor replaces a component supporting a tank-farm display. A configuration file on a personal drive is labeled “last good.” The contractor proposes restoring it because it worked during a previous visit. The new display uses a different presentation from the one the night operators practiced. The contractor can log in and see changing values, but no record is available showing whether the required alarm and protective interfaces were verified. The day supervisor says production was stable before the work and wants the night team to learn the display during operation.\n\nThe night operator notices the gap during handover. They are authorized for the normal operating procedure, but have not been assessed on the changed interface. The operator is not an OT recovery engineer.\n\n### Work through the decision\n\nExplain which facts are insufficient for release, how the recovery source and operational state should be resolved, and what the receiving operator needs before reliance. Do not design a live test or choose technical settings.\n\n### Worked solution\n\nThe operator reports the incomplete handback and maintains the applicable safe restriction through the designated operating authority. A successful login and changing values establish limited observations. They do not prove that the configuration is the approved one, the data is trustworthy or the required protective functions are available.\n\nThe responsible technical team establishes the recovery source’s identity, provenance, version and relationship to the current approved configuration. A personal file name and a previous successful visit are not enough. The operations and technical authorities determine the suitable recovery and verification method. The operator supplies observations and follows the assigned process; they do not select or restore the file.\n\nThe team reviews the component and display changes through the applicable change process. Required functions and dependencies are checked using the authorized safe method. This exercise does not instruct anyone to defeat an interlock, generate a hazardous condition or test a live defense. If a required check cannot be completed, the uncertainty and operating limit remain visible.\n\nThe night team receives current instructions and the appropriate safe role-specific learning and practical assessment for the changed interface. A sign-off that only acknowledges receipt of release notes cannot establish that capability. The handover identifies actual configuration, completed checks, remaining issues and the people who accept return to service.\n\nAfter the immediate work, management reviews why an uncontrolled recovery file and production-based learning were proposed. The corrective action addresses usable backup/change arrangements, contractor boundaries and operator readiness. Closing the repair ticket is separate from proving that those improvements work. First and remediated online scores remain learning evidence; they do not turn the operator into a recovery or functional-safety specialist.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G23_final",
+        "title": "Final assessment — twenty operational decisions",
+        "body": "Answer each question individually using the work boundary, role, physical state and evidence supplied. Retain every first answer. An incorrect answer requires reading and explicitly acknowledging its explanation and corrected response. Both the first and remediated results remain visible across all twenty-six course questions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G23_finish",
+        "title": "Finish — confirm the actual next duty",
+        "body": "## Knowledge completion\n\nComplete every section, six lesson checks and twenty final questions correctly or through explicitly acknowledged remediation. Keep first-attempt and remediated results separate. A knowledge record can contribute to the applicable company training component; it is not the entire safety score or evidence that every company system is secure.\n\n## Separate technical and practical requirements\n\nThis defensive knowledge foundation qualifies no operator, OT administrator, cyber incident responder, recovery engineer, electrical technician or functional-safety engineer. It grants no permission to scan, probe, bypass controls, alter configuration, operate equipment, collect intrusive evidence, restore production or authorize restart. Actual system/task instruction, qualified technical and safe practical assessment, employer/site approval and any applicable credentials remain separate.\n\nA safe practical exercise can assess identification of the work boundary, use of the approved reporting/access route, a simulated hold and a clear handover. The assessor records the actual actions, assistance, conditions and limits. Do not create a real cyber incident, hazardous state or unauthorized system connection for training. Technical operation and qualification need their own appropriate evaluation.\n\nBefore the next actual duty, confirm the assigned system and task, current instructions, permitted access, responsible contacts, operational coordination and failed-control response. If scope or readiness remains uncertain, use the established hold and escalation process. Changes to the task, system, access route or recovery method require the relevant review. This course establishes no universal renewal interval and no automatic restart permission.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G23_check1",
+        "prompt": "A worker is asked to move an unfamiliar connection supporting an operational display. What should they do first?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Identify the asset, physical function and authorized work boundary with the responsible roles."
+          },
+          {
+            "id": "b",
+            "label": "Unplug it briefly to identify what stops."
+          },
+          {
+            "id": "c",
+            "label": "Assume every workstation is ordinary office IT."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G23_check2",
+        "prompt": "A vendor’s approved remote account fails and they propose a different support tool. What is the appropriate response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Install it if the caller knows the equipment name."
+          },
+          {
+            "id": "b",
+            "label": "Hold the alternative connection for authorized access and change review."
+          },
+          {
+            "id": "c",
+            "label": "Approve authentication prompts until one connection succeeds."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G23_check3",
+        "prompt": "A programmer calls an alarm-display edit “only visual” during loading. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Make the edit during a quiet moment without review."
+          },
+          {
+            "id": "b",
+            "label": "Let live loading demonstrate whether the new display is understandable."
+          },
+          {
+            "id": "c",
+            "label": "Review the actual operating interface, change authority, verification and affected-person readiness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G23_check4",
+        "prompt": "A display freezes while an unexpected remote-access message appears. What should the worker do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Report observations through operations and security routes and follow the assigned safe procedure."
+          },
+          {
+            "id": "b",
+            "label": "Click through the message to find the person responsible."
+          },
+          {
+            "id": "c",
+            "label": "Reboot the controller immediately without coordinating operations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G23_check5",
+        "prompt": "A restored screen responds and shows changing values. What does that establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every protective function is now proven available."
+          },
+          {
+            "id": "b",
+            "label": "Limited screen behavior; required system functions and return-to-service conditions still need verification."
+          },
+          {
+            "id": "c",
+            "label": "The latest approved configuration must have been restored."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G23_check6",
+        "prompt": "The incoming operator has not been assessed on a changed interface. What should the handover do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat release-note receipt as practical competence."
+          },
+          {
+            "id": "b",
+            "label": "Let the operator learn unfamiliar controls during production."
+          },
+          {
+            "id": "c",
+            "label": "Keep the readiness gap explicit and obtain the appropriate instruction, assessment and authorized decision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G23_final1",
+        "prompt": "Which feature makes a digital support task potentially relevant to OT safety?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It can affect monitoring or control of a physical activity."
+          },
+          {
+            "id": "b",
+            "label": "Its screen has an industrial-looking background."
+          },
+          {
+            "id": "c",
+            "label": "It uses a laptop rather than a desktop."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G23_final2",
+        "prompt": "Which statement best describes a helpdesk account?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It qualifies its user to alter any connected protective function."
+          },
+          {
+            "id": "b",
+            "label": "It provides only the access authorized for its assigned purpose, not automatic operating authority."
+          },
+          {
+            "id": "c",
+            "label": "It replaces the site’s technical change process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G23_final3",
+        "prompt": "Which information belongs in the initial scope check?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the desired ticket completion time."
+          },
+          {
+            "id": "b",
+            "label": "Only whether the contractor has worked for the company before."
+          },
+          {
+            "id": "c",
+            "label": "Asset identity, physical function, operating state, responsible contacts and proposed actions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G23_final4",
+        "prompt": "How should an unexpected caller requesting urgent remote access be handled?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify through the established channel and involve the responsible access and operating roles."
+          },
+          {
+            "id": "b",
+            "label": "Share a colleague’s login to avoid delay."
+          },
+          {
+            "id": "c",
+            "label": "Accept the request because the caller names the site correctly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G23_final5",
+        "prompt": "A worker finds an unfamiliar USB device beside an operational workstation. What is the safe course decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Connect it to discover its owner."
+          },
+          {
+            "id": "b",
+            "label": "Keep it unconnected and follow the approved reporting and media-handling process."
+          },
+          {
+            "id": "c",
+            "label": "Try it on another operational device first."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G23_final6",
+        "prompt": "What should happen to temporary remote access after the approved task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leave it available indefinitely for convenience."
+          },
+          {
+            "id": "b",
+            "label": "Assume the contractor will remove it without verification."
+          },
+          {
+            "id": "c",
+            "label": "End or formally review it through the authorized process and record the actual remaining state."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G23_final7",
+        "prompt": "Why can an office-tested software package still require operational review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual equipment, dependencies and safety conditions may differ from the office test."
+          },
+          {
+            "id": "b",
+            "label": "An office test proves all industrial systems compatible."
+          },
+          {
+            "id": "c",
+            "label": "Only the package’s release date matters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G23_final8",
+        "prompt": "Which activity is outside this foundation’s authorization?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reporting an observed message through the approved route."
+          },
+          {
+            "id": "b",
+            "label": "Intrusive scanning or exploratory changes on live production equipment."
+          },
+          {
+            "id": "c",
+            "label": "Identifying the responsible operating contact."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G23_final9",
+        "prompt": "A temporary configuration measure reaches its review limit. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep it because production has appeared stable."
+          },
+          {
+            "id": "b",
+            "label": "Extend its date without review."
+          },
+          {
+            "id": "c",
+            "label": "Use the applicable safe restriction and obtain the responsible reviewed decision before further reliance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G23_final10",
+        "prompt": "What is the correct way to describe an unexplained indication during an incident report?",
+        "options": [
+          {
+            "id": "a",
+            "label": "State the observed behavior, time and context, distinguishing assumptions from facts."
+          },
+          {
+            "id": "b",
+            "label": "Declare a confirmed attack without evidence."
+          },
+          {
+            "id": "c",
+            "label": "Omit uncertainty so the report sounds decisive."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G23_final11",
+        "prompt": "Why should a general worker avoid automatically unplugging every connected system after a cyber concern?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every connection must remain active regardless of danger."
+          },
+          {
+            "id": "b",
+            "label": "Abrupt loss of communications or power can itself affect the physical operation."
+          },
+          {
+            "id": "c",
+            "label": "A cyber concern is never relevant to operations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G23_final12",
+        "prompt": "An operational indication may be unreliable. Who determines the appropriate physical operating response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any person who can restart the display."
+          },
+          {
+            "id": "b",
+            "label": "The person who submitted the support ticket first."
+          },
+          {
+            "id": "c",
+            "label": "The qualified assigned operating role using the actual procedures and information."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G23_final13",
+        "prompt": "Which backup description most directly supports a recovery decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Identified provenance, configuration/version, relevant date and tested recovery arrangements."
+          },
+          {
+            "id": "b",
+            "label": "A personal file called “latest.”"
+          },
+          {
+            "id": "c",
+            "label": "A file that was once used successfully on another visit."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G23_final14",
+        "prompt": "Why might restoring one server be insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A server can never be used in an operational system."
+          },
+          {
+            "id": "b",
+            "label": "Required communications, data, access and protective dependencies may still be unavailable or unverified."
+          },
+          {
+            "id": "c",
+            "label": "A successful login proves every field function."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G23_final15",
+        "prompt": "Who controls return to service after technical recovery?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The contractor solely because their repair activity is complete."
+          },
+          {
+            "id": "b",
+            "label": "Any user who sees a green indicator."
+          },
+          {
+            "id": "c",
+            "label": "The designated responsible authority after required technical and operating prerequisites are verified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G23_final16",
+        "prompt": "What must a shift handover preserve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Current configuration, completed checks, restrictions, pending work and accountable contacts."
+          },
+          {
+            "id": "b",
+            "label": "Only that the ticket is closed."
+          },
+          {
+            "id": "c",
+            "label": "Only a statement that the previous shift saw no incident."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G23_final17",
+        "prompt": "What does the CSB Bayer example contribute to this course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proof that every control-system accident is a cyberattack."
+          },
+          {
+            "id": "b",
+            "label": "A documented lesson about control-system change, operator readiness and safeguards."
+          },
+          {
+            "id": "c",
+            "label": "A technical recipe for bypassing interlocks."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G23_final18",
+        "prompt": "Which exercise stays within this foundation’s scope?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A deliberately unauthorized connection to a live controller."
+          },
+          {
+            "id": "b",
+            "label": "A real protective-function defeat to see whether the learner notices."
+          },
+          {
+            "id": "c",
+            "label": "A fictional support request and simulated indication used to practice reporting, holds and handover."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G23_final19",
+        "prompt": "In Case 1, why does the familiar vendor’s alternative remote tool remain held?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The new route and proposed actions still require verified authorization and operational coordination."
+          },
+          {
+            "id": "b",
+            "label": "A familiar vendor can never provide legitimate support."
+          },
+          {
+            "id": "c",
+            "label": "The queue automatically authorizes any available workaround."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G23_final20",
+        "prompt": "In Case 2, what must be resolved before relying on the recovered system?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the ability to see changing values."
+          },
+          {
+            "id": "b",
+            "label": "Recovery provenance, required-function verification, operator readiness and authorized handback."
+          },
+          {
+            "id": "c",
+            "label": "Only the contractor’s promise that the file is “last good.”"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G23_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G23_lesson1",
+          "questionIds": [
+            "G23_check1"
+          ]
+        },
+        {
+          "lessonId": "G23_lesson2",
+          "questionIds": [
+            "G23_check2"
+          ]
+        },
+        {
+          "lessonId": "G23_lesson3",
+          "questionIds": [
+            "G23_check3"
+          ]
+        },
+        {
+          "lessonId": "G23_lesson4",
+          "questionIds": [
+            "G23_check4"
+          ]
+        },
+        {
+          "lessonId": "G23_lesson5",
+          "questionIds": [
+            "G23_check5"
+          ]
+        },
+        {
+          "lessonId": "G23_lesson6",
+          "questionIds": [
+            "G23_check6"
+          ]
+        },
+        {
+          "lessonId": "G23_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G23_final",
+          "questionIds": [
+            "G23_final1",
+            "G23_final2",
+            "G23_final3",
+            "G23_final4",
+            "G23_final5",
+            "G23_final6",
+            "G23_final7",
+            "G23_final8",
+            "G23_final9",
+            "G23_final10",
+            "G23_final11",
+            "G23_final12",
+            "G23_final13",
+            "G23_final14",
+            "G23_final15",
+            "G23_final16",
+            "G23_final17",
+            "G23_final18",
+            "G23_final19",
+            "G23_final20"
+          ]
+        },
+        {
+          "lessonId": "G23_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G23_check1": "The worker must understand what the task can affect before changing it. Appearance, account access and an exploratory interruption do not establish a safe operating boundary.",
+        "G23_check2": "An alternative support route can change exposure and access. A familiar caller and a successful login do not replace the approved purpose, privileges and operational coordination.",
+        "G23_check3": "A display may influence decisions in a hazardous operation. The team must establish what is affected and how the change will be safely verified; production is not an uncontrolled training environment.",
+        "G23_check4": "Report facts and protect the operation within the assigned role. A cyber suspicion does not give a general worker authority to investigate or shut down systems indiscriminately.",
+        "G23_check5": "Screen behavior is one observation. Recovery must establish the relevant configuration, dependencies and safety functions through the authorized technical and operating processes.",
+        "G23_check6": "Understanding, practical performance and authorization are separate. A handover must preserve the actual limitation instead of converting an administrative acknowledgment into demonstrated capability.",
+        "G23_final1": "OT scope follows the function and dependencies of the system. Appearance and device shape do not determine whether a support action can affect physical safety.",
+        "G23_final2": "Access credentials are not a practical qualification or an unrestricted work permission. The task, system and approval boundary still apply.",
+        "G23_final3": "A usable scope check connects the requested work to the actual system and authority. Familiarity and schedule do not describe physical consequences.",
+        "G23_final4": "Knowledge of site details does not establish identity or permission. The verified access process protects both the digital boundary and the affected operation.",
+        "G23_final5": "An unfamiliar device should not be used as an exploratory diagnostic. The approved process determines how it is handled without introducing an unreviewed connection.",
+        "G23_final6": "Temporary access needs ownership and controlled closure or reviewed continuation. Convenience does not establish a permanent approved route.",
+        "G23_final7": "A test result is bounded by its configuration and conditions. The relevant authority determines what evidence supports use on the actual operational system.",
+        "G23_final8": "This course teaches defensive recognition and coordination. It grants no permission for live probing, exploitation, configuration experiments or technical testing.",
+        "G23_final9": "Stable output does not establish continued authorization or adequate protection. Temporary measures must follow their actual approval and review conditions.",
+        "G23_final10": "A factual report helps both operational and cyber responders. Unsupported certainty can misdirect the response, while uncertainty should be made explicit.",
+        "G23_final11": "The designated response coordinates physical safety and containment. The lesson is to follow the approved safe response, not to preserve all connections or disconnect indiscriminately.",
+        "G23_final12": "An uncertain digital indication does not transfer operating authority to a general support worker. The actual role and procedure govern the safe state.",
+        "G23_final13": "Recovery requires a trustworthy source for the actual approved state. A name or past success does not establish suitability for this configuration and incident.",
+        "G23_final14": "Recovery concerns the whole required operating function. A single restored component does not automatically verify its dependencies.",
+        "G23_final15": "Technical work completion and operating release are different decisions. The assigned authority needs evidence for the actual readiness conditions.",
+        "G23_final16": "The incoming role needs actionable state and limitations. A reassuring summary cannot replace the information needed to manage the next shift safely.",
+        "G23_final17": "The investigation illustrates readiness and human-system interfaces. The course does not attribute the accident to cyberattack or teach operational bypass methods.",
+        "G23_final18": "Safe simulation can assess the learner’s assigned recognition and communication. Live uncontrolled exposure or technical interference is not justified as a teaching method.",
+        "G23_final19": "The issue is the unreviewed access and work boundary, not the vendor’s identity alone. Operational pressure does not supply the missing approval or verification.",
+        "G23_final20": "The case contains separate recovery, verification and competence gaps. Each relevant prerequisite must be addressed through its responsible role before the operating release."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}
