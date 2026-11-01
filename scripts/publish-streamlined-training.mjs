@@ -55,7 +55,8 @@ function validateManifest(){
  ensure(manifest.version===2&&manifest.courses.length===117&&previousIdentities.length===117,'Expected same117coursefamilies');
  const courses=manifest.courses.map(c=>{
   const content=LibraryDraftSchema.parse(c.content),training=content.training,core=c.id==='G99';
-  ensure(previousIdentities.some(p=>p.id===c.id)&&c.sourceVersion===(previousIdentities.find(p=>p.id===c.id).sourceSha256===c.sourceSha256?'1.0':'2.0'),'Unexpected family/version');
+  const previous=previousIdentities.find(p=>p.id===c.id);
+  ensure(previous&&c.sourceVersion===(previous.sourceSha256===c.sourceSha256?previous.sourceVersion:`${Number.parseInt(previous.sourceVersion,10)+1}.0`),'Unexpected family/version');
   ensure(training&&training.lessons.length===(core?13:10)&&training.questions.length===(core?48:26)&&training.guided?.steps.length===(core?11:10),c.id+': incomplete course');
   ensure(createHash('sha256').update(JSON.stringify(content)).digest('hex')===c.sourceSha256,c.id+': source mismatch');
   const contentSha256=safetyTrainingContentHash(content),trusted=safetyTrainingCatalog.curriculum.find(x=>x.id===c.id),prior=previousIdentities.find(p=>p.id===c.id);

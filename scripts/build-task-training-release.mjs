@@ -7,7 +7,7 @@ import {course as originalH03} from '../research/safety-program/2026-10-31/cours
 import {streamlineCourseContent,streamlineBody,legalBoundary} from './lib/streamlined-training.mjs';
 const priorRoot='research/safety-program/2026-11-01',root='research/safety-program/2026-11-02';
 const previousVersions=JSON.parse(fs.readFileSync('research/safety-program/regulatory-streamlining/previous-course-identities.json'));
-const sourceVersion=(id,sha)=>previousVersions.find(c=>c.id===id)?.sourceSha256===sha?'1.0':'2.0';
+const sourceVersion=(id,sha)=>{const previous=previousVersions.find(c=>c.id===id);return previous.sourceSha256===sha?previous.sourceVersion:`${Number.parseInt(previous.sourceVersion,10)+1}.0`;};
 const identities=JSON.parse(fs.readFileSync(`${root}/preserved-course-identities.json`));
 const prior={courses:identities.map(({contentSha256,...identity})=>{
  const raw=identity.id==='H03'?originalH03:JSON.parse(fs.readFileSync(`${priorRoot}/${identity.id.startsWith('G')?'gap-courses':'complete-courses'}/${identity.id}.json`));

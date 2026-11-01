@@ -7,7 +7,7 @@
       "title": "L01 — Leadership commitment and accountable safety roles",
       "purpose": "Make safety decisions owned and resourced across dispersed crews.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "75db8e63f810c6133d9701f867062cd5ef3f943d503e59402d2ecfcb56f5e78e",
       "content": {
         "kind": "training",
@@ -800,7 +800,7 @@
       "title": "L02 — Worker participation and safety meetings",
       "purpose": "Surface changing field hazards through worker input.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "8e37ddd408148196851fd9fcd895b3b3a69de703bf89c48dddf717b0c3cfa1cf",
       "content": {
         "kind": "training",
@@ -1593,7 +1593,7 @@
       "title": "L03 — Stop-work and safe restart",
       "purpose": "Give every worker authority to interrupt uncontrolled energy exposure.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "cd5874be4781acf24a7bc8ede99ebfbbbbb04ba539c2c43c11b80cd1fa80b542",
       "content": {
         "kind": "training",
@@ -2385,7 +2385,7 @@
       "title": "L04 — Subcontractor selection and safety bridging",
       "purpose": "Prevent lower-tier gaps between service scope and client controls.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "dc8160d81dd8e36b6cc14f6c8bf9f95ea3452824952e8d633ab70937edd40753",
       "content": {
         "kind": "training",
@@ -3177,7 +3177,7 @@
       "title": "L05 — Service applicability, legal obligations and controlled documents",
       "purpose": "Keep each Vendor assessed against actual work and current procedures.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "f61b42efa03b381795ee7c8df5e1fd4db5a154b9fb18eae9dfd7c4d7844181ae",
       "content": {
         "kind": "training",
@@ -3970,7 +3970,7 @@
       "title": "H01 — Task risk assessment and JSA/JHA",
       "purpose": "Identify energy sources and effective controls before routine and nonroutine work.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "170619dade3ee182e270affdc173165bebe3dabdc7a1bd26c654a3feb40e843c",
       "content": {
         "kind": "training",
@@ -4763,7 +4763,7 @@
       "title": "H02 — Critical-control checks and line of fire",
       "purpose": "Prevent crushing, struck-by and stored-energy harm.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "f1a6aa83825dd768a88cd4ff60d33daf0ab29df005273fa83841d97c7f6a4f0f",
       "content": {
         "kind": "training",
@@ -5555,7 +5555,7 @@
       "title": "H03 — Permit to work and SIMOPS coordination — Training",
       "purpose": "Coordinate simultaneous work near operating hydrocarbon systems.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "4.0",
       "sourceSha256": "f1c790eafcb9c6826ba082c0f5763fde6bb0d1fc7d50d7e2aa632c39e28f1a70",
       "content": {
         "kind": "training",
@@ -6344,7 +6344,7 @@
       "title": "H04 — Hazardous energy isolation / LOTO",
       "purpose": "Control unexpected startup and residual energy.",
       "practicalBoundary": "29 CFR 1910.147(c)(7)(i), (iv) — Employees with the specified roles in covered general-industry energy-control work; excludes oil/gas well drilling/servicing and the other exclusions in (a)(1)(ii): Provide the specified assigned-role energy-control training and employer certification identifying employee and training date. This paragraph does not prescribe a universal separate independent practical examination. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "5a11b85f5755f4947752834322fee5b86355a80e800b5f5acebd3f7678ffe67e",
       "content": {
         "kind": "training",
@@ -7136,7 +7136,7 @@
       "title": "H05 — Confined-space entry",
       "purpose": "Control atmosphere, engulfment, access and rescue risks.",
       "practicalBoundary": "29 CFR 1910.146(k)(2)(iv) — Employer-designated employees performing covered permit-space rescue: Practice the assigned permit-space rescues at least every 12 months using the specified actual or representative spaces, subject to the real-rescue exception. This is a rescue-team duty, not a practical test required of every awareness-course learner. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "e99e99896b35631d719cb9888aec23871c728170403142cec8d7b34900b550cd",
       "content": {
         "kind": "training",
@@ -7928,7 +7928,7 @@
       "title": "H06 — Hot work and fire watch",
       "purpose": "Prevent fire/explosion during work around flammable materials.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "ccb9ebf686b4f0bb18051df655ee0b66aad102ceb3a3c86a492e390b3e6037f7",
       "content": {
         "kind": "training",
@@ -8721,7 +8721,7 @@
       "title": "H07 — Lifting, rigging and suspended loads",
       "purpose": "Avoid dropped loads, overturning and line-of-fire exposure.",
       "practicalBoundary": "29 CFR 1910.178(l)(2), (4), (6) — Operators of powered industrial trucks covered by this standard: Formal instruction, practical training and workplace performance evaluation are required before independent operation, with employer certification and applicable refresher/evaluation duties. A trainer/evaluator needs the knowledge, training and experience specified in (l)(2)(iii); an outside assessor is not universally required. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178\n29 CFR 1926.1427(a), (f) — Operators of construction cranes/equipment covered by Subpart CC, subject to the stated exceptions: Meet the applicable operator training/certification or licensing provisions and employer evaluation requirements for the equipment and assigned work. Do not apply this crane rule to every lifting worker or every piece of mobile equipment. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427\n29 CFR 1926.1428(a), (c)(5) — Construction crane signal persons covered by Subpart CC: Demonstrate the specified knowledge through an oral or written test and a practical test. The standard permits a qualified third-party evaluator or the employer's qualified evaluator, with the stated documentation and portability limits. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1428",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "11b2644a0be4a5619daaaba83439fb279c48e8a70585a3409fecaba22562774d",
       "content": {
         "kind": "training",
@@ -9514,7 +9514,7 @@
       "title": "H08 — Work at height, scaffolds and dropped objects",
       "purpose": "Prevent falls and falling-object injuries.",
       "practicalBoundary": "29 CFR 1910.132(f)(2), (g) — Employees using the eye/face, head, foot, hand or personal fall protection covered by paragraph (g): Before that work, demonstrate understanding of the PPE training and ability to use the PPE properly. This is not a separate independent certification requirement. Respirators and electrical protective equipment follow their own standards rather than paragraph (f). Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.132",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "a9dd974cf139d74b09a4cb36f8d8bce99c6824d3947fb4809f06926fb99a3258",
       "content": {
         "kind": "training",
@@ -10308,7 +10308,7 @@
       "title": "H09 — Excavation and underground services",
       "purpose": "Prevent utility strikes, collapse and hazardous access.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "f1c7015fc55f21040d16368c1351fbea9c678f2e3196aeced44be8022c363eb6",
       "content": {
         "kind": "training",
@@ -11102,7 +11102,7 @@
       "title": "H10 — Pressure pumping, testing and exclusion zones",
       "purpose": "Prevent high-energy release and incompatible pressure equipment use.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "e1354212a6cc7955c9021f4ee12f76f98556ce1d77f6338e6a9b656482ffe97b",
       "content": {
         "kind": "training",
@@ -11893,7 +11893,7 @@
       "title": "H11 — Breaking containment and process handback",
       "purpose": "Prevent hydrocarbon/chemical release on opening equipment.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "516985658d38ea8cc7958e2127711c4592f27bf5e5db2742e8c1344c347c04fd",
       "content": {
         "kind": "training",
@@ -12685,7 +12685,7 @@
       "title": "H12 — Electrical work and arc-flash controls",
       "purpose": "Prevent shock, arc flash and ignition.",
       "practicalBoundary": "29 CFR 1910.269(a)(2)(viii) — Employees doing covered electric-power generation, transmission or distribution work: Demonstrate proficiency in the applicable work practices before the training required by this paragraph is treated as complete. This does not impose the power-industry rule on every employee taking electrical awareness. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.269",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "1fc67b589c9efed76799a2cca577b0857fa26dfcf9e9e23ec1e4a71c5ec7b98b",
       "content": {
         "kind": "training",
@@ -13478,7 +13478,7 @@
       "title": "H13 — H2S and hazardous-atmosphere awareness",
       "purpose": "Recognize gas danger and escape without unplanned rescue.",
       "practicalBoundary": "29 CFR 1910.134(e), (f), (k)(1) — Required respirator users; tight-fitting facepieces require the applicable fit test: Complete the required medical evaluation before fit testing or use, the applicable fit test, and training that enables demonstration of the listed knowledge and respirator-use skills. These duties apply to the actual respirator assignment, not everyone taking awareness training. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "95155bbf088c77cab85e338c62a610e982c368c22afcda654c5575296feeb6ca",
       "content": {
         "kind": "training",
@@ -14272,7 +14272,7 @@
       "title": "H14 — Chemicals, SDS and exposure assessment",
       "purpose": "Make process chemicals, fuels, cleaners and waste hazards visible.",
       "practicalBoundary": "29 CFR 1910.132(f)(2), (g) — Employees using the eye/face, head, foot, hand or personal fall protection covered by paragraph (g): Before that work, demonstrate understanding of the PPE training and ability to use the PPE properly. This is not a separate independent certification requirement. Respirators and electrical protective equipment follow their own standards rather than paragraph (f). Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.132",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "ec261820934eedf26fb74a405f555b83e6d5fcdb70eefcfa0e1d7fa7a6a8866f",
       "content": {
         "kind": "training",
@@ -15065,7 +15065,7 @@
       "title": "H15 — Respiratory protection",
       "purpose": "Ensure respiratory equipment matches exposure and user.",
       "practicalBoundary": "29 CFR 1910.134(e), (f), (k)(1) — Required respirator users; tight-fitting facepieces require the applicable fit test: Complete the required medical evaluation before fit testing or use, the applicable fit test, and training that enables demonstration of the listed knowledge and respirator-use skills. These duties apply to the actual respirator assignment, not everyone taking awareness training. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "039fbd3b836b298ea2fafc2de61aa95f3a4ced614936710188cdaa494d5e2941",
       "content": {
         "kind": "training",
@@ -15857,7 +15857,7 @@
       "title": "H16 — Silica, asbestos, lead and coating hazards",
       "purpose": "Control chronic exposure and contaminated materials.",
       "practicalBoundary": "29 CFR 1926.1101(k)(9)(iii)-(v) — Workers performing the particular construction asbestos work classes covered by these provisions: Use the training specified for the actual work class, including its applicable hands-on component and required course duration. General asbestos awareness does not impose these abatement-training requirements on a worker who does not perform that work. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1101",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "3d6d46ceedea937120edf4605c7644e2adf284404baef6ba91d93f08ca6a6037",
       "content": {
         "kind": "training",
@@ -16650,7 +16650,7 @@
       "title": "H17 — Noise and hearing conservation",
       "purpose": "Prevent cumulative hearing loss in shops and field operations.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "110d0e305fdd9be593029c601e0d8debd18f3e7a3fbb202993e426ae96460787",
       "content": {
         "kind": "training",
@@ -17443,7 +17443,7 @@
       "title": "H18 — Heat, cold and severe weather",
       "purpose": "Protect outdoor crews, gate workers and hot-process staff.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "8767122020d0cf3fa3d452c3c75f714ea6e324dae9089ce46bad3dc3cac37097",
       "content": {
         "kind": "training",
@@ -18236,7 +18236,7 @@
       "title": "H19 — Driving, journey planning and fatigue",
       "purpose": "Manage remote roads, long shifts and vehicle travel.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "098ad020376eebf2fbbfe9ba0a9de892d22ddd76541a493ad44cf5ab5c862f14",
       "content": {
         "kind": "training",
@@ -19028,7 +19028,7 @@
       "title": "H20 — Traffic, gate access and pedestrian separation",
       "purpose": "Prevent vehicle/pedestrian conflict and unsafe admission.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "742b421a4c2428a16eae277d7e8e03e5e9a164a4adef532711a8139d1400fdfc",
       "content": {
         "kind": "training",
@@ -19821,7 +19821,7 @@
       "title": "H21 — Lone work, workplace violence and remote check-ins",
       "purpose": "Ensure help reaches isolated workers and threatening encounters are escalated.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "312047705dc24925d7e553487a52704990df4e0953c623c5ce779cfbc1dc7638",
       "content": {
         "kind": "training",
@@ -20613,7 +20613,7 @@
       "title": "H22 — Manual handling and ergonomics",
       "purpose": "Reduce strain during handling, repetitive work and prolonged gate/vehicle shifts.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "a5029fb9a9f0a5cc3296ac5ed8b74ce38403a5d8b5c5177c3d236b215823c9c5",
       "content": {
         "kind": "training",
@@ -21405,7 +21405,7 @@
       "title": "H23 — Machine guarding, hand tools and housekeeping",
       "purpose": "Prevent entanglement, cuts, trips and unsafe temporary arrangements.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "ab93d51a8414932f3f92f9f7c212d3a82fca8f60a682042de4be88d0339dfd6c",
       "content": {
         "kind": "training",
@@ -22199,7 +22199,7 @@
       "title": "H24 — Specialist hazards: radiation, explosives, diving, marine and rail",
       "purpose": "Avoid omitting low-frequency, high-consequence specialist work.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "46acce574e85122601f1502b57fe6f8f75277ac86c81beceade7bf0d6390c664",
       "content": {
         "kind": "training",
@@ -22994,7 +22994,7 @@
       "title": "C01 — Role/task competence matrix and authorization",
       "purpose": "Tie capability to the actual tasks each worker may perform.",
       "practicalBoundary": "29 CFR 1910.178(l)(2), (4), (6) — Operators of powered industrial trucks covered by this standard: Formal instruction, practical training and workplace performance evaluation are required before independent operation, with employer certification and applicable refresher/evaluation duties. A trainer/evaluator needs the knowledge, training and experience specified in (l)(2)(iii); an outside assessor is not universally required. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "2b181c4e44854dc2c63f55129f75687664c7a88ecc763c2f7d3c50119f6f472c",
       "content": {
         "kind": "training",
@@ -23787,7 +23787,7 @@
       "title": "C02 — Induction, orientation and understandable communication",
       "purpose": "Ensure workers understand hazards, reporting and emergency arrangements.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "5a3f04f464bc7ab07312a595691eb5995d214d9058afd96696afe57301187d9b",
       "content": {
         "kind": "training",
@@ -24580,7 +24580,7 @@
       "title": "C03 — Short-service workers and supervision",
       "purpose": "Control unfamiliarity with high-energy tasks and local conditions.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "311710a9a6607bc95db5f2066ce938be8fbd7b43405fd2d7527c8637daeba9e8",
       "content": {
         "kind": "training",
@@ -25373,7 +25373,7 @@
       "title": "C04 — Training delivery and practical assessor assurance",
       "purpose": "Prevent attendance certificates from being mistaken for competence.",
       "practicalBoundary": "29 CFR 1910.178(l)(2), (4), (6) — Operators of powered industrial trucks covered by this standard: Formal instruction, practical training and workplace performance evaluation are required before independent operation, with employer certification and applicable refresher/evaluation duties. A trainer/evaluator needs the knowledge, training and experience specified in (l)(2)(iii); an outside assessor is not universally required. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "bf26d15b6057c36852b28615bcfa41a0f4c68f007c302914589979c230e3c3dd",
       "content": {
         "kind": "training",
@@ -26166,7 +26166,7 @@
       "title": "C05 — Commercial drivers and transport authorization",
       "purpose": "Keep driver/legal qualification distinct from general awareness.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "567ab4776559c55cf4487f9365f129a86737522c14915950ee4555afe8ac0a66",
       "content": {
         "kind": "training",
@@ -26959,7 +26959,7 @@
       "title": "C06 — Mobile equipment, forklift and lifting-role assessment",
       "purpose": "Match authorization to equipment and work environment.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "49d95608086059b02d81524a093b8e94e6ae98f7554160333a4beca7c7b87a04",
       "content": {
         "kind": "training",
@@ -27751,7 +27751,7 @@
       "title": "C07 — Permit, isolation, gas-test and electrical role endorsements",
       "purpose": "Ensure the person signing a control has relevant assessed authority.",
       "practicalBoundary": "29 CFR 1910.147(c)(7)(i), (iv) — Employees with the specified roles in covered general-industry energy-control work; excludes oil/gas well drilling/servicing and the other exclusions in (a)(1)(ii): Provide the specified assigned-role energy-control training and employer certification identifying employee and training date. This paragraph does not prescribe a universal separate independent practical examination. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "75471b148abbe3cb36224d7ec159cd7a0f36945691120186fc0024a97db455a9",
       "content": {
         "kind": "training",
@@ -28544,7 +28544,7 @@
       "title": "C08 — Emergency responders and occupational first aid",
       "purpose": "Ensure response promises correspond to capable people.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "b2fdff01bd29e81721fcff3a8aaa29ce06f3e37c45811dcaf7b96c4637ca79a2",
       "content": {
         "kind": "training",
@@ -29338,7 +29338,7 @@
       "title": "E01 — Asset register and preventive maintenance",
       "purpose": "Maintain traceable safety-critical equipment across fleets and shops.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "e3028f397c1a3c88326299de19c0f34a28de3277c4f97ff9f1de2dea9af8c532",
       "content": {
         "kind": "training",
@@ -30130,7 +30130,7 @@
       "title": "E02 — Pre-use inspections, defects and out-of-service control",
       "purpose": "Prevent known defects from returning to work uncorrected.",
       "practicalBoundary": "29 CFR 1910.178(l)(2), (4), (6) — Operators of powered industrial trucks covered by this standard: Formal instruction, practical training and workplace performance evaluation are required before independent operation, with employer certification and applicable refresher/evaluation duties. A trainer/evaluator needs the knowledge, training and experience specified in (l)(2)(iii); an outside assessor is not universally required. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "35a0c36a0a999deed783e4499000aafbb42462724a56e672eab05cb0b3554e30",
       "content": {
         "kind": "training",
@@ -30922,7 +30922,7 @@
       "title": "E03 — Vehicles, trailers, load securement and recovery",
       "purpose": "Control vehicle condition, shifting loads and unsafe recovery.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "648b2b283f8b31d7289a2396f815b219dad2f85c5f555072d0aa41b5ba5cb880",
       "content": {
         "kind": "training",
@@ -31714,7 +31714,7 @@
       "title": "E04 — Gas detectors and measurement assurance",
       "purpose": "Avoid relying on unserviceable or unsuitable gas instruments.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "ab64a330ff4b3395459d20b8aefb449a83ec5b44952fe936f571b4c0241ae36f",
       "content": {
         "kind": "training",
@@ -32507,7 +32507,7 @@
       "title": "E05 — Pressure equipment, hoses and relief devices",
       "purpose": "Match components and protection to actual pressure service.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "242e9ee0453da7f0cc003c0c681e62271b827c8d55506ae31d76f67b18a60a90",
       "content": {
         "kind": "training",
@@ -33300,7 +33300,7 @@
       "title": "E06 — Lifting gear, access equipment and fall protection inspection",
       "purpose": "Ensure critical load-bearing equipment is fit and traceable.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "858f5c8fde369179ebd066adfa2f959980ac3545eee43d36afcab73ad8018845",
       "content": {
         "kind": "training",
@@ -34095,7 +34095,7 @@
       "title": "E07 — PPE assessment, issue and care",
       "purpose": "Make protection fit the exposure and worker.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "67b2764b21912ac1e9bc126396fa0d4167122b3289e7a2e61a8588dd22112736",
       "content": {
         "kind": "training",
@@ -34889,7 +34889,7 @@
       "title": "E08 — Shop and facility readiness",
       "purpose": "Control fixed machinery, storage and emergency access between jobs.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "4f88dc01297d47da9da27cac0bef4fad29e5a528718ee0c514c7d8331639b28f",
       "content": {
         "kind": "training",
@@ -35682,7 +35682,7 @@
       "title": "E09 — Vacuum, hydroblasting and specialist service equipment",
       "purpose": "Prevent static ignition, suction and high-pressure injury.",
       "practicalBoundary": "29 CFR 1910.178(l)(2), (4), (6) — Operators of powered industrial trucks covered by this standard: Formal instruction, practical training and workplace performance evaluation are required before independent operation, with employer certification and applicable refresher/evaluation duties. A trainer/evaluator needs the knowledge, training and experience specified in (l)(2)(iii); an outside assessor is not universally required. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178\n29 CFR 1926.1427(a), (f) — Operators of construction cranes/equipment covered by Subpart CC, subject to the stated exceptions: Meet the applicable operator training/certification or licensing provisions and employer evaluation requirements for the equipment and assigned work. Do not apply this crane rule to every lifting worker or every piece of mobile equipment. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "9843ad6ecccd78062b65fe4e9dc2e83894d9580fc325c59643f7cc2ccda72ce0",
       "content": {
         "kind": "training",
@@ -36474,7 +36474,7 @@
       "title": "I01 — Incident, near-miss and hazard reporting",
       "purpose": "Enable timely learning without hiding events or rewarding report volume.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "2608f3295a24c62be17d23b421e481e7330cb04363972185d6a0d3f634d156df",
       "content": {
         "kind": "training",
@@ -37267,7 +37267,7 @@
       "title": "I02 — Investigation and causal analysis",
       "purpose": "Find failed controls and organizational causes rather than blame alone.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "9b4770cc8a95cec5ba2e7f212273ee88ef3a7ef2520f04e7b20cd93cc47b8791",
       "content": {
         "kind": "training",
@@ -38059,7 +38059,7 @@
       "title": "I03 — Corrective actions and effectiveness verification",
       "purpose": "Distinguish completing a task from fixing a safety weakness.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "2e79c8acbfe38b0aa464e0b006f6ed06903d474d5773e47e237aa821ca789191",
       "content": {
         "kind": "training",
@@ -38853,7 +38853,7 @@
       "title": "I04 — Learning alerts and post-job review",
       "purpose": "Transfer learning between crews and repeat work.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "fccc5a0b88ef0fd5038e2fab26df2e908dabd09cd91cef80a7e4601fa6109aba",
       "content": {
         "kind": "training",
@@ -39646,7 +39646,7 @@
       "title": "I05 — Incident history and exposure-data integrity",
       "purpose": "Keep transparent event context without treating zero reports as maturity.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "34c9d460b1aa33a0de5a410c90ed18d16dd05efa2bc70c785579a44a46c48b3c",
       "content": {
         "kind": "training",
@@ -40438,7 +40438,7 @@
       "title": "I06 — Medical response, restricted records and return-to-work interfaces",
       "purpose": "Coordinate care and safe restrictions while protecting worker privacy.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "e08ed74fda06561fde668ad3cdf69a2da44bed6afe84e97f8528796e18666fc7",
       "content": {
         "kind": "training",
@@ -41230,7 +41230,7 @@
       "title": "R01 — Emergency plan and site interface",
       "purpose": "Ensure credible response for remote sites and hazardous operations.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "bbab0504d0b9519006b032a222a20a527ce35f270415f217b82f87cdd9693014",
       "content": {
         "kind": "training",
@@ -42023,7 +42023,7 @@
       "title": "R02 — Rescue plans and emergency equipment readiness",
       "purpose": "Avoid relying on unavailable rescue or unplanned entry.",
       "practicalBoundary": "29 CFR 1910.146(k)(2)(iv) — Employer-designated employees performing covered permit-space rescue: Practice the assigned permit-space rescues at least every 12 months using the specified actual or representative spaces, subject to the real-rescue exception. This is a rescue-team duty, not a practical test required of every awareness-course learner. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "35fe30010a7156b23ec5818e4cdfedc7443fa488e09c51eeb03b47030e335b00",
       "content": {
         "kind": "training",
@@ -42816,7 +42816,7 @@
       "title": "R03 — Drills, exercises and after-action improvement",
       "purpose": "Test whether plans and people work together under credible conditions.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "8ddc50e40e8c43329d136ad40b70a859f2a5b9aba5ffc9930216ba61d8dac2ff",
       "content": {
         "kind": "training",
@@ -43610,7 +43610,7 @@
       "title": "R04 — Assurance audits and critical-control observations",
       "purpose": "Check actual implementation beyond document existence.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "bd99408960baebad89d9f614cb9b646d6b03e21b0febe76494aaab087d5cf243",
       "content": {
         "kind": "training",
@@ -44403,7 +44403,7 @@
       "title": "R05 — Management review and improvement objectives",
       "purpose": "Make leadership respond to recurring gaps and changing work.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "a837184c96498e6b838956df2ee4a94c39923786c3685976093e54214f5cb7b2",
       "content": {
         "kind": "training",
@@ -45197,7 +45197,7 @@
       "title": "R06 — Management of change and renewal review",
       "purpose": "Reassess controls when services, people, assets or procedures change.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "12af53dfed83b602034f708e36db3dc8726b3db981f2cdf39eb6cad6103ad2d0",
       "content": {
         "kind": "training",
@@ -45990,7 +45990,7 @@
       "title": "R07 — Environmental release and spill emergency interface",
       "purpose": "Coordinate personnel safety, containment and external response.",
       "practicalBoundary": "",
-      "sourceVersion": "2.0",
+      "sourceVersion": "5.0",
       "sourceSha256": "992c4edf637ccc95a7efe5c57080d4fe65e031ccd65d07a4f2678ad5f890d616",
       "content": {
         "kind": "training",

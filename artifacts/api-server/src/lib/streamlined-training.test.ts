@@ -28,9 +28,9 @@ describe('streamlined training requirements',()=>{
   const office=courses.find(c=>c.id==='G81')!.content.training!;expect(office.lessons.map(l=>l.body).join(' ')).not.toMatch(/practical assessment|qualified practical assessment still required/i);
   const forklift=courses.find(c=>c.id==='G75')!.content.training!;expect(forklift.lessons.at(-1)!.body).toContain('29 CFR 1910.178(l)');
  });
- it('removes added requirements from an authenticated historical H03 read without changing its stored content or assessment keys',()=>{
+ it.each(['1.0','3.0','4.0'])('uses approved hashes for historical H03 reads rather than assuming source label %s, without changing stored content or keys',sourceVersion=>{
   const content=LibraryDraftSchema.parse(h03),before=safetyTrainingContentHash(content),identity=read('research/safety-program/regulatory-streamlining/previous-course-identities.json').find((x:any)=>x.id==='H03');
-  const metadata={content,safetyResource:{familyId:'H03',sourceVersion:'1.0',sourceSha256:identity.sourceSha256}} as LibraryMetadata;
+  const metadata={content,safetyResource:{familyId:'H03',sourceVersion,sourceSha256:identity.sourceSha256}} as LibraryMetadata;
   const shown=trainingReadContent(metadata)!;
   expect(safetyTrainingContentHash(content)).toBe(before);expect(shown.training!.questions).toEqual(content.training!.questions);
   expect(shown.training!.lessons.map(l=>l.body).join(' ')).not.toContain('must separately observe');
