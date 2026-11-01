@@ -1,3 +1,4 @@
+import { guardAdditiveReplay } from '../../../scripts/guard-additive-replay.mjs';
 import { Pool, type PoolClient } from "pg";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -204,19 +205,19 @@ export async function runFleetMobileWorkflowsMigration(
     const client = await pool.connect();
     let committing = false;
     try {
-      await client.query("BEGIN");
-      await client.query("SELECT pg_advisory_xact_lock(hashtext('fleet_mobile_workflows_migration'))");
-      for (const statement of fleetMobileWorkflowsMigration) await client.query(statement);
+      await client.query(guardAdditiveReplay("BEGIN"));
+      await client.query(guardAdditiveReplay("SELECT pg_advisory_xact_lock(hashtext('fleet_mobile_workflows_migration'))"));
+      for (const statement of fleetMobileWorkflowsMigration) await client.query(guardAdditiveReplay(statement));
       for (const [table, name, definition] of checkRepairs) {
-        await client.query(`DO $$ BEGIN IF NOT EXISTS (
+        await client.query(guardAdditiveReplay(`DO $$ BEGIN IF NOT EXISTS (
           SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('${table}') AND conname = '${name}'
-        ) THEN ALTER TABLE ${table} ADD CONSTRAINT ${name} CHECK (${definition}); END IF; END $$`);
+        ) THEN ALTER TABLE ${table} ADD CONSTRAINT ${name} CHECK (${definition}); END IF; END $$`));
       }
       committing = true;
-      await client.query("COMMIT");
+      await client.query(guardAdditiveReplay("COMMIT"));
       return;
     } catch (error) {
-      await client.query("ROLLBACK");
+      await client.query(guardAdditiveReplay("ROLLBACK"));
       if (
         committing || attempt >= 2 || !error || typeof error !== "object" ||
         !("code" in error) || error.code !== "40P01"

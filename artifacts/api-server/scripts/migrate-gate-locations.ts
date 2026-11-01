@@ -1,3 +1,4 @@
+import { guardAdditiveReplay } from '../../../scripts/guard-additive-replay.mjs';
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,11 +40,11 @@ async function main() {
   const client = new pg.Client({ connectionString });
   try {
     await client.connect();
-    await client.query("BEGIN");
-    await client.query("SET LOCAL lock_timeout = '5s'");
-    await client.query("SET LOCAL statement_timeout = '30s'");
-    await client.query(sql);
-    await client.query("COMMIT");
+    await client.query(guardAdditiveReplay("BEGIN"));
+    await client.query(guardAdditiveReplay("SET LOCAL lock_timeout = '5s'"));
+    await client.query(guardAdditiveReplay("SET LOCAL statement_timeout = '30s'"));
+    await client.query(guardAdditiveReplay(sql));
+    await client.query(guardAdditiveReplay("COMMIT"));
     console.log("Gate location guarded additive migration passed");
   } finally {
     await client.end();

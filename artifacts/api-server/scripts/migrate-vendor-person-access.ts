@@ -1,3 +1,4 @@
+import { guardAdditiveReplay } from '../../../scripts/guard-additive-replay.mjs';
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -80,14 +81,14 @@ async function main(): Promise<void> {
   const client = new pg.Client({ connectionString });
   try {
     await client.connect();
-    await client.query("BEGIN");
-    await client.query("SET LOCAL lock_timeout = '5s'");
-    await client.query("SET LOCAL statement_timeout = '30s'");
-    await client.query(VENDOR_PERSON_ACCESS_MIGRATION);
-    await client.query("COMMIT");
+    await client.query(guardAdditiveReplay("BEGIN"));
+    await client.query(guardAdditiveReplay("SET LOCAL lock_timeout = '5s'"));
+    await client.query(guardAdditiveReplay("SET LOCAL statement_timeout = '30s'"));
+    await client.query(guardAdditiveReplay(VENDOR_PERSON_ACCESS_MIGRATION));
+    await client.query(guardAdditiveReplay("COMMIT"));
     console.log("Vendor person access guarded additive migration passed");
   } catch (error) {
-    await client.query("ROLLBACK").catch(() => undefined);
+    await client.query(guardAdditiveReplay("ROLLBACK")).catch(() => undefined);
     throw error;
   } finally {
     await client.end();

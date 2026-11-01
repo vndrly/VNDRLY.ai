@@ -1,9 +1,10 @@
+import { guardAdditiveReplay } from '../../../../scripts/guard-additive-replay.mjs';
 import { pool } from "../index";
 
 async function main() {
   const client = await pool.connect();
   try {
-    await client.query("BEGIN");
+    await client.query(guardAdditiveReplay("BEGIN"));
     for (const statement of [
       "ALTER TABLE vendor_work_types ADD COLUMN IF NOT EXISTS precise_unit_price numeric(24,9)",
       "ALTER TABLE vendor_work_types ADD COLUMN IF NOT EXISTS fleet_rate_card jsonb",
@@ -16,11 +17,11 @@ async function main() {
       "ALTER TABLE invoice_lines ADD COLUMN IF NOT EXISTS precise_quantity numeric(24,9)",
       "ALTER TABLE invoice_lines ADD COLUMN IF NOT EXISTS precise_unit_price numeric(24,9)",
       "ALTER TABLE invoice_lines ADD COLUMN IF NOT EXISTS fleet_billing_metadata jsonb",
-    ]) await client.query(statement);
-    await client.query("COMMIT");
+    ]) await client.query(guardAdditiveReplay(statement));
+    await client.query(guardAdditiveReplay("COMMIT"));
     console.log("Fleet precise pricing columns ready; historical amounts unchanged");
   } catch (error) {
-    await client.query("ROLLBACK");
+    await client.query(guardAdditiveReplay("ROLLBACK"));
     throw error;
   } finally {
     client.release();

@@ -1,3 +1,4 @@
+import { guardAdditiveReplay } from '../../../scripts/guard-additive-replay.mjs';
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
 import pg from "pg";
@@ -54,17 +55,17 @@ export async function verifyMarketplaceSchema(client: pg.Client): Promise<void> 
     ];
     // PostgreSQL canonicalizes expressions in this session-local reference table,
     // so a same-named but weakened live check cannot pass verification.
-    await client.query(`CREATE TEMP TABLE ${quote(expectedName)} (${definitions.join(", ")})`);
-    const result = await client.query(`
+    await client.query(guardAdditiveReplay(`CREATE TEMP TABLE ${quote(expectedName)} (${definitions.join(", ")})`));
+    const result = await client.query(guardAdditiveReplay(`
       SELECT a.attname, format_type(a.atttypid, a.atttypmod) AS type, a.attnotnull,
         pg_get_expr(d.adbin, d.adrelid) AS default_expression
       FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
-      WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped`, [`public.${config.name}`]);
-    const expected = await client.query(`
+      WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped`), [`public.${config.name}`]);
+    const expected = await client.query(guardAdditiveReplay(`
       SELECT a.attname, format_type(a.atttypid, a.atttypmod) AS type, a.attnotnull,
         pg_get_expr(d.adbin, d.adrelid) AS default_expression
       FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
-      WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped`, [expectedName]);
+      WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped`), [expectedName]);
     for (const column of columns) {
       const actual = result.rows.find((row) => row.attname === column.name);
       const wanted = expected.rows.find((row) => row.attname === column.name);
@@ -73,10 +74,10 @@ export async function verifyMarketplaceSchema(client: pg.Client): Promise<void> 
         throw new Error(`Marketplace column mismatch: ${config.name}.${column.name}`);
       }
     }
-    const constraints = await client.query(`SELECT conname, contype, pg_get_constraintdef(oid) AS definition
-      FROM pg_constraint WHERE conrelid = $1::regclass`, [`public.${config.name}`]);
-    const expectedChecks = await client.query(`SELECT conname, pg_get_constraintdef(oid) AS definition
-      FROM pg_constraint WHERE conrelid = $1::regclass AND contype = 'c'`, [expectedName]);
+    const constraints = await client.query(guardAdditiveReplay(`SELECT conname, contype, pg_get_constraintdef(oid) AS definition
+      FROM pg_constraint WHERE conrelid = $1::regclass`), [`public.${config.name}`]);
+    const expectedChecks = await client.query(guardAdditiveReplay(`SELECT conname, pg_get_constraintdef(oid) AS definition
+      FROM pg_constraint WHERE conrelid = $1::regclass AND contype = 'c'`), [expectedName]);
     for (const wanted of expectedChecks.rows) {
       if (!constraints.rows.some((row) => row.conname === wanted.conname && row.definition === wanted.definition)) {
         throw new Error(`Marketplace check mismatch: ${config.name}.${wanted.conname}`);
@@ -94,16 +95,16 @@ export async function verifyMarketplaceSchema(client: pg.Client): Promise<void> 
     if (table !== ticketsTable) {
       const primary = constraints.rows.find((row) => row.contype === "p");
       if (normalize(primary?.definition ?? "") !== "primarykeyid") throw new Error(`Marketplace primary key mismatch: ${config.name}`);
-      const rls = await client.query("SELECT relrowsecurity FROM pg_class WHERE oid = $1::regclass", [`public.${config.name}`]);
+      const rls = await client.query(guardAdditiveReplay("SELECT relrowsecurity FROM pg_class WHERE oid = $1::regclass"), [`public.${config.name}`]);
       if (!rls.rows[0]?.relrowsecurity) throw new Error(`Marketplace RLS missing: ${config.name}`);
     }
     for (const index of config.indexes.filter(index => table !== ticketsTable || index.config.columns.every(column => "name" in column && ticketLineage.has(column.name!)))) {
       const definition = index.config;
-      const result = await client.query(`SELECT i.indisunique, i.indisvalid, i.indnkeyatts,
+      const result = await client.query(guardAdditiveReplay(`SELECT i.indisunique, i.indisvalid, i.indnkeyatts,
         pg_get_expr(i.indpred, i.indrelid) AS predicate,
         ARRAY(SELECT pg_get_indexdef(i.indexrelid, n, true) FROM generate_series(1, i.indnkeyatts) n) AS columns
         FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
-        WHERE i.indrelid = $1::regclass AND c.relname = $2`, [`public.${config.name}`, definition.name]);
+        WHERE i.indrelid = $1::regclass AND c.relname = $2`), [`public.${config.name}`, definition.name]);
       const actual = result.rows[0];
       const wantedColumns = definition.columns.map((column) => {
         if (!("name" in column)) throw new Error("Marketplace expression index requires explicit migration support");
@@ -119,30 +120,30 @@ export async function verifyMarketplaceSchema(client: pg.Client): Promise<void> 
 }
 
 export async function migrateSemanticServiceMarketplace(client: pg.Client): Promise<void> {
-  await client.query("BEGIN");
+  await client.query(guardAdditiveReplay("BEGIN"));
   try {
-    await client.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
-    await client.query("SELECT pg_advisory_xact_lock(2026101801)");
-    await client.query("SET LOCAL search_path = public, pg_catalog");
-    const before = await client.query("SELECT count(*)::text AS count FROM tickets");
+    await client.query(guardAdditiveReplay("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"));
+    await client.query(guardAdditiveReplay("SELECT pg_advisory_xact_lock(2026101801)"));
+    await client.query(guardAdditiveReplay("SET LOCAL search_path = public, pg_catalog"));
+    const before = await client.query(guardAdditiveReplay("SELECT count(*)::text AS count FROM tickets"));
     for (const table of marketplaceTables) {
       const config = getTableConfig(table);
       const definitions = columnsFor(table).map((column) => `${columnDefinition(column)}${column.primary ? " PRIMARY KEY" : ""}`);
       definitions.push(...config.checks.map((check) => `CONSTRAINT ${quote(check.name)} CHECK (${bare(render(check.value), config.name)})`));
-      await client.query(`CREATE TABLE IF NOT EXISTS public.${quote(config.name)} (${definitions.join(", ")})`);
-      await client.query(`ALTER TABLE public.${quote(config.name)} ENABLE ROW LEVEL SECURITY`);
+      await client.query(guardAdditiveReplay(`CREATE TABLE IF NOT EXISTS public.${quote(config.name)} (${definitions.join(", ")})`));
+      await client.query(guardAdditiveReplay(`ALTER TABLE public.${quote(config.name)} ENABLE ROW LEVEL SECURITY`));
     }
     for (const column of columnsFor(ticketsTable)) {
-      await client.query(`ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS ${columnDefinition(column)}`);
+      await client.query(guardAdditiveReplay(`ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS ${columnDefinition(column)}`));
     }
     for (const table of [...marketplaceTables, ticketsTable]) {
       const config = getTableConfig(table);
       for (const fk of config.foreignKeys.filter((key) => table !== ticketsTable || key.reference().columns.some((col) => ticketLineage.has(col.name)))) {
         const name = fk.getName().slice(0, 63);
-        const existing = await client.query("SELECT 1 FROM pg_constraint WHERE conrelid = $1::regclass AND conname = $2", [`public.${config.name}`, name]);
+        const existing = await client.query(guardAdditiveReplay("SELECT 1 FROM pg_constraint WHERE conrelid = $1::regclass AND conname = $2"), [`public.${config.name}`, name]);
         if (existing.rowCount) continue;
         const ref = fk.reference();
-        await client.query(`ALTER TABLE public.${quote(config.name)} ADD CONSTRAINT ${quote(name)} FOREIGN KEY (${ref.columns.map((col) => quote(col.name)).join(", ")}) REFERENCES public.${quote(getTableConfig(ref.foreignTable).name)} (${ref.foreignColumns.map((col) => quote(col.name)).join(", ")})`);
+        await client.query(guardAdditiveReplay(`ALTER TABLE public.${quote(config.name)} ADD CONSTRAINT ${quote(name)} FOREIGN KEY (${ref.columns.map((col) => quote(col.name)).join(", ")}) REFERENCES public.${quote(getTableConfig(ref.foreignTable).name)} (${ref.foreignColumns.map((col) => quote(col.name)).join(", ")})`));
       }
       for (const index of config.indexes.filter(index => table !== ticketsTable || index.config.columns.every(column => "name" in column && ticketLineage.has(column.name!)))) {
         const definition = index.config;
@@ -150,16 +151,16 @@ export async function migrateSemanticServiceMarketplace(client: pg.Client): Prom
           if (!("name" in column) || !column.name) throw new Error("Marketplace expression index requires explicit migration support");
           return quote(column.name);
         });
-        await client.query(`CREATE ${definition.unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS ${quote(definition.name!)} ON public.${quote(config.name)} (${columns.join(", ")})${definition.where ? ` WHERE ${bare(render(definition.where), config.name)}` : ""}`);
+        await client.query(guardAdditiveReplay(`CREATE ${definition.unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS ${quote(definition.name!)} ON public.${quote(config.name)} (${columns.join(", ")})${definition.where ? ` WHERE ${bare(render(definition.where), config.name)}` : ""}`));
       }
     }
     await verifyMarketplaceSchema(client);
-    const after = await client.query("SELECT count(*)::text AS count FROM tickets");
+    const after = await client.query(guardAdditiveReplay("SELECT count(*)::text AS count FROM tickets"));
     if (before.rows[0].count !== after.rows[0].count) throw new Error("Ticket count changed during marketplace migration");
-    await client.query("COMMIT");
+    await client.query(guardAdditiveReplay("COMMIT"));
     console.log(JSON.stringify({ marketplaceTables: marketplaceTables.length, ticketsPreserved: after.rows[0].count }));
   } catch (error) {
-    await client.query("ROLLBACK");
+    await client.query(guardAdditiveReplay("ROLLBACK"));
     throw error;
   }
 }

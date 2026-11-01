@@ -1,3 +1,4 @@
+import { guardAdditiveReplay } from '../../../scripts/guard-additive-replay.mjs';
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 async function main() {
@@ -6,10 +7,10 @@ async function main() {
  kind text NOT NULL, record_key text NOT NULL, data jsonb NOT NULL, created_by integer NOT NULL,
  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())`);
   await db.execute(
-    sql`CREATE INDEX IF NOT EXISTS work_hub_file_library_owner_idx ON work_hub_file_library (org_type, org_id, kind)`,
+    sql.raw(guardAdditiveReplay("CREATE INDEX IF NOT EXISTS work_hub_file_library_owner_idx ON work_hub_file_library (org_type, org_id, kind)")),
   );
   await db.execute(
-    sql`CREATE UNIQUE INDEX IF NOT EXISTS work_hub_file_library_key_idx ON work_hub_file_library (org_type, org_id, kind, record_key)`,
+    sql.raw(guardAdditiveReplay("CREATE UNIQUE INDEX IF NOT EXISTS work_hub_file_library_key_idx ON work_hub_file_library (org_type, org_id, kind, record_key)")),
   );
   console.log("Work Hub file library additive migration complete");
 }

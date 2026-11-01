@@ -1,3 +1,4 @@
+import { guardAdditiveReplay } from '../../../scripts/guard-additive-replay.mjs';
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -15,7 +16,7 @@ for (const statement of statements) {
 const client = new pg.Client({ connectionString: databaseUrl });
 try {
   await client.connect();
-  for (const statement of statements) await client.query(statement);
+  for (const statement of statements) await client.query(guardAdditiveReplay(statement));
   process.stdout.write("Work Hub meeting collaboration migration passed\n");
 } finally {
   await client.end().catch(() => undefined);

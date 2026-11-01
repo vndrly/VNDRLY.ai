@@ -1,15 +1,16 @@
+import { guardAdditiveReplay } from '../../../scripts/guard-additive-replay.mjs';
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
 // Additive only: existing tickets, assignments, AFEs and evidence are untouched.
 async function main() {
   await db.transaction(async tx => {
-    await tx.execute(sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS engagement_job_offer_id integer CONSTRAINT tickets_engagement_job_offer_id_job_offers_id_fk REFERENCES job_offers(id)`);
-    await tx.execute(sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS engagement_ticket_key text`);
-    await tx.execute(sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS submission_revision integer NOT NULL DEFAULT 0`);
-    await tx.execute(sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS proof_submissions jsonb`);
-    await tx.execute(sql`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS approved_submission_revision integer`);
-    await tx.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS tickets_engagement_key_unique ON tickets(engagement_job_offer_id,engagement_ticket_key)`);
+    await tx.execute(sql.raw(guardAdditiveReplay("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS engagement_job_offer_id integer CONSTRAINT tickets_engagement_job_offer_id_job_offers_id_fk REFERENCES job_offers(id)")));
+    await tx.execute(sql.raw(guardAdditiveReplay("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS engagement_ticket_key text")));
+    await tx.execute(sql.raw(guardAdditiveReplay("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS submission_revision integer NOT NULL DEFAULT 0")));
+    await tx.execute(sql.raw(guardAdditiveReplay("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS proof_submissions jsonb")));
+    await tx.execute(sql.raw(guardAdditiveReplay("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS approved_submission_revision integer")));
+    await tx.execute(sql.raw(guardAdditiveReplay("CREATE UNIQUE INDEX IF NOT EXISTS tickets_engagement_key_unique ON tickets(engagement_job_offer_id,engagement_ticket_key)")));
     const columns = (await tx.execute(sql`SELECT column_name,data_type,is_nullable,column_default
       FROM information_schema.columns WHERE table_schema='public' AND table_name='tickets'
       AND column_name IN ('engagement_job_offer_id','engagement_ticket_key','submission_revision','proof_submissions','approved_submission_revision')`)).rows;

@@ -1,3 +1,4 @@
+import { guardAdditiveReplay } from '../../../../scripts/guard-additive-replay.mjs';
 import pg from "pg";
 import { demoOwnerConnection, assertDemoMigrationIdentity } from "./ios-parity-demo-policy";
 
@@ -11,11 +12,11 @@ const owner = new pg.Client({ connectionString: demoOwnerConnection(process.env.
 try {
   await Promise.all([production.connect(), demo.connect(), owner.connect()]);
   const identity = "select current_database() name, host(inet_server_addr()) address, inet_server_port() port, pg_postmaster_start_time()::text started, current_user role";
-  const [a, b, c] = await Promise.all([production.query(identity), demo.query(identity), owner.query(identity)]);
+  const [a, b, c] = await Promise.all([production.query(guardAdditiveReplay(identity)), demo.query(guardAdditiveReplay(identity)), owner.query(guardAdditiveReplay(identity))]);
   assertDemoMigrationIdentity(a.rows[0], b.rows[0], c.rows[0]);
   if (process.argv.includes("--verify-only")) { console.log("Distinct demo owner and runtime cluster identities verified; no DDL executed."); }
   else {
-  await owner.query("BEGIN");
+  await owner.query(guardAdditiveReplay("BEGIN"));
   for (const statement of [
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_pin_hash text",
     "ALTER TABLE vendors ADD COLUMN IF NOT EXISTS native_operations_policy jsonb NOT NULL DEFAULT '{}'::jsonb",
@@ -39,12 +40,12 @@ try {
     "ALTER TABLE vendors ADD COLUMN IF NOT EXISTS staff_role_catalog jsonb",
     "ALTER TABLE workforce_staffing_requirements ADD COLUMN IF NOT EXISTS gate_definition jsonb",
     "ALTER TABLE work_hub_shifts ADD COLUMN IF NOT EXISTS gate_definition_id uuid",
-  ]) await owner.query(statement.replace("ALTER TABLE ", "ALTER TABLE public."));
-  await owner.query("COMMIT");
+  ]) await owner.query(guardAdditiveReplay(statement.replace("ALTER TABLE ", "ALTER TABLE public.")));
+  await owner.query(guardAdditiveReplay("COMMIT"));
   console.log("Isolated demo parity columns available; rows and credentials preserved.");
   }
 } catch (error) {
-  await owner.query("ROLLBACK").catch(() => {});
+  await owner.query(guardAdditiveReplay("ROLLBACK")).catch(() => {});
   throw error;
 } finally {
   await Promise.all([production.end(), demo.end(), owner.end()]);

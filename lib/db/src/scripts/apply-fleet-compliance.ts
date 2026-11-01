@@ -1,20 +1,21 @@
+import { guardAdditiveReplay } from '../../../../scripts/guard-additive-replay.mjs';
 import { pool } from "../index";
 
 async function main() {
   const client = await pool.connect();
   try {
-    await client.query("BEGIN");
+    await client.query(guardAdditiveReplay("BEGIN"));
     for (const statement of [
       "ALTER TABLE vendors ADD COLUMN IF NOT EXISTS fleet_compliance_configuration jsonb",
       "ALTER TABLE assets ADD COLUMN IF NOT EXISTS fleet_compliance_record_ids jsonb",
       "ALTER TABLE vendor_people ADD COLUMN IF NOT EXISTS fleet_compliance_record_ids jsonb",
       "ALTER TABLE partner_vendor_relationships ADD COLUMN IF NOT EXISTS fleet_commercial_authority jsonb",
       "ALTER TABLE partner_vendor_relationships ADD COLUMN IF NOT EXISTS fleet_compliance_policies jsonb",
-    ]) await client.query(statement);
-    await client.query("COMMIT");
+    ]) await client.query(guardAdditiveReplay(statement));
+    await client.query(guardAdditiveReplay("COMMIT"));
     console.log("Fleet compliance columns ready; warning policy and existing approvals unchanged");
   } catch (error) {
-    await client.query("ROLLBACK");
+    await client.query(guardAdditiveReplay("ROLLBACK"));
     throw error;
   } finally {
     client.release();
