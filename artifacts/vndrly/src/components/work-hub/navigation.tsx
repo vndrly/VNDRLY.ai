@@ -4,7 +4,7 @@ import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowLeft, Pin, ArrowUp, ArrowDown, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Pin, ArrowUp, ArrowDown, MoreHorizontal, BookOpen, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
@@ -145,6 +145,18 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
         : items.filter((item) => preferences.pinned.includes(item.key))
       ).filter(item => item.key !== "askv").map(render)}
       {(customize || preferences.pinned.includes("askv")) && items.filter(item => item.key === "askv").map(render)}
+      <Link href="/work-hub/library" onClick={onNavigate} className="block" data-testid="nav-library" aria-current={location.startsWith("/work-hub/library") ? "page" : undefined}>
+        <SidebarButton isActive={location.startsWith("/work-hub/library")}>
+          <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+          <span>Library</span>
+        </SidebarButton>
+      </Link>
+      <Link href="/safety-score" onClick={onNavigate} className="block" data-testid="nav-safety-maturity" aria-current={location === "/safety-score" ? "page" : undefined}>
+        <SidebarButton isActive={location === "/safety-score"}>
+          <ShieldCheck className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+          <span className="min-w-0 whitespace-normal text-left text-xs leading-tight">Safety Program Maturity</span>
+        </SidebarButton>
+      </Link>
       {office && <>
       <button type="button" className="block w-full text-left" onClick={() => setPinAction("admin")} data-testid="nav-go-to-admin">
         <SidebarButton isActive={false}><ArrowLeft className="h-4 w-4" />{t("gateNav.returnToAdmin")}</SidebarButton>
@@ -173,3 +185,4 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
     </div>
   );
 }
+
