@@ -1,3 +1,4 @@
+import {cleanTrainingText} from '../../../../scripts/lib/streamlined-training.mjs';
 import {and,eq,sql,inArray} from 'drizzle-orm';
 import {db,workHubFormTemplatesTable as templates} from '@workspace/db';
 import {libraryRecord,LibraryError,type LibraryActor} from './library-core';
@@ -10,7 +11,7 @@ export async function trainingStudyGuide(actor:LibraryActor,itemId:string){
  if(own.metadata.state!=='published'||own.metadata.kind!=='training')throw new LibraryError('Published training course required',400);
  const content=trainingReadContent(own.metadata);if(!content?.training)throw new LibraryError('Training material unavailable',404);
  const familyId=own.metadata.safetyResource?.familyId??'',reference=trainingCatalog.curriculum.find(c=>c.id===familyId);
- const guide=buildTrainingCourseGuide(content,familyId,reference?.purpose??'');
+ const guide=buildTrainingCourseGuide(content,familyId,cleanTrainingText(reference?.purpose??''));
  const relatedIds=relatedCourseFamilies[familyId]??[];
  const candidates=relatedIds.length?await db.select({itemId:templates.id,title:templates.name,version:templates.currentVersion,familyId:sql<string>`${templates.libraryMetadata}->'safetyResource'->>'familyId'`}).from(templates).where(and(eq(templates.ownerOrgType,own.owner.type),eq(templates.ownerOrgId,own.owner.id),sql`${templates.libraryMetadata}->>'kind'='training' AND ${templates.libraryMetadata}->>'state'='published'`,inArray(sql`${templates.libraryMetadata}->'safetyResource'->>'familyId'`,relatedIds))):[];
  const related=relatedIds.flatMap(id=>{const item=candidates.filter(c=>c.familyId===id).sort((a,b)=>b.version-a.version)[0];return item?[{itemId:item.itemId,familyId:id,title:item.title}]:[];});
@@ -18,3 +19,4 @@ export async function trainingStudyGuide(actor:LibraryActor,itemId:string){
 }
 
 export {renderTrainingStudyPdf} from '../lib/training-study-pdf';
+
