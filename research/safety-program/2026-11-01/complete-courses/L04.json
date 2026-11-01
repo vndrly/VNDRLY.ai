@@ -1,0 +1,781 @@
+{
+  "familyId": "L04",
+  "title": "Subcontractor selection and safety bridging",
+  "description": "Complete original VNDRLY L04 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Prevent lower-tier gaps between service scope and client controls.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Identify conflicting rules and responsibility boundaries; bridging case exercise. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.enbridge.com/~/media/Enb/Documents/Governance/Subcontractor_Safety_Checklist.pdf?hash=CE8972D0C4E22CBDEE879E80300D7731&rev=87f628b7c81b47e092d8e7984c3a91ec"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.bechtel.com/getmedia/0b4fd69e-be6c-4e09-b085-b5caf826009b/2023-Supplier-Guide_1.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "L04_intro",
+        "title": "Start here — Subcontractor selection and safety bridging",
+        "body": "# L04: Subcontractor selection and safety bridging\n\nPrevent lower-tier gaps between service scope and client controls. This course teaches the decisions needed to implement that purpose in field operations. It covers scope-specific screening, responsibilities, flowdown, interfaces and monitoring. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L04_lesson1",
+        "title": "Lesson 1 — Screen the actual subcontract scope",
+        "body": "## Screen the actual subcontract scope\n\nLower-tier selection starts with the work proposed, not a vendor's overall grade. Identify legal entity, services, locations, workers, equipment and specialist exposures. Compare evidence with those boundaries. A company assessed for routine maintenance may lack confined-space cleaning capability. Commercial approval and safety acceptance answer different questions. Require a specialist review when the scope exceeds the general reviewer's expertise.\n\n### Deeper application\n\nUse a scope statement that another reviewer could test. Pump maintenance at named production locations is more useful than oilfield services, but still needs boundaries around electrical work, entry, lifting and transport if those tasks are proposed. Ask the performing company to identify further tiers and specialty support. When evidence is missing, distinguish unverified capability from a proven unsafe practice. Both can prevent acceptance of the new scope, but the record should state the actual basis rather than exaggerate the finding.\n\n### Worked oilfield example\n\nA maintenance subcontractor adds vessel cleaning to its accepted work without presenting rescue or entry-role evidence. The decision is to hold the added scope and obtain specialist evidence and interface review before mobilization.\n\nApproval for one service does not establish competence or arrangements for a different exposure. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A scope-specific assessment listing vessel-cleaning prerequisites and unresolved rescue interfaces. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the submitted assessment covers another legal entity in the same corporate group. The appropriate correction is to verify the actual performing entity and its matching capability before acceptance. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L04_lesson2",
+        "title": "Lesson 2 — Verify people equipment and evidence",
+        "body": "## Verify people equipment and evidence\n\nEvidence must identify who will do the work, with which equipment and under which limits. Check credential issuer, identity, validity and task coverage. An equipment list is not a readiness inspection, and a training list is not practical authorization. External assessments can be accepted when their scope and evidence are equivalent; a platform name alone should neither approve nor disqualify the company.\n\n### Deeper application\n\nSample evidence against mobilization rather than an ideal corporate roster. Trace a named person's credential to issuer verification, matching task scope and employer authorization; trace a named asset to the readiness evidence required for its use. A large file package can contain many irrelevant records. Accepting an equivalent external assessment requires checking what was actually examined, by whom and when. Requiring a duplicate upload in a preferred format does not resolve a substantive mismatch in people or equipment.\n\n### Worked oilfield example\n\nA subcontractor uploads operator cards, but the roster contains different workers from those assigned. The decision is to verify the assigned workers and matching task authorization before accepting the roster.\n\nEvidence must correspond to the people actually performing the task; unrelated cards cannot transfer competence. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A checked roster connecting assigned people to authentic scoped credentials and employer authorization. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that two credentials expire before the planned mobilization date. The appropriate correction is to obtain valid matching evidence or assign appropriately authorized replacements before release. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L04_lesson3",
+        "title": "Lesson 3 — Bridge shared responsibilities",
+        "body": "## Bridge shared responsibilities\n\nA bridge identifies interfaces between employers and site operations: who issues permits, controls isolations, reports events, supervises workers and activates emergency response. Name responsible roles and communication routes. Do not simply write that both parties are responsible. Where responsibilities overlap, specify the handoff and acknowledgment. The subcontractor remains accountable for its workforce even when the host controls an operating system.\n\n### Deeper application\n\nA useful responsibility bridge follows a function to its handoff. For an emergency, identify who detects and raises the alarm, who supplies response capability, how responders gain access and who stops dependent operations. For permits, identify who requests, issues, holds and hands back the work. Write how each party knows the previous step is complete. Shared responsibility is not necessarily wrong, but an overlap needs an explicit coordination mechanism so each party does not assume the other acted.\n\n### Worked oilfield example\n\nThe host assumes the subcontractor will arrange rescue; the subcontractor assumes the host provides it. The decision is to keep the dependent work unready until a suitable rescue interface is explicitly agreed and verified.\n\nShared assumptions can leave a critical function unprovided. A bridge must resolve who supplies and verifies it. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An agreed interface record naming coverage, activation, access and responsibility acceptance. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the named rescue arrangement is unavailable on the intended night shift. The appropriate correction is to reconcile actual shift coverage and retain the dependent restriction until suitable coverage exists. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L04_lesson4",
+        "title": "Lesson 4 — Resolve conflicting requirements",
+        "body": "## Resolve conflicting requirements\n\nCompare the subcontractor's procedure with the Partner's site rules before work. A conflict may involve permit boundaries, reporting, supervision or a technical method. Do not let a worker choose whichever rule is easiest or assume the most restrictive-sounding wording solves incompatible systems. Appropriate authorities must resolve the conflict and issue a coherent work instruction. Preserve the original requirements and documented resolution.\n\n### Deeper application\n\nA conflict can involve incompatible sequencing rather than a simple stricter-or-looser rule. For example, one process may hand equipment back after mechanical checks while another requires an operating release still outstanding. Choosing whichever sounds more conservative may not identify the correct authority. Preserve both requirements, define the actual conflict and obtain a coordinated resolution. Communicate the resulting sequence to the people performing it; an agreement between managers does not reach the field automatically.\n\n### Worked oilfield example\n\nThe subcontractor's handback process permits restart while the site's permit remains on hold. The decision is to resolve the conflicting restart requirements with the authorized employer and site roles before release.\n\nTwo incompatible release instructions create uncertainty that workers cannot safely resolve by guessing. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A documented conflict resolution identifying the applicable handback and site release sequence. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the resolution was agreed verbally but not passed to the incoming supervisor. The appropriate correction is to communicate the agreed sequence and confirm receipt before the next handback. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L04_lesson5",
+        "title": "Lesson 5 — Flow requirements to further tiers",
+        "body": "## Flow requirements to further tiers\n\nA subcontractor may engage another specialist, but that does not remove the original interface duties. Identify further tiers, actual scope and who verifies their prerequisites. Relevant requirements should reach the people performing the work in an understood form. Avoid unlimited copying of manuals without identifying which provisions apply. Changing the performing company or service triggers review of the bridge and acceptance evidence.\n\n### Deeper application\n\nFlowdown should be selective and explicit. Tell the lower tier which requirements apply to its actual scope, provide usable access and verify understanding. Sending an entire manual without explaining the relevant interfaces can leave the same gap hidden. The first subcontractor's promise to manage further tiers is not proof that qualification and site arrangements are implemented. Review who will verify them and what change requires notice, particularly when a new specialist, vehicle or hazardous service is introduced.\n\n### Worked oilfield example\n\nA cleaning subcontractor quietly hires a transport company that has not received the site's vehicle rules. The decision is to review the added tier and communicate applicable transport and site interfaces before its work begins.\n\nThe performing tier can introduce unassessed people and exposures; contractual distance does not eliminate the interface. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A lower-tier scope and acceptance record with relevant requirements and acknowledged site interfaces. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the further tier changes from domestic hauling to regulated cargo transport. The appropriate correction is to reassess the changed transport scope with the competent transport owner before dispatch. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L04_lesson6",
+        "title": "Lesson 6 — Monitor performance and changes",
+        "body": "## Monitor performance and changes\n\nSelection is an initial decision, not perpetual readiness. Monitor actual work, credential changes, unresolved findings and scope growth. Keep acceptance bounded and state restrictions. A serious field finding should reach the responsible operating authority even when the company score remains high. Reuse valid unchanged evidence, but do not stretch it to cover new work. Follow up corrective actions to see whether the control works in subsequent jobs.\n\n### Deeper application\n\nMonitoring should compare accepted scope with work observed. A subcontractor can perform routine jobs well while a newly added high-risk task remains unsupported. Review restrictions, expired evidence and recurring interface failures without restarting every unchanged assessment. If a finding affects current operations, route it promptly to the operating authority; do not wait for the next company score update. Conversely, an unsupported document claim should be corrected accurately without inventing an incident or assuming every task has failed.\n\n### Worked oilfield example\n\nA subcontractor repeatedly omits shift handovers despite a closed corrective action and favorable score. The decision is to escalate the verified failure, reopen the action and protect dependent work while the interface is corrected.\n\nMonitoring tests real implementation; a grade or closed checkbox cannot refute an observed interface failure. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Observed handovers and later field checks linked to the reopened corrective action. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that only office records were reviewed after the repeated field failure. The appropriate correction is to add suitable field observation and check later comparable handovers before claiming effectiveness. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L04_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA maintenance subcontractor adds vessel cleaning to its accepted work without presenting rescue or entry-role evidence. At the handover, a second issue is identified: Two credentials expire before the planned mobilization date. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Record both employers as responsible and begin. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Hold the added scope and obtain specialist evidence and interface review before mobilization. The reason is specific: Approval for one service does not establish competence or arrangements for a different exposure. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Obtain valid matching evidence or assign appropriately authorized replacements before release. The supporting record should show: A checked roster connecting assigned people to authentic scoped credentials and employer authorization. This is important because evidence must correspond to the people actually performing the task; unrelated cards cannot transfer competence. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because shared assumptions can leave a critical function unprovided. A bridge must resolve who supplies and verifies it. The suitable decision is: Keep the dependent work unready until a suitable rescue interface is explicitly agreed and verified. Evidence for review would include: An agreed interface record naming coverage, activation, access and responsibility acceptance. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nThe subcontractor's handback process permits restart while the site's permit remains on hold. At the handover, a second issue is identified: The further tier changes from domestic hauling to regulated cargo transport. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Keep acceptance unrestricted because the score exceeds the threshold. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Resolve the conflicting restart requirements with the authorized employer and site roles before release. The reason is specific: Two incompatible release instructions create uncertainty that workers cannot safely resolve by guessing. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Reassess the changed transport scope with the competent transport owner before dispatch. The supporting record should show: A lower-tier scope and acceptance record with relevant requirements and acknowledged site interfaces. This is important because the performing tier can introduce unassessed people and exposures; contractual distance does not eliminate the interface. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because monitoring tests real implementation; a grade or closed checkbox cannot refute an observed interface failure. The suitable decision is: Escalate the verified failure, reopen the action and protect dependent work while the interface is corrected. Evidence for review would include: Observed handovers and later field checks linked to the reopened corrective action. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L04_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L04_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nIdentify conflicting rules and responsibility boundaries; bridging case exercise. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "L04_check1",
+        "prompt": "A maintenance subcontractor adds vessel cleaning to its accepted work without presenting rescue or entry-role evidence. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the added scope and obtain specialist evidence and interface review before mobilization."
+          },
+          {
+            "id": "b",
+            "label": "Accept the scope because routine maintenance was approved."
+          },
+          {
+            "id": "c",
+            "label": "Let the subcontractor's invoice describe the new work after completion."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L04_final1",
+        "prompt": "For screen the actual subcontract scope, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A scope-specific assessment listing vessel-cleaning prerequisites and unresolved rescue interfaces."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L04_final2",
+        "prompt": "A later review finds: The submitted assessment covers another legal entity in the same corporate group. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Verify the actual performing entity and its matching capability before acceptance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L04_final3",
+        "prompt": "Consider this proposed response: Accept the scope because routine maintenance was approved. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approval for one service does not establish competence or arrangements for a different exposure."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L04_check2",
+        "prompt": "A subcontractor uploads operator cards, but the roster contains different workers from those assigned. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat any operator cards as covering the entire company."
+          },
+          {
+            "id": "b",
+            "label": "Verify the assigned workers and matching task authorization before accepting the roster."
+          },
+          {
+            "id": "c",
+            "label": "Reject equivalent external evidence solely because it uses another platform."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L04_final4",
+        "prompt": "For verify people equipment and evidence, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A checked roster connecting assigned people to authentic scoped credentials and employer authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L04_final5",
+        "prompt": "A later review finds: Two credentials expire before the planned mobilization date. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain valid matching evidence or assign appropriately authorized replacements before release."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L04_final6",
+        "prompt": "Consider this proposed response: Treat any operator cards as covering the entire company. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Evidence must correspond to the people actually performing the task; unrelated cards cannot transfer competence."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L04_check3",
+        "prompt": "The host assumes the subcontractor will arrange rescue; the subcontractor assumes the host provides it. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record both employers as responsible and begin."
+          },
+          {
+            "id": "b",
+            "label": "Assume the nearest emergency service can perform any required rescue."
+          },
+          {
+            "id": "c",
+            "label": "Keep the dependent work unready until a suitable rescue interface is explicitly agreed and verified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L04_final7",
+        "prompt": "For bridge shared responsibilities, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An agreed interface record naming coverage, activation, access and responsibility acceptance."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L04_final8",
+        "prompt": "A later review finds: The named rescue arrangement is unavailable on the intended night shift. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Reconcile actual shift coverage and retain the dependent restriction until suitable coverage exists."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L04_final9",
+        "prompt": "Consider this proposed response: Record both employers as responsible and begin. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Shared assumptions can leave a critical function unprovided. A bridge must resolve who supplies and verifies it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L04_check4",
+        "prompt": "The subcontractor's handback process permits restart while the site's permit remains on hold. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Resolve the conflicting restart requirements with the authorized employer and site roles before release."
+          },
+          {
+            "id": "b",
+            "label": "Follow the subcontractor process because it employs the crew."
+          },
+          {
+            "id": "c",
+            "label": "Follow whichever document has the newest date without reviewing scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L04_final10",
+        "prompt": "For resolve conflicting requirements, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A documented conflict resolution identifying the applicable handback and site release sequence."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L04_final11",
+        "prompt": "A later review finds: The resolution was agreed verbally but not passed to the incoming supervisor. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Communicate the agreed sequence and confirm receipt before the next handback."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L04_final12",
+        "prompt": "Consider this proposed response: Follow the subcontractor process because it employs the crew. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Two incompatible release instructions create uncertainty that workers cannot safely resolve by guessing."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L04_check5",
+        "prompt": "A cleaning subcontractor quietly hires a transport company that has not received the site's vehicle rules. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the first subcontractor's approval automatically covers further tiers."
+          },
+          {
+            "id": "b",
+            "label": "Review the added tier and communicate applicable transport and site interfaces before its work begins."
+          },
+          {
+            "id": "c",
+            "label": "Keep the lower-tier identity out of the bridge to simplify records."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L04_final13",
+        "prompt": "For flow requirements to further tiers, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A lower-tier scope and acceptance record with relevant requirements and acknowledged site interfaces."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L04_final14",
+        "prompt": "A later review finds: The further tier changes from domestic hauling to regulated cargo transport. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reassess the changed transport scope with the competent transport owner before dispatch."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L04_final15",
+        "prompt": "Consider this proposed response: Assume the first subcontractor's approval automatically covers further tiers. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "The performing tier can introduce unassessed people and exposures; contractual distance does not eliminate the interface."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L04_check6",
+        "prompt": "A subcontractor repeatedly omits shift handovers despite a closed corrective action and favorable score. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep acceptance unrestricted because the score exceeds the threshold."
+          },
+          {
+            "id": "b",
+            "label": "Require duplicate uploads without examining the actual handover failure."
+          },
+          {
+            "id": "c",
+            "label": "Escalate the verified failure, reopen the action and protect dependent work while the interface is corrected."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L04_final16",
+        "prompt": "For monitor performance and changes, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Observed handovers and later field checks linked to the reopened corrective action."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L04_final17",
+        "prompt": "A later review finds: Only office records were reviewed after the repeated field failure. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Add suitable field observation and check later comparable handovers before claiming effectiveness."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L04_final18",
+        "prompt": "Consider this proposed response: Keep acceptance unrestricted because the score exceeds the threshold. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Monitoring tests real implementation; a grade or closed checkbox cannot refute an observed interface failure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L04_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain valid matching evidence or assign appropriately authorized replacements before release."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L04_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Reassess the changed transport scope with the competent transport owner before dispatch."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "L04_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L04_lesson1",
+          "questionIds": [
+            "L04_check1"
+          ]
+        },
+        {
+          "lessonId": "L04_lesson2",
+          "questionIds": [
+            "L04_check2"
+          ]
+        },
+        {
+          "lessonId": "L04_lesson3",
+          "questionIds": [
+            "L04_check3"
+          ]
+        },
+        {
+          "lessonId": "L04_lesson4",
+          "questionIds": [
+            "L04_check4"
+          ]
+        },
+        {
+          "lessonId": "L04_lesson5",
+          "questionIds": [
+            "L04_check5"
+          ]
+        },
+        {
+          "lessonId": "L04_lesson6",
+          "questionIds": [
+            "L04_check6"
+          ]
+        },
+        {
+          "lessonId": "L04_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L04_assessment",
+          "questionIds": [
+            "L04_final1",
+            "L04_final2",
+            "L04_final3",
+            "L04_final4",
+            "L04_final5",
+            "L04_final6",
+            "L04_final7",
+            "L04_final8",
+            "L04_final9",
+            "L04_final10",
+            "L04_final11",
+            "L04_final12",
+            "L04_final13",
+            "L04_final14",
+            "L04_final15",
+            "L04_final16",
+            "L04_final17",
+            "L04_final18",
+            "L04_final19",
+            "L04_final20"
+          ]
+        },
+        {
+          "lessonId": "L04_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "L04_check1": "Approval for one service does not establish competence or arrangements for a different exposure.",
+        "L04_final1": "Approval for one service does not establish competence or arrangements for a different exposure. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L04_final2": "Approval for one service does not establish competence or arrangements for a different exposure. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L04_final3": "Approval for one service does not establish competence or arrangements for a different exposure. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L04_check2": "Evidence must correspond to the people actually performing the task; unrelated cards cannot transfer competence.",
+        "L04_final4": "Evidence must correspond to the people actually performing the task; unrelated cards cannot transfer competence. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L04_final5": "Evidence must correspond to the people actually performing the task; unrelated cards cannot transfer competence. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L04_final6": "Evidence must correspond to the people actually performing the task; unrelated cards cannot transfer competence. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L04_check3": "Shared assumptions can leave a critical function unprovided. A bridge must resolve who supplies and verifies it.",
+        "L04_final7": "Shared assumptions can leave a critical function unprovided. A bridge must resolve who supplies and verifies it. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L04_final8": "Shared assumptions can leave a critical function unprovided. A bridge must resolve who supplies and verifies it. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L04_final9": "Shared assumptions can leave a critical function unprovided. A bridge must resolve who supplies and verifies it. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L04_check4": "Two incompatible release instructions create uncertainty that workers cannot safely resolve by guessing.",
+        "L04_final10": "Two incompatible release instructions create uncertainty that workers cannot safely resolve by guessing. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L04_final11": "Two incompatible release instructions create uncertainty that workers cannot safely resolve by guessing. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L04_final12": "Two incompatible release instructions create uncertainty that workers cannot safely resolve by guessing. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L04_check5": "The performing tier can introduce unassessed people and exposures; contractual distance does not eliminate the interface.",
+        "L04_final13": "The performing tier can introduce unassessed people and exposures; contractual distance does not eliminate the interface. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L04_final14": "The performing tier can introduce unassessed people and exposures; contractual distance does not eliminate the interface. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L04_final15": "The performing tier can introduce unassessed people and exposures; contractual distance does not eliminate the interface. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L04_check6": "Monitoring tests real implementation; a grade or closed checkbox cannot refute an observed interface failure.",
+        "L04_final16": "Monitoring tests real implementation; a grade or closed checkbox cannot refute an observed interface failure. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L04_final17": "Monitoring tests real implementation; a grade or closed checkbox cannot refute an observed interface failure. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L04_final18": "Monitoring tests real implementation; a grade or closed checkbox cannot refute an observed interface failure. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L04_final19": "Evidence must correspond to the people actually performing the task; unrelated cards cannot transfer competence. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "L04_final20": "The performing tier can introduce unassessed people and exposures; contractual distance does not eliminate the interface. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

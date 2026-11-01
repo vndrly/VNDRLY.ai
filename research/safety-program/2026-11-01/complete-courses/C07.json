@@ -1,0 +1,785 @@
+{
+  "familyId": "C07",
+  "title": "Permit, isolation, gas-test and electrical role endorsements",
+  "description": "Complete original VNDRLY C07 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Ensure the person signing a control has relevant assessed authority.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Role-specific observed task and emergency/abnormal scenario assessment by qualified personnel. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-12-10-24/Products%20Isolation%20of%20Hazardous%20Energy%20Standard.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-12-10-24/Products%20Electrical%20Safe%20Work%20Standard.pdf"
+    },
+    {
+      "title": "Inventory research reference 3",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-6-10-25/Products%20Portable%20Gas%20Detection%20Standard_revised.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "C07_intro",
+        "title": "Start here — Permit, isolation, gas-test and electrical role endorsements",
+        "body": "# C07: Permit, isolation, gas-test and electrical role endorsements\n\nEnsure the person signing a control has relevant assessed authority. This course teaches the decisions needed to implement that purpose in field operations. It covers define separate issuer, holder, isolator, gas tester and electrical scopes. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C07_lesson1",
+        "title": "Lesson 1 — Separate high-risk decision roles",
+        "body": "## Separate high-risk decision roles\n\nPermit issuer, permit holder, isolator, gas tester and electrical worker are separate roles with distinct tasks and authority. Identify what each person signs and the evidence their signature represents. One credential or endorsement does not imply the others. A general supervisor coordinates work but may not have authority to make every technical judgment. Company review of an endorsement register is not a job permit.\n\n### Deeper application\n\nList the decision represented by each role's signature. A permit holder accepts and coordinates the permitted work within scope; a technical role's signature represents its own assessed verification. The site's actual system defines details, so do not invent a universal role diagram. What matters here is preventing one broad label from concealing several distinct authorities that must each be supported.\n\n### Worked oilfield example\n\nAn authorized permit holder is asked to sign the gas-test entry despite having no gas-testing endorsement. The decision is to decline the unendorsed signature and obtain a qualified authorized gas tester before gas-dependent release.\n\nA signature must represent the signer's actual assessed role and a real relevant action. One permit role cannot supply another. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A role register separating holder and gas-tester scopes with verified authorizations. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the register uses a single high-risk authorized label without role distinctions. The appropriate correction is to define and verify separate role scopes before relying on the register for assignments. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C07_lesson2",
+        "title": "Lesson 2 — Match prerequisites and practical evidence",
+        "body": "## Match prerequisites and practical evidence\n\nFor each endorsement identify relevant knowledge, practical tasks, abnormal decisions and any governing prerequisites. Verify authentic evidence and the worker's identity. Training in awareness may explain a hazard without qualifying the person to implement its control. Practical assessment must use a competent assessor and safe conditions. This course does not teach an isolation method, gas-testing technique or electrical work procedure.\n\n### Deeper application\n\nSeparate awareness of a hazard from ability to implement its control. A worker may correctly recognize an isolation concern without being authorized to isolate. An assessor should examine relevant routine and abnormal decisions within safe conditions. The resulting record needs task and system boundaries, not only a course name. Match evidence to the particular endorsement before assigning the person to sign for that function.\n\n### Worked oilfield example\n\nA worker's isolation-awareness certificate is presented as evidence of practical isolator authorization. The decision is to verify relevant practical assessment and employer/site authorization before assigning isolator duties.\n\nAwareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A task-relevant assessment linked to the exact isolator scope and authorizing decision. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the assessment contains routine steps but no response to an uncertain isolation boundary. The appropriate correction is to arrange suitable assessment of the relevant abnormal and stop decisions before accepting full scope. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C07_lesson3",
+        "title": "Lesson 3 — Bound site equipment and system authority",
+        "body": "## Bound site equipment and system authority\n\nAn endorsement should identify the systems, equipment, site or other limits necessary to define its scope. Authority at one location may not transfer automatically to another operating system. The responsible employer/site roles decide what familiarization and acceptance are required. Keep the actual operating procedure and technical limits controlled. Do not infer authority merely because a person has performed similar work elsewhere.\n\n### Deeper application\n\nScope boundaries should be visible where work is allocated. A role accepted for one site or defined system may need additional familiarization or assessment elsewhere. Do not broaden the authority through an administrative copy of a roster. Identify the competent employer and site roles deciding acceptance, record what they checked and keep pending conditions separate from completed prerequisites.\n\n### Worked oilfield example\n\nA gas tester authorized for one defined operation is sent to a different site with unfamiliar arrangements and no scope review. The decision is to verify the new site's requirements and matching role acceptance before assigning the testing duty.\n\nTechnical authority is bounded by assessed and accepted scope; a different site can introduce unreviewed requirements. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A site and role scope decision showing familiarization, applicable procedure and authorization limits. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the authorization names the site but omits the particular equipment-system limitation. The appropriate correction is to clarify and approve the bounded system scope before the person signs for that duty. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C07_lesson4",
+        "title": "Lesson 4 — Recognize uncertainty and stop within role",
+        "body": "## Recognize uncertainty and stop within role\n\nEndorsed personnel must recognize when a required condition is absent, uncertain or outside their authority. Stop the affected work through the established route and seek appropriate technical resolution. A gas tester does not become an electrical specialist by noticing an electrical concern. Good judgment includes declining unsupported signatures. Do not guess technical limits from this course or treat an earlier reading as automatically valid under changed conditions.\n\n### Deeper application\n\nA qualified person demonstrates judgment partly by refusing to certify an unknown. An uncertain prerequisite should be described specifically so the correct specialist can resolve it. The role holder need not repair every problem personally. Escalate beyond scope, keep the relevant hold visible and avoid supplying an estimated reading or remembered technical limit merely to keep the permit sequence moving.\n\n### Worked oilfield example\n\nA permit issuer cannot verify a prerequisite after operating conditions change, but the crew requests immediate reissue. The decision is to keep the affected permit release on hold and obtain competent verification of the changed condition.\n\nEarlier approval does not verify a changed prerequisite. Uncertainty must be resolved before relying on the control. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A documented hold identifying the changed condition, required verification and responsible decision role. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the hold was resolved verbally but an affected crew still uses the earlier permit conditions. The appropriate correction is to communicate and document the applicable changed conditions before dependent work resumes. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C07_lesson5",
+        "title": "Lesson 5 — Verify issuer holder and technical interfaces",
+        "body": "## Verify issuer holder and technical interfaces\n\nDifferent role holders need a coherent handoff: work scope, isolations, tests, restrictions and status must agree. A signature chain is not reliable if each person assumes another checked the same missing prerequisite. At shift change, identify open holds and who can clear them. Preserve role separation while coordinating the combined decision. A mismatch between paperwork and the actual system requires resolution by authorized people.\n\n### Deeper application\n\nInterfaces fail when one role assumes another completed a prerequisite that was only requested. Handover should state actual results, open holds and the release authority, with acknowledgment from affected receivers. A technical record unavailable to the incoming role may leave them unable to make a supported decision. Resolve the evidence and communication gap rather than adding signatures that repeat the same assumption.\n\n### Worked oilfield example\n\nThe holder believes testing is complete while the tester's record shows access was unavailable and no test occurred. The decision is to maintain the gas-dependent hold and reconcile actual test status through the responsible roles.\n\nCoordination must use real status, not mutually reinforcing assumptions. An unperformed test cannot be inferred from another signature. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A reconciled handover recording actual test status, unresolved access issue and release responsibility. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the corrected status reaches the issuer but not the incoming holder. The appropriate correction is to confirm affected role holders receive and understand the actual restriction before handover acceptance. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C07_lesson6",
+        "title": "Lesson 6 — Maintain endorsements and reassessment",
+        "body": "## Maintain endorsements and reassessment\n\nTrack relevant validity, suspension and change triggers for each role separately. A problem in one endorsement does not erase unrelated evidence, but its operational consequences must be clear. Reassess after relevant competence findings or changed duties and use governing requirements for renewal. Preserve prior decisions and notify the people allocating work. An expired or unsupported endorsement cannot be extended by changing a date without evidence.\n\n### Deeper application\n\nMaintain endorsements separately enough to target restrictions accurately. A suspended gas-testing scope does not automatically erase a valid unrelated role, but any task depending on gas testing still needs a suitable authorized person. Reassessment should address the identified gap and changed conditions. Preserve the original evidence, restriction and later decision so allocation can use the correct current authority without losing history.\n\n### Worked oilfield example\n\nA required electrical-role endorsement is suspended after a verified scope gap, but the work roster still assigns that duty. The decision is to remove the affected assignment and arrange appropriate reassessment or an authorized replacement.\n\nCurrent allocation must reflect current role authority; a historical endorsement cannot override an active restriction. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A dated role restriction, notified allocation change and supported reassessment decision. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the replacement has permit-holder authority but no matching electrical endorsement. The appropriate correction is to assign a person with the specific required electrical scope rather than substituting a different endorsement. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C07_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nAn authorized permit holder is asked to sign the gas-test entry despite having no gas-testing endorsement. At the handover, a second issue is identified: The assessment contains routine steps but no response to an uncertain isolation boundary. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Assume one site's endorsement grants universal authority. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Decline the unendorsed signature and obtain a qualified authorized gas tester before gas-dependent release. The reason is specific: A signature must represent the signer's actual assessed role and a real relevant action. One permit role cannot supply another. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Arrange suitable assessment of the relevant abnormal and stop decisions before accepting full scope. The supporting record should show: A task-relevant assessment linked to the exact isolator scope and authorizing decision. This is important because awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because technical authority is bounded by assessed and accepted scope; a different site can introduce unreviewed requirements. The suitable decision is: Verify the new site's requirements and matching role acceptance before assigning the testing duty. Evidence for review would include: A site and role scope decision showing familiarization, applicable procedure and authorization limits. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA permit issuer cannot verify a prerequisite after operating conditions change, but the crew requests immediate reissue. At the handover, a second issue is identified: The corrected status reaches the issuer but not the incoming holder. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Leave the roster unchanged until the next routine review. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Keep the affected permit release on hold and obtain competent verification of the changed condition. The reason is specific: Earlier approval does not verify a changed prerequisite. Uncertainty must be resolved before relying on the control. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Confirm affected role holders receive and understand the actual restriction before handover acceptance. The supporting record should show: A reconciled handover recording actual test status, unresolved access issue and release responsibility. This is important because coordination must use real status, not mutually reinforcing assumptions. An unperformed test cannot be inferred from another signature. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because current allocation must reflect current role authority; a historical endorsement cannot override an active restriction. The suitable decision is: Remove the affected assignment and arrange appropriate reassessment or an authorized replacement. Evidence for review would include: A dated role restriction, notified allocation change and supported reassessment decision. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C07_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C07_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nRole-specific observed task and emergency/abnormal scenario assessment by qualified personnel. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "C07_check1",
+        "prompt": "An authorized permit holder is asked to sign the gas-test entry despite having no gas-testing endorsement. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Decline the unendorsed signature and obtain a qualified authorized gas tester before gas-dependent release."
+          },
+          {
+            "id": "b",
+            "label": "Sign because all permit-related roles are equivalent."
+          },
+          {
+            "id": "c",
+            "label": "Copy the last shift's gas-test signature."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C07_final1",
+        "prompt": "For separate high-risk decision roles, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A role register separating holder and gas-tester scopes with verified authorizations."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C07_final2",
+        "prompt": "A later review finds: The register uses a single high-risk authorized label without role distinctions. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Define and verify separate role scopes before relying on the register for assignments."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C07_final3",
+        "prompt": "Consider this proposed response: Sign because all permit-related roles are equivalent. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signature must represent the signer's actual assessed role and a real relevant action. One permit role cannot supply another."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C07_check2",
+        "prompt": "A worker's isolation-awareness certificate is presented as evidence of practical isolator authorization. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat any isolation course as full isolator competence."
+          },
+          {
+            "id": "b",
+            "label": "Verify relevant practical assessment and employer/site authorization before assigning isolator duties."
+          },
+          {
+            "id": "c",
+            "label": "Let the worker learn isolation by acting alone on the first live job."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C07_final4",
+        "prompt": "For match prerequisites and practical evidence, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A task-relevant assessment linked to the exact isolator scope and authorizing decision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C07_final5",
+        "prompt": "A later review finds: The assessment contains routine steps but no response to an uncertain isolation boundary. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Arrange suitable assessment of the relevant abnormal and stop decisions before accepting full scope."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C07_final6",
+        "prompt": "Consider this proposed response: Treat any isolation course as full isolator competence. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C07_check3",
+        "prompt": "A gas tester authorized for one defined operation is sent to a different site with unfamiliar arrangements and no scope review. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume one site's endorsement grants universal authority."
+          },
+          {
+            "id": "b",
+            "label": "Use whatever limits the worker remembers from a previous customer."
+          },
+          {
+            "id": "c",
+            "label": "Verify the new site's requirements and matching role acceptance before assigning the testing duty."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C07_final7",
+        "prompt": "For bound site equipment and system authority, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A site and role scope decision showing familiarization, applicable procedure and authorization limits."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C07_final8",
+        "prompt": "A later review finds: The authorization names the site but omits the particular equipment-system limitation. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Clarify and approve the bounded system scope before the person signs for that duty."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C07_final9",
+        "prompt": "Consider this proposed response: Assume one site's endorsement grants universal authority. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Technical authority is bounded by assessed and accepted scope; a different site can introduce unreviewed requirements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C07_check4",
+        "prompt": "A permit issuer cannot verify a prerequisite after operating conditions change, but the crew requests immediate reissue. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the affected permit release on hold and obtain competent verification of the changed condition."
+          },
+          {
+            "id": "b",
+            "label": "Reissue because the original permit was valid earlier."
+          },
+          {
+            "id": "c",
+            "label": "Ask workers to sign that they accept any unknown conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C07_final10",
+        "prompt": "For recognize uncertainty and stop within role, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A documented hold identifying the changed condition, required verification and responsible decision role."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C07_final11",
+        "prompt": "A later review finds: The hold was resolved verbally but an affected crew still uses the earlier permit conditions. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Communicate and document the applicable changed conditions before dependent work resumes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C07_final12",
+        "prompt": "Consider this proposed response: Reissue because the original permit was valid earlier. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Earlier approval does not verify a changed prerequisite. Uncertainty must be resolved before relying on the control."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C07_check5",
+        "prompt": "The holder believes testing is complete while the tester's record shows access was unavailable and no test occurred. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the holder's assumption as evidence of the test."
+          },
+          {
+            "id": "b",
+            "label": "Maintain the gas-dependent hold and reconcile actual test status through the responsible roles."
+          },
+          {
+            "id": "c",
+            "label": "Ask the tester to enter an estimated result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C07_final13",
+        "prompt": "For verify issuer holder and technical interfaces, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A reconciled handover recording actual test status, unresolved access issue and release responsibility."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C07_final14",
+        "prompt": "A later review finds: The corrected status reaches the issuer but not the incoming holder. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Confirm affected role holders receive and understand the actual restriction before handover acceptance."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C07_final15",
+        "prompt": "Consider this proposed response: Accept the holder's assumption as evidence of the test. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Coordination must use real status, not mutually reinforcing assumptions. An unperformed test cannot be inferred from another signature."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C07_check6",
+        "prompt": "A required electrical-role endorsement is suspended after a verified scope gap, but the work roster still assigns that duty. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leave the roster unchanged until the next routine review."
+          },
+          {
+            "id": "b",
+            "label": "Delete the suspension so the schedule remains full."
+          },
+          {
+            "id": "c",
+            "label": "Remove the affected assignment and arrange appropriate reassessment or an authorized replacement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C07_final16",
+        "prompt": "For maintain endorsements and reassessment, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A dated role restriction, notified allocation change and supported reassessment decision."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C07_final17",
+        "prompt": "A later review finds: The replacement has permit-holder authority but no matching electrical endorsement. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Assign a person with the specific required electrical scope rather than substituting a different endorsement."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C07_final18",
+        "prompt": "Consider this proposed response: Leave the roster unchanged until the next routine review. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Current allocation must reflect current role authority; a historical endorsement cannot override an active restriction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C07_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Arrange suitable assessment of the relevant abnormal and stop decisions before accepting full scope."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C07_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Confirm affected role holders receive and understand the actual restriction before handover acceptance."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "C07_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C07_lesson1",
+          "questionIds": [
+            "C07_check1"
+          ]
+        },
+        {
+          "lessonId": "C07_lesson2",
+          "questionIds": [
+            "C07_check2"
+          ]
+        },
+        {
+          "lessonId": "C07_lesson3",
+          "questionIds": [
+            "C07_check3"
+          ]
+        },
+        {
+          "lessonId": "C07_lesson4",
+          "questionIds": [
+            "C07_check4"
+          ]
+        },
+        {
+          "lessonId": "C07_lesson5",
+          "questionIds": [
+            "C07_check5"
+          ]
+        },
+        {
+          "lessonId": "C07_lesson6",
+          "questionIds": [
+            "C07_check6"
+          ]
+        },
+        {
+          "lessonId": "C07_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C07_assessment",
+          "questionIds": [
+            "C07_final1",
+            "C07_final2",
+            "C07_final3",
+            "C07_final4",
+            "C07_final5",
+            "C07_final6",
+            "C07_final7",
+            "C07_final8",
+            "C07_final9",
+            "C07_final10",
+            "C07_final11",
+            "C07_final12",
+            "C07_final13",
+            "C07_final14",
+            "C07_final15",
+            "C07_final16",
+            "C07_final17",
+            "C07_final18",
+            "C07_final19",
+            "C07_final20"
+          ]
+        },
+        {
+          "lessonId": "C07_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "C07_check1": "A signature must represent the signer's actual assessed role and a real relevant action. One permit role cannot supply another.",
+        "C07_final1": "A signature must represent the signer's actual assessed role and a real relevant action. One permit role cannot supply another. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C07_final2": "A signature must represent the signer's actual assessed role and a real relevant action. One permit role cannot supply another. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C07_final3": "A signature must represent the signer's actual assessed role and a real relevant action. One permit role cannot supply another. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C07_check2": "Awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks.",
+        "C07_final4": "Awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C07_final5": "Awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C07_final6": "Awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C07_check3": "Technical authority is bounded by assessed and accepted scope; a different site can introduce unreviewed requirements.",
+        "C07_final7": "Technical authority is bounded by assessed and accepted scope; a different site can introduce unreviewed requirements. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C07_final8": "Technical authority is bounded by assessed and accepted scope; a different site can introduce unreviewed requirements. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C07_final9": "Technical authority is bounded by assessed and accepted scope; a different site can introduce unreviewed requirements. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C07_check4": "Earlier approval does not verify a changed prerequisite. Uncertainty must be resolved before relying on the control.",
+        "C07_final10": "Earlier approval does not verify a changed prerequisite. Uncertainty must be resolved before relying on the control. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C07_final11": "Earlier approval does not verify a changed prerequisite. Uncertainty must be resolved before relying on the control. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C07_final12": "Earlier approval does not verify a changed prerequisite. Uncertainty must be resolved before relying on the control. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C07_check5": "Coordination must use real status, not mutually reinforcing assumptions. An unperformed test cannot be inferred from another signature.",
+        "C07_final13": "Coordination must use real status, not mutually reinforcing assumptions. An unperformed test cannot be inferred from another signature. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C07_final14": "Coordination must use real status, not mutually reinforcing assumptions. An unperformed test cannot be inferred from another signature. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C07_final15": "Coordination must use real status, not mutually reinforcing assumptions. An unperformed test cannot be inferred from another signature. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C07_check6": "Current allocation must reflect current role authority; a historical endorsement cannot override an active restriction.",
+        "C07_final16": "Current allocation must reflect current role authority; a historical endorsement cannot override an active restriction. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C07_final17": "Current allocation must reflect current role authority; a historical endorsement cannot override an active restriction. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C07_final18": "Current allocation must reflect current role authority; a historical endorsement cannot override an active restriction. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C07_final19": "Awareness and implementation are different capabilities; an isolator endorsement needs evidence for its actual tasks. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "C07_final20": "Coordination must use real status, not mutually reinforcing assumptions. An unperformed test cannot be inferred from another signature. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

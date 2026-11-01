@@ -1,0 +1,785 @@
+{
+  "familyId": "R01",
+  "title": "Emergency plan and site interface",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Ensure credible response for remote sites and hazardous operations.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate site orientation and safe practical demonstration must verify alarm recognition, evacuation/shelter, accountability, reporting and responder access. Technical shutdown, firefighting, rescue and medical response require their own trained roles and authorization.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.slb.com/about/health-safety-and-environment/worker-safety-and-incident-prevention"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.marathonpetroleum.com/Sustainability/Safety/"
+    },
+    {
+      "title": "OSHA Emergency action plans",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.38"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "R01_intro",
+        "title": "Start here: Emergency plan and site interface",
+        "body": "# Emergency plan and site interface\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate site orientation and safe practical demonstration must verify alarm recognition, evacuation/shelter, accountability, reporting and responder access. Technical shutdown, firefighting, rescue and medical response require their own trained roles and authorization.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Emergency action plans](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.38). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R01_lesson1",
+        "title": "Lesson 1 - Plan from credible scenarios",
+        "body": "An emergency plan should reflect actual work and location. Identify credible fire, release, injury, severe weather, traffic, security and other events through the risk assessment. A plan copied from an office may not address a remote site, hazardous atmosphere or delayed access.\n\nDefine the worker's action and the interface with the site's system. Distinguish an employee's employer, the site operator and external responders. Clarify who raises the alarm, directs evacuation, accounts for people and controls technical response.\n\nAvoid assuming all emergencies use the same route or muster point. A release can make one route unsafe while another event requires shelter. The applicable site plan establishes the response, not a universal instruction invented in this course.\n\n## Worked field example\n\nA remote service crew adopts an office fire plan without reviewing site releases or access.\n\nThe safe decision is to develop and coordinate the emergency arrangements for the actual work and site scenarios. An office plan does not automatically address remote industrial hazards or response constraints.\n\nA useful field record is specific: A scenario-based company/site interface review with assigned actions and known limitations. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nBuild each scenario around the actual work state. A crew replacing a component, a driver waiting at a gate and an office worker can face different warning and escape problems during the same release. The site assessment determines how they receive instructions and what safe action is possible. Do not assume everyone hears the same alarm or sees the same escape signs.\n\nFor a remote service, consider access and communication before the crew is isolated. The plan should identify what happens when the nearest public response capability cannot perform the required technical function. An emergency number is a contact mechanism, not a completed capability assessment.\n\nInclude interactions between employers. A contractor may have an internal call tree, but the site operator still needs prompt warning of a release or missing person. Agree which calls happen immediately, who coordinates updates and how duplicate or conflicting instructions are resolved. Preserve any uncertainty that prevents the planned activity from being ready.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R01_lesson2",
+        "title": "Lesson 2 - Make alarm and notification actionable",
+        "body": "Workers need to recognize relevant alarms, know what they mean and have a reliable way to report an emergency. Include alternate methods for noise, failed phones, language needs and remote coverage. A contact list is useful only if the intended roles can be reached.\n\nGive clear information: location, event, immediate hazards, people affected and safe access details. Do not delay the initial alarm while collecting every detail. Update the response coordinator as reliable information becomes available and distinguish observation from assumption.\n\nTest receipt as well as transmission. A radio call made on the wrong channel or a message to an unattended number does not establish notification. Maintain a usable backup when the primary route fails.\n\n## Worked field example\n\nA worker sends an emergency message to a group chat that nobody is assigned to monitor.\n\nThe safe decision is to use the designated monitored alarm route and confirm the responsible role receives actionable information. A sent message is not evidence that emergency response has been activated.\n\nA useful field record is specific: An end-to-end alarm test and verified current monitored contacts. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nAn effective alarm instruction distinguishes the signal from the action. Workers should know whether the relevant signal requires evacuation, shelter or another site-specific response. Do not teach one sound as universal across all clients. At a new location, verify the current system and the method for people who cannot rely on the primary signal.\n\nTest a report using usable location information. A receiving role should be able to identify the correct site and entrance from the message without guessing between similarly named gates. If the test exposes confusion, correct the information and repeat the affected link safely.\n\nProvide a backup for foreseeable failure. Poor radio coverage, a discharged phone or an unavailable primary contact should not leave the worker inventing a route. The backup must be understood and available, with clear responsibility for acting. A list containing several numbers does not establish which role is monitoring them.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R01_lesson3",
+        "title": "Lesson 3 - Define command and worker boundaries",
+        "body": "An emergency needs clear coordination. Workers should know the designated site command contact and their own role. They should not receive conflicting instructions from several employers without resolution through the established structure.\n\nMost workers' duties are to alarm, withdraw or shelter, account and communicate. Technical shutdown, firefighting, rescue and medical actions require assigned trained roles and suitable conditions. A person who knows where a valve is located is not necessarily authorized to remain behind and operate it during an emergency.\n\nThe plan must identify any people who remain for critical operations and their conditions for withdrawal. Do not create such a role spontaneously after the alarm. Personal willingness does not establish safe capability.\n\n## Worked field example\n\nA general worker is told after an alarm to remain inside and shut down equipment without an assigned emergency role.\n\nThe safe decision is to withdraw under the plan and refer the shutdown decision to the designated trained and authorized role. Critical emergency duties must be planned and assigned rather than improvised during exposure.\n\nA useful field record is specific: A role briefing and plan identifying authorized critical-operation duties and withdrawal limits. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nCommand arrangements should remain understandable when several organizations are present. A contractor supervisor can account for their crew and give reliable information while the site command role coordinates the wider event. Technical specialists advise and act within their own competence. Do not allow a general manager's confidence to replace the required technical decision.\n\nWorkers should understand the difference between an assigned emergency action and an impulsive attempt to help. A person may be allowed to operate a remote emergency stop from a safe position under the plan but not enter a hazard to close a manual valve. The actual instruction and conditions define the boundary.\n\nIf conflicting directions arise, communicate them through the designated route rather than selecting the more convenient instruction. Report immediate danger and maintain the safe action available under the plan. The later review should identify why the interface failed so the next shift is not left with the same conflict.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R01_lesson4",
+        "title": "Lesson 4 - Evacuate and account for everyone",
+        "body": "Know the site-specific evacuation or shelter instruction, route and destination. Include contractors, visitors, delivery drivers and people away from the main crew. A gate list may not reflect who has left or moved within the site; accountability needs a reliable current process.\n\nOn arrival, report through the assigned accountability role and stay available for instructions. Do not leave the muster area without reporting or re-enter to find a missing person. Give the coordinator the last known location and relevant hazards.\n\nA missing name is information for the emergency response, not an invitation to unplanned rescue. The coordinator reconciles records and uses the planned safe response. A confident headcount is not reliable if it omitted an entire contractor group.\n\n## Worked field example\n\nA muster count matches the employee roster but excludes a contractor crew and two visitors.\n\nThe safe decision is to reconcile all affected groups through the accountability process and report unresolved people to command. A complete employee count does not establish accountability for everyone on site.\n\nA useful field record is specific: A current reconciled muster record covering employees, contractors and visitors with unresolved cases escalated. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nAccountability begins before an alarm. The site needs a reliable method for knowing who is present, including visitors, short-term crews and delivery personnel where relevant. Arrivals, departures and employer handovers should not silently create gaps. The system must remain usable if ordinary network access or the main office is unavailable.\n\nDuring muster, report the actual status: confirmed present, known safely elsewhere or unresolved. Do not infer safety from a vehicle being parked or a phone showing online. Give command the last reliable information and let the planned response resolve uncertainty.\n\nWorkers should remain available for the next instruction and tell the accountability role if they must move. Uncontrolled departure can trigger unnecessary searches or leave command with a false count. After the event, retain the original discrepancy and how it was resolved. A final complete count does not prove that the process worked without failures.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R01_lesson5",
+        "title": "Lesson 5 - Provide usable responder access",
+        "body": "External responders need an accurate location and a usable route to the incident. Verify entrance names, coordinates where appropriate, gate access, approach restrictions and a safe guide arrangement. A postal address or map pin may point to an old entrance.\n\nCoordinate with the site and relevant response services before reliance where the plan requires it. Confirm capabilities and access constraints rather than assuming a public number guarantees every type of technical response. Keep emergency routes clear during normal operations.\n\nDuring an event, tell responders about changes such as blocked roads, hazardous areas or locked access. Do not position a guide inside an uncontrolled hazard. The guiding role needs a safe location and communication with command.\n\n## Worked field example\n\nThe contact sheet directs responders to an old locked entrance behind an active construction zone.\n\nThe safe decision is to correct and verify usable access with the site authority and communicate it to all relevant roles. An emergency number cannot overcome inaccurate or inaccessible directions.\n\nA useful field record is specific: A verified current entrance and safe responder-guide arrangement tested with the responsible roles. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nResponder access should be checked against the actual vehicle and incident. A small car may reach an entrance that cannot admit an emergency vehicle. A gate key may be stored with a person who is absent overnight. The responsible site roles verify the relevant arrangement instead of assuming an address is sufficient.\n\nA guide needs a safe waiting position and a communication route to command. They should not stand inside an uncontrolled atmosphere, vehicle conflict area or falling-object zone to make themselves visible. If the usual entrance becomes unsafe, command communicates the alternative and any constraints to responders.\n\nKeep ordinary deliveries and spectators from blocking access through the approved traffic plan. Gate workers need a manageable task assignment; processing normal arrivals while directing emergency vehicles can create conflict. The plan should identify when admissions stop, how exits are preserved and who takes over other essential duties.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R01_lesson6",
+        "title": "Lesson 6 - Test and maintain the interface",
+        "body": "Plans become stale when layouts, contacts, staffing, work or response resources change. Review those changes and test the affected interface. A new phone number in a document is not enough until the intended role can actually receive and act.\n\nExercises should have observable objectives and safe boundaries. Test alarm, accountability, communication and access without introducing real danger. Record failures honestly and verify corrective actions.\n\nWorkers need a practical orientation at the actual site or a safe representative setting. Online learning can teach the process, but cannot show that a person recognizes the local alarm, reaches the right shelter or gives usable directions from that entrance.\n\n## Worked field example\n\nA revised emergency contact list is uploaded but night staff cannot access it and the number is untested.\n\nThe safe decision is to make the current arrangement accessible and verify the alarm/response route for the affected shift. A document update is not implemented until the people who rely on it can use it.\n\nA useful field record is specific: A night-shift access and notification test with recorded receiver response. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nA useful interface exercise can test a fictional alarm from a remote work point, the receiving role's interpretation, the crew's accountability and the access directions. Record what was simulated and which actions were actually demonstrated. Do not introduce a real release or send people into live traffic to create realism.\n\nCorrect the specific failed link. If the receiver cannot identify the entrance, adding more general emergency posters may not solve it. Update the information, confirm access and repeat the relevant communication check. If a contractor crew is missing from muster, correct the current-person interface and retest that function.\n\nReview after changes in layout, staffing, services or available responders. A plan can remain well written while becoming operationally stale. Preserve prior versions and decisions so users know which arrangement is current, and make the current instruction accessible to every affected shift before work relies on it.\n\n## Further application\n\nKeep the current instruction usable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R01_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional service crew arrives at a remote site after dark. Its company plan points to an old entrance. The site alarm differs from the one described in induction, and the crew has two visitors not on its employee roster. A supervisor says the existing plan is enough because the emergency telephone number is correct.\n\n### Worked solution\n\nThe crew resolves the interface before affected work starts. The site authority confirms the actual alarm meanings, withdrawal or shelter instructions, routes, accountability process and usable responder entrance. Visitors are included. The company and site assign notification and command contacts and test the relevant communication. A correct telephone number is one component, not the entire plan. The crew receives an understandable briefing and demonstrates the assigned actions safely. Unresolved access or response limitations remain visible and may prevent the affected activity. The record identifies actual roles and conditions rather than merely recording induction attendance.\n\n## Scenario 2\n\nDuring a fictional release alarm, one contractor is missing from muster. A worker volunteers to search, while a manager wants everyone to leave the site immediately in personal vehicles.\n\n### Worked solution\n\nThe accountability role gives command the unresolved name, last known location and reliable information. No unplanned search is authorized by willingness alone. Workers remain under the site evacuation/shelter and accountability instructions; uncontrolled departure can confuse the count and conflict with emergency traffic. Qualified response roles assess the search and other technical actions. Updates are recorded and passed to command, and any release from muster is communicated through the established process. Later review checks the roster interface and whether visitors and contractors were included. A resolved count does not erase a failure in the process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R01_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R01_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate site orientation and safe practical demonstration must verify alarm recognition, evacuation/shelter, accountability, reporting and responder access. Technical shutdown, firefighting, rescue and medical response require their own trained roles and authorization.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "R01_check1",
+        "prompt": "A remote service crew adopts an office fire plan without reviewing site releases or access. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Develop and coordinate the emergency arrangements for the actual work and site scenarios"
+          },
+          {
+            "id": "b",
+            "label": "Use the office plan because the company logo is correct"
+          },
+          {
+            "id": "c",
+            "label": "Let each worker decide what an emergency means"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R01_check2",
+        "prompt": "A worker sends an emergency message to a group chat that nobody is assigned to monitor. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wait for someone to react to the group chat"
+          },
+          {
+            "id": "b",
+            "label": "Use the designated monitored alarm route and confirm the responsible role receives actionable information"
+          },
+          {
+            "id": "c",
+            "label": "Complete the incident form before raising the alarm"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R01_check3",
+        "prompt": "A general worker is told after an alarm to remain inside and shut down equipment without an assigned emergency role. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stay because the worker knows the equipment location"
+          },
+          {
+            "id": "b",
+            "label": "Accept instructions from whichever supervisor speaks loudest"
+          },
+          {
+            "id": "c",
+            "label": "Withdraw under the plan and refer the shutdown decision to the designated trained and authorized role"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R01_check4",
+        "prompt": "A muster count matches the employee roster but excludes a contractor crew and two visitors. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reconcile all affected groups through the accountability process and report unresolved people to command"
+          },
+          {
+            "id": "b",
+            "label": "Declare everyone accounted for using the employee total"
+          },
+          {
+            "id": "c",
+            "label": "Send an untrained worker back into the area to search"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R01_check5",
+        "prompt": "The contact sheet directs responders to an old locked entrance behind an active construction zone. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the old sheet until the next scheduled review"
+          },
+          {
+            "id": "b",
+            "label": "Correct and verify usable access with the site authority and communicate it to all relevant roles"
+          },
+          {
+            "id": "c",
+            "label": "Assume responders will find another entrance themselves"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R01_check6",
+        "prompt": "A revised emergency contact list is uploaded but night staff cannot access it and the number is untested. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the upload as proof of readiness"
+          },
+          {
+            "id": "b",
+            "label": "Wait for a real event to test the new number"
+          },
+          {
+            "id": "c",
+            "label": "Make the current arrangement accessible and verify the alarm/response route for the affected shift"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R01_final1",
+        "prompt": "For plan from credible scenarios, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An office plan does not automatically address remote industrial hazards or response constraints."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R01_final2",
+        "prompt": "Which evidence would most directly verify plan from credible scenarios in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A scenario-based company/site interface review with assigned actions and known limitations"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R01_final3",
+        "prompt": "A relief worker proposes the following shortcut during plan from credible scenarios: \"Use the office plan because the company logo is correct.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the office plan because the company logo is correct"
+          },
+          {
+            "id": "b",
+            "label": "Let each worker decide what an emergency means"
+          },
+          {
+            "id": "c",
+            "label": "Develop and coordinate the emergency arrangements for the actual work and site scenarios"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R01_final4",
+        "prompt": "For make alarm and notification actionable, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A sent message is not evidence that emergency response has been activated."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R01_final5",
+        "prompt": "Which evidence would most directly verify make alarm and notification actionable in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An end-to-end alarm test and verified current monitored contacts"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R01_final6",
+        "prompt": "A relief worker proposes the following shortcut during make alarm and notification actionable: \"Wait for someone to react to the group chat.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wait for someone to react to the group chat"
+          },
+          {
+            "id": "b",
+            "label": "Complete the incident form before raising the alarm"
+          },
+          {
+            "id": "c",
+            "label": "Use the designated monitored alarm route and confirm the responsible role receives actionable information"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R01_final7",
+        "prompt": "For define command and worker boundaries, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Critical emergency duties must be planned and assigned rather than improvised during exposure."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R01_final8",
+        "prompt": "Which evidence would most directly verify define command and worker boundaries in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A role briefing and plan identifying authorized critical-operation duties and withdrawal limits"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R01_final9",
+        "prompt": "A relief worker proposes the following shortcut during define command and worker boundaries: \"Stay because the worker knows the equipment location.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stay because the worker knows the equipment location"
+          },
+          {
+            "id": "b",
+            "label": "Accept instructions from whichever supervisor speaks loudest"
+          },
+          {
+            "id": "c",
+            "label": "Withdraw under the plan and refer the shutdown decision to the designated trained and authorized role"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R01_final10",
+        "prompt": "For evacuate and account for everyone, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A complete employee count does not establish accountability for everyone on site."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R01_final11",
+        "prompt": "Which evidence would most directly verify evacuate and account for everyone in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A current reconciled muster record covering employees, contractors and visitors with unresolved cases escalated"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R01_final12",
+        "prompt": "A relief worker proposes the following shortcut during evacuate and account for everyone: \"Declare everyone accounted for using the employee total.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Declare everyone accounted for using the employee total"
+          },
+          {
+            "id": "b",
+            "label": "Send an untrained worker back into the area to search"
+          },
+          {
+            "id": "c",
+            "label": "Reconcile all affected groups through the accountability process and report unresolved people to command"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R01_final13",
+        "prompt": "For provide usable responder access, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An emergency number cannot overcome inaccurate or inaccessible directions."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R01_final14",
+        "prompt": "Which evidence would most directly verify provide usable responder access in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified current entrance and safe responder-guide arrangement tested with the responsible roles"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R01_final15",
+        "prompt": "A relief worker proposes the following shortcut during provide usable responder access: \"Keep the old sheet until the next scheduled review.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the old sheet until the next scheduled review"
+          },
+          {
+            "id": "b",
+            "label": "Assume responders will find another entrance themselves"
+          },
+          {
+            "id": "c",
+            "label": "Correct and verify usable access with the site authority and communicate it to all relevant roles"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R01_final16",
+        "prompt": "For test and maintain the interface, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A document update is not implemented until the people who rely on it can use it."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R01_final17",
+        "prompt": "Which evidence would most directly verify test and maintain the interface in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A night-shift access and notification test with recorded receiver response"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R01_final18",
+        "prompt": "A relief worker proposes the following shortcut during test and maintain the interface: \"Count the upload as proof of readiness.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the upload as proof of readiness"
+          },
+          {
+            "id": "b",
+            "label": "Wait for a real event to test the new number"
+          },
+          {
+            "id": "c",
+            "label": "Make the current arrangement accessible and verify the alarm/response route for the affected shift"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R01_final19",
+        "prompt": "In Scenario 1, why is the correct telephone number insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Alarm meaning, accountability, site roles and responder access also need verified arrangements"
+          },
+          {
+            "id": "b",
+            "label": "Telephone contact is never useful"
+          },
+          {
+            "id": "c",
+            "label": "Visitors are automatically covered by an employee roster"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R01_final20",
+        "prompt": "In Scenario 2, what should the volunteer do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Re-enter immediately before conditions worsen"
+          },
+          {
+            "id": "b",
+            "label": "Provide last-known information and remain within the assigned emergency role"
+          },
+          {
+            "id": "c",
+            "label": "Leave without reporting because their own name was counted"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "R01_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R01_lesson1",
+          "questionIds": [
+            "R01_check1"
+          ]
+        },
+        {
+          "lessonId": "R01_lesson2",
+          "questionIds": [
+            "R01_check2"
+          ]
+        },
+        {
+          "lessonId": "R01_lesson3",
+          "questionIds": [
+            "R01_check3"
+          ]
+        },
+        {
+          "lessonId": "R01_lesson4",
+          "questionIds": [
+            "R01_check4"
+          ]
+        },
+        {
+          "lessonId": "R01_lesson5",
+          "questionIds": [
+            "R01_check5"
+          ]
+        },
+        {
+          "lessonId": "R01_lesson6",
+          "questionIds": [
+            "R01_check6"
+          ]
+        },
+        {
+          "lessonId": "R01_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R01_final",
+          "questionIds": [
+            "R01_final1",
+            "R01_final2",
+            "R01_final3",
+            "R01_final4",
+            "R01_final5",
+            "R01_final6",
+            "R01_final7",
+            "R01_final8",
+            "R01_final9",
+            "R01_final10",
+            "R01_final11",
+            "R01_final12",
+            "R01_final13",
+            "R01_final14",
+            "R01_final15",
+            "R01_final16",
+            "R01_final17",
+            "R01_final18",
+            "R01_final19",
+            "R01_final20"
+          ]
+        },
+        {
+          "lessonId": "R01_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "R01_check1": "Develop and coordinate the emergency arrangements for the actual work and site scenarios. An office plan does not automatically address remote industrial hazards or response constraints.",
+        "R01_check2": "Use the designated monitored alarm route and confirm the responsible role receives actionable information. A sent message is not evidence that emergency response has been activated.",
+        "R01_check3": "Withdraw under the plan and refer the shutdown decision to the designated trained and authorized role. Critical emergency duties must be planned and assigned rather than improvised during exposure.",
+        "R01_check4": "Reconcile all affected groups through the accountability process and report unresolved people to command. A complete employee count does not establish accountability for everyone on site.",
+        "R01_check5": "Correct and verify usable access with the site authority and communicate it to all relevant roles. An emergency number cannot overcome inaccurate or inaccessible directions.",
+        "R01_check6": "Make the current arrangement accessible and verify the alarm/response route for the affected shift. A document update is not implemented until the people who rely on it can use it.",
+        "R01_final1": "An office plan does not automatically address remote industrial hazards or response constraints. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R01_final2": "A scenario-based company/site interface review with assigned actions and known limitations. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R01_final3": "Develop and coordinate the emergency arrangements for the actual work and site scenarios. An office plan does not automatically address remote industrial hazards or response constraints. A staffing change does not remove this requirement.",
+        "R01_final4": "A sent message is not evidence that emergency response has been activated. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R01_final5": "An end-to-end alarm test and verified current monitored contacts. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R01_final6": "Use the designated monitored alarm route and confirm the responsible role receives actionable information. A sent message is not evidence that emergency response has been activated. A staffing change does not remove this requirement.",
+        "R01_final7": "Critical emergency duties must be planned and assigned rather than improvised during exposure. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R01_final8": "A role briefing and plan identifying authorized critical-operation duties and withdrawal limits. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R01_final9": "Withdraw under the plan and refer the shutdown decision to the designated trained and authorized role. Critical emergency duties must be planned and assigned rather than improvised during exposure. A staffing change does not remove this requirement.",
+        "R01_final10": "A complete employee count does not establish accountability for everyone on site. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R01_final11": "A current reconciled muster record covering employees, contractors and visitors with unresolved cases escalated. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R01_final12": "Reconcile all affected groups through the accountability process and report unresolved people to command. A complete employee count does not establish accountability for everyone on site. A staffing change does not remove this requirement.",
+        "R01_final13": "An emergency number cannot overcome inaccurate or inaccessible directions. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R01_final14": "A verified current entrance and safe responder-guide arrangement tested with the responsible roles. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R01_final15": "Correct and verify usable access with the site authority and communicate it to all relevant roles. An emergency number cannot overcome inaccurate or inaccessible directions. A staffing change does not remove this requirement.",
+        "R01_final16": "A document update is not implemented until the people who rely on it can use it. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R01_final17": "A night-shift access and notification test with recorded receiver response. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R01_final18": "Make the current arrangement accessible and verify the alarm/response route for the affected shift. A document update is not implemented until the people who rely on it can use it. A staffing change does not remove this requirement.",
+        "R01_final19": "An emergency response is a chain of coordinated actions. A number does not establish the other links.",
+        "R01_final20": "Missing-person information must reach command, while rescue and search remain within planned qualified response arrangements."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

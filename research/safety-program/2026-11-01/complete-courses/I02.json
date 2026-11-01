@@ -1,0 +1,781 @@
+{
+  "familyId": "I02",
+  "title": "Investigation and causal analysis",
+  "description": "Complete original VNDRLY I02 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Find failed controls and organizational causes rather than blame alone.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Qualified investigator instruction and assessed case analysis; complex events need specialist investigators. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y15-95-301_0.pdf"
+    },
+    {
+      "title": "OSHA incident investigation guidance",
+      "url": "https://www.osha.gov/incident-investigation"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "I02_intro",
+        "title": "Start here — Investigation and causal analysis",
+        "body": "# I02: Investigation and causal analysis\n\nFind failed controls and organizational causes rather than blame alone. This course teaches the decisions needed to implement that purpose in field operations. It covers evidence collection, worker involvement, competence, causal review and independent challenge. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I02_lesson1",
+        "title": "Lesson 1 — Set investigation scope by potential harm",
+        "body": "## Set investigation scope by potential harm\n\nInvestigation depth should reflect credible potential consequence, complexity and applicable obligations, not only the injury outcome. Secure immediate protection before analysis. Select people with relevant investigation and technical capability, and include worker knowledge. A high-potential near miss may need specialist support even without injury. Define the questions and interfaces to examine so the investigation does not become an unbounded search or a quick blame exercise.\n\n### Deeper application\n\nDefine scope proportionately while preserving flexibility for new evidence. A simple low-complexity event may need a short factual review, while an event with severe potential or complex technical interactions may require specialist investigators. Record the basis for that choice. Do not confuse a shorter report with a less serious event or a longer report with a better investigation. The test is whether relevant control questions receive supported answers.\n\n### Worked oilfield example\n\nA suspended load narrowly misses a worker, but a superficial review is proposed because nobody was injured. The decision is to set proportionate investigation depth using credible potential harm and obtain relevant lifting expertise.\n\nOutcome severity alone does not reveal the control weakness; credible potential harm guides investigation depth. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An investigation scope documenting actual and potential consequence, required expertise and review boundaries. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the team lacks expertise to judge the lifting-control failure it is analyzing. The appropriate correction is to add suitable specialist competence and limit unsupported technical conclusions meanwhile. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I02_lesson2",
+        "title": "Lesson 2 — Collect and preserve evidence respectfully",
+        "body": "## Collect and preserve evidence respectfully\n\nGather relevant physical and documentary evidence and worker accounts while memories and records are available. Interview respectfully using open questions and avoid coaching witnesses toward a preferred answer. Record who supplied information, when and its limitations. Separate recollection from direct measurement. Do not expose people to danger to reconstruct an event; use safe analysis and competent technical methods. Protect confidentiality without promising secrecy the process cannot guarantee.\n\n### Deeper application\n\nAsk witnesses what they saw, heard and did, then explore context without supplying the answer. Record differences and the limits of recollection. A worker who did not see the initial condition may still provide valuable evidence about planning or handover. Do not require witnesses to sign an account they disagree with merely to standardize the file. Respectful collection improves accuracy while protecting appropriate confidentiality.\n\n### Worked oilfield example\n\nTwo witnesses give different accounts of when a barrier opening appeared. The decision is to retain both accounts and seek corroborating evidence without forcing agreement.\n\nDisagreement is evidence to investigate; rank and convenience do not determine which recollection is accurate. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Attributed accounts with collection times, differences and linked corroborating evidence. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that a photograph has no known time or location provenance. The appropriate correction is to establish provenance where possible and clearly limit conclusions drawn from the uncertain image. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I02_lesson3",
+        "title": "Lesson 3 — Build an evidence-based timeline",
+        "body": "## Build an evidence-based timeline\n\nA timeline shows relevant conditions and actions before, during and after the event. Include planning, dispatch, changes and handovers, not only the final seconds. Mark estimated times and unresolved sequence questions. Connect entries to evidence references. A coherent story can still be wrong if gaps are filled with assumptions. The purpose is to identify how controls and decisions interacted, rather than to create a persuasive narrative detached from records.\n\n### Deeper application\n\nUse evidence references beside timeline entries so another reviewer can test the sequence. Mark approximate times and avoid false precision. Include earlier decisions that explain how the work was configured: route changes, maintenance status, staffing and dispatch instructions where relevant. An unknown interval is a question for inquiry. Filling it with a plausible story creates a causal claim the evidence may not support.\n\n### Worked oilfield example\n\nThe timeline states the barrier was removed before dispatch, but the evidence establishes only that it was absent after the event. The decision is to mark the sequence as uncertain and obtain relevant records before making a causal claim.\n\nA causal sequence requires evidence. A later observation does not automatically prove an earlier condition. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A referenced timeline separating known times, estimates and unresolved sequence questions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that a new dispatch log contradicts the original sequence. The appropriate correction is to preserve the original and update the analysis transparently with the new evidence and its implications. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I02_lesson4",
+        "title": "Lesson 4 — Analyze failed controls and organizational conditions",
+        "body": "## Analyze failed controls and organizational conditions\n\nExamine which safeguards should have prevented exposure, why they were absent or ineffective and how the work system allowed that state. A worker action may be relevant without being the whole cause. Explore design, maintenance, planning, supervision, communication and production pressure where evidence supports them. Avoid treating a generic human error label as an explanation. Causes should connect to actual conditions and testable corrective actions.\n\n### Deeper application\n\nAsk what the control was intended to do, whether it existed, whether it was suitable and why it was not effective at the time. Then examine the supported conditions that allowed the gap. A rule violation may be an immediate action but does not explain whether the rule was understandable, workable, supervised or contradicted by other instructions. Avoid a single root-cause label when several interacting factors are supported.\n\n### Worked oilfield example\n\nThe draft concludes worker careless although the walkway was blocked and dispatch required drivers to keep moving. The decision is to analyze the blocked route and dispatch conditions alongside the worker's actions.\n\nA label does not explain why the control failed. Examine relevant system conditions without replacing one unsupported blame claim with another. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A cause analysis linking observed exposure to failed separation and supported planning or dispatch conditions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the report names production pressure but provides no supporting accounts or records. The appropriate correction is to obtain evidence and qualify or revise the proposed causal conclusion before relying on it. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I02_lesson5",
+        "title": "Lesson 5 — Link actions to supported findings",
+        "body": "## Link actions to supported findings\n\nEvery corrective action should address a specific finding or failed control. Choose stronger feasible control changes where appropriate, rather than defaulting to reminders. Define accountable owners, interim protection and later effectiveness questions. Check whether comparable work elsewhere shares the same weakness. An action that fixes the immediate object may leave the allocation or maintenance process unchanged, allowing recurrence. Avoid prescribing technical redesign without competent review.\n\n### Deeper application\n\nA finding-to-action table can expose weak proposals. If the finding is uncontrolled access, an email reminding people about access may support communication but may not establish a barrier or workable route. Explain the chosen control and technical review needed. Identify similar operations potentially affected. The action owner should define implementation evidence and a later effectiveness question rather than promising generic retraining for every causal category.\n\n### Worked oilfield example\n\nAn investigation finds uncontrolled pedestrian access, but its only action is remind everyone to be careful. The decision is to develop a competent reviewed separation control and address the process allowing uncontrolled access.\n\nActions must address the demonstrated control weakness; a reminder or unrelated purchase may leave exposure unchanged. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A finding-to-action map with control rationale, owner, interim protection and effectiveness test. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the corrective action protects one gate but identical access conditions exist at another active gate. The appropriate correction is to review the shared exposure and apply an appropriately scoped correction to affected comparable work. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I02_lesson6",
+        "title": "Lesson 6 — Challenge conclusions and retain history",
+        "body": "## Challenge conclusions and retain history\n\nA suitable reviewer tests whether evidence supports the sequence, causal claims and actions. Include relevant worker perspectives and disclose review limitations or conflicts. An independent review must actually be independent; do not relabel a self-check. Preserve original event history and subsequent revisions. Closing the investigation does not delete the occurrence or prove every action effective. Share deidentified learning through the proper process.\n\n### Deeper application\n\nChallenge includes asking what evidence would contradict the conclusion. A reviewer should check alternative explanations, unsupported leaps and whether actions match findings. Record remaining uncertainty instead of forcing unanimity. A corrected report should preserve version history and explain why conclusions changed. Investigation closure means the inquiry reached its defined decision state; it does not make an event unoccur or complete later effectiveness checks that have not happened.\n\n### Worked oilfield example\n\nThe investigator also owns the failed process and signs the review as independent without another reviewer. The decision is to disclose the conflict and obtain appropriately separate challenge of the relevant conclusions.\n\nReview credibility depends on actual competence and independence claims, not labels. Original history must remain traceable. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A review record identifying reviewer competence, relationship to the work, challenges and resolved changes. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the final report closes all actions although effectiveness checks are scheduled for later. The appropriate correction is to separate investigation closure from action implementation and pending effectiveness status. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I02_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA suspended load narrowly misses a worker, but a superficial review is proposed because nobody was injured. At the handover, a second issue is identified: A photograph has no known time or location provenance. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Treat the inferred sequence as proven because it fits the preferred explanation. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Set proportionate investigation depth using credible potential harm and obtain relevant lifting expertise. The reason is specific: Outcome severity alone does not reveal the control weakness; credible potential harm guides investigation depth. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Establish provenance where possible and clearly limit conclusions drawn from the uncertain image. The supporting record should show: Attributed accounts with collection times, differences and linked corroborating evidence. This is important because disagreement is evidence to investigate; rank and convenience do not determine which recollection is accurate. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because a causal sequence requires evidence. A later observation does not automatically prove an earlier condition. The suitable decision is: Mark the sequence as uncertain and obtain relevant records before making a causal claim. Evidence for review would include: A referenced timeline separating known times, estimates and unresolved sequence questions. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nThe draft concludes worker careless although the walkway was blocked and dispatch required drivers to keep moving. At the handover, a second issue is identified: The corrective action protects one gate but identical access conditions exist at another active gate. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Call the review independent because the form requires that word. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Analyze the blocked route and dispatch conditions alongside the worker's actions. The reason is specific: A label does not explain why the control failed. Examine relevant system conditions without replacing one unsupported blame claim with another. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Review the shared exposure and apply an appropriately scoped correction to affected comparable work. The supporting record should show: A finding-to-action map with control rationale, owner, interim protection and effectiveness test. This is important because actions must address the demonstrated control weakness; a reminder or unrelated purchase may leave exposure unchanged. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because review credibility depends on actual competence and independence claims, not labels. Original history must remain traceable. The suitable decision is: Disclose the conflict and obtain appropriately separate challenge of the relevant conclusions. Evidence for review would include: A review record identifying reviewer competence, relationship to the work, challenges and resolved changes. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I02_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I02_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nQualified investigator instruction and assessed case analysis; complex events need specialist investigators. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "I02_check1",
+        "prompt": "A suspended load narrowly misses a worker, but a superficial review is proposed because nobody was injured. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Set proportionate investigation depth using credible potential harm and obtain relevant lifting expertise."
+          },
+          {
+            "id": "b",
+            "label": "Limit review to a short no-injury entry."
+          },
+          {
+            "id": "c",
+            "label": "Treat the absence of injury as proof all controls worked."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I02_final1",
+        "prompt": "For set investigation scope by potential harm, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "An investigation scope documenting actual and potential consequence, required expertise and review boundaries."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I02_final2",
+        "prompt": "A later review finds: The team lacks expertise to judge the lifting-control failure it is analyzing. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Add suitable specialist competence and limit unsupported technical conclusions meanwhile."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I02_final3",
+        "prompt": "Consider this proposed response: Limit review to a short no-injury entry. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Outcome severity alone does not reveal the control weakness; credible potential harm guides investigation depth."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I02_check2",
+        "prompt": "Two witnesses give different accounts of when a barrier opening appeared. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Rewrite both accounts into one convenient version."
+          },
+          {
+            "id": "b",
+            "label": "Retain both accounts and seek corroborating evidence without forcing agreement."
+          },
+          {
+            "id": "c",
+            "label": "Choose the account from the most senior witness automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I02_final4",
+        "prompt": "For collect and preserve evidence respectfully, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "Attributed accounts with collection times, differences and linked corroborating evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I02_final5",
+        "prompt": "A later review finds: A photograph has no known time or location provenance. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Establish provenance where possible and clearly limit conclusions drawn from the uncertain image."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I02_final6",
+        "prompt": "Consider this proposed response: Rewrite both accounts into one convenient version. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Disagreement is evidence to investigate; rank and convenience do not determine which recollection is accurate."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I02_check3",
+        "prompt": "The timeline states the barrier was removed before dispatch, but the evidence establishes only that it was absent after the event. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the inferred sequence as proven because it fits the preferred explanation."
+          },
+          {
+            "id": "b",
+            "label": "Delete the uncertainty to make the timeline easier to read."
+          },
+          {
+            "id": "c",
+            "label": "Mark the sequence as uncertain and obtain relevant records before making a causal claim."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I02_final7",
+        "prompt": "For build an evidence-based timeline, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A referenced timeline separating known times, estimates and unresolved sequence questions."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I02_final8",
+        "prompt": "A later review finds: A new dispatch log contradicts the original sequence. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Preserve the original and update the analysis transparently with the new evidence and its implications."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I02_final9",
+        "prompt": "Consider this proposed response: Treat the inferred sequence as proven because it fits the preferred explanation. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "A causal sequence requires evidence. A later observation does not automatically prove an earlier condition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I02_check4",
+        "prompt": "The draft concludes worker careless although the walkway was blocked and dispatch required drivers to keep moving. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Analyze the blocked route and dispatch conditions alongside the worker's actions."
+          },
+          {
+            "id": "b",
+            "label": "Stop at the carelessness label because a rule existed."
+          },
+          {
+            "id": "c",
+            "label": "Assume management caused everything without examining evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I02_final10",
+        "prompt": "For analyze failed controls and organizational conditions, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A cause analysis linking observed exposure to failed separation and supported planning or dispatch conditions."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I02_final11",
+        "prompt": "A later review finds: The report names production pressure but provides no supporting accounts or records. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Obtain evidence and qualify or revise the proposed causal conclusion before relying on it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I02_final12",
+        "prompt": "Consider this proposed response: Stop at the carelessness label because a rule existed. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A label does not explain why the control failed. Examine relevant system conditions without replacing one unsupported blame claim with another."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I02_check5",
+        "prompt": "An investigation finds uncontrolled pedestrian access, but its only action is remind everyone to be careful. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the finding when the reminder email is sent."
+          },
+          {
+            "id": "b",
+            "label": "Develop a competent reviewed separation control and address the process allowing uncontrolled access."
+          },
+          {
+            "id": "c",
+            "label": "Buy unrelated PPE and describe it as a causal correction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I02_final13",
+        "prompt": "For link actions to supported findings, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A finding-to-action map with control rationale, owner, interim protection and effectiveness test."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I02_final14",
+        "prompt": "A later review finds: The corrective action protects one gate but identical access conditions exist at another active gate. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Review the shared exposure and apply an appropriately scoped correction to affected comparable work."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I02_final15",
+        "prompt": "Consider this proposed response: Close the finding when the reminder email is sent. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Actions must address the demonstrated control weakness; a reminder or unrelated purchase may leave exposure unchanged."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I02_check6",
+        "prompt": "The investigator also owns the failed process and signs the review as independent without another reviewer. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Call the review independent because the form requires that word."
+          },
+          {
+            "id": "b",
+            "label": "Delete the original report before issuing a corrected version."
+          },
+          {
+            "id": "c",
+            "label": "Disclose the conflict and obtain appropriately separate challenge of the relevant conclusions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I02_final16",
+        "prompt": "For challenge conclusions and retain history, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A review record identifying reviewer competence, relationship to the work, challenges and resolved changes."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I02_final17",
+        "prompt": "A later review finds: The final report closes all actions although effectiveness checks are scheduled for later. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Separate investigation closure from action implementation and pending effectiveness status."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I02_final18",
+        "prompt": "Consider this proposed response: Call the review independent because the form requires that word. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Review credibility depends on actual competence and independence claims, not labels. Original history must remain traceable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I02_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Establish provenance where possible and clearly limit conclusions drawn from the uncertain image."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I02_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Review the shared exposure and apply an appropriately scoped correction to affected comparable work."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "I02_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I02_lesson1",
+          "questionIds": [
+            "I02_check1"
+          ]
+        },
+        {
+          "lessonId": "I02_lesson2",
+          "questionIds": [
+            "I02_check2"
+          ]
+        },
+        {
+          "lessonId": "I02_lesson3",
+          "questionIds": [
+            "I02_check3"
+          ]
+        },
+        {
+          "lessonId": "I02_lesson4",
+          "questionIds": [
+            "I02_check4"
+          ]
+        },
+        {
+          "lessonId": "I02_lesson5",
+          "questionIds": [
+            "I02_check5"
+          ]
+        },
+        {
+          "lessonId": "I02_lesson6",
+          "questionIds": [
+            "I02_check6"
+          ]
+        },
+        {
+          "lessonId": "I02_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I02_assessment",
+          "questionIds": [
+            "I02_final1",
+            "I02_final2",
+            "I02_final3",
+            "I02_final4",
+            "I02_final5",
+            "I02_final6",
+            "I02_final7",
+            "I02_final8",
+            "I02_final9",
+            "I02_final10",
+            "I02_final11",
+            "I02_final12",
+            "I02_final13",
+            "I02_final14",
+            "I02_final15",
+            "I02_final16",
+            "I02_final17",
+            "I02_final18",
+            "I02_final19",
+            "I02_final20"
+          ]
+        },
+        {
+          "lessonId": "I02_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "I02_check1": "Outcome severity alone does not reveal the control weakness; credible potential harm guides investigation depth.",
+        "I02_final1": "Outcome severity alone does not reveal the control weakness; credible potential harm guides investigation depth. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I02_final2": "Outcome severity alone does not reveal the control weakness; credible potential harm guides investigation depth. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I02_final3": "Outcome severity alone does not reveal the control weakness; credible potential harm guides investigation depth. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I02_check2": "Disagreement is evidence to investigate; rank and convenience do not determine which recollection is accurate.",
+        "I02_final4": "Disagreement is evidence to investigate; rank and convenience do not determine which recollection is accurate. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I02_final5": "Disagreement is evidence to investigate; rank and convenience do not determine which recollection is accurate. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I02_final6": "Disagreement is evidence to investigate; rank and convenience do not determine which recollection is accurate. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I02_check3": "A causal sequence requires evidence. A later observation does not automatically prove an earlier condition.",
+        "I02_final7": "A causal sequence requires evidence. A later observation does not automatically prove an earlier condition. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I02_final8": "A causal sequence requires evidence. A later observation does not automatically prove an earlier condition. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I02_final9": "A causal sequence requires evidence. A later observation does not automatically prove an earlier condition. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I02_check4": "A label does not explain why the control failed. Examine relevant system conditions without replacing one unsupported blame claim with another.",
+        "I02_final10": "A label does not explain why the control failed. Examine relevant system conditions without replacing one unsupported blame claim with another. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I02_final11": "A label does not explain why the control failed. Examine relevant system conditions without replacing one unsupported blame claim with another. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I02_final12": "A label does not explain why the control failed. Examine relevant system conditions without replacing one unsupported blame claim with another. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I02_check5": "Actions must address the demonstrated control weakness; a reminder or unrelated purchase may leave exposure unchanged.",
+        "I02_final13": "Actions must address the demonstrated control weakness; a reminder or unrelated purchase may leave exposure unchanged. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I02_final14": "Actions must address the demonstrated control weakness; a reminder or unrelated purchase may leave exposure unchanged. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I02_final15": "Actions must address the demonstrated control weakness; a reminder or unrelated purchase may leave exposure unchanged. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I02_check6": "Review credibility depends on actual competence and independence claims, not labels. Original history must remain traceable.",
+        "I02_final16": "Review credibility depends on actual competence and independence claims, not labels. Original history must remain traceable. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I02_final17": "Review credibility depends on actual competence and independence claims, not labels. Original history must remain traceable. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I02_final18": "Review credibility depends on actual competence and independence claims, not labels. Original history must remain traceable. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I02_final19": "Disagreement is evidence to investigate; rank and convenience do not determine which recollection is accurate. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "I02_final20": "Actions must address the demonstrated control weakness; a reminder or unrelated purchase may leave exposure unchanged. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

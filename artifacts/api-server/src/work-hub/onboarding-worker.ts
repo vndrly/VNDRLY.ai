@@ -1,4 +1,6 @@
 import { runLibraryDeliveryWork } from "./library-delivery-worker";
+import {assignPolicyTraining} from './training-course-policy';
+import {runRequiredTrainingWork} from './required-training';
 import { and, eq, sql } from "drizzle-orm";
 import {
   db,
@@ -138,6 +140,24 @@ export async function runOnboardingWork(now = new Date()) {
           .set({ assignmentMetadata: a })
           .where(eq(instances.id, instance.id));
       }
+      const policies=await tx.select().from(templates).where(sql`
+        ${templates.libraryMetadata}->>'state'='published'
+        AND (${templates.libraryMetadata}->'trainingPolicy'->>'newHireRequired'='true' OR ${templates.libraryMetadata}->'trainingPolicy'->>'roleChangeRequired'='true')
+        AND coalesce((${templates.libraryMetadata}->'trainingPolicy'->>'nextScanAt')::timestamptz,'1970-01-01')<=${now}
+        AND NOT EXISTS (SELECT 1 FROM work_hub_form_templates newer WHERE newer.owner_org_type=${templates.ownerOrgType} AND newer.owner_org_id=${templates.ownerOrgId} AND newer.library_metadata->>'seriesId'=${templates.libraryMetadata}->>'seriesId' AND newer.current_version>${templates.currentVersion} AND newer.library_metadata->>'state'<>'draft')
+      `).orderBy(sql`coalesce(${templates.libraryMetadata}->'trainingPolicy'->>'nextScanAt','1970-01-01')`).limit(25).for('update',{skipLocked:true});
+      for(const record of policies){
+        const metadata=LibraryMetadataSchema.parse(record.libraryMetadata);
+        try{
+          const count=await tx.transaction(inner=>assignPolicyTraining(inner,record,undefined,now));
+          assigned+=count;
+          metadata.trainingPolicy!.nextScanAt=new Date(now.getTime()+60000).toISOString();
+        }catch{
+          metadata.trainingPolicy!.nextScanAt=new Date(now.getTime()+3600000).toISOString();
+          console.error('Work Hub training policy deferred',record.id);
+        }
+        await tx.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,record.id));
+      }
       return assigned;
     });
   } finally {
@@ -149,6 +169,7 @@ export function startOnboardingWorker() {
   const run = () =>
     void runOnboardingWork()
       .then(() => runLibraryDeliveryWork())
+      .then(() => runRequiredTrainingWork())
       .catch(() => console.error("Work Hub onboarding scan unavailable"));
   timer = setInterval(run, 60000);
   timer.unref?.();

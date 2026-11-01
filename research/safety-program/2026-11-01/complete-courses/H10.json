@@ -1,0 +1,777 @@
+{
+  "familyId": "H10",
+  "title": "Pressure pumping, testing and exclusion zones",
+  "description": "Complete guided H10 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Prevent high-energy release and incompatible pressure equipment use.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Pressure-system designers, test leaders and operators require separate technical qualification and practical evaluation of the actual system, limits, setup, instrumentation, exclusion, shutdown and verified depressurization. This course does not authorize test-pressure selection, assembly approval or hands-on testing.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Pressure pumping, testing and exclusion zones",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/chevron-specific-swc/Pressure%20Pumping.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H10_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H10: Pressure pumping, testing and exclusion zones\n\nThis original VNDRLY course teaches decisions for service-specific: wellsite, pressure, production and testing services. Its purpose is to prevent high-energy release and incompatible pressure equipment use. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H10_lesson1",
+        "title": "Lesson 1: Understand pressure as stored energy",
+        "body": "Pressure systems can release energy through failed components, disconnected lines, leaks, moving hoses and ejected material. Both liquid and gas systems can injure; compressed gas can store substantial energy. A small leak can penetrate skin or release hazardous contents, so never use a hand to search for leakage. A system that looks still can remain pressurized.\n\nThe actual fluid, temperature, pressure, volume and configuration shape the hazard. A competent technical authority defines the operating envelope and testing method. This course does not supply a universal test pressure, hold time or exclusion distance.\n\nWorked example: a worker wants to feel around a fitting to locate a leak during testing. The activity is stopped and the approved leak-detection and depressurization method is used instead; gloves do not make hand searching safe.\n\n### Applying the mechanism\n\nPressure is force acting over an area, and its release can move components as well as fluid. A disconnected connection can eject parts; a hose can whip; a high-velocity jet can penetrate or burn; hazardous contents can create atmosphere and environmental exposure. The energy depends on the complete system, including compressed gas, trapped volumes and elastic components. For that reason, the safe assessment considers more than the gauge’s maximum number. The fluid and temperature also matter: water, hot process liquid and nitrogen have different secondary hazards even at a similar indicated pressure. The user must know the approved envelope and stop conditions, while the competent technical authority establishes the calculations and method. Never derive a safe test from a previous job’s pressure alone.\n\n### Decision principles\n\nVisible stillness does not establish energy state. The approved depressurization and verification method must establish the condition before intervention.\n\nTest pressure, method, sequence and limits depend on system design and service. They cannot be improvised by a general awareness learner.\n\nFluid compressibility is only one factor. Pressure, volume, elastic components and release mechanics can create serious hazards in liquid systems.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H10_lesson2",
+        "title": "Lesson 2: Verify the complete system configuration",
+        "body": "Every component must suit the approved service: pressure and temperature rating, fluid compatibility, connections, hoses, valves, gauges, restraints and relief protection. The weakest unsuitable component can defeat the system. A matching diameter or thread does not prove compatibility or rating. Field substitutions require competent review under the change process.\n\nTrace identity and required inspection or test status before assembly. Keep damaged, unidentified or overdue components out of reliance. Do not use paint color or apparent thickness to infer a rating.\n\nWorked example: a replacement hose fits the coupling but has an unreadable identity. The crew obtains a verified suitable hose rather than assuming that physical fit establishes pressure capability.\n\n### Applying the mechanism\n\nAn approved system is a particular assembly, not a collection of individually impressive parts. Connection type, material, pressure class, temperature and fluid compatibility must all fit together. A connector can thread into another component without forming an acceptable pressure assembly. Restraints and supports must be attached to suitable points and arranged as specified, rather than added as an improvised reassurance. Instruments need appropriate connection and range, and relief protection must match the accepted design. Before pressure is applied, compare what is physically assembled with the plan. If a part was substituted after the review, identify the difference explicitly and obtain the required acceptance. Do not let a generic system name conceal a changed weak point.\n\n### Decision principles\n\nA component must perform under the actual pressure, temperature, fluid and loading conditions. Reputation and appearance cannot replace technical evidence.\n\nSubstitutions can change ratings, materials and connection behavior. The accepted system must reflect what is actually assembled.\n\nRelief devices have specific settings, capacity and installation requirements. Their presence does not make an otherwise unsuitable or uncontrolled system acceptable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H10_lesson3",
+        "title": "Lesson 3: Establish separation, communication and shutdown",
+        "body": "Before pressurization, establish the approved exclusion area and access control for credible release, hose movement and ejected material. Protect adjacent crews and routes, including side approaches. Locate operators and observers at the designated safe positions and use approved remote methods where specified.\n\nAgree who controls the test, communications, stage authorization and emergency shutdown response. A lost signal or unauthorized person in the zone requires the planned stop. Do not position a person near a connection simply to watch for the first leak.\n\nWorked example: the front barrier is complete but a service door opens into the pressure zone. Pressurization remains held until that access is controlled and affected workers understand the boundary.\n\n### Applying the mechanism\n\nThe exclusion arrangement should protect people from the credible event, including moving hose, ejected hardware, spray and hazardous contents. It also needs to work with site traffic and adjacent operations. A barrier placed only where the crew stands may leave another approach open. The test leader confirms that people are clear and the boundary remains effective before each stage that changes exposure. Communication must identify who can initiate pressure, who confirms readiness and how a stop is recognized. Remote observation can reduce exposure only when its placement and capability suit the task; a camera that cannot show the relevant condition does not justify placing a person beside the connection. The approved method resolves those observation limits before testing.\n\n### Decision principles\n\nRelease paths and reach depend on the actual system and surroundings. The competent plan establishes the required boundary.\n\nPressure changes require shared understanding of control and exposure. A defined communication system prevents conflicting actions during stages and emergencies.\n\nObservation must not create exposure to prove the system works. Remote or otherwise approved methods preserve separation from release paths.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H10_lesson4",
+        "title": "Lesson 4: Conduct staged testing only within qualification",
+        "body": "Only qualified and authorized personnel conduct the approved test. Follow the defined sequence, instrumentation, stage holds, acceptance criteria and recording requirements. Do not increase pressure to overcome an unexplained response or compensate for an unsuitable gauge. The instrument range, accuracy and service status must support the measurement.\n\nThe test leader confirms conditions before each authorized stage and watches for unexpected behavior. Other workers remain outside the controlled area. Passing one stage is not permission to skip the next required check or introduce an unreviewed configuration.\n\nWorked example: pressure does not rise as expected. The operator stops under the plan and investigates through a safe controlled method rather than adding more input to force the expected reading.\n\n### Applying the mechanism\n\nA staged procedure allows the qualified test team to establish defined conditions and observe the system within a controlled sequence. It is not a license to invent pressure increments or shorten holds. The applicable plan states what must be measured, what results are acceptable and what requires stopping. Record actual values and behavior, including instability or unexpected pressure loss. Do not force a result to match the target by increasing input without understanding the response. A gauge connected through an obstructed path may not represent the intended section, while a gauge with an unsuitable range may not support the required decision. Qualified interpretation considers the system and measurement method together, rather than treating the displayed number as self-explanatory.\n\n### Decision principles\n\nTesting requires task-specific technical and operating skills. Written awareness does not demonstrate safe setup, control or interpretation.\n\nA display can move while providing unsuitable or unreliable measurement. Instrument selection and assurance must support the actual acceptance decision.\n\nEach stage and check has a defined purpose. A partial success does not establish the conditions assessed by later required steps.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H10_lesson5",
+        "title": "Lesson 5: Stop on leaks and verify depressurization",
+        "body": "Leakage, unexpected movement, loss of communication, failed instrumentation or breached separation are stop conditions under the plan. Do not tighten, strike or disconnect pressurized components as an improvised repair. Place the system in its prescribed safe state and verify depressurization before intervention.\n\nA zero reading at one point may not establish that every isolated or blocked section is depressurized. The competent procedure identifies trapped pockets and verification methods. Treat uncertainty as a hold, not an invitation to loosen a fitting to find out.\n\nWorked example: the pump is stopped but a check valve traps pressure downstream. The worker does not infer safety from pump shutdown. Authorized personnel establish and verify the actual section’s safe state.\n\n### Applying the mechanism\n\nDepressurization is a controlled operation because released contents and energy need a suitable destination. The prescribed method identifies the sections, valves, drains or vents, containment and verification. A check valve, blockage or isolated branch can retain pressure after another part reaches zero. A local gauge can also be damaged or disconnected from the trapped volume. The worker therefore does not treat one favorable clue as universal clearance. If intervention is needed, the authorized roles establish the relevant safe state and verify it by the approved method. Loosening a fitting to test for pressure can place the worker directly in the release path and is not a substitute for the required preparation. Suspected injection injuries require immediate emergency reporting and medical response under the site plan.\n\n### Decision principles\n\nA leak is evidence of a failed condition. Hands-on intervention while pressurized can expose the worker to injection, release and component movement.\n\nMeasurement is bounded by its connection and instrument condition. The approved procedure must address pockets and barriers that can separate the gauge from retained pressure.\n\nAn uncertain energy state means the prerequisite for intervention is not established. Separation and suitable equipment do not replace required verification.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H10_lesson6",
+        "title": "Lesson 6: Hand back and preserve configuration evidence",
+        "body": "After testing, controlled depressurization, drainage or other restoration follows the approved method. Record actual stages, results, defects, corrective actions, configuration and acceptance. The operating authority accepts the equipment state and any restrictions before return to service. A successful test is bounded to the tested arrangement and does not clear later substitutions.\n\nControl components involved in abnormal loading or failure through the equipment process. Review whether boundary checks, communications and measurement assurance worked. A test with no injury can still reveal serious control weaknesses.\n\nWorked example: a hose is changed after a successful test. The technical authority determines the required acceptance and retest rather than treating the previous result as automatically applying to the new assembly.\n\n### Applying the mechanism\n\nA test result should remain linked to the assembly and conditions that produced it. The final record should make clear whether the system was left drained, isolated, assembled for operation or under another restriction. Return to service also considers temporary equipment and relief arrangements introduced for testing. If a test hose, blind or temporary connection remains, its disposition must be explicit. A later component change requires the responsible technical decision about what evidence remains valid and what must be repeated. Preserve the earlier successful test rather than deleting it, but do not apply it to a different assembly. This distinction allows efficient reuse of valid evidence without pretending that an untested change has already been verified.\n\n### Decision principles\n\nTraceable results explain what was tested and under which conditions. A target value is an intention, not evidence of performance.\n\nTesting and operating readiness are related but distinct decisions. The accepted final state and restrictions must be communicated to the responsible operator.\n\nTechnical pressure testing requires separately assessed competence and authorization. Awareness supports stopping and escalation without granting execution authority.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H10_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: Leaking connection\n\nA test develops a small leak at a coupling. An experienced worker wants to tighten it while the pressure is held to avoid restarting the test.\n\n**Worked decision and reasoning.** The test follows its stop and safe-state procedure. People remain outside the release path. Authorized personnel depressurize and verify the relevant sections, then inspect and correct the connection under the approved method. The cause, repair and required retest are recorded. Experience does not remove injection or component-release hazards.\n\n### Scenario 2: Unverified replacement\n\nA damaged hose is replaced with a similar-looking spare whose service history and rating cannot be established. The crew wants to continue from the last completed test stage.\n\n**Worked decision and reasoning.** The spare is not used until suitability and required status are verified. The competent authority reviews the actual assembly and determines the required sequence and retest. The previous stage result is preserved as history but cannot establish the changed system. The boundary and communications are rechecked before any authorized pressurization.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H10_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H10_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nPressure-system designers, test leaders and operators require separate technical qualification and practical evaluation of the actual system, limits, setup, instrumentation, exclusion, shutdown and verified depressurization. This course does not authorize test-pressure selection, assembly approval or hands-on testing.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H10_check1",
+        "prompt": "A worker proposes using a hand to locate a pressure leak. What is the decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Do not do it; use the approved safe method and control the system."
+          },
+          {
+            "id": "b",
+            "label": "Allow it with gloves."
+          },
+          {
+            "id": "c",
+            "label": "Use a bare finger for better sensitivity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H10_final_1_1",
+        "prompt": "Does a motionless hose prove absence of pressure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, unless it vibrates."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after the pump sound stops."
+          },
+          {
+            "id": "c",
+            "label": "No; stored pressure can remain without visible movement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H10_final_1_2",
+        "prompt": "Who establishes the pressure test envelope?",
+        "options": [
+          {
+            "id": "a",
+            "label": "This awareness quiz automatically."
+          },
+          {
+            "id": "b",
+            "label": "The designated competent technical authority using actual service and equipment information."
+          },
+          {
+            "id": "c",
+            "label": "Any operator choosing a convenient gauge value."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H10_final_1_3",
+        "prompt": "Are liquid pressure systems harmless because liquid is less compressible?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; releases, component movement and stored system energy can still cause serious harm."
+          },
+          {
+            "id": "b",
+            "label": "Yes, only gas tests need controls."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the liquid is water."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H10_check2",
+        "prompt": "A replacement hose fits but its rating is unknown. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use it because the coupling matches."
+          },
+          {
+            "id": "b",
+            "label": "Use it only for the first pressure stage."
+          },
+          {
+            "id": "c",
+            "label": "Do not use it until suitability and traceability are established."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H10_final_2_1",
+        "prompt": "What determines component suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the supplier’s reputation."
+          },
+          {
+            "id": "b",
+            "label": "Approved rating, service compatibility, condition and configuration."
+          },
+          {
+            "id": "c",
+            "label": "Only connection size."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H10_final_2_2",
+        "prompt": "What should a field substitution trigger?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Required competent review and updated configuration acceptance."
+          },
+          {
+            "id": "b",
+            "label": "No review if it looks similar."
+          },
+          {
+            "id": "c",
+            "label": "Automatic approval from the delivery note."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H10_final_2_3",
+        "prompt": "What is the role of relief protection?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permission to exceed every other component rating."
+          },
+          {
+            "id": "b",
+            "label": "A substitute for all operating controls."
+          },
+          {
+            "id": "c",
+            "label": "The designed protective function within the approved system."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H10_check3",
+        "prompt": "A side door opens into the pressure exclusion area. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ask anyone entering to run through."
+          },
+          {
+            "id": "b",
+            "label": "Control and verify that access before pressurization."
+          },
+          {
+            "id": "c",
+            "label": "Proceed because the main entrance is closed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H10_final_3_1",
+        "prompt": "How is the exclusion area determined?",
+        "options": [
+          {
+            "id": "a",
+            "label": "By the approved task-specific technical and site assessment."
+          },
+          {
+            "id": "b",
+            "label": "By a universal distance invented in this course."
+          },
+          {
+            "id": "c",
+            "label": "By available tape length."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H10_final_3_2",
+        "prompt": "What should test communications establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only who records the final pressure."
+          },
+          {
+            "id": "b",
+            "label": "Only a general instruction to be careful."
+          },
+          {
+            "id": "c",
+            "label": "Controller, stage signals, stop response and loss-of-signal action."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H10_final_3_3",
+        "prompt": "Where should leak observers be positioned?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Inside the zone if wearing a face shield."
+          },
+          {
+            "id": "b",
+            "label": "At the safe positions and using methods defined by the approved plan."
+          },
+          {
+            "id": "c",
+            "label": "Beside the most likely failure point."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H10_check4",
+        "prompt": "Pressure behaves unexpectedly during a stage. What is the decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stop under the plan and resolve the cause through the safe process."
+          },
+          {
+            "id": "b",
+            "label": "Increase input until the expected number appears."
+          },
+          {
+            "id": "c",
+            "label": "Record the planned value instead."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H10_final_4_1",
+        "prompt": "Who may conduct the pressure test?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any course graduate."
+          },
+          {
+            "id": "b",
+            "label": "Any worker able to read a gauge."
+          },
+          {
+            "id": "c",
+            "label": "Personnel qualified and authorized for the actual system and method."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H10_final_4_2",
+        "prompt": "What makes a gauge suitable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a recent-looking case."
+          },
+          {
+            "id": "b",
+            "label": "Required range, accuracy, compatibility and verified service status for the test."
+          },
+          {
+            "id": "c",
+            "label": "Only a working needle."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H10_final_4_3",
+        "prompt": "Can a passing early stage waive later required checks?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; follow the complete approved sequence."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the system looks strong."
+          },
+          {
+            "id": "c",
+            "label": "Yes, when the crew is behind schedule."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H10_check5",
+        "prompt": "The pump is stopped but trapped pressure may remain. May a fitting be loosened?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, stopping always releases pressure."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if loosened slowly without assessment."
+          },
+          {
+            "id": "c",
+            "label": "No; verify the required safe state through the approved method first."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H10_final_5_1",
+        "prompt": "What is the response to leakage during a test?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cover it with a rag."
+          },
+          {
+            "id": "b",
+            "label": "Follow the stop and safe-state process before repair."
+          },
+          {
+            "id": "c",
+            "label": "Tighten while watching the gauge."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H10_final_5_2",
+        "prompt": "Why may one zero gauge be insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It may not represent trapped or isolated sections."
+          },
+          {
+            "id": "b",
+            "label": "Every gauge measures the entire connected site."
+          },
+          {
+            "id": "c",
+            "label": "Zero always proves all energy absent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H10_final_5_3",
+        "prompt": "What if safe-state verification is uncertain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use PPE as permission to open."
+          },
+          {
+            "id": "b",
+            "label": "Ask someone to stand farther away and proceed."
+          },
+          {
+            "id": "c",
+            "label": "Keep intervention held and obtain competent resolution."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H10_check6",
+        "prompt": "A component is changed after the system passed. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a new photograph."
+          },
+          {
+            "id": "b",
+            "label": "Technical review of the changed configuration and required verification or retest."
+          },
+          {
+            "id": "c",
+            "label": "Automatic acceptance from the earlier test."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H10_final_6_1",
+        "prompt": "What should a pressure-test record preserve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual configuration, method, readings, deviations and responsible acceptance."
+          },
+          {
+            "id": "b",
+            "label": "Only the target pressure."
+          },
+          {
+            "id": "c",
+            "label": "Only a success label."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H10_final_6_2",
+        "prompt": "Who accepts return to operation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The person who printed the certificate."
+          },
+          {
+            "id": "b",
+            "label": "Any observer outside the zone."
+          },
+          {
+            "id": "c",
+            "label": "The designated operating authority through the required technical handback."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H10_final_6_3",
+        "prompt": "What does this course not qualify a learner to do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Report an unexpected response."
+          },
+          {
+            "id": "b",
+            "label": "Design, operate or approve a hazardous pressure test."
+          },
+          {
+            "id": "c",
+            "label": "Recognize a failed exclusion boundary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H10_final_scenario1",
+        "prompt": "Why is tightening under pressure unacceptable as an improvised response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It exposes the worker to the active failure and stored energy."
+          },
+          {
+            "id": "b",
+            "label": "Only inexperienced workers are at risk."
+          },
+          {
+            "id": "c",
+            "label": "A small leak cannot cause serious injury."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H10_final_scenario2",
+        "prompt": "What is the correct use of the earlier stage result?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat it as proof that any replacement will work."
+          },
+          {
+            "id": "b",
+            "label": "Delete it and invent a new result."
+          },
+          {
+            "id": "c",
+            "label": "Keep it as bounded history while the changed assembly receives required acceptance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H10_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H10_lesson1",
+          "questionIds": [
+            "H10_check1"
+          ]
+        },
+        {
+          "lessonId": "H10_lesson2",
+          "questionIds": [
+            "H10_check2"
+          ]
+        },
+        {
+          "lessonId": "H10_lesson3",
+          "questionIds": [
+            "H10_check3"
+          ]
+        },
+        {
+          "lessonId": "H10_lesson4",
+          "questionIds": [
+            "H10_check4"
+          ]
+        },
+        {
+          "lessonId": "H10_lesson5",
+          "questionIds": [
+            "H10_check5"
+          ]
+        },
+        {
+          "lessonId": "H10_lesson6",
+          "questionIds": [
+            "H10_check6"
+          ]
+        },
+        {
+          "lessonId": "H10_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H10_assessment",
+          "questionIds": [
+            "H10_final_1_1",
+            "H10_final_1_2",
+            "H10_final_1_3",
+            "H10_final_2_1",
+            "H10_final_2_2",
+            "H10_final_2_3",
+            "H10_final_3_1",
+            "H10_final_3_2",
+            "H10_final_3_3",
+            "H10_final_4_1",
+            "H10_final_4_2",
+            "H10_final_4_3",
+            "H10_final_5_1",
+            "H10_final_5_2",
+            "H10_final_5_3",
+            "H10_final_6_1",
+            "H10_final_6_2",
+            "H10_final_6_3",
+            "H10_final_scenario1",
+            "H10_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H10_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H10_check1": "A small high-pressure jet can penetrate tissue and expose the worker to hazardous contents. PPE does not justify placing a hand in the release path.",
+        "H10_final_1_1": "Visible stillness does not establish energy state. The approved depressurization and verification method must establish the condition before intervention.",
+        "H10_final_1_2": "Test pressure, method, sequence and limits depend on system design and service. They cannot be improvised by a general awareness learner.",
+        "H10_final_1_3": "Fluid compressibility is only one factor. Pressure, volume, elastic components and release mechanics can create serious hazards in liquid systems.",
+        "H10_check2": "Physical fit does not establish pressure, temperature or chemical suitability. Unknown components undermine the approved system basis even during an initial test stage.",
+        "H10_final_2_1": "A component must perform under the actual pressure, temperature, fluid and loading conditions. Reputation and appearance cannot replace technical evidence.",
+        "H10_final_2_2": "Substitutions can change ratings, materials and connection behavior. The accepted system must reflect what is actually assembled.",
+        "H10_final_2_3": "Relief devices have specific settings, capacity and installation requirements. Their presence does not make an otherwise unsuitable or uncontrolled system acceptable.",
+        "H10_check3": "The exclusion arrangement must prevent exposure through every credible approach. A visible barrier at one side does not establish complete separation.",
+        "H10_final_3_1": "Release paths and reach depend on the actual system and surroundings. The competent plan establishes the required boundary.",
+        "H10_final_3_2": "Pressure changes require shared understanding of control and exposure. A defined communication system prevents conflicting actions during stages and emergencies.",
+        "H10_final_3_3": "Observation must not create exposure to prove the system works. Remote or otherwise approved methods preserve separation from release paths.",
+        "H10_check4": "Unexpected response can indicate leakage, trapped conditions, instrumentation or configuration problems. Forcing the result can escalate a failure and conceal the true system state.",
+        "H10_final_4_1": "Testing requires task-specific technical and operating skills. Written awareness does not demonstrate safe setup, control or interpretation.",
+        "H10_final_4_2": "A display can move while providing unsuitable or unreliable measurement. Instrument selection and assurance must support the actual acceptance decision.",
+        "H10_final_4_3": "Each stage and check has a defined purpose. A partial success does not establish the conditions assessed by later required steps.",
+        "H10_check5": "Stopped equipment can retain hazardous energy. Opening a connection as a test can release it toward the worker; verification must precede intervention.",
+        "H10_final_5_1": "A leak is evidence of a failed condition. Hands-on intervention while pressurized can expose the worker to injection, release and component movement.",
+        "H10_final_5_2": "Measurement is bounded by its connection and instrument condition. The approved procedure must address pockets and barriers that can separate the gauge from retained pressure.",
+        "H10_final_5_3": "An uncertain energy state means the prerequisite for intervention is not established. Separation and suitable equipment do not replace required verification.",
+        "H10_check6": "Test evidence applies to the actual tested arrangement. A changed component can alter integrity and must pass the applicable change and acceptance process.",
+        "H10_final_6_1": "Traceable results explain what was tested and under which conditions. A target value is an intention, not evidence of performance.",
+        "H10_final_6_2": "Testing and operating readiness are related but distinct decisions. The accepted final state and restrictions must be communicated to the responsible operator.",
+        "H10_final_6_3": "Technical pressure testing requires separately assessed competence and authorization. Awareness supports stopping and escalation without granting execution authority.",
+        "H10_final_scenario1": "The leak indicates a failed condition. Intervention requires the verified safe state and approved repair method, not confidence that the leak will remain small.",
+        "H10_final_scenario2": "Evidence must remain tied to configuration. Preserving the old result is useful, but it does not verify a different component or assembly."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

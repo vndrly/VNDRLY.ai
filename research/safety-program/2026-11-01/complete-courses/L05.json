@@ -1,0 +1,785 @@
+{
+  "familyId": "L05",
+  "title": "Service applicability, legal obligations and controlled documents",
+  "description": "Complete original VNDRLY L05 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Keep each Vendor assessed against actual work and current procedures.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Recognize when scope changes need reassessment; document-version exercise. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.chevronwithtechron.com/en_us/home/safe-work-practices.html"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://static.conocophillips.com/files/resources/exhibit-3-health-safety-and-environment-hse-requir.pdf"
+    },
+    {
+      "title": "Inventory research reference 3",
+      "url": "https://www.enbridge.com/~/media/Enb/Documents/Governance/GTM-Construction-Safety-Manual.pdf?hash=E601FF20539F4465EBD7F924A763ED62&rev=d6109a102e68445a843001f7c26f18ec"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "L05_intro",
+        "title": "Start here — Service applicability, legal obligations and controlled documents",
+        "body": "# L05: Service applicability, legal obligations and controlled documents\n\nKeep each Vendor assessed against actual work and current procedures. This course teaches the decisions needed to implement that purpose in field operations. It covers service/exposure register; jurisdiction review; document control; approved exclusions. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L05_lesson1",
+        "title": "Lesson 1 — Map services to exposures",
+        "body": "## Map services to exposures\n\nA service profile describes the actual work sold and performed, including subcontracted work, locations, assets and people. Service names alone may hide different exposures: gate support differs from fuel delivery even when one company supplies both. Identify what changes when a service is added. Requirements follow the real exposure rather than the company's preferred category. Unknown scope must be clarified before approving an exclusion.\n\n### Deeper application\n\nBuild the exposure profile by asking what the service requires workers to do, not merely what the marketing description calls it. A gate company might provide office administration only, direct traffic or also operate vehicles; those are different task combinations. Include temporary and subcontracted delivery arrangements so outsourcing does not make an exposure disappear on paper. Keep active and proposed scope distinct. A proposed service can create readiness tasks before it becomes an authorized operational offering.\n\n### Worked oilfield example\n\nA gate-support company adds fuel delivery but requests driving requirements remain excluded because it historically owned no trucks. The decision is to update the service and exposure profile and assess transport prerequisites before accepting delivery work.\n\nApplicability follows current work. A historical exclusion cannot cover a newly introduced exposure. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A revised scope profile identifying delivery assets, drivers, cargo and transport obligations. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the revised profile omits fuel delivery subcontracted to another company. The appropriate correction is to include the subcontracted exposure and bridge the performing company's relevant requirements. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L05_lesson2",
+        "title": "Lesson 2 — Identify obligations through competent review",
+        "body": "## Identify obligations through competent review\n\nLegal, client and manufacturer requirements have different sources and scopes. Assign a competent owner to identify jurisdiction and activity applicability, capture the current source and explain how it translates into practice. An internet summary or another customer's procedure is not automatically governing. Where interpretation is uncertain, seek appropriate expertise rather than making a universal claim. Record the decision and the limits of the review.\n\n### Deeper application\n\nFor each obligation, retain the source, revision or retrieval basis, jurisdiction, affected activity and responsible interpreter. A law, manufacturer instruction and client condition can all apply, but they do not have identical legal status. Do not call a client's contractual condition a universal regulation. Where sources conflict or applicability is uncertain, record the question and obtain suitable advice. The operational procedure should translate the resolved requirements into usable steps without pretending the register itself performs the work.\n\n### Worked oilfield example\n\nA manager applies a neighboring state's driver rule without checking the routes and jurisdiction actually used. The decision is to have the competent transport owner verify applicable requirements for the actual operation.\n\nSimilar work can fall under different requirements; a traceable applicability decision is needed. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An obligation register linking jurisdiction, service, source, responsible owner and applicability decision. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the register lists an outdated source without a current applicability review. The appropriate correction is to verify the current governing source and assess any resulting changes to the affected work. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L05_lesson3",
+        "title": "Lesson 3 — Control document versions",
+        "body": "## Control document versions\n\nA controlled procedure has an identity, approved revision, scope, owner and effective date. Workers need access to the version applying to their work, including offline conditions. Remove obsolete copies from operational use while preserving historical records. A printed page is not inherently invalid, but its version and controlled distribution must be clear. Do not alter past job records to make them appear to have used a later revision.\n\n### Deeper application\n\nA controlled document lifecycle includes drafting, competent review where needed, approval, issue, access, revision and withdrawal from use. Archive the superseded version with its effective period so a historical job can still be understood. Withdrawal from use is different from deleting history. For offline copies, define who supplies updates and how users recognize the applicable revision. A current master document in the office does not prevent an obsolete field copy from directing actual work.\n\n### Worked oilfield example\n\nA supervisor's truck contains an old isolation instruction that conflicts with the approved current work pack. The decision is to hold the conflicting activity and obtain the applicable controlled instruction and competent resolution.\n\nVersion control protects the method used, not merely the label on a page. Conflicting instructions require resolution. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A controlled distribution record and confirmation the obsolete operational copy was withdrawn. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the obsolete page was archived correctly but remains in an active field binder. The appropriate correction is to remove it from operational use and verify the crew has the applicable replacement. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L05_lesson4",
+        "title": "Lesson 4 — Evaluate change before expanding work",
+        "body": "## Evaluate change before expanding work\n\nNew equipment, jurisdictions, roles, subcontractors or services can change the required controls. Evaluate the change before mobilization, identify added prerequisites and reuse existing evidence only where its scope remains valid. A change review should show who assessed technical implications and what remains unready. Commercial urgency cannot make an unmatched credential or procedure applicable. Changed work must reach dispatch and site personnel, not only the document register.\n\n### Deeper application\n\nA change review can be proportional: identify what is different, which earlier evidence still matches and which requirements are newly triggered. Reusing valid evidence avoids unnecessary repetition, but scope must be checked explicitly. A new attachment may leave first-aid training unchanged while changing equipment assessment and operator authorization. Record pending prerequisites in allocation systems. Adding a service in a catalogue should not silently change the operational status to ready before its people, equipment and interfaces are verified.\n\n### Worked oilfield example\n\nA maintenance company introduces a new lifting attachment but relies on an assessment for its previous configuration. The decision is to review equipment suitability and matching competence before releasing the changed operation.\n\nA changed configuration can alter both equipment suitability and the operator's assessed task scope. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A change review linking the attachment, manufacturer information, task assessment and authorization limits. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the change was approved in the office but not communicated to dispatch. The appropriate correction is to update dispatch restrictions and confirm the changed authorization is understood before allocation. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L05_lesson5",
+        "title": "Lesson 5 — Decide and preserve exclusions",
+        "body": "## Decide and preserve exclusions\n\nAn N/A request needs a bounded reason and authorized review. Exclusion is not a way to gain full credit or hide missing evidence. Removing a service from the catalogue does not erase active job obligations or historical assessments. Distinguish no current exposure from unknown exposure. If an entire category appears inapplicable, follow the approved review rules rather than inventing a reweighting method.\n\n### Deeper application\n\nA good exclusion reason identifies an exposure that is genuinely absent within a stated scope. No trucks owned is inadequate if the company dispatches subcontracted fuel deliveries. Explain what evidence supports the request and who reviewed it. The decision should show its effective scope and change triggers. N/A neither earns full points nor removes historical events. When work is removed, check active jobs and obligations before changing applicability; deleting a catalogue label cannot cancel an existing operational commitment.\n\n### Worked oilfield example\n\nA vendor removes a service listing while an accepted job using that service remains active. The decision is to preserve the job obligations and have the exclusion reviewed against actual continuing work.\n\nApplicability is a reviewed scope judgment, not deletion of an inconvenient requirement or event history. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A reviewed exclusion decision with scope, rationale, active-job check and preserved history. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the exclusion rationale says no exposure but no one checked active assignments. The appropriate correction is to verify active work and correct the applicability decision before relying on the exclusion. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L05_lesson6",
+        "title": "Lesson 6 — Audit access and real use",
+        "body": "## Audit access and real use\n\nA complete register is useful only if people use current instructions in relevant conditions. Sample jobs, versions and worker understanding across representative shifts and services. Compare the procedure required with the one actually available. An auditor should distinguish an inaccessible document from an obsolete one and from an unclear instruction; each needs a different correction. A favorable sample is bounded evidence, not proof of universal compliance.\n\n### Deeper application\n\nDocument assurance should sample retrieval as well as content. Ask a field user to obtain the instruction they would actually use, identify its revision and explain the relevant decision. If connectivity fails, inspect the authorized fallback. If the user finds two conflicting versions, resolve which governs before relying on either. Capture whether the problem was access, obsolete distribution or unclear instruction so the corrective action addresses the real failure instead of merely adding another document.\n\n### Worked oilfield example\n\nA remote crew cannot retrieve the controlled procedure because the only approved copy requires unavailable connectivity. The decision is to provide an approved accessible arrangement and confirm the crew has the applicable instructions before dependent work.\n\nDistribution must support actual conditions of use; an inaccessible current procedure does not guide the crew. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A field access check identifying revision, offline arrangement and worker comprehension. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the offline copy is available but no process updates it after revision. The appropriate correction is to establish controlled updating and verify obsolete offline versions are withdrawn from use. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L05_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA gate-support company adds fuel delivery but requests driving requirements remain excluded because it historically owned no trucks. At the handover, a second issue is identified: The register lists an outdated source without a current applicability review. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Use the truck copy because it is familiar. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Update the service and exposure profile and assess transport prerequisites before accepting delivery work. The reason is specific: Applicability follows current work. A historical exclusion cannot cover a newly introduced exposure. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Verify the current governing source and assess any resulting changes to the affected work. The supporting record should show: An obligation register linking jurisdiction, service, source, responsible owner and applicability decision. This is important because similar work can fall under different requirements; a traceable applicability decision is needed. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because version control protects the method used, not merely the label on a page. Conflicting instructions require resolution. The suitable decision is: Hold the conflicting activity and obtain the applicable controlled instruction and competent resolution. Evidence for review would include: A controlled distribution record and confirmation the obsolete operational copy was withdrawn. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA maintenance company introduces a new lifting attachment but relies on an assessment for its previous configuration. At the handover, a second issue is identified: The exclusion rationale says no exposure but no one checked active assignments. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Treat online publication as proof every crew can use it. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Review equipment suitability and matching competence before releasing the changed operation. The reason is specific: A changed configuration can alter both equipment suitability and the operator's assessed task scope. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Verify active work and correct the applicability decision before relying on the exclusion. The supporting record should show: A reviewed exclusion decision with scope, rationale, active-job check and preserved history. This is important because applicability is a reviewed scope judgment, not deletion of an inconvenient requirement or event history. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because distribution must support actual conditions of use; an inaccessible current procedure does not guide the crew. The suitable decision is: Provide an approved accessible arrangement and confirm the crew has the applicable instructions before dependent work. Evidence for review would include: A field access check identifying revision, offline arrangement and worker comprehension. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L05_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L05_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nRecognize when scope changes need reassessment; document-version exercise. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "L05_check1",
+        "prompt": "A gate-support company adds fuel delivery but requests driving requirements remain excluded because it historically owned no trucks. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Update the service and exposure profile and assess transport prerequisites before accepting delivery work."
+          },
+          {
+            "id": "b",
+            "label": "Keep the exclusion because it was previously approved."
+          },
+          {
+            "id": "c",
+            "label": "Rename fuel delivery as gate support to avoid reassessment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L05_final1",
+        "prompt": "For map services to exposures, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A revised scope profile identifying delivery assets, drivers, cargo and transport obligations."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L05_final2",
+        "prompt": "A later review finds: The revised profile omits fuel delivery subcontracted to another company. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Include the subcontracted exposure and bridge the performing company's relevant requirements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L05_final3",
+        "prompt": "Consider this proposed response: Keep the exclusion because it was previously approved. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Applicability follows current work. A historical exclusion cannot cover a newly introduced exposure."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L05_check2",
+        "prompt": "A manager applies a neighboring state's driver rule without checking the routes and jurisdiction actually used. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Copy the neighboring rule because the vehicles look similar."
+          },
+          {
+            "id": "b",
+            "label": "Have the competent transport owner verify applicable requirements for the actual operation."
+          },
+          {
+            "id": "c",
+            "label": "Allow drivers to decide legal applicability individually."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L05_final4",
+        "prompt": "For identify obligations through competent review, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "An obligation register linking jurisdiction, service, source, responsible owner and applicability decision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L05_final5",
+        "prompt": "A later review finds: The register lists an outdated source without a current applicability review. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify the current governing source and assess any resulting changes to the affected work."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L05_final6",
+        "prompt": "Consider this proposed response: Copy the neighboring rule because the vehicles look similar. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Similar work can fall under different requirements; a traceable applicability decision is needed."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L05_check3",
+        "prompt": "A supervisor's truck contains an old isolation instruction that conflicts with the approved current work pack. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the truck copy because it is familiar."
+          },
+          {
+            "id": "b",
+            "label": "Replace the revision number on the old page without reviewing content."
+          },
+          {
+            "id": "c",
+            "label": "Hold the conflicting activity and obtain the applicable controlled instruction and competent resolution."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L05_final7",
+        "prompt": "For control document versions, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A controlled distribution record and confirmation the obsolete operational copy was withdrawn."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L05_final8",
+        "prompt": "A later review finds: The obsolete page was archived correctly but remains in an active field binder. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Remove it from operational use and verify the crew has the applicable replacement."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L05_final9",
+        "prompt": "Consider this proposed response: Use the truck copy because it is familiar. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Version control protects the method used, not merely the label on a page. Conflicting instructions require resolution."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L05_check4",
+        "prompt": "A maintenance company introduces a new lifting attachment but relies on an assessment for its previous configuration. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Review equipment suitability and matching competence before releasing the changed operation."
+          },
+          {
+            "id": "b",
+            "label": "Extend the old assessment by changing its title."
+          },
+          {
+            "id": "c",
+            "label": "Wait for an incident before updating the scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L05_final10",
+        "prompt": "For evaluate change before expanding work, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A change review linking the attachment, manufacturer information, task assessment and authorization limits."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L05_final11",
+        "prompt": "A later review finds: The change was approved in the office but not communicated to dispatch. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Update dispatch restrictions and confirm the changed authorization is understood before allocation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L05_final12",
+        "prompt": "Consider this proposed response: Extend the old assessment by changing its title. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A changed configuration can alter both equipment suitability and the operator's assessed task scope."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L05_check5",
+        "prompt": "A vendor removes a service listing while an accepted job using that service remains active. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Immediately remove all related requirements and historical decisions."
+          },
+          {
+            "id": "b",
+            "label": "Preserve the job obligations and have the exclusion reviewed against actual continuing work."
+          },
+          {
+            "id": "c",
+            "label": "Award full safety credit for the excluded service."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L05_final13",
+        "prompt": "For decide and preserve exclusions, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A reviewed exclusion decision with scope, rationale, active-job check and preserved history."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L05_final14",
+        "prompt": "A later review finds: The exclusion rationale says no exposure but no one checked active assignments. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify active work and correct the applicability decision before relying on the exclusion."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L05_final15",
+        "prompt": "Consider this proposed response: Immediately remove all related requirements and historical decisions. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Applicability is a reviewed scope judgment, not deletion of an inconvenient requirement or event history."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L05_check6",
+        "prompt": "A remote crew cannot retrieve the controlled procedure because the only approved copy requires unavailable connectivity. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat online publication as proof every crew can use it."
+          },
+          {
+            "id": "b",
+            "label": "Allow an unverified screenshot to become the permanent procedure."
+          },
+          {
+            "id": "c",
+            "label": "Provide an approved accessible arrangement and confirm the crew has the applicable instructions before dependent work."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L05_final16",
+        "prompt": "For audit access and real use, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A field access check identifying revision, offline arrangement and worker comprehension."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L05_final17",
+        "prompt": "A later review finds: The offline copy is available but no process updates it after revision. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Establish controlled updating and verify obsolete offline versions are withdrawn from use."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L05_final18",
+        "prompt": "Consider this proposed response: Treat online publication as proof every crew can use it. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Distribution must support actual conditions of use; an inaccessible current procedure does not guide the crew."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L05_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify the current governing source and assess any resulting changes to the affected work."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L05_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Verify active work and correct the applicability decision before relying on the exclusion."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "L05_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L05_lesson1",
+          "questionIds": [
+            "L05_check1"
+          ]
+        },
+        {
+          "lessonId": "L05_lesson2",
+          "questionIds": [
+            "L05_check2"
+          ]
+        },
+        {
+          "lessonId": "L05_lesson3",
+          "questionIds": [
+            "L05_check3"
+          ]
+        },
+        {
+          "lessonId": "L05_lesson4",
+          "questionIds": [
+            "L05_check4"
+          ]
+        },
+        {
+          "lessonId": "L05_lesson5",
+          "questionIds": [
+            "L05_check5"
+          ]
+        },
+        {
+          "lessonId": "L05_lesson6",
+          "questionIds": [
+            "L05_check6"
+          ]
+        },
+        {
+          "lessonId": "L05_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L05_assessment",
+          "questionIds": [
+            "L05_final1",
+            "L05_final2",
+            "L05_final3",
+            "L05_final4",
+            "L05_final5",
+            "L05_final6",
+            "L05_final7",
+            "L05_final8",
+            "L05_final9",
+            "L05_final10",
+            "L05_final11",
+            "L05_final12",
+            "L05_final13",
+            "L05_final14",
+            "L05_final15",
+            "L05_final16",
+            "L05_final17",
+            "L05_final18",
+            "L05_final19",
+            "L05_final20"
+          ]
+        },
+        {
+          "lessonId": "L05_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "L05_check1": "Applicability follows current work. A historical exclusion cannot cover a newly introduced exposure.",
+        "L05_final1": "Applicability follows current work. A historical exclusion cannot cover a newly introduced exposure. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L05_final2": "Applicability follows current work. A historical exclusion cannot cover a newly introduced exposure. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L05_final3": "Applicability follows current work. A historical exclusion cannot cover a newly introduced exposure. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L05_check2": "Similar work can fall under different requirements; a traceable applicability decision is needed.",
+        "L05_final4": "Similar work can fall under different requirements; a traceable applicability decision is needed. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L05_final5": "Similar work can fall under different requirements; a traceable applicability decision is needed. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L05_final6": "Similar work can fall under different requirements; a traceable applicability decision is needed. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L05_check3": "Version control protects the method used, not merely the label on a page. Conflicting instructions require resolution.",
+        "L05_final7": "Version control protects the method used, not merely the label on a page. Conflicting instructions require resolution. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L05_final8": "Version control protects the method used, not merely the label on a page. Conflicting instructions require resolution. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L05_final9": "Version control protects the method used, not merely the label on a page. Conflicting instructions require resolution. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L05_check4": "A changed configuration can alter both equipment suitability and the operator's assessed task scope.",
+        "L05_final10": "A changed configuration can alter both equipment suitability and the operator's assessed task scope. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L05_final11": "A changed configuration can alter both equipment suitability and the operator's assessed task scope. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L05_final12": "A changed configuration can alter both equipment suitability and the operator's assessed task scope. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L05_check5": "Applicability is a reviewed scope judgment, not deletion of an inconvenient requirement or event history.",
+        "L05_final13": "Applicability is a reviewed scope judgment, not deletion of an inconvenient requirement or event history. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L05_final14": "Applicability is a reviewed scope judgment, not deletion of an inconvenient requirement or event history. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L05_final15": "Applicability is a reviewed scope judgment, not deletion of an inconvenient requirement or event history. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L05_check6": "Distribution must support actual conditions of use; an inaccessible current procedure does not guide the crew.",
+        "L05_final16": "Distribution must support actual conditions of use; an inaccessible current procedure does not guide the crew. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L05_final17": "Distribution must support actual conditions of use; an inaccessible current procedure does not guide the crew. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L05_final18": "Distribution must support actual conditions of use; an inaccessible current procedure does not guide the crew. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L05_final19": "Similar work can fall under different requirements; a traceable applicability decision is needed. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "L05_final20": "Applicability is a reviewed scope judgment, not deletion of an inconvenient requirement or event history. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

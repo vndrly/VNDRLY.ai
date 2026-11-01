@@ -1,0 +1,793 @@
+{
+  "familyId": "H24",
+  "title": "Specialist hazards: radiation, explosives, diving, marine and rail",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Avoid omitting low-frequency, high-consequence specialist work.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "This is general specialist-interface AWARENESS only. Radiation work/source recovery, explosives handling/misfire response, commercial diving/rescue, marine operation/transfers and rail access/movement each require their own qualified authority, applicable licences, technical plan, practical assessment and employer/site permission. None is conferred by this course.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.chevronwithtechron.com/en_us/home/safe-work-practices.html"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://kmterm.kindermorgan.com/ContAlliance/SSPOMS.aspx"
+    },
+    {
+      "title": "OSHA Radiation",
+      "url": "https://www.osha.gov/radiation"
+    },
+    {
+      "title": "OSHA Commercial diving — separate specialist scope",
+      "url": "https://www.osha.gov/commercial-diving"
+    },
+    {
+      "title": "OSHA Explosives",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.109"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H24_intro",
+        "title": "Start here: Specialist hazards: radiation, explosives, diving, marine and rail",
+        "body": "# Specialist hazards: radiation, explosives, diving, marine and rail\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nThis is general specialist-interface AWARENESS only. Radiation work/source recovery, explosives handling/misfire response, commercial diving/rescue, marine operation/transfers and rail access/movement each require their own qualified authority, applicable licences, technical plan, practical assessment and employer/site permission. None is conferred by this course.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Commercial diving — separate specialist scope](https://www.osha.gov/commercial-diving). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H24_lesson1",
+        "title": "Lesson 1 - Separate awareness from specialist qualification",
+        "body": "Radiation, explosives, diving, marine and rail work have different technical authorities, legal frameworks, equipment and emergency needs. Grouping them in a company register helps identify specialist scope; it does not make them one competence. This lesson teaches interface awareness for workers, supervisors and reviewers.\n\nIdentify the actual activity precisely. Industrial radiography differs from operating a non-ionizing device; a diver's underwater inspection differs from a worker standing on a quay. The scope determines the specialist requirements. Do not accept a certificate that merely contains the same broad word.\n\nThe qualified specialist and responsible employer must establish the technical method and personnel requirements. A general safety reviewer verifies that the appropriate evidence and decisions exist without pretending to approve technical parameters outside their competence. Online awareness never supplies a licence, specialist practical qualification or permission to operate.\n\n## Worked field example\n\nA vendor offers radiographic inspection with only a generic company safety certificate.\n\nThe safe decision is to hold the specialist scope until the relevant technical authority, permissions, personnel and plan are verified. General safety learning does not establish specialist authorization or technical competence.\n\nA useful field record is specific: A scope-specific specialist package reviewed by the appropriate qualified authority. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed specialist-interface application\n\nA company service register can contain several specialist activities without every employee performing them. Map the actual role first: a scheduler arranging a radiography visit, a guard maintaining the site access boundary and a radiographer handling the device have different responsibilities. The scheduler and guard need interface awareness; neither becomes an authorized source operator from knowing the plan.\n\nThe evidence review should preserve that distinction. Verify the specialist organization and people for their actual technical scope, and verify the general workforce's understanding of boundaries and alarm routes. Do not issue a single specialist-qualified label to everyone who attended an awareness briefing.\n\nWhere a contract combines disciplines, name the separate authorities. A marine contractor may use commercial divers, rail transport and explosives subcontractors, but one company's broad experience does not establish every technical role. Confirm the relevant lower-tier arrangements and responsibilities before the affected activity begins.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H24_lesson2",
+        "title": "Lesson 2 - Respect radiation boundaries and abnormal conditions",
+        "body": "Radiation work requires the relevant licensed or otherwise authorized organization and qualified personnel under the governing jurisdiction. The specialist establishes controlled areas, monitoring, access restrictions and abnormal-event arrangements for the particular operation. This course supplies no exposure limit or exclusion distance.\n\nWorkers near radiography must understand the announced restrictions and how to contact the specialist. Do not cross a barrier because no work is visibly happening. Radiation hazards may not be detectable by human senses. A quiet work area is not evidence that the source is secured.\n\nIf a source or device is suspected lost, damaged or not returned to its safe condition, keep clear and use the agreed alarm route. Do not retrieve or move it, adjust the boundary yourself or ask an unqualified guard to investigate. Only the appropriate specialist controls assessment and recovery.\n\n## Worked field example\n\nA radiography barrier blocks a shortcut and a worker sees no operator nearby.\n\nThe safe decision is to remain outside the boundary and contact the authorized radiography representative. Absence of visible activity does not establish that the radiation hazard is absent.\n\nA useful field record is specific: A verified boundary briefing and communication route to the qualified radiation authority. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed specialist-interface application\n\nFor a radiography interface, the specialist establishes the work restrictions and how other people will be notified. Site coordination then ensures pedestrian routes, deliveries and simultaneous work do not defeat those restrictions. The general supervisor should know whom to call, what area is held and how a changed condition is escalated.\n\nA barrier is not an invitation for a general worker to determine whether the source is exposed. Workers remain outside and contact the qualified authority. Do not use a personal impression, silence or a lack of visible equipment as clearance. Technical monitoring and source status belong to the authorized personnel and method.\n\nIf an abnormal condition is reported, preserve the boundary and give reliable observations from safety. Do not touch an unfamiliar device or carry it to an office for identification. Source recovery and radiation emergency actions require specialist arrangements beyond this course.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H24_lesson3",
+        "title": "Lesson 3 - Leave explosives decisions with the qualified authority",
+        "body": "Explosives and blasting-related operations require the applicable specialist permissions, secure arrangements and qualified personnel. Confirm the actual activity: transport, storage, preparation, use and abnormal-event response are not interchangeable duties. A worker authorized for one stage is not automatically authorized for another.\n\nThe specialist plan addresses interfaces such as access, other work, ignition or initiation hazards and emergency arrangements. General crews follow the stated restrictions. This awareness course deliberately does not teach initiation, charge preparation, magazine design or misfire handling.\n\nTreat a suspected misfire, damaged item or unknown explosive-related object as an abnormal specialist event. Keep people clear and notify the designated authority. Do not touch, dismantle or attempt to make it safe. Schedule pressure and familiarity with ordinary tools do not create explosives competence.\n\n## Worked field example\n\nA worker finds an unfamiliar item after specialist blasting and offers to move it out of a vehicle route.\n\nThe safe decision is to keep clear, restrict affected access and notify the explosives authority through the agreed process. An unknown explosive-related item requires specialist assessment rather than ordinary handling.\n\nA useful field record is specific: A specialist-controlled abnormal-event response and maintained access restriction. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed specialist-interface application\n\nExplosives controls begin before use and extend through storage, movement, preparation and abnormal-event response under the applicable authority. A person who is permitted to drive a vehicle does not automatically have permission to transport or handle its explosive cargo. The actual functions need separate verification.\n\nGeneral workers follow announced restrictions, stop conditions and communication rules from the specialist plan. They should report an unexpected object or changed activity without manipulating equipment or improvising protective measures. This course does not provide safe approach distances, initiation instructions or misfire waiting periods.\n\nAfter the specialist work, release of an area follows the relevant technical authority and site process. The fact that a scheduled time has passed is not clearance. Workers should obtain the current instruction and report conflicting messages rather than choosing the one that allows work to continue fastest.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H24_lesson4",
+        "title": "Lesson 4 - Do not turn swimming ability into diving competence",
+        "body": "Commercial diving needs a task-specific diving plan, qualified team, suitable equipment and emergency capability under applicable requirements. Water conditions, visibility, entanglement, energy sources and pressure differences can create severe hazards. A recreational qualification or good swimming ability does not establish competence for an industrial dive.\n\nCoordinate the dive with operations. Pumps, intakes, discharges, vessel movement and adjacent work may affect the diver. The specialist authority identifies required isolations and controls and verifies them with the responsible operating roles. A general permit cannot replace that technical planning.\n\nIf a diver is in difficulty, activate the established diving emergency arrangements. Do not send a willing swimmer into the water. Rescue and treatment have specialist requirements, and an improvised second entry can create another casualty.\n\n## Worked field example\n\nA maintenance worker volunteers to inspect a submerged intake because they are a strong swimmer.\n\nThe safe decision is to hold the underwater task for the qualified commercial-diving authority and reviewed plan. Swimming ability does not control industrial diving hazards or establish team and rescue capability.\n\nA useful field record is specific: A scope-specific diving plan with verified team, operational interfaces and emergency resources. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed specialist-interface application\n\nA diving interface assessment should identify the operational systems that can affect the underwater work. Pumps, intakes, outfalls, vessel propulsion and other energy sources can create hazards that are not visible from the surface. The qualified diving authority and operating roles coordinate the required controls and verification.\n\nThe shore team must understand its assigned role and how to activate the diving emergency arrangement. Watching bubbles or keeping a telephone nearby does not establish a qualified standby or rescue function. Recreational equipment and experience are not automatically suitable for the industrial task.\n\nROV operation is a different technical method and should not be described as a diver qualification. It still requires competent planning for equipment, cables, energy and marine interfaces. Confirm which method is actually contracted and preserve the qualification boundary rather than assuming all subsea labels mean the same workforce.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H24_lesson5",
+        "title": "Lesson 5 - Coordinate marine and rail interfaces",
+        "body": "Marine and rail operations require their own qualified operating authority. A site worker should know the limits of the area, movement restrictions, communication and emergency route. Do not assume ordinary road-traffic habits apply to a rail corridor or that working beside water is the same as working on a vessel.\n\nFor marine work, the competent plan addresses access, vessel movement, water exposure, transfer, weather and rescue interfaces as applicable. General crews must not improvise boarding or transfer methods. For rail work, the responsible rail authority establishes the applicable access and movement protection; a parked wagon or quiet track is not clearance.\n\nCoordinate overlapping work before it starts. A crane movement, a delivery or an inspection can affect the specialist operating area. Stop at an uncertain boundary and contact the appropriate authority instead of relying on a driver or bystander who may not control the operation.\n\n## Worked field example\n\nA contractor proposes crossing a quiet rail siding between parked wagons to reach a work area.\n\nThe safe decision is to use the rail authority’s approved access and movement-protection arrangement. Quiet or stationary rail equipment does not establish authorized safe access.\n\nA useful field record is specific: A rail-authority access decision and briefing covering the actual crossing and movement controls. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed specialist-interface application\n\nMarine access and rail access each need their own current operating permission. A visitor inspecting a vessel may require an approved boarding arrangement and briefing without being a vessel operator. A consultant reviewing a rail yard drawing may remain entirely at a desk. Assign exposure-based learning to the actual activity rather than a keyword in the service name.\n\nWhere people enter an operating area, verify the relevant authority, route, movement restrictions and communication. A stationary ship, wagon or crane can change state. Do not rely on someone who is nearby but does not control that movement.\n\nEmergency coordination also differs. A water rescue, vessel evacuation and rail incident can require specialist resources and access arrangements. General workers raise the alarm and follow their assigned safe actions; they do not improvise a crossover method because they hold an unrelated rescue or driving credential.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H24_lesson6",
+        "title": "Lesson 6 - Review change without borrowing another discipline’s approval",
+        "body": "A change in location, equipment, personnel, material or surrounding operation can invalidate a specialist plan. Return it to the appropriate technical authority before relying on the original approval. Do not treat the most qualified person on site as qualified in every discipline.\n\nEvidence should identify legal entity, specialist scope, applicable authority, personnel competence, equipment status, technical plan, interfaces and emergency capability. Verify authenticity and currency through the approved review process. Record exclusions and unresolved conditions rather than creating a broad specialist-ready label.\n\nGeneral workers can demonstrate boundary recognition, alarm and escalation in safe simulation. Technical operation, source recovery, explosives handling, diving, vessel duties and rail movement require separate specialist assessment and authorization. An awareness result can support interface readiness but must never be presented as those qualifications.\n\n## Worked field example\n\nA radiography crew changes equipment and location after its technical plan was reviewed.\n\nThe safe decision is to return the changed scope to the radiation authority and verify revised interfaces before release. Approval for one specialist configuration does not automatically cover a changed configuration.\n\nA useful field record is specific: A specialist change review identifying equipment, location, boundaries and emergency arrangements. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed specialist-interface application\n\nA safe awareness evaluation can present a changed specialist boundary and ask the learner to identify the correct authority and hold. It should not expose them to a live source, explosive item, uncontrolled water entry or rail movement. The assessor records the demonstrated recognition and escalation, not technical operation.\n\nThe technical records remain separate. Where a specialist's licence, equipment, personnel or method changes, the appropriate authority determines what must be reviewed and verified. A general training renewal does not restore an expired technical permission.\n\nThe final handover should make restrictions clear to other employers and shifts. State what is approved, what remains held and who can authorize change. Preserve source references and original evidence, while protecting sensitive security details. A broad safety-program score must never be used to override a specialist hold or claim that online awareness has qualified radiation, explosives, diving, marine or rail operations.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H24_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nAt a fictional construction site, a vendor proposes radiographic inspection beside a busy pedestrian route. Its evidence pack contains a general safety certificate and a procedure from another location. A project supervisor offers to choose the boundary and asks gate staff to move the barrier whenever a delivery arrives. Explain the correct approval and interface sequence.\n\n### Worked solution\n\nThe radiography activity is held. The responsible organization verifies the relevant jurisdictional authorization and appropriately qualified personnel and equipment. The radiation authority reviews the actual location and establishes the technical controls and abnormal-event arrangements. The site authority coordinates the pedestrian and delivery interfaces so access restrictions are maintained. Gate staff are briefed on the boundary, communication and hold process; they do not decide when radiation restrictions may be moved. A plan from another location is supporting background at most, not approval of this configuration. A safe interface exercise can confirm communication, but it does not replace specialist technical verification. The release record identifies the actual scope and the people responsible for the technical and site decisions.\n\n## Scenario 2\n\nA fictional water intake needs inspection near a rail-served terminal. A general contractor offers a recreational diver and proposes using a quiet rail siding as access. The manager says the combined specialist-awareness course should cover both activities.\n\n### Worked solution\n\nThe underwater inspection and rail access are treated as separate specialist scopes. The commercial-diving authority evaluates the actual task, team, equipment, operational hazards and emergency capability. The rail authority establishes permitted access and movement protection. Neither is inferred from quiet conditions or broad course completion. The site coordinates any shared constraints and confirms that one activity cannot undermine the other’s controls. If either arrangement cannot be verified, that affected work remains held. The record preserves the distinction between awareness, specialist qualification and operational authorization. No one enters the water or track area merely to obtain missing information.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H24_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H24_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nThis is general specialist-interface AWARENESS only. Radiation work/source recovery, explosives handling/misfire response, commercial diving/rescue, marine operation/transfers and rail access/movement each require their own qualified authority, applicable licences, technical plan, practical assessment and employer/site permission. None is conferred by this course.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H24_check1",
+        "prompt": "A vendor offers radiographic inspection with only a generic company safety certificate. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the specialist scope until the relevant technical authority, permissions, personnel and plan are verified"
+          },
+          {
+            "id": "b",
+            "label": "Accept the generic certificate because it mentions radiation"
+          },
+          {
+            "id": "c",
+            "label": "Let the ordinary site supervisor select source-handling steps"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H24_check2",
+        "prompt": "A radiography barrier blocks a shortcut and a worker sees no operator nearby. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cross quickly because no exposure can be seen"
+          },
+          {
+            "id": "b",
+            "label": "Remain outside the boundary and contact the authorized radiography representative"
+          },
+          {
+            "id": "c",
+            "label": "Move the barrier to keep the walkway open"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H24_check3",
+        "prompt": "A worker finds an unfamiliar item after specialist blasting and offers to move it out of a vehicle route. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Move it carefully with a hand tool"
+          },
+          {
+            "id": "b",
+            "label": "Ask the most experienced mechanic to dismantle it"
+          },
+          {
+            "id": "c",
+            "label": "Keep clear, restrict affected access and notify the explosives authority through the agreed process"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H24_check4",
+        "prompt": "A maintenance worker volunteers to inspect a submerged intake because they are a strong swimmer. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the underwater task for the qualified commercial-diving authority and reviewed plan"
+          },
+          {
+            "id": "b",
+            "label": "Allow a short dive with a coworker watching from shore"
+          },
+          {
+            "id": "c",
+            "label": "Use a general work permit as the only diving authorization"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H24_check5",
+        "prompt": "A contractor proposes crossing a quiet rail siding between parked wagons to reach a work area. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cross if no engine can be heard"
+          },
+          {
+            "id": "b",
+            "label": "Use the rail authority’s approved access and movement-protection arrangement"
+          },
+          {
+            "id": "c",
+            "label": "Ask a road-traffic spotter to approve rail access"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H24_check6",
+        "prompt": "A radiography crew changes equipment and location after its technical plan was reviewed. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the previous approval because the company name is unchanged"
+          },
+          {
+            "id": "b",
+            "label": "Ask a qualified diver to approve the radiation change"
+          },
+          {
+            "id": "c",
+            "label": "Return the changed scope to the radiation authority and verify revised interfaces before release"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H24_final1",
+        "prompt": "For separate awareness from specialist qualification, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "General safety learning does not establish specialist authorization or technical competence."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H24_final2",
+        "prompt": "Which evidence would most directly verify separate awareness from specialist qualification in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A scope-specific specialist package reviewed by the appropriate qualified authority"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H24_final3",
+        "prompt": "A relief worker proposes the following shortcut during separate awareness from specialist qualification: \"Accept the generic certificate because it mentions radiation.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the generic certificate because it mentions radiation"
+          },
+          {
+            "id": "b",
+            "label": "Let the ordinary site supervisor select source-handling steps"
+          },
+          {
+            "id": "c",
+            "label": "Hold the specialist scope until the relevant technical authority, permissions, personnel and plan are verified"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H24_final4",
+        "prompt": "For respect radiation boundaries and abnormal conditions, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Absence of visible activity does not establish that the radiation hazard is absent."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H24_final5",
+        "prompt": "Which evidence would most directly verify respect radiation boundaries and abnormal conditions in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified boundary briefing and communication route to the qualified radiation authority"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H24_final6",
+        "prompt": "A relief worker proposes the following shortcut during respect radiation boundaries and abnormal conditions: \"Cross quickly because no exposure can be seen.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cross quickly because no exposure can be seen"
+          },
+          {
+            "id": "b",
+            "label": "Move the barrier to keep the walkway open"
+          },
+          {
+            "id": "c",
+            "label": "Remain outside the boundary and contact the authorized radiography representative"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H24_final7",
+        "prompt": "For leave explosives decisions with the qualified authority, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An unknown explosive-related item requires specialist assessment rather than ordinary handling."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H24_final8",
+        "prompt": "Which evidence would most directly verify leave explosives decisions with the qualified authority in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A specialist-controlled abnormal-event response and maintained access restriction"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H24_final9",
+        "prompt": "A relief worker proposes the following shortcut during leave explosives decisions with the qualified authority: \"Move it carefully with a hand tool.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Move it carefully with a hand tool"
+          },
+          {
+            "id": "b",
+            "label": "Ask the most experienced mechanic to dismantle it"
+          },
+          {
+            "id": "c",
+            "label": "Keep clear, restrict affected access and notify the explosives authority through the agreed process"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H24_final10",
+        "prompt": "For do not turn swimming ability into diving competence, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Swimming ability does not control industrial diving hazards or establish team and rescue capability."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H24_final11",
+        "prompt": "Which evidence would most directly verify do not turn swimming ability into diving competence in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A scope-specific diving plan with verified team, operational interfaces and emergency resources"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H24_final12",
+        "prompt": "A relief worker proposes the following shortcut during do not turn swimming ability into diving competence: \"Allow a short dive with a coworker watching from shore.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Allow a short dive with a coworker watching from shore"
+          },
+          {
+            "id": "b",
+            "label": "Use a general work permit as the only diving authorization"
+          },
+          {
+            "id": "c",
+            "label": "Hold the underwater task for the qualified commercial-diving authority and reviewed plan"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H24_final13",
+        "prompt": "For coordinate marine and rail interfaces, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Quiet or stationary rail equipment does not establish authorized safe access."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H24_final14",
+        "prompt": "Which evidence would most directly verify coordinate marine and rail interfaces in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A rail-authority access decision and briefing covering the actual crossing and movement controls"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H24_final15",
+        "prompt": "A relief worker proposes the following shortcut during coordinate marine and rail interfaces: \"Cross if no engine can be heard.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cross if no engine can be heard"
+          },
+          {
+            "id": "b",
+            "label": "Ask a road-traffic spotter to approve rail access"
+          },
+          {
+            "id": "c",
+            "label": "Use the rail authority’s approved access and movement-protection arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H24_final16",
+        "prompt": "For review change without borrowing another discipline’s approval, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approval for one specialist configuration does not automatically cover a changed configuration."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H24_final17",
+        "prompt": "Which evidence would most directly verify review change without borrowing another discipline’s approval in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A specialist change review identifying equipment, location, boundaries and emergency arrangements"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H24_final18",
+        "prompt": "A relief worker proposes the following shortcut during review change without borrowing another discipline’s approval: \"Use the previous approval because the company name is unchanged.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the previous approval because the company name is unchanged"
+          },
+          {
+            "id": "b",
+            "label": "Ask a qualified diver to approve the radiation change"
+          },
+          {
+            "id": "c",
+            "label": "Return the changed scope to the radiation authority and verify revised interfaces before release"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H24_final19",
+        "prompt": "In Scenario 1, who may establish the radiation control arrangement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The appropriate qualified radiation authority, coordinated with the responsible site roles"
+          },
+          {
+            "id": "b",
+            "label": "Any supervisor who has completed general safety awareness"
+          },
+          {
+            "id": "c",
+            "label": "Gate staff whenever traffic requires access"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H24_final20",
+        "prompt": "In Scenario 2, why can the combined awareness course not authorize both activities?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Online training is automatically invalid for all safety topics"
+          },
+          {
+            "id": "b",
+            "label": "The disciplines require separate technical competence, permissions and site-specific controls"
+          },
+          {
+            "id": "c",
+            "label": "A single client signature replaces every specialist requirement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H24_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H24_lesson1",
+          "questionIds": [
+            "H24_check1"
+          ]
+        },
+        {
+          "lessonId": "H24_lesson2",
+          "questionIds": [
+            "H24_check2"
+          ]
+        },
+        {
+          "lessonId": "H24_lesson3",
+          "questionIds": [
+            "H24_check3"
+          ]
+        },
+        {
+          "lessonId": "H24_lesson4",
+          "questionIds": [
+            "H24_check4"
+          ]
+        },
+        {
+          "lessonId": "H24_lesson5",
+          "questionIds": [
+            "H24_check5"
+          ]
+        },
+        {
+          "lessonId": "H24_lesson6",
+          "questionIds": [
+            "H24_check6"
+          ]
+        },
+        {
+          "lessonId": "H24_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H24_final",
+          "questionIds": [
+            "H24_final1",
+            "H24_final2",
+            "H24_final3",
+            "H24_final4",
+            "H24_final5",
+            "H24_final6",
+            "H24_final7",
+            "H24_final8",
+            "H24_final9",
+            "H24_final10",
+            "H24_final11",
+            "H24_final12",
+            "H24_final13",
+            "H24_final14",
+            "H24_final15",
+            "H24_final16",
+            "H24_final17",
+            "H24_final18",
+            "H24_final19",
+            "H24_final20"
+          ]
+        },
+        {
+          "lessonId": "H24_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H24_check1": "Hold the specialist scope until the relevant technical authority, permissions, personnel and plan are verified. General safety learning does not establish specialist authorization or technical competence.",
+        "H24_check2": "Remain outside the boundary and contact the authorized radiography representative. Absence of visible activity does not establish that the radiation hazard is absent.",
+        "H24_check3": "Keep clear, restrict affected access and notify the explosives authority through the agreed process. An unknown explosive-related item requires specialist assessment rather than ordinary handling.",
+        "H24_check4": "Hold the underwater task for the qualified commercial-diving authority and reviewed plan. Swimming ability does not control industrial diving hazards or establish team and rescue capability.",
+        "H24_check5": "Use the rail authority’s approved access and movement-protection arrangement. Quiet or stationary rail equipment does not establish authorized safe access.",
+        "H24_check6": "Return the changed scope to the radiation authority and verify revised interfaces before release. Approval for one specialist configuration does not automatically cover a changed configuration.",
+        "H24_final1": "General safety learning does not establish specialist authorization or technical competence. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H24_final2": "A scope-specific specialist package reviewed by the appropriate qualified authority. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H24_final3": "Hold the specialist scope until the relevant technical authority, permissions, personnel and plan are verified. General safety learning does not establish specialist authorization or technical competence. A staffing change does not remove this requirement.",
+        "H24_final4": "Absence of visible activity does not establish that the radiation hazard is absent. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H24_final5": "A verified boundary briefing and communication route to the qualified radiation authority. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H24_final6": "Remain outside the boundary and contact the authorized radiography representative. Absence of visible activity does not establish that the radiation hazard is absent. A staffing change does not remove this requirement.",
+        "H24_final7": "An unknown explosive-related item requires specialist assessment rather than ordinary handling. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H24_final8": "A specialist-controlled abnormal-event response and maintained access restriction. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H24_final9": "Keep clear, restrict affected access and notify the explosives authority through the agreed process. An unknown explosive-related item requires specialist assessment rather than ordinary handling. A staffing change does not remove this requirement.",
+        "H24_final10": "Swimming ability does not control industrial diving hazards or establish team and rescue capability. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H24_final11": "A scope-specific diving plan with verified team, operational interfaces and emergency resources. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H24_final12": "Hold the underwater task for the qualified commercial-diving authority and reviewed plan. Swimming ability does not control industrial diving hazards or establish team and rescue capability. A staffing change does not remove this requirement.",
+        "H24_final13": "Quiet or stationary rail equipment does not establish authorized safe access. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H24_final14": "A rail-authority access decision and briefing covering the actual crossing and movement controls. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H24_final15": "Use the rail authority’s approved access and movement-protection arrangement. Quiet or stationary rail equipment does not establish authorized safe access. A staffing change does not remove this requirement.",
+        "H24_final16": "Approval for one specialist configuration does not automatically cover a changed configuration. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H24_final17": "A specialist change review identifying equipment, location, boundaries and emergency arrangements. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H24_final18": "Return the changed scope to the radiation authority and verify revised interfaces before release. Approval for one specialist configuration does not automatically cover a changed configuration. A staffing change does not remove this requirement.",
+        "H24_final19": "Specialist technical decisions stay with the appropriate authority. Site coordination controls interfaces without transferring technical approval to unqualified roles.",
+        "H24_final20": "The course teaches recognition and escalation. It cannot assess commercial-diving competence or establish rail access protection."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

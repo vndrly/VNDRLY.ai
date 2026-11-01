@@ -1,0 +1,789 @@
+{
+  "familyId": "R05",
+  "title": "Management review and improvement objectives",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Make leadership respond to recurring gaps and changing work.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate leadership review of actual evidence and resources is required; online completion is not an audit opinion or proof of company effectiveness. Technical controls and operational restart remain with qualified specialists and responsible employer/site authorities.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y15-95-301_0.pdf"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-318_Rev3.pdf"
+    },
+    {
+      "title": "Inventory reference 3",
+      "url": "https://www.bechtel.com/getmedia/0b4fd69e-be6c-4e09-b085-b5caf826009b/2023-Supplier-Guide_1.pdf"
+    },
+    {
+      "title": "OSHA Program evaluation and improvement — recommended practices",
+      "url": "https://www.osha.gov/safety-management/program-evaluation"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "R05_intro",
+        "title": "Start here: Management review and improvement objectives",
+        "body": "# Management review and improvement objectives\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate leadership review of actual evidence and resources is required; online completion is not an audit opinion or proof of company effectiveness. Technical controls and operational restart remain with qualified specialists and responsible employer/site authorities.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Program evaluation and improvement — recommended practices](https://www.osha.gov/safety-management/program-evaluation). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R05_lesson1",
+        "title": "Lesson 1 - Bring the whole evidence set to leadership",
+        "body": "Management review is a decision process about the safety program's adequacy and improvement. Bring together worker concerns, control failures, audits, incidents, near misses, changes, overdue actions, competence gaps and resources. A low injury count is only one input.\n\nDefine the scope and period covered and identify missing information. A report from one region cannot silently represent every service and subcontractor. Make uncertainty visible so leadership can resource the missing assurance.\n\nReview prior decisions as well as new issues. An objective that has remained open through several meetings needs a decision about cause, resources and exposure, not another unchanged due date. Preserve the history so repeated deferral is visible.\n\n## Worked field example\n\nA review celebrates zero injuries but omits repeated failed inspections and overdue actions.\n\nThe safe decision is to reopen the inputs and include control failures, worker concerns and evidence coverage. Outcome counts alone cannot establish that the prevention system is effective.\n\nA useful field record is specific: A complete scoped input pack with failures, uncertainty and prior-action status. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nThe review owner should prepare an evidence pack that leadership can challenge. Identify the services, locations, workforce and period represented by each input. Show missing samples, unresolved technical decisions and uncertain data alongside favorable results. A polished chart should not conceal gaps in coverage.\n\nWorker input deserves a visible path into decisions. Include reported workarounds, unavailable equipment and concerns about staffing or response arrangements. Leadership should understand how those issues affect the controls the company claims to have implemented.\n\nPrior actions need actual status. Distinguish planned, resourced, implemented and verified effective. An owner saying the task is nearly complete does not establish the protective result. The review should decide what remains controlled, who acts next and what evidence will support closure. Preserve the original commitment and reasons for delay instead of repeatedly resetting the due date without an operational decision.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R05_lesson2",
+        "title": "Lesson 2 - Interpret indicators without hiding uncertainty",
+        "body": "Separate leading information about controls from outcomes such as injuries. Both require context. An increase in reported concerns may reflect better reporting rather than worse conditions; a quiet reporting system may conceal problems.\n\nCheck denominators and scope before comparisons. A small office and a large field service operation do not have equivalent exposure. Do not convert a favorable company average into evidence that a missing critical safeguard is acceptable.\n\nAsk what was actually measured and what was not. A count of training attendance does not show practical competence. A completed inspection count does not show that findings were corrected. Use the indicators to ask better questions, not to replace the underlying evidence.\n\n## Worked field example\n\nA manager compares training attendance with field competence and declares every worker capable.\n\nThe safe decision is to review the actual practical evidence and state what the attendance indicator does and does not show. Participation is not the same evidence as demonstrated task capability.\n\nA useful field record is specific: An indicator review linked to practical-assessment coverage and identified gaps. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nAn indicator can improve while the system worsens. Fewer near-miss reports might mean fewer events, reduced reporting access or pressure not to speak up. More inspection records might mean better coverage, or repeated paperwork without correction. Ask what the indicator measures and what evidence supports its interpretation.\n\nCompare like with like and retain exposure context. A desk consultancy, a rig crew and a mixed subcontracting operation have different risk patterns. A single company average should not hide a missing critical control in a small but consequential service.\n\nUse qualitative evidence carefully. Worker experience can identify a problem that counts miss, but the review should distinguish a concern, a confirmed observation and a cause still being investigated. The aim is a defensible decision about controls and resources, not a claim that one favorable metric settles every uncertainty.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R05_lesson3",
+        "title": "Lesson 3 - Prioritize controls and resources",
+        "body": "Leadership must decide how to control important gaps, including immediate restrictions where needed. Consider consequence, exposure, control reliability, uncertainty and affected scope. Do not choose improvements solely because they are inexpensive or easy to display.\n\nResources include time, people, technical support, equipment and authority. An owner cannot deliver a correction without the means to act. Where a critical control is missing, management must arrange suitable interim protection or stop the affected activity through the operating process.\n\nRecord the decision and its basis. 'Continue monitoring' needs a defined action and escalation condition; otherwise it can become an indefinite substitute for correction.\n\n## Worked field example\n\nA critical equipment defect is deferred repeatedly because the repair budget is not assigned.\n\nThe safe decision is to provide an accountable resource decision and maintain suitable restriction or interim control. An unresourced action does not resolve the exposure or establish a safe operating condition.\n\nA useful field record is specific: A documented resource and operating-control decision with owner and escalation. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nResourcing decisions should specify what is needed to achieve the outcome. A technical repair may require specialist time, an operating shutdown and replacement equipment, while a safe gate break arrangement may require relief staffing. Funding only a training reminder can leave the physical or organizational control absent.\n\nLeadership must also decide how exposure is managed while correction proceeds. The appropriate operating authority establishes restriction or suitable interim control. The management review records that decision and checks it remains effective rather than assuming an open action itself provides protection.\n\nWhere several actions compete, prioritize from actual consequence, exposure and uncertainty. Easy completion is not the same as risk reduction. A minor office improvement should not be used to demonstrate progress while a required rescue or isolation safeguard remains unavailable. Escalate constraints honestly and assign authority to resolve them.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R05_lesson4",
+        "title": "Lesson 4 - Set objectives that can be verified",
+        "body": "An improvement objective identifies the intended result, affected scope, owner, resources, timeframe and evidence of success. 'Improve safety' is an aspiration, not a verifiable objective. Choose measures connected to the control problem.\n\nFor example, a gate positioning objective can require a redesigned checking arrangement and representative observation of its use. Counting reminder emails is not the same outcome. The review should define what result would cause the action to be reopened.\n\nAvoid invented universal targets. The organization sets justified objectives from its risks and obligations. A training pass threshold is a learning rule, not proof of operational effectiveness or regulatory compliance.\n\n## Worked field example\n\nAn objective says “send more safety emails” after repeated unsafe pedestrian crossings.\n\nThe safe decision is to define and resource the safer crossing outcome and how actual use will be checked. Activity counts do not establish that the identified exposure was reduced.\n\nA useful field record is specific: An objective tied to revised crossing controls and representative effectiveness observation. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nA useful objective explains the intended change and how it will be tested. For example, the company may redesign the gate checking position, brief affected shifts and observe representative arrivals to verify that attendants remain separated from vehicle paths. The objective is the protective arrangement in use, not merely the number of briefings.\n\nDefine the scope and owner so responsibility is not shared into ambiguity. Identify supporting roles, resources and dependencies. If a client or technical authority must approve the layout, that is an actual dependency to manage rather than a reason to pretend the action is complete.\n\nThe verification basis should include what would count as failure. If workers must still enter the squeeze area to read documents, the objective has not been achieved. Reopen and adjust the design or method. A favorable overall company score cannot compensate for that unresolved control.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R05_lesson5",
+        "title": "Lesson 5 - Communicate decisions and monitor between reviews",
+        "body": "A decision must reach the people who implement and rely on it. Explain what changes, who owns it, what remains restricted and when verification occurs. A signed minute stored in a leadership folder is not enough for a night crew.\n\nMonitor progress between formal reviews. Escalate new failures, overdue actions or changed conditions rather than waiting for the calendar. The review frequency and triggers follow the organization's assessed needs and governing requirements; this course invents no common renewal period.\n\nWorkers should receive feedback on concerns they raised, within confidentiality limits. That shows what was decided and invites information about whether the proposed control works in practice.\n\n## Worked field example\n\nA management decision changes the gate process, but night staff are not briefed.\n\nThe safe decision is to communicate and verify the changed instructions for all affected shifts before reliance. A leadership decision is not implemented where affected workers do not know the arrangement.\n\nA useful field record is specific: Affected-shift briefing and observed use of the revised process with live restrictions clear. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nCommunication should make the decision usable. Tell affected people which process changes, what remains restricted, who provides support and when the new arrangement applies. A night worker should not have to infer an instruction from leadership minutes written for a different audience.\n\nConfirm implementation rather than only distribution. Ask the receiving supervisor to explain the change and show the relevant field arrangement safely. Include subcontractors where the decision affects their work. A read receipt is limited evidence and does not demonstrate practical understanding.\n\nMonitor material issues between meetings. New failures, lost interim controls or changed scope need prompt review through the responsible route. Do not wait for the next scheduled management review when a control is missing now. The review process supports operating decisions; it is not a calendar-based excuse to postpone them.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R05_lesson6",
+        "title": "Lesson 6 - Check whether improvement worked",
+        "body": "Return to the original problem after implementation. Compare the actual control and worker experience with the intended result. A purchase, policy or briefing can be complete while the exposure persists.\n\nUse representative evidence and state limits. A short sample may support a bounded conclusion, not a guarantee. If the same failure recurs, reopen the action and review whether the cause, resources or verification were inadequate.\n\nPreserve earlier decisions and results. Management review should show learning over time rather than a changing set of success claims. Separate company-program improvement from site authorization and specialist technical decisions.\n\n## Worked field example\n\nA new shelter is purchased but workers still miss cooling breaks because relief staffing is absent.\n\nThe safe decision is to reopen the objective and address usable break access and coverage before claiming effectiveness. Equipment acquisition alone does not establish that workers can use the intended control.\n\nA useful field record is specific: A follow-up check of actual breaks, coverage and worker access under relevant conditions. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nEffectiveness review returns to the original exposure and checks the new arrangement in practice. A purchased shelter may exist while workers still cannot leave the gate; a new handling aid may be inaccessible during receiving. Ask whether the intended protective action is usable under representative conditions.\n\nPreserve worker feedback and any unfavorable observation. A review that deletes dissent after procurement is complete cannot show whether the improvement worked. Where evidence is limited, state the limit and plan proportionate follow-up rather than claiming a guarantee.\n\nThe final decision records what leadership learned, what it accepted within its authority, what remains unresolved and how resources or objectives changed. Technical acceptance and site work permission remain with the appropriate authorities. Completing this course helps a participant understand that process but cannot substitute for the actual leadership decision or verification of the company’s controls.\n\n## Further application\n\nA management review can use a decision table to make unresolved matters visible. For each significant gap, record the observed condition, affected scope, current operating control, accountable owner, resources, intended outcome and verification. The format is useful only if entries describe actual decisions; a table filled with aspirations is not evidence of implementation.\n\nLeadership should test whether the owner can deliver. Ask which approvals, specialist input, staffing or equipment are still needed and who will resolve those dependencies. Where a constraint prevents correction, decide the safe restriction or alternative rather than repeatedly carrying the same unsupported promise forward.\n\nLater review compares the result with the original objective. If the correction only moved exposure to another shift or role, reopen it. Involve those affected rather than treating procurement or document completion as the final measure. A successful improvement should have evidence of a usable control and a bounded check of effectiveness.\n\nKeep authority clear. Management can allocate resources and require action, but a technical method or site restart still needs the relevant qualified decision. The review record should name those dependencies and not imply that executive approval by itself establishes engineering, rescue or operating competence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R05_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional quarterly review reports zero injuries and full training attendance. Worker concerns about unsafe gate positioning, unavailable relief and a recurring machine defect are omitted. Leadership plans to declare the program fully effective.\n\n### Worked solution\n\nThe review is reopened to include control failures, worker input, practical-assessment coverage, overdue actions and evidence gaps. Leadership separates favorable outcomes from preventive control evidence. It assigns immediate operating restrictions or interim controls for unresolved serious hazards and resources the required corrections. Objectives specify the intended field result and how it will be verified. Decisions reach affected shifts and workers receive feedback. The review records its scope and uncertainty. It does not convert a company performance summary into permission for a specific hazardous task.\n\n## Scenario 2\n\nA fictional management action purchases handling aids after discomfort reports. Three months later the aids are blocked by storage and workers use the old method. The action owner requests closure because procurement is complete.\n\n### Worked solution\n\nProcurement is recorded as completed activity, while the effectiveness objective remains unresolved. Leadership assigns usable storage and route changes, appropriate practical instruction and observation of the full task. Worker feedback helps test whether the redesigned method addresses the original exposure. The follow-up checks representative receiving conditions and records remaining limits. Resources and ownership are adjusted if the first action lacked implementation support. The original decision and failed follow-up remain in history rather than being overwritten.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R05_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R05_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate leadership review of actual evidence and resources is required; online completion is not an audit opinion or proof of company effectiveness. Technical controls and operational restart remain with qualified specialists and responsible employer/site authorities.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "R05_check1",
+        "prompt": "A review celebrates zero injuries but omits repeated failed inspections and overdue actions. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reopen the inputs and include control failures, worker concerns and evidence coverage"
+          },
+          {
+            "id": "b",
+            "label": "Use zero injuries as proof that no improvement is needed"
+          },
+          {
+            "id": "c",
+            "label": "Remove overdue actions to keep the review concise"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R05_check2",
+        "prompt": "A manager compares training attendance with field competence and declares every worker capable. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat every attendance signature as technical qualification"
+          },
+          {
+            "id": "b",
+            "label": "Review the actual practical evidence and state what the attendance indicator does and does not show"
+          },
+          {
+            "id": "c",
+            "label": "Average missing competence records into a favorable company score"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R05_check3",
+        "prompt": "A critical equipment defect is deferred repeatedly because the repair budget is not assigned. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Move the action to the next review without changing controls"
+          },
+          {
+            "id": "b",
+            "label": "Close the defect because the repair was requested"
+          },
+          {
+            "id": "c",
+            "label": "Provide an accountable resource decision and maintain suitable restriction or interim control"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R05_check4",
+        "prompt": "An objective says “send more safety emails” after repeated unsafe pedestrian crossings. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Define and resource the safer crossing outcome and how actual use will be checked"
+          },
+          {
+            "id": "b",
+            "label": "Close the issue once the email count increases"
+          },
+          {
+            "id": "c",
+            "label": "Use an unrelated attendance target as the crossing measure"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R05_check5",
+        "prompt": "A management decision changes the gate process, but night staff are not briefed. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume publication of the minutes reaches everyone"
+          },
+          {
+            "id": "b",
+            "label": "Communicate and verify the changed instructions for all affected shifts before reliance"
+          },
+          {
+            "id": "c",
+            "label": "Wait for the next annual review to tell night staff"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R05_check6",
+        "prompt": "A new shelter is purchased but workers still miss cooling breaks because relief staffing is absent. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the objective because the shelter invoice is paid"
+          },
+          {
+            "id": "b",
+            "label": "Use the absence of severe illness as the only verification"
+          },
+          {
+            "id": "c",
+            "label": "Reopen the objective and address usable break access and coverage before claiming effectiveness"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R05_final1",
+        "prompt": "For bring the whole evidence set to leadership, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Outcome counts alone cannot establish that the prevention system is effective."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R05_final2",
+        "prompt": "Which evidence would most directly verify bring the whole evidence set to leadership in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A complete scoped input pack with failures, uncertainty and prior-action status"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R05_final3",
+        "prompt": "A relief worker proposes the following shortcut during bring the whole evidence set to leadership: \"Use zero injuries as proof that no improvement is needed.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use zero injuries as proof that no improvement is needed"
+          },
+          {
+            "id": "b",
+            "label": "Remove overdue actions to keep the review concise"
+          },
+          {
+            "id": "c",
+            "label": "Reopen the inputs and include control failures, worker concerns and evidence coverage"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R05_final4",
+        "prompt": "For interpret indicators without hiding uncertainty, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Participation is not the same evidence as demonstrated task capability."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R05_final5",
+        "prompt": "Which evidence would most directly verify interpret indicators without hiding uncertainty in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An indicator review linked to practical-assessment coverage and identified gaps"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R05_final6",
+        "prompt": "A relief worker proposes the following shortcut during interpret indicators without hiding uncertainty: \"Treat every attendance signature as technical qualification.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat every attendance signature as technical qualification"
+          },
+          {
+            "id": "b",
+            "label": "Average missing competence records into a favorable company score"
+          },
+          {
+            "id": "c",
+            "label": "Review the actual practical evidence and state what the attendance indicator does and does not show"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R05_final7",
+        "prompt": "For prioritize controls and resources, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An unresourced action does not resolve the exposure or establish a safe operating condition."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R05_final8",
+        "prompt": "Which evidence would most directly verify prioritize controls and resources in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A documented resource and operating-control decision with owner and escalation"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R05_final9",
+        "prompt": "A relief worker proposes the following shortcut during prioritize controls and resources: \"Move the action to the next review without changing controls.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Move the action to the next review without changing controls"
+          },
+          {
+            "id": "b",
+            "label": "Close the defect because the repair was requested"
+          },
+          {
+            "id": "c",
+            "label": "Provide an accountable resource decision and maintain suitable restriction or interim control"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R05_final10",
+        "prompt": "For set objectives that can be verified, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Activity counts do not establish that the identified exposure was reduced."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R05_final11",
+        "prompt": "Which evidence would most directly verify set objectives that can be verified in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An objective tied to revised crossing controls and representative effectiveness observation"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R05_final12",
+        "prompt": "A relief worker proposes the following shortcut during set objectives that can be verified: \"Close the issue once the email count increases.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the issue once the email count increases"
+          },
+          {
+            "id": "b",
+            "label": "Use an unrelated attendance target as the crossing measure"
+          },
+          {
+            "id": "c",
+            "label": "Define and resource the safer crossing outcome and how actual use will be checked"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R05_final13",
+        "prompt": "For communicate decisions and monitor between reviews, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A leadership decision is not implemented where affected workers do not know the arrangement."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R05_final14",
+        "prompt": "Which evidence would most directly verify communicate decisions and monitor between reviews in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "Affected-shift briefing and observed use of the revised process with live restrictions clear"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R05_final15",
+        "prompt": "A relief worker proposes the following shortcut during communicate decisions and monitor between reviews: \"Assume publication of the minutes reaches everyone.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume publication of the minutes reaches everyone"
+          },
+          {
+            "id": "b",
+            "label": "Wait for the next annual review to tell night staff"
+          },
+          {
+            "id": "c",
+            "label": "Communicate and verify the changed instructions for all affected shifts before reliance"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R05_final16",
+        "prompt": "For check whether improvement worked, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Equipment acquisition alone does not establish that workers can use the intended control."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R05_final17",
+        "prompt": "Which evidence would most directly verify check whether improvement worked in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A follow-up check of actual breaks, coverage and worker access under relevant conditions"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R05_final18",
+        "prompt": "A relief worker proposes the following shortcut during check whether improvement worked: \"Close the objective because the shelter invoice is paid.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the objective because the shelter invoice is paid"
+          },
+          {
+            "id": "b",
+            "label": "Use the absence of severe illness as the only verification"
+          },
+          {
+            "id": "c",
+            "label": "Reopen the objective and address usable break access and coverage before claiming effectiveness"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R05_final19",
+        "prompt": "In Scenario 1, what is the central review failure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Important control and worker evidence is omitted in favor of favorable outcome indicators"
+          },
+          {
+            "id": "b",
+            "label": "Having any positive indicators in the report"
+          },
+          {
+            "id": "c",
+            "label": "Recording training attendance as one limited input"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R05_final20",
+        "prompt": "In Scenario 2, what establishes improvement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A paid purchase order alone"
+          },
+          {
+            "id": "b",
+            "label": "Verified usable aids and a changed handling task under representative conditions"
+          },
+          {
+            "id": "c",
+            "label": "An email telling workers to find the aids"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "R05_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R05_lesson1",
+          "questionIds": [
+            "R05_check1"
+          ]
+        },
+        {
+          "lessonId": "R05_lesson2",
+          "questionIds": [
+            "R05_check2"
+          ]
+        },
+        {
+          "lessonId": "R05_lesson3",
+          "questionIds": [
+            "R05_check3"
+          ]
+        },
+        {
+          "lessonId": "R05_lesson4",
+          "questionIds": [
+            "R05_check4"
+          ]
+        },
+        {
+          "lessonId": "R05_lesson5",
+          "questionIds": [
+            "R05_check5"
+          ]
+        },
+        {
+          "lessonId": "R05_lesson6",
+          "questionIds": [
+            "R05_check6"
+          ]
+        },
+        {
+          "lessonId": "R05_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R05_final",
+          "questionIds": [
+            "R05_final1",
+            "R05_final2",
+            "R05_final3",
+            "R05_final4",
+            "R05_final5",
+            "R05_final6",
+            "R05_final7",
+            "R05_final8",
+            "R05_final9",
+            "R05_final10",
+            "R05_final11",
+            "R05_final12",
+            "R05_final13",
+            "R05_final14",
+            "R05_final15",
+            "R05_final16",
+            "R05_final17",
+            "R05_final18",
+            "R05_final19",
+            "R05_final20"
+          ]
+        },
+        {
+          "lessonId": "R05_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "R05_check1": "Reopen the inputs and include control failures, worker concerns and evidence coverage. Outcome counts alone cannot establish that the prevention system is effective.",
+        "R05_check2": "Review the actual practical evidence and state what the attendance indicator does and does not show. Participation is not the same evidence as demonstrated task capability.",
+        "R05_check3": "Provide an accountable resource decision and maintain suitable restriction or interim control. An unresourced action does not resolve the exposure or establish a safe operating condition.",
+        "R05_check4": "Define and resource the safer crossing outcome and how actual use will be checked. Activity counts do not establish that the identified exposure was reduced.",
+        "R05_check5": "Communicate and verify the changed instructions for all affected shifts before reliance. A leadership decision is not implemented where affected workers do not know the arrangement.",
+        "R05_check6": "Reopen the objective and address usable break access and coverage before claiming effectiveness. Equipment acquisition alone does not establish that workers can use the intended control.",
+        "R05_final1": "Outcome counts alone cannot establish that the prevention system is effective. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R05_final2": "A complete scoped input pack with failures, uncertainty and prior-action status. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R05_final3": "Reopen the inputs and include control failures, worker concerns and evidence coverage. Outcome counts alone cannot establish that the prevention system is effective. A staffing change does not remove this requirement.",
+        "R05_final4": "Participation is not the same evidence as demonstrated task capability. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R05_final5": "An indicator review linked to practical-assessment coverage and identified gaps. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R05_final6": "Review the actual practical evidence and state what the attendance indicator does and does not show. Participation is not the same evidence as demonstrated task capability. A staffing change does not remove this requirement.",
+        "R05_final7": "An unresourced action does not resolve the exposure or establish a safe operating condition. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R05_final8": "A documented resource and operating-control decision with owner and escalation. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R05_final9": "Provide an accountable resource decision and maintain suitable restriction or interim control. An unresourced action does not resolve the exposure or establish a safe operating condition. A staffing change does not remove this requirement.",
+        "R05_final10": "Activity counts do not establish that the identified exposure was reduced. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R05_final11": "An objective tied to revised crossing controls and representative effectiveness observation. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R05_final12": "Define and resource the safer crossing outcome and how actual use will be checked. Activity counts do not establish that the identified exposure was reduced. A staffing change does not remove this requirement.",
+        "R05_final13": "A leadership decision is not implemented where affected workers do not know the arrangement. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R05_final14": "Affected-shift briefing and observed use of the revised process with live restrictions clear. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R05_final15": "Communicate and verify the changed instructions for all affected shifts before reliance. A leadership decision is not implemented where affected workers do not know the arrangement. A staffing change does not remove this requirement.",
+        "R05_final16": "Equipment acquisition alone does not establish that workers can use the intended control. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R05_final17": "A follow-up check of actual breaks, coverage and worker access under relevant conditions. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R05_final18": "Reopen the objective and address usable break access and coverage before claiming effectiveness. Equipment acquisition alone does not establish that workers can use the intended control. A staffing change does not remove this requirement.",
+        "R05_final19": "Positive indicators are useful in context, but cannot support effectiveness while known failures and evidence gaps are excluded.",
+        "R05_final20": "The intended outcome is reduced handling exposure through a usable method. Procurement is necessary activity in this case, but not evidence of that result."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

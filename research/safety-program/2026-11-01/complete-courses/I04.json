@@ -1,0 +1,785 @@
+{
+  "familyId": "I04",
+  "title": "Learning alerts and post-job review",
+  "description": "Complete original VNDRLY I04 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Transfer learning between crews and repeat work.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Extract actionable learning and explain change; facilitated debrief. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/contractor-standards/Post-Job%20review%20Card.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y15-95-301_0.pdf"
+    },
+    {
+      "title": "OSHA incident investigation guidance",
+      "url": "https://www.osha.gov/incident-investigation"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "I04_intro",
+        "title": "Start here — Learning alerts and post-job review",
+        "body": "# I04: Learning alerts and post-job review\n\nTransfer learning between crews and repeat work. This course teaches the decisions needed to implement that purpose in field operations. It covers debrief, validate lesson, distribute, update controls and check understanding. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I04_lesson1",
+        "title": "Lesson 1 — Debrief the work people actually performed",
+        "body": "## Debrief the work people actually performed\n\nA post-job review compares the intended plan with actual conditions, changes and results. Include the people doing the work and relevant interfaces, not only managers. Discuss what helped as well as what failed so effective safeguards can be preserved. Use factual examples and avoid turning the review into a blame session. A quiet job can still reveal weak controls or useful adaptations worth evaluating before repetition.\n\n### Deeper application\n\nAsk what the plan expected, what actually happened, why differences arose and what should be preserved or changed. Include useful adaptations, but assess them before turning them into standard practice. A worker workaround can reveal an impractical plan while also introducing new exposure. Review that tension with the relevant technical owner instead of automatically praising improvisation or blaming the worker for deviating from an unworkable method.\n\n### Worked oilfield example\n\nA maintenance job finishes without injury, but workers describe an unplanned access change that repeatedly placed them near vehicle movement. The decision is to record and review the access change and its exposure before repeating the job.\n\nSuccessful outcome does not prove the method was adequately controlled; workers' observations reveal what actually occurred. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A factual debrief identifying the planned route, actual change, exposure and agreed next steps. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the debrief includes supervisors but excludes the crew who used the changed route. The appropriate correction is to obtain relevant worker accounts and update the review with their actual experience. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I04_lesson2",
+        "title": "Lesson 2 — Validate the lesson before distributing it",
+        "body": "## Validate the lesson before distributing it\n\nA lesson should identify the relevant condition, control and supported change. Distinguish established facts from possible causes and avoid publishing an early theory as a proven conclusion. Seek technical review when the proposed lesson affects a specialist method. Deidentify unnecessary personal information. A dramatic story can attract attention without providing accurate guidance; relevance and evidence matter more than impact.\n\n### Deeper application\n\nAn alert should identify its evidence status. A preliminary message can warn of a known exposure while stating that causes remain under investigation. Later corrections should be traceable and redistributed to affected users. Avoid naming individuals or sharing medical details unless the authorized process genuinely requires it. The lesson should teach a relevant control decision, not rely on dramatic or stigmatizing descriptions to gain attention.\n\n### Worked oilfield example\n\nA draft alert says a detector failed, but the investigation has established only that no usable test record was available. The decision is to describe the verified evidence gap and qualify unresolved technical conclusions before distribution.\n\nLearning must not turn missing evidence into an unsupported technical conclusion; inaccurate alerts can create new errors. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A reviewed alert separating verified facts, uncertainty and approved interim guidance. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that a specialist method change is included without competent technical review. The appropriate correction is to obtain the required technical review before issuing that change as operating guidance. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I04_lesson3",
+        "title": "Lesson 3 — Translate learning into a specific change",
+        "body": "## Translate learning into a specific change\n\nInformation becomes operational learning when it changes planning, equipment, procedures, training or another relevant control. Identify who owns the change and which work packs or systems must be updated. An alert saying take care is weaker than a clear approved change responding to the failed control. Maintain temporary protection while permanent revisions are reviewed and issued. Do not let an alert become an uncontrolled substitute procedure.\n\n### Deeper application\n\nAssign the operational change to the owner of the system it affects. Planning lessons belong in work-pack preparation; equipment lessons may require technical modification; communication lessons may require a changed handover. One alert can trigger several linked actions without itself completing them. Preserve interim restrictions while the permanent revision is pending. The worker should not be left choosing between an email and an unchanged approved procedure.\n\n### Worked oilfield example\n\nA near-miss email recommends a new route, but the next work pack still directs traffic through the old crossing. The decision is to update and approve the applicable work pack and brief affected people before the next relevant movement.\n\nA lesson must reach the instructions actually used; an email cannot resolve conflicting operational documents by itself. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A controlled work-pack revision linked to the alert and its approved traffic-control decision. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the revision is approved but obsolete field copies remain in the active binder. The appropriate correction is to withdraw obsolete operational copies and verify the current instructions are available to users. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I04_lesson4",
+        "title": "Lesson 4 — Distribute to relevant people and check understanding",
+        "body": "## Distribute to relevant people and check understanding\n\nIdentify crews, shifts, subcontractors and planners whose work shares the exposure. Tailor the message to their decisions and communicate through usable understood channels. Ask recipients to explain the change and stop conditions, rather than relying only on a read receipt. Avoid flooding everyone with unrelated alerts; excessive distribution can hide relevant actions. People may need additional practical training before applying a new method.\n\n### Deeper application\n\nMap recipients by exposure rather than seniority. A planner at another site may need the lesson if they prepare the same work, while an unrelated office group may not. Use understood communication and confirm what recipients will do differently. A read receipt can support delivery evidence but not comprehension. If a changed method requires new practical capability, arrange that assessment rather than relying on the alert briefing.\n\n### Worked oilfield example\n\nOnly day-shift employees receive an alert about delivery routing that also affects night subcontract drivers. The decision is to reach the affected night and subcontract drivers and check their understanding before the changed task.\n\nDistribution must follow the exposure and actual users, not only the company's convenient mailing list. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A relevant recipient map with shift coverage, communication method and comprehension check. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that recipients acknowledge receipt but explain the old route during teach-back. The appropriate correction is to correct the misunderstanding and verify the actual new decision before relying on acknowledgment. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I04_lesson5",
+        "title": "Lesson 5 — Verify transfer into later work",
+        "body": "## Verify transfer into later work\n\nFollow-up asks whether the next relevant job uses the change and whether it works in the intended conditions. Inspect planning records and safely observe implementation where appropriate. A learning alert count or signature total is not evidence of transfer. If the change creates new difficulties, feed those facts back into competent review rather than blaming workers for not adopting an impractical method. Bound the conclusion to the sample checked.\n\n### Deeper application\n\nTransfer is demonstrated when a later comparable job incorporates the accepted change and people can apply it. Trace the revised plan to actual setup and behavior using a suitable safe method. If the change is not used, examine availability, clarity and practicality before assuming resistance. A lesson that creates another conflict needs further competent review. Keep the follow-up conclusion bounded by the conditions actually sampled.\n\n### Worked oilfield example\n\nAn alert is closed after distribution, but the next crew repeats the unchanged setup and the same access conflict. The decision is to reopen the learning action and correct the implementation gap before further affected work.\n\nLearning requires changed practice and appropriate follow-up; distribution alone cannot establish transfer. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A later job sample linking the approved change to actual setup, worker explanation and observed result. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the follow-up verifies the new document but never checks the setup it describes. The appropriate correction is to add suitable observation or equivalent evidence of actual implementation before concluding transfer occurred. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I04_lesson6",
+        "title": "Lesson 6 — Maintain a traceable learning system",
+        "body": "## Maintain a traceable learning system\n\nPreserve the source event, reviewed lesson, controlled changes, recipients and later results as a connected history. Update or withdraw superseded alerts from operational use while retaining archival records. A correction should say what changed and why. Protect confidential details and distinguish fictional training cases from real company evidence. Review whether similar work elsewhere needs the lesson, but do not claim an alert proves every site's effectiveness.\n\n### Deeper application\n\nA learning record should connect source, approved message, controlled changes, recipients and later results. Superseded operational guidance must be withdrawn while historical versions remain available for audit. If the original conclusion changes, explain why and who is affected. Do not overwrite the event record or quietly leave two competing instructions active. Deidentified learning can travel between crews without exposing unnecessary personal information.\n\n### Worked oilfield example\n\nAn alert's technical guidance is corrected, but an earlier copy remains pinned in the workshop as current instruction. The decision is to withdraw the superseded operational alert and communicate the correction to affected users.\n\nTraceability preserves learning while preventing obsolete guidance from continuing to direct work. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A versioned alert history showing the correction, operational withdrawal and confirmed redistribution. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the correction was archived but never sent to a contractor who received the first alert. The appropriate correction is to notify that affected contractor and verify the current applicable message is understood. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I04_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA maintenance job finishes without injury, but workers describe an unplanned access change that repeatedly placed them near vehicle movement. At the handover, a second issue is identified: A specialist method change is included without competent technical review. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Treat the email as proof the operational change is complete. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Record and review the access change and its exposure before repeating the job. The reason is specific: Successful outcome does not prove the method was adequately controlled; workers' observations reveal what actually occurred. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Obtain the required technical review before issuing that change as operating guidance. The supporting record should show: A reviewed alert separating verified facts, uncertainty and approved interim guidance. This is important because learning must not turn missing evidence into an unsupported technical conclusion; inaccurate alerts can create new errors. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because a lesson must reach the instructions actually used; an email cannot resolve conflicting operational documents by itself. The suitable decision is: Update and approve the applicable work pack and brief affected people before the next relevant movement. Evidence for review would include: A controlled work-pack revision linked to the alert and its approved traffic-control decision. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nOnly day-shift employees receive an alert about delivery routing that also affects night subcontract drivers. At the handover, a second issue is identified: The follow-up verifies the new document but never checks the setup it describes. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Delete the source event so nobody notices the changed advice. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Reach the affected night and subcontract drivers and check their understanding before the changed task. The reason is specific: Distribution must follow the exposure and actual users, not only the company's convenient mailing list. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Add suitable observation or equivalent evidence of actual implementation before concluding transfer occurred. The supporting record should show: A later job sample linking the approved change to actual setup, worker explanation and observed result. This is important because learning requires changed practice and appropriate follow-up; distribution alone cannot establish transfer. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because traceability preserves learning while preventing obsolete guidance from continuing to direct work. The suitable decision is: Withdraw the superseded operational alert and communicate the correction to affected users. Evidence for review would include: A versioned alert history showing the correction, operational withdrawal and confirmed redistribution. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I04_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I04_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nExtract actionable learning and explain change; facilitated debrief. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "I04_check1",
+        "prompt": "A maintenance job finishes without injury, but workers describe an unplanned access change that repeatedly placed them near vehicle movement. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record and review the access change and its exposure before repeating the job."
+          },
+          {
+            "id": "b",
+            "label": "Skip debrief because the job had no injury."
+          },
+          {
+            "id": "c",
+            "label": "Praise improvisation without checking whether it introduced risk."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I04_final1",
+        "prompt": "For debrief the work people actually performed, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A factual debrief identifying the planned route, actual change, exposure and agreed next steps."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I04_final2",
+        "prompt": "A later review finds: The debrief includes supervisors but excludes the crew who used the changed route. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Obtain relevant worker accounts and update the review with their actual experience."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I04_final3",
+        "prompt": "Consider this proposed response: Skip debrief because the job had no injury. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Successful outcome does not prove the method was adequately controlled; workers' observations reveal what actually occurred."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I04_check2",
+        "prompt": "A draft alert says a detector failed, but the investigation has established only that no usable test record was available. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Publish detector failure as proven to make the alert stronger."
+          },
+          {
+            "id": "b",
+            "label": "Describe the verified evidence gap and qualify unresolved technical conclusions before distribution."
+          },
+          {
+            "id": "c",
+            "label": "Remove all uncertainty from the alert so workers do not ask questions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I04_final4",
+        "prompt": "For validate the lesson before distributing it, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A reviewed alert separating verified facts, uncertainty and approved interim guidance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I04_final5",
+        "prompt": "A later review finds: A specialist method change is included without competent technical review. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain the required technical review before issuing that change as operating guidance."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I04_final6",
+        "prompt": "Consider this proposed response: Publish detector failure as proven to make the alert stronger. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Learning must not turn missing evidence into an unsupported technical conclusion; inaccurate alerts can create new errors."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I04_check3",
+        "prompt": "A near-miss email recommends a new route, but the next work pack still directs traffic through the old crossing. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the email as proof the operational change is complete."
+          },
+          {
+            "id": "b",
+            "label": "Leave workers to choose between the conflicting route instructions."
+          },
+          {
+            "id": "c",
+            "label": "Update and approve the applicable work pack and brief affected people before the next relevant movement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I04_final7",
+        "prompt": "For translate learning into a specific change, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A controlled work-pack revision linked to the alert and its approved traffic-control decision."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I04_final8",
+        "prompt": "A later review finds: The revision is approved but obsolete field copies remain in the active binder. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Withdraw obsolete operational copies and verify the current instructions are available to users."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I04_final9",
+        "prompt": "Consider this proposed response: Treat the email as proof the operational change is complete. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "A lesson must reach the instructions actually used; an email cannot resolve conflicting operational documents by itself."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I04_check4",
+        "prompt": "Only day-shift employees receive an alert about delivery routing that also affects night subcontract drivers. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reach the affected night and subcontract drivers and check their understanding before the changed task."
+          },
+          {
+            "id": "b",
+            "label": "Count the day-shift email list as complete distribution."
+          },
+          {
+            "id": "c",
+            "label": "Assume subcontractors will discover the change on arrival."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I04_final10",
+        "prompt": "For distribute to relevant people and check understanding, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A relevant recipient map with shift coverage, communication method and comprehension check."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I04_final11",
+        "prompt": "A later review finds: Recipients acknowledge receipt but explain the old route during teach-back. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Correct the misunderstanding and verify the actual new decision before relying on acknowledgment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I04_final12",
+        "prompt": "Consider this proposed response: Count the day-shift email list as complete distribution. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Distribution must follow the exposure and actual users, not only the company's convenient mailing list."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I04_check5",
+        "prompt": "An alert is closed after distribution, but the next crew repeats the unchanged setup and the same access conflict. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Declare learning effective because everyone signed the alert."
+          },
+          {
+            "id": "b",
+            "label": "Reopen the learning action and correct the implementation gap before further affected work."
+          },
+          {
+            "id": "c",
+            "label": "Remove the repeated conflict from the post-job review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I04_final13",
+        "prompt": "For verify transfer into later work, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A later job sample linking the approved change to actual setup, worker explanation and observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I04_final14",
+        "prompt": "A later review finds: The follow-up verifies the new document but never checks the setup it describes. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Add suitable observation or equivalent evidence of actual implementation before concluding transfer occurred."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I04_final15",
+        "prompt": "Consider this proposed response: Declare learning effective because everyone signed the alert. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Learning requires changed practice and appropriate follow-up; distribution alone cannot establish transfer."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I04_check6",
+        "prompt": "An alert's technical guidance is corrected, but an earlier copy remains pinned in the workshop as current instruction. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Delete the source event so nobody notices the changed advice."
+          },
+          {
+            "id": "b",
+            "label": "Leave both copies without explaining which applies."
+          },
+          {
+            "id": "c",
+            "label": "Withdraw the superseded operational alert and communicate the correction to affected users."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I04_final16",
+        "prompt": "For maintain a traceable learning system, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A versioned alert history showing the correction, operational withdrawal and confirmed redistribution."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I04_final17",
+        "prompt": "A later review finds: The correction was archived but never sent to a contractor who received the first alert. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Notify that affected contractor and verify the current applicable message is understood."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I04_final18",
+        "prompt": "Consider this proposed response: Delete the source event so nobody notices the changed advice. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Traceability preserves learning while preventing obsolete guidance from continuing to direct work."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I04_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain the required technical review before issuing that change as operating guidance."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I04_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Add suitable observation or equivalent evidence of actual implementation before concluding transfer occurred."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "I04_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I04_lesson1",
+          "questionIds": [
+            "I04_check1"
+          ]
+        },
+        {
+          "lessonId": "I04_lesson2",
+          "questionIds": [
+            "I04_check2"
+          ]
+        },
+        {
+          "lessonId": "I04_lesson3",
+          "questionIds": [
+            "I04_check3"
+          ]
+        },
+        {
+          "lessonId": "I04_lesson4",
+          "questionIds": [
+            "I04_check4"
+          ]
+        },
+        {
+          "lessonId": "I04_lesson5",
+          "questionIds": [
+            "I04_check5"
+          ]
+        },
+        {
+          "lessonId": "I04_lesson6",
+          "questionIds": [
+            "I04_check6"
+          ]
+        },
+        {
+          "lessonId": "I04_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I04_assessment",
+          "questionIds": [
+            "I04_final1",
+            "I04_final2",
+            "I04_final3",
+            "I04_final4",
+            "I04_final5",
+            "I04_final6",
+            "I04_final7",
+            "I04_final8",
+            "I04_final9",
+            "I04_final10",
+            "I04_final11",
+            "I04_final12",
+            "I04_final13",
+            "I04_final14",
+            "I04_final15",
+            "I04_final16",
+            "I04_final17",
+            "I04_final18",
+            "I04_final19",
+            "I04_final20"
+          ]
+        },
+        {
+          "lessonId": "I04_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "I04_check1": "Successful outcome does not prove the method was adequately controlled; workers' observations reveal what actually occurred.",
+        "I04_final1": "Successful outcome does not prove the method was adequately controlled; workers' observations reveal what actually occurred. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I04_final2": "Successful outcome does not prove the method was adequately controlled; workers' observations reveal what actually occurred. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I04_final3": "Successful outcome does not prove the method was adequately controlled; workers' observations reveal what actually occurred. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I04_check2": "Learning must not turn missing evidence into an unsupported technical conclusion; inaccurate alerts can create new errors.",
+        "I04_final4": "Learning must not turn missing evidence into an unsupported technical conclusion; inaccurate alerts can create new errors. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I04_final5": "Learning must not turn missing evidence into an unsupported technical conclusion; inaccurate alerts can create new errors. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I04_final6": "Learning must not turn missing evidence into an unsupported technical conclusion; inaccurate alerts can create new errors. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I04_check3": "A lesson must reach the instructions actually used; an email cannot resolve conflicting operational documents by itself.",
+        "I04_final7": "A lesson must reach the instructions actually used; an email cannot resolve conflicting operational documents by itself. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I04_final8": "A lesson must reach the instructions actually used; an email cannot resolve conflicting operational documents by itself. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I04_final9": "A lesson must reach the instructions actually used; an email cannot resolve conflicting operational documents by itself. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I04_check4": "Distribution must follow the exposure and actual users, not only the company's convenient mailing list.",
+        "I04_final10": "Distribution must follow the exposure and actual users, not only the company's convenient mailing list. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I04_final11": "Distribution must follow the exposure and actual users, not only the company's convenient mailing list. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I04_final12": "Distribution must follow the exposure and actual users, not only the company's convenient mailing list. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I04_check5": "Learning requires changed practice and appropriate follow-up; distribution alone cannot establish transfer.",
+        "I04_final13": "Learning requires changed practice and appropriate follow-up; distribution alone cannot establish transfer. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I04_final14": "Learning requires changed practice and appropriate follow-up; distribution alone cannot establish transfer. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I04_final15": "Learning requires changed practice and appropriate follow-up; distribution alone cannot establish transfer. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I04_check6": "Traceability preserves learning while preventing obsolete guidance from continuing to direct work.",
+        "I04_final16": "Traceability preserves learning while preventing obsolete guidance from continuing to direct work. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I04_final17": "Traceability preserves learning while preventing obsolete guidance from continuing to direct work. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I04_final18": "Traceability preserves learning while preventing obsolete guidance from continuing to direct work. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I04_final19": "Learning must not turn missing evidence into an unsupported technical conclusion; inaccurate alerts can create new errors. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "I04_final20": "Learning requires changed practice and appropriate follow-up; distribution alone cannot establish transfer. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

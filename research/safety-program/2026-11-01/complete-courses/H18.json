@@ -1,0 +1,785 @@
+{
+  "familyId": "H18",
+  "title": "Heat, cold and severe weather",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Protect outdoor crews, gate workers and hot-process staff.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Practical evaluation must verify relief, monitoring, alarms and safe shelter access without deliberate thermal exposure. Medical assessment, first aid and emergency treatment require appropriately trained responders. The employer must establish applicable local controls; this course supplies no universal heat index, work/rest ratio, lightning radius or medical clearance.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-314_5.pdf"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.marathonrefinerycontractor.com/content/documents/Refinery_Contractor/Detroit/Detroit_Safety_Documents/Other_Procedures/Misc_Procedures/202_2542_9.pdf"
+    },
+    {
+      "title": "OSHA Heat exposure",
+      "url": "https://www.osha.gov/heat-exposure"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H18_intro",
+        "title": "Start here: Heat, cold and severe weather",
+        "body": "# Heat, cold and severe weather\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nPractical evaluation must verify relief, monitoring, alarms and safe shelter access without deliberate thermal exposure. Medical assessment, first aid and emergency treatment require appropriately trained responders. The employer must establish applicable local controls; this course supplies no universal heat index, work/rest ratio, lightning radius or medical clearance.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Heat exposure](https://www.osha.gov/heat-exposure). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H18_lesson1",
+        "title": "Lesson 1 - Assess conditions and the work together",
+        "body": "Heat and cold risk depend on more than the forecast. Workload, radiant heat, humidity, wind, wet clothing, protective clothing, duration, shelter access and the worker's acclimatization can affect the situation. A gate worker in an unshaded booth and a crew lifting equipment in protective clothing may need different arrangements on the same day.\n\nThe employer's competent process determines the applicable monitoring and controls. A weather application alone does not capture every exposure at the task. Check actual conditions and forecast changes and identify who will decide when the method must change or work must stop.\n\nInclude new workers, workers returning after absence and people whose role limits their access to water, rest or shelter. Arrange support without demanding public disclosure of medical details. Health restrictions should pass through the appropriate confidential process. Do not assume experience in another climate proves current readiness.\n\n## Worked field example\n\nA new gate worker is assigned a hot outdoor shift using only the weather forecast for the nearest town.\n\nThe safe decision is to assess the actual work, shelter, clothing, workload and acclimatization needs before the assignment. The forecast alone does not describe the worker’s complete thermal exposure.\n\nA useful field record is specific: A task-specific plan linking actual conditions and worker support to monitored controls. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nA task assessment should consider where the worker actually stands and how the work changes. A metal booth, radiant process surface or protective coverall can affect conditions differently from an open weather station. The employer's competent method determines relevant measurements and controls. Workers do not need to calculate a medical threshold to report that the planned arrangement is failing.\n\nPlan who observes changing conditions and how that person reaches remote workers. A lone attendant may not recognize their own worsening judgment. The monitoring arrangement should account for that limitation and connect to the emergency response. A phone available only when the worker can actively call does not by itself address incapacitation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H18_lesson2",
+        "title": "Lesson 2 - Organize heat prevention",
+        "body": "Plan suitable drinking water, rest, cooling or shade and work organization through the assessment and applicable requirements. Make them available where and when workers can actually use them. A water cooler in a distant locked building does not support a gate attendant who cannot leave the post.\n\nAcclimatization is a managed adjustment to work in heat, not an instruction to endure discomfort until used to it. The employer sets the appropriate progression and supervision for new or returning workers. Do not invent a single schedule for every task, climate and person.\n\nCoordinate coverage so workers can take the planned breaks without exposing a gate or another critical position. Consider rescheduling demanding work and reducing heat load through the method. Monitor whether protective clothing or extra tasks increase exposure beyond the original plan. A missed break because of a delivery surge is a control failure to address, not evidence of commitment.\n\n## Worked field example\n\nA gate attendant skips the planned cooling break because no relief worker was arranged.\n\nThe safe decision is to provide safe coverage and restore the assessed rest and cooling arrangement. A planned break is ineffective if staffing prevents the worker from taking it.\n\nA useful field record is specific: A shift plan and observed coverage enabling access to water, rest and cooling. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nRelief is part of the control when a worker cannot leave a critical post. The shift plan identifies who covers the duty, how the handover occurs and what happens if the relief person is delayed. Do not make a worker choose between an unattended gate and the assessed break.\n\nWater and cooling arrangements need practical checks. Confirm access, condition, replenishment and the route to use them. A stock count at the warehouse does not demonstrate provision at a remote location. Workers should know how to report loss of a facility before symptoms occur. The supervisor uses the contingency, changes staffing or restricts work rather than asking the person to endure the gap.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H18_lesson3",
+        "title": "Lesson 3 - Recognize illness and obtain help",
+        "body": "Workers and supervisors need to recognize warning signs and act early. Weakness, dizziness, headache, nausea, unusual behavior or loss of coordination require attention under the site health response. Confusion, collapse or other severe signs can indicate an emergency. Do not require a worker to complete the queue or walk alone to a distant office before getting help.\n\nStop the exposure, summon the appropriate first-aid or emergency assistance and follow the responder's instructions. For a suspected heat emergency, begin the site's immediate cooling response while emergency help is called, within training and available safe means. Do not delay because a temperature measurement or incident form is unavailable.\n\nNever leave an impaired worker alone or have them drive themselves for care. The assigned response determines safe movement, treatment and further medical support. This awareness lesson is not a diagnostic or first-aid certification and does not tell untrained workers to give fluids to a person unable to drink safely.\n\n## Worked field example\n\nA worker becomes confused and unsteady in hot conditions while a supervisor asks for one more delivery check.\n\nThe safe decision is to stop exposure, activate emergency assistance and begin the approved immediate cooling response. Severe signs require urgent response rather than continued work or administrative delay.\n\nA useful field record is specific: A response record showing prompt alarm, trained assistance and safe care without leaving the worker alone. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nA coworker witnessing unusual behavior should give the responder clear observations rather than an unqualified diagnosis. Report the work, conditions, symptoms and any immediate action. Emergency help must not wait for certainty about whether the cause is heat, a medical condition or something else.\n\nKeep the affected person supported through the trained response. Do not send them alone to rest in a parked vehicle or ask them to drive home. A safe coverage arrangement protects both the worker and other people who rely on the post. The subsequent return-to-work decision uses the appropriate health advice and operational readiness process, rather than a supervisor's impression that the person looks better.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H18_lesson4",
+        "title": "Lesson 4 - Control cold and wet exposure",
+        "body": "Cold risk is affected by wind, wetness, contact with cold surfaces, duration and the ability to move or shelter. A worker who is wet and stationary can lose heat even when another crew feels comfortable. Arrange suitable clothing, dry replacements, warm shelter and work organization through the assessment.\n\nTeach workers to report numbness, loss of dexterity, persistent shivering, unusual behavior or other concerns promptly. Cold hands can also make vehicle checks, tool control and radio use unsafe before a worker recognizes a broader illness. Use the appropriate first-aid and emergency process for concerning symptoms.\n\nDo not improvise aggressive warming or rub damaged skin. Protect the person from further exposure and obtain trained help. Ice and snow create additional fall and traffic hazards. Review access surfaces, visibility and the ability of responders to reach the worker rather than treating cold protection solely as a clothing issue.\n\n## Worked field example\n\nA rain-soaked gate worker has numb hands and cannot operate the radio reliably.\n\nThe safe decision is to stop the affected exposure and arrange warm dry support, trained assessment and safe gate coverage. Wet cold exposure can impair both health and the worker’s ability to perform critical actions.\n\nA useful field record is specific: A verified shelter and clothing arrangement plus response to the reported functional impairment. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nCold prevention should cover the work method as well as clothing. Dexterity requirements, wet contact, wind exposure and periods of stationary duty can make controls difficult to use. A glove that protects against cold but prevents safe control operation needs review with the relevant task requirements; removing it repeatedly may defeat the planned protection.\n\nShelter access must remain safe. Review ice, lighting, traffic and lone-work communication on the route. A worker who is already impaired should not be sent unaccompanied across a hazardous yard. Trained responders determine appropriate care while the supervisor arranges safe operational coverage. Personal clothing purchases do not replace the employer's assessed arrangement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H18_lesson5",
+        "title": "Lesson 5 - Use severe-weather triggers and safe shelter",
+        "body": "The site needs an understood method for monitoring severe weather and triggering protective action. Identify who watches the information, how workers are notified, where suitable shelter is located and how long safe access takes. Different hazards can require different shelters and actions; a convenient canopy is not automatically suitable for lightning, wind or flooding.\n\nWork backward from the time needed to stop safely and reach shelter. A crew on a remote pad cannot wait until a storm is overhead before deciding who controls the equipment. Follow the governing site triggers rather than inventing distances or intervals in this course.\n\nTest the communication route and backup. Include visitors, contractors, lone workers and drivers waiting at the gate. Emergency traffic arrangements must preserve access and safe withdrawal. Do not direct people through a flooded route or beneath unstable objects merely because it is the usual way to muster.\n\n## Worked field example\n\nA storm warning arrives, but the posted shelter route passes a newly flooded low crossing.\n\nThe safe decision is to use the site authority to establish a safe alternative and notify affected workers before movement. A named shelter is ineffective if people cannot reach it safely under the actual conditions.\n\nA useful field record is specific: A current shelter/access arrangement and successful notification covering all affected groups. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nA severe-weather notification should explain the required action, not merely forward a forecast screenshot. Workers need to know whether to suspend work, make equipment safe, evacuate or shelter under the applicable site plan. Contractors and waiting drivers must receive usable instructions too.\n\nConfirm the shelter location and capacity through the responsible site process. A temporary trailer or canopy should not be described as suitable for every hazard without assessment. If the planned route becomes unsafe, command establishes a suitable alternative and communicates it. Gate staff maintain their own safe position while controlling ordinary admission and responder access under the emergency arrangement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H18_lesson6",
+        "title": "Lesson 6 - Monitor, hand over and review",
+        "body": "Conditions and worker readiness can change faster than a shift plan. Assign monitoring and give workers a clear route to stop and report concerns. At handover, transfer the current conditions, restrictions, breaks or relief still due, shelter changes and any worker needing support through the appropriate confidential method.\n\nReview whether controls were usable. Repeated missed breaks, empty water stations or a shelter too distant to reach before weather changes indicate a system problem. Do not use a low incident count to dismiss those failures. Include worker feedback about the actual task and clothing.\n\nPractical evaluation can safely demonstrate the notification, relief and shelter arrangements. It must not deliberately induce heat or cold illness. Record which actions were demonstrated and what was not assessed. After an event or material change, revise the arrangement and verify it in the field before treating the issue as resolved.\n\n## Worked field example\n\nSeveral shifts report missed cooling breaks, but a review declares success because nobody was hospitalized.\n\nThe safe decision is to review and correct the failed break and coverage controls despite the favorable reported outcome. Absence of a severe outcome does not demonstrate that preventive controls were available and used.\n\nA useful field record is specific: A review of actual break access, staffing and corrective-action effectiveness with worker feedback. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nThe review after a weather interruption should ask which controls worked and which were unavailable. A successful evacuation may still reveal a missed contractor notification or an inaccessible shelter. Preserve those failures and assign correction instead of treating the eventual safe outcome as complete evidence.\n\nUse a safe exercise to test notifications, relief and access. Do not expose workers to deliberate overheating, cold injury or a real storm to demonstrate resilience. Record what was simulated and which local actions were actually observed. Later checks should include the shift and task where the problem occurred, with technical and medical decisions kept within the appropriate qualified roles.\n\nWhere the shelter or relief arrangement changes, communicate the new instructions before exposed work resumes. A revised map must match the actual usable route and the people responsible for monitoring.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H18_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional gate worker starts a first outdoor shift during hot weather. Deliveries are continuous, the water supply is in a distant office and no relief person is assigned. The worker reports dizziness. The supervisor asks them to sit in the booth and keep processing paperwork until lunch.\n\n### Worked solution\n\nThe supervisor stops the worker’s exposure and summons appropriate trained assessment or emergency help according to the symptoms and site plan. Safe gate coverage is arranged without leaving the impaired worker alone. Continuing paperwork in the same hot booth does not necessarily remove exposure. The employer then reviews actual conditions, acclimatization, water and cooling access, workload and relief staffing. Before return to exposed duty, the appropriate health and operational decisions are made through their respective roles. Records distinguish the immediate response from the longer-term correction. A promise to stock more water does not resolve lack of coverage or cooling.\n\n## Scenario 2\n\nDuring a fictional winter night shift, rain turns to sleet. The remote gate radio works intermittently and the normal route to the heated shelter becomes icy. The relief worker is late. The attendant reports numb fingers and difficulty writing vehicle details.\n\n### Worked solution\n\nThe responsible supervisor treats impaired function and degraded communications as active concerns. They stop or restrict affected work, arrange safe support and gate coverage, and use trained assessment for the worker. The worker is not sent alone over an unsafe route. The site reviews a safe shelter path, surface treatment, suitable dry clothing, communications and relief arrangements. Before lone gate work resumes, those controls are confirmed in actual conditions. The handover includes live restrictions and monitoring responsibility. The record does not dismiss the event because air temperature was only slightly below or above a chosen value; actual wetness, wind and function matter.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H18_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H18_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nPractical evaluation must verify relief, monitoring, alarms and safe shelter access without deliberate thermal exposure. Medical assessment, first aid and emergency treatment require appropriately trained responders. The employer must establish applicable local controls; this course supplies no universal heat index, work/rest ratio, lightning radius or medical clearance.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H18_check1",
+        "prompt": "A new gate worker is assigned a hot outdoor shift using only the weather forecast for the nearest town. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assess the actual work, shelter, clothing, workload and acclimatization needs before the assignment"
+          },
+          {
+            "id": "b",
+            "label": "Assume the town forecast guarantees the gate is acceptable"
+          },
+          {
+            "id": "c",
+            "label": "Rely on the worker to request help only after symptoms become severe"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H18_check2",
+        "prompt": "A gate attendant skips the planned cooling break because no relief worker was arranged. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tell the worker to finish the queue before resting"
+          },
+          {
+            "id": "b",
+            "label": "Provide safe coverage and restore the assessed rest and cooling arrangement"
+          },
+          {
+            "id": "c",
+            "label": "Count water stored in a locked office as adequate provision"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H18_check3",
+        "prompt": "A worker becomes confused and unsteady in hot conditions while a supervisor asks for one more delivery check. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Have the worker drive to the clinic after finishing"
+          },
+          {
+            "id": "b",
+            "label": "Wait for a thermometer before calling for help"
+          },
+          {
+            "id": "c",
+            "label": "Stop exposure, activate emergency assistance and begin the approved immediate cooling response"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H18_check4",
+        "prompt": "A rain-soaked gate worker has numb hands and cannot operate the radio reliably. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stop the affected exposure and arrange warm dry support, trained assessment and safe gate coverage"
+          },
+          {
+            "id": "b",
+            "label": "Tell the worker to move faster to stay warm"
+          },
+          {
+            "id": "c",
+            "label": "Continue because air temperature is above freezing"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H18_check5",
+        "prompt": "A storm warning arrives, but the posted shelter route passes a newly flooded low crossing. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the flooded crossing because it is on the posted map"
+          },
+          {
+            "id": "b",
+            "label": "Use the site authority to establish a safe alternative and notify affected workers before movement"
+          },
+          {
+            "id": "c",
+            "label": "Tell each worker to find any nearby cover"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H18_check6",
+        "prompt": "Several shifts report missed cooling breaks, but a review declares success because nobody was hospitalized. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the concern because hospitalization is the only meaningful measure"
+          },
+          {
+            "id": "b",
+            "label": "Ask workers to sign that they accept the missed breaks"
+          },
+          {
+            "id": "c",
+            "label": "Review and correct the failed break and coverage controls despite the favorable reported outcome"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H18_final1",
+        "prompt": "For assess conditions and the work together, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The forecast alone does not describe the worker’s complete thermal exposure."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H18_final2",
+        "prompt": "Which evidence would most directly verify assess conditions and the work together in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A task-specific plan linking actual conditions and worker support to monitored controls"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H18_final3",
+        "prompt": "A relief worker proposes the following shortcut during assess conditions and the work together: \"Assume the town forecast guarantees the gate is acceptable.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the town forecast guarantees the gate is acceptable"
+          },
+          {
+            "id": "b",
+            "label": "Rely on the worker to request help only after symptoms become severe"
+          },
+          {
+            "id": "c",
+            "label": "Assess the actual work, shelter, clothing, workload and acclimatization needs before the assignment"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H18_final4",
+        "prompt": "For organize heat prevention, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A planned break is ineffective if staffing prevents the worker from taking it."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H18_final5",
+        "prompt": "Which evidence would most directly verify organize heat prevention in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A shift plan and observed coverage enabling access to water, rest and cooling"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H18_final6",
+        "prompt": "A relief worker proposes the following shortcut during organize heat prevention: \"Tell the worker to finish the queue before resting.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tell the worker to finish the queue before resting"
+          },
+          {
+            "id": "b",
+            "label": "Count water stored in a locked office as adequate provision"
+          },
+          {
+            "id": "c",
+            "label": "Provide safe coverage and restore the assessed rest and cooling arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H18_final7",
+        "prompt": "For recognize illness and obtain help, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Severe signs require urgent response rather than continued work or administrative delay."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H18_final8",
+        "prompt": "Which evidence would most directly verify recognize illness and obtain help in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A response record showing prompt alarm, trained assistance and safe care without leaving the worker alone"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H18_final9",
+        "prompt": "A relief worker proposes the following shortcut during recognize illness and obtain help: \"Have the worker drive to the clinic after finishing.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Have the worker drive to the clinic after finishing"
+          },
+          {
+            "id": "b",
+            "label": "Wait for a thermometer before calling for help"
+          },
+          {
+            "id": "c",
+            "label": "Stop exposure, activate emergency assistance and begin the approved immediate cooling response"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H18_final10",
+        "prompt": "For control cold and wet exposure, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wet cold exposure can impair both health and the worker’s ability to perform critical actions."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H18_final11",
+        "prompt": "Which evidence would most directly verify control cold and wet exposure in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified shelter and clothing arrangement plus response to the reported functional impairment"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H18_final12",
+        "prompt": "A relief worker proposes the following shortcut during control cold and wet exposure: \"Tell the worker to move faster to stay warm.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tell the worker to move faster to stay warm"
+          },
+          {
+            "id": "b",
+            "label": "Continue because air temperature is above freezing"
+          },
+          {
+            "id": "c",
+            "label": "Stop the affected exposure and arrange warm dry support, trained assessment and safe gate coverage"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H18_final13",
+        "prompt": "For use severe-weather triggers and safe shelter, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A named shelter is ineffective if people cannot reach it safely under the actual conditions."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H18_final14",
+        "prompt": "Which evidence would most directly verify use severe-weather triggers and safe shelter in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A current shelter/access arrangement and successful notification covering all affected groups"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H18_final15",
+        "prompt": "A relief worker proposes the following shortcut during use severe-weather triggers and safe shelter: \"Use the flooded crossing because it is on the posted map.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the flooded crossing because it is on the posted map"
+          },
+          {
+            "id": "b",
+            "label": "Tell each worker to find any nearby cover"
+          },
+          {
+            "id": "c",
+            "label": "Use the site authority to establish a safe alternative and notify affected workers before movement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H18_final16",
+        "prompt": "For monitor, hand over and review, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Absence of a severe outcome does not demonstrate that preventive controls were available and used."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H18_final17",
+        "prompt": "Which evidence would most directly verify monitor, hand over and review in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A review of actual break access, staffing and corrective-action effectiveness with worker feedback"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H18_final18",
+        "prompt": "A relief worker proposes the following shortcut during monitor, hand over and review: \"Close the concern because hospitalization is the only meaningful measure.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the concern because hospitalization is the only meaningful measure"
+          },
+          {
+            "id": "b",
+            "label": "Ask workers to sign that they accept the missed breaks"
+          },
+          {
+            "id": "c",
+            "label": "Review and correct the failed break and coverage controls despite the favorable reported outcome"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H18_final19",
+        "prompt": "In Scenario 1, what is missing from “sit in the booth and keep working”?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A verified reduction of exposure and appropriate health response"
+          },
+          {
+            "id": "b",
+            "label": "A requirement to finish every delivery first"
+          },
+          {
+            "id": "c",
+            "label": "A self-diagnosis by the worker"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H18_final20",
+        "prompt": "In Scenario 2, which evidence best supports resumed duty?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original winter clothing issue record alone"
+          },
+          {
+            "id": "b",
+            "label": "Verified safe shelter access, effective communication, coverage and appropriate worker readiness"
+          },
+          {
+            "id": "c",
+            "label": "A statement that the gate has operated for years"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H18_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H18_lesson1",
+          "questionIds": [
+            "H18_check1"
+          ]
+        },
+        {
+          "lessonId": "H18_lesson2",
+          "questionIds": [
+            "H18_check2"
+          ]
+        },
+        {
+          "lessonId": "H18_lesson3",
+          "questionIds": [
+            "H18_check3"
+          ]
+        },
+        {
+          "lessonId": "H18_lesson4",
+          "questionIds": [
+            "H18_check4"
+          ]
+        },
+        {
+          "lessonId": "H18_lesson5",
+          "questionIds": [
+            "H18_check5"
+          ]
+        },
+        {
+          "lessonId": "H18_lesson6",
+          "questionIds": [
+            "H18_check6"
+          ]
+        },
+        {
+          "lessonId": "H18_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H18_final",
+          "questionIds": [
+            "H18_final1",
+            "H18_final2",
+            "H18_final3",
+            "H18_final4",
+            "H18_final5",
+            "H18_final6",
+            "H18_final7",
+            "H18_final8",
+            "H18_final9",
+            "H18_final10",
+            "H18_final11",
+            "H18_final12",
+            "H18_final13",
+            "H18_final14",
+            "H18_final15",
+            "H18_final16",
+            "H18_final17",
+            "H18_final18",
+            "H18_final19",
+            "H18_final20"
+          ]
+        },
+        {
+          "lessonId": "H18_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H18_check1": "Assess the actual work, shelter, clothing, workload and acclimatization needs before the assignment. The forecast alone does not describe the worker’s complete thermal exposure.",
+        "H18_check2": "Provide safe coverage and restore the assessed rest and cooling arrangement. A planned break is ineffective if staffing prevents the worker from taking it.",
+        "H18_check3": "Stop exposure, activate emergency assistance and begin the approved immediate cooling response. Severe signs require urgent response rather than continued work or administrative delay.",
+        "H18_check4": "Stop the affected exposure and arrange warm dry support, trained assessment and safe gate coverage. Wet cold exposure can impair both health and the worker’s ability to perform critical actions.",
+        "H18_check5": "Use the site authority to establish a safe alternative and notify affected workers before movement. A named shelter is ineffective if people cannot reach it safely under the actual conditions.",
+        "H18_check6": "Review and correct the failed break and coverage controls despite the favorable reported outcome. Absence of a severe outcome does not demonstrate that preventive controls were available and used.",
+        "H18_final1": "The forecast alone does not describe the worker’s complete thermal exposure. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H18_final2": "A task-specific plan linking actual conditions and worker support to monitored controls. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H18_final3": "Assess the actual work, shelter, clothing, workload and acclimatization needs before the assignment. The forecast alone does not describe the worker’s complete thermal exposure. A staffing change does not remove this requirement.",
+        "H18_final4": "A planned break is ineffective if staffing prevents the worker from taking it. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H18_final5": "A shift plan and observed coverage enabling access to water, rest and cooling. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H18_final6": "Provide safe coverage and restore the assessed rest and cooling arrangement. A planned break is ineffective if staffing prevents the worker from taking it. A staffing change does not remove this requirement.",
+        "H18_final7": "Severe signs require urgent response rather than continued work or administrative delay. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H18_final8": "A response record showing prompt alarm, trained assistance and safe care without leaving the worker alone. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H18_final9": "Stop exposure, activate emergency assistance and begin the approved immediate cooling response. Severe signs require urgent response rather than continued work or administrative delay. A staffing change does not remove this requirement.",
+        "H18_final10": "Wet cold exposure can impair both health and the worker’s ability to perform critical actions. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H18_final11": "A verified shelter and clothing arrangement plus response to the reported functional impairment. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H18_final12": "Stop the affected exposure and arrange warm dry support, trained assessment and safe gate coverage. Wet cold exposure can impair both health and the worker’s ability to perform critical actions. A staffing change does not remove this requirement.",
+        "H18_final13": "A named shelter is ineffective if people cannot reach it safely under the actual conditions. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H18_final14": "A current shelter/access arrangement and successful notification covering all affected groups. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H18_final15": "Use the site authority to establish a safe alternative and notify affected workers before movement. A named shelter is ineffective if people cannot reach it safely under the actual conditions. A staffing change does not remove this requirement.",
+        "H18_final16": "Absence of a severe outcome does not demonstrate that preventive controls were available and used. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H18_final17": "A review of actual break access, staffing and corrective-action effectiveness with worker feedback. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H18_final18": "Review and correct the failed break and coverage controls despite the favorable reported outcome. Absence of a severe outcome does not demonstrate that preventive controls were available and used. A staffing change does not remove this requirement.",
+        "H18_final19": "The same location and continuing duties may retain the exposure and delay care. Symptoms require the planned trained response and usable protective arrangements.",
+        "H18_final20": "Readiness depends on usable controls and the worker’s condition in the current situation. Historical operation and clothing stock do not demonstrate those conditions."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

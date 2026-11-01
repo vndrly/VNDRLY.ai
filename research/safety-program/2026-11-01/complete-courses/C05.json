@@ -1,0 +1,785 @@
+{
+  "familyId": "C05",
+  "title": "Commercial drivers and transport authorization",
+  "description": "Complete original VNDRLY C05 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Keep driver/legal qualification distinct from general awareness.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Licensed training/testing and on-road evaluation for vehicle/task; jurisdiction review required. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.slb.com/-/media/files/about-us/2023-policies-and-procedures/driving-policy-2023.ashx"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.slb.com/about/health-safety-and-environment/worker-safety-and-incident-prevention"
+    },
+    {
+      "title": "FMCSA commercial driver license program",
+      "url": "https://www.fmcsa.dot.gov/cdl"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "C05_intro",
+        "title": "Start here — Commercial drivers and transport authorization",
+        "body": "# C05: Commercial drivers and transport authorization\n\nKeep driver/legal qualification distinct from general awareness. This course teaches the decisions needed to implement that purpose in field operations. It covers license class, endorsements, applicable carrier obligations, assessment and fitness status. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C05_lesson1",
+        "title": "Lesson 1 — Classify the transport operation",
+        "body": "## Classify the transport operation\n\nDriver eligibility begins with the vehicle, combination, cargo, route and jurisdiction. A passenger vehicle, a regulated commercial combination and a hazardous-cargo movement can require different qualification evidence. The competent transport owner determines applicable legal and carrier requirements. This awareness course supplies no universal weight threshold or license class. Identify the operation accurately before deciding which evidence to request.\n\n### Deeper application\n\nDescribe the operation before asking whether a driver is qualified. Include the actual combination, planned cargo, route and jurisdiction, since a changed trailer or load can change the legal review. This course deliberately supplies no threshold table for universal use. The transport owner should use the applicable authoritative requirements and document why they apply, instead of asking dispatch to infer law from vehicle appearance.\n\n### Worked oilfield example\n\nA pickup driver is allocated a larger regulated vehicle and cargo combination outside the verified qualification scope. The decision is to hold dispatch and have the transport owner verify the required qualifications for that operation.\n\nQualification depends on the actual operation; a valid license for unrelated driving does not establish eligibility. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An operation classification linking vehicle, cargo, route, jurisdiction and applicable driver prerequisites. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the classification omits a trailer added after the original review. The appropriate correction is to reassess the actual vehicle combination and verify matching qualifications before dispatch. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C05_lesson2",
+        "title": "Lesson 2 — Verify license endorsements and restrictions",
+        "body": "## Verify license endorsements and restrictions\n\nInspect authentic current evidence for the identified driver, relevant license class, required endorsements and restrictions. Resolve unclear scope with the proper issuing or competent transport source. A photocopy is not a guarantee of present validity. Record verified status and protect personal identifiers. In the United States, FMCSA identifies additional endorsements for certain vehicle and cargo types; the precise requirement must be checked for the actual operation.\n\n### Deeper application\n\nCheck identity, category and conditions as well as the expiry date. A credential can be genuine and current while still unsuitable for the assignment. Use authorized verification channels and record the decision without spreading unnecessary personal identifiers. Do not edit a submitted image or convert a restriction into a note that dispatch can ignore. If scope remains unclear, the assignment remains unverified pending resolution.\n\n### Worked oilfield example\n\nA driver's license is current, but its restriction conflicts with the assigned vehicle's configuration. The decision is to assign only work within verified license conditions or obtain an appropriately qualified replacement.\n\nCurrency is only one attribute. An active restriction can make a particular assignment unsuitable despite a valid license. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A verified license check recording matching identity, class, endorsements, restrictions and decision. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the submitted copy belongs to a different driver with a similar name. The appropriate correction is to resolve identity through the authorized verification process before accepting the evidence. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C05_lesson3",
+        "title": "Lesson 3 — Separate legal eligibility from task suitability",
+        "body": "## Separate legal eligibility from task suitability\n\nA license establishes a legal qualification within its scope; it does not demonstrate competence for every company route, load or site interface. Use relevant instruction and on-road or task evaluation by suitable assessors. Evaluate decisions such as identifying an unsafe route or stopping when conditions change. Never conduct training by exposing an unqualified driver or the public to an uncontrolled hazard.\n\n### Deeper application\n\nTask assessment should represent the planned work safely: relevant vehicle characteristics, route interfaces, load-related duties and abnormal decisions. The assessor should have matching competence and identify limitations. A familiarization drive cannot automatically establish cargo-handling capability, just as a cargo briefing cannot prove on-road performance. Keep the evidence types distinct and use them together for a bounded employer authorization.\n\n### Worked oilfield example\n\nA legally qualified driver has never used the remote lease road and has no assessment for the assigned transport task. The decision is to arrange relevant familiarization and suitable task evaluation before independent assignment.\n\nLegal eligibility and task suitability answer different questions; unfamiliar operating conditions need appropriate preparation and assessment. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A relevant route and task evaluation identifying conditions, observed decisions and remaining limits. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the evaluation covered an empty vehicle but not the materially different planned cargo task. The appropriate correction is to review the cargo-specific gap and arrange suitable assessment before expanding authorization. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C05_lesson4",
+        "title": "Lesson 4 — Verify carrier and company prerequisites",
+        "body": "## Verify carrier and company prerequisites\n\nThe transport owner should map applicable carrier obligations and driver qualification requirements, including any relevant fitness, records or duty requirements. This course does not replace that jurisdiction-specific mapping. Dispatch must know what is verified and which assignments remain restricted. A folder of documents is not a decision unless their validity and compatibility have been reviewed. Do not pressure a driver to self-approve an unresolved legal prerequisite.\n\n### Deeper application\n\nTransport eligibility can involve more than licensing. The responsible transport specialist maps carrier and jurisdiction obligations for the operation and identifies the required evidence. Dispatch needs a usable approved, restricted or pending status. A thick document file without a supported decision leaves allocation uncertain. If a prerequisite is missing, specify the missing item and alternative assignment rather than inventing a general waiver.\n\n### Worked oilfield example\n\nDispatch sees a valid license but the transport owner's required qualification review remains incomplete. The decision is to keep the affected assignment unready until required qualification evidence and approval are verified.\n\nA license does not replace other requirements that apply to the carrier and operation. Pending checks remain pending. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A transport-owner qualification decision showing applicable checks, outstanding items and dispatch restrictions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that dispatch cannot distinguish pending review from approved status in its roster. The appropriate correction is to make the operational status and restriction explicit before allocating the affected work. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C05_lesson5",
+        "title": "Lesson 5 — Handle fitness status without unnecessary disclosure",
+        "body": "## Handle fitness status without unnecessary disclosure\n\nA driver may have health-related qualification conditions or other fitness concerns requiring authorized review. Supervisors need the operational status and restrictions relevant to assignment, rather than a full clinical file. Use the designated process and qualified providers for medical judgments. A driver reporting inability to continue safely should be heard and the assignment reassessed; the supervisor should not diagnose or override a clinician.\n\n### Deeper application\n\nFitness information should follow the designated occupational or regulatory process. A supervisor can report observed difficulty or a worker's stated concern, but should not make a diagnosis. The operational decision uses valid capacity or qualification status and applicable restrictions. Keep clinical detail in authorized channels. Urgent uncertainty about safe continuation calls for a suitable reassessment and protection, not pressure to finish the route.\n\n### Worked oilfield example\n\nA dispatcher asks for a driver's diagnosis when the necessary information is a verified restriction on driving duties. The decision is to use authorized fitness-status and restriction information through the designated confidential process.\n\nAssignment decisions need valid capacity information, while clinical details remain in appropriately restricted channels. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A restricted fitness-status record and an operational roster showing only necessary assignment limits. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that a restriction is present but no one translated it into dispatch limits. The appropriate correction is to coordinate authorized clarification and implement compatible assignments before release. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C05_lesson6",
+        "title": "Lesson 6 — Maintain authorization through change and expiry",
+        "body": "## Maintain authorization through change and expiry\n\nEmployer authorization states permitted vehicles, tasks and conditions based on verified evidence. Track relevant expiry, restriction and change triggers, and suspend affected allocation when required qualification cannot be confirmed. Reuse valid matching evidence; do not invent an annual renewal rule for every document. A changed route, vehicle or cargo can require review even when a credential has not expired. Preserve previous decisions and communicate current limits.\n\n### Deeper application\n\nPlan renewal early enough to preserve coverage, but keep planned and verified renewal separate. A renewal receipt may show an application was submitted without proving the required status is current. Changed cargo or routes may require scope review even after renewal. Preserve historical validity and employer decisions so later audits can examine what supported each assignment at the time it occurred.\n\n### Worked oilfield example\n\nA driver's required credential expires before tomorrow's regulated transport assignment. The decision is to hold that assignment until valid matching qualification is verified or use an authorized replacement.\n\nA planned renewal is not current evidence. Allocation must use the status valid for the intended work date. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A dated restriction and later verified renewal or replacement decision tied to the actual assignment. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the renewal is verified but employer authorization still excludes the newly assigned cargo. The appropriate correction is to review and approve the actual cargo scope before dispatch rather than relying on renewal alone. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C05_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA pickup driver is allocated a larger regulated vehicle and cargo combination outside the verified qualification scope. At the handover, a second issue is identified: The submitted copy belongs to a different driver with a similar name. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Assume the license proves suitability for every route and load. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Hold dispatch and have the transport owner verify the required qualifications for that operation. The reason is specific: Qualification depends on the actual operation; a valid license for unrelated driving does not establish eligibility. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Resolve identity through the authorized verification process before accepting the evidence. The supporting record should show: A verified license check recording matching identity, class, endorsements, restrictions and decision. This is important because currency is only one attribute. An active restriction can make a particular assignment unsuitable despite a valid license. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because legal eligibility and task suitability answer different questions; unfamiliar operating conditions need appropriate preparation and assessment. The suitable decision is: Arrange relevant familiarization and suitable task evaluation before independent assignment. Evidence for review would include: A relevant route and task evaluation identifying conditions, observed decisions and remaining limits. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nDispatch sees a valid license but the transport owner's required qualification review remains incomplete. At the handover, a second issue is identified: A restriction is present but no one translated it into dispatch limits. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Extend the expiry date in the roster because renewal is planned. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Keep the affected assignment unready until required qualification evidence and approval are verified. The reason is specific: A license does not replace other requirements that apply to the carrier and operation. Pending checks remain pending. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Coordinate authorized clarification and implement compatible assignments before release. The supporting record should show: A restricted fitness-status record and an operational roster showing only necessary assignment limits. This is important because assignment decisions need valid capacity information, while clinical details remain in appropriately restricted channels. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because a planned renewal is not current evidence. Allocation must use the status valid for the intended work date. The suitable decision is: Hold that assignment until valid matching qualification is verified or use an authorized replacement. Evidence for review would include: A dated restriction and later verified renewal or replacement decision tied to the actual assignment. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C05_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C05_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nLicensed training/testing and on-road evaluation for vehicle/task; jurisdiction review required. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "C05_check1",
+        "prompt": "A pickup driver is allocated a larger regulated vehicle and cargo combination outside the verified qualification scope. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold dispatch and have the transport owner verify the required qualifications for that operation."
+          },
+          {
+            "id": "b",
+            "label": "Treat any valid driving license as covering every company vehicle."
+          },
+          {
+            "id": "c",
+            "label": "Let the customer decide license applicability after arrival."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C05_final1",
+        "prompt": "For classify the transport operation, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "An operation classification linking vehicle, cargo, route, jurisdiction and applicable driver prerequisites."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C05_final2",
+        "prompt": "A later review finds: The classification omits a trailer added after the original review. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Reassess the actual vehicle combination and verify matching qualifications before dispatch."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C05_final3",
+        "prompt": "Consider this proposed response: Treat any valid driving license as covering every company vehicle. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Qualification depends on the actual operation; a valid license for unrelated driving does not establish eligibility."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C05_check2",
+        "prompt": "A driver's license is current, but its restriction conflicts with the assigned vehicle's configuration. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ignore restrictions because the expiry date is in the future."
+          },
+          {
+            "id": "b",
+            "label": "Assign only work within verified license conditions or obtain an appropriately qualified replacement."
+          },
+          {
+            "id": "c",
+            "label": "Ask the driver to promise to be careful with the unfamiliar configuration."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C05_final4",
+        "prompt": "For verify license endorsements and restrictions, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A verified license check recording matching identity, class, endorsements, restrictions and decision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C05_final5",
+        "prompt": "A later review finds: The submitted copy belongs to a different driver with a similar name. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Resolve identity through the authorized verification process before accepting the evidence."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C05_final6",
+        "prompt": "Consider this proposed response: Ignore restrictions because the expiry date is in the future. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Currency is only one attribute. An active restriction can make a particular assignment unsuitable despite a valid license."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C05_check3",
+        "prompt": "A legally qualified driver has never used the remote lease road and has no assessment for the assigned transport task. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the license proves suitability for every route and load."
+          },
+          {
+            "id": "b",
+            "label": "Send the driver alone to learn the road during the first delivery."
+          },
+          {
+            "id": "c",
+            "label": "Arrange relevant familiarization and suitable task evaluation before independent assignment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C05_final7",
+        "prompt": "For separate legal eligibility from task suitability, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A relevant route and task evaluation identifying conditions, observed decisions and remaining limits."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C05_final8",
+        "prompt": "A later review finds: The evaluation covered an empty vehicle but not the materially different planned cargo task. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Review the cargo-specific gap and arrange suitable assessment before expanding authorization."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C05_final9",
+        "prompt": "Consider this proposed response: Assume the license proves suitability for every route and load. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Legal eligibility and task suitability answer different questions; unfamiliar operating conditions need appropriate preparation and assessment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C05_check4",
+        "prompt": "Dispatch sees a valid license but the transport owner's required qualification review remains incomplete. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the affected assignment unready until required qualification evidence and approval are verified."
+          },
+          {
+            "id": "b",
+            "label": "Dispatch because a license is the only document drivers ever need."
+          },
+          {
+            "id": "c",
+            "label": "Mark the pending review complete to meet the delivery slot."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C05_final10",
+        "prompt": "For verify carrier and company prerequisites, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A transport-owner qualification decision showing applicable checks, outstanding items and dispatch restrictions."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C05_final11",
+        "prompt": "A later review finds: Dispatch cannot distinguish pending review from approved status in its roster. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Make the operational status and restriction explicit before allocating the affected work."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C05_final12",
+        "prompt": "Consider this proposed response: Dispatch because a license is the only document drivers ever need. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A license does not replace other requirements that apply to the carrier and operation. Pending checks remain pending."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C05_check5",
+        "prompt": "A dispatcher asks for a driver's diagnosis when the necessary information is a verified restriction on driving duties. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Copy the complete clinical file into the dispatch roster."
+          },
+          {
+            "id": "b",
+            "label": "Use authorized fitness-status and restriction information through the designated confidential process."
+          },
+          {
+            "id": "c",
+            "label": "Let the dispatcher decide the diagnosis is unimportant and remove the restriction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C05_final13",
+        "prompt": "For handle fitness status without unnecessary disclosure, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A restricted fitness-status record and an operational roster showing only necessary assignment limits."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C05_final14",
+        "prompt": "A later review finds: A restriction is present but no one translated it into dispatch limits. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Coordinate authorized clarification and implement compatible assignments before release."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C05_final15",
+        "prompt": "Consider this proposed response: Copy the complete clinical file into the dispatch roster. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Assignment decisions need valid capacity information, while clinical details remain in appropriately restricted channels."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C05_check6",
+        "prompt": "A driver's required credential expires before tomorrow's regulated transport assignment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Extend the expiry date in the roster because renewal is planned."
+          },
+          {
+            "id": "b",
+            "label": "Ignore expiry until the customer complains."
+          },
+          {
+            "id": "c",
+            "label": "Hold that assignment until valid matching qualification is verified or use an authorized replacement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C05_final16",
+        "prompt": "For maintain authorization through change and expiry, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A dated restriction and later verified renewal or replacement decision tied to the actual assignment."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C05_final17",
+        "prompt": "A later review finds: The renewal is verified but employer authorization still excludes the newly assigned cargo. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Review and approve the actual cargo scope before dispatch rather than relying on renewal alone."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C05_final18",
+        "prompt": "Consider this proposed response: Extend the expiry date in the roster because renewal is planned. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "A planned renewal is not current evidence. Allocation must use the status valid for the intended work date."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C05_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Resolve identity through the authorized verification process before accepting the evidence."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C05_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Coordinate authorized clarification and implement compatible assignments before release."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "C05_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C05_lesson1",
+          "questionIds": [
+            "C05_check1"
+          ]
+        },
+        {
+          "lessonId": "C05_lesson2",
+          "questionIds": [
+            "C05_check2"
+          ]
+        },
+        {
+          "lessonId": "C05_lesson3",
+          "questionIds": [
+            "C05_check3"
+          ]
+        },
+        {
+          "lessonId": "C05_lesson4",
+          "questionIds": [
+            "C05_check4"
+          ]
+        },
+        {
+          "lessonId": "C05_lesson5",
+          "questionIds": [
+            "C05_check5"
+          ]
+        },
+        {
+          "lessonId": "C05_lesson6",
+          "questionIds": [
+            "C05_check6"
+          ]
+        },
+        {
+          "lessonId": "C05_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C05_assessment",
+          "questionIds": [
+            "C05_final1",
+            "C05_final2",
+            "C05_final3",
+            "C05_final4",
+            "C05_final5",
+            "C05_final6",
+            "C05_final7",
+            "C05_final8",
+            "C05_final9",
+            "C05_final10",
+            "C05_final11",
+            "C05_final12",
+            "C05_final13",
+            "C05_final14",
+            "C05_final15",
+            "C05_final16",
+            "C05_final17",
+            "C05_final18",
+            "C05_final19",
+            "C05_final20"
+          ]
+        },
+        {
+          "lessonId": "C05_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "C05_check1": "Qualification depends on the actual operation; a valid license for unrelated driving does not establish eligibility.",
+        "C05_final1": "Qualification depends on the actual operation; a valid license for unrelated driving does not establish eligibility. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C05_final2": "Qualification depends on the actual operation; a valid license for unrelated driving does not establish eligibility. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C05_final3": "Qualification depends on the actual operation; a valid license for unrelated driving does not establish eligibility. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C05_check2": "Currency is only one attribute. An active restriction can make a particular assignment unsuitable despite a valid license.",
+        "C05_final4": "Currency is only one attribute. An active restriction can make a particular assignment unsuitable despite a valid license. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C05_final5": "Currency is only one attribute. An active restriction can make a particular assignment unsuitable despite a valid license. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C05_final6": "Currency is only one attribute. An active restriction can make a particular assignment unsuitable despite a valid license. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C05_check3": "Legal eligibility and task suitability answer different questions; unfamiliar operating conditions need appropriate preparation and assessment.",
+        "C05_final7": "Legal eligibility and task suitability answer different questions; unfamiliar operating conditions need appropriate preparation and assessment. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C05_final8": "Legal eligibility and task suitability answer different questions; unfamiliar operating conditions need appropriate preparation and assessment. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C05_final9": "Legal eligibility and task suitability answer different questions; unfamiliar operating conditions need appropriate preparation and assessment. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C05_check4": "A license does not replace other requirements that apply to the carrier and operation. Pending checks remain pending.",
+        "C05_final10": "A license does not replace other requirements that apply to the carrier and operation. Pending checks remain pending. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C05_final11": "A license does not replace other requirements that apply to the carrier and operation. Pending checks remain pending. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C05_final12": "A license does not replace other requirements that apply to the carrier and operation. Pending checks remain pending. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C05_check5": "Assignment decisions need valid capacity information, while clinical details remain in appropriately restricted channels.",
+        "C05_final13": "Assignment decisions need valid capacity information, while clinical details remain in appropriately restricted channels. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C05_final14": "Assignment decisions need valid capacity information, while clinical details remain in appropriately restricted channels. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C05_final15": "Assignment decisions need valid capacity information, while clinical details remain in appropriately restricted channels. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C05_check6": "A planned renewal is not current evidence. Allocation must use the status valid for the intended work date.",
+        "C05_final16": "A planned renewal is not current evidence. Allocation must use the status valid for the intended work date. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C05_final17": "A planned renewal is not current evidence. Allocation must use the status valid for the intended work date. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C05_final18": "A planned renewal is not current evidence. Allocation must use the status valid for the intended work date. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C05_final19": "Currency is only one attribute. An active restriction can make a particular assignment unsuitable despite a valid license. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "C05_final20": "Assignment decisions need valid capacity information, while clinical details remain in appropriately restricted channels. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

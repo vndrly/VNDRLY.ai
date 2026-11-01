@@ -1,0 +1,782 @@
+{
+  "courseId": "G01",
+  "title": "Hazardous-material transportation: recognition and safe handoff",
+  "description": "Finished VNDRLY foundation instruction in recognizing transport functions, protecting containment, checking information, stopping unsafe handoffs and escalating within assigned authority.",
+  "purpose": "Close the transport-recognition teaching gap while preserving separate function-specific, mode-specific and practical qualification requirements.",
+  "audience": [
+    "Hazmat loaders",
+    "Shippers and shipping clerks",
+    "Transport dispatchers",
+    "Hazmat drivers",
+    "Transport supervisors"
+  ],
+  "practicalBoundary": "This foundation is not a complete PHMSA, dangerous-goods, HAZWOPER or all-mode qualification. Employer function/material/mode instruction, testing, certification and any practical evaluation remain separate requirements.",
+  "sources": [
+    {
+      "title": "PHMSA hazardous-materials training requirements",
+      "url": "https://www.phmsa.dot.gov/about-phmsa/hazardous-materials-training-requirements"
+    },
+    {
+      "title": "FMCSA: How to comply with federal hazardous materials regulations",
+      "url": "https://www.fmcsa.dot.gov/regulations/hazardous-materials/how-comply-federal-hazardous-materials-regulations"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G01_intro",
+        "title": "Before you begin",
+        "body": "This VNDRLY course teaches how to recognize a hazardous-material transport task, protect a shipment handoff, detect mismatches and act within your authority. It is intended for workers whose duties may include preparing, offering, loading, unloading, dispatching or transporting hazardous material. It uses U.S. highway-related examples; actual materials, functions, transport modes and jurisdictions determine the employer’s additional requirements.\n\nWork through six lessons and answer each knowledge check. Read two worked scenarios, then answer the twenty-question final assessment. You must resolve all twenty-six questions to complete this guided course. Your first answers remain in the original score. After an incorrect answer, read the explanation and explicitly acknowledge the correction; the corrected score records that remediation. Completion requires 100% correct after any remediation. This knowledge record does not establish a practical qualification or replace the employer’s full function-specific training program.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G01_lesson1",
+        "title": "Recognize the transportation task before touching the load",
+        "body": "Hazardous-material transportation begins before a truck leaves the yard. A person who chooses a package, prepares shipping information, loads a vehicle or accepts a shipment can affect transportation safety. A driver’s license does not establish that everyone upstream has performed those functions correctly. Your first decision is to identify the exact job you are being asked to perform: prepare, package, document, offer, load, unload, drive, or arrange transportation. Your employer must establish which requirements apply to each function. If your authorization covers loading only, do not assume it also authorizes classification or shipping-paper preparation.\n\nA familiar product name is not a transportation classification. An SDS can provide useful information, including a transportation section, but the actual material, formulation, condition, concentration and shipment circumstances must be considered by the person responsible for classification. A used solvent or oilfield waste can differ from the unused product. “Produced water,” “empty,” “nonhazardous waste” and “it went this way last time” do not independently settle transportation requirements. Ask for the approved classification or documented determination for this load. Do not invent a proper shipping name or select a UN number from a similar product.\n\nCompare the request with your training and assigned authority. If a dispatcher asks you to sign a shipper certification that you have never been trained or authorized to make, stop that step and contact the responsible shipping specialist. Explain what is missing: the material identity, the approved determination, the packaging instruction or your function-specific authorization. This is a controlled handoff, not a refusal to communicate. Other work can continue only where the supervisor confirms it does not depend on the unresolved shipment.\n\nThis course teaches recognition and safe handoff. It does not authorize you to classify every chemical or prepare every mode of shipment. Air, highway, rail and vessel shipments can have different requirements. An additional employer-directed module must teach the exact functions you perform, and the employer must test, certify and retain the applicable training records.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G01_lesson2",
+        "title": "Read the shipment as one consistent set of information",
+        "body": "A shipment communicates its hazards through several coordinated elements. Depending on the shipment, these can include shipping papers, package marks and labels, vehicle placards and emergency-response information. These elements perform different jobs. A package label communicates a hazard on the package; a placard provides a larger transport warning where required; a shipping paper describes the consignment. One does not automatically replace another. Your function-specific instruction must show which elements are required for your material, quantity, package and transport mode.\n\nBefore accepting or loading, compare the actual load with the approved shipment information within your assigned role. Check the product or waste identity, package count and type, and any required markings and labels against the controlled documents. Use the employer’s approved checklist. Do not rely on a truck already having a placard as proof that every package and document is correct. A placard remaining from an earlier load can mislead responders and does not validate the current consignment.\n\nSuppose the load sheet says two drums while three are staged, and the third drum has a different product label. Do not “correct” the paperwork to match what is in front of you unless you are trained and authorized to make that change using verified information. Hold acceptance or loading, segregate the disputed item through the approved process, and have the responsible person reconcile the physical load and the documents. Record the specific discrepancy rather than a vague note such as “paperwork issue.”\n\nEmergency-response information must be available in the manner required for the shipment, including during transportation. Drivers need their mode-specific instruction on accessibility and location; office staff need their instruction on providing accurate information. An emergency telephone number printed on a form is useful only if the approved response arrangements meet the applicable requirements. Never replace the approved number with someone who has not accepted that responsibility.\n\nWhen a document is revised, confirm that everyone relying on the old version receives the corrected controlled information. A dispatcher’s text message saying “all good” is not a substitute for resolving a material mismatch.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G01_lesson3",
+        "title": "Inspect packages and protect containment",
+        "body": "Packaging is a containment system, not just a container that happens to fit. The approved package must be suitable for the material, its quantity and condition, and the transportation circumstances. Closures, gaskets, liners, pressure provisions and any overpack are part of that system. A drum that looks identical to another may have different specifications or closure instructions. Your job-specific training must identify the approved package and tell you which inspections and closure tasks you may perform.\n\nPerform the employer’s pre-loading acceptance checks from a safe position. Look for visible damage, wetness, staining, corrosion, bulging, missing closures and inconsistent markings. Do not open, sniff, touch or tighten an unknown leaking package to discover what it contains. A strong smell is a warning; the absence of smell is not proof that a package is safe. If you see a possible leak, stop handling, keep people away, notify the designated supervisor and follow the site’s release procedure. The response depends on the substance and conditions, and must be directed by people trained for that response level.\n\nDo not improvise repairs with tape, an available cap or a second container. An overpack is not permission to conceal a leaking or noncompliant package. Authorized specialists must decide whether recovery, repackaging, salvage packaging or another action is appropriate. Keep identification and required hazard communication available during the controlled response.\n\nEmpty packaging may retain hazardous residue. A tank, tote or drum that has been drained can still contain vapor, liquid films or pressure. Do not remove required hazard communication or treat it as unrestricted cargo merely because the delivery is complete. The responsible person must establish the applicable empty-package or residue status.\n\nAt handoff, distinguish a package you inspected from one you merely saw on the pallet. If your checklist requires individual inspection, sample checking is not equivalent. Report defects with the package identifier and observed condition, and prevent the rejected item from being accidentally loaded by the next shift.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G01_lesson4",
+        "title": "Control loading, unloading and incompatible work",
+        "body": "Loading is an operating task with moving vehicles, stored energy and possible chemical exposure. Before starting, establish who controls the vehicle and loading area. Follow the approved vehicle-securement, access-control and communication procedures. A driver moving unexpectedly while a hose is connected or a loader is inside the vehicle can create a serious release or crush injury. Do not assume that another person has secured the vehicle because it is stationary.\n\nCheck the load plan and compatibility instructions for the actual materials. Products that are individually contained can still require separation during transportation. A general chemical-storage chart is not a complete transport segregation instruction. If the instructions do not cover the proposed combination, stop and obtain a determination from the authorized shipping specialist. Do not decide that two sealed packages are compatible simply because they cannot normally touch.\n\nFor bulk transfers, verify the approved source, receiving compartment, material compatibility, available capacity, connections and communication method through the site’s transfer procedure. Confirm the trained operator has performed the required equipment checks. A correct truck number is not enough if the wrong compartment is selected. Stop transfer if there is unexpected movement, leakage, loss of communication, an abnormal instrument indication or a person entering the exclusion area. Your authority to stop does not depend on proving the exact failure first.\n\nSecure cargo using the approved method for the package, vehicle and journey. Restraints must prevent the movement they are intended to control without damaging the packages. The right number of straps cannot compensate for an unsuitable restraint system or a damaged anchor point. Any loading, unloading, cargo-securement or bulk-transfer qualification beyond this awareness course must be assessed on the actual equipment and task.\n\nBefore release, reconcile the final physical load with the approved documents and confirm that rejected cargo is excluded. Pass the receiving driver the required information through the designated process. A hurried change of driver or trailer is a new handoff that needs checking; it is not an administrative detail to fill in after departure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G01_lesson5",
+        "title": "Recognize emergencies and protect yourself before reporting",
+        "body": "A transportation incident may begin as a small wet patch, an unusual hiss, a shifted package or an unexpected vapor cloud. You do not need to identify the exact chemical before stopping an unsafe task and notifying the designated contact. Keep a safe distance, move away from the exposure and prevent others from approaching where you can do so without entering danger. Avoid low areas or enclosed spaces where a released substance might accumulate. Follow the site emergency plan and responder instructions for the actual conditions.\n\nDo not walk into the release to read a label. Give responders information already available from a safe place: location, vehicle or package identification, observed conditions, people affected and the approved shipping information. State clearly what you do not know. Guessing a substance or quantity can misdirect a response. If someone is overcome, do not make an unprotected rescue entry. Call the designated emergency response and provide the casualty’s last known location.\n\nResponse authority is separate from ordinary loading or driving authority. A loader trained to report an incident is not thereby trained to stop a leak, enter a vapor area or manage a hazardous-material emergency. Some minor, incidental releases can be handled under an employer’s established procedure by appropriately trained people; that determination must come from the actual conditions and competent response arrangements. Do not downgrade an unfamiliar release to avoid calling for assistance.\n\nSecurity concerns also need prompt reporting. An unexplained broken seal, unauthorized access, a suspicious routing request or a missing package may affect the shipment’s safety and security. Follow the employer’s reporting process without confronting a potentially violent person or circulating sensitive routing information publicly. Employees assigned duties under a required security plan need instruction in the relevant plan, beyond general awareness.\n\nAfter the immediate response, preserve the information needed for investigation without delaying medical help or entering an unsafe area. Record observed facts and the actions you took. Incident reporting and regulatory notifications must be handled by the designated responsible people; a worker’s internal report should get accurate information to them promptly.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G01_lesson6",
+        "title": "Confirm authorization when jobs, materials or modes change",
+        "body": "Training must match the functions you actually perform. Before starting a new transport-related duty, tell your supervisor what has changed. Examples include moving from loading to shipping-paper preparation, changing from highway to air shipments, handling a new material or operating a different bulk-transfer system. Prior experience with a similar task is useful background, but it does not establish the specific knowledge and demonstrated capability required for the new function.\n\nPHMSA describes a training program that includes general awareness, function-specific training, safety and security awareness, and in-depth security training where a security plan is required. Applicable mode-specific instruction is also necessary. This foundation course contributes to recognition and safe handoff; it is not a blanket statement that those elements have all been completed. The employer must determine the full program, test the employee as required, certify the training and keep the necessary records.\n\nFor U.S. HMR duties, PHMSA states that recurrent training is required at least every three years. A new or changed function also requires the applicable training; the three-year cycle is not permission to wait while performing unfamiliar duties independently. Although the regulations provide a supervised-training route in specified circumstances, a learner must not self-authorize using a deadline. The employer must establish that the conditions for that route are satisfied and provide the required direct supervision. Other jurisdictions and transport modes can impose additional requirements.\n\nKeep your training evidence accurate. A completion record should identify the actual course and version, the date, the original result and any remediation, and the person or organization responsible for the training. Do not rename this foundation as a complete dangerous-goods shipping qualification. A perfect remediated score means the course’s questions have been resolved; it does not prove equipment skill or qualify every function.\n\nWhen you discover a gap, document the affected task and notify the responsible supervisor before performing it independently. The useful outcome is a clear assignment of the missing instruction, supervised practice or assessment, followed by verified authorization. A row marked complete in software cannot make an untrained shipment safe.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G01_scenarios",
+        "title": "Worked scenarios: resolve the handoff",
+        "body": "Scenario 1 — An urgent waste pickup. You are a loader trained to move approved, sealed packages. The staged shipment contains two drums listed on the load sheet and an additional tote marked only “used treatment chemical.” A dispatcher says the customer needs everything gone and suggests using the UN number from last month’s load.\n\nStep 1: Identify your function and limits. You can inspect and load an approved shipment; you cannot classify an unidentified waste through comparison. Step 2: Stop the disputed acceptance/loading step and keep the tote out of the approved load through the yard’s controlled hold process. Do not erase its existing identification or open it to investigate. Step 3: Tell the supervisor exactly what is missing: verified identity, approved classification and shipment instructions for the tote. Step 4: The authorized shipping specialist obtains the needed information and reconciles packaging, documentation and the proposed transport arrangement. Step 5: Recheck the final approved load before release. If the two drums depart separately, that shipment must have its own accurate information; removing the tote must not leave incorrect counts or references.\n\nThe outcome is not “the loader chose a more conservative UN number.” The correct outcome is that an authorized determination and safe handoff replace an unsupported guess. Urgency changes the need for communication, not the worker’s classification authority.\n\nScenario 2 — A bulk-transfer interruption. During a planned transfer, a radio fails. The receiving operator is no longer visible, and a bystander says there is probably enough capacity. A wet patch appears near a connection.\n\nStep 1: Stop through the approved transfer procedure because communication has been lost and containment may be compromised. Do not continue to an estimated volume. Step 2: Keep people away from the possible release and notify the designated response contact from a safe position. Do not tighten a leaking connection under pressure. Step 3: Give responders the known material and shipment information, the location and your observations. Do not enter the area to obtain more detail. Step 4: Authorized personnel assess and resolve the release, verify equipment condition, receiving capacity and communications, and determine whether restart is permitted. Step 5: Before resuming, the trained operator completes the required checks and briefs everyone affected by the interruption.\n\nYour foundation training supports the stop and report decisions. Repair, recovery, emergency response and restart authorization remain with people trained and assigned for those functions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G01_final",
+        "title": "Final assessment",
+        "body": "Answer every final question using the decisions taught in the lessons. Do not infer authorization from urgency, a familiar product name or a prior certificate. Any incorrect first answer remains in your original score and must be explicitly remediated.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G01_finish",
+        "title": "Complete the knowledge component; confirm the next task",
+        "body": "After all checks and final questions are correctly resolved, this course’s knowledge component is complete. Keep both the original and remediated results. Before independent work, confirm your employer’s instruction, testing, certification and authorization for the actual materials, functions and transport modes. Loading, bulk transfer, cargo securement and emergency duties may also require supervised practical evaluation on the actual task and equipment by a qualified assessor. This course is not that evaluation.\n\nIf your current duties exceed the training recorded for you, report the specific gap to the responsible supervisor. Do not label this foundation as complete hazardous-material shipping qualification. Your employer’s approved shipment procedures and current applicable requirements remain the working instructions.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G01_check1",
+        "prompt": "You are trained to load approved packages. A supervisor asks you to classify an unfamiliar waste and sign the shipper certification. What should you do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Choose the classification used for a similar waste."
+          },
+          {
+            "id": "b",
+            "label": "Hold that step and obtain the approved determination and authorized shipping specialist."
+          },
+          {
+            "id": "c",
+            "label": "Sign because the supervisor requested it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G01_check2",
+        "prompt": "Three drums are staged, but the approved load information lists two and the third has a different label. What is the correct action?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Load all three because the vehicle has placards."
+          },
+          {
+            "id": "b",
+            "label": "Cross out the package count and continue."
+          },
+          {
+            "id": "c",
+            "label": "Hold the discrepancy for authorized reconciliation before acceptance or loading."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G01_check3",
+        "prompt": "A drum is wet around its closure and the contents are unfamiliar. What should the loader do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stop handling, keep others clear and initiate the designated release/defect response."
+          },
+          {
+            "id": "b",
+            "label": "Tighten the closure with whatever tool is available."
+          },
+          {
+            "id": "c",
+            "label": "Put the drum in an overpack and hide the old label."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G01_check4",
+        "prompt": "The approved load plan does not cover a proposed combination of two hazardous materials. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Load them together if the packages are sealed."
+          },
+          {
+            "id": "b",
+            "label": "Obtain an authorized compatibility/segregation determination before loading."
+          },
+          {
+            "id": "c",
+            "label": "Ask the driver to keep the packages at opposite ends without further review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G01_check5",
+        "prompt": "A worker collapses near an unidentified vapor release. You have awareness training only. What is the correct first response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter quickly while holding your breath."
+          },
+          {
+            "id": "b",
+            "label": "Move the leaking package before calling for help."
+          },
+          {
+            "id": "c",
+            "label": "Stay clear, call the designated emergency response and report the casualty location."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G01_check6",
+        "prompt": "A highway loader is now asked to prepare an air shipment. What establishes readiness?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The previous loader certificate covers every transport mode."
+          },
+          {
+            "id": "b",
+            "label": "Completion of this foundation alone."
+          },
+          {
+            "id": "c",
+            "label": "Employer-confirmed instruction, testing and authorization for the new function and applicable mode."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G01_final1",
+        "prompt": "Which task can directly affect hazardous-material transportation safety?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Preparing shipment documents."
+          },
+          {
+            "id": "b",
+            "label": "Only driving on a public road."
+          },
+          {
+            "id": "c",
+            "label": "Only responding after an accident."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G01_final2",
+        "prompt": "What establishes the transport classification of an unfamiliar waste?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its informal yard name."
+          },
+          {
+            "id": "b",
+            "label": "An approved determination for the actual material and shipment."
+          },
+          {
+            "id": "c",
+            "label": "The label on a similar unused product."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G01_final3",
+        "prompt": "A placard is already on the trailer. What can you conclude?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every package is correctly documented."
+          },
+          {
+            "id": "b",
+            "label": "The present load is automatically acceptable."
+          },
+          {
+            "id": "c",
+            "label": "The placard alone does not validate the load or its documents."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G01_final4",
+        "prompt": "Who should resolve a shipping-paper mismatch?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A trained, authorized person using verified shipment information."
+          },
+          {
+            "id": "b",
+            "label": "Whoever can edit the form fastest."
+          },
+          {
+            "id": "c",
+            "label": "The newest worker as practice without supervision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G01_final5",
+        "prompt": "When may a loader classify a chemical?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whenever the driver asks."
+          },
+          {
+            "id": "b",
+            "label": "When trained and authorized for that function using the approved process."
+          },
+          {
+            "id": "c",
+            "label": "Whenever the SDS is available."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G01_final6",
+        "prompt": "What is the safest response to a bulging unknown package?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Open it slightly to release pressure."
+          },
+          {
+            "id": "b",
+            "label": "Load it last so it is easy to reach."
+          },
+          {
+            "id": "c",
+            "label": "Stop handling and notify the designated responsible person from a safe position."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G01_final7",
+        "prompt": "What does an overpack automatically accomplish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It does not automatically make a leaking or noncompliant package acceptable."
+          },
+          {
+            "id": "b",
+            "label": "It cancels all marking requirements."
+          },
+          {
+            "id": "c",
+            "label": "It allows unknown chemicals to be combined."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G01_final8",
+        "prompt": "A tank has been drained. What remains to be checked?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing; drained always means unrestricted."
+          },
+          {
+            "id": "b",
+            "label": "Whether residue, vapor, pressure and empty-package requirements remain."
+          },
+          {
+            "id": "c",
+            "label": "Only the outside paint condition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G01_final9",
+        "prompt": "What should happen before a driver moves during a connected bulk transfer?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The driver should move slowly."
+          },
+          {
+            "id": "b",
+            "label": "The loader should hold the hose."
+          },
+          {
+            "id": "c",
+            "label": "The transfer must be safely stopped and the authorized disconnection/release process completed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G01_final10",
+        "prompt": "What determines whether two hazardous materials may be loaded together?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The approved compatibility and transport segregation requirements for the actual load."
+          },
+          {
+            "id": "b",
+            "label": "Whether the packages are the same color."
+          },
+          {
+            "id": "c",
+            "label": "Whether there is spare floor space."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G01_final11",
+        "prompt": "What is the correct action when transfer communication is lost?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep pumping until the estimated amount is reached."
+          },
+          {
+            "id": "b",
+            "label": "Stop according to the transfer procedure and restore safe communication before restart."
+          },
+          {
+            "id": "c",
+            "label": "Ask an unbriefed bystander to wave."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G01_final12",
+        "prompt": "Which item is sufficient to establish correct bulk receiving capacity?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The truck registration number alone."
+          },
+          {
+            "id": "b",
+            "label": "The driver saying it usually fits."
+          },
+          {
+            "id": "c",
+            "label": "The approved check of the actual receiving compartment and available capacity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G01_final13",
+        "prompt": "Where should you obtain release information for responders?",
+        "options": [
+          {
+            "id": "a",
+            "label": "From documents and observations available without entering danger."
+          },
+          {
+            "id": "b",
+            "label": "By walking through vapor to read the package."
+          },
+          {
+            "id": "c",
+            "label": "By opening an unknown drum."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G01_final14",
+        "prompt": "What should an awareness-trained worker do about an unknown leak?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Attempt a repair to show initiative."
+          },
+          {
+            "id": "b",
+            "label": "Report and follow the emergency plan within assigned response limits."
+          },
+          {
+            "id": "c",
+            "label": "Assume every small leak is incidental."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G01_final15",
+        "prompt": "An unexplained seal is broken. What is the appropriate response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ignore it if no product is visible."
+          },
+          {
+            "id": "b",
+            "label": "Post the vehicle route publicly."
+          },
+          {
+            "id": "c",
+            "label": "Use the employer’s security reporting and shipment-hold procedure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G01_final16",
+        "prompt": "What training change requires review before independent work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Moving from loading to shipping-paper preparation."
+          },
+          {
+            "id": "b",
+            "label": "Changing the color of a lunch box."
+          },
+          {
+            "id": "c",
+            "label": "Taking the same authorized route at the planned time."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G01_final17",
+        "prompt": "Does a three-year recurrent training cycle permit unfamiliar work now?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, until the next renewal date."
+          },
+          {
+            "id": "b",
+            "label": "No; changed functions and applicable requirements need timely employer review and training."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the shipment is urgent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G01_final18",
+        "prompt": "Who determines whether a supervised-training provision can be used?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The learner alone."
+          },
+          {
+            "id": "b",
+            "label": "Any passenger in the vehicle."
+          },
+          {
+            "id": "c",
+            "label": "The employer through an applicable, properly supervised training arrangement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G01_final19",
+        "prompt": "What does a 100% remediated foundation score establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The learner resolved this course’s questions; separate task qualification remains necessary."
+          },
+          {
+            "id": "b",
+            "label": "The learner may ship all dangerous goods in every mode."
+          },
+          {
+            "id": "c",
+            "label": "Every practical evaluation can be waived."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G01_final20",
+        "prompt": "Which record description is truthful for this course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Complete international dangerous-goods certification."
+          },
+          {
+            "id": "b",
+            "label": "Hazardous-material transportation recognition and safe-handoff foundation, with the actual version and scores."
+          },
+          {
+            "id": "c",
+            "label": "All-mode shipping authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G01_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G01_lesson1",
+          "questionIds": [
+            "G01_check1"
+          ]
+        },
+        {
+          "lessonId": "G01_lesson2",
+          "questionIds": [
+            "G01_check2"
+          ]
+        },
+        {
+          "lessonId": "G01_lesson3",
+          "questionIds": [
+            "G01_check3"
+          ]
+        },
+        {
+          "lessonId": "G01_lesson4",
+          "questionIds": [
+            "G01_check4"
+          ]
+        },
+        {
+          "lessonId": "G01_lesson5",
+          "questionIds": [
+            "G01_check5"
+          ]
+        },
+        {
+          "lessonId": "G01_lesson6",
+          "questionIds": [
+            "G01_check6"
+          ]
+        },
+        {
+          "lessonId": "G01_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G01_final",
+          "questionIds": [
+            "G01_final1",
+            "G01_final2",
+            "G01_final3",
+            "G01_final4",
+            "G01_final5",
+            "G01_final6",
+            "G01_final7",
+            "G01_final8",
+            "G01_final9",
+            "G01_final10",
+            "G01_final11",
+            "G01_final12",
+            "G01_final13",
+            "G01_final14",
+            "G01_final15",
+            "G01_final16",
+            "G01_final17",
+            "G01_final18",
+            "G01_final19",
+            "G01_final20"
+          ]
+        },
+        {
+          "lessonId": "G01_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G01_check1": "Answer: B. Loading authorization does not automatically cover classification or certification. The approved determination and the person responsible for that function must be established before the shipment proceeds.",
+        "G01_check2": "Answer: C. The load and its approved information must agree. A placard cannot resolve a package identity or quantity mismatch, and an unauthorized handwritten change can create another error.",
+        "G01_check3": "Answer: A. Possible loss of containment requires a controlled response. Unknown exposure, unsuitable tools or improvised repackaging can increase the hazard.",
+        "G01_check4": "Answer: B. Transport compatibility and segregation depend on the actual shipment. Neither sealed packages nor improvised spacing establishes that the combination is permitted or adequately controlled.",
+        "G01_check5": "Answer: C. Awareness training does not equip a worker for a hazardous-atmosphere rescue. A second casualty delays rescue and exposes responders to additional danger.",
+        "G01_check6": "Answer: C. Changing function or mode can introduce requirements outside the previous training. The employer must establish and verify the additional instruction and authorization.",
+        "G01_final1": "Answer: A. Preparation and offering functions can affect transport safety before departure; the requirements are not limited to drivers.",
+        "G01_final2": "Answer: B. Waste composition and shipment conditions matter. Similar names or prior loads cannot replace a verified determination.",
+        "G01_final3": "Answer: C. Package, document and placarding checks have different functions and must be reconciled.",
+        "G01_final4": "Answer: A. Changing regulated shipment information requires the appropriate function knowledge and authority.",
+        "G01_final5": "Answer: B. Access to information is useful but does not itself establish classification competence or authority.",
+        "G01_final6": "Answer: C. Bulging can indicate a containment or pressure problem. Opening or transporting it without a controlled decision can increase exposure.",
+        "G01_final7": "Answer: A. An overpack has specific uses and cannot be treated as an improvised compliance or leak-repair solution.",
+        "G01_final8": "Answer: B. Draining does not eliminate every hazard or settle the regulatory status of residue packaging.",
+        "G01_final9": "Answer: C. Movement with connected equipment can rupture hoses and cause a release. Follow the controlled procedure.",
+        "G01_final10": "Answer: A. Appearance and available space cannot establish chemical compatibility or transport compliance.",
+        "G01_final11": "Answer: B. Loss of a required control is a reason to stop, not replace it with an unapproved assumption.",
+        "G01_final12": "Answer: C. Vehicle identity does not verify compartment selection, compatibility or remaining capacity.",
+        "G01_final13": "Answer: A. Accurate safe-position information helps responders without creating another casualty.",
+        "G01_final14": "Answer: B. Release magnitude alone does not establish a safe response level, especially when the substance is unknown.",
+        "G01_final15": "Answer: C. The concern needs authorized investigation without exposing sensitive routing information or creating confrontation.",
+        "G01_final16": "Answer: A. A new regulated function can require different instruction, testing and employer authorization.",
+        "G01_final17": "Answer: B. The recurrence interval does not excuse missing instruction for a new function or changed requirements.",
+        "G01_final18": "Answer: C. A learner cannot treat a regulatory deadline as self-authorization to work independently.",
+        "G01_final19": "Answer: A. Online knowledge completion and practical or function-specific authorization are distinct evidence.",
+        "G01_final20": "Answer: B. The record must describe the training actually completed and must not exaggerate its scope."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

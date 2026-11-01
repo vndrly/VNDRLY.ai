@@ -1,0 +1,781 @@
+{
+  "familyId": "E09",
+  "title": "Vacuum, hydroblasting and specialist service equipment",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Prevent static ignition, suction and high-pressure injury.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate equipment-specific technical training, supervised practical evaluation and employer/site authorization are required for vacuum and hydroblasting operators. Specialist approval must set ratings, compatibility, atmospheric and ignition controls, isolation and emergency arrangements. This awareness course supplies no operating parameters and authorizes no confined-space entry or equipment intervention.",
+  "sources": [
+    {
+      "title": "Chevron Hydro blasting start-work check — client-specific example",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/chevron-specific-swc/Hydro%20Blasting%20with%20Shotgun.pdf"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/chevron-specific-swc/Liquid%20Hydrocarbon%20Vacuum%20Operation.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "E09_intro",
+        "title": "Start here: Vacuum, hydroblasting and specialist service equipment",
+        "body": "# Vacuum, hydroblasting and specialist service equipment\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate equipment-specific technical training, supervised practical evaluation and employer/site authorization are required for vacuum and hydroblasting operators. Specialist approval must set ratings, compatibility, atmospheric and ignition controls, isolation and emergency arrangements. This awareness course supplies no operating parameters and authorizes no confined-space entry or equipment intervention.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[Chevron Hydro blasting start-work check — client-specific example](https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/chevron-specific-swc/Hydro%20Blasting%20with%20Shotgun.pdf). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E09_lesson1",
+        "title": "Lesson 1 - Specify the actual specialist service",
+        "body": "Vacuum loading and hydroblasting involve different energy and material hazards. Identify the material, residues, equipment, location, task and surrounding operations before selecting the system. A truck that can physically collect a liquid is not automatically compatible with its vapors or residues.\n\nThe competent specialist establishes the technical method and equipment configuration. General workers need to understand the boundary, controls and stop conditions without pretending to select pressure ratings, nozzle geometry or vacuum-system design.\n\nReview the receiving and discharge arrangements as well as the collection point. The hazard can move with the material. Confirm who controls the source system, equipment, exclusion and disposal interface before authorization.\n\n## Worked field example\n\nA vacuum truck is selected only because its tank has enough spare volume for an unidentified liquid.\n\nThe safe decision is to hold the operation until material hazards, residues and system compatibility are competently assessed. Capacity alone does not establish safe compatibility or a suitable vacuum method.\n\nA useful field record is specific: A specialist assessment linking the actual material and residues to the approved equipment and method. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nTechnical selection begins with a reliable material description and the actual intended operation. A vacuum truck used for water cannot automatically be assigned to a solvent or mixed waste. The competent specialist considers residues in the tank, hoses and associated equipment, as well as compatibility with the incoming material. The receiving facility and waste route may impose additional constraints.\n\nFor hydroblasting, the work scope needs the equipment, access, surface, nearby people and method clearly identified. Different nozzles or operating configurations may require different controls and competence. This awareness course intentionally provides no recipe for setting pressure, selecting nozzle dimensions or constructing a system.\n\nThe supervisor should make the boundary understandable to adjacent crews. They need to know the exclusion, stop arrangement and contact, while the specialist retains authority over technical parameters. A generic cleaning permit cannot substitute for the complete reviewed setup.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E09_lesson2",
+        "title": "Lesson 2 - Verify equipment and protective controls",
+        "body": "Check the approved system's ratings, condition, compatibility and protective functions through the specialist pre-start method. Identify hoses, couplings, controls and any required restraints or guarding. Components must be suitable together, not merely individually available.\n\nHydroblasting can create severe injection, cutting and hose-failure hazards. Vacuum systems can create suction, atmospheric, pressure and ignition hazards depending on the task. This course supplies no operating pressure or universal component specification.\n\nThe required emergency controls must be checked through the safe approved procedure. A failed test is a hold point. Do not bypass a deadman or emergency function because the operator is experienced or the planned work is brief.\n\n## Worked field example\n\nA hydroblasting emergency-control check fails and the crew proposes starting at lower output.\n\nThe safe decision is to do not start until competent correction and verification restore the required control. A lower setting does not replace a failed required emergency protective function.\n\nA useful field record is specific: A successful approved pre-start verification tied to the actual repaired setup. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nA pre-start check is useful when it verifies the actual configuration. Identify the relevant unit, hoses, couplings, control devices and protective components. Check condition and suitability through the approved technical process. A spare hose may have a different rating or material compatibility even if it connects physically.\n\nRequired functional tests must be conducted safely and by the assigned competent people. Do not direct a jet toward a person or create an uncontrolled release to prove a stop function. The specialist method establishes the test conditions and acceptable result. Record actual results and failures rather than ticking predicted outcomes.\n\nA failed protective function prevents starting the affected operation. Lowering output, adding a helper or shortening the task does not automatically compensate. Any proposed alternative requires appropriate technical review and authorization; this online course cannot approve a bypass.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E09_lesson3",
+        "title": "Lesson 3 - Establish exclusion and communication",
+        "body": "Identify the jet, suction, hose, release and exhaust danger areas through the approved plan. Keep unauthorized people out and coordinate nearby crews and traffic. A barrier must remain effective during the operation, including at access points and changes in hose routing.\n\nAssign communication and stopping responsibility. Operators, pump attendants and other required roles need agreed signals and a clear response to lost contact. Do not continue on an assumption that another person can see the hazard.\n\nA visitor or cleaner must not cross the exclusion area simply because work appears paused. Use the authorized access process and verified safe state. A sign warns of a hazard but does not by itself control every possible entry.\n\n## Worked field example\n\nA pedestrian route crosses the hose and jet exclusion area while communication with the pump operator is lost.\n\nThe safe decision is to stop the affected operation and restore exclusion and the approved communication arrangement. Loss of access control and communication defeats the planned protection for people around the system.\n\nA useful field record is specific: A verified boundary and successful communication check covering all required operating roles. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nCommunication should be rehearsed before hazardous energy is applied. The required roles agree who starts, who can stop, what signals mean and what happens if contact is uncertain. Several people issuing conflicting instructions can be as unsafe as silence.\n\nThe exclusion arrangement must cover the complete affected area, including hose routing, potential failure paths, workpiece openings and relevant exhaust or release zones. The specialist determines the technical boundary; the site coordinates adjacent work and access. Do not invent a distance from a previous job.\n\nIf someone needs access, stop and use the approved safe-state process before entry. A momentary pause in visible jetting is not proof that the system is isolated. The operator must not wave a visitor across a hose or danger path while assuming the pump attendant will notice.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E09_lesson4",
+        "title": "Lesson 4 - Control material, atmosphere and ignition interfaces",
+        "body": "Vacuum operations require assessment of the material and any residual contents in tanks, hoses and equipment. Incompatible residues can react. Vapors and exhaust can create hazards away from the collection point, so the specialist plan must address their location and effects.\n\nWhere the approved method requires atmospheric testing, bonding, grounding or ignition controls, competent people verify the actual arrangement. A cable clipped to any metal object is not proof of an effective required connection. Do not invent test values or substitute visual judgment for the specified verification.\n\nConfined-space access is a separate controlled activity. A vacuum hose placed in a vessel does not authorize anyone to enter it, and the cleaning team cannot waive the entry and rescue requirements.\n\n## Worked field example\n\nA hydrocarbon vacuum operation exhausts toward an occupied access route and required connection checks are undocumented.\n\nThe safe decision is to hold the operation while the specialist verifies atmosphere, exhaust, ignition and required connection controls. The hazard includes vapor and exhaust interfaces rather than only the liquid collection point.\n\nA useful field record is specific: A task-specific verification of atmospheric and ignition controls and safe exhaust/exclusion arrangement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nMaterial control follows the full transfer path. Confirm the source, receiving capacity, residues, discharge and exhaust arrangements through the reviewed method. A truck may collect the right liquid while creating a vapor hazard at its exhaust. The gate or adjacent crew therefore belongs in the interface assessment.\n\nWhere grounding, bonding, gas testing or ignition controls are required, competent verification must establish the actual function. A cable attached somewhere or a detector present in a bag does not demonstrate the specified control. The relevant role records the result and responds to failure.\n\nChanges during collection can matter. Different layers, incoming material or a source-system change may alter the hazard. Operators need an understood stop and escalation trigger rather than continuing because the first part of the load behaved normally. The specialist evaluates the new condition before reliance resumes.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E09_lesson5",
+        "title": "Lesson 5 - Stop and isolate before intervention",
+        "body": "A blocked hose, damaged coupling, unexpected movement or lost control requires the approved stop response. Keep people clear of the release path. Do not feel for a high-pressure leak with a hand or loosen a connection to discover whether pressure remains.\n\nThe competent authorized roles isolate and verify the safe condition before intervention. Stored energy and material may remain after the motor stops. Use the specified pressure/vacuum release and verification procedure rather than assuming a quiet machine is safe.\n\nSuspected injection injuries need urgent medical assessment through the emergency process even when the skin mark appears small. Give responders the mechanism and material information. This lesson is not clinical treatment instruction.\n\n## Worked field example\n\nA stopped hydroblasting unit has a blocked hose and a worker reaches to loosen the coupling.\n\nThe safe decision is to keep clear until authorized isolation and verification of the safe condition permit intervention. A stopped prime mover does not prove that hazardous stored energy is absent.\n\nA useful field record is specific: An authorized isolation and safe-condition verification for the specific blocked system. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nIntervention is a separate task from operation. A blockage may involve stored pressure, vacuum, trapped material, moving parts or hazardous atmosphere. Identify the affected system and follow authorized isolation, release and verification before anyone loosens connections or reaches into the equipment.\n\nNever use a hand to locate a high-pressure leak. Protective gloves do not turn that into a safe diagnostic technique. Keep people out of the release path and have the appropriate technical role assess the fault. A small wound from a pressure incident still requires urgent appropriate medical assessment; do not wait for a dramatic surface injury.\n\nAfter repair, the system is reassembled and verified through the approved process before restart. Confirm that the cause and protective functions have been addressed, not merely that the flow resumes. Record the actual configuration and any restrictions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E09_lesson6",
+        "title": "Lesson 6 - Verify technical competence and handback",
+        "body": "Operators require task- and equipment-specific training, practical assessment and authorization. A general specialist-service course cannot establish nozzle control, vacuum loading competence or technical maintenance capability. Record the actual scope and limitations.\n\nHandback includes the source system, collected material, contaminated equipment, hoses, work area and any continuing restrictions. Confirm the waste or receiving route through the responsible environmental and technical roles. Do not label the area ready merely because the truck has departed.\n\nReview failed controls and changes before repeating the operation. A different material, nozzle, hose route, truck residue or surrounding activity can invalidate the original setup. Return the change to the competent specialist and verify revised controls.\n\n## Worked field example\n\nThe crew changes nozzle and hose configuration after pre-start verification but does not review the change.\n\nThe safe decision is to have the competent specialist review and verify the changed configuration before operation. The earlier check covers the earlier setup rather than every possible component arrangement.\n\nA useful field record is specific: A configuration-specific change review and renewed approved pre-start verification. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nThe operator's practical assessment should cover the equipment and assigned method under safe controlled conditions. It must distinguish ordinary user checks from technical inspection and maintenance. A person who can recite the shutdown instruction may still need supervised practice to operate the actual control correctly.\n\nHandback should confirm the source process, collected material, contaminated equipment and work area status. Waste, residual liquid and access restrictions remain managed until the responsible authority accepts the condition. A departing truck is not evidence that the source vessel is safe to enter.\n\nReview changes and failures with the crew and site. If repeated loss of communication occurs, investigate equipment, positioning, noise and work organization rather than repeatedly telling operators to speak louder. Verify the corrected arrangement in the field. Retain the original failure and the scope of the subsequent successful check.\n\nA handover between operators should identify material already collected, residual contents, current configuration, defects, temporary restrictions and the condition of the source process. The receiving operator verifies the information needed for their assigned role rather than assuming the previous shift’s check covers every change. If a hose, nozzle or material changes, the relevant specialist review and pre-start verification occur before reliance.\n\nKeep practical operator records separate from online scores. A corrected quiz answer supports understanding, while a safe observed demonstration addresses equipment actions. Neither replaces the technical approval of the system. Preserve any unsuccessful demonstration and the later reassessment so assignment is based on demonstrated readiness within a clear scope.\n\n## Further application\n\nPreserve configuration-specific operating limits.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E09_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional hydroblasting crew is ready to clean equipment beside a shared walkway. The emergency function fails its approved pre-start check. The pump attendant loses radio contact, and the supervisor suggests starting at lower output while a helper keeps pedestrians away.\n\n### Worked solution\n\nThe operation does not start. The failed emergency function is corrected by competent personnel and verified through the approved safe check. Communication and exclusion are established as designed, with named roles and a clear loss-of-contact stop response. A helper improvising pedestrian warnings does not replace a controlled boundary. The specialist verifies the actual component configuration and surrounding interfaces before release. Online awareness does not authorize the helper as a technical operator. The record captures the failures, correction and observed verification rather than only a completed checklist. If controls cannot be restored, the affected work remains held.\n\n## Scenario 2\n\nA fictional vacuum truck collects a liquid whose composition is uncertain. Its tank previously held another waste, and exhaust is directed toward an occupied gate. After a blockage, a worker offers to loosen a connection because the engine is off.\n\n### Worked solution\n\nThe operation is held and people kept clear. A competent specialist establishes material and residual compatibility, suitable equipment and the required atmosphere, exhaust and ignition controls. The gate exposure is addressed through the site interface. Authorized personnel isolate and verify the blocked system before intervention; engine shutdown alone is insufficient. No one enters the vessel or an uncertain atmosphere to inspect the blockage. The receiving and waste arrangements are confirmed before operation resumes. The handback records the condition of equipment, material and surrounding area, including any ongoing restrictions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E09_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E09_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate equipment-specific technical training, supervised practical evaluation and employer/site authorization are required for vacuum and hydroblasting operators. Specialist approval must set ratings, compatibility, atmospheric and ignition controls, isolation and emergency arrangements. This awareness course supplies no operating parameters and authorizes no confined-space entry or equipment intervention.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "E09_check1",
+        "prompt": "A vacuum truck is selected only because its tank has enough spare volume for an unidentified liquid. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the operation until material hazards, residues and system compatibility are competently assessed"
+          },
+          {
+            "id": "b",
+            "label": "Take a small test load to check for reaction"
+          },
+          {
+            "id": "c",
+            "label": "Use the truck if the hose fits the connection"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E09_check2",
+        "prompt": "A hydroblasting emergency-control check fails and the crew proposes starting at lower output. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Start slowly and keep another worker near the pump"
+          },
+          {
+            "id": "b",
+            "label": "Do not start until competent correction and verification restore the required control"
+          },
+          {
+            "id": "c",
+            "label": "Bypass the function for the short cleaning task"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E09_check3",
+        "prompt": "A pedestrian route crosses the hose and jet exclusion area while communication with the pump operator is lost. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue while a bystander warns pedestrians"
+          },
+          {
+            "id": "b",
+            "label": "Let people cross whenever the nozzle is momentarily directed away"
+          },
+          {
+            "id": "c",
+            "label": "Stop the affected operation and restore exclusion and the approved communication arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E09_check4",
+        "prompt": "A hydrocarbon vacuum operation exhausts toward an occupied access route and required connection checks are undocumented. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the operation while the specialist verifies atmosphere, exhaust, ignition and required connection controls"
+          },
+          {
+            "id": "b",
+            "label": "Continue if nobody smells vapor"
+          },
+          {
+            "id": "c",
+            "label": "Assume a clip touching painted metal proves the required connection"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E09_check5",
+        "prompt": "A stopped hydroblasting unit has a blocked hose and a worker reaches to loosen the coupling. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Crack the coupling slowly to see whether pressure remains"
+          },
+          {
+            "id": "b",
+            "label": "Keep clear until authorized isolation and verification of the safe condition permit intervention"
+          },
+          {
+            "id": "c",
+            "label": "Use a gloved hand to search for a pinhole leak"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E09_check6",
+        "prompt": "The crew changes nozzle and hose configuration after pre-start verification but does not review the change. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the previous check because the pump is unchanged"
+          },
+          {
+            "id": "b",
+            "label": "Let any online-trained worker approve the nozzle change"
+          },
+          {
+            "id": "c",
+            "label": "Have the competent specialist review and verify the changed configuration before operation"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E09_final1",
+        "prompt": "For specify the actual specialist service, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Capacity alone does not establish safe compatibility or a suitable vacuum method."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E09_final2",
+        "prompt": "Which evidence would most directly verify specify the actual specialist service in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A specialist assessment linking the actual material and residues to the approved equipment and method"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E09_final3",
+        "prompt": "A relief worker proposes the following shortcut during specify the actual specialist service: \"Take a small test load to check for reaction.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Take a small test load to check for reaction"
+          },
+          {
+            "id": "b",
+            "label": "Use the truck if the hose fits the connection"
+          },
+          {
+            "id": "c",
+            "label": "Hold the operation until material hazards, residues and system compatibility are competently assessed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E09_final4",
+        "prompt": "For verify equipment and protective controls, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A lower setting does not replace a failed required emergency protective function."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E09_final5",
+        "prompt": "Which evidence would most directly verify verify equipment and protective controls in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A successful approved pre-start verification tied to the actual repaired setup"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E09_final6",
+        "prompt": "A relief worker proposes the following shortcut during verify equipment and protective controls: \"Start slowly and keep another worker near the pump.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Start slowly and keep another worker near the pump"
+          },
+          {
+            "id": "b",
+            "label": "Bypass the function for the short cleaning task"
+          },
+          {
+            "id": "c",
+            "label": "Do not start until competent correction and verification restore the required control"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E09_final7",
+        "prompt": "For establish exclusion and communication, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Loss of access control and communication defeats the planned protection for people around the system."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E09_final8",
+        "prompt": "Which evidence would most directly verify establish exclusion and communication in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified boundary and successful communication check covering all required operating roles"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E09_final9",
+        "prompt": "A relief worker proposes the following shortcut during establish exclusion and communication: \"Continue while a bystander warns pedestrians.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue while a bystander warns pedestrians"
+          },
+          {
+            "id": "b",
+            "label": "Let people cross whenever the nozzle is momentarily directed away"
+          },
+          {
+            "id": "c",
+            "label": "Stop the affected operation and restore exclusion and the approved communication arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E09_final10",
+        "prompt": "For control material, atmosphere and ignition interfaces, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The hazard includes vapor and exhaust interfaces rather than only the liquid collection point."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E09_final11",
+        "prompt": "Which evidence would most directly verify control material, atmosphere and ignition interfaces in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A task-specific verification of atmospheric and ignition controls and safe exhaust/exclusion arrangement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E09_final12",
+        "prompt": "A relief worker proposes the following shortcut during control material, atmosphere and ignition interfaces: \"Continue if nobody smells vapor.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue if nobody smells vapor"
+          },
+          {
+            "id": "b",
+            "label": "Assume a clip touching painted metal proves the required connection"
+          },
+          {
+            "id": "c",
+            "label": "Hold the operation while the specialist verifies atmosphere, exhaust, ignition and required connection controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E09_final13",
+        "prompt": "For stop and isolate before intervention, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A stopped prime mover does not prove that hazardous stored energy is absent."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E09_final14",
+        "prompt": "Which evidence would most directly verify stop and isolate before intervention in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An authorized isolation and safe-condition verification for the specific blocked system"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E09_final15",
+        "prompt": "A relief worker proposes the following shortcut during stop and isolate before intervention: \"Crack the coupling slowly to see whether pressure remains.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Crack the coupling slowly to see whether pressure remains"
+          },
+          {
+            "id": "b",
+            "label": "Use a gloved hand to search for a pinhole leak"
+          },
+          {
+            "id": "c",
+            "label": "Keep clear until authorized isolation and verification of the safe condition permit intervention"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E09_final16",
+        "prompt": "For verify technical competence and handback, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The earlier check covers the earlier setup rather than every possible component arrangement."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E09_final17",
+        "prompt": "Which evidence would most directly verify verify technical competence and handback in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A configuration-specific change review and renewed approved pre-start verification"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E09_final18",
+        "prompt": "A relief worker proposes the following shortcut during verify technical competence and handback: \"Use the previous check because the pump is unchanged.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the previous check because the pump is unchanged"
+          },
+          {
+            "id": "b",
+            "label": "Let any online-trained worker approve the nozzle change"
+          },
+          {
+            "id": "c",
+            "label": "Have the competent specialist review and verify the changed configuration before operation"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E09_final19",
+        "prompt": "In Scenario 1, why is reduced output insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It does not restore the failed required emergency control, communication or exclusion"
+          },
+          {
+            "id": "b",
+            "label": "Lower output is always more hazardous than full output"
+          },
+          {
+            "id": "c",
+            "label": "A supervisor’s signature is the only missing safeguard"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E09_final20",
+        "prompt": "In Scenario 2, what must happen before loosening the blocked connection?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only confirmation that the engine is not running"
+          },
+          {
+            "id": "b",
+            "label": "Authorized isolation and verification of a safe condition for that intervention"
+          },
+          {
+            "id": "c",
+            "label": "A quick touch test with a gloved hand"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "E09_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E09_lesson1",
+          "questionIds": [
+            "E09_check1"
+          ]
+        },
+        {
+          "lessonId": "E09_lesson2",
+          "questionIds": [
+            "E09_check2"
+          ]
+        },
+        {
+          "lessonId": "E09_lesson3",
+          "questionIds": [
+            "E09_check3"
+          ]
+        },
+        {
+          "lessonId": "E09_lesson4",
+          "questionIds": [
+            "E09_check4"
+          ]
+        },
+        {
+          "lessonId": "E09_lesson5",
+          "questionIds": [
+            "E09_check5"
+          ]
+        },
+        {
+          "lessonId": "E09_lesson6",
+          "questionIds": [
+            "E09_check6"
+          ]
+        },
+        {
+          "lessonId": "E09_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E09_final",
+          "questionIds": [
+            "E09_final1",
+            "E09_final2",
+            "E09_final3",
+            "E09_final4",
+            "E09_final5",
+            "E09_final6",
+            "E09_final7",
+            "E09_final8",
+            "E09_final9",
+            "E09_final10",
+            "E09_final11",
+            "E09_final12",
+            "E09_final13",
+            "E09_final14",
+            "E09_final15",
+            "E09_final16",
+            "E09_final17",
+            "E09_final18",
+            "E09_final19",
+            "E09_final20"
+          ]
+        },
+        {
+          "lessonId": "E09_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "E09_check1": "Hold the operation until material hazards, residues and system compatibility are competently assessed. Capacity alone does not establish safe compatibility or a suitable vacuum method.",
+        "E09_check2": "Do not start until competent correction and verification restore the required control. A lower setting does not replace a failed required emergency protective function.",
+        "E09_check3": "Stop the affected operation and restore exclusion and the approved communication arrangement. Loss of access control and communication defeats the planned protection for people around the system.",
+        "E09_check4": "Hold the operation while the specialist verifies atmosphere, exhaust, ignition and required connection controls. The hazard includes vapor and exhaust interfaces rather than only the liquid collection point.",
+        "E09_check5": "Keep clear until authorized isolation and verification of the safe condition permit intervention. A stopped prime mover does not prove that hazardous stored energy is absent.",
+        "E09_check6": "Have the competent specialist review and verify the changed configuration before operation. The earlier check covers the earlier setup rather than every possible component arrangement.",
+        "E09_final1": "Capacity alone does not establish safe compatibility or a suitable vacuum method. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E09_final2": "A specialist assessment linking the actual material and residues to the approved equipment and method. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E09_final3": "Hold the operation until material hazards, residues and system compatibility are competently assessed. Capacity alone does not establish safe compatibility or a suitable vacuum method. A staffing change does not remove this requirement.",
+        "E09_final4": "A lower setting does not replace a failed required emergency protective function. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E09_final5": "A successful approved pre-start verification tied to the actual repaired setup. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E09_final6": "Do not start until competent correction and verification restore the required control. A lower setting does not replace a failed required emergency protective function. A staffing change does not remove this requirement.",
+        "E09_final7": "Loss of access control and communication defeats the planned protection for people around the system. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E09_final8": "A verified boundary and successful communication check covering all required operating roles. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E09_final9": "Stop the affected operation and restore exclusion and the approved communication arrangement. Loss of access control and communication defeats the planned protection for people around the system. A staffing change does not remove this requirement.",
+        "E09_final10": "The hazard includes vapor and exhaust interfaces rather than only the liquid collection point. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E09_final11": "A task-specific verification of atmospheric and ignition controls and safe exhaust/exclusion arrangement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E09_final12": "Hold the operation while the specialist verifies atmosphere, exhaust, ignition and required connection controls. The hazard includes vapor and exhaust interfaces rather than only the liquid collection point. A staffing change does not remove this requirement.",
+        "E09_final13": "A stopped prime mover does not prove that hazardous stored energy is absent. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E09_final14": "An authorized isolation and safe-condition verification for the specific blocked system. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E09_final15": "Keep clear until authorized isolation and verification of the safe condition permit intervention. A stopped prime mover does not prove that hazardous stored energy is absent. A staffing change does not remove this requirement.",
+        "E09_final16": "The earlier check covers the earlier setup rather than every possible component arrangement. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E09_final17": "A configuration-specific change review and renewed approved pre-start verification. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E09_final18": "Have the competent specialist review and verify the changed configuration before operation. The earlier check covers the earlier setup rather than every possible component arrangement. A staffing change does not remove this requirement.",
+        "E09_final19": "The proposal changes an operating condition while leaving the required protective functions failed. Those functions must be restored and verified.",
+        "E09_final20": "Stored energy and hazardous material may remain in a stopped system. The approved isolation and verification method establishes the intervention boundary."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

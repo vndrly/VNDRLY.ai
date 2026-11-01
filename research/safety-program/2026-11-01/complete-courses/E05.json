@@ -1,0 +1,785 @@
+{
+  "familyId": "E05",
+  "title": "Pressure equipment, hoses and relief devices",
+  "description": "Complete guided E05 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Match components and protection to actual pressure service.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Pressure-equipment inspection, statutory examination, hose assembly, relief-device servicing, testing and technical release require separately assessed specialist competence and any applicable certification. Users need practical pre-use and defect-control instruction for their equipment. This course does not approve pressure designs or authorize hazardous testing.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Pressure equipment, hoses and relief devices",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/chevron-specific-swc/Pressure%20Pumping.pdf"
+    },
+    {
+      "title": "Inventory source 2: Pressure equipment, hoses and relief devices",
+      "url": "https://www.y12.doe.gov/suppliers/procurement/subcontracting/subcontracting-forecasts/upf-forecast/upf-safety-procedures"
+    },
+    {
+      "title": "OSHA: Air receivers, bounded equipment scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.169"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "E05_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# E05: Pressure equipment, hoses and relief devices\n\nThis original VNDRLY course teaches decisions for service-specific: pressure/production, compressed systems and testing. Its purpose is to match components and protection to actual pressure service. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E05_lesson1",
+        "title": "Lesson 1: Establish service suitability and traceability",
+        "body": "Pressure equipment includes assemblies and components whose failure can release stored energy or hazardous contents. Register or otherwise trace the items as required: vessels, hoses, connections, gauges and relief devices. Establish pressure, temperature, fluid, environmental and cyclic-service suitability using approved technical information. Size and appearance do not establish rating.\n\nAn assembly is only suitable when its components and configuration are compatible. A high-rated hose does not upgrade a lower-rated coupling. The competent technical owner controls selection and changes.\n\nWorked example: an unmarked hose is found in usable stock. It is held from pressure service until identity and suitability are established through the equipment process, not assigned a rating from color.\n\n### Applying the mechanism\n\nThink of a hose assembly as several interfaces that must all remain suitable: the tube contacts the fluid, reinforcement carries load, the cover protects against the environment, and the end fittings transfer force into the connected system. A compatible tube does not prove an acceptable fitting, and an intact cover does not reveal every internal defect. The specification must describe the assembly rather than one attractive feature. For a vessel or receiver, identification similarly connects the item to its design conditions and accepted history. If a nameplate is unreadable, an operator cannot recreate the design basis from wall thickness by eye. The technical owner obtains defensible records or removes the item from the proposed duty. This is why procurement should preserve technical identity from receipt through storage and use.\n\n### Decision principles\n\nThe component must perform in the actual service. A dimensional match can conceal unsuitable materials or limits.\n\nThe system can fail at an unsuitable component. Ratings must be assessed for the whole accepted configuration.\n\nSelection affects integrity and protective functions. It requires suitable technical information and authority rather than convenience.\n\nService temperature can affect component limits even when pressure is unchanged. The technical owner must use the applicable combined pressure, temperature and material information rather than treating a room-temperature marking as universal. A worker reports a changed duty and holds use until suitability is resolved; they do not invent a new derated operating value.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E05_lesson2",
+        "title": "Lesson 2: Set inspection, examination and testing requirements",
+        "body": "Requirements come from applicable law, design basis, manufacturer information and competent assessment of service. Routine visual checks, periodic examination, proof or integrity testing and relief-device servicing have different purposes. Do not replace one with another merely because a form is available.\n\nThe program identifies due triggers, acceptance criteria, competent providers and records. Corrosion, fatigue, abrasion, temperature and chemical attack can require service-specific attention. A universal annual test interval is not invented here.\n\nWorked example: a vessel’s external inspection is current, but a separate required examination is overdue. The external pass does not waive the overdue requirement; the owner resolves the actual status before release.\n\n### Applying the mechanism\n\nInspection asks what deterioration could reasonably occur and what method can detect it. External abrasion may be visible while internal corrosion or fatigue needs another suitable examination. A pressure test answers a bounded integrity question under specified conditions; it does not automatically reveal every future failure mechanism. The program should distinguish an initial acceptance test, in-service examination and a user’s pre-use check so one record cannot accidentally close all three obligations. If a unit cycles frequently or changes to a corrosive fluid, the technical review considers whether the original assurance basis remains adequate. Users report those service changes even when they cannot interpret their engineering significance. Their responsibility is accurate information and respect for restrictions, not selecting a new test method.\n\n### Decision principles\n\nDeterioration and legal obligations vary by equipment and service. The maintenance basis must be technically supported.\n\nThe same component can deteriorate differently in different duties. Inspection and retirement decisions must reflect the actual exposure history.\n\nSpecialist assurance needs method-specific skills and equipment. Administrative handling does not establish examination competence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E05_lesson3",
+        "title": "Lesson 3: Inspect hoses and connections before reliance",
+        "body": "Pre-use checks look for identification, damaged covers, exposed reinforcement, deformation, corrosion, coupling movement, leaks and other manufacturer-defined rejection conditions. Do not feel for pressure leaks with a hand or flex a suspect hose under pressure. Inspection must use a safe state and method.\n\nRouting protects against sharp edges, excessive bending, heat, traffic and incompatible exposure as required. Restraints, where specified, must match the approved design and attachments; they do not make a failed hose acceptable.\n\nWorked example: a hose has a cut near its end fitting and uncertain reinforcement condition. The user reports and quarantines it for competent disposition rather than wrapping the cover and returning it to pressure use.\n\n### Applying the mechanism\n\nA hose can be unsuitable even without visible damage when its installed shape exceeds the approved bend or loading conditions. Twisting during connection can introduce stress, and a fitting used as a handle can load an interface in an unintended direction. Routing across a vehicle path adds crushing and abrasion exposure. The task plan should provide a supported route that permits the intended movement without dragging, kinking or pulling on fittings. The user checks that the installed assembly matches that arrangement before pressure is applied. If a restraint is required, its attachments and geometry are checked separately; tying a random chain around a connection can create an unassessed assembly. Correct routing and restraint supplement suitable components rather than compensating for unknown ratings.\n\n### Decision principles\n\nA functioning flow path can still have impaired integrity. The check must address the components relied on to contain pressure.\n\nRestraints can limit movement under defined conditions but do not restore hose integrity or compatibility.\n\nInstallation conditions affect service life and failure risk. The approved routing must preserve the assembly’s limits and protect nearby people.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E05_lesson4",
+        "title": "Lesson 4: Protect relief devices and verify their function",
+        "body": "Relief devices form part of an engineered protective system. Their selection, setting, capacity, installation and discharge destination must match the design and applicable requirements. Do not adjust, plug, bypass or isolate a required protective device casually. A leaking device is a defect needing competent assessment, not permission to defeat protection.\n\nMaintain traceable servicing and test status. The presence of a seal or tag is useful only when linked to the correct device and current accepted condition. Discharge can create noise, temperature, pressure or chemical exposure and must be controlled.\n\nWorked example: a relief outlet annoys workers with occasional discharge. The technical owner investigates the cause and safe arrangement; the outlet is not capped to stop the nuisance.\n\n### Applying the mechanism\n\nA relief device must be able to sense the protected condition and discharge as designed. An obstructed inlet, closed isolation path or blocked outlet can defeat that function even if the device itself was recently serviced. Backpressure and discharge routing can also affect performance and exposure, which is why installation changes belong to technical review. A user should be able to identify the required device and recognize unauthorized caps, disconnected sensing arrangements or other obvious changes, but should not adjust its setting to investigate. When a device repeatedly operates, ask the technical authority to examine both the system pressure behavior and device condition. Replacing the valve without understanding the initiating condition may leave the underlying overpressure problem unresolved.\n\n### Decision principles\n\nRelief performance depends on the complete protective design. A fitting match does not prove adequate capacity or correct function.\n\nProtecting the vessel must not create uncontrolled exposure elsewhere. The outlet arrangement needs technical and site assessment.\n\nTraceability establishes which protective item was serviced and accepted. Aggregate paperwork cannot verify an unidentified device.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E05_lesson5",
+        "title": "Lesson 5: Quarantine uncertain items and control repair",
+        "body": "Damaged, unidentified, overdue or unsuitable pressure components stay out of service until the responsible technical process resolves them. Use effective segregation and status control so they cannot be issued from stock. Do not recreate missing ratings from memory or treat an improvised pressure test as proof of unknown design.\n\nRepair and testing require qualified methods, safe energy control and required acceptance. Some items must be retired rather than repaired. The applicable criteria determine disposition, not the desire to recover purchase cost.\n\nWorked example: a coupling is deformed after an abnormal event. It is controlled with its history and assessed by the competent owner; straightening it in the field does not establish restored rating.\n\n### Applying the mechanism\n\nQuarantine should preserve the item and its history for diagnosis. Record the service, observed defect and any abnormal event before separating it from ready stock. Do not clean away evidence or dismantle a failed component casually if an investigation or technical assessment needs the as-found condition. Where contamination creates its own hazard, the qualified plan controls handling and identifies what preparation occurred. A repair provider needs the real service information to judge material compatibility and applicable methods. A return labeled simply “repaired” should not be accepted when the work scope, tests or limitations are unknown. The owner must know whether the provider repaired the original defect, replaced the item or rejected it, and what must happen before reuse.\n\n### Decision principles\n\nUnknown integrity or suitability is not a safe operating basis. The item must not circulate as ready stock.\n\nA test result is bounded by its method and conditions. It cannot create missing design information or certify every service condition.\n\nSome damage or service history requires retirement. Economic preference cannot override technical rejection criteria.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E05_lesson6",
+        "title": "Lesson 6: Release the accepted configuration and retain history",
+        "body": "Return to service requires traceable technical acceptance of the actual item and assembly, required tests and resolved restrictions. Keep inspection, repair, test and abnormal-event history linked to identity. If service or configuration changes, review suitability and refresh affected evidence.\n\nThe owner checks that physical tags, stock and dispatch systems agree. Review recurring defects to address compatibility, routing, operating transients or maintenance weaknesses. A written course pass supports awareness only; it does not certify a pressure vessel or relief valve.\n\nWorked example: an accepted hose is transferred to a hotter chemical service. The technical review occurs before transfer because prior acceptance was bounded to different conditions.\n\n### Applying the mechanism\n\nRelease should answer a practical question: can the next user identify this exact component, understand its permitted duty and see any restriction without having attended the repair discussion? If the answer depends on memory, the handback is fragile. An assembly record may need to link its components and configuration so later substitution is visible. When a fitting is replaced, retain the earlier history but establish the new accepted configuration and required tests. During follow-up, compare failures by service and installation as well as by supplier. Several different hoses failing at the same hot edge may indicate a routing problem; one model failing across different sites may suggest selection or manufacture. Either pattern requires evidence-based technical review, not an unsupported blame assignment.\n\n### Decision principles\n\nReadiness must be supported by technical evidence for the item being used. Commercial completion is not integrity acceptance.\n\nAbnormal loads or exposure may impair components in ways requiring specific disposition. The next reviewer needs that context.\n\nTechnical examination and certification require separately qualified personnel and applicable procedures. Written learning cannot substitute for them.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E05_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: Mixed stock\n\nA store contains rated hoses and an identical-looking unmarked hose. Dispatch wants the unmarked one because it is longest.\n\n**Worked decision and reasoning.** The unmarked item remains held. The owner establishes identity, service suitability and required inspection status or replaces it with verified equipment. No one copies another label or invents a lower pressure rating. The stock-control review checks how uncertain equipment entered usable storage.\n\n### Scenario 2: Nuisance relief discharge\n\nA relief device repeatedly opens. A crew proposes isolating it while production continues and checking it after the shift.\n\n**Worked decision and reasoning.** The required protection is not defeated. The operating and technical authorities follow the approved response, establish a safe condition and investigate the pressure behavior and device. Any repair, replacement or operating change receives required verification and acceptance. Repeated discharge can signal a system problem as well as a device issue.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E05_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E05_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nPressure-equipment inspection, statutory examination, hose assembly, relief-device servicing, testing and technical release require separately assessed specialist competence and any applicable certification. Users need practical pre-use and defect-control instruction for their equipment. This course does not approve pressure designs or authorize hazardous testing.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "E05_check1",
+        "prompt": "An unmarked hose looks identical to a rated one. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Establish its own traceable suitability before pressure service."
+          },
+          {
+            "id": "b",
+            "label": "Copy the other hose’s rating."
+          },
+          {
+            "id": "c",
+            "label": "Use it at an arbitrary lower pressure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E05_final_1_1",
+        "prompt": "What does pressure-component suitability include?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only diameter."
+          },
+          {
+            "id": "b",
+            "label": "Only purchase date."
+          },
+          {
+            "id": "c",
+            "label": "Pressure, temperature, fluid compatibility, condition and intended configuration."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E05_final_1_2",
+        "prompt": "Can a high-rated hose upgrade a lower-rated coupling?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the connection is tight."
+          },
+          {
+            "id": "b",
+            "label": "No; the complete assembly must meet its approved requirements."
+          },
+          {
+            "id": "c",
+            "label": "Yes, the strongest part governs."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E05_final_1_3",
+        "prompt": "Who controls technical component selection?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The designated competent technical owner under the applicable system."
+          },
+          {
+            "id": "b",
+            "label": "Any worker picking from stock."
+          },
+          {
+            "id": "c",
+            "label": "The training platform."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E05_check2",
+        "prompt": "A visual check passed but another required examination is overdue. What is the status?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The visual pass replaces it."
+          },
+          {
+            "id": "b",
+            "label": "The due date can be deleted."
+          },
+          {
+            "id": "c",
+            "label": "The overdue requirement remains unresolved and controls use as applicable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E05_final_2_1",
+        "prompt": "Where should inspection intervals and criteria come from?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The most convenient workshop date."
+          },
+          {
+            "id": "b",
+            "label": "Applicable requirements, manufacturer and competent service assessment."
+          },
+          {
+            "id": "c",
+            "label": "One period for every pressure item."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E05_final_2_2",
+        "prompt": "Why assess actual service conditions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Corrosion, cycles, temperature and chemicals affect degradation."
+          },
+          {
+            "id": "b",
+            "label": "Only age determines condition."
+          },
+          {
+            "id": "c",
+            "label": "A new paint finish eliminates degradation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E05_final_2_3",
+        "prompt": "Who performs required specialist examination or testing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any operator with a checklist."
+          },
+          {
+            "id": "b",
+            "label": "The stock clerk."
+          },
+          {
+            "id": "c",
+            "label": "Providers competent and authorized for that equipment and method."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E05_check3",
+        "prompt": "A hose has damaged cover near a coupling and uncertain reinforcement condition. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Test it by hand while pressurized."
+          },
+          {
+            "id": "b",
+            "label": "Remove it from reliance and obtain competent disposition."
+          },
+          {
+            "id": "c",
+            "label": "Wrap it informally and use it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E05_final_3_1",
+        "prompt": "What should a pre-use hose check include?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Identity, condition, connections and service suitability under applicable criteria."
+          },
+          {
+            "id": "b",
+            "label": "Only whether fluid flows."
+          },
+          {
+            "id": "c",
+            "label": "Only exterior cleanliness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E05_final_3_2",
+        "prompt": "Do restraints make a defective hose acceptable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, any restraint replaces inspection."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if tied tightly."
+          },
+          {
+            "id": "c",
+            "label": "No; they have a separate protective function within the approved system."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E05_final_3_3",
+        "prompt": "Why control hose routing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Routing never affects pressure equipment."
+          },
+          {
+            "id": "b",
+            "label": "Bending, abrasion, heat and traffic can damage or overload the assembly."
+          },
+          {
+            "id": "c",
+            "label": "Only to make the area look tidy."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E05_check4",
+        "prompt": "A relief device discharges and someone proposes capping it. What is the decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Do not defeat it; obtain competent investigation and disposition."
+          },
+          {
+            "id": "b",
+            "label": "Cap it until the next service."
+          },
+          {
+            "id": "c",
+            "label": "Raise its setting informally."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E05_final_4_1",
+        "prompt": "What determines relief-device suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only connection size."
+          },
+          {
+            "id": "b",
+            "label": "Only the device’s shiny appearance."
+          },
+          {
+            "id": "c",
+            "label": "Design requirements, setting, capacity, service and installation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E05_final_4_2",
+        "prompt": "Why assess relief discharge destination?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All discharge is harmless once relieved."
+          },
+          {
+            "id": "b",
+            "label": "Released material and energy can expose people or other equipment."
+          },
+          {
+            "id": "c",
+            "label": "Only the pressure setpoint matters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E05_final_4_3",
+        "prompt": "What should servicing evidence link?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual device identity, work, test result, status and responsible provider."
+          },
+          {
+            "id": "b",
+            "label": "Only a generic annual invoice."
+          },
+          {
+            "id": "c",
+            "label": "Only the number of devices on site."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E05_check5",
+        "prompt": "A deformed coupling is straightened informally. Is it ready?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the threads reconnect."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after repainting."
+          },
+          {
+            "id": "c",
+            "label": "No; competent disposition and required acceptance remain necessary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E05_final_5_1",
+        "prompt": "What should uncertain component status trigger?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use on the lowest-pressure job without review."
+          },
+          {
+            "id": "b",
+            "label": "A hold with physical and administrative control until resolved."
+          },
+          {
+            "id": "c",
+            "label": "A guessed rating."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E05_final_5_2",
+        "prompt": "Can an improvised test establish every unknown design rating?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; design suitability and approved testing are distinct technical questions."
+          },
+          {
+            "id": "b",
+            "label": "Yes, survival proves unlimited suitability."
+          },
+          {
+            "id": "c",
+            "label": "Yes, one successful cycle is certification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E05_final_5_3",
+        "prompt": "Who decides repair versus retirement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The person who paid for it."
+          },
+          {
+            "id": "b",
+            "label": "Any user needing a spare."
+          },
+          {
+            "id": "c",
+            "label": "The competent owner using applicable technical and manufacturer criteria."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E05_check6",
+        "prompt": "An accepted hose is moved to a hotter chemical service. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Add a warning label only."
+          },
+          {
+            "id": "b",
+            "label": "Review suitability and required acceptance for the changed service."
+          },
+          {
+            "id": "c",
+            "label": "Use the old status automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E05_final_6_1",
+        "prompt": "What should return-to-service acceptance cover?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual identity, configuration, required work and tests, and restrictions."
+          },
+          {
+            "id": "b",
+            "label": "Only a clean exterior."
+          },
+          {
+            "id": "c",
+            "label": "Only payment for repair."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E05_final_6_2",
+        "prompt": "Why retain abnormal-event history?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only visible cracks matter."
+          },
+          {
+            "id": "b",
+            "label": "History can be erased after a passed test."
+          },
+          {
+            "id": "c",
+            "label": "It can affect inspection, retirement and future suitability decisions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E05_final_6_3",
+        "prompt": "What does this course not provide?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Knowledge of traceability principles."
+          },
+          {
+            "id": "b",
+            "label": "Pressure-equipment certification or specialist inspection authority."
+          },
+          {
+            "id": "c",
+            "label": "Awareness of quarantine duties."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E05_final_scenario1",
+        "prompt": "Why can the unmarked hose not simply receive another item’s label?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Traceability and rating belong to the actual component, not its appearance."
+          },
+          {
+            "id": "b",
+            "label": "Long hoses never need ratings."
+          },
+          {
+            "id": "c",
+            "label": "Labels are optional for all pressure service."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E05_final_scenario2",
+        "prompt": "What is the key safeguard in the relief scenario?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Isolate protection to maintain output."
+          },
+          {
+            "id": "b",
+            "label": "Assume every discharge is a faulty valve."
+          },
+          {
+            "id": "c",
+            "label": "Preserve required pressure protection while qualified roles establish a safe response."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "E05_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E05_lesson1",
+          "questionIds": [
+            "E05_check1"
+          ]
+        },
+        {
+          "lessonId": "E05_lesson2",
+          "questionIds": [
+            "E05_check2"
+          ]
+        },
+        {
+          "lessonId": "E05_lesson3",
+          "questionIds": [
+            "E05_check3"
+          ]
+        },
+        {
+          "lessonId": "E05_lesson4",
+          "questionIds": [
+            "E05_check4"
+          ]
+        },
+        {
+          "lessonId": "E05_lesson5",
+          "questionIds": [
+            "E05_check5"
+          ]
+        },
+        {
+          "lessonId": "E05_lesson6",
+          "questionIds": [
+            "E05_check6"
+          ]
+        },
+        {
+          "lessonId": "E05_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E05_assessment",
+          "questionIds": [
+            "E05_final_1_1",
+            "E05_final_1_2",
+            "E05_final_1_3",
+            "E05_final_2_1",
+            "E05_final_2_2",
+            "E05_final_2_3",
+            "E05_final_3_1",
+            "E05_final_3_2",
+            "E05_final_3_3",
+            "E05_final_4_1",
+            "E05_final_4_2",
+            "E05_final_4_3",
+            "E05_final_5_1",
+            "E05_final_5_2",
+            "E05_final_5_3",
+            "E05_final_6_1",
+            "E05_final_6_2",
+            "E05_final_6_3",
+            "E05_final_scenario1",
+            "E05_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "E05_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "E05_check1": "Appearance cannot establish materials, rating or service history. A guessed derating does not create a defensible operating envelope.",
+        "E05_final_1_1": "The component must perform in the actual service. A dimensional match can conceal unsuitable materials or limits.",
+        "E05_final_1_2": "The system can fail at an unsuitable component. Ratings must be assessed for the whole accepted configuration.",
+        "E05_final_1_3": "Selection affects integrity and protective functions. It requires suitable technical information and authority rather than convenience.",
+        "E05_check2": "Different assurance activities establish different facts. Passing one check does not satisfy an unperformed requirement with another purpose.",
+        "E05_final_2_1": "Deterioration and legal obligations vary by equipment and service. The maintenance basis must be technically supported.",
+        "E05_final_2_2": "The same component can deteriorate differently in different duties. Inspection and retirement decisions must reflect the actual exposure history.",
+        "E05_final_2_3": "Specialist assurance needs method-specific skills and equipment. Administrative handling does not establish examination competence.",
+        "E05_check3": "Damage can affect load-bearing structure or signal a failure mechanism. The approved criteria and technical process determine disposition, not an improvised cover repair.",
+        "E05_final_3_1": "A functioning flow path can still have impaired integrity. The check must address the components relied on to contain pressure.",
+        "E05_final_3_2": "Restraints can limit movement under defined conditions but do not restore hose integrity or compatibility.",
+        "E05_final_3_3": "Installation conditions affect service life and failure risk. The approved routing must preserve the assembly’s limits and protect nearby people.",
+        "E05_check4": "Relief protection is part of the system’s safety basis. Defeating or altering it can permit dangerous pressure and must not be used as a nuisance fix.",
+        "E05_final_4_1": "Relief performance depends on the complete protective design. A fitting match does not prove adequate capacity or correct function.",
+        "E05_final_4_2": "Protecting the vessel must not create uncontrolled exposure elsewhere. The outlet arrangement needs technical and site assessment.",
+        "E05_final_4_3": "Traceability establishes which protective item was serviced and accepted. Aggregate paperwork cannot verify an unidentified device.",
+        "E05_check5": "Deformation can impair strength and geometry. Restoring appearance cannot establish original performance or an approved repair.",
+        "E05_final_5_1": "Unknown integrity or suitability is not a safe operating basis. The item must not circulate as ready stock.",
+        "E05_final_5_2": "A test result is bounded by its method and conditions. It cannot create missing design information or certify every service condition.",
+        "E05_final_5_3": "Some damage or service history requires retirement. Economic preference cannot override technical rejection criteria.",
+        "E05_check6": "Pressure, temperature and chemical compatibility interact. Prior acceptance does not establish suitability for a materially different duty.",
+        "E05_final_6_1": "Readiness must be supported by technical evidence for the item being used. Commercial completion is not integrity acceptance.",
+        "E05_final_6_2": "Abnormal loads or exposure may impair components in ways requiring specific disposition. The next reviewer needs that context.",
+        "E05_final_6_3": "Technical examination and certification require separately qualified personnel and applicable procedures. Written learning cannot substitute for them.",
+        "E05_final_scenario1": "Copying identity would create false assurance and disconnect the item from its real design and history. The competent process must establish its own status.",
+        "E05_final_scenario2": "Relief function is part of the approved safety basis. Repeated operation requires competent diagnosis without casually removing the protective layer."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

@@ -282,7 +282,7 @@ export async function submitAssignedLibrary(
 export async function submitGuidedTraining(actor:LibraryActor,id:string,e:WorkHubCommandEnvelope) {
   return libraryCommand(actor,e,'library.guided-training',id,async tx=>{
     const own=await readAssignedLibrary(tx,actor,id,true), a=own.assignment, training=own.metadata.content?.training;
-    if(own.metadata.safetyResource?.familyId!=='H03'||!training?.guided)throw new LibraryError('Guided H03 assignment required',400);
+    if(own.metadata.kind!=='training'||!training?.guided)throw new LibraryError('Guided training assignment required',400);
     if(a.version!==e.expectedVersion)throw new LibraryError('Assignment changed; refresh',409);
     if(['completed','cancelled','exempted'].includes(a.status))throw new LibraryError('Assignment is not accepting responses',409);
     const now=new Date();let result:ReturnType<typeof guidedResult>;

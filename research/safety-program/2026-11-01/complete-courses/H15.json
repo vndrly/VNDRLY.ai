@@ -1,0 +1,785 @@
+{
+  "familyId": "H15",
+  "title": "Respiratory protection",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Ensure respiratory equipment matches exposure and user.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate program administration, medical evaluation, equipment-specific fit testing and safe practical demonstration are required as applicable. This online awareness course does not qualify respirator selection, fit-test administration, supplied-air technical work, emergency entry or rescue.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-318_Rev3.pdf"
+    },
+    {
+      "title": "OSHA Respiratory protection",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+    },
+    {
+      "title": "OSHA Respiratory protection",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H15_intro",
+        "title": "Start here: Respiratory protection",
+        "body": "# Respiratory protection\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate program administration, medical evaluation, equipment-specific fit testing and safe practical demonstration are required as applicable. This online awareness course does not qualify respirator selection, fit-test administration, supplied-air technical work, emergency entry or rescue.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Respiratory protection](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H15_lesson1",
+        "title": "Lesson 1 - Determine the exposure before choosing equipment",
+        "body": "Respiratory protection is selected from the assessed atmosphere and work, not from what happens to be in the truck. Identify the contaminant, its likely concentration, oxygen conditions, task duration and foreseeable changes. A competent program owner must address uncertainty. An atmosphere that cannot be adequately characterized is not made safe by guessing a cartridge.\n\nUse elimination and engineering controls where feasible before relying on a respirator. A respirator may be needed while other controls are installed or for residual exposure, but it must operate within an employer's respiratory program. An SDS can inform the assessment; it does not select a complete system for every task.\n\nWorkers should understand the equipment's basic limit. An air-purifying respirator filters specified contaminants from ambient air; it does not supply oxygen. A dust filter does not control every gas or vapor. Escape and emergency devices have specific purposes and cannot be borrowed as general work equipment.\n\n## Worked field example\n\nA worker chooses a dust-filter mask for an unidentified tank vapor because it is available.\n\nThe safe decision is to hold the task until the competent program owner characterizes the hazard and selects an appropriate system. An available filter cannot establish suitability for an unidentified atmosphere.\n\nA useful field record is specific: A documented exposure assessment and selection tied to the actual task and atmosphere. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nSelection requires a complete work description. Two workers using the same coating may have different needs if one mixes in an open ventilated station and the other sprays inside an enclosure. The assessor considers the actual release, duration, concentration information, oxygen conditions and foreseeable failure. A label saying organic vapor does not answer every one of those questions.\n\nWhere assessment information is incomplete, the program owner determines the safe restriction and appropriate further evaluation. The crew does not conduct an exploratory entry to discover whether a cartridge works. An apparent reduction in smell is not a selection test. Technical decisions are recorded with their basis and limits so a different shift cannot reuse a selection outside the atmosphere and task for which it was made.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H15_lesson2",
+        "title": "Lesson 2 - Confirm the program and medical prerequisites",
+        "body": "The employer's program needs a qualified administrator and procedures for selection, medical evaluation, fit testing where applicable, use, cleaning, maintenance, storage and evaluation. Workers need to know who can answer selection and equipment questions. An online lesson is only one element of that program.\n\nMedical evaluation addresses whether a person can use the selected respirator under the expected conditions. It is conducted through the appropriate licensed health professional before required fit testing or use under the applicable rule. A supervisor must not replace this with a general statement that the worker looks fit.\n\nProtect medical confidentiality. The operational record should contain the permitted status and restrictions needed for assignment, not the worker's full questionnaire or clinical history. A restriction is an instruction to manage work through the proper process. It is not permission for an unqualified manager to diagnose or challenge the worker publicly.\n\n## Worked field example\n\nA supervisor asks to read a worker’s complete medical questionnaire before assigning respirator work.\n\nThe safe decision is to use the authorized medical clearance and restrictions process while keeping clinical information restricted. Assignment needs the appropriate clearance outcome, not unrestricted clinical disclosure.\n\nA useful field record is specific: The applicable clearance status and any work restrictions held through the approved confidential process. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nA medical recommendation can include limits relevant to the respirator or work. The assigning supervisor follows the authorized outcome rather than demanding the worker explain a diagnosis in front of the crew. Questions about changed health or difficulty using the equipment return to the appropriate health professional and program administrator. They are not resolved by a general fitness statement from a colleague.\n\nThe program owner also needs enough authority and resources to implement the program. Naming an administrator without time, training or access to equipment information does not create effective administration. Workers need a practical way to obtain help before exposure. If the selected equipment is unavailable, the administrator arranges a suitable alternative through the full process instead of allowing a different model to be borrowed without review.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H15_lesson3",
+        "title": "Lesson 3 - Match fit testing to the respirator",
+        "body": "A tight-fitting respirator depends on a seal against the face. Fit testing evaluates an appropriate make, model, style and size through the applicable method. It is not interchangeable with a user seal check. A fit result for one model does not establish fit for another model that looks similar.\n\nFacial hair or other interference at the sealing surface can prevent a reliable seal. Straps, eyewear and other PPE can affect use. Raise these conflicts with the program owner rather than tightening the mask until it feels uncomfortable. Approved alternatives may exist, but their selection is a competent program decision.\n\nThe worker performs the required user seal check each time the respirator is put on, using the manufacturer's instructions and program method. A successful check does not cancel fit-test requirements. A failed check means the worker does not begin respirator-dependent work until the issue is resolved.\n\n## Worked field example\n\nA worker switches to a different tight-fitting respirator model using last month’s record for the old model.\n\nThe safe decision is to do not assign respirator-dependent work until suitable selection and applicable fit testing are confirmed. A previous model’s fit result does not establish fit for the replacement.\n\nA useful field record is specific: A matching fit-test record and observed correct donning and user seal check. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nDuring a safe demonstration, the assessor checks the worker's actual equipment identification before donning. The worker explains which fit-test record applies and follows the manufacturer's method for placement and the user seal check. If the check fails, the demonstration stops for correction rather than rewarding the ability to tighten straps rapidly. The assessor records the observed action and any coaching.\n\nA change in facial characteristics, equipment or other relevant conditions should be raised through the program's fit-review process. Do not assume a calendar date alone determines suitability. Equally, do not claim that passing a seal check proves all fit requirements are current. Fit testing and the check performed at each donning answer different questions and both remain within the applicable program.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H15_lesson4",
+        "title": "Lesson 4 - Inspect and use the selected system",
+        "body": "Inspect the respirator through the manufacturer's instructions and employer procedure. Check relevant facepiece, seal, valves, straps, filters, connections and supply components for the selected system. A damaged valve or incompatible component can defeat protection even when the equipment looks clean.\n\nUse only approved components in their intended configuration. Do not mix parts from different systems, repair cracks with tape or install a cartridge because the threads happen to fit. Follow the program's cartridge/filter replacement rules. Odor breakthrough is not a universal replacement schedule, and absence of odor does not demonstrate protection.\n\nKnow the approved withdrawal conditions: equipment failure, difficulty breathing, irritation, leakage, a change in the atmosphere or other signs that protection may be inadequate. Leave through the safe route and notify the appropriate role. Do not remove the facepiece in a hazardous area to adjust it or finish a quick task.\n\n## Worked field example\n\nA facepiece valve is damaged and the worker proposes taping it for the rest of the shift.\n\nThe safe decision is to remove the respirator from service and obtain an approved functional replacement before exposure. Unapproved repair can defeat the respirator’s protective function.\n\nA useful field record is specific: A documented inspection and verified approved replacement in the selected configuration. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nA worker inspecting a cartridge should verify the approved identity and condition, not merely that it is new in packaging. Storage history, damage, expiry information where applicable and the program's replacement rules can affect readiness. Once opened or used, management of service life follows the selected system and competent plan. The worker must know how to obtain a replacement without improvising.\n\nIf breathing resistance increases or equipment behaves abnormally, the worker withdraws by the approved route. They do not diagnose the cause while remaining exposed. The program administrator reviews equipment and conditions before reuse. A coworker reporting that the same model feels fine does not invalidate the individual warning or establish that this worker's system is functioning.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H15_lesson5",
+        "title": "Lesson 5 - Clean, store and maintain protection",
+        "body": "A respirator's reliability continues after use. Follow the manufacturer and program for cleaning, disinfection where applicable, inspection, maintenance and storage. Protect the facepiece from deformation, contamination, sunlight, chemicals and damaging conditions. A respirator left open on a dusty dashboard may no longer be ready for the next task.\n\nShared equipment needs the program's appropriate hygiene and inspection controls. Identify equipment so the worker can confirm the approved system and condition. Defective items must be marked or segregated so another worker does not take them back into service.\n\nMaintenance belongs to people trained and authorized for the relevant system. Some systems require specific inspection, testing or air-supply controls beyond ordinary user checks. A worker's responsibility is to recognize and report the limit, not improvise technical service. Keep records that identify the equipment, defect, competent action and verified return to service.\n\n## Worked field example\n\nA used respirator is stored loose beside solvent containers and issued to another worker.\n\nThe safe decision is to quarantine it pending the required cleaning, inspection and confirmation of serviceable condition. Contamination and poor storage can compromise both hygiene and protective performance.\n\nA useful field record is specific: A cleaning and inspection record tied to the actual equipment and approved storage arrangement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nFor shared reusable equipment, the record should identify the actual item and completed hygiene and inspection steps. A common cleaning log that cannot be tied to the issued unit may not establish its condition. The next user still performs the required inspection. A clean appearance cannot reveal every defective valve, connection or supply issue.\n\nRepairs must preserve the approved system. A replacement strap, valve or hose is selected and fitted through the authorized procedure, not taken from a visually similar discarded unit. Where technical testing is required, it is performed by appropriately competent people. Release identifies the repaired equipment and verification. The workshop does not return a suspect unit to the general issue shelf while waiting for a decision.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H15_lesson6",
+        "title": "Lesson 6 - Recognize emergency and training limits",
+        "body": "Emergency use is a distinct planned capability. Unknown or immediately dangerous atmospheres require the applicable specialized selection, staffing, rescue and emergency arrangements. Do not send an untrained coworker into a hazardous area wearing a spare respirator because someone has collapsed.\n\nWorkers must demonstrate the assigned equipment actions in a safe setting. That includes inspection, donning, seal checking where relevant, use limitations, withdrawal, cleaning and reporting. Written recognition of the steps does not prove the worker can perform them. Program evaluation should include whether workers actually use the selected system correctly.\n\nReview the program after changed hazards, new equipment, fit concerns, medical restrictions, defects or observed misuse. The governing standard and employer program determine applicable intervals. This course does not invent a common expiry period for every respirator and role.\n\n## Worked field example\n\nA worker collapses in an unknown atmosphere and an untrained coworker grabs a spare half-mask.\n\nThe safe decision is to prevent unplanned entry and activate the established emergency and rescue response. A spare respirator does not establish suitable protection, rescue competence or safe entry conditions.\n\nA useful field record is specific: A verified emergency arrangement and safe practical demonstration of assigned withdrawal and alarm actions. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nEmergency preparedness includes protecting people who are not responders. A worker may demonstrate alarm, withdrawal and information transfer without demonstrating hazardous entry. The receiving responder needs the location, known atmosphere and equipment information, while uncertainty remains explicit. An unqualified supervisor should not promise a safe atmosphere from the fact that an injured person is still visible.\n\nAfter a failed practical demonstration, the worker receives equipment-specific instruction and another safe assessment before assignment. Preserve the original result and the subsequent performance rather than rewriting the first record as a pass. The online quiz's acknowledged remediation is learning evidence; it does not erase a failed practical seal check or authorize required respirator use. Each evidence stream retains its own scope.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H15_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional coating crew changes to a new solvent and obtains different half-mask respirators. The crew has records for the old model, an SDS for the previous coating and a box of cartridges selected by purchase price. The supervisor wants to begin because everyone completed an online course. Identify the hold points.\n\n### Worked solution\n\nThe program owner reviews the actual coating and application exposure before selection. Existing medical status is handled through the proper confidential process and reviewed for applicable restrictions. The new make/model requires the appropriate matching fit testing for tight-fitting equipment. Cartridges and replacement rules must be selected for the actual hazard and approved configuration, not price alone. Workers demonstrate inspection, donning, required seal check and withdrawal through safe practical evaluation. Engineering controls and emergency arrangements are also verified. The online course supports understanding but does not clear these prerequisites. The assignment remains held until the responsible authority verifies the relevant program conditions.\n\n## Scenario 2\n\nA fictional worker detects irritation while using an assigned respirator. The task leader says the cartridge is new and asks the worker to remove the facepiece briefly to check the seal in the work area. Explain the safe response.\n\n### Worked solution\n\nThe worker follows the approved withdrawal route and reports the concern from a safe location. The facepiece is not removed in the exposure area. A new cartridge does not prove correct selection, intact equipment or adequate control. The program owner reviews the atmosphere, fit, equipment configuration and possible changes before authorizing renewed exposure. Medical concerns follow the appropriate health process. The defective or suspect system is kept out of service until evaluated. A record describes the observed symptom and condition without speculative diagnosis. Restart requires the actual protective arrangement to be verified, not merely replacing another cartridge.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H15_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H15_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate program administration, medical evaluation, equipment-specific fit testing and safe practical demonstration are required as applicable. This online awareness course does not qualify respirator selection, fit-test administration, supplied-air technical work, emergency entry or rescue.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H15_check1",
+        "prompt": "A worker chooses a dust-filter mask for an unidentified tank vapor because it is available. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the task until the competent program owner characterizes the hazard and selects an appropriate system"
+          },
+          {
+            "id": "b",
+            "label": "Use the mask if the odor is reduced"
+          },
+          {
+            "id": "c",
+            "label": "Enter briefly to identify the vapor"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H15_check2",
+        "prompt": "A supervisor asks to read a worker’s complete medical questionnaire before assigning respirator work. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Publish the questionnaire in the crew training folder"
+          },
+          {
+            "id": "b",
+            "label": "Use the authorized medical clearance and restrictions process while keeping clinical information restricted"
+          },
+          {
+            "id": "c",
+            "label": "Skip clearance because the worker passed the written course"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H15_check3",
+        "prompt": "A worker switches to a different tight-fitting respirator model using last month’s record for the old model. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tighten the straps and reuse the old record"
+          },
+          {
+            "id": "b",
+            "label": "Use a successful seal check as a substitute for fit testing"
+          },
+          {
+            "id": "c",
+            "label": "Do not assign respirator-dependent work until suitable selection and applicable fit testing are confirmed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H15_check4",
+        "prompt": "A facepiece valve is damaged and the worker proposes taping it for the rest of the shift. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Remove the respirator from service and obtain an approved functional replacement before exposure"
+          },
+          {
+            "id": "b",
+            "label": "Tape the valve because the job is short"
+          },
+          {
+            "id": "c",
+            "label": "Use the respirator if there is no noticeable smell"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H15_check5",
+        "prompt": "A used respirator is stored loose beside solvent containers and issued to another worker. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wipe the outside and assume it is ready"
+          },
+          {
+            "id": "b",
+            "label": "Quarantine it pending the required cleaning, inspection and confirmation of serviceable condition"
+          },
+          {
+            "id": "c",
+            "label": "Let the next worker decide after entering the task area"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H15_check6",
+        "prompt": "A worker collapses in an unknown atmosphere and an untrained coworker grabs a spare half-mask. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter quickly before the casualty gets worse"
+          },
+          {
+            "id": "b",
+            "label": "Use any respirator if another worker watches from the doorway"
+          },
+          {
+            "id": "c",
+            "label": "Prevent unplanned entry and activate the established emergency and rescue response"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H15_final1",
+        "prompt": "For determine the exposure before choosing equipment, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An available filter cannot establish suitability for an unidentified atmosphere."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H15_final2",
+        "prompt": "Which evidence would most directly verify determine the exposure before choosing equipment in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A documented exposure assessment and selection tied to the actual task and atmosphere"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H15_final3",
+        "prompt": "A relief worker proposes the following shortcut during determine the exposure before choosing equipment: \"Use the mask if the odor is reduced.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the mask if the odor is reduced"
+          },
+          {
+            "id": "b",
+            "label": "Enter briefly to identify the vapor"
+          },
+          {
+            "id": "c",
+            "label": "Hold the task until the competent program owner characterizes the hazard and selects an appropriate system"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H15_final4",
+        "prompt": "For confirm the program and medical prerequisites, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assignment needs the appropriate clearance outcome, not unrestricted clinical disclosure."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H15_final5",
+        "prompt": "Which evidence would most directly verify confirm the program and medical prerequisites in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "The applicable clearance status and any work restrictions held through the approved confidential process"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H15_final6",
+        "prompt": "A relief worker proposes the following shortcut during confirm the program and medical prerequisites: \"Publish the questionnaire in the crew training folder.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Publish the questionnaire in the crew training folder"
+          },
+          {
+            "id": "b",
+            "label": "Skip clearance because the worker passed the written course"
+          },
+          {
+            "id": "c",
+            "label": "Use the authorized medical clearance and restrictions process while keeping clinical information restricted"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H15_final7",
+        "prompt": "For match fit testing to the respirator, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A previous model’s fit result does not establish fit for the replacement."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H15_final8",
+        "prompt": "Which evidence would most directly verify match fit testing to the respirator in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A matching fit-test record and observed correct donning and user seal check"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H15_final9",
+        "prompt": "A relief worker proposes the following shortcut during match fit testing to the respirator: \"Tighten the straps and reuse the old record.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tighten the straps and reuse the old record"
+          },
+          {
+            "id": "b",
+            "label": "Use a successful seal check as a substitute for fit testing"
+          },
+          {
+            "id": "c",
+            "label": "Do not assign respirator-dependent work until suitable selection and applicable fit testing are confirmed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H15_final10",
+        "prompt": "For inspect and use the selected system, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Unapproved repair can defeat the respirator’s protective function."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H15_final11",
+        "prompt": "Which evidence would most directly verify inspect and use the selected system in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A documented inspection and verified approved replacement in the selected configuration"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H15_final12",
+        "prompt": "A relief worker proposes the following shortcut during inspect and use the selected system: \"Tape the valve because the job is short.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tape the valve because the job is short"
+          },
+          {
+            "id": "b",
+            "label": "Use the respirator if there is no noticeable smell"
+          },
+          {
+            "id": "c",
+            "label": "Remove the respirator from service and obtain an approved functional replacement before exposure"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H15_final13",
+        "prompt": "For clean, store and maintain protection, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Contamination and poor storage can compromise both hygiene and protective performance."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H15_final14",
+        "prompt": "Which evidence would most directly verify clean, store and maintain protection in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A cleaning and inspection record tied to the actual equipment and approved storage arrangement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H15_final15",
+        "prompt": "A relief worker proposes the following shortcut during clean, store and maintain protection: \"Wipe the outside and assume it is ready.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wipe the outside and assume it is ready"
+          },
+          {
+            "id": "b",
+            "label": "Let the next worker decide after entering the task area"
+          },
+          {
+            "id": "c",
+            "label": "Quarantine it pending the required cleaning, inspection and confirmation of serviceable condition"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H15_final16",
+        "prompt": "For recognize emergency and training limits, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A spare respirator does not establish suitable protection, rescue competence or safe entry conditions."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H15_final17",
+        "prompt": "Which evidence would most directly verify recognize emergency and training limits in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified emergency arrangement and safe practical demonstration of assigned withdrawal and alarm actions"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H15_final18",
+        "prompt": "A relief worker proposes the following shortcut during recognize emergency and training limits: \"Enter quickly before the casualty gets worse.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter quickly before the casualty gets worse"
+          },
+          {
+            "id": "b",
+            "label": "Use any respirator if another worker watches from the doorway"
+          },
+          {
+            "id": "c",
+            "label": "Prevent unplanned entry and activate the established emergency and rescue response"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H15_final19",
+        "prompt": "In Scenario 1, what does the old-model fit record establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the recorded result for its specified equipment and conditions"
+          },
+          {
+            "id": "b",
+            "label": "Fit for every half-mask from the same supplier"
+          },
+          {
+            "id": "c",
+            "label": "Medical clearance for any future respirator"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H15_final20",
+        "prompt": "In Scenario 2, where should facepiece adjustment occur?",
+        "options": [
+          {
+            "id": "a",
+            "label": "In the exposure area if the worker holds their breath"
+          },
+          {
+            "id": "b",
+            "label": "In the safe location reached through the approved withdrawal procedure"
+          },
+          {
+            "id": "c",
+            "label": "Beside the release while a coworker watches"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H15_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H15_lesson1",
+          "questionIds": [
+            "H15_check1"
+          ]
+        },
+        {
+          "lessonId": "H15_lesson2",
+          "questionIds": [
+            "H15_check2"
+          ]
+        },
+        {
+          "lessonId": "H15_lesson3",
+          "questionIds": [
+            "H15_check3"
+          ]
+        },
+        {
+          "lessonId": "H15_lesson4",
+          "questionIds": [
+            "H15_check4"
+          ]
+        },
+        {
+          "lessonId": "H15_lesson5",
+          "questionIds": [
+            "H15_check5"
+          ]
+        },
+        {
+          "lessonId": "H15_lesson6",
+          "questionIds": [
+            "H15_check6"
+          ]
+        },
+        {
+          "lessonId": "H15_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H15_final",
+          "questionIds": [
+            "H15_final1",
+            "H15_final2",
+            "H15_final3",
+            "H15_final4",
+            "H15_final5",
+            "H15_final6",
+            "H15_final7",
+            "H15_final8",
+            "H15_final9",
+            "H15_final10",
+            "H15_final11",
+            "H15_final12",
+            "H15_final13",
+            "H15_final14",
+            "H15_final15",
+            "H15_final16",
+            "H15_final17",
+            "H15_final18",
+            "H15_final19",
+            "H15_final20"
+          ]
+        },
+        {
+          "lessonId": "H15_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H15_check1": "Hold the task until the competent program owner characterizes the hazard and selects an appropriate system. An available filter cannot establish suitability for an unidentified atmosphere.",
+        "H15_check2": "Use the authorized medical clearance and restrictions process while keeping clinical information restricted. Assignment needs the appropriate clearance outcome, not unrestricted clinical disclosure.",
+        "H15_check3": "Do not assign respirator-dependent work until suitable selection and applicable fit testing are confirmed. A previous model’s fit result does not establish fit for the replacement.",
+        "H15_check4": "Remove the respirator from service and obtain an approved functional replacement before exposure. Unapproved repair can defeat the respirator’s protective function.",
+        "H15_check5": "Quarantine it pending the required cleaning, inspection and confirmation of serviceable condition. Contamination and poor storage can compromise both hygiene and protective performance.",
+        "H15_check6": "Prevent unplanned entry and activate the established emergency and rescue response. A spare respirator does not establish suitable protection, rescue competence or safe entry conditions.",
+        "H15_final1": "An available filter cannot establish suitability for an unidentified atmosphere. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H15_final2": "A documented exposure assessment and selection tied to the actual task and atmosphere. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H15_final3": "Hold the task until the competent program owner characterizes the hazard and selects an appropriate system. An available filter cannot establish suitability for an unidentified atmosphere. A staffing change does not remove this requirement.",
+        "H15_final4": "Assignment needs the appropriate clearance outcome, not unrestricted clinical disclosure. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H15_final5": "The applicable clearance status and any work restrictions held through the approved confidential process. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H15_final6": "Use the authorized medical clearance and restrictions process while keeping clinical information restricted. Assignment needs the appropriate clearance outcome, not unrestricted clinical disclosure. A staffing change does not remove this requirement.",
+        "H15_final7": "A previous model’s fit result does not establish fit for the replacement. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H15_final8": "A matching fit-test record and observed correct donning and user seal check. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H15_final9": "Do not assign respirator-dependent work until suitable selection and applicable fit testing are confirmed. A previous model’s fit result does not establish fit for the replacement. A staffing change does not remove this requirement.",
+        "H15_final10": "Unapproved repair can defeat the respirator’s protective function. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H15_final11": "A documented inspection and verified approved replacement in the selected configuration. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H15_final12": "Remove the respirator from service and obtain an approved functional replacement before exposure. Unapproved repair can defeat the respirator’s protective function. A staffing change does not remove this requirement.",
+        "H15_final13": "Contamination and poor storage can compromise both hygiene and protective performance. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H15_final14": "A cleaning and inspection record tied to the actual equipment and approved storage arrangement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H15_final15": "Quarantine it pending the required cleaning, inspection and confirmation of serviceable condition. Contamination and poor storage can compromise both hygiene and protective performance. A staffing change does not remove this requirement.",
+        "H15_final16": "A spare respirator does not establish suitable protection, rescue competence or safe entry conditions. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H15_final17": "A verified emergency arrangement and safe practical demonstration of assigned withdrawal and alarm actions. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H15_final18": "Prevent unplanned entry and activate the established emergency and rescue response. A spare respirator does not establish suitable protection, rescue competence or safe entry conditions. A staffing change does not remove this requirement.",
+        "H15_final19": "Fit records have a specific equipment scope and do not replace exposure selection, medical evaluation or practical assessment.",
+        "H15_final20": "Removing or adjusting protection in the hazardous area can create direct exposure. Withdrawal and competent reassessment address the warning without adding risk."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

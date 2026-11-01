@@ -1,0 +1,781 @@
+{
+  "familyId": "H02",
+  "title": "Critical-control checks and line of fire",
+  "description": "Complete guided H02 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Prevent crushing, struck-by and stored-energy harm.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "A competent assessor must separately observe identification of actual energy paths, safe positioning, establishment and verification of assigned boundaries, agreed stop signals and response to a failed critical control. Specialized isolation, rigging, operating, pressure-system and restraint decisions require their own qualifications and practical authorization. This course does not qualify a worker to calculate exclusion zones, design restraints or direct hazardous equipment movement.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Critical-control checks and line of fire",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/chevron-specific-swc/Pressure%20Pumping.pdf"
+    },
+    {
+      "title": "Inventory source 2: Critical-control checks and line of fire",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Simplified%20PTW%20and%20JSA%20template.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H02_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H02: Critical-control checks and line of fire\n\nThis original VNDRLY course teaches decisions for common risk-screen; service controls conditional. Its purpose is to prevent crushing, struck-by and stored-energy harm. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H02_lesson1",
+        "title": "Lesson 1: Trace where energy can travel",
+        "body": "Line of fire means being in a position where released energy, moving equipment or material can reach you. It includes a suspended load’s fall path, a vehicle’s travel and reversing area, a hose or connection’s potential release, a tensioned line’s recoil, an unstable object’s roll and the space between moving and fixed objects. Distance alone is not a complete control: the possible direction, reach, deflection and secondary movement matter.\n\nStart with the actual activity and ask what is moving, held under force, elevated, pressurized or able to start unexpectedly. Identify who can enter the path, including people outside the immediate crew. If the energy or path cannot be established, the affected activity is not ready. A worker should not stand near a suspected release point to test whether the estimate is correct.\n\nWorked example: a worker stands beside a tensioned line rather than directly behind it and assumes this is safe. The competent task plan must account for credible recoil and connected equipment movement, not a single imagined straight path.\n\n### Applying the mechanism\n\nTrace the path on a safe plan or from a protected observation position. Include the source, connected components and people beyond the immediate crew. Do not enter the suspected path to mark it physically while energy is present. The assessment method itself must preserve separation.\n\n### Decision principles\n\nThe vehicle can close the space against the structure and crush the person. The relevant control is separation from the movement path, not merely visibility or protective clothing.\n\nAn energy event can create more than its first trajectory. Assessing connected parts, deflection and falling or rolling objects helps define a realistic exclusion area.\n\nUncertainty about the path means separation has not been established. People should not be used as test instruments while the team discovers how energy might travel.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H02_lesson2",
+        "title": "Lesson 2: Distinguish critical controls from general precautions",
+        "body": "A critical control prevents a serious event or limits its consequence in a way the risk assessment relies upon. Examples may include verified isolation, a designed restraint, a controlled lifting boundary or an interlocked guard, depending on the task. A list of every good practice does not identify which failure requires an immediate stop. The competent plan must state the safeguard, its required condition, verification method and failed-control response.\n\nGeneral precautions such as tidy work areas support safety but cannot substitute for a missing control against fatal energy. A helmet does not make standing beneath a suspended load acceptable. A second warning sign does not replace a missing engineered guard. Workers need to know what the control does, not just its name.\n\nWorked example: a pressure job has good housekeeping and a completed briefing, but one required restraint is missing. The successful general checks do not outweigh the failed restraint requirement. The affected activity remains held until the specified control is established and verified.\n\n### Applying the mechanism\n\nFor each critical control, explain the serious event it prevents. This allows a worker to recognize that a missing restraint is a substantive failure rather than a minor paperwork issue. It also prevents unrelated successful checks from being used to dismiss the failed protective function.\n\n### Decision principles\n\nVerification must establish the specific protection being relied on. Administrative participation can support the process but does not demonstrate that an engineered or physical safeguard exists and works.\n\nPPE has limited protective capability and cannot absorb the crushing energy of a falling load. The lifting plan must keep people out of the dangerous load path.\n\nChanging a critical safeguard can alter the risk basis. The alternative needs suitable technical review and authorization; it is not established by convenience or a learner’s preference.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H02_lesson3",
+        "title": "Lesson 3: Establish effective boundaries and access control",
+        "body": "An exclusion zone keeps people outside an assessed hazard area while the relevant energy or movement is present. Its shape and size must follow the actual activity and approved technical plan; this course does not invent a universal distance. Boundaries may need physical barriers, controlled access points, a designated attendant or other arrangements appropriate to the consequences and site. Tape that people routinely cross is not effective separation by itself.\n\nWalk the complete boundary, including side approaches, adjacent workstations and escape routes. Coordinate with other employers and operations so nobody is routed into the zone by a separate task. The person controlling access must have a defined role and communication method. A boundary should not trap workers or block emergency movement without an approved alternative.\n\nWorked example: a lifting crew controls the front of the route, but a maintenance door opens behind the barrier. The lift remains held while that approach is addressed. The plan is checked as a whole, not accepted because the most visible side looks correct.\n\n### Applying the mechanism\n\nA controlled boundary needs a clear release condition: who may reopen access and after what equipment state is established? Without that agreement, another crew may remove it because its own task is complete while the original energy exposure remains. Coordinate the whole period of reliance.\n\n### Decision principles\n\nEnergy, equipment, load and surroundings determine credible reach and exposure. A convenient or generic distance can be inadequate and must not replace competent task-specific planning.\n\nThe purpose is prevention of exposure, not the presence of material. Repeated unauthorized crossing demonstrates that the arrangement needs correction and enforcement or redesign.\n\nA boundary affects shared space. Coordination prevents another crew from unknowingly entering, moving the barrier or losing an escape route because of the first crew’s controls.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H02_lesson4",
+        "title": "Lesson 4: Verify controls from a safe position",
+        "body": "Verification must not create the exposure it is supposed to prevent. Use the approved safe method and a competent verifier for technical controls. Observing a restraint from outside a controlled area may be appropriate; entering a pressurized zone to touch it is not an improvised verification method. The check must occur before reliance and again when required by a change or operating stage.\n\nRecord the specific result, not a guessed pass. A failed check must reach the person who can hold and correct the activity. The checker should understand the acceptance criteria and what is outside their competence. When a technical measurement or test is needed, a general awareness learner must request the designated qualified person.\n\nWorked example: a worker cannot see the isolation indicator from the safe position. The worker does not climb inside the machine to obtain a better view. The responsible isolation authority arranges the prescribed verification under controlled conditions and communicates the result before access is considered.\n\n### Applying the mechanism\n\nThe verifier should distinguish seeing a component from checking its function. A restraint may be present but attached to an unsuitable point; a guard may be installed but incomplete. Use the approved acceptance criteria and seek technical help when appearance cannot establish performance.\n\n### Decision principles\n\nControls can be absent initially or change during work. Verification must align with the exposure stages and task requirements, not merely a periodic paperwork cycle.\n\nA check without a defined requirement cannot establish the intended safeguard. The worker must resolve the criteria through the approved technical process before recording a pass.\n\nTraceable observations show what condition was actually established. Predicted results and schedules do not prove that the critical safeguard existed when people relied upon it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H02_lesson5",
+        "title": "Lesson 5: Maintain positioning during movement and change",
+        "body": "Safe positioning is an active part of the planned method, not a single pre-start location. As equipment moves, the crush gap, load path or release direction can change. Use agreed signals and communication, and stop movement if communication is lost or a person enters the controlled area. Do not reach into a pinch point to correct alignment while movement remains possible. The task must be placed in its approved safe state first.\n\nSpotters and signal persons need protected positions and role-specific competence. Their presence does not remove the operator’s need to follow the agreed plan, nor does high-visibility clothing create separation. Avoid standing between a moving vehicle and an object, beneath a suspended part or within a tensioned system’s assessed danger area.\n\nWorked example: a worker drops a tool inside a lifting zone and starts to retrieve it. The tool can wait. The worker requests a stop and follows the lifting lead’s controlled arrangement rather than entering under a load because the retrieval will be brief.\n\n### Applying the mechanism\n\nPeople naturally follow the moving work, which can draw them toward a changing pinch point. Plan where helpers will stand at each stage and how they withdraw before movement. Do not rely on a single safe starting position for a sequence that changes geometry.\n\n### Decision principles\n\nLoss of communication removes a coordination safeguard. The planned stop response prevents operators and exposed workers from acting on different assumptions about movement.\n\nVisibility helps recognition but cannot prevent physical crushing. Position and separation must remain controlled regardless of clothing, vehicle speed or familiarity.\n\nHands in a pinch point can be trapped by small or unexpected movement. The approved safe state and handling method must prevent that movement before manual intervention.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H02_lesson6",
+        "title": "Lesson 6: Stop, restart and review actual performance",
+        "body": "Every affected worker should recognize a failed boundary, missing restraint, unexpected motion or uncertain energy state as a reason to stop the affected activity. Warn others from safety, notify the responsible lead and keep people clear. Do not remove a barrier or restart equipment to see whether the failure repeats. The designated authority resolves the cause, verifies restored safeguards and communicates restart under the site process.\n\nAfter work, record actual checks, interventions and remaining defects. A critical-control program should review whether checks detected real gaps and whether repeated failures require changes in design, maintenance or supervision. A high completion rate for checklists is not enough if the same missing barrier is repeatedly found in the field.\n\nWorked example: three separate jobs find the same side access uncontrolled. Correcting each opening is necessary, but the program owner also reviews why the route design and dispatch instructions keep recreating the failure. Effectiveness means the control works in use, not just that three corrective forms were closed.\n\n### Applying the mechanism\n\nA strong stop report identifies the failed safeguard and affected activity without exaggeration. “The side access is open while the line is pressurized” gives the lead a clear decision. “Everything is unsafe” may be harder to act on and should not replace the specific observed condition.\n\n### Decision principles\n\nRestart requires the actual safeguard and applicable authorization to be restored. A schedule need or training result does not establish readiness of the affected equipment and area.\n\nA checklist can support evidence but must match observed conditions and the time of reliance. Completion percentages cannot substitute for control function and sustained use.\n\nHandback must convey actual conditions to those who next control the equipment or area. Hiding remaining restrictions can expose the next crew despite a successful current task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H02_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: Pressure-zone shortcut\n\nA service crew establishes a pressure exclusion area. A delivery worker finds that the normal route is blocked and steps through the tape to save time while the system is active.\n\n**Worked decision and reasoning.** The crew stops the affected activity through the agreed communication and keeps people outside the assessed danger area. The delivery worker is directed to a safe waiting point. The task lead and site authority resolve the delivery route, verify every access and rebrief affected people. Restart occurs only through the approved process after controls are re-established. The event is recorded as a boundary failure, even if nobody was injured.\n\n### Scenario 2: Alignment beside a moving load\n\nA suspended component is almost aligned. A helper places a hand between it and a fixed frame, arguing that the operator is moving very slowly.\n\n**Worked decision and reasoning.** The helper withdraws safely and requests a stop. The lifting lead establishes the approved controlled state and handling method before any alignment action. The team verifies that the plan keeps hands and bodies out of the crush path and that signals are understood. Slow movement is still movement; small travel can create severe crushing. Any revised method is reviewed by the competent lifting roles rather than improvised under the suspended load.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H02_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H02_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nA competent assessor must separately observe identification of actual energy paths, safe positioning, establishment and verification of assigned boundaries, agreed stop signals and response to a failed critical control. Specialized isolation, rigging, operating, pressure-system and restraint decisions require their own qualifications and practical authorization. This course does not qualify a worker to calculate exclusion zones, design restraints or direct hazardous equipment movement.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H02_check1",
+        "prompt": "A worker stands to one side of a tensioned line. What establishes safe positioning?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The assessed energy path and approved separation arrangement, not position by intuition."
+          },
+          {
+            "id": "b",
+            "label": "Standing anywhere except directly behind it."
+          },
+          {
+            "id": "c",
+            "label": "The worker’s previous injury-free experience."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H02_final_1_1",
+        "prompt": "Which is a line-of-fire exposure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A person outside the verified controlled work boundary."
+          },
+          {
+            "id": "b",
+            "label": "A remote observer at the designated safe point."
+          },
+          {
+            "id": "c",
+            "label": "A person between a reversing vehicle and a fixed structure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H02_final_1_2",
+        "prompt": "Why consider secondary movement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Secondary movement is always too unlikely to assess."
+          },
+          {
+            "id": "b",
+            "label": "A released part can strike another object or move connected equipment."
+          },
+          {
+            "id": "c",
+            "label": "Only the first moving component can harm people."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H02_final_1_3",
+        "prompt": "What should happen when the release path is uncertain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold exposure and obtain competent assessment."
+          },
+          {
+            "id": "b",
+            "label": "Move closer to watch the first attempt."
+          },
+          {
+            "id": "c",
+            "label": "Ask the least experienced worker to stand back slightly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H02_check2",
+        "prompt": "A required critical restraint is missing while other checks pass. What is the decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed because most controls passed."
+          },
+          {
+            "id": "b",
+            "label": "Add another warning sign as an automatic equivalent."
+          },
+          {
+            "id": "c",
+            "label": "Hold the affected activity until the critical control is resolved and verified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H02_final_2_1",
+        "prompt": "What makes a control verification useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It confirms the worker has read a slogan."
+          },
+          {
+            "id": "b",
+            "label": "It checks the safeguard’s required condition against defined criteria."
+          },
+          {
+            "id": "c",
+            "label": "It counts the number of signatures."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H02_final_2_2",
+        "prompt": "Can PPE justify standing under a suspended load?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; the load-path exposure must be controlled."
+          },
+          {
+            "id": "b",
+            "label": "Yes, with a hard hat."
+          },
+          {
+            "id": "c",
+            "label": "Yes, for a short time."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H02_final_2_3",
+        "prompt": "Who decides whether a substitute control is equivalent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any worker who wants to save time."
+          },
+          {
+            "id": "b",
+            "label": "The training platform automatically."
+          },
+          {
+            "id": "c",
+            "label": "The designated competent technical and operating roles under the approved process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H02_check3",
+        "prompt": "A side door opens into the controlled load path. What must happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ask people to move quickly if they enter."
+          },
+          {
+            "id": "b",
+            "label": "Resolve and verify that access before the affected lift."
+          },
+          {
+            "id": "c",
+            "label": "Ignore it because the main entrance is barricaded."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H02_final_3_1",
+        "prompt": "How is an exclusion distance selected?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Through the approved assessment of the actual hazard and configuration."
+          },
+          {
+            "id": "b",
+            "label": "By one universal number for every task."
+          },
+          {
+            "id": "c",
+            "label": "By the length of tape available."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H02_final_3_2",
+        "prompt": "What shows that a barrier is ineffective?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It has a visible sign and a responsible owner."
+          },
+          {
+            "id": "b",
+            "label": "It is checked before work starts."
+          },
+          {
+            "id": "c",
+            "label": "People can or routinely do enter the hazard without controlled authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H02_final_3_3",
+        "prompt": "Why coordinate boundaries with adjacent crews?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Different employers have physically separate energy paths."
+          },
+          {
+            "id": "b",
+            "label": "Their routes or tasks can enter or defeat the separation arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Only the initiating crew can ever be exposed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H02_check4",
+        "prompt": "The only proposed check puts the verifier inside the energy path. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A safe approved verification method before the activity proceeds."
+          },
+          {
+            "id": "b",
+            "label": "Perform it quickly before anyone notices."
+          },
+          {
+            "id": "c",
+            "label": "Skip the check and mark it passed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H02_final_4_1",
+        "prompt": "When should a critical control be checked?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only after an incident."
+          },
+          {
+            "id": "b",
+            "label": "Only when an auditor schedules a visit."
+          },
+          {
+            "id": "c",
+            "label": "Before reliance and at required change or stage triggers."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H02_final_4_2",
+        "prompt": "What should a worker do if acceptance criteria are unclear?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume visual neatness equals function."
+          },
+          {
+            "id": "b",
+            "label": "Hold reliance and seek the competent responsible role."
+          },
+          {
+            "id": "c",
+            "label": "Invent a favorable criterion."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H02_final_4_3",
+        "prompt": "What belongs in the check record?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Control identity, observed result, verifier, time and relevant configuration."
+          },
+          {
+            "id": "b",
+            "label": "A pass entered in advance."
+          },
+          {
+            "id": "c",
+            "label": "Only the planned completion date."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H02_check5",
+        "prompt": "A tool falls into an active lifting zone. What is the safe decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Duck under the load to recover it."
+          },
+          {
+            "id": "b",
+            "label": "Rely on a helmet and move fast."
+          },
+          {
+            "id": "c",
+            "label": "Keep out and request a controlled stop and retrieval arrangement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H02_final_5_1",
+        "prompt": "What should happen on loss of the agreed movement signal?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Follow whichever observer waves most strongly."
+          },
+          {
+            "id": "b",
+            "label": "Stop according to the approved plan and restore communication before movement."
+          },
+          {
+            "id": "c",
+            "label": "Continue using guesses."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H02_final_5_2",
+        "prompt": "Does a spotter’s high-visibility clothing create a safe crush gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; the spotter still needs a protected position outside the movement path."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the operator can see it."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the vehicle is moving slowly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H02_final_5_3",
+        "prompt": "When may alignment be corrected by hand?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whenever the part is almost aligned."
+          },
+          {
+            "id": "b",
+            "label": "While a colleague watches the pinch point."
+          },
+          {
+            "id": "c",
+            "label": "Only through the approved method after the relevant movement and energy are safely controlled."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H02_check6",
+        "prompt": "The same uncontrolled side access appears on several jobs. What additional response is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stop recording failures to improve the pass rate."
+          },
+          {
+            "id": "b",
+            "label": "Review and correct the recurring system cause, then verify effectiveness."
+          },
+          {
+            "id": "c",
+            "label": "Close each form without examining recurrence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H02_final_6_1",
+        "prompt": "Who authorizes restart after a failed critical control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The designated responsible site or operating authority after required verification."
+          },
+          {
+            "id": "b",
+            "label": "The person who needs the equipment first."
+          },
+          {
+            "id": "c",
+            "label": "Any worker with a perfect quiz score."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H02_final_6_2",
+        "prompt": "What does a completed checklist alone demonstrate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That every safeguard worked throughout the task."
+          },
+          {
+            "id": "b",
+            "label": "That no further field observation is needed."
+          },
+          {
+            "id": "c",
+            "label": "That a record was completed, subject to checking its truth and scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H02_final_6_3",
+        "prompt": "What should remain visible after handback?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A statement that all future work is safe."
+          },
+          {
+            "id": "b",
+            "label": "Unresolved defects, restrictions and the accepted equipment or area state."
+          },
+          {
+            "id": "c",
+            "label": "Only successful checks."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H02_final_scenario1",
+        "prompt": "What failed in the shortcut scenario?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The access-control arrangement did not prevent a person entering the active hazard area."
+          },
+          {
+            "id": "b",
+            "label": "The delivery worker lacked pressure-equipment certification only."
+          },
+          {
+            "id": "c",
+            "label": "The tape color was the sole issue."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H02_final_scenario2",
+        "prompt": "Why is slow movement insufficient protection for alignment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Slow loads have no stored energy."
+          },
+          {
+            "id": "b",
+            "label": "Gloves make the gap safe."
+          },
+          {
+            "id": "c",
+            "label": "A small movement can still close a crush gap and injure the helper."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H02_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H02_lesson1",
+          "questionIds": [
+            "H02_check1"
+          ]
+        },
+        {
+          "lessonId": "H02_lesson2",
+          "questionIds": [
+            "H02_check2"
+          ]
+        },
+        {
+          "lessonId": "H02_lesson3",
+          "questionIds": [
+            "H02_check3"
+          ]
+        },
+        {
+          "lessonId": "H02_lesson4",
+          "questionIds": [
+            "H02_check4"
+          ]
+        },
+        {
+          "lessonId": "H02_lesson5",
+          "questionIds": [
+            "H02_check5"
+          ]
+        },
+        {
+          "lessonId": "H02_lesson6",
+          "questionIds": [
+            "H02_check6"
+          ]
+        },
+        {
+          "lessonId": "H02_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H02_assessment",
+          "questionIds": [
+            "H02_final_1_1",
+            "H02_final_1_2",
+            "H02_final_1_3",
+            "H02_final_2_1",
+            "H02_final_2_2",
+            "H02_final_2_3",
+            "H02_final_3_1",
+            "H02_final_3_2",
+            "H02_final_3_3",
+            "H02_final_4_1",
+            "H02_final_4_2",
+            "H02_final_4_3",
+            "H02_final_5_1",
+            "H02_final_5_2",
+            "H02_final_5_3",
+            "H02_final_6_1",
+            "H02_final_6_2",
+            "H02_final_6_3",
+            "H02_final_scenario1",
+            "H02_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H02_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H02_check1": "Released force can change direction or move connected components. Positioning must follow the actual system assessment and controlled boundary rather than an assumed straight-line trajectory.",
+        "H02_final_1_1": "The vehicle can close the space against the structure and crush the person. The relevant control is separation from the movement path, not merely visibility or protective clothing.",
+        "H02_final_1_2": "An energy event can create more than its first trajectory. Assessing connected parts, deflection and falling or rolling objects helps define a realistic exclusion area.",
+        "H02_final_1_3": "Uncertainty about the path means separation has not been established. People should not be used as test instruments while the team discovers how energy might travel.",
+        "H02_check2": "Critical controls are not averaged. A safeguard relied on for serious-risk prevention must meet the approved requirement; any alternative needs competent assessment and authorization.",
+        "H02_final_2_1": "Verification must establish the specific protection being relied on. Administrative participation can support the process but does not demonstrate that an engineered or physical safeguard exists and works.",
+        "H02_final_2_2": "PPE has limited protective capability and cannot absorb the crushing energy of a falling load. The lifting plan must keep people out of the dangerous load path.",
+        "H02_final_2_3": "Changing a critical safeguard can alter the risk basis. The alternative needs suitable technical review and authorization; it is not established by convenience or a learner’s preference.",
+        "H02_check3": "An exclusion boundary must control all credible approaches. An unaddressed side entrance can expose someone who never saw the main barrier or attended the lift briefing.",
+        "H02_final_3_1": "Energy, equipment, load and surroundings determine credible reach and exposure. A convenient or generic distance can be inadequate and must not replace competent task-specific planning.",
+        "H02_final_3_2": "The purpose is prevention of exposure, not the presence of material. Repeated unauthorized crossing demonstrates that the arrangement needs correction and enforcement or redesign.",
+        "H02_final_3_3": "A boundary affects shared space. Coordination prevents another crew from unknowingly entering, moving the barrier or losing an escape route because of the first crew’s controls.",
+        "H02_check4": "Verification cannot justify uncontrolled exposure. The responsible technical authority must establish a suitable method rather than trading the checker’s safety for a completed record.",
+        "H02_final_4_1": "Controls can be absent initially or change during work. Verification must align with the exposure stages and task requirements, not merely a periodic paperwork cycle.",
+        "H02_final_4_2": "A check without a defined requirement cannot establish the intended safeguard. The worker must resolve the criteria through the approved technical process before recording a pass.",
+        "H02_final_4_3": "Traceable observations show what condition was actually established. Predicted results and schedules do not prove that the critical safeguard existed when people relied upon it.",
+        "H02_check5": "A small retrieval task does not suspend the load hazard. The activity must be controlled through the lifting plan before anyone enters the affected area.",
+        "H02_final_5_1": "Loss of communication removes a coordination safeguard. The planned stop response prevents operators and exposed workers from acting on different assumptions about movement.",
+        "H02_final_5_2": "Visibility helps recognition but cannot prevent physical crushing. Position and separation must remain controlled regardless of clothing, vehicle speed or familiarity.",
+        "H02_final_5_3": "Hands in a pinch point can be trapped by small or unexpected movement. The approved safe state and handling method must prevent that movement before manual intervention.",
+        "H02_check6": "Repeated failures suggest the arrangement is not reliable. Immediate correction protects the current job; a broader cause and effectiveness review prevents the same exposure from being recreated.",
+        "H02_final_6_1": "Restart requires the actual safeguard and applicable authorization to be restored. A schedule need or training result does not establish readiness of the affected equipment and area.",
+        "H02_final_6_2": "A checklist can support evidence but must match observed conditions and the time of reliance. Completion percentages cannot substitute for control function and sustained use.",
+        "H02_final_6_3": "Handback must convey actual conditions to those who next control the equipment or area. Hiding remaining restrictions can expose the next crew despite a successful current task.",
+        "H02_final_scenario1": "The physical and administrative boundary must work for everyone sharing the area. A worker’s shortcut reveals a control failure requiring correction before the affected activity resumes.",
+        "H02_final_scenario2": "The harm mechanism is closing space under force, not only high speed. Safe positioning and an approved controlled handling method must prevent exposure to that movement."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

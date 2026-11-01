@@ -1,0 +1,1814 @@
+{
+  "catalogSha256": "1f2dbb3abc8a7fcebe6ff5eb4e593774a271a21b1cc99da31ac9358784eeb524",
+  "catalogServices": 963,
+  "scope": "Initial source-backed specialty gaps; not an exhaustive gap-closure claim. Service labels trigger a scope check; required training is determined by actual employee tasks and jurisdiction.",
+  "gaps": [
+    {
+      "id": "G01",
+      "title": "Hazardous-material transportation: recognition and safe handoff",
+      "status": "course_written_local_employer_and_specialist_gaps_open",
+      "courseFile": "gap-courses/G01.json",
+      "relatedFamilies": [
+        "C05",
+        "E03",
+        "H14",
+        "R07"
+      ],
+      "trigger": "Shipping, classifying, packaging, marking, documenting, loading, unloading or transporting a regulated hazardous material; classification of the actual load must be established, including wastes.",
+      "roles": "Shippers, loaders, hazmat drivers, dispatchers whose functions affect transport safety",
+      "sourceUrl": "https://www.phmsa.dot.gov/about-phmsa/hazardous-materials-training-requirements",
+      "missing": "The existing driver, chemical and spill courses do not teach the complete function-specific transport requirements. VNDRLY foundation must be supplemented by the actual material, function and transport-mode instruction, testing and employer certification.",
+      "services": [
+        {
+          "masterServiceId": "VMS-E7103935F7",
+          "name": "Aviation fuel management system services",
+          "sourceRecords": [
+            {
+              "id": "SRC-5D240B3C390F",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 4; table 2; row 57; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-CF5489B45F",
+          "name": "CO2 transportation",
+          "sourceRecords": [
+            {
+              "id": "SRC-355AAA0EACF4",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 76",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-CCE9BD82FF",
+          "name": "Crude oil truck service",
+          "sourceRecords": [
+            {
+              "id": "SRC-10287D6191DB",
+              "url": "https://www.mongoose-trucking.com/services/other-services/",
+              "locator": "mongoose.txt line 53; section Trucking and field services",
+              "originalFile": "vendors/mongoose.html"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-B0F1378580",
+          "name": "Hazardous Waste Disposal",
+          "sourceRecords": [
+            {
+              "id": "SRC-9F70DB5AD86B",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 34",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-52A0FB8D41",
+          "name": "LPG Cylinder Handling services",
+          "sourceRecords": [
+            {
+              "id": "SRC-1F53DE3A744D",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 2; table 2; row 29; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-0531A97C26",
+          "name": "Mud Hauling",
+          "sourceRecords": [
+            {
+              "id": "SRC-58CD9C011229",
+              "url": "https://anadarkodozer.com/oilfield-trucking-services/",
+              "locator": "adt.txt line 28; section Oilfield trucking services",
+              "originalFile": "vendors/adt.html"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-25BE7C4EF8",
+          "name": "Non Hazardous Waste Disposal",
+          "sourceRecords": [
+            {
+              "id": "SRC-58FA0BC708FB",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 33",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-EF5BBED5B6",
+          "name": "Oil/synthetic-based drilling fluid disposal",
+          "sourceRecords": [
+            {
+              "id": "SRC-BEFD1C756330",
+              "url": "https://www.rbcenergyservices.com/price-list",
+              "locator": "rbc.txt line 23; section Disposal services",
+              "originalFile": "vendors/rbc.html"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-EFCE8C3A29",
+          "name": "Oilfield Waste Management Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-15BBF6AB87F5",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 29",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-9BE605AE4E",
+          "name": "Potassium chloride transportation",
+          "sourceRecords": [
+            {
+              "id": "SRC-F47710402E75",
+              "url": "https://anadarkodozer.com/oilfield-trucking-services/",
+              "locator": "adt.txt line 64; section Trucking Services",
+              "originalFile": "vendors/adt.html"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-102E2B5235",
+          "name": "Refuelling Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-91EA183AD2F9",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 68",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C1C6A8852A",
+          "name": "Saltwater and flowback hauling",
+          "sourceRecords": [
+            {
+              "id": "SRC-ECC1462584FE",
+              "url": "https://anadarkodozer.com/oilfield-trucking-services/",
+              "locator": "adt.txt line 63; section Trucking Services",
+              "originalFile": "vendors/adt.html"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C0B5C2CA3C",
+          "name": "TRANSPORTATION and HANDLING OF LPG CYLINDERS",
+          "sourceRecords": [
+            {
+              "id": "SRC-FE196D0853B7",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 81",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-7DCB1C3726",
+          "name": "Truck and tank wagon loading automation",
+          "sourceRecords": [
+            {
+              "id": "SRC-104F047B6162",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 2; table 2; row 22; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E355A1AF57",
+          "name": "Truck and tank wagon loading automation maintenance and repair",
+          "sourceRecords": [
+            {
+              "id": "SRC-4557382F5277",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 2; table 2; row 22; description item 2",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G02",
+      "title": "Hazardous waste and spill-response role limits",
+      "status": "course_written_local_employer_and_specialist_gaps_open",
+      "courseFile": "gap-courses/G02.json",
+      "relatedFamilies": [
+        "H14",
+        "H15",
+        "R07",
+        "R02"
+      ],
+      "trigger": "A covered hazardous-waste operation or emergency response, determined from the operation and assigned response level—not every routine disposal task.",
+      "roles": "Waste-site workers, spill responders and their supervisors",
+      "sourceUrl": "https://www.osha.gov/emergency-preparedness/hazardous-waste-operations/preparedness",
+      "missing": "R07 is an emergency interface course, not HAZWOPER role qualification. Required hours, supervised field experience, exercises and refresher requirements must remain separate and verified.",
+      "services": [
+        {
+          "masterServiceId": "VMS-EB882ACB9C",
+          "name": "Decommissioning Waste Management Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-1573572F5F55",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 75",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-B0F1378580",
+          "name": "Hazardous Waste Disposal",
+          "sourceRecords": [
+            {
+              "id": "SRC-9F70DB5AD86B",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 34",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-25BE7C4EF8",
+          "name": "Non Hazardous Waste Disposal",
+          "sourceRecords": [
+            {
+              "id": "SRC-58FA0BC708FB",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 33",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-413F2E3AFB",
+          "name": "Nuclear Waste Treatment",
+          "sourceRecords": [
+            {
+              "id": "SRC-06D77A8A8ECC",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 34",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-7883F8B214",
+          "name": "Oil Spill Cleanup",
+          "sourceRecords": [
+            {
+              "id": "SRC-7F5810BD127D",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 34",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-EFCE8C3A29",
+          "name": "Oilfield Waste Management Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-15BBF6AB87F5",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 29",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-B257E478DB",
+          "name": "Pollution Investigation Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-3CA11CACE1E7",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 34",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-4A002366AC",
+          "name": "Radioactive Decontamination Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-A155074B283B",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 33",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-3DF09376B3",
+          "name": "Tank Bottom Sludge Treatment Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-6A4E284E50FB",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 65",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C1BB623F22",
+          "name": "Toxic Spill Cleanup",
+          "sourceRecords": [
+            {
+              "id": "SRC-5BD334473D8D",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 34",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G03",
+      "title": "Process safety and operating-procedure competence",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H03",
+        "H04",
+        "H10",
+        "H11",
+        "R06"
+      ],
+      "trigger": "Operating or maintaining a process covered by the applicable process-safety regime; the actual process and assigned duties control applicability.",
+      "roles": "Process operators, maintenance contractors, startup/shutdown staff and process supervisors",
+      "sourceUrl": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119",
+      "missing": "Existing permit, isolation and MOC awareness is not process-specific operating, emergency shutdown or abnormal-operation training.",
+      "services": [
+        {
+          "masterServiceId": "VMS-8179249A69",
+          "name": "Catalyst handling services (for Refinery)",
+          "sourceRecords": [
+            {
+              "id": "SRC-59742BAFD25A",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 4; table 2; row 59; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-8D4BF7CD8F",
+          "name": "CO2 sequestration",
+          "sourceRecords": [
+            {
+              "id": "SRC-FB9BBD381292",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 76",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-9212396CCD",
+          "name": "Gas Treatment and Compression",
+          "sourceRecords": [
+            {
+              "id": "SRC-779C74709D31",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 63",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-22CA23574F",
+          "name": "Hiring of assistant operators (for refinery)",
+          "sourceRecords": [
+            {
+              "id": "SRC-5671E302B297",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 2; table 2; row 18; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E92B0F24E8",
+          "name": "Hydrocarbon Reservoir Development and Production Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-45BFFBB8ED80",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 27",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-A37E100381",
+          "name": "LPG Contract service for production lines",
+          "sourceRecords": [
+            {
+              "id": "SRC-85F4FFAAEEA2",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 2; table 2; row 29; description item 2",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E73E887280",
+          "name": "Oil and Gas Utilities",
+          "sourceRecords": [
+            {
+              "id": "SRC-C21FB1F31E0F",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 42",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-B0CEDFF859",
+          "name": "Oil Refinery Construction Service",
+          "sourceRecords": [
+            {
+              "id": "SRC-FB600EA936AD",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 29",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-91E7CE5AF7",
+          "name": "Oilfield Production Operations Management",
+          "sourceRecords": [
+            {
+              "id": "SRC-B899EF879096",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 28",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-DD93B13DC4",
+          "name": "OPERATION and maintenance OF BITUMEN FILLING PLANT",
+          "sourceRecords": [
+            {
+              "id": "SRC-3EAE3CC64E78",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 96",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-15018226DF",
+          "name": "Refinery / Downstream Technology (R & D) Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-243E2420CD70",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 61",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-0895C2EDF1",
+          "name": "Refinery pipeline / tank insulation services",
+          "sourceRecords": [
+            {
+              "id": "SRC-4D4F92DC6FEA",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 5; table 2; row 72; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-4E686AF7BD",
+          "name": "Terminal Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-980949DC482D",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 36",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-ECD646496C",
+          "name": "Terminal and tank farm automation maintenance and repair",
+          "sourceRecords": [
+            {
+              "id": "SRC-27CB171A9523",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 2; table 2; row 21; description item 2",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G04",
+      "title": "Bloodborne pathogens and occupational exposure controls",
+      "status": "course_written_local_employer_and_specialist_gaps_open",
+      "courseFile": "gap-courses/G04.json",
+      "relatedFamilies": [
+        "C08",
+        "I06",
+        "E07"
+      ],
+      "trigger": "Reasonably anticipated occupational exposure to blood or other potentially infectious material; not simply any employee who might witness an injury.",
+      "roles": "Assigned first aiders, clinical staff, contaminated-laundry handlers and exposure-control supervisors",
+      "sourceUrl": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030",
+      "missing": "First-aid role assurance and medical-record privacy are not a complete exposure-control training program. Employer-specific plan, interactive questions and practical controls are additional.",
+      "services": [
+        {
+          "masterServiceId": "VMS-7D3AD2E225",
+          "name": "Funeral and Associated Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-7BB818A20864",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 43",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E4CD580F10",
+          "name": "Household Assistance and Care",
+          "sourceRecords": [
+            {
+              "id": "SRC-4D4837BF8099",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 44",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-A95329DF09",
+          "name": "Laundering services",
+          "sourceRecords": [
+            {
+              "id": "SRC-C48264DD0DF3",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 111",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            },
+            {
+              "id": "SRC-3D350CBC9F46",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 44",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-948DBDE67A",
+          "name": "Medical services",
+          "sourceRecords": [
+            {
+              "id": "SRC-0FE7255CB435",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 4; table 2; row 44; description item 16",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            },
+            {
+              "id": "SRC-945AD9C314B2",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 76",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-22C5C9B899",
+          "name": "Offshore or Site-Based Medic Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-AFA623F11017",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 43",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-5D1DE6CC08",
+          "name": "Personal Care Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-0B1B7B8DB715",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 44",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-999272BFC2",
+          "name": "Private Specialised Clinic Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-57CE6B4E2739",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 43",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G05",
+      "title": "Food hygiene, allergens and catering controls",
+      "status": "course_written_local_employer_and_specialist_gaps_open",
+      "courseFile": "gap-courses/G05.json",
+      "relatedFamilies": [
+        "H14",
+        "E07",
+        "E08"
+      ],
+      "trigger": "Preparing, handling, storing or serving food, or supervising those activities; accommodation-only staff do not automatically receive cook qualifications.",
+      "roles": "Food handlers, cooks, catering supervisors and the person in charge",
+      "sourceUrl": "https://www.fda.gov/food/fda-food-code/food-code-2026",
+      "missing": "The 59 safety families do not teach foodborne illness prevention, allergen cross-contact or time/temperature controls. Local food-handler and manager requirements remain distinct.",
+      "services": [
+        {
+          "masterServiceId": "VMS-41D6F409E1",
+          "name": "Cafeteria Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-DE28664BCF27",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 44",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-8C57205167",
+          "name": "Catering services",
+          "sourceRecords": [
+            {
+              "id": "SRC-5A8877050D76",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 5; table 2; row 67; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            },
+            {
+              "id": "SRC-765B96E2DA69",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 44",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            },
+            {
+              "id": "SRC-DA876AF818FC",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 76",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-4974BD577E",
+          "name": "Hotels and Motels and Inns",
+          "sourceRecords": [
+            {
+              "id": "SRC-F4F8B55D7243",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 44",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-5D8EB0A808",
+          "name": "Management and Provision of all Catering, Cleaning, Office and Security Services at Location or Platform",
+          "sourceRecords": [
+            {
+              "id": "SRC-417B361031A3",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 27",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-3478121D51",
+          "name": "Repair of canteen equipments",
+          "sourceRecords": [
+            {
+              "id": "SRC-7E7B65A70360",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 109",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E455DF93D8",
+          "name": "Temporary Accommodation / Camp Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-4899CDDE1E1E",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 76",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G06",
+      "title": "Laboratory chemical hygiene and analytical task safety",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H14",
+        "E04",
+        "E07"
+      ],
+      "trigger": "Laboratory use or handling of hazardous chemicals, biological samples or specialized analytical equipment; the actual methods determine additional controls.",
+      "roles": "Laboratory analysts, sample-preparation technicians and laboratory supervisors",
+      "sourceUrl": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450",
+      "missing": "General SDS awareness does not cover the facility chemical-hygiene plan, method-specific reactions, fume hoods or analytical waste handling.",
+      "services": [
+        {
+          "masterServiceId": "VMS-2A194D2778",
+          "name": "Chemical Analysis services",
+          "sourceRecords": [
+            {
+              "id": "SRC-6A9C10B16E40",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 4; table 2; row 45; description item 3",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-2B5A8BF58F",
+          "name": "LAB instruments services",
+          "sourceRecords": [
+            {
+              "id": "SRC-FAC51BCC0835",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 2; table 2; row 24; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-438271B71B",
+          "name": "Laboratory instrument maintenance and repair",
+          "sourceRecords": [
+            {
+              "id": "SRC-D29FBA4C2D1E",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 2; table 2; row 24; description item 2",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-2B8555FFC8",
+          "name": "Laboratory Testing Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-D344AAE6B865",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 66",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-34557C5494",
+          "name": "Sample analysis of effluent/emission",
+          "sourceRecords": [
+            {
+              "id": "SRC-201C399B50C9",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 100",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-FD0E30AC9F",
+          "name": "Soil or Sludge or Solid Waste Testing",
+          "sourceRecords": [
+            {
+              "id": "SRC-A69A93F2EF1E",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 34",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-43BC60DC9B",
+          "name": "TEST and CHEMICAL ANALYSIS OF MATERIALS",
+          "sourceRecords": [
+            {
+              "id": "SRC-3595E41708C8",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 72",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-8CEDFFE3AA",
+          "name": "Testing of water samples",
+          "sourceRecords": [
+            {
+              "id": "SRC-28FF3271957D",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 99",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G07",
+      "title": "Commercial diving and subsea team qualification",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H24",
+        "R02",
+        "C08"
+      ],
+      "trigger": "Actual human diving or work controlling another person’s hyperbaric exposure; ROV-only operations do not establish diver duties.",
+      "roles": "Divers, dive supervisors, tenders and relevant support personnel",
+      "sourceUrl": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.410",
+      "missing": "H24 is specialist-interface awareness. Diving-mode training, equipment competence, emergency procedures, first aid/CPR and demonstrated capabilities require a qualified diving program.",
+      "services": [
+        {
+          "masterServiceId": "VMS-EDFFB5F456",
+          "name": "Diving / ROV Inspection Operations",
+          "sourceRecords": [
+            {
+              "id": "SRC-94A4F61B92A5",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 66",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-1683869663",
+          "name": "Diving / ROV / Submersible Installation Operations",
+          "sourceRecords": [
+            {
+              "id": "SRC-4B9DFF1C3019",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 65",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-07B05839AB",
+          "name": "Diving / ROV / Submersible Maintenance Operations",
+          "sourceRecords": [
+            {
+              "id": "SRC-73D5610DDAD5",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 64",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-EC301FBA09",
+          "name": "In Water Survey",
+          "sourceRecords": [
+            {
+              "id": "SRC-30AA53227EB1",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 39",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-155374A506",
+          "name": "Subsea / Diving / ROV Technology Engineering Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-8B238C4F011A",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 58",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-2E49908F91",
+          "name": "Under Water Inspection in lieu of Dry-Docking Service",
+          "sourceRecords": [
+            {
+              "id": "SRC-CC15A5527230",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 39",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G08",
+      "title": "UAS flight safety and remote-pilot authorization",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H24",
+        "H01",
+        "R01"
+      ],
+      "trigger": "Acting as remote pilot or assigned flight-support personnel under the applicable aviation rules.",
+      "roles": "Remote pilots, visual observers and UAS operation supervisors",
+      "sourceUrl": "https://www.faa.gov/uas/commercial_operators",
+      "missing": "Generic specialist awareness is not remote-pilot certification, aircraft-specific competence or operation-specific authorization.",
+      "services": [
+        {
+          "masterServiceId": "VMS-702CE54B7E",
+          "name": "Uncrewed Aerial Vehicle UAV or Drone Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-CFB2991CF3EB",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 32",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G09",
+      "title": "Railway roadway-worker and on-track protection",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H20",
+        "H24",
+        "H02"
+      ],
+      "trigger": "Working on or near tracks in duties covered by roadway-worker protection; freight brokerage does not automatically make an employee a roadway worker.",
+      "roles": "Track workers, lookouts, equipment operators and employees in charge of on-track protection",
+      "sourceUrl": "https://railroads.dot.gov/railroad-safety/divisions/roadway-worker-protection",
+      "missing": "Traffic separation does not teach railroad-specific on-track safety or role qualification. The operating railroad’s procedures and applicable recurrent qualification are required.",
+      "services": [
+        {
+          "masterServiceId": "VMS-5DE50E4A60",
+          "name": "Maintenance of railway tracks",
+          "sourceRecords": [
+            {
+              "id": "SRC-7A41B0DFE304",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 1; table 1; row 36",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-52A2AD3EB7",
+          "name": "Rail Track Repairs",
+          "sourceRecords": [
+            {
+              "id": "SRC-4FF2F44C299A",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 59",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C81018F453",
+          "name": "Rail Tracks work",
+          "sourceRecords": [
+            {
+              "id": "SRC-7194E06A994A",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 3; table 2; row 36; description item 5",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-74F85C1203",
+          "name": "Railway Siding / Yard Consultancy services",
+          "sourceRecords": [
+            {
+              "id": "SRC-981700E5B402",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 4; table 2; row 44; description item 9",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G10",
+      "title": "Industrial radiography and radiation-role authorization",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H24",
+        "C07",
+        "R02"
+      ],
+      "trigger": "Using radiation sources, performing industrial radiography, handling radioactive material or entering a controlled radiography area.",
+      "roles": "Radiographers, assistants, radiation-protection personnel and affected support staff",
+      "sourceUrl": "https://www.nrc.gov/reading-rm/doc-collections/cfr/part034/part034-0043",
+      "missing": "Awareness cannot replace license-specific radiation training, examinations, equipment proficiency or supervised experience.",
+      "services": [
+        {
+          "masterServiceId": "VMS-413F2E3AFB",
+          "name": "Nuclear Waste Treatment",
+          "sourceRecords": [
+            {
+              "id": "SRC-06D77A8A8ECC",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 34",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-4A002366AC",
+          "name": "Radioactive Decontamination Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-A155074B283B",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 33",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-64DE2D2D25",
+          "name": "Radiography services",
+          "sourceRecords": [
+            {
+              "id": "SRC-2E22A3D1383D",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 4; table 2; row 45; description item 4",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-661FA857A8",
+          "name": "Radiography/ultrasonic testing",
+          "sourceRecords": [
+            {
+              "id": "SRC-63EFDB85E4A3",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 73",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G11",
+      "title": "Electric power qualified-worker task competence",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H12",
+        "H04",
+        "C07"
+      ],
+      "trigger": "Assigned generation, transmission, distribution or high-voltage duties under the applicable electrical regime.",
+      "roles": "Qualified electrical workers, electrical supervisors and affected support staff",
+      "sourceUrl": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.269",
+      "missing": "H12/C07 provide awareness and endorsement assurance, not demonstrated proficiency for voltage, switching, approach distances, grounding or the actual equipment.",
+      "services": [
+        {
+          "masterServiceId": "VMS-9BC1C03FCF",
+          "name": "Electric Utilities",
+          "sourceRecords": [
+            {
+              "id": "SRC-30EF48448E11",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 42",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-338528D14B",
+          "name": "ELECTRICAL services FOR ALL VOLTAGES UP TO and AND ABOVE 11 KV",
+          "sourceRecords": [
+            {
+              "id": "SRC-D23C0BABEFBE",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 1; table 1; row 18",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-D782CA2532",
+          "name": "Electrical services High Tension including testing and commissioning",
+          "sourceRecords": [
+            {
+              "id": "SRC-7819E1DF412C",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 1; table 2; row 7; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-D0C421AC5F",
+          "name": "Electrical Power Transmission Engineering",
+          "sourceRecords": [
+            {
+              "id": "SRC-D2058A732190",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 38",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C8D219B109",
+          "name": "Electrical services up to 11 kv including medium voltages",
+          "sourceRecords": [
+            {
+              "id": "SRC-8BCE01D482FF",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 1; table 1; row 17",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-6D9E5B7CA9",
+          "name": "Energy / Electrical Power Supply Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-8178E7732126",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 77",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-77A4839FFC",
+          "name": "Maintenance and repair of HT supply",
+          "sourceRecords": [
+            {
+              "id": "SRC-0F1D529D4F22",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 1; table 2; row 7; description item 2",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G12",
+      "title": "Marine vessel duties, transfer and survival competence",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H24",
+        "H07",
+        "R02",
+        "C08"
+      ],
+      "trigger": "Assigned vessel operation, marine deck work, personnel transfer or marine emergency duties; scope and flag/coastal jurisdiction determine credential and survival requirements.",
+      "roles": "Masters, crew, deck personnel, marine-transfer teams and assigned emergency personnel",
+      "sourceUrl": "https://www.dco.uscg.mil/national_maritime_center/licenses_credentials/",
+      "missing": "H24 does not provide seamanship, navigation/watchkeeping, vessel-specific familiarization, sea-survival or required mariner credentials. Office marine consultants do not automatically have vessel duties.",
+      "services": [
+        {
+          "masterServiceId": "VMS-2B094241F0",
+          "name": "Anchor Handling Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-C5D08ED67F31",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 39",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-A94E59C133",
+          "name": "Boat Hire Service",
+          "sourceRecords": [
+            {
+              "id": "SRC-0D422C067BAF",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 68",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            },
+            {
+              "id": "SRC-85E043C95EB2",
+              "url": "https://wtdrilling.com/rates/",
+              "locator": "wt.txt line 86; section OIL SPILL EQUIPMENT RATES",
+              "originalFile": "vendors/wt.html"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-D9113AFD90",
+          "name": "Coastal and Transoceanic Water Vessel Salvage and Refloating Service",
+          "sourceRecords": [
+            {
+              "id": "SRC-4140880B33E0",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 36",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-87C500B48A",
+          "name": "Marine Cargo Transport",
+          "sourceRecords": [
+            {
+              "id": "SRC-60BCD56D6A12",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 35",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-4BCF2E6623",
+          "name": "Marine master services",
+          "sourceRecords": [
+            {
+              "id": "SRC-BCBCD0B9E982",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 101",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-A0B1DF6BE0",
+          "name": "Mooring Service",
+          "sourceRecords": [
+            {
+              "id": "SRC-009445784A12",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 39",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-01776F438B",
+          "name": "Motor launch operation",
+          "sourceRecords": [
+            {
+              "id": "SRC-6CFD0E9F31DB",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 104",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-2AFC95102D",
+          "name": "Offshore Construction Vessel Service",
+          "sourceRecords": [
+            {
+              "id": "SRC-D9DFB9963856",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 30",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E9CC42AAC5",
+          "name": "Offshore Standby and Support Vessel Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-4D5E523C337F",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 39",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-D9FB2990A6",
+          "name": "Oil and Gas Offshore Platform Supply Vessel Service",
+          "sourceRecords": [
+            {
+              "id": "SRC-05988F3A0069",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 35",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-36AC67AA84",
+          "name": "Passenger Marine Transportation",
+          "sourceRecords": [
+            {
+              "id": "SRC-8882BCA2F7D2",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 35",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-B0C63226ED",
+          "name": "Ship Inspection Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-2AB1ABE7F76F",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 68",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-1178905251",
+          "name": "Tanker operation at jetty",
+          "sourceRecords": [
+            {
+              "id": "SRC-45C48B312DC1",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 1; table 1; row 59",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            },
+            {
+              "id": "SRC-0E397094CF10",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 2; table 1; row 113",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G13",
+      "title": "Explosives and well-perforating specialist competence",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H24",
+        "H03",
+        "H02",
+        "R02"
+      ],
+      "trigger": "Actual use, transport, storage or firing of explosives; seismic acquisition can instead be nonexplosive, so the method must be confirmed.",
+      "roles": "Authorized blasters, perforating specialists, shotfirers and affected support personnel",
+      "sourceUrl": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.901",
+      "missing": "Specialist-awareness training is not qualification in the actual explosive system, firing method, misfire controls, licensing or jurisdiction-specific requirements. The cited construction rule is an example for applicable construction blasting, not a universal rule for every well-perforating operation.",
+      "services": [
+        {
+          "masterServiceId": "VMS-A1652B8D16",
+          "name": "2D / 3D / 4D Seismic Data Acquisition Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-9821C51A7DBD",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 69",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-02A1DFE23C",
+          "name": "Cased Hole Logging Services (Gyro, Perforation, PLT, Gauges)",
+          "sourceRecords": [
+            {
+              "id": "SRC-1B3100188969",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 63",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C224CC422D",
+          "name": "Seismic Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-F9B1398D0BB9",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 24",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-AC54B3E129",
+          "name": "Well Perforating Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-9E3D4F314A92",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 25",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            },
+            {
+              "id": "SRC-3D3C0DCC570E",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 63",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G14",
+      "title": "Well-control and production-safety role competence",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H10",
+        "H11",
+        "H03",
+        "E05",
+        "C07"
+      ],
+      "trigger": "Assigned well-control, intervention, drilling, workover or production-safety duties; pressure-control responsibilities depend on the method and actual role.",
+      "roles": "Drillers, well-service operators, intervention supervisors and designated well-control personnel",
+      "sourceUrl": "https://www.bsee.gov/sites/bsee.gov/files/o-pincs-02-21.pdf",
+      "missing": "Pressure-awareness and role-endorsement assurance do not teach or assess well-control procedures, equipment-specific responses, calculations, simulations or practical performance. BSEE evidence applies to its offshore jurisdiction; onshore and other regions require their own applicable standards.",
+      "services": [
+        {
+          "masterServiceId": "VMS-EF9A9A94E7",
+          "name": "Coiled Tubing Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-5441C73B1AC7",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 24",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            },
+            {
+              "id": "SRC-B934B20F2F78",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 63",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-72186D7281",
+          "name": "Coiled Tubing and Nitrogen Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-6FA6024CFF13",
+              "url": "https://www.aramco.com/en/what-we-do/suppliers/contracting-opportunities/drilling-and-workover",
+              "locator": "Drilling & Workover ordered list item 4",
+              "originalFile": "operator/originals/aramco-drilling-workover.html"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-875B206E53",
+          "name": "Emergency Well Control Service",
+          "sourceRecords": [
+            {
+              "id": "SRC-920A872F670F",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 27",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-DAC06CA3C1",
+          "name": "Oil Well Drilling Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-BE4685B2E867",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 25",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-028D921D21",
+          "name": "Rig services — onshore and offshore oil and gas drilling, workover and water well drilling",
+          "sourceRecords": [
+            {
+              "id": "SRC-11DA5CE688B0",
+              "url": "https://www.aramco.com/en/what-we-do/suppliers/contracting-opportunities/drilling-and-workover",
+              "locator": "Drilling & Workover ordered list item 1",
+              "originalFile": "operator/originals/aramco-drilling-workover.html"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-79A6FFBBA3",
+          "name": "Slickline Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-CC008F9E4463",
+              "url": "https://www.aramco.com/en/what-we-do/suppliers/contracting-opportunities/drilling-and-workover",
+              "locator": "Drilling & Workover ordered list item 5",
+              "originalFile": "operator/originals/aramco-drilling-workover.html"
+            },
+            {
+              "id": "SRC-5DBE1DE15EA2",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 25",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-7F139DCF38",
+          "name": "Snubbing Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-6EAAF1C10B6E",
+              "url": "https://www.aramco.com/en/what-we-do/suppliers/contracting-opportunities/drilling-and-workover",
+              "locator": "Drilling & Workover ordered list item 11",
+              "originalFile": "operator/originals/aramco-drilling-workover.html"
+            },
+            {
+              "id": "SRC-F4ED59B4C3B2",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 62",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E6BEDF24AA",
+          "name": "Subsea Well Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-4FD0C18BCC67",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 26",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C737789626",
+          "name": "Well Completion Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-394C24AFAD02",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 26",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            },
+            {
+              "id": "SRC-442AD9AD1B2A",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 62",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-A469AED3C9",
+          "name": "Well Crisis Management Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-456EB23C4BFB",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 63",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-9E664D6DFF",
+          "name": "Well Fracturing Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-D0A448956C50",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 27",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            },
+            {
+              "id": "SRC-A9331F3BA469",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 63",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-94C1AFB079",
+          "name": "Well Plugging and Abandonment Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-462B70742C8A",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 27",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-9D164D2CA5",
+          "name": "Well Testing Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-769E6C57B479",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 26",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            },
+            {
+              "id": "SRC-88BAC4D3CBB9",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 62",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E232C8AB84",
+          "name": "Well Testing Services (Surface and Downhole)",
+          "sourceRecords": [
+            {
+              "id": "SRC-5DD440A19CB2",
+              "url": "https://www.aramco.com/en/what-we-do/suppliers/contracting-opportunities/drilling-and-workover",
+              "locator": "Drilling & Workover ordered list item 8",
+              "originalFile": "operator/originals/aramco-drilling-workover.html"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-470D7D1082",
+          "name": "Well Workover Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-3F7BF75404C5",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 62",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-480A8DD811",
+          "name": "Wireline Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-F03E8435EAD8",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 62",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-B55AF8D72C",
+          "name": "Workover/completion rig operating time",
+          "sourceRecords": [
+            {
+              "id": "SRC-F45217DA21B1",
+              "url": "https://wtdrilling.com/rates/",
+              "locator": "wt.txt line 30; section WORKOVER RIG/COMPLETION RIG RATES",
+              "originalFile": "vendors/wt.html"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G15",
+      "title": "Pesticide handling and application task safety",
+      "status": "identified_not_closed",
+      "relatedFamilies": [
+        "H14",
+        "H15",
+        "E07",
+        "R07"
+      ],
+      "trigger": "Actual pesticide mixing, loading, application or exposure-control responsibilities; a grounds-maintenance service does not by itself establish pesticide use.",
+      "roles": "Pesticide handlers/applicators, grounds supervisors and affected workers",
+      "sourceUrl": "https://www.epa.gov/pesticide-worker-safety/worker-protection-standard-training-programs-submission-process-and",
+      "missing": "SDS awareness does not replace product-label application instructions, applicator licensing, re-entry controls or required approved training. Agricultural WPS applies only where its coverage criteria are met; nonagricultural pest control needs the appropriate state/local regime.",
+      "services": [
+        {
+          "masterServiceId": "VMS-E0111F0A9C",
+          "name": "Civil works maintenance and repair, site clearing and termite treatment",
+          "sourceRecords": [
+            {
+              "id": "SRC-2FA5F688796A",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 1; table 1; row 2; description item 10",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-0F9CEB34E7",
+          "name": "Horticultural / Grounds Maintenance Services",
+          "sourceRecords": [
+            {
+              "id": "SRC-F3800A5A94F2",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 77",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-48A0F7E206",
+          "name": "Horticulture services",
+          "sourceRecords": [
+            {
+              "id": "SRC-1425F9FF496C",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 1; table 1; row 50",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            },
+            {
+              "id": "SRC-1F37CB02B94D",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 5; table 2; row 73; description item 1",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-EA8445E1EF",
+          "name": "Horticulture and Landscaping Consultancy services",
+          "sourceRecords": [
+            {
+              "id": "SRC-654F80555C8B",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 4; table 2; row 44; description item 7",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            }
+          ]
+        },
+        {
+          "masterServiceId": "VMS-97ACF2AC82",
+          "name": "Pest control services",
+          "sourceRecords": [
+            {
+              "id": "SRC-8F2DA88FBDF8",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+              "locator": "page 1; table 1; row 53",
+              "originalFile": "operator/originals/Job_category_Registration_Refinery.doc"
+            },
+            {
+              "id": "SRC-8635A9B153C5",
+              "url": "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+              "locator": "page 1; table 2; row 2; description item 2",
+              "originalFile": "operator/originals/JobCategory_other_than_Refinery.doc"
+            },
+            {
+              "id": "SRC-523A40ED7D6B",
+              "url": "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf",
+              "locator": "PDF page 29",
+              "originalFile": "industry/originals/sequal-v6-2022-11.pdf"
+            },
+            {
+              "id": "SRC-195670986024",
+              "url": "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+              "locator": "PDF page 77",
+              "originalFile": "industry/originals/achilles-global-energy-2022.pdf"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,781 @@
+{
+  "familyId": "H11",
+  "title": "Breaking containment and process handback",
+  "description": "Complete guided H11 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Prevent hydrocarbon/chemical release on opening equipment.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Separately assess equipment identification, process preparation, isolation coordination, verified safe state, approved opening method, exposure protection, stop response and reinstatement for the actual role. Technical isolation, gas testing and process integrity acceptance require their own qualified personnel. This written course does not authorize line opening or operating restoration.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Breaking containment and process handback",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/other-hse-policies-standards/Breaking-Lines-Isolating-Release-of-Equipment-Rev-G.pdf"
+    },
+    {
+      "title": "Inventory source 2: Breaking containment and process handback",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-12-10-24/Products%20Isolation%20of%20Hazardous%20Energy%20Standard.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H11_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H11: Breaking containment and process handback\n\nThis original VNDRLY course teaches decisions for service-specific: piping, vessels, maintenance and production. Its purpose is to prevent hydrocarbon/chemical release on opening equipment. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H11_lesson1",
+        "title": "Lesson 1: Recognize the containment boundary and actual contents",
+        "body": "Breaking containment means opening equipment or connections that can release process contents or energy. It includes lines, filters, drains, hoses and vessels, not only large pipework. Establish the correct equipment identity, contents, operating history and connected sources before planning the opening. Residues can remain after normal operation stops.\n\nConsider pressure, temperature, toxic or flammable material, corrosive contents and oxygen displacement, along with gravity and connected energy. An apparently empty line can hold liquid in low points or gas in isolated sections. Unknown contents are a hold requiring competent resolution.\n\nWorked example: a worker calls a small filter change routine. The assessment still identifies its actual process connection and retained contents. Small component size does not eliminate a release toward the worker.\n\n### Applying the mechanism\n\nThe containment boundary must be described at the point where the worker will intervene. Equipment can have multiple connections, low points, dead legs or trapped sections that are not obvious from the exterior. Contents may differ from the normal process after cleaning, upset or maintenance. A label describing the routine fluid is useful but may not establish the current residue or temperature. Operations and technical personnel use controlled information and the actual configuration to define the hazards. The performing crew confirms the identified work point and reports contradictions. The aim is a shared, bounded statement of what can be released and what preparation is required, rather than a general claim that a whole skid is safe because one process is stopped.\n\n### Decision principles\n\nFilters, drains and hoses can create the same release pathway as larger equipment. The actual boundary and contents determine the controls.\n\nRecent service and abnormal operation can change residues and energy. History informs the assessment but does not substitute for verifying current conditions.\n\nUnknown material can create severe exposure. Identification must use the approved information and safe technical process, not direct sensory exposure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H11_lesson2",
+        "title": "Lesson 2: Coordinate isolation, draining and depressurization",
+        "body": "The operations owner and authorized isolation personnel establish the required boundary, energy control, draining, depressurization and verification. The work crew confirms what conditions have actually been established and what remains restricted. Closing one valve is not automatically sufficient for every process or hazard.\n\nDrain and vent paths must be suitable and controlled so making equipment safe does not expose another worker or release material to an unsuitable location. Blockages, trapped pockets and connected sources require competent assessment. Do not assume a zero local indicator describes the entire section.\n\nWorked example: a drain produces no flow, but it may be blocked. The crew does not treat “nothing came out” as proof of empty equipment. The responsible authority verifies the condition through the prescribed method.\n\n### Applying the mechanism\n\nPreparation must address where retained contents go. Draining a hazardous liquid into an open container can create splash, vapor, ignition or overflow exposure outside the original equipment. Venting a gas can affect another crew or an intake. The approved plan therefore treats draining and depressurization as tasks with their own controls, not invisible administrative prerequisites. Isolation must also consider whether a source can leak through or reintroduce material. Where the method requires particular physical separation or verification, a convenient closed valve is not an automatic equivalent. Workers should understand the verified boundary and any ongoing monitoring, but they must not redesign the isolation or select a drain destination beyond their authority.\n\n### Decision principles\n\nPreparation affects operating systems and exposed workers. The designated roles must establish and communicate the boundary and verified state.\n\nMaking one item safe must not create another uncontrolled exposure. Release destination and containment are part of the preparation plan.\n\nIsolation adequacy depends on the system and consequences. A universal valve-count assumption cannot replace the competent procedure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H11_lesson3",
+        "title": "Lesson 3: Choose a controlled opening method",
+        "body": "The competent task plan establishes the opening sequence, position, tools, containment, protection and emergency response. The method must keep people out of the credible discharge path and account for residual contents. This awareness course does not provide a universal flange-loosening technique or authorize a worker to improvise one.\n\nPPE selection follows the assessed material, temperature and release mechanism and must be compatible and usable. PPE does not replace verified preparation. Establish access and a route to withdraw without crossing a release. Keep unneeded people away and coordinate nearby ignition sources.\n\nWorked example: an opening is directly above a walkway. The plan addresses collection, separation and the actual release path before work; a bucket below is not automatically adequate containment.\n\n### Applying the mechanism\n\nSafe positioning begins before the tool is applied. The approved method considers the credible direction and reach of residual discharge, the worker’s body position, nearby people, access and withdrawal. Protection may include containment, shields or remote arrangements selected for the material and geometry, but none replaces the verified preparation. A shield that blocks splash toward the operator could redirect it toward a helper if the whole path is not assessed. Tools and fasteners also need a controlled handling plan so the worker does not reach into the potential release path to catch a part. The competent procedure establishes the actual sequence; this course deliberately does not offer a universal loosening technique that could be unsafe on a different connection.\n\n### Decision principles\n\nOpening methods depend on equipment, contents and energy. General awareness cannot replace a technically suitable method and practical training.\n\nPPE is one layer in the control system. It cannot establish a safe energy state or make uncontrolled discharge acceptable.\n\nA usable route reduces the chance of being trapped or moving through the discharge. It must exist before exposure, not be discovered during an event.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H11_lesson4",
+        "title": "Lesson 4: Verify readiness at the work point",
+        "body": "Before the first break, match the equipment identity, scope and preparation records to the actual work point. Confirm required permits, isolation verification, atmosphere controls, containment, communications and roles. A record for the adjacent line is not clearance for the intended one. The crew must understand the verified state and what observations require stopping.\n\nTechnical testing and process verification require qualified personnel. If a required condition is missing or ambiguous, hold the affected opening. Do not use the first loosened connection as the verification method unless that is specifically part of an approved qualified procedure.\n\nWorked example: the permit identifies a different filter housing. The crew resolves identity and protection with operations before touching the fasteners.\n\n### Applying the mechanism\n\nAt the work point, compare the permit, equipment identity and isolation or preparation references with the physical item. Ask the responsible authority to resolve any mismatch before touching it. A record may be genuine and still apply to the wrong housing or branch. The crew should be able to explain the expected condition and the stop response without claiming technical knowledge they do not possess. If a safeguard depends on a test, identify who performed it and what scope it establishes. Do not silently broaden an external atmosphere result to a vessel interior or a zero pressure at one point to every branch. Readiness is the combined set of verified prerequisites for this opening, not the existence of several unrelated signed forms.\n\n### Decision principles\n\nA broad administrative match cannot establish the specific containment boundary. The verified conditions must apply to the equipment being opened.\n\nAtmosphere and isolation address different hazards. One completed record cannot stand in for a missing required technical safeguard.\n\nImprovised opening can expose workers to retained pressure or material. Verification must follow the task-specific safe method and role limits.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H11_lesson5",
+        "title": "Lesson 5: Stop on unexpected contents or response",
+        "body": "Unexpected pressure, temperature, material, odor, leakage or equipment movement invalidates the expected opening condition. Stop through the prescribed response, withdraw from the exposure and notify the responsible authority. Do not keep opening to see whether the flow will finish. A suspected hazardous atmosphere requires the site emergency and escape actions, not a closer sensory check.\n\nThe authority reassesses isolation, trapped sections, contents and the method before any further intervention. Keep nearby people away through safe communication. Preserve the actual observation in the record even if later testing finds an acceptable condition.\n\nWorked example: a supposedly drained line releases hot liquid. The crew withdraws and raises the response. The event is investigated before the opening is continued; a later empty drain does not erase the failed preparation.\n\n### Applying the mechanism\n\nUnexpected material is information that the preparation basis may be wrong. Even a small release can indicate a larger trapped volume or connected source. The worker should not assume it will stop harmlessly or try to diagnose the system while standing in the discharge. Follow the planned stop and withdrawal actions, communicate observed facts and keep others clear from safety. The technical and operating roles investigate the source and establish the next safe condition. Preserve what was actually seen, including time and equipment identity; avoid inventing pressure or concentration values. If exposure occurred, activate the appropriate emergency and medical interface. Resuming after the visible release diminishes requires the approved reassessment, not a personal judgment that the worst is over.\n\n### Decision principles\n\nThe discrepancy can reflect trapped or connected energy. The task must return to its controlled preparation and verification process.\n\nClear factual reporting helps the responsible team identify the failed assumption. Unsupported conclusions can misdirect the response.\n\nA changing release does not establish that the remaining system is safe. Restart depends on the approved technical and operating process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H11_lesson6",
+        "title": "Lesson 6: Reinstate and hand back the actual system",
+        "body": "Reassembly requires the specified components, condition, assembly method and any inspection or testing. Account for blanks, temporary hoses, drains, vents, tools and removed parts through the approved system. The operations owner accepts the final configuration before controlled restoration. Do not silently leave a temporary arrangement in service.\n\nRecord what was opened, findings, replacements, checks, remaining restrictions and acceptance. A repair invoice alone cannot establish correct reinstatement. If the configuration changes, use the technical change process and refresh affected evidence.\n\nWorked example: a temporary drain remains connected after the filter is reassembled. Handback identifies and resolves its disposition before operation rather than assuming someone else will remove it.\n\n### Applying the mechanism\n\nReinstatement is more than closing the opening. Correct parts, orientation, assembly, cleanliness and required inspection or tests support containment integrity. Temporary blinds, caps, hoses and instruments must be accounted for through the applicable system so their removal or retention is deliberate. The operating authority needs the actual state before restoring energy or process contents. A crew might finish its craft work while another required inspection remains outstanding; the handback must preserve that restriction. When a seal or fitting differs from the approved specification, technical review decides whether it is acceptable and what verification is needed. A tidy exterior or successful static appearance does not establish compatibility under operating temperature, pressure and chemistry.\n\n### Decision principles\n\nIntegrity depends on the actual assembly and required verification. Administrative completion cannot establish technical readiness.\n\nThe operating owner must understand the final state and restrictions before restoration. Craft completion does not automatically grant operating clearance.\n\nHazardous execution requires separately assessed technical skills and employer/site authorization. Written understanding supports, but does not replace, those decisions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H11_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: No drain flow\n\nA filter is scheduled for opening. The drain gives no flow, but the service is known to leave deposits and blockage has not been ruled out.\n\n**Worked decision and reasoning.** The opening remains held. Authorized operations and isolation personnel verify the actual contents and energy state using the approved method, including any trapped sections. The crew reviews the equipment identity, containment and opening plan after preparation is established. The record distinguishes no observed drain flow from verified absence of retained pressure or material.\n\n### Scenario 2: Wrong replacement seal\n\nThe housing is ready for reinstatement, but the available replacement seal looks similar and lacks verified material compatibility.\n\n**Worked decision and reasoning.** The crew does not assemble it as an informal substitute. The technical authority establishes the correct component and any required change approval, then verifies assembly and testing under the procedure. Operations receives the accepted final state and restrictions. A visually similar part can fail in the actual fluid or temperature service.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H11_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H11_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nSeparately assess equipment identification, process preparation, isolation coordination, verified safe state, approved opening method, exposure protection, stop response and reinstatement for the actual role. Technical isolation, gas testing and process integrity acceptance require their own qualified personnel. This written course does not authorize line opening or operating restoration.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H11_check1",
+        "prompt": "A small filter is called routine but its contents are uncertain. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold opening until contents and hazards are established."
+          },
+          {
+            "id": "b",
+            "label": "Open slowly to identify the contents."
+          },
+          {
+            "id": "c",
+            "label": "Assume small size means low risk."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H11_final_1_1",
+        "prompt": "What counts as breaking containment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only cutting a large pipeline."
+          },
+          {
+            "id": "b",
+            "label": "Only opening a vessel marked hazardous."
+          },
+          {
+            "id": "c",
+            "label": "Opening a connection or item that can release process contents or energy."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H11_final_1_2",
+        "prompt": "Why check operating history?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the equipment age matters."
+          },
+          {
+            "id": "b",
+            "label": "It can reveal retained material, temperature or unusual conditions."
+          },
+          {
+            "id": "c",
+            "label": "History replaces current verification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H11_final_1_3",
+        "prompt": "What should unknown contents trigger?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A hold and competent identification and assessment."
+          },
+          {
+            "id": "b",
+            "label": "A guess based on pipe color."
+          },
+          {
+            "id": "c",
+            "label": "A quick sniff at the opening."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H11_check2",
+        "prompt": "A drain shows no flow but blockage is possible. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The equipment is certainly safe."
+          },
+          {
+            "id": "b",
+            "label": "Every connected pocket has drained."
+          },
+          {
+            "id": "c",
+            "label": "The absence of flow alone does not prove the equipment is empty or depressurized."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H11_final_2_1",
+        "prompt": "Who coordinates process isolation and preparation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The course administrator."
+          },
+          {
+            "id": "b",
+            "label": "The authorized operations and isolation roles with the performing crew."
+          },
+          {
+            "id": "c",
+            "label": "Any worker who finds a convenient valve."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H11_final_2_2",
+        "prompt": "Why assess drain and vent destinations?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Preparation can transfer hazardous material or energy to another location."
+          },
+          {
+            "id": "b",
+            "label": "Any discharge point is acceptable during maintenance."
+          },
+          {
+            "id": "c",
+            "label": "Only the final opening matters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H11_final_2_3",
+        "prompt": "Does closing one valve always establish adequate isolation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, for every liquid system."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the handle is difficult to move."
+          },
+          {
+            "id": "c",
+            "label": "No; the approved task-specific isolation method governs."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H11_check3",
+        "prompt": "The proposed opening can discharge onto a walkway. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A warning after the first release."
+          },
+          {
+            "id": "b",
+            "label": "A task-specific controlled method, containment and separation arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Only a bucket placed below."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H11_final_3_1",
+        "prompt": "Who defines the safe opening technique?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The competent approved task procedure and responsible roles."
+          },
+          {
+            "id": "b",
+            "label": "A universal technique invented by this quiz."
+          },
+          {
+            "id": "c",
+            "label": "Whoever has the largest wrench."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H11_final_3_2",
+        "prompt": "What is PPE’s role in containment opening?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permission to skip depressurization."
+          },
+          {
+            "id": "b",
+            "label": "Proof that any release can be tolerated."
+          },
+          {
+            "id": "c",
+            "label": "Protection against assessed residual exposure within its limitations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H11_final_3_3",
+        "prompt": "Why plan withdrawal access?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Experienced workers can always jump away."
+          },
+          {
+            "id": "b",
+            "label": "A release can require immediate safe separation."
+          },
+          {
+            "id": "c",
+            "label": "Only material delivery needs access planning."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H11_check4",
+        "prompt": "The preparation record names an adjacent housing. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold and resolve identity and protection before opening."
+          },
+          {
+            "id": "b",
+            "label": "Use it because both housings are similar."
+          },
+          {
+            "id": "c",
+            "label": "Change the label on the record without verification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H11_final_4_1",
+        "prompt": "What should pre-opening verification match?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the general site name."
+          },
+          {
+            "id": "b",
+            "label": "Only the crew’s attendance list."
+          },
+          {
+            "id": "c",
+            "label": "The actual work point, scope, contents and required safeguards."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H11_final_4_2",
+        "prompt": "What if a required atmospheric check is missing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed because isolation paperwork exists."
+          },
+          {
+            "id": "b",
+            "label": "Hold the affected activity and obtain the qualified check."
+          },
+          {
+            "id": "c",
+            "label": "Substitute smell."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H11_final_4_3",
+        "prompt": "Can the first release always be used to verify preparation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; only the approved qualified procedure can define any such controlled step."
+          },
+          {
+            "id": "b",
+            "label": "Yes, loosen anything slowly."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if a coworker watches."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H11_check5",
+        "prompt": "Unexpected hot liquid appears during opening. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue until the line empties."
+          },
+          {
+            "id": "b",
+            "label": "Tighten while standing in the discharge."
+          },
+          {
+            "id": "c",
+            "label": "Stop, withdraw through the approved response and obtain reassessment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H11_final_5_1",
+        "prompt": "What does unexpected pressure indicate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permission to vent through the worker’s opening."
+          },
+          {
+            "id": "b",
+            "label": "The assumed safe state is not established and must be reassessed."
+          },
+          {
+            "id": "c",
+            "label": "Only that the gauge needs a new label."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H11_final_5_2",
+        "prompt": "What should workers report?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual observations, location, equipment and uncertainties from safety."
+          },
+          {
+            "id": "b",
+            "label": "Invented concentrations."
+          },
+          {
+            "id": "c",
+            "label": "Only a claim that the line is safe now."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H11_final_5_3",
+        "prompt": "When may the opening resume?",
+        "options": [
+          {
+            "id": "a",
+            "label": "When the visible flow slows."
+          },
+          {
+            "id": "b",
+            "label": "When the crew needs to finish."
+          },
+          {
+            "id": "c",
+            "label": "After required reassessment, verified safeguards and authorized restart."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H11_check6",
+        "prompt": "A temporary drain remains at handback. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leave it for the next shift without notification."
+          },
+          {
+            "id": "b",
+            "label": "Resolve and record its approved final disposition before restoration."
+          },
+          {
+            "id": "c",
+            "label": "Ignore it because the housing is closed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H11_final_6_1",
+        "prompt": "What supports safe reinstatement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Correct components and assembly, required checks and responsible acceptance."
+          },
+          {
+            "id": "b",
+            "label": "Only a completed invoice."
+          },
+          {
+            "id": "c",
+            "label": "Only the absence of visible leakage at rest."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H11_final_6_2",
+        "prompt": "Who accepts return to service?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any worker leaving the area."
+          },
+          {
+            "id": "b",
+            "label": "The course platform."
+          },
+          {
+            "id": "c",
+            "label": "The designated operations authority through the controlled handback."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H11_final_6_3",
+        "prompt": "What qualification does this course not provide?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Knowledge of reporting duties."
+          },
+          {
+            "id": "b",
+            "label": "Authority to isolate, break containment or approve process reinstatement."
+          },
+          {
+            "id": "c",
+            "label": "Awareness of stop conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H11_final_scenario1",
+        "prompt": "Why is no drain flow insufficient here?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A blocked drain can conceal retained contents and pressure."
+          },
+          {
+            "id": "b",
+            "label": "No flow always means empty."
+          },
+          {
+            "id": "c",
+            "label": "Deposits make verification unnecessary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H11_final_scenario2",
+        "prompt": "What establishes the replacement seal’s suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Similar appearance."
+          },
+          {
+            "id": "b",
+            "label": "The fact that it fits the groove."
+          },
+          {
+            "id": "c",
+            "label": "Verified technical compatibility and approved acceptance for the actual service."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H11_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H11_lesson1",
+          "questionIds": [
+            "H11_check1"
+          ]
+        },
+        {
+          "lessonId": "H11_lesson2",
+          "questionIds": [
+            "H11_check2"
+          ]
+        },
+        {
+          "lessonId": "H11_lesson3",
+          "questionIds": [
+            "H11_check3"
+          ]
+        },
+        {
+          "lessonId": "H11_lesson4",
+          "questionIds": [
+            "H11_check4"
+          ]
+        },
+        {
+          "lessonId": "H11_lesson5",
+          "questionIds": [
+            "H11_check5"
+          ]
+        },
+        {
+          "lessonId": "H11_lesson6",
+          "questionIds": [
+            "H11_check6"
+          ]
+        },
+        {
+          "lessonId": "H11_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H11_assessment",
+          "questionIds": [
+            "H11_final_1_1",
+            "H11_final_1_2",
+            "H11_final_1_3",
+            "H11_final_2_1",
+            "H11_final_2_2",
+            "H11_final_2_3",
+            "H11_final_3_1",
+            "H11_final_3_2",
+            "H11_final_3_3",
+            "H11_final_4_1",
+            "H11_final_4_2",
+            "H11_final_4_3",
+            "H11_final_5_1",
+            "H11_final_5_2",
+            "H11_final_5_3",
+            "H11_final_6_1",
+            "H11_final_6_2",
+            "H11_final_6_3",
+            "H11_final_scenario1",
+            "H11_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H11_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H11_check1": "The release hazard follows contents and energy, not the component’s size or familiarity. Opening must not be used as an improvised identification test.",
+        "H11_final_1_1": "Filters, drains and hoses can create the same release pathway as larger equipment. The actual boundary and contents determine the controls.",
+        "H11_final_1_2": "Recent service and abnormal operation can change residues and energy. History informs the assessment but does not substitute for verifying current conditions.",
+        "H11_final_1_3": "Unknown material can create severe exposure. Identification must use the approved information and safe technical process, not direct sensory exposure.",
+        "H11_check2": "A blocked path can conceal retained material and pressure. The approved verification method must resolve the actual condition before opening.",
+        "H11_final_2_1": "Preparation affects operating systems and exposed workers. The designated roles must establish and communicate the boundary and verified state.",
+        "H11_final_2_2": "Making one item safe must not create another uncontrolled exposure. Release destination and containment are part of the preparation plan.",
+        "H11_final_2_3": "Isolation adequacy depends on the system and consequences. A universal valve-count assumption cannot replace the competent procedure.",
+        "H11_check3": "The method must control both expected residual material and credible abnormal release. A convenient container does not by itself establish capacity, compatibility or people protection.",
+        "H11_final_3_1": "Opening methods depend on equipment, contents and energy. General awareness cannot replace a technically suitable method and practical training.",
+        "H11_final_3_2": "PPE is one layer in the control system. It cannot establish a safe energy state or make uncontrolled discharge acceptable.",
+        "H11_final_3_3": "A usable route reduces the chance of being trapped or moving through the discharge. It must exist before exposure, not be discovered during an event.",
+        "H11_check4": "Preparation is bounded to the actual equipment and sources. Similar appearance does not transfer isolation or verification to another item.",
+        "H11_final_4_1": "A broad administrative match cannot establish the specific containment boundary. The verified conditions must apply to the equipment being opened.",
+        "H11_final_4_2": "Atmosphere and isolation address different hazards. One completed record cannot stand in for a missing required technical safeguard.",
+        "H11_final_4_3": "Improvised opening can expose workers to retained pressure or material. Verification must follow the task-specific safe method and role limits.",
+        "H11_check5": "The observed condition contradicts the preparation basis. Further hands-on action can increase exposure; the safe response and competent reassessment come first.",
+        "H11_final_5_1": "The discrepancy can reflect trapped or connected energy. The task must return to its controlled preparation and verification process.",
+        "H11_final_5_2": "Clear factual reporting helps the responsible team identify the failed assumption. Unsupported conclusions can misdirect the response.",
+        "H11_final_5_3": "A changing release does not establish that the remaining system is safe. Restart depends on the approved technical and operating process.",
+        "H11_check6": "Temporary connections can alter containment and operating hazards. The accepted final configuration must be explicit and verified.",
+        "H11_final_6_1": "Integrity depends on the actual assembly and required verification. Administrative completion cannot establish technical readiness.",
+        "H11_final_6_2": "The operating owner must understand the final state and restrictions before restoration. Craft completion does not automatically grant operating clearance.",
+        "H11_final_6_3": "Hazardous execution requires separately assessed technical skills and employer/site authorization. Written understanding supports, but does not replace, those decisions.",
+        "H11_final_scenario1": "The observation has more than one possible cause. The competent preparation method must resolve the actual condition before the worker opens containment.",
+        "H11_final_scenario2": "Fit is only one aspect of suitability. Material, temperature, pressure and design requirements must support the replacement before containment is restored."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

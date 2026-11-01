@@ -1,0 +1,789 @@
+{
+  "familyId": "H08",
+  "title": "Work at height, scaffolds and dropped objects",
+  "description": "Complete guided H08 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Prevent falls and falling-object injuries.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Qualified assessors must separately evaluate the assigned access equipment, harness fitting and connections, movement, inspection, tool control and emergency actions. Scaffold erection, alteration and inspection, anchorage design and rescue require their own competent or qualified roles. This course does not grant scaffold, lift, rope-access or rescue authority.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Work at height, scaffolds and dropped objects",
+      "url": "https://www.chevronwithtechron.com/en_us/home/safe-work-practices.html"
+    },
+    {
+      "title": "Inventory source 2: Work at height, scaffolds and dropped objects",
+      "url": "https://www.y12.doe.gov/suppliers/procurement/subcontracting/subcontracting-forecasts/upf-forecast/upf-safety-procedures"
+    },
+    {
+      "title": "OSHA: Construction fall-protection duties",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.501"
+    },
+    {
+      "title": "OSHA: Scaffold requirements",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.451"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H08_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H08: Work at height, scaffolds and dropped objects\n\nThis original VNDRLY course teaches decisions for service-specific: elevated work, scaffolding and rope access. Its purpose is to prevent falls and falling-object injuries. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H08_lesson1",
+        "title": "Lesson 1: Avoid exposure and select the right access",
+        "body": "Work at height includes exposure to a fall to a lower level, through an opening or from unsuitable access. Begin by asking whether the task can be performed from ground level using an approved method. If elevation is necessary, select an access system that fits the task duration, reach, load, ground, surrounding equipment and emergency arrangements. A ladder is not automatically the right choice because it is nearby.\n\nApplicable rules differ by sector and activity; this course does not impose one universal trigger height. The employer determines the governing requirements. A fall onto equipment or through an opening can be serious even where the distance appears small.\n\nWorked example: a worker proposes standing on a bucket to reach a valve. The task is held while suitable access and the valve operation method are selected. Better footwear does not turn a bucket into a work platform.\n\n### Applying the mechanism\n\nAccess selection should reflect what the worker needs to do with both hands, how far they must reach and what tools or materials they carry. A short task can still demand a stable working platform. Overreaching or using an improvised support changes the worker’s balance and can defeat intended protection. Ground and supporting surfaces need suitable strength and stability. Nearby vehicles, openings and equipment can add exposure even where the elevation is modest. The competent plan chooses the method for the whole sequence, including getting on and off and handling materials. Do not treat access as an afterthought to be solved with whatever item is nearest the work.\n\n### Decision principles\n\nAvoiding the exposure can remove the fall hazard. Where elevation remains necessary, access and protection still require task-specific assessment.\n\nRules vary, and serious hazards can exist at lower heights. The employer must determine applicable duties and assess the actual fall consequences.\n\nAccess must support the intended work without overreach or instability. Convenience alone does not establish suitability.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H08_lesson2",
+        "title": "Lesson 2: Use scaffolds and platforms within their authorization",
+        "body": "Scaffolds and platforms require suitable design, support, erection, access and inspection under the applicable system. Users must understand status, load limits and restrictions. A status tag can communicate an inspection decision, but it does not override visible damage or a changed configuration. Missing components or unauthorized alterations require a hold and competent review.\n\nDo not remove a guardrail to pass material and then continue using the platform under the old status. Do not climb braces or use an unapproved route because the designated access is inconvenient. Loading includes workers, tools, materials and equipment, not just the item being installed.\n\nWorked example: a completed scaffold is altered by another crew overnight. The morning user stops access and requests the required competent inspection rather than relying on yesterday’s tag.\n\n### Applying the mechanism\n\nScaffold status is bounded to an inspected arrangement. Moving a board, removing a rail or adding stored material can change that condition. Users should understand the designated access, load restrictions and visible signs that require a hold. They should not adjust structural or protective components themselves unless trained and authorized for that role. The competent system also considers support and surroundings; a complete-looking scaffold can still be unsuitable if its base or ties have changed. When another crew alters the area, communicate with the scaffold authority before reliance. A current tag supports information but does not cancel a visible defect or an unassessed alteration.\n\n### Decision principles\n\nAlterations can change stability, capacity and fall protection. They require the approved competent process and any necessary reinspection.\n\nThe support system carries the complete imposed load. Omitting stored materials or equipment can invalidate the approved capacity assumptions.\n\nAn improvised route can bypass the intended protection and load assumptions. Safe access must be restored or an approved alternative established.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H08_lesson3",
+        "title": "Lesson 3: Distinguish prevention, restraint and fall arrest",
+        "body": "Guardrails and suitable platforms can prevent a fall. A restraint system limits reach so the worker cannot reach the edge. A fall-arrest system stops a fall after it begins and introduces additional clearance, force, swing and rescue considerations. These are different protective functions and cannot be interchanged by changing a label.\n\nA qualified person establishes suitable anchors, connectors, compatibility, clearance and configuration under the applicable system. Do not attach to an unverified pipe, handrail or convenient structural member. A harness alone provides no protection without the complete suitable system and correct use.\n\nWorked example: a worker has a harness but insufficient space below for the proposed arrest system. The task remains held while a qualified review selects a suitable arrangement. Wearing the harness does not solve the missing clearance.\n\n### Applying the mechanism\n\nA fall-arrest system must prevent harmful impact within the actual geometry. That assessment includes the anchor location, connector lengths and behavior, the worker’s movement, available space and possible swing toward structures. A restraint arrangement has a different purpose: limiting reach to prevent reaching the fall edge. Do not assume changing one connector converts the system correctly. Qualified design and manufacturer compatibility establish the accepted arrangement. The worker’s practical training then demonstrates correct fitting, connection and movement within those limits. If a proposed work position cannot be reached while preserving the system’s intended protection, the task method needs review rather than an improvised extension.\n\n### Decision principles\n\nRestraint and arrest have different functions. The selected system must be configured for its intended purpose rather than assumed equivalent.\n\nAnchor strength, compatibility, clearance and swing hazards require technical assessment. Appearance and convenience cannot establish an approved system.\n\nThe anchor position and work geometry can create lateral travel during arrest. Clearance assessment must consider more than a straight vertical drop.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H08_lesson4",
+        "title": "Lesson 4: Prevent dropped objects and protect people below",
+        "body": "Tools and materials can fall from hands, pockets, platforms or temporary storage. Plan secure storage, suitable tool retention where appropriate, edge protection and controlled access below. Retention devices must suit the tool and attachment; improvisation can introduce snagging or overload. A hard hat is not a substitute for preventing a heavy object from falling.\n\nThe exclusion area must account for the actual fall and possible deflection path, nearby walkways and other work. Do not throw equipment down or leave loose items near edges. Coordinate material transfer so removing a barrier or moving a load does not expose people beneath.\n\nWorked example: a worker leaves bolts on an open platform edge above a gate route. The task is corrected before the route is opened, using suitable storage and separation rather than only warning pedestrians to look up.\n\n### Applying the mechanism\n\nDropped-object control starts at the work position. Secure tools and materials against the actual movement and handling expected, and avoid loose storage near edges. Retention devices must suit both the tool and the attachment point; an unsuitable tether can fail or snag machinery. The area below needs control for credible fall and deflection paths, including people who did not attend the height-work briefing. A route may need temporary closure or an approved alternative. Do not open it because the person above promises to be careful. The prevention and separation arrangement must remain effective while materials are moved and while the elevated task is being dismantled.\n\n### Decision principles\n\nRetention is part of an engineered or approved system. An improvised connection can fail or create a different hazard during use.\n\nThe protected area must follow credible movement, including bounce or deflection, so people are not placed just outside an unrealistically narrow boundary.\n\nTransfer can change fall and dropped-object controls. The method must preserve protection during the temporary opening or movement.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H08_lesson5",
+        "title": "Lesson 5: Prepare rescue and respond to changing conditions",
+        "body": "A fall-arrest plan needs a feasible rescue arrangement before work. A suspended worker may need prompt assistance; an emergency number alone does not establish access, capability or equipment. Qualified planning and practical drills must fit the actual structure and system. An untrained coworker must not climb into a second fall exposure to improvise rescue.\n\nStop for damaged protection, changed access, loss of rescue availability, unsuitable weather or other defined triggers. Wind, ice, poor visibility and adjacent lifting can affect both the worker and equipment. The responsible authority reassesses and verifies conditions before restart.\n\nWorked example: the designated rescue capability leaves the site while harness work remains planned. The work is held until a suitable verified arrangement is restored; the original morning briefing does not supply an absent team.\n\n### Applying the mechanism\n\nRescue planning should test whether the designated team can reach the actual work position and remove a casualty using suitable equipment. Congested structures, restricted access or a suspended position can defeat a generic plan. Practice safely before exposure so those limits are found without a casualty. The worker should know how to summon the response and what actions are within their training. If the required rescue capability leaves or equipment becomes unavailable, the affected work is no longer supported by the plan. Do not substitute a general phone number or an untrained coworker’s willingness. The responsible authority must establish a feasible arrangement before the exposure resumes.\n\n### Decision principles\n\nA practical plan must exist before the emergency. Access, equipment and capable responders cannot safely be improvised with a casualty suspended.\n\nRescue can expose additional people and destabilize the casualty. The designated qualified response must follow the planned method.\n\nAuthorization depends on actual conditions. Wind, ice, visibility and nearby movement can defeat controls even while the task itself remains unchanged.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H08_lesson6",
+        "title": "Lesson 6: Inspect, hand back and assess practical skills",
+        "body": "Before use, inspect assigned access and protection equipment under the manufacturer and program criteria. Remove damaged, unidentified or otherwise unverified items from reliance and report them. Fall-arrest equipment involved in an event needs the specified competent disposition; do not return it to the common bin because damage is not obvious.\n\nAt closeout, secure openings, remove loose materials through the approved method and communicate any remaining access restrictions. Practical evaluation must cover the actual equipment and task, including fitting, connections, movement and emergency actions. A written pass cannot demonstrate correct harness use or competent scaffold inspection.\n\nWorked example: a harness has been involved in an arrest. The equipment owner controls it for the required inspection or retirement decision rather than allowing another worker to use it immediately.\n\n### Applying the mechanism\n\nInspection should preserve the distinction between an item’s condition and the complete task setup. A sound harness does not establish a suitable anchor; a sound ladder does not establish stable placement; and a sound platform does not establish an acceptable load. The user performs assigned checks and reports any uncertainty for competent disposition. After an arrest, impact or other abnormal event, follow the specific removal and inspection requirements even when damage is not visible. At closeout, make the area safe for people who arrive later. Temporary openings, loose materials or incomplete access restrictions can transfer the hazard after the original crew has left.\n\n### Decision principles\n\nIdentification links the item to its limitations and history. Guessing restores neither rating nor condition.\n\nThe next users need the actual area state. Leaving an opening or loose material can transfer the hazard to people outside the original crew.\n\nTask competence requires observed performance. Awareness knowledge supports it but cannot replace safe demonstration and employer designation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H08_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: A rail removed for delivery\n\nA scaffold rail is removed to pass a component. The delivery is complete, but the crew wants to continue work before the rail is restored.\n\n**Worked decision and reasoning.** The affected platform remains held. The authorized scaffold process restores the protective arrangement and performs the required review or inspection. Material-transfer controls and access are checked, and users are briefed on the accepted condition. The old status tag does not authorize the altered platform. The temporary change is recorded so the handback is traceable.\n\n### Scenario 2: Harness without a rescue route\n\nA worker is assigned a harness task above congested equipment. The proposed rescue route cannot reach the work position, and the supervisor suggests calling emergency services if needed.\n\n**Worked decision and reasoning.** The work does not start. A qualified review establishes a suitable access and protective method together with a feasible rescue arrangement, equipment and capable responders. An alternative that avoids the elevation may be preferable if technically suitable. The worker receives practical instruction in the actual system before authorization. A phone number is not evidence that a suspended casualty can be reached.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H08_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H08_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nQualified assessors must separately evaluate the assigned access equipment, harness fitting and connections, movement, inspection, tool control and emergency actions. Scaffold erection, alteration and inspection, anchorage design and rescue require their own competent or qualified roles. This course does not grant scaffold, lift, rope-access or rescue authority.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H08_check1",
+        "prompt": "A nearby bucket gives enough reach for a valve task. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Select suitable approved access or a safe ground-level method."
+          },
+          {
+            "id": "b",
+            "label": "Use the bucket if it does not wobble initially."
+          },
+          {
+            "id": "c",
+            "label": "Ask a coworker to hold it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H08_final_1_1",
+        "prompt": "What is the first planning question for elevated work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Which harness color is available?"
+          },
+          {
+            "id": "b",
+            "label": "How quickly can the worker climb?"
+          },
+          {
+            "id": "c",
+            "label": "Can the exposure be avoided through a suitable ground-level method?"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H08_final_1_2",
+        "prompt": "Does one universal height threshold govern every activity?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No requirements apply below a worker’s height."
+          },
+          {
+            "id": "b",
+            "label": "No; applicable sector and task requirements must be established."
+          },
+          {
+            "id": "c",
+            "label": "Yes, one number clears every oilfield task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H08_final_1_3",
+        "prompt": "What should access selection consider?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Task, reach, loads, environment, support and rescue needs."
+          },
+          {
+            "id": "b",
+            "label": "Only what is nearest."
+          },
+          {
+            "id": "c",
+            "label": "Only the worker’s preference."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H08_check2",
+        "prompt": "A scaffold has a valid-looking tag but a guardrail is missing. What is the decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use it because the tag is current."
+          },
+          {
+            "id": "b",
+            "label": "Stand farther from the edge informally."
+          },
+          {
+            "id": "c",
+            "label": "Do not use the affected access; obtain competent review and restoration."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H08_final_2_1",
+        "prompt": "Who may alter a scaffold?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Anyone holding a harness."
+          },
+          {
+            "id": "b",
+            "label": "People authorized and competent under the scaffold system."
+          },
+          {
+            "id": "c",
+            "label": "Any user who needs more space."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H08_final_2_2",
+        "prompt": "What counts toward platform loading?",
+        "options": [
+          {
+            "id": "a",
+            "label": "People, tools, materials and other imposed loads as applicable."
+          },
+          {
+            "id": "b",
+            "label": "Only the largest component."
+          },
+          {
+            "id": "c",
+            "label": "Only workers wearing harnesses."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H08_final_2_3",
+        "prompt": "What should a user do if designated access is blocked?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Climb the braces."
+          },
+          {
+            "id": "b",
+            "label": "Step from adjacent machinery."
+          },
+          {
+            "id": "c",
+            "label": "Hold access and resolve the route through the responsible authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H08_check3",
+        "prompt": "A worker has a harness but no verified suitable anchor or clearance. May work proceed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the worker promises not to fall."
+          },
+          {
+            "id": "b",
+            "label": "No; the complete protective system must be established."
+          },
+          {
+            "id": "c",
+            "label": "Yes, because harness issue proves protection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H08_final_3_1",
+        "prompt": "What does restraint aim to do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Prevent the worker from reaching the fall edge."
+          },
+          {
+            "id": "b",
+            "label": "Stop a fall only after free fall."
+          },
+          {
+            "id": "c",
+            "label": "Replace every platform inspection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H08_final_3_2",
+        "prompt": "Who establishes anchorage and clearance suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any learner who recognizes a strong-looking pipe."
+          },
+          {
+            "id": "b",
+            "label": "The worker with the longest lanyard."
+          },
+          {
+            "id": "c",
+            "label": "The designated qualified technical person under the applicable system."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H08_final_3_3",
+        "prompt": "What is a swing-fall concern?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only vertical distance matters."
+          },
+          {
+            "id": "b",
+            "label": "A fall can move the worker laterally into a structure or obstruction."
+          },
+          {
+            "id": "c",
+            "label": "A harness prevents all sideways movement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H08_check4",
+        "prompt": "Loose bolts are stored above an occupied route. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Prevent falling items and control the affected area below."
+          },
+          {
+            "id": "b",
+            "label": "Only tell pedestrians to wear helmets."
+          },
+          {
+            "id": "c",
+            "label": "Ask workers to walk faster."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H08_final_4_1",
+        "prompt": "What should tool retention selection consider?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only whether a cord can be tied around it."
+          },
+          {
+            "id": "b",
+            "label": "Only the worker’s favorite knot."
+          },
+          {
+            "id": "c",
+            "label": "Tool, attachment, rating, compatibility and snagging hazards."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H08_final_4_2",
+        "prompt": "Why include deflection in the area below?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the item’s weight matters."
+          },
+          {
+            "id": "b",
+            "label": "A falling object can strike a surface and travel beyond a vertical line."
+          },
+          {
+            "id": "c",
+            "label": "Objects always fall straight and stop."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H08_final_4_3",
+        "prompt": "What is the safe material-transfer principle?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the approved controlled method and maintain protection for everyone affected."
+          },
+          {
+            "id": "b",
+            "label": "Throw small items to save time."
+          },
+          {
+            "id": "c",
+            "label": "Remove rails and leave the opening unattended."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H08_check5",
+        "prompt": "The required rescue arrangement is no longer available. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue because nobody has fallen."
+          },
+          {
+            "id": "b",
+            "label": "Rely on any coworker with a ladder."
+          },
+          {
+            "id": "c",
+            "label": "Hold affected work until the approved capability is restored and verified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H08_final_5_1",
+        "prompt": "When is rescue feasibility established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only during an annual audit."
+          },
+          {
+            "id": "b",
+            "label": "Before exposure and after relevant changes."
+          },
+          {
+            "id": "c",
+            "label": "After a worker is suspended."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H08_final_5_2",
+        "prompt": "What should an untrained coworker do during a fall emergency?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Activate the planned response from safety and avoid creating another exposure."
+          },
+          {
+            "id": "b",
+            "label": "Climb without protection to help."
+          },
+          {
+            "id": "c",
+            "label": "Cut the lanyard immediately."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H08_final_5_3",
+        "prompt": "Why reassess weather and adjacent operations?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only rain affects height work."
+          },
+          {
+            "id": "b",
+            "label": "A permit guarantees stable weather."
+          },
+          {
+            "id": "c",
+            "label": "They can change stability, access, dropped-object and rescue conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H08_check6",
+        "prompt": "A harness has arrested a fall but looks intact. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let another worker test it."
+          },
+          {
+            "id": "b",
+            "label": "Remove it from use pending the specified competent disposition."
+          },
+          {
+            "id": "c",
+            "label": "Return it to the bin if clean."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H08_final_6_1",
+        "prompt": "What should happen to unreadable equipment identification?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold reliance and resolve traceability through the approved process."
+          },
+          {
+            "id": "b",
+            "label": "Invent a new rating label."
+          },
+          {
+            "id": "c",
+            "label": "Assume the strongest available rating."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H08_final_6_2",
+        "prompt": "What belongs in height-work handback?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the worker’s departure time."
+          },
+          {
+            "id": "b",
+            "label": "Automatic reopening of every route."
+          },
+          {
+            "id": "c",
+            "label": "Secured openings, material control and remaining access restrictions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H08_final_6_3",
+        "prompt": "What must practical evaluation establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That a written score grants rescue authority."
+          },
+          {
+            "id": "b",
+            "label": "Correct use of the actual assigned system and response within role limits."
+          },
+          {
+            "id": "c",
+            "label": "Only that a worker can name a harness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H08_final_scenario1",
+        "prompt": "What invalidates reliance on the old scaffold status?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual protective configuration was altered."
+          },
+          {
+            "id": "b",
+            "label": "The component was delivered successfully."
+          },
+          {
+            "id": "c",
+            "label": "The workers have harnesses in storage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H08_final_scenario2",
+        "prompt": "What must be resolved before the harness task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the worker’s online score."
+          },
+          {
+            "id": "b",
+            "label": "Only the emergency telephone number."
+          },
+          {
+            "id": "c",
+            "label": "A complete suitable protection and feasible rescue system for the actual position."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H08_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H08_lesson1",
+          "questionIds": [
+            "H08_check1"
+          ]
+        },
+        {
+          "lessonId": "H08_lesson2",
+          "questionIds": [
+            "H08_check2"
+          ]
+        },
+        {
+          "lessonId": "H08_lesson3",
+          "questionIds": [
+            "H08_check3"
+          ]
+        },
+        {
+          "lessonId": "H08_lesson4",
+          "questionIds": [
+            "H08_check4"
+          ]
+        },
+        {
+          "lessonId": "H08_lesson5",
+          "questionIds": [
+            "H08_check5"
+          ]
+        },
+        {
+          "lessonId": "H08_lesson6",
+          "questionIds": [
+            "H08_check6"
+          ]
+        },
+        {
+          "lessonId": "H08_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H08_assessment",
+          "questionIds": [
+            "H08_final_1_1",
+            "H08_final_1_2",
+            "H08_final_1_3",
+            "H08_final_2_1",
+            "H08_final_2_2",
+            "H08_final_2_3",
+            "H08_final_3_1",
+            "H08_final_3_2",
+            "H08_final_3_3",
+            "H08_final_4_1",
+            "H08_final_4_2",
+            "H08_final_4_3",
+            "H08_final_5_1",
+            "H08_final_5_2",
+            "H08_final_5_3",
+            "H08_final_6_1",
+            "H08_final_6_2",
+            "H08_final_6_3",
+            "H08_final_scenario1",
+            "H08_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H08_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H08_check1": "Access must be designed and selected for the task. An improvised support can fail or create an uncontrolled fall regardless of a helper’s presence.",
+        "H08_final_1_1": "Avoiding the exposure can remove the fall hazard. Where elevation remains necessary, access and protection still require task-specific assessment.",
+        "H08_final_1_2": "Rules vary, and serious hazards can exist at lower heights. The employer must determine applicable duties and assess the actual fall consequences.",
+        "H08_final_1_3": "Access must support the intended work without overreach or instability. Convenience alone does not establish suitability.",
+        "H08_check2": "Observed defects or alterations can invalidate the inspected condition. A tag is evidence of a bounded decision, not permission to ignore the current state.",
+        "H08_final_2_1": "Alterations can change stability, capacity and fall protection. They require the approved competent process and any necessary reinspection.",
+        "H08_final_2_2": "The support system carries the complete imposed load. Omitting stored materials or equipment can invalidate the approved capacity assumptions.",
+        "H08_final_2_3": "An improvised route can bypass the intended protection and load assumptions. Safe access must be restored or an approved alternative established.",
+        "H08_check3": "Fall protection depends on the complete system and geometry. A harness alone cannot prevent impact or ensure the anchorage and connectors perform as required.",
+        "H08_final_3_1": "Restraint and arrest have different functions. The selected system must be configured for its intended purpose rather than assumed equivalent.",
+        "H08_final_3_2": "Anchor strength, compatibility, clearance and swing hazards require technical assessment. Appearance and convenience cannot establish an approved system.",
+        "H08_final_3_3": "The anchor position and work geometry can create lateral travel during arrest. Clearance assessment must consider more than a straight vertical drop.",
+        "H08_check4": "Dropped-object prevention and separation address the source and pathway. Head protection alone cannot make uncontrolled falling material acceptable.",
+        "H08_final_4_1": "Retention is part of an engineered or approved system. An improvised connection can fail or create a different hazard during use.",
+        "H08_final_4_2": "The protected area must follow credible movement, including bounce or deflection, so people are not placed just outside an unrealistically narrow boundary.",
+        "H08_final_4_3": "Transfer can change fall and dropped-object controls. The method must preserve protection during the temporary opening or movement.",
+        "H08_check5": "Rescue readiness is part of the protective system, not an optional response after a fall. Its loss can invalidate the work authorization.",
+        "H08_final_5_1": "A practical plan must exist before the emergency. Access, equipment and capable responders cannot safely be improvised with a casualty suspended.",
+        "H08_final_5_2": "Rescue can expose additional people and destabilize the casualty. The designated qualified response must follow the planned method.",
+        "H08_final_5_3": "Authorization depends on actual conditions. Wind, ice, visibility and nearby movement can defeat controls even while the task itself remains unchanged.",
+        "H08_check6": "An arrest can damage equipment in ways not obvious to a user. The manufacturer and program requirements govern inspection, retirement or other disposition.",
+        "H08_final_6_1": "Identification links the item to its limitations and history. Guessing restores neither rating nor condition.",
+        "H08_final_6_2": "The next users need the actual area state. Leaving an opening or loose material can transfer the hazard to people outside the original crew.",
+        "H08_final_6_3": "Task competence requires observed performance. Awareness knowledge supports it but cannot replace safe demonstration and employer designation.",
+        "H08_final_scenario1": "An inspection decision applies to the inspected condition. A removed protective component requires the appropriate restoration and review before reliance.",
+        "H08_final_scenario2": "Protection includes the ability to respond to a foreseeable fall. Access constraints and rescue capability must be established before exposure."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

@@ -1,0 +1,789 @@
+{
+  "familyId": "I03",
+  "title": "Corrective actions and effectiveness verification",
+  "description": "Complete original VNDRLY I03 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Distinguish completing a task from fixing a safety weakness.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Develop control-focused actions and test recurrence/implementation; assessed case. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-318_Rev3.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y17-95-64-875_0.pdf"
+    },
+    {
+      "title": "Inventory research reference 3",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y15-95-301_0.pdf"
+    },
+    {
+      "title": "OSHA incident investigation guidance",
+      "url": "https://www.osha.gov/incident-investigation"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "I03_intro",
+        "title": "Start here — Corrective actions and effectiveness verification",
+        "body": "# I03: Corrective actions and effectiveness verification\n\nDistinguish completing a task from fixing a safety weakness. This course teaches the decisions needed to implement that purpose in field operations. It covers cause-linked action, accountable owner, deadlines, interim controls and effectiveness review. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I03_lesson1",
+        "title": "Lesson 1 — Connect action to the failed control",
+        "body": "## Connect action to the failed control\n\nStart with a clear finding: what protection was missing or ineffective, who was exposed and what evidence supports that conclusion. The corrective action must change that weakness. An attractive purchase or training session is not automatically relevant. Prefer effective control improvements over vague reminders where practicable, with competent technical review for methods and equipment changes. Keep the causal link visible so later reviewers can test whether the action did what was intended.\n\n### Deeper application\n\nState the failure narrowly enough to design a response but broadly enough to address its supported cause. Replace pedestrian conflict with the actual missing or ineffective separation arrangement and the conditions that allowed it. A technical solution may need competent design review. A procedural solution may need changes to allocation or supervision. Training can support a control, but should not be selected automatically when equipment or planning is the principal weakness.\n\n### Worked oilfield example\n\nA gate conflict finding identifies missing pedestrian separation, but the proposed action purchases unrelated office supplies. The decision is to define a reviewed action that addresses pedestrian separation and the process that left it uncontrolled.\n\nSpending is not corrective effectiveness. The action must address the failed protection identified by evidence. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An action record linking the observed separation failure to a specific accepted control change. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the action merely says improve safety without describing a control or outcome. The appropriate correction is to specify the actual control change and measurable intended protection before accepting the action. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I03_lesson2",
+        "title": "Lesson 2 — Assign ownership deadlines and interim protection",
+        "body": "## Assign ownership deadlines and interim protection\n\nName one accountable owner with authority and resources, a justified due date and the restriction or temporary control protecting people meanwhile. Support roles can contribute without obscuring accountability. Escalate inability to meet the date before exposure is left uncontrolled. A due date is not permission to continue unsafe work until that date. Critical gaps may require immediate suspension of dependent activity.\n\n### Deeper application\n\nOwnership means the person can coordinate resources and escalate constraints, not that they personally perform every task. Assign supporting roles explicitly where needed. A temporary control should have a defined scope and review conditions. If it becomes unsuitable or cannot be maintained, stop dependent work or implement another approved arrangement. Moving a deadline without reexamining exposure leaves the original safety question unanswered.\n\n### Worked oilfield example\n\nPermanent route changes will take time, but workers continue crossing uncontrolled traffic while the action waits. The decision is to establish suitable interim protection or suspend dependent movement while the permanent correction is developed.\n\nA future correction does not protect current work. Interim measures must address the actual exposure. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An owned action with due date, resources, interim traffic arrangement and escalation conditions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the named owner lacks authority to secure the required site change. The appropriate correction is to escalate ownership and resources while maintaining the protective restriction. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I03_lesson3",
+        "title": "Lesson 3 — Define completion evidence before doing the work",
+        "body": "## Define completion evidence before doing the work\n\nSpecify what will show the action was implemented: installed control, approved instruction, verified allocation or observed performance as appropriate. A purchase order or invoice proves a transaction, not installation or usability. Decide who will check completion and the scope of that check. This helps prevent a checkbox being closed on the wrong evidence. Keep technical acceptance with the appropriately qualified person.\n\n### Deeper application\n\nDefine completion in terms of the promised output. For a revised procedure, that may include approval, issue and withdrawal of obsolete operational copies. For an installed route, it may include appropriate installation and readiness review. The exact technical acceptance comes from the responsible competent source. Purchasing materials and scheduling a contractor can be progress milestones without being misrepresented as completion of the protective change.\n\n### Worked oilfield example\n\nAn action to install a protected pedestrian route is marked complete when paint is purchased. The decision is to keep implementation open until the approved route is installed and its required readiness checks are complete.\n\nPurchased materials are inputs. Completion evidence must show the specified control was actually implemented. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An actual installation and readiness check linked to the approved route and remaining restrictions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the route is painted but conflicts with an active reversing area. The appropriate correction is to obtain competent interface review and resolve the conflict before accepting the route for use. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I03_lesson4",
+        "title": "Lesson 4 — Test effectiveness separately from completion",
+        "body": "## Test effectiveness separately from completion\n\nEffectiveness asks whether the control achieves its purpose during relevant later work. Define the observation, sample or test before closure, including conditions where failure is plausible. A route installed today may need checking under night traffic or delivery peaks. Use suitable expertise and do not create exposure to test it. A favorable observation supports only its bounded scope, not every job in the company.\n\n### Deeper application\n\nAn effectiveness question should be specific enough to fail. Are pedestrians using the separated route during busy night deliveries is testable; is everyone safer is too vague. Choose a representative safe observation or other appropriate method and state its limits. Lack of recurrence in a small sample is not universal proof, especially where reporting coverage is weak. Use worker feedback to identify practical difficulties that a tidy installation photograph hides.\n\n### Worked oilfield example\n\nA new walkway is installed, but nobody has checked whether arriving drivers actually use it during busy deliveries. The decision is to observe relevant later work safely and test whether separation works under representative conditions.\n\nImplementation establishes that a change exists; effectiveness examines whether it protects people in real use. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A later representative traffic observation recording route use, conflicts and worker feedback. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the effectiveness sample includes only quiet daytime conditions despite a night-glare concern. The appropriate correction is to test under relevant night conditions with suitable protection before concluding the glare-related action works. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I03_lesson5",
+        "title": "Lesson 5 — Verify with suitable challenge and records",
+        "body": "## Verify with suitable challenge and records\n\nA verifier should have competence matching the judgment and enough separation to challenge unsupported closure. Record what was checked, when, by whom and with what limitations. Do not call a self-check independent. Separate completion status from effectiveness status so a manager can see work installed but follow-up pending. Preserve evidence and original findings; correction should add traceability rather than erase the problem.\n\n### Deeper application\n\nVerification should state which evidence was examined and what conclusion it supports. A reviewer can accept installation while leaving effectiveness pending. That is more accurate than forcing a single closed label to represent both. Where independence is required or claimed, explain the reviewer's actual relationship to the work. A technical acceptance should not be signed by someone whose role is only administrative file completion.\n\n### Worked oilfield example\n\nThe action owner marks their own work independently verified without another suitable review. The decision is to describe the self-check accurately and obtain the required suitable verification before claiming that state.\n\nVerification claims must reflect what occurred. A self-check cannot be represented as independent review. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A verification record identifying actual reviewer, competence, evidence checked and bounded conclusion. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the verifier signs the record but cannot identify what evidence was inspected. The appropriate correction is to complete and document a genuine evidence review before relying on the verification claim. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I03_lesson6",
+        "title": "Lesson 6 — Reopen recurrence and escalate overdue risk",
+        "body": "## Reopen recurrence and escalate overdue risk\n\nA failed effectiveness test or recurring weakness requires renewed control of exposure and reconsideration of the action. Preserve the closed record and link a reopening reason or new action as appropriate. Investigate whether the design, implementation or operating conditions differed from assumptions. Overdue actions need risk-based escalation, not silent date changes. Learning from recurrence should improve the system without automatically treating the incident count as the maturity score.\n\n### Deeper application\n\nReopening does not mean the original work was never done. It means new evidence shows the intended protection remains unsupported or ineffective. Link the recurrence to the earlier finding, establish immediate protection and examine whether assumptions, design or implementation failed. Preserve previous decisions to learn from them. For overdue actions, escalate remaining risk and needed resources instead of merely changing dates to remove an overdue indicator.\n\n### Worked oilfield example\n\nA closed gate action is followed by the same pedestrian conflict under normal deliveries. The decision is to reopen the issue, protect the exposure and review why the correction failed.\n\nA timely completed action can still be ineffective; recurrence is evidence requiring reassessment, not deletion. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A linked recurrence review with protective response, revised control and new effectiveness test. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the owner repeatedly extends dates without reviewing remaining exposure. The appropriate correction is to escalate the unresolved risk and verify interim protection with an accountable decision-maker. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I03_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA gate conflict finding identifies missing pedestrian separation, but the proposed action purchases unrelated office supplies. At the handover, a second issue is identified: The named owner lacks authority to secure the required site change. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Accept the invoice as proof the route exists. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Define a reviewed action that addresses pedestrian separation and the process that left it uncontrolled. The reason is specific: Spending is not corrective effectiveness. The action must address the failed protection identified by evidence. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Escalate ownership and resources while maintaining the protective restriction. The supporting record should show: An owned action with due date, resources, interim traffic arrangement and escalation conditions. This is important because a future correction does not protect current work. Interim measures must address the actual exposure. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because purchased materials are inputs. Completion evidence must show the specified control was actually implemented. The suitable decision is: Keep implementation open until the approved route is installed and its required readiness checks are complete. Evidence for review would include: An actual installation and readiness check linked to the approved route and remaining restrictions. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA new walkway is installed, but nobody has checked whether arriving drivers actually use it during busy deliveries. At the handover, a second issue is identified: The verifier signs the record but cannot identify what evidence was inspected. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Keep the action closed because its original deadline was met. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Observe relevant later work safely and test whether separation works under representative conditions. The reason is specific: Implementation establishes that a change exists; effectiveness examines whether it protects people in real use. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Complete and document a genuine evidence review before relying on the verification claim. The supporting record should show: A verification record identifying actual reviewer, competence, evidence checked and bounded conclusion. This is important because verification claims must reflect what occurred. A self-check cannot be represented as independent review. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because a timely completed action can still be ineffective; recurrence is evidence requiring reassessment, not deletion. The suitable decision is: Reopen the issue, protect the exposure and review why the correction failed. Evidence for review would include: A linked recurrence review with protective response, revised control and new effectiveness test. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I03_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I03_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nDevelop control-focused actions and test recurrence/implementation; assessed case. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "I03_check1",
+        "prompt": "A gate conflict finding identifies missing pedestrian separation, but the proposed action purchases unrelated office supplies. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Define a reviewed action that addresses pedestrian separation and the process that left it uncontrolled."
+          },
+          {
+            "id": "b",
+            "label": "Close the finding because money was spent on safety administration."
+          },
+          {
+            "id": "c",
+            "label": "Replace the finding with a more convenient one matching the purchase."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I03_final1",
+        "prompt": "For connect action to the failed control, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "An action record linking the observed separation failure to a specific accepted control change."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I03_final2",
+        "prompt": "A later review finds: The action merely says improve safety without describing a control or outcome. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Specify the actual control change and measurable intended protection before accepting the action."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I03_final3",
+        "prompt": "Consider this proposed response: Close the finding because money was spent on safety administration. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Spending is not corrective effectiveness. The action must address the failed protection identified by evidence."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I03_check2",
+        "prompt": "Permanent route changes will take time, but workers continue crossing uncontrolled traffic while the action waits. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the due date as approval for exposure until then."
+          },
+          {
+            "id": "b",
+            "label": "Establish suitable interim protection or suspend dependent movement while the permanent correction is developed."
+          },
+          {
+            "id": "c",
+            "label": "Assign everyone as owner so nobody can be blamed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I03_final4",
+        "prompt": "For assign ownership deadlines and interim protection, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "An owned action with due date, resources, interim traffic arrangement and escalation conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I03_final5",
+        "prompt": "A later review finds: The named owner lacks authority to secure the required site change. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Escalate ownership and resources while maintaining the protective restriction."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I03_final6",
+        "prompt": "Consider this proposed response: Treat the due date as approval for exposure until then. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "A future correction does not protect current work. Interim measures must address the actual exposure."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I03_check3",
+        "prompt": "An action to install a protected pedestrian route is marked complete when paint is purchased. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the invoice as proof the route exists."
+          },
+          {
+            "id": "b",
+            "label": "Photograph unopened paint tins and label them the finished control."
+          },
+          {
+            "id": "c",
+            "label": "Keep implementation open until the approved route is installed and its required readiness checks are complete."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I03_final7",
+        "prompt": "For define completion evidence before doing the work, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An actual installation and readiness check linked to the approved route and remaining restrictions."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I03_final8",
+        "prompt": "A later review finds: The route is painted but conflicts with an active reversing area. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Obtain competent interface review and resolve the conflict before accepting the route for use."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I03_final9",
+        "prompt": "Consider this proposed response: Accept the invoice as proof the route exists. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Purchased materials are inputs. Completion evidence must show the specified control was actually implemented."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I03_check4",
+        "prompt": "A new walkway is installed, but nobody has checked whether arriving drivers actually use it during busy deliveries. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Observe relevant later work safely and test whether separation works under representative conditions."
+          },
+          {
+            "id": "b",
+            "label": "Declare effectiveness from the installation photograph alone."
+          },
+          {
+            "id": "c",
+            "label": "Wait for an injury as the only meaningful effectiveness test."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I03_final10",
+        "prompt": "For test effectiveness separately from completion, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A later representative traffic observation recording route use, conflicts and worker feedback."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I03_final11",
+        "prompt": "A later review finds: The effectiveness sample includes only quiet daytime conditions despite a night-glare concern. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Test under relevant night conditions with suitable protection before concluding the glare-related action works."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I03_final12",
+        "prompt": "Consider this proposed response: Declare effectiveness from the installation photograph alone. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Implementation establishes that a change exists; effectiveness examines whether it protects people in real use."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I03_check5",
+        "prompt": "The action owner marks their own work independently verified without another suitable review. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the independent label because the action is probably correct."
+          },
+          {
+            "id": "b",
+            "label": "Describe the self-check accurately and obtain the required suitable verification before claiming that state."
+          },
+          {
+            "id": "c",
+            "label": "Remove the verifier field so no one asks about it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I03_final13",
+        "prompt": "For verify with suitable challenge and records, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A verification record identifying actual reviewer, competence, evidence checked and bounded conclusion."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I03_final14",
+        "prompt": "A later review finds: The verifier signs the record but cannot identify what evidence was inspected. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Complete and document a genuine evidence review before relying on the verification claim."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I03_final15",
+        "prompt": "Consider this proposed response: Keep the independent label because the action is probably correct. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Verification claims must reflect what occurred. A self-check cannot be represented as independent review."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I03_check6",
+        "prompt": "A closed gate action is followed by the same pedestrian conflict under normal deliveries. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the action closed because its original deadline was met."
+          },
+          {
+            "id": "b",
+            "label": "Delete the recurring event to preserve a clean history."
+          },
+          {
+            "id": "c",
+            "label": "Reopen the issue, protect the exposure and review why the correction failed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I03_final16",
+        "prompt": "For reopen recurrence and escalate overdue risk, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A linked recurrence review with protective response, revised control and new effectiveness test."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I03_final17",
+        "prompt": "A later review finds: The owner repeatedly extends dates without reviewing remaining exposure. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Escalate the unresolved risk and verify interim protection with an accountable decision-maker."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I03_final18",
+        "prompt": "Consider this proposed response: Keep the action closed because its original deadline was met. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "A timely completed action can still be ineffective; recurrence is evidence requiring reassessment, not deletion."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I03_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Escalate ownership and resources while maintaining the protective restriction."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I03_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Complete and document a genuine evidence review before relying on the verification claim."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "I03_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I03_lesson1",
+          "questionIds": [
+            "I03_check1"
+          ]
+        },
+        {
+          "lessonId": "I03_lesson2",
+          "questionIds": [
+            "I03_check2"
+          ]
+        },
+        {
+          "lessonId": "I03_lesson3",
+          "questionIds": [
+            "I03_check3"
+          ]
+        },
+        {
+          "lessonId": "I03_lesson4",
+          "questionIds": [
+            "I03_check4"
+          ]
+        },
+        {
+          "lessonId": "I03_lesson5",
+          "questionIds": [
+            "I03_check5"
+          ]
+        },
+        {
+          "lessonId": "I03_lesson6",
+          "questionIds": [
+            "I03_check6"
+          ]
+        },
+        {
+          "lessonId": "I03_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I03_assessment",
+          "questionIds": [
+            "I03_final1",
+            "I03_final2",
+            "I03_final3",
+            "I03_final4",
+            "I03_final5",
+            "I03_final6",
+            "I03_final7",
+            "I03_final8",
+            "I03_final9",
+            "I03_final10",
+            "I03_final11",
+            "I03_final12",
+            "I03_final13",
+            "I03_final14",
+            "I03_final15",
+            "I03_final16",
+            "I03_final17",
+            "I03_final18",
+            "I03_final19",
+            "I03_final20"
+          ]
+        },
+        {
+          "lessonId": "I03_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "I03_check1": "Spending is not corrective effectiveness. The action must address the failed protection identified by evidence.",
+        "I03_final1": "Spending is not corrective effectiveness. The action must address the failed protection identified by evidence. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I03_final2": "Spending is not corrective effectiveness. The action must address the failed protection identified by evidence. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I03_final3": "Spending is not corrective effectiveness. The action must address the failed protection identified by evidence. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I03_check2": "A future correction does not protect current work. Interim measures must address the actual exposure.",
+        "I03_final4": "A future correction does not protect current work. Interim measures must address the actual exposure. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I03_final5": "A future correction does not protect current work. Interim measures must address the actual exposure. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I03_final6": "A future correction does not protect current work. Interim measures must address the actual exposure. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I03_check3": "Purchased materials are inputs. Completion evidence must show the specified control was actually implemented.",
+        "I03_final7": "Purchased materials are inputs. Completion evidence must show the specified control was actually implemented. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I03_final8": "Purchased materials are inputs. Completion evidence must show the specified control was actually implemented. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I03_final9": "Purchased materials are inputs. Completion evidence must show the specified control was actually implemented. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I03_check4": "Implementation establishes that a change exists; effectiveness examines whether it protects people in real use.",
+        "I03_final10": "Implementation establishes that a change exists; effectiveness examines whether it protects people in real use. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I03_final11": "Implementation establishes that a change exists; effectiveness examines whether it protects people in real use. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I03_final12": "Implementation establishes that a change exists; effectiveness examines whether it protects people in real use. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I03_check5": "Verification claims must reflect what occurred. A self-check cannot be represented as independent review.",
+        "I03_final13": "Verification claims must reflect what occurred. A self-check cannot be represented as independent review. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I03_final14": "Verification claims must reflect what occurred. A self-check cannot be represented as independent review. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I03_final15": "Verification claims must reflect what occurred. A self-check cannot be represented as independent review. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I03_check6": "A timely completed action can still be ineffective; recurrence is evidence requiring reassessment, not deletion.",
+        "I03_final16": "A timely completed action can still be ineffective; recurrence is evidence requiring reassessment, not deletion. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I03_final17": "A timely completed action can still be ineffective; recurrence is evidence requiring reassessment, not deletion. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I03_final18": "A timely completed action can still be ineffective; recurrence is evidence requiring reassessment, not deletion. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I03_final19": "A future correction does not protect current work. Interim measures must address the actual exposure. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "I03_final20": "Verification claims must reflect what occurred. A self-check cannot be represented as independent review. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

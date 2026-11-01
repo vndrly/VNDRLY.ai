@@ -1,0 +1,785 @@
+{
+  "familyId": "H12",
+  "title": "Electrical work and arc-flash controls",
+  "description": "Complete guided H12 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Prevent shock, arc flash and ignition.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Qualified electrical personnel require separate practical evaluation for the equipment and tasks, including source identification, isolation, suitable testing, protective systems, boundaries and restoration. Licensing and employer designation apply where required. Electrical rescue and first aid are separately trained capabilities. This course does not authorize opening panels, testing voltage or energized repair.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Electrical work and arc-flash controls",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-12-10-24/Products%20Electrical%20Safe%20Work%20Standard.pdf"
+    },
+    {
+      "title": "OSHA: Electrical work practices",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333"
+    },
+    {
+      "title": "OSHA: Electrical equipment use",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.334"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H12_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H12: Electrical work and arc-flash controls\n\nThis original VNDRLY course teaches decisions for service-specific: electrical/instrumentation; basic awareness for exposed workers. Its purpose is to prevent shock, arc flash and ignition. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H12_lesson1",
+        "title": "Lesson 1: Recognize shock, arc and unexpected energy hazards",
+        "body": "Electricity can injure through contact, arc energy, fire and unexpected equipment movement. A circuit can remain hazardous after a control switch is off, and alternate supplies or stored energy can defeat an assumed boundary. Damaged cords, open enclosures, moisture and unidentified equipment require a hold and reporting, not informal repair by an unqualified worker.\n\nShock and arc-flash hazards are related but different. Insulating protection for one exposure is not automatically adequate for another. The competent electrical assessment establishes the actual hazards and controls. A general worker’s role is to respect boundaries, recognize defects and contact the designated electrical authority.\n\nWorked example: a panel display is dark. That does not establish that conductors are deenergized; a failed display can coexist with live supply.\n\n### Applying the mechanism\n\nA person can encounter an electrical hazard without intending electrical work. Moving a long object near exposed parts, opening a damaged enclosure or handling wet equipment can create contact or a fault. The electrical assessment also considers stored energy and alternate sources that may remain after a normal supply is disconnected. For an unqualified worker, the useful skill is recognizing the boundary of knowledge: do not infer voltage absence from silence, a switch position or a dark lamp. Report the specific equipment and condition and keep clear through the site arrangement. Protective clothing and confidence cannot convert an unknown circuit into an acceptable work area. The qualified electrical authority establishes the technical condition and access restrictions.\n\n### Decision principles\n\nElectrical energy can produce several harm pathways. The assessment must address actual equipment and task conditions rather than only direct contact.\n\nDamage can expose energized parts and arc hazards. Unqualified intervention can create contact or fault conditions; the electrical authority must assess it.\n\nDifferent protective functions and performance are involved. Selection must follow the qualified assessment and applicable electrical program.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H12_lesson2",
+        "title": "Lesson 2: Plan deenergized work and qualified boundaries",
+        "body": "Plan to establish a verified electrically safe condition wherever required and feasible under the applicable rules. Only qualified and employer-authorized people perform electrical tasks within their assessed scope. Qualification is task-specific: experience with one voltage or equipment type does not grant unlimited electrical authority.\n\nThe responsible electrical plan identifies sources, isolation, verification, boundaries, tools, protection and restoration. Other workers remain outside the defined limits and do not cross them to deliver material. The course does not invent universal approach distances or incident-energy values.\n\nWorked example: a mechanic needs access near electrical equipment but is not qualified for exposed electrical work. The electrical authority establishes the safe arrangement and access limits before the mechanical task begins.\n\n### Applying the mechanism\n\nQualification should be recorded by task rather than as a broad title. A person trained to operate equipment may not be qualified to expose conductors, select a tester or interpret an electrical fault. A technician competent on one system may need additional assessment for another voltage, configuration or hazard. The work plan identifies the qualified roles and how other trades interact with them. Mechanical crews may need a safe electrical state established before their own work, but that does not make them the electrical testers. Similarly, a site supervisor can coordinate the job without having technical authority to approve energized repair. Clear role boundaries allow people to ask for the right capability instead of using hierarchy as a substitute for electrical competence.\n\n### Decision principles\n\nDeenergizing and verifying removes exposure where required. Energized work is subject to specific justified conditions and controls, not convenience.\n\nBoundaries depend on the equipment and electrical hazards. Awareness workers respect established limits rather than inventing them.\n\nDuration and material do not remove the electrical exposure. Access must follow the qualified control arrangement and role limits.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H12_lesson3",
+        "title": "Lesson 3: Verify absence of voltage using suitable methods",
+        "body": "Opening a disconnect and applying protection are necessary parts of some safe-state procedures, but they do not alone prove absence of voltage. A qualified person uses suitable rated test equipment and the prescribed verification process, including checks of instrument function as required. Alternate supplies, induced or stored energy and incorrect circuit identification must be addressed.\n\nTesting can itself occur near energized parts, so it requires the relevant protection and technique. A noncontact indicator or a failed start is not a universal substitute for the specified absence-of-voltage test. The exact method belongs to the qualified electrical procedure.\n\nWorked example: a tester gives an unexpected result. The worker stops and resolves the circuit and instrument condition rather than selecting the reading that agrees with the isolation sheet.\n\n### Applying the mechanism\n\nA suitable test instrument must match the circuit and environment, including its rating, leads, condition and intended measurement. Damaged leads or an unsuitable instrument can create a fault or produce misleading results. The qualified procedure addresses how the instrument’s function is established before and after the relevant test, and how the worker is protected while the condition may still be energized. Do not use a general awareness explanation as a step-by-step testing instruction. The learner’s decision is to require the qualified method and recognize that an unexpected result keeps the work held. Selecting the favorable value, changing the record or assuming the meter is wrong defeats the verification that protects everyone who later relies on the safe state.\n\n### Decision principles\n\nTesting requires task-specific skill and suitable equipment because the conductors may still be energized during verification.\n\nThe measurement is only reliable within the instrument’s condition and method. Required function checks help prevent a false safe-state conclusion.\n\nA control response is bounded and can fail for many reasons. Qualified electrical verification must address the actual conductors and sources.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H12_lesson4",
+        "title": "Lesson 4: Treat energized work as a controlled exception",
+        "body": "Where energized work is permitted under applicable rules, it requires its specific technical basis, assessment, authorization and protective arrangement. Avoiding production delay is not by itself a technical justification. The qualified authority determines whether the proposed task meets the governing conditions and what safeguards are necessary.\n\nTools, test instruments, insulating equipment and arc-rated protection must match the actual assessment and be in suitable condition. PPE is not permission for an unqualified worker to perform energized work. Keep nonessential people away and plan emergency response and access.\n\nWorked example: a supervisor requests live repair to avoid a shutdown. The electrical authority reviews the request against the applicable criteria. The supervisor’s schedule preference does not create an energized-work authorization.\n\n### Applying the mechanism\n\nEnergized-work controls must be established before a person enters exposure. The technical basis and governing requirements determine whether the task is permitted in that state, and the assessment defines suitable tools, barriers, approach limits and protective equipment. These controls are not selected by matching a suit to a cabinet’s appearance. Equipment condition and the specific work can affect the hazard. If the job changes from observation to adjustment or repair, the authority reassesses rather than allowing the worker to expand the task informally. Production pressure can be communicated as a scheduling issue, but it is not evidence of technical necessity. The qualified process decides the allowable method and the worker remains within that assessed scope.\n\n### Decision principles\n\nProtective performance must match the exposure and work method. Generic issue or appearance does not establish adequacy.\n\nProtective equipment does not supply the knowledge and skill needed to avoid faults and contact. Qualified execution is still required.\n\nDamage can defeat protective performance. The applicable inspection and replacement process must restore the safeguard before reliance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H12_lesson5",
+        "title": "Lesson 5: Control portable equipment and respond safely",
+        "body": "Inspect portable electrical equipment and cords under applicable requirements before use. Damaged insulation, missing pins, crushed cords or evidence of internal damage require removal from reliance and competent disposition. Do not use a cord to lift equipment or create makeshift repairs. Wet or hazardous locations can impose additional suitability requirements.\n\nIf a person is in contact with electricity, do not touch them or conductive equipment while the source may remain live. Activate the emergency system and follow the trained safe isolation and rescue arrangements. First aid is performed only after the scene is safe and within the responder’s training.\n\nWorked example: a worker sees a damaged extension cord near water. The equipment is not used; the site’s safe isolation and defect-control process is followed rather than moving the live damaged section by hand.\n\n### Applying the mechanism\n\nPortable equipment can carry damage from transport and handling into a new location. Inspect the actual cord, plug, enclosure and visible condition using the applicable criteria, and route cords so vehicles, sharp edges and doors do not damage them. Keep connections suitable for moisture and the environment under the approved system. A device that ran successfully yesterday may have been crushed or contaminated since then. If protection trips or the equipment behaves abnormally, follow the defect process rather than repeatedly resetting it to finish the task. Repeated operation is not a diagnostic method for an unqualified user. The owner arranges competent assessment and prevents the item returning to service without the required verification.\n\n### Decision principles\n\nFunction does not prove insulation integrity. Damage can expose users to shock or faults and must pass the approved repair or replacement process.\n\nPulling equipment by its cord can damage insulation and connections. Handling must preserve the electrical protective condition.\n\nEquipment ratings and protection must match the environment. A device that works in one location may create unacceptable risk in another.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H12_lesson6",
+        "title": "Lesson 6: Restore, communicate and retain practical limits",
+        "body": "Restoration follows the qualified procedure: account for people and tools, restore covers and protection, handle isolation devices under their rules, communicate the changed state and energize only through the authorized process. A completed repair does not automatically mean the system is ready for power.\n\nRecord circuit identity, work, tests, defects, changes and acceptance. Any later configuration change can require new review. The employer must separately assess electrical qualifications and practical skills; this awareness course supports recognizing restrictions and reporting concerns.\n\nWorked example: testing is complete but a cover is still removed for cleanup. The authorized restoration process resolves the exposed condition before returning the equipment to normal access.\n\n### Applying the mechanism\n\nRestoration changes the assumptions of everyone working around the system. The qualified procedure accounts for tools, temporary grounds or protection where applicable, covers, people and isolation devices before energization. Communication must reach affected workers who may still believe the system is deenergized. If testing requires a temporary energized stage followed by more exposed work, the plan explicitly controls both transitions and re-establishes the required safe state before access resumes. Record the actual tests and configuration so a later worker can understand what was accepted. Do not use a general “repair complete” message as permission for every subsequent activity. Electrical maintenance, operating readiness and access authorization remain distinct controlled decisions.\n\n### Decision principles\n\nPeople may still rely on the previous isolated state. Clear communication prevents inadvertent contact or conflicting work after energization.\n\nTraceability links verification to the actual system and condition. Vague or predicted records cannot establish the work performed.\n\nWritten awareness cannot establish hands-on electrical testing, repair or rescue skills. The employer and applicable licensing system determine those qualifications.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H12_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: Wrong circuit identity\n\nA panel label and drawing disagree. The worker has opened the labeled disconnect but has not resolved the circuit identity.\n\n**Worked decision and reasoning.** The task remains held. The qualified electrical authority resolves the actual sources and circuit, establishes the required isolation and verification, and updates controlled information. The worker does not choose the label that makes the job easiest or expose a conductor to test assumptions informally. A safe state must apply to the actual work point.\n\n### Scenario 2: Live repair for convenience\n\nA supervisor asks an unqualified mechanic to tighten a connection inside an energized cabinet to avoid stopping production. A protective suit is available.\n\n**Worked decision and reasoning.** The mechanic does not enter the electrical task. The designated electrical authority evaluates the work, plans the required safe condition and determines any lawful energized-work exception and controls. Qualified personnel perform only within their assessed scope. The suit does not create qualification, technical justification or work authorization.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H12_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H12_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nQualified electrical personnel require separate practical evaluation for the equipment and tasks, including source identification, isolation, suitable testing, protective systems, boundaries and restoration. Licensing and employer designation apply where required. Electrical rescue and first aid are separately trained capabilities. This course does not authorize opening panels, testing voltage or energized repair.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H12_check1",
+        "prompt": "A panel display is dark. What does that prove about exposed conductors?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing about absence of voltage; qualified verification is required."
+          },
+          {
+            "id": "b",
+            "label": "All circuits are deenergized."
+          },
+          {
+            "id": "c",
+            "label": "The panel can be opened by anyone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H12_final_1_1",
+        "prompt": "Which hazard can electricity create besides shock?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a harmless static sensation."
+          },
+          {
+            "id": "b",
+            "label": "No hazard when equipment is quiet."
+          },
+          {
+            "id": "c",
+            "label": "Arc energy, fire and unexpected movement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H12_final_1_2",
+        "prompt": "What should an unqualified worker do with an open damaged enclosure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cover it with any available material."
+          },
+          {
+            "id": "b",
+            "label": "Keep clear, prevent exposure where safe and report through the site system."
+          },
+          {
+            "id": "c",
+            "label": "Reach inside to identify the loose wire."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H12_final_1_3",
+        "prompt": "Are shock and arc-flash protective requirements always identical?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; the electrical assessment must address each relevant hazard."
+          },
+          {
+            "id": "b",
+            "label": "Yes, any rubber item controls both."
+          },
+          {
+            "id": "c",
+            "label": "Yes, a helmet alone controls both."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H12_check2",
+        "prompt": "A worker is experienced with one electrical system. Does that authorize every electrical task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, experience transfers without limits."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after this written course."
+          },
+          {
+            "id": "c",
+            "label": "No; qualification and authorization must match the actual task and equipment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H12_final_2_1",
+        "prompt": "What is the default planning direction for exposed electrical work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let the worker choose without review."
+          },
+          {
+            "id": "b",
+            "label": "Establish the required verified safe electrical condition under the applicable program."
+          },
+          {
+            "id": "c",
+            "label": "Keep it energized whenever shutdown is inconvenient."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H12_final_2_2",
+        "prompt": "Who establishes electrical approach boundaries?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The qualified electrical assessment and applicable requirements."
+          },
+          {
+            "id": "b",
+            "label": "A general worker’s estimate."
+          },
+          {
+            "id": "c",
+            "label": "A universal distance supplied by this course."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H12_final_2_3",
+        "prompt": "May an unqualified delivery worker cross a boundary briefly?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, for less than a minute."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if carrying nonmetallic material."
+          },
+          {
+            "id": "c",
+            "label": "Only through a separately established safe authorized arrangement, never by convenience."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H12_check3",
+        "prompt": "A qualified test produces an unexpected voltage indication. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record zero because that was expected."
+          },
+          {
+            "id": "b",
+            "label": "Hold the work and resolve the circuit and test condition."
+          },
+          {
+            "id": "c",
+            "label": "Ignore it because the disconnect is open."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H12_final_3_1",
+        "prompt": "Who performs absence-of-voltage testing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A person qualified and authorized for that electrical task."
+          },
+          {
+            "id": "b",
+            "label": "Any learner with a meter."
+          },
+          {
+            "id": "c",
+            "label": "Any operator who pressed stop."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H12_final_3_2",
+        "prompt": "Why verify tester function as prescribed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A digital display can never fail."
+          },
+          {
+            "id": "b",
+            "label": "Instrument appearance proves accuracy."
+          },
+          {
+            "id": "c",
+            "label": "A failed instrument can falsely suggest absence of voltage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H12_final_3_3",
+        "prompt": "Does a failed machine start prove electrical safety?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the motor is silent."
+          },
+          {
+            "id": "b",
+            "label": "No; it is not a universal absence-of-voltage test."
+          },
+          {
+            "id": "c",
+            "label": "Yes, for all exposed parts."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H12_check4",
+        "prompt": "A supervisor wants live repair solely to avoid delay. Is that sufficient justification?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; applicable technical criteria and authorization must be satisfied."
+          },
+          {
+            "id": "b",
+            "label": "Yes, the supervisor owns the schedule."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the worker wears a face shield."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H12_final_4_1",
+        "prompt": "What does electrical PPE selection depend on?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the worker’s preferred brand."
+          },
+          {
+            "id": "b",
+            "label": "Only the equipment cabinet color."
+          },
+          {
+            "id": "c",
+            "label": "The qualified task-specific hazard assessment and applicable requirements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H12_final_4_2",
+        "prompt": "Can PPE qualify an unqualified worker for live work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, for a quick adjustment."
+          },
+          {
+            "id": "b",
+            "label": "No; competence and authorization remain separate prerequisites."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the suit is new."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H12_final_4_3",
+        "prompt": "What should happen if required electrical protection is damaged?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the task and obtain suitable verified equipment through the program."
+          },
+          {
+            "id": "b",
+            "label": "Use it carefully."
+          },
+          {
+            "id": "c",
+            "label": "Cover the damage with tape without approval."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H12_check5",
+        "prompt": "A person may still be in contact with electricity. What is the awareness-level response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Pull them away with bare hands."
+          },
+          {
+            "id": "b",
+            "label": "Touch the equipment to see if it is live."
+          },
+          {
+            "id": "c",
+            "label": "Raise the emergency response and avoid contact until the scene is made safe by the trained process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H12_final_5_1",
+        "prompt": "What should happen to a cord with crushed insulation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wrap it informally and continue."
+          },
+          {
+            "id": "b",
+            "label": "Remove it from reliance and obtain competent disposition."
+          },
+          {
+            "id": "c",
+            "label": "Use it if the tool still runs."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H12_final_5_2",
+        "prompt": "Can a flexible cord be used to lift its tool?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; use the intended handling method."
+          },
+          {
+            "id": "b",
+            "label": "Yes, for short lifts."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the plug stays connected."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H12_final_5_3",
+        "prompt": "Why assess location suitability for portable equipment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only indoor equipment needs assessment."
+          },
+          {
+            "id": "b",
+            "label": "A working plug proves suitability everywhere."
+          },
+          {
+            "id": "c",
+            "label": "Moisture and hazardous atmospheres can change electrical and ignition requirements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H12_check6",
+        "prompt": "A repair is complete but protective covers remain removed. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let general workers avoid the opening informally."
+          },
+          {
+            "id": "b",
+            "label": "Resolve the final protective state through the qualified restoration process before normal access."
+          },
+          {
+            "id": "c",
+            "label": "Energize because repair completion is enough."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H12_final_6_1",
+        "prompt": "What should restoration communicate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The equipment state, changed restrictions and authorized energization to affected people."
+          },
+          {
+            "id": "b",
+            "label": "Only a finish time."
+          },
+          {
+            "id": "c",
+            "label": "Only the technician’s invoice number."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H12_final_6_2",
+        "prompt": "What should electrical records identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the planned result."
+          },
+          {
+            "id": "b",
+            "label": "Only a generic “safe” label."
+          },
+          {
+            "id": "c",
+            "label": "Actual circuits, work, tests, changes and responsible acceptance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H12_final_6_3",
+        "prompt": "What electrical qualification does this written course grant?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A license to perform gas testing too."
+          },
+          {
+            "id": "b",
+            "label": "None; practical task-specific qualification and employer authorization remain separate."
+          },
+          {
+            "id": "c",
+            "label": "Unlimited energized-work authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H12_final_scenario1",
+        "prompt": "What is the central gap in the circuit scenario?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual circuit and source boundary are uncertain."
+          },
+          {
+            "id": "b",
+            "label": "The drawing needs a prettier format only."
+          },
+          {
+            "id": "c",
+            "label": "A dark display proves isolation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H12_final_scenario2",
+        "prompt": "Why is the available suit insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any suit automatically qualifies the wearer."
+          },
+          {
+            "id": "b",
+            "label": "Only the suit’s color matters."
+          },
+          {
+            "id": "c",
+            "label": "PPE does not establish qualification, justified energized work or authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H12_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H12_lesson1",
+          "questionIds": [
+            "H12_check1"
+          ]
+        },
+        {
+          "lessonId": "H12_lesson2",
+          "questionIds": [
+            "H12_check2"
+          ]
+        },
+        {
+          "lessonId": "H12_lesson3",
+          "questionIds": [
+            "H12_check3"
+          ]
+        },
+        {
+          "lessonId": "H12_lesson4",
+          "questionIds": [
+            "H12_check4"
+          ]
+        },
+        {
+          "lessonId": "H12_lesson5",
+          "questionIds": [
+            "H12_check5"
+          ]
+        },
+        {
+          "lessonId": "H12_lesson6",
+          "questionIds": [
+            "H12_check6"
+          ]
+        },
+        {
+          "lessonId": "H12_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H12_assessment",
+          "questionIds": [
+            "H12_final_1_1",
+            "H12_final_1_2",
+            "H12_final_1_3",
+            "H12_final_2_1",
+            "H12_final_2_2",
+            "H12_final_2_3",
+            "H12_final_3_1",
+            "H12_final_3_2",
+            "H12_final_3_3",
+            "H12_final_4_1",
+            "H12_final_4_2",
+            "H12_final_4_3",
+            "H12_final_5_1",
+            "H12_final_5_2",
+            "H12_final_5_3",
+            "H12_final_6_1",
+            "H12_final_6_2",
+            "H12_final_6_3",
+            "H12_final_scenario1",
+            "H12_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H12_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H12_check1": "An indicator can fail or represent only part of a system. Electrical safe-state verification must use the qualified approved method, not a display assumption.",
+        "H12_final_1_1": "Electrical energy can produce several harm pathways. The assessment must address actual equipment and task conditions rather than only direct contact.",
+        "H12_final_1_2": "Damage can expose energized parts and arc hazards. Unqualified intervention can create contact or fault conditions; the electrical authority must assess it.",
+        "H12_final_1_3": "Different protective functions and performance are involved. Selection must follow the qualified assessment and applicable electrical program.",
+        "H12_check2": "Electrical competence is bounded by demonstrated knowledge and skills for the task. Different equipment, energy and methods can require additional evaluation and authorization.",
+        "H12_final_2_1": "Deenergizing and verifying removes exposure where required. Energized work is subject to specific justified conditions and controls, not convenience.",
+        "H12_final_2_2": "Boundaries depend on the equipment and electrical hazards. Awareness workers respect established limits rather than inventing them.",
+        "H12_final_2_3": "Duration and material do not remove the electrical exposure. Access must follow the qualified control arrangement and role limits.",
+        "H12_check3": "The observed discrepancy means the assumed safe state is not established. The qualified process must resolve sources, identity and instrument behavior before exposure.",
+        "H12_final_3_1": "Testing requires task-specific skill and suitable equipment because the conductors may still be energized during verification.",
+        "H12_final_3_2": "The measurement is only reliable within the instrument’s condition and method. Required function checks help prevent a false safe-state conclusion.",
+        "H12_final_3_3": "A control response is bounded and can fail for many reasons. Qualified electrical verification must address the actual conductors and sources.",
+        "H12_check4": "Energized work is governed by specific conditions and safeguards. Convenience alone does not establish that those conditions are met.",
+        "H12_final_4_1": "Protective performance must match the exposure and work method. Generic issue or appearance does not establish adequacy.",
+        "H12_final_4_2": "Protective equipment does not supply the knowledge and skill needed to avoid faults and contact. Qualified execution is still required.",
+        "H12_final_4_3": "Damage can defeat protective performance. The applicable inspection and replacement process must restore the safeguard before reliance.",
+        "H12_check5": "The rescuer can become part of the circuit. Safe electrical control precedes contact and first aid; the designated response handles the energized hazard.",
+        "H12_final_5_1": "Function does not prove insulation integrity. Damage can expose users to shock or faults and must pass the approved repair or replacement process.",
+        "H12_final_5_2": "Pulling equipment by its cord can damage insulation and connections. Handling must preserve the electrical protective condition.",
+        "H12_final_5_3": "Equipment ratings and protection must match the environment. A device that works in one location may create unacceptable risk in another.",
+        "H12_check6": "Restoration must establish the actual safe operating and access condition. Craft completion alone does not restore enclosure protection or clear people from exposure.",
+        "H12_final_6_1": "People may still rely on the previous isolated state. Clear communication prevents inadvertent contact or conflicting work after energization.",
+        "H12_final_6_2": "Traceability links verification to the actual system and condition. Vague or predicted records cannot establish the work performed.",
+        "H12_final_6_3": "Written awareness cannot establish hands-on electrical testing, repair or rescue skills. The employer and applicable licensing system determine those qualifications.",
+        "H12_final_scenario1": "Conflicting identity information can leave a worker on a live source despite following the wrong label. Qualified resolution and verification are necessary.",
+        "H12_final_scenario2": "Protective equipment is one safeguard within a qualified program. It cannot replace the technical basis and practical competence for hazardous electrical work."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

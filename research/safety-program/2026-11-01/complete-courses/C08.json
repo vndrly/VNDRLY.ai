@@ -1,0 +1,789 @@
+{
+  "familyId": "C08",
+  "title": "Emergency responders and occupational first aid",
+  "description": "Complete original VNDRLY C08 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Ensure response promises correspond to capable people.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Recognized first-aid/CPR provider and practical response/rescue assessment as applicable. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.slb.com/about/health-safety-and-environment/worker-safety-and-incident-prevention"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.y12.doe.gov/suppliers/procurement/subcontracting/subcontracting-forecasts/upf-forecast/upf-safety-procedures"
+    },
+    {
+      "title": "Inventory research reference 3",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+    },
+    {
+      "title": "OSHA medical services and first aid",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.151"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "C08_intro",
+        "title": "Start here — Emergency responders and occupational first aid",
+        "body": "# C08: Emergency responders and occupational first aid\n\nEnsure response promises correspond to capable people. This course teaches the decisions needed to implement that purpose in field operations. It covers coverage needs, role limits, qualified training, exercises and renewal. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C08_lesson1",
+        "title": "Lesson 1 — Plan coverage for credible emergencies",
+        "body": "## Plan coverage for credible emergencies\n\nResponse coverage depends on location, shift, workforce, access and credible events. Identify what assistance is needed and whether it is actually available during the work. A name on a credential list is not a response arrangement. Consider breaks, leave and simultaneous work. Competent emergency planning determines appropriate first-aid, CPR, medical and rescue provisions; this course does not prescribe a universal response time or staffing ratio.\n\n### Deeper application\n\nCoverage planning should represent the working shift, not only normal office hours. Include when responders leave, where they are based and how access or simultaneous commitments affect availability. A suitable backup must be real and usable. The credible emergency and location determine what arrangement needs competent review. Do not use an off-duty name or an unsupported assumption about public emergency services as the sole coverage basis.\n\n### Worked oilfield example\n\nThe only trained first aider leaves a remote site while the final crew continues work that depends on that coverage. The decision is to reassess coverage and provide a suitable arrangement or suspend dependent work.\n\nCoverage is an operational condition, not simply a list of credential holders. Off-duty absence can create a real gap. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A shift coverage plan showing actual availability, location, backup and relevant work restrictions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the backup responder is listed but cannot access the site. The appropriate correction is to resolve access and actual availability before relying on that backup arrangement. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C08_lesson2",
+        "title": "Lesson 2 — Match provider training to assigned role",
+        "body": "## Match provider training to assigned role\n\nFirst aid, CPR, specialist rescue and clinical care are different capabilities. Use appropriately qualified providers and practical assessment for the duties assigned. Verify credential authenticity, scope and validity. A general awareness course does not confer responder competence. Where applicable, governing requirements determine the training needed. Do not assume a first-aid certificate qualifies someone for confined-space entry rescue or hazardous-atmosphere response.\n\n### Deeper application\n\nRead the credential's scope and verify it belongs to the assigned responder. First aid, CPR and specialist rescue are not interchangeable titles. Practical capabilities must match the scenario promised in the plan. A roster can accurately show current first-aid credentials while still revealing a missing rescue capability. Keeping that distinction explicit prevents a general training record from becoming an unsupported response commitment.\n\n### Worked oilfield example\n\nA first-aid credential holder is assigned confined-space rescue with no matching rescue assessment. The decision is to obtain a suitable qualified rescue arrangement and keep dependent entry work unready meanwhile.\n\nFirst aid and specialist rescue require different capabilities; a certificate's scope must match the response promised. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Verified role-specific training and practical evidence for the actual rescue arrangement. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the rescue credential is authentic but covers a different task environment. The appropriate correction is to have the competent rescue owner verify matching capability and address the gap before reliance. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C08_lesson3",
+        "title": "Lesson 3 — Verify equipment readiness and access",
+        "body": "## Verify equipment readiness and access\n\nA capable person needs suitable available equipment and a practicable route to the casualty. Check equipment status, access arrangements, communications and integration with site response. Do not treat a sealed cabinet or purchase order as proof of usable readiness. Technical inspection and service requirements come from the relevant manufacturer and competent sources. Responders should operate only equipment within their training and authorization.\n\n### Deeper application\n\nCheck the response chain: suitable people, equipment readiness, communication, access and handoff. A missing link can defeat the arrangement even when the rest is strong. An AED in inventory is different from an accessible ready AED at the shift's location. The appropriate equipment owner determines technical readiness requirements; this course does not substitute a generic visual glance for those checks.\n\n### Worked oilfield example\n\nA crew relies on an AED listed in the plan, but it is locked in an inaccessible office during night work. The decision is to provide verified accessible response equipment and review the night coverage arrangement before relying on it.\n\nEquipment presence does not establish operational availability; access and readiness must match the working conditions. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A readiness check identifying accessible location, suitable equipment status and responsible coverage. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that access is fixed but nobody checked the equipment's required readiness status. The appropriate correction is to obtain the appropriate readiness check before treating the equipment as available for response. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C08_lesson4",
+        "title": "Lesson 4 — Activate help and remain within limits",
+        "body": "## Activate help and remain within limits\n\nWorkers should know the alarm route, precise location information, access instructions and who coordinates emergency services. Responders act within training and summon specialist support when needed. A first aider does not override clinical decisions or enter an unsafe atmosphere simply because someone is injured. The first priority includes avoiding additional casualties. This course teaches coordination boundaries, not medical treatment or rescue techniques.\n\n### Deeper application\n\nA clear emergency call gives the known location, nature of event, hazards and access information through the established route. State uncertainty honestly. The caller should not approach an unsafe area to obtain details. A worker can activate help without being a medical specialist. A trained responder must still remain within their capability and use specialist support when the situation exceeds that scope.\n\n### Worked oilfield example\n\nA casualty is visible inside a vessel, and an untrained colleague proposes immediate entry to help. The decision is to raise the emergency alarm, keep clear and activate the established suitable rescue response.\n\nUncontrolled entry can create another casualty. Activate capable response without exceeding the observer's safe role. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A response activation record showing location, known hazards, access and specialist notification. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the caller gives the site name but no access location or known hazard information. The appropriate correction is to supply the available precise location and hazard details through the emergency communication route. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C08_lesson5",
+        "title": "Lesson 5 — Exercise the interfaces safely",
+        "body": "## Exercise the interfaces safely\n\nA drill tests whether the plan works, including alarms, access, coverage and handoff. State objectives and use safe simulation rather than real exposure. Observe actual communication and response coordination, record gaps and assign corrective actions. A drill attendance sheet does not demonstrate every capability. Recognize the boundary between practicing coordination and assessing a specialist rescue or clinical technique.\n\n### Deeper application\n\nChoose drill objectives that can be safely observed, such as message receipt, gate access and handoff. Distinguish a simulated action from a performed one in the record. If a gate would not open, the drill has revealed a real readiness gap even when no casualty was present. Correct and retest the function rather than converting attendance or a debrief discussion into proof of effectiveness.\n\n### Worked oilfield example\n\nA drill counts as successful because everyone attended, although the ambulance access gate could not be opened. The decision is to record the access failure, implement protective arrangements and correct and retest the interface.\n\nA drill's value is revealing whether the arrangement works; attendance cannot refute an observed access failure. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A drill record linking the access failure to corrective action and a later successful safe retest. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the gate repair is invoiced but no one has retested access. The appropriate correction is to verify the actual access function and response interface before closing effectiveness. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C08_lesson6",
+        "title": "Lesson 6 — Maintain current coverage and credentials",
+        "body": "## Maintain current coverage and credentials\n\nReview responder status when shifts, locations or work change and at relevant credential renewal triggers. Use actual provider or governing validity rules, not an invented annual rule for every credential. Ensure replacement coverage during training or leave. Keep only necessary personal information in operational rosters. A company training score cannot establish that competent responders are physically available for tonight's work.\n\n### Deeper application\n\nReview both credentials and actual availability when the roster changes. A current certificate does not keep its holder on site during leave. Conversely, renewal planning should reuse valid evidence rather than demand duplicate courses without a basis. Ensure operational copies show current coverage and restrictions. A stale exported roster can defeat an otherwise correct live record, so communicate the change to actual users.\n\n### Worked oilfield example\n\nA roster shows current responders, but both qualified people are scheduled away from the remote site tomorrow. The decision is to revise actual coverage and restrict dependent work until a suitable arrangement is in place.\n\nCredential validity and availability are separate conditions; both must support the response promised. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A current shift roster connecting verified role competence with real site coverage and backup. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the roster has been corrected but dispatch continues using an old exported copy. The appropriate correction is to replace the stale operational copy and confirm affected supervisors know the current coverage limits. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C08_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nThe only trained first aider leaves a remote site while the final crew continues work that depends on that coverage. At the handover, a second issue is identified: The rescue credential is authentic but covers a different task environment. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Count the AED as available because it exists on the inventory. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Reassess coverage and provide a suitable arrangement or suspend dependent work. The reason is specific: Coverage is an operational condition, not simply a list of credential holders. Off-duty absence can create a real gap. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Have the competent rescue owner verify matching capability and address the gap before reliance. The supporting record should show: Verified role-specific training and practical evidence for the actual rescue arrangement. This is important because first aid and specialist rescue require different capabilities; a certificate's scope must match the response promised. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because equipment presence does not establish operational availability; access and readiness must match the working conditions. The suitable decision is: Provide verified accessible response equipment and review the night coverage arrangement before relying on it. Evidence for review would include: A readiness check identifying accessible location, suitable equipment status and responsible coverage. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA casualty is visible inside a vessel, and an untrained colleague proposes immediate entry to help. At the handover, a second issue is identified: The gate repair is invoiced but no one has retested access. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Rely on the roster's green credential status. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Raise the emergency alarm, keep clear and activate the established suitable rescue response. The reason is specific: Uncontrolled entry can create another casualty. Activate capable response without exceeding the observer's safe role. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Verify the actual access function and response interface before closing effectiveness. The supporting record should show: A drill record linking the access failure to corrective action and a later successful safe retest. This is important because a drill's value is revealing whether the arrangement works; attendance cannot refute an observed access failure. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because credential validity and availability are separate conditions; both must support the response promised. The suitable decision is: Revise actual coverage and restrict dependent work until a suitable arrangement is in place. Evidence for review would include: A current shift roster connecting verified role competence with real site coverage and backup. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C08_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C08_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nRecognized first-aid/CPR provider and practical response/rescue assessment as applicable. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "C08_check1",
+        "prompt": "The only trained first aider leaves a remote site while the final crew continues work that depends on that coverage. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reassess coverage and provide a suitable arrangement or suspend dependent work."
+          },
+          {
+            "id": "b",
+            "label": "Count the off-duty first aider as still covering the site."
+          },
+          {
+            "id": "c",
+            "label": "Assume any worker can provide the same response without training."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C08_final1",
+        "prompt": "For plan coverage for credible emergencies, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A shift coverage plan showing actual availability, location, backup and relevant work restrictions."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C08_final2",
+        "prompt": "A later review finds: The backup responder is listed but cannot access the site. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Resolve access and actual availability before relying on that backup arrangement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C08_final3",
+        "prompt": "Consider this proposed response: Count the off-duty first aider as still covering the site. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Coverage is an operational condition, not simply a list of credential holders. Off-duty absence can create a real gap."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C08_check2",
+        "prompt": "A first-aid credential holder is assigned confined-space rescue with no matching rescue assessment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat first-aid training as qualification for all rescue tasks."
+          },
+          {
+            "id": "b",
+            "label": "Obtain a suitable qualified rescue arrangement and keep dependent entry work unready meanwhile."
+          },
+          {
+            "id": "c",
+            "label": "Ask the responder to improvise entry rescue if an emergency occurs."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C08_final4",
+        "prompt": "For match provider training to assigned role, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "Verified role-specific training and practical evidence for the actual rescue arrangement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C08_final5",
+        "prompt": "A later review finds: The rescue credential is authentic but covers a different task environment. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Have the competent rescue owner verify matching capability and address the gap before reliance."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C08_final6",
+        "prompt": "Consider this proposed response: Treat first-aid training as qualification for all rescue tasks. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "First aid and specialist rescue require different capabilities; a certificate's scope must match the response promised."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C08_check3",
+        "prompt": "A crew relies on an AED listed in the plan, but it is locked in an inaccessible office during night work. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the AED as available because it exists on the inventory."
+          },
+          {
+            "id": "b",
+            "label": "Break into the office as the normal planned access method."
+          },
+          {
+            "id": "c",
+            "label": "Provide verified accessible response equipment and review the night coverage arrangement before relying on it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C08_final7",
+        "prompt": "For verify equipment readiness and access, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A readiness check identifying accessible location, suitable equipment status and responsible coverage."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C08_final8",
+        "prompt": "A later review finds: Access is fixed but nobody checked the equipment's required readiness status. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Obtain the appropriate readiness check before treating the equipment as available for response."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C08_final9",
+        "prompt": "Consider this proposed response: Count the AED as available because it exists on the inventory. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Equipment presence does not establish operational availability; access and readiness must match the working conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C08_check4",
+        "prompt": "A casualty is visible inside a vessel, and an untrained colleague proposes immediate entry to help. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Raise the emergency alarm, keep clear and activate the established suitable rescue response."
+          },
+          {
+            "id": "b",
+            "label": "Enter immediately because helping overrides all entry controls."
+          },
+          {
+            "id": "c",
+            "label": "Delay the alarm until a full incident form is complete."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C08_final10",
+        "prompt": "For activate help and remain within limits, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A response activation record showing location, known hazards, access and specialist notification."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C08_final11",
+        "prompt": "A later review finds: The caller gives the site name but no access location or known hazard information. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Supply the available precise location and hazard details through the emergency communication route."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C08_final12",
+        "prompt": "Consider this proposed response: Enter immediately because helping overrides all entry controls. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Uncontrolled entry can create another casualty. Activate capable response without exceeding the observer's safe role."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C08_check5",
+        "prompt": "A drill counts as successful because everyone attended, although the ambulance access gate could not be opened. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Mark the drill fully effective because attendance was high."
+          },
+          {
+            "id": "b",
+            "label": "Record the access failure, implement protective arrangements and correct and retest the interface."
+          },
+          {
+            "id": "c",
+            "label": "Hide the access problem to avoid a poor safety score."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C08_final13",
+        "prompt": "For exercise the interfaces safely, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A drill record linking the access failure to corrective action and a later successful safe retest."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C08_final14",
+        "prompt": "A later review finds: The gate repair is invoiced but no one has retested access. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify the actual access function and response interface before closing effectiveness."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C08_final15",
+        "prompt": "Consider this proposed response: Mark the drill fully effective because attendance was high. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "A drill's value is revealing whether the arrangement works; attendance cannot refute an observed access failure."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C08_check6",
+        "prompt": "A roster shows current responders, but both qualified people are scheduled away from the remote site tomorrow. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Rely on the roster's green credential status."
+          },
+          {
+            "id": "b",
+            "label": "Change the location field without arranging real availability."
+          },
+          {
+            "id": "c",
+            "label": "Revise actual coverage and restrict dependent work until a suitable arrangement is in place."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C08_final16",
+        "prompt": "For maintain current coverage and credentials, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A current shift roster connecting verified role competence with real site coverage and backup."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C08_final17",
+        "prompt": "A later review finds: The roster has been corrected but dispatch continues using an old exported copy. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Replace the stale operational copy and confirm affected supervisors know the current coverage limits."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C08_final18",
+        "prompt": "Consider this proposed response: Rely on the roster's green credential status. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Credential validity and availability are separate conditions; both must support the response promised."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C08_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Have the competent rescue owner verify matching capability and address the gap before reliance."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C08_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Verify the actual access function and response interface before closing effectiveness."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "C08_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C08_lesson1",
+          "questionIds": [
+            "C08_check1"
+          ]
+        },
+        {
+          "lessonId": "C08_lesson2",
+          "questionIds": [
+            "C08_check2"
+          ]
+        },
+        {
+          "lessonId": "C08_lesson3",
+          "questionIds": [
+            "C08_check3"
+          ]
+        },
+        {
+          "lessonId": "C08_lesson4",
+          "questionIds": [
+            "C08_check4"
+          ]
+        },
+        {
+          "lessonId": "C08_lesson5",
+          "questionIds": [
+            "C08_check5"
+          ]
+        },
+        {
+          "lessonId": "C08_lesson6",
+          "questionIds": [
+            "C08_check6"
+          ]
+        },
+        {
+          "lessonId": "C08_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C08_assessment",
+          "questionIds": [
+            "C08_final1",
+            "C08_final2",
+            "C08_final3",
+            "C08_final4",
+            "C08_final5",
+            "C08_final6",
+            "C08_final7",
+            "C08_final8",
+            "C08_final9",
+            "C08_final10",
+            "C08_final11",
+            "C08_final12",
+            "C08_final13",
+            "C08_final14",
+            "C08_final15",
+            "C08_final16",
+            "C08_final17",
+            "C08_final18",
+            "C08_final19",
+            "C08_final20"
+          ]
+        },
+        {
+          "lessonId": "C08_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "C08_check1": "Coverage is an operational condition, not simply a list of credential holders. Off-duty absence can create a real gap.",
+        "C08_final1": "Coverage is an operational condition, not simply a list of credential holders. Off-duty absence can create a real gap. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C08_final2": "Coverage is an operational condition, not simply a list of credential holders. Off-duty absence can create a real gap. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C08_final3": "Coverage is an operational condition, not simply a list of credential holders. Off-duty absence can create a real gap. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C08_check2": "First aid and specialist rescue require different capabilities; a certificate's scope must match the response promised.",
+        "C08_final4": "First aid and specialist rescue require different capabilities; a certificate's scope must match the response promised. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C08_final5": "First aid and specialist rescue require different capabilities; a certificate's scope must match the response promised. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C08_final6": "First aid and specialist rescue require different capabilities; a certificate's scope must match the response promised. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C08_check3": "Equipment presence does not establish operational availability; access and readiness must match the working conditions.",
+        "C08_final7": "Equipment presence does not establish operational availability; access and readiness must match the working conditions. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C08_final8": "Equipment presence does not establish operational availability; access and readiness must match the working conditions. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C08_final9": "Equipment presence does not establish operational availability; access and readiness must match the working conditions. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C08_check4": "Uncontrolled entry can create another casualty. Activate capable response without exceeding the observer's safe role.",
+        "C08_final10": "Uncontrolled entry can create another casualty. Activate capable response without exceeding the observer's safe role. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C08_final11": "Uncontrolled entry can create another casualty. Activate capable response without exceeding the observer's safe role. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C08_final12": "Uncontrolled entry can create another casualty. Activate capable response without exceeding the observer's safe role. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C08_check5": "A drill's value is revealing whether the arrangement works; attendance cannot refute an observed access failure.",
+        "C08_final13": "A drill's value is revealing whether the arrangement works; attendance cannot refute an observed access failure. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C08_final14": "A drill's value is revealing whether the arrangement works; attendance cannot refute an observed access failure. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C08_final15": "A drill's value is revealing whether the arrangement works; attendance cannot refute an observed access failure. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C08_check6": "Credential validity and availability are separate conditions; both must support the response promised.",
+        "C08_final16": "Credential validity and availability are separate conditions; both must support the response promised. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C08_final17": "Credential validity and availability are separate conditions; both must support the response promised. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C08_final18": "Credential validity and availability are separate conditions; both must support the response promised. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C08_final19": "First aid and specialist rescue require different capabilities; a certificate's scope must match the response promised. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "C08_final20": "A drill's value is revealing whether the arrangement works; attendance cannot refute an observed access failure. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

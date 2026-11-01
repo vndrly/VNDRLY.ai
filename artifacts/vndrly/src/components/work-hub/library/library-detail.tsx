@@ -19,6 +19,7 @@ import { useLibrary as useFormCampaigns } from "./use-library";
 import LibraryEditor from "./library-editor";
 import AssignmentReview from "./assignment-review";
 import { LibraryBody } from "./library-body";
+import TrainingPolicy from './training-policy';
 const schema = z.object({
   itemId: z.uuid(),
   title: z.string(),
@@ -105,8 +106,8 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
           {t(`workHubLibrary.state_${m.state}`)} · {t("workHubLibrary.version")}{" "}
           {m.contentVersion}
         </Text>
-        {!!m.content?.description && (
-          <Text style={label}>{m.content.description}</Text>
+        {!!(m.trainingPolicy?.description??m.content?.description) && (
+          <Text style={label}>{m.trainingPolicy?.description??m.content?.description}</Text>
         )}
         {data.canManage && (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -217,6 +218,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
           </TogglePillButton>
         )}
       </View>
+      {data.canManage&&m.safetyResource&&(m.kind==='policy'||(m.kind==='training'&&m.safetyResource.familyId.startsWith('G')))&&<TrainingPolicy itemId={itemId} onSaved={api.reload}/>}
       {edit && m.content && data.canManage && m.state === "draft" && (
         <View style={card}>
           <LibraryEditor

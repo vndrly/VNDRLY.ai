@@ -1,0 +1,789 @@
+{
+  "familyId": "H23",
+  "title": "Machine guarding, hand tools and housekeeping",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Prevent entanglement, cuts, trips and unsafe temporary arrangements.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate equipment-specific practical assessment, operator authorization, isolation competence and competent technical maintenance are required as applicable. This course does not authorize bypasses, energized troubleshooting or machine repair.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://kmterm.kindermorgan.com/ContAlliance/SSPOMS.aspx"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.y12.doe.gov/suppliers/procurement/subcontracting/subcontracting-forecasts/upf-forecast/upf-safety-procedures"
+    },
+    {
+      "title": "OSHA Machine guarding",
+      "url": "https://www.osha.gov/machine-guarding"
+    },
+    {
+      "title": "OSHA General machine guarding requirements",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.212"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H23_intro",
+        "title": "Start here: Machine guarding, hand tools and housekeeping",
+        "body": "# Machine guarding, hand tools and housekeeping\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate equipment-specific practical assessment, operator authorization, isolation competence and competent technical maintenance are required as applicable. This course does not authorize bypasses, energized troubleshooting or machine repair.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA General machine guarding requirements](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.212). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H23_lesson1",
+        "title": "Lesson 1 - Choose the correct tool and machine",
+        "body": "Match equipment to the task, material and environment. An attachment that fits physically is not necessarily rated or approved for the machine. Confirm the manufacturer's intended configuration and the employer's method. Do not exceed ratings or invent a safe operating limit from experience with another tool.\n\nConsider ignition, electrical, pressure, cutting and ejection hazards. A tool suitable in a dry shop may not be suitable in a wet or hazardous area. Only people with the applicable competence and authorization should operate the equipment.\n\nIf the correct equipment is unavailable, change or defer the task through the responsible role. Improvised extensions and altered attachments can change the force path and protective functions.\n\n## Worked field example\n\nA worker fits an unapproved cutting attachment because its shaft fits the available tool.\n\nThe safe decision is to hold use until the approved tool and attachment configuration is confirmed. Physical fit does not establish rated compatibility or suitability.\n\nA useful field record is specific: A verified manufacturer-approved configuration and task-specific equipment selection. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nTool selection should include the attachment and accessory as a system. Confirm the intended material, speed, mounting, guard and environmental suitability through the manufacturer's information and approved procedure. Do not make an adapter simply because it allows a part to be installed. A homemade extension can change leverage, reaction force and failure consequences.\n\nConsider the workpiece too. A tool suitable for a secured part at a bench may not be suitable for an awkward in-place cut near other equipment. The supervisor should identify what the method assumes about position, restraint and access. If those assumptions are absent, the task needs review before use.\n\nWorkers should know how to obtain the correct tool without pressure to improvise. A stores system that issues whatever is available can undermine the approved method. Deferring the task for suitable equipment is a controlled response, not evidence that the worker should find a workaround.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H23_lesson2",
+        "title": "Lesson 2 - Inspect guards and protective functions",
+        "body": "A guard protects against a defined hazard such as contact, entanglement or ejected material. Inspect the required guard, interlock and control condition through the approved procedure before use. A guard that is present but loose or unable to perform its function is not effective protection.\n\nDo not bypass an interlock or remove a guard to improve production. Report repeated nuisance trips or jams as problems requiring competent review. The machine should not depend on the operator keeping a hand away from an accessible danger point.\n\nInspection and functional checks must themselves be safe. Do not reach into a moving machine to prove the guard is working. Follow the manufacturer's and employer's method and keep unqualified people out of technical testing.\n\n## Worked field example\n\nA machine interlock is taped closed so the guard can remain open during production.\n\nThe safe decision is to stop use and have the protective system restored and verified through competent maintenance. Bypassing the interlock defeats a designed protective function.\n\nA useful field record is specific: A competent repair and safe functional verification of the guard/interlock arrangement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nA guard check should address function and configuration. A cover fitted with missing fasteners or an interlock connected incorrectly may look complete. Users perform only the approved safe checks; competent personnel conduct technical inspection and testing where needed. Do not reach into a danger zone to demonstrate that the machine stops.\n\nThe reason for a guard complaint is useful information. Repeated removal may indicate poor access, visibility or material feeding, but that does not justify removal. The technical authority redesigns or corrects the method so the required protection remains effective.\n\nTemporary defeat of a protective device is not authorized by this course. Any exceptional technical activity must follow the applicable controlled procedure and authority, with its own safety arrangements. Ordinary production should not continue around a missing safeguard because the operator has accepted personal risk or a supervisor has signed a note.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H23_lesson3",
+        "title": "Lesson 3 - Keep people outside energy and ejection paths",
+        "body": "Position the work and secure it through the approved method so hands are not used as an improvised clamp. Consider the direction of cutting, recoil, rotation and ejected material. Protect nearby people as well as the operator.\n\nLoose clothing, jewelry, hair and unsuitable gloves can create entanglement around rotating equipment. Follow the task-specific PPE and clothing requirements rather than assuming more material always provides more protection. Eye and face protection do not replace a missing guard.\n\nMaintain a stable working position and clear access. A tool used from an overreach or unstable platform can escape control. Stop when the setup does not permit the approved method; do not rely on a coworker holding an unsafe position.\n\n## Worked field example\n\nA worker holds a small part by hand near a rotating tool because the fixture is missing.\n\nThe safe decision is to hold the task until the approved secure workholding and safe positioning are established. Hands used as a substitute fixture can enter the tool’s danger area.\n\nA useful field record is specific: A verified fixture and observation of hands and bystanders outside the relevant danger paths. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nMap the likely energy and material paths before positioning people. A rotating part can grab loose material; a cutting wheel can eject fragments; a press can create a trapping zone; a hand tool can slip into another worker. The approved setup must address the relevant paths rather than only the point where work is performed.\n\nKeep bystanders outside the affected area through the site method. A helper should not hold a part in a position the operator would not safely use themselves. Use suitable workholding and supports, and review what happens when the cut is complete or a load shifts.\n\nThe operator's stance and escape space matter. An obstructed floor, trailing lead or narrow access can defeat tool control. Clean and organize the area before starting, while preserving emergency and pedestrian routes. If the task forces an unstable position, redesign it rather than treating protective clothing as the solution.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H23_lesson4",
+        "title": "Lesson 4 - Isolate before clearing or maintenance",
+        "body": "Stopping a machine at the control is not the same as isolating hazardous energy. A jam can store force, and automatic or remote restart can occur. The approved isolation process identifies energy sources, secures them and verifies the safe condition before the authorized intervention.\n\nAn operator must stay within their permitted role. If clearing a jam requires access to a danger area, obtain the authorized isolation and competent maintenance arrangement. Do not reach through an opening while another person holds the stop button.\n\nRestart follows controlled handback: people clear, equipment restored, guards in place and the designated authority satisfied. A cleared jam is not enough if the original fault or protective defect remains.\n\n## Worked field example\n\nA conveyor jams and a worker proposes reaching inside while a coworker holds the stop button.\n\nThe safe decision is to use the approved isolation and verification process before authorized access to the danger area. A held stop button does not control every energy source or prevent unexpected movement.\n\nA useful field record is specific: An authorized isolation record and verified safe condition for the specific intervention. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nA jam can retain tension, compression, gravity or other stored energy. The isolation plan identifies those sources and the method for securing or releasing them safely. A machine can be electrically isolated while a suspended or compressed component remains dangerous. Only authorized people perform the intervention within the reviewed method.\n\nThe person clearing the fault should verify the actual equipment identity. Similar adjacent machines and shared supplies can create mistakes. Follow the approved identification, isolation, securing and verification process rather than relying on someone saying the power is off.\n\nHandback includes checking that tools and people are clear, guards and controls are restored and the machine is ready for authorized restart. Communicate any remaining limits. Do not remove another person's protection or energize the machine because a maintenance ticket shows the task complete. The applicable isolation procedure controls those actions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H23_lesson5",
+        "title": "Lesson 5 - Quarantine defects and maintain housekeeping",
+        "body": "Remove unsafe tools from service through a clear identification and segregation process. A note that falls off or a defective tool returned to the shared drawer can expose the next user. Competent repair and verified release are required before reuse.\n\nHousekeeping protects routes, stable footing, access to controls and emergency equipment. Control hoses, leads, scrap, sharp offcuts and spills as work develops. Do not move a hazard from the bench into the pedestrian route simply to make the workstation look tidy.\n\nStorage should prevent falling items and preserve safe access. Heavy or awkward items need suitable placement and handling. A clean floor does not compensate for unstable racking or a blocked emergency control.\n\n## Worked field example\n\nA damaged grinder is left in the common drawer with a loose paper note.\n\nThe safe decision is to segregate and identify it so it cannot be used until competent repair and release. A defect report is ineffective if another worker can unknowingly return the tool to service.\n\nA useful field record is specific: A controlled quarantine record tied to the tool and verified repair status. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nQuarantine needs to prevent unintended use. Identify the item, defect and status through the approved process and place it in a controlled location where appropriate. If the equipment cannot be moved, maintain effective restriction and communication at the point of use. A shared drawer or ordinary tool rack does not provide that distinction.\n\nRepair records should connect the competent action to the actual equipment. A generic invoice for several tools may need supporting identification before one item is released. Users still complete their required pre-use checks after repair.\n\nHousekeeping is continuous. Plan where offcuts, packaging, hoses and waste go as work progresses. A cleanup that blocks an exit or hides a defect is not improvement. Review storage capacity and receiving practices where obstructions recur; repeated reminders cannot create space that the layout does not provide.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H23_lesson6",
+        "title": "Lesson 6 - Verify competence and recurring faults",
+        "body": "Practical evaluation must address the actual equipment, setup, pre-use checks, safe operation, stopping and defect reporting. A generic tool course does not authorize every machine. Record unassessed attachments, conditions and tasks rather than implying unlimited competence.\n\nReview repeated jams, guard damage and workarounds with users and maintenance. The cause may involve unsuitable material, worn components, poor workholding or an unrealistic production method. A reminder to be careful does not resolve a recurring technical fault.\n\nObserve the revised arrangement before closing an action. A maintenance ticket shows work was recorded; field verification establishes whether the protective function and task method are restored. Keep operation held if required safeguards remain uncertain.\n\n## Worked field example\n\nA supervisor closes repeated guard complaints after sending a reminder, without examining the machine.\n\nThe safe decision is to arrange competent investigation and verify the corrected protective function in the actual setup. Repeated protective failures need a verified technical and work-method response.\n\nA useful field record is specific: A cause-specific repair or method change and safe observation of restored protection. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nAn equipment-specific practical assessment should make the worker explain their permitted scope and demonstrate the safe setup, checks, use, stopping and defect response. Use a controlled representative task, not a deliberately defective machine or live jam. The assessor records coaching and unassessed operations.\n\nIf an operator identifies a guard failure, that is useful preventive behavior. The response should encourage prompt reporting and provide a safe alternative rather than reward the person who continues production. Management needs to resolve the technical cause and the work pressure together.\n\nAfter correction, observe representative operation to verify the original problem has been addressed. A machine that no longer jams because workers feed it through an unsafe opening has not improved. Preserve previous findings, repair evidence and the limits of the field check. Future changes to attachments, materials or operating method require review of the affected competence and controls.\n\nA tool returned from repair should be issued with clear identity and status. The user confirms the required pre-use checks and the approved attachment, while the competent repair record remains available through the authorized process. If the original fault recurs, stop and report it rather than assuming the previous repair guarantees continued safety. A recurring defect may require a deeper technical or work-method review. Record the new observation and preserve the earlier repair history so the next decision is based on the actual sequence rather than an isolated favorable entry.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H23_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional shop machine jams repeatedly. An operator removes a guard to improve access and asks a coworker to hold the stop button during clearing. The production leader proposes continuing until the next maintenance day.\n\n### Worked solution\n\nUse stops and the authorized isolation arrangement is established before any permitted intervention. The held stop button and removed guard are not acceptable substitutes. Competent maintenance reviews the jam and protective system, while the supervisor reviews material and workholding. The machine is not released merely because the blockage is removed. Guards, interlocks and the complete operating configuration are safely verified, people are clear and the designated authority controls restart. The review records the fault, actual corrective action and limits of the check. Production pressure does not make bypassing a safeguard a valid temporary method.\n\n## Scenario 2\n\nA fictional crew cleans the shop for an inspection. Defective tools go back into drawers, hoses are piled against an exit and scrap is stacked beside an emergency control. The floor appears clear.\n\n### Worked solution\n\nThe cleanup is not accepted as readiness. Unsafe tools are identified and segregated, exit and emergency-control access restored, and hoses and scrap placed in suitable storage. The responsible owner checks the complete routes and work areas rather than a photograph of the floor. Recurring storage pressure is reviewed so hazards are not simply moved during inspections. Practical checks and repair records distinguish serviceable tools from quarantined items. The final observation records the actual area and conditions; it does not certify machines whose technical condition was not assessed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H23_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H23_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate equipment-specific practical assessment, operator authorization, isolation competence and competent technical maintenance are required as applicable. This course does not authorize bypasses, energized troubleshooting or machine repair.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H23_check1",
+        "prompt": "A worker fits an unapproved cutting attachment because its shaft fits the available tool. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold use until the approved tool and attachment configuration is confirmed"
+          },
+          {
+            "id": "b",
+            "label": "Test the attachment at full speed to see if it vibrates"
+          },
+          {
+            "id": "c",
+            "label": "Assume any part from the same supplier is interchangeable"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H23_check2",
+        "prompt": "A machine interlock is taped closed so the guard can remain open during production. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue if the operator promises to keep hands clear"
+          },
+          {
+            "id": "b",
+            "label": "Stop use and have the protective system restored and verified through competent maintenance"
+          },
+          {
+            "id": "c",
+            "label": "Post a warning sign and leave the bypass in place"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H23_check3",
+        "prompt": "A worker holds a small part by hand near a rotating tool because the fixture is missing. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ask a coworker to hold the part more firmly"
+          },
+          {
+            "id": "b",
+            "label": "Remove the guard to improve visibility of the hand-held part"
+          },
+          {
+            "id": "c",
+            "label": "Hold the task until the approved secure workholding and safe positioning are established"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H23_check4",
+        "prompt": "A conveyor jams and a worker proposes reaching inside while a coworker holds the stop button. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the approved isolation and verification process before authorized access to the danger area"
+          },
+          {
+            "id": "b",
+            "label": "Reach in quickly while the button is held"
+          },
+          {
+            "id": "c",
+            "label": "Reverse the conveyor with the worker’s hand near the jam"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H23_check5",
+        "prompt": "A damaged grinder is left in the common drawer with a loose paper note. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leave it available for workers willing to accept the risk"
+          },
+          {
+            "id": "b",
+            "label": "Segregate and identify it so it cannot be used until competent repair and release"
+          },
+          {
+            "id": "c",
+            "label": "Remove the note once someone reports the defect"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H23_check6",
+        "prompt": "A supervisor closes repeated guard complaints after sending a reminder, without examining the machine. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the reminder email as proof that the guard is effective"
+          },
+          {
+            "id": "b",
+            "label": "Allow the most experienced worker to operate around the defect"
+          },
+          {
+            "id": "c",
+            "label": "Arrange competent investigation and verify the corrected protective function in the actual setup"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H23_final1",
+        "prompt": "For choose the correct tool and machine, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Physical fit does not establish rated compatibility or suitability."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H23_final2",
+        "prompt": "Which evidence would most directly verify choose the correct tool and machine in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified manufacturer-approved configuration and task-specific equipment selection"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H23_final3",
+        "prompt": "A relief worker proposes the following shortcut during choose the correct tool and machine: \"Test the attachment at full speed to see if it vibrates.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Test the attachment at full speed to see if it vibrates"
+          },
+          {
+            "id": "b",
+            "label": "Assume any part from the same supplier is interchangeable"
+          },
+          {
+            "id": "c",
+            "label": "Hold use until the approved tool and attachment configuration is confirmed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H23_final4",
+        "prompt": "For inspect guards and protective functions, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Bypassing the interlock defeats a designed protective function."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H23_final5",
+        "prompt": "Which evidence would most directly verify inspect guards and protective functions in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A competent repair and safe functional verification of the guard/interlock arrangement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H23_final6",
+        "prompt": "A relief worker proposes the following shortcut during inspect guards and protective functions: \"Continue if the operator promises to keep hands clear.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue if the operator promises to keep hands clear"
+          },
+          {
+            "id": "b",
+            "label": "Post a warning sign and leave the bypass in place"
+          },
+          {
+            "id": "c",
+            "label": "Stop use and have the protective system restored and verified through competent maintenance"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H23_final7",
+        "prompt": "For keep people outside energy and ejection paths, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hands used as a substitute fixture can enter the tool’s danger area."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H23_final8",
+        "prompt": "Which evidence would most directly verify keep people outside energy and ejection paths in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified fixture and observation of hands and bystanders outside the relevant danger paths"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H23_final9",
+        "prompt": "A relief worker proposes the following shortcut during keep people outside energy and ejection paths: \"Ask a coworker to hold the part more firmly.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ask a coworker to hold the part more firmly"
+          },
+          {
+            "id": "b",
+            "label": "Remove the guard to improve visibility of the hand-held part"
+          },
+          {
+            "id": "c",
+            "label": "Hold the task until the approved secure workholding and safe positioning are established"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H23_final10",
+        "prompt": "For isolate before clearing or maintenance, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A held stop button does not control every energy source or prevent unexpected movement."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H23_final11",
+        "prompt": "Which evidence would most directly verify isolate before clearing or maintenance in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An authorized isolation record and verified safe condition for the specific intervention"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H23_final12",
+        "prompt": "A relief worker proposes the following shortcut during isolate before clearing or maintenance: \"Reach in quickly while the button is held.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reach in quickly while the button is held"
+          },
+          {
+            "id": "b",
+            "label": "Reverse the conveyor with the worker’s hand near the jam"
+          },
+          {
+            "id": "c",
+            "label": "Use the approved isolation and verification process before authorized access to the danger area"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H23_final13",
+        "prompt": "For quarantine defects and maintain housekeeping, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A defect report is ineffective if another worker can unknowingly return the tool to service."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H23_final14",
+        "prompt": "Which evidence would most directly verify quarantine defects and maintain housekeeping in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A controlled quarantine record tied to the tool and verified repair status"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H23_final15",
+        "prompt": "A relief worker proposes the following shortcut during quarantine defects and maintain housekeeping: \"Leave it available for workers willing to accept the risk.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leave it available for workers willing to accept the risk"
+          },
+          {
+            "id": "b",
+            "label": "Remove the note once someone reports the defect"
+          },
+          {
+            "id": "c",
+            "label": "Segregate and identify it so it cannot be used until competent repair and release"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H23_final16",
+        "prompt": "For verify competence and recurring faults, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Repeated protective failures need a verified technical and work-method response."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H23_final17",
+        "prompt": "Which evidence would most directly verify verify competence and recurring faults in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A cause-specific repair or method change and safe observation of restored protection"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H23_final18",
+        "prompt": "A relief worker proposes the following shortcut during verify competence and recurring faults: \"Count the reminder email as proof that the guard is effective.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the reminder email as proof that the guard is effective"
+          },
+          {
+            "id": "b",
+            "label": "Allow the most experienced worker to operate around the defect"
+          },
+          {
+            "id": "c",
+            "label": "Arrange competent investigation and verify the corrected protective function in the actual setup"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H23_final19",
+        "prompt": "In Scenario 1, what must precede access to the danger area?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The approved isolation and verified safe condition for the authorized intervention"
+          },
+          {
+            "id": "b",
+            "label": "A coworker holding the stop button"
+          },
+          {
+            "id": "c",
+            "label": "A verbal promise not to restart"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H23_final20",
+        "prompt": "In Scenario 2, why is the clear floor insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A floor inspection is never useful"
+          },
+          {
+            "id": "b",
+            "label": "Other hazards remain in tool availability, emergency access and storage"
+          },
+          {
+            "id": "c",
+            "label": "Every tool must be discarded after inspection"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H23_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H23_lesson1",
+          "questionIds": [
+            "H23_check1"
+          ]
+        },
+        {
+          "lessonId": "H23_lesson2",
+          "questionIds": [
+            "H23_check2"
+          ]
+        },
+        {
+          "lessonId": "H23_lesson3",
+          "questionIds": [
+            "H23_check3"
+          ]
+        },
+        {
+          "lessonId": "H23_lesson4",
+          "questionIds": [
+            "H23_check4"
+          ]
+        },
+        {
+          "lessonId": "H23_lesson5",
+          "questionIds": [
+            "H23_check5"
+          ]
+        },
+        {
+          "lessonId": "H23_lesson6",
+          "questionIds": [
+            "H23_check6"
+          ]
+        },
+        {
+          "lessonId": "H23_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H23_final",
+          "questionIds": [
+            "H23_final1",
+            "H23_final2",
+            "H23_final3",
+            "H23_final4",
+            "H23_final5",
+            "H23_final6",
+            "H23_final7",
+            "H23_final8",
+            "H23_final9",
+            "H23_final10",
+            "H23_final11",
+            "H23_final12",
+            "H23_final13",
+            "H23_final14",
+            "H23_final15",
+            "H23_final16",
+            "H23_final17",
+            "H23_final18",
+            "H23_final19",
+            "H23_final20"
+          ]
+        },
+        {
+          "lessonId": "H23_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H23_check1": "Hold use until the approved tool and attachment configuration is confirmed. Physical fit does not establish rated compatibility or suitability.",
+        "H23_check2": "Stop use and have the protective system restored and verified through competent maintenance. Bypassing the interlock defeats a designed protective function.",
+        "H23_check3": "Hold the task until the approved secure workholding and safe positioning are established. Hands used as a substitute fixture can enter the tool’s danger area.",
+        "H23_check4": "Use the approved isolation and verification process before authorized access to the danger area. A held stop button does not control every energy source or prevent unexpected movement.",
+        "H23_check5": "Segregate and identify it so it cannot be used until competent repair and release. A defect report is ineffective if another worker can unknowingly return the tool to service.",
+        "H23_check6": "Arrange competent investigation and verify the corrected protective function in the actual setup. Repeated protective failures need a verified technical and work-method response.",
+        "H23_final1": "Physical fit does not establish rated compatibility or suitability. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H23_final2": "A verified manufacturer-approved configuration and task-specific equipment selection. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H23_final3": "Hold use until the approved tool and attachment configuration is confirmed. Physical fit does not establish rated compatibility or suitability. A staffing change does not remove this requirement.",
+        "H23_final4": "Bypassing the interlock defeats a designed protective function. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H23_final5": "A competent repair and safe functional verification of the guard/interlock arrangement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H23_final6": "Stop use and have the protective system restored and verified through competent maintenance. Bypassing the interlock defeats a designed protective function. A staffing change does not remove this requirement.",
+        "H23_final7": "Hands used as a substitute fixture can enter the tool’s danger area. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H23_final8": "A verified fixture and observation of hands and bystanders outside the relevant danger paths. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H23_final9": "Hold the task until the approved secure workholding and safe positioning are established. Hands used as a substitute fixture can enter the tool’s danger area. A staffing change does not remove this requirement.",
+        "H23_final10": "A held stop button does not control every energy source or prevent unexpected movement. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H23_final11": "An authorized isolation record and verified safe condition for the specific intervention. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H23_final12": "Use the approved isolation and verification process before authorized access to the danger area. A held stop button does not control every energy source or prevent unexpected movement. A staffing change does not remove this requirement.",
+        "H23_final13": "A defect report is ineffective if another worker can unknowingly return the tool to service. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H23_final14": "A controlled quarantine record tied to the tool and verified repair status. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H23_final15": "Segregate and identify it so it cannot be used until competent repair and release. A defect report is ineffective if another worker can unknowingly return the tool to service. A staffing change does not remove this requirement.",
+        "H23_final16": "Repeated protective failures need a verified technical and work-method response. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H23_final17": "A cause-specific repair or method change and safe observation of restored protection. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H23_final18": "Arrange competent investigation and verify the corrected protective function in the actual setup. Repeated protective failures need a verified technical and work-method response. A staffing change does not remove this requirement.",
+        "H23_final19": "Unexpected restart and stored energy remain possible after a control stop. The approved isolation process addresses the actual energy sources.",
+        "H23_final20": "Housekeeping concerns usable controls and safe storage as well as floor appearance. A tidy photograph cannot establish technical equipment condition."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

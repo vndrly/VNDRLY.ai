@@ -1,0 +1,781 @@
+{
+  "familyId": "H22",
+  "title": "Manual handling and ergonomics",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Reduce strain during handling, repetitive work and prolonged gate/vehicle shifts.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "A separate safe practical evaluation must verify the selected aid, route, placement and any team coordination. Powered handling equipment needs its own operator authorization. Medical assessment and complex ergonomic evaluation require the appropriate professionals; this course establishes no universal safe load.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Simplified%20PTW%20and%20JSA%20template.pdf"
+    },
+    {
+      "title": "OSHA Ergonomics",
+      "url": "https://www.osha.gov/ergonomics"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H22_intro",
+        "title": "Start here: Manual handling and ergonomics",
+        "body": "# Manual handling and ergonomics\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nA separate safe practical evaluation must verify the selected aid, route, placement and any team coordination. Powered handling equipment needs its own operator authorization. Medical assessment and complex ergonomic evaluation require the appropriate professionals; this course establishes no universal safe load.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Ergonomics](https://www.osha.gov/ergonomics). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H22_lesson1",
+        "title": "Lesson 1 - Assess the entire handling task",
+        "body": "Manual handling includes lifting, lowering, carrying, pushing, pulling and holding. Assess the load, grip, reach, posture, repetition, frequency, duration, route and environment with the people doing the work. Weight alone does not describe risk. A lighter awkward item handled repeatedly from the floor can still create substantial exposure.\n\nObserve the real task, including the beginning and end of the shift. Ask where discomfort occurs and what workers do when the normal arrangement fails. Do not assume a strong or experienced worker is protected from strain.\n\nUse competent input for complex or persistent problems. This course provides no universal safe lifting weight or medical diagnosis.\n\n## Worked field example\n\nA worker repeatedly lifts awkward valve boxes from floor level and reports increasing discomfort.\n\nThe safe decision is to pause the aggravating task and review load, reach, repetition and the work arrangement with the worker. Handling risk depends on the whole task rather than weight or worker strength alone.\n\nA useful field record is specific: A task observation and worker input identifying the actual handling exposures. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nA handling assessment should observe the worker, load and workplace together. Consider a box that is easy to lift at a waist-height demonstration bench but normally arrives on a low pallet behind other stock. The real task includes reaching over the pallet, turning with the box and setting it onto a surface occupied by tools. Teaching only the demonstration lift leaves most of the exposure unexamined.\n\nAsk workers how the process varies. A delivery surge, damaged packaging or a different product size may make the normal method unusable. The assessment should state the conditions it covers and the action when they change. Do not blame a worker for failing to follow a method that cannot be performed in the available space.\n\nAlso review pushing and pulling. Wheel condition, floor surface, gradient, visibility and stopping control affect a loaded trolley. A label giving nominal capacity does not establish manageable force or stability along the actual route. Competent advice is needed when the forces or task complexities cannot be adequately evaluated through the ordinary process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H22_lesson2",
+        "title": "Lesson 2 - Redesign before relying on technique",
+        "body": "Look first for elimination of handling, improved delivery placement, smaller units, suitable working height or mechanical assistance. A lift table can reduce low-level handling, but its suitability and pinch hazards must be assessed. The best change removes the awkward action rather than teaching people to tolerate it.\n\nLifting technique is a supporting skill, not a substitute for redesign. Telling a worker to bend their knees does not solve a load with no usable grip or a repeated long reach across a bench.\n\nCheck that the new method works for receiving, storage and final placement. A device that helps lift onto a trolley but leaves an uncontrolled final lift has solved only part of the task.\n\n## Worked field example\n\nA manager proposes another lifting video instead of fixing repeated floor-to-bench handling.\n\nThe safe decision is to review task redesign and suitable assistance before relying on technique training. Technique alone cannot remove the force, reach and repetition built into the task.\n\nA useful field record is specific: A redesigned handling sequence verified from receipt through final placement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nRedesign should begin early enough to affect procurement and delivery. Ask whether a supplier can deliver at a suitable height, provide usable handling points or divide the load without creating another hazard. A smaller package can reduce one lift while increasing repetition; review the complete shift rather than one favorable feature.\n\nAt a shop bench, the worker should be able to position the item without a long reach or twist. Suitable fixtures can support the work and reduce sustained holding, but their clamping and release need assessment. The method should also account for removing the completed item and dealing with rejects.\n\nUse a trial with appropriate safe conditions to understand the proposed arrangement. Do not ask a worker with discomfort to prove that a design is acceptable by enduring the old load. The assessor chooses a suitable demonstration, records limitations and uses worker feedback to refine the method. A prototype's apparent convenience does not eliminate the need to check its new pinch or stability hazards.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H22_lesson3",
+        "title": "Lesson 3 - Use suitable aids and routes",
+        "body": "Select handling aids for the actual load, surface, gradient, space and task. Check capacity and condition through the approved method and ensure the worker is trained for the aid. Do not turn a trolley into a personnel platform or use it with an unstable load.\n\nInspect the route before movement. Thresholds, hoses, potholes and tight corners can increase force or destabilize a load. Clear the route or choose a reviewed alternative. Keep hands and feet out of pinch and crush points during loading, movement and placement.\n\nA mechanical aid does not make every movement safe. Powered equipment may require separate authorization, and the final placement still needs a controlled method.\n\n## Worked field example\n\nA loaded trolley must cross a hose and broken threshold to reach the bench.\n\nThe safe decision is to correct or change the route and verify a stable controlled movement before transport. A handling aid can still create high force and instability on an unsuitable route.\n\nA useful field record is specific: A pre-move route check and observation of the suitable aid with the actual load. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nBefore using an aid, confirm its intended purpose and the actual load configuration. A trolley rated for a distributed load may behave differently with a tall, off-center component. Secure or support the item through the approved method, keep the view and route adequate and use the designated means of control.\n\nInspect wheels, handles, brakes and other relevant components according to the device. A worker should report a stiff wheel rather than compensate by pulling harder. Remove defective equipment from use when required and provide a suitable alternative or hold the task.\n\nThe route review includes the destination. A clear corridor is not enough if the final doorway is too narrow or the unloading position traps hands. Check where the worker can stand, how the load is stopped and how the aid is withdrawn. Powered equipment introduces its own operator, pedestrian and energy controls; completing this ergonomics lesson does not grant that authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H22_lesson4",
+        "title": "Lesson 4 - Coordinate team handling",
+        "body": "Team handling needs a planned method, suitable people, a clear route and agreed communication. Assign coordination and confirm when to lift, move, stop and lower. Do not assume adding another person divides risk evenly or compensates for an awkward unstable load.\n\nWorkers need room to hold the item without trapping hands against a doorway or stepping backward into hazards. If one person loses grip or cannot continue, use the agreed safe response rather than expecting the others to catch a falling load.\n\nWhere coordination or geometry cannot be made suitable, change the method or use appropriate mechanical assistance. Team handling is an assessed option, not the automatic fallback when an aid is missing.\n\n## Worked field example\n\nTwo workers plan to carry a long pump part through a narrow doorway without a lowering or stop instruction.\n\nThe safe decision is to plan the route, positions and coordinated stop/lower method or select a suitable alternative. Uncoordinated team handling can create trapping and sudden load transfer.\n\nA useful field record is specific: A briefing and safe demonstration of coordinated movement and placement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nTeam handling needs more than a verbal count to three. Confirm each person's position, visibility, grip, path and ability to use the agreed stop signal. A person walking backward cannot assume the route stays clear. Another worker should not be placed where the load can trap them against a fixed object.\n\nDiscuss what to do if the item cannot be placed as planned. A suitable supported intermediate position may be necessary through the reviewed method. Do not expect the team to hold an awkward load indefinitely while someone clears the destination.\n\nChanges in team composition also matter. A new worker may not know the signals or route. Brief and assess them within the task rather than relying on the previous team's experience. Record any limits, including conditions under which team handling is not permitted. If the arrangement needs an improvised catch or an exposed hand beneath the load, return to redesign.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H22_lesson5",
+        "title": "Lesson 5 - Review repetition and workstation exposure",
+        "body": "Ergonomics includes repeated hand actions, sustained posture, awkward viewing and prolonged static work. A gate desk, packing bench or tool station can create exposure even when no heavy lift occurs. Adjust the work to the person and task through a reviewed arrangement.\n\nTask rotation helps only if it changes the exposure. Rotating between two jobs that use the same reach, grip and posture may not provide meaningful recovery. Review work pace and the ability to vary position rather than treating rotation as proof of control.\n\nWorkers should report discomfort early through the appropriate process. The employer reviews the task and any health restrictions while keeping clinical details confidential.\n\n## Worked field example\n\nA worker rotates between two packing stations that both require the same repeated overhead reach.\n\nThe safe decision is to review and redesign the exposure rather than assuming rotation provides recovery. Changing station does not remove risk if the same loading pattern continues.\n\nA useful field record is specific: An exposure comparison and verified workstation change reducing the repeated awkward reach. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nFor repeated desk or bench work, observe where information and controls are placed. A scanner outside comfortable reach may create a repeated shoulder movement, while a poorly positioned screen can create sustained neck posture. Move or adjust the work through a reviewed arrangement that preserves visibility, emergency access and other important functions.\n\nAllow suitable opportunities to vary posture and task where the assessment calls for them. Rotation is meaningful only if the alternative changes the loading pattern. A schedule that alternates two near-identical reaches should not be reported as exposure reduction without evidence.\n\nWorkers should have an accessible way to report discomfort and limitations. The supervisor can discuss task conditions without asking for detailed clinical history. Medical concerns follow the appropriate health process, and any work restrictions are communicated through the authorized route. Early reporting should lead to review, not a challenge to prove an injury.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H22_lesson6",
+        "title": "Lesson 6 - Verify improvement in real use",
+        "body": "After changing a task, observe whether the intended method is used and whether new problems appear. A lift table stored behind pallets is not an available control. A better bench height that creates a long sideways reach may need further adjustment.\n\nUse worker feedback alongside task observation and appropriate competent review. Distinguish immediate comfort from longer-term effectiveness and avoid promising that one change prevents all injuries.\n\nPractical evaluation should demonstrate the aid, route, positioning and communication through a safe representative task. Do not ask a worker to attempt an unsuitable load to prove strength. Record limits and any unassessed element and resolve gaps before assignment.\n\n## Worked field example\n\nA purchased lift aid remains blocked by storage while workers continue lifting from the floor.\n\nThe safe decision is to restore usable access and verify the redesigned method in the actual task. A purchased device does not control exposure when workers cannot use it.\n\nA useful field record is specific: An observed complete task using the accessible aid with worker feedback. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nVerification should follow the complete work cycle after the change has become routine. An aid can be accessible during training but blocked during receiving. A new bench can work for one product size while forcing an awkward reach for another. State what products, shifts and conditions the observation represents.\n\nAsk whether the new method is practical under normal workload. If workers bypass it, investigate access, time, fit and instruction rather than assuming unwillingness. Correct the actual obstacle and recheck use. Keep the original concern and the subsequent decisions in the record.\n\nThe practical assessor records demonstrated setup, inspection, route choice, control of movement and placement. They identify what was not tested, including unfamiliar powered devices or loads. A successful safe demonstration supports a bounded assignment, not unlimited handling capacity. Future changes in load, route, frequency or worker restrictions should trigger the appropriate review.\n\nAt handover, tell the receiving worker which load sizes, aid and route the reviewed method covers. A different package or blocked route needs the appropriate reassessment before handling.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H22_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional shop receives awkward pump components on floor pallets. Workers lift them onto a high bench many times per shift. One reports discomfort. A lift table is available but the receiving route is blocked, and the supervisor suggests a two-person lift for every item.\n\n### Worked solution\n\nThe aggravating task is paused and the actual receiving-to-bench sequence reviewed with workers. The assessment includes force, reach, grip, repetition, route and placement. The team-lift suggestion is evaluated rather than treated as an automatic solution. A suitable aid and work-height arrangement are selected, with the route cleared and pinch hazards controlled. Workers safely demonstrate the complete method. Any health concern follows the proper confidential process. The company checks use after implementation and asks whether discomfort and awkward handling persist. Buying equipment or issuing a technique reminder alone does not establish that the exposure changed.\n\n## Scenario 2\n\nA fictional gate attendant enters vehicle details at a high counter for long periods and repeatedly reaches sideways for a scanner. A proposed rotation moves the worker to another identical counter. Explain how to evaluate the proposal.\n\n### Worked solution\n\nThe review observes the real posture, reach, viewing, pace and opportunities to vary position. The second station is compared with the first; if the same loading pattern continues, rotation has not materially changed the exposure. The employer considers layout and equipment positioning, suitable work height and work organization. The attendant tests the revised arrangement safely and provides feedback. The assessor checks for new issues such as obstructed visibility or a compromised retreat route. The record identifies what changed and what was observed, with follow-up to confirm continued use.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H22_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H22_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nA separate safe practical evaluation must verify the selected aid, route, placement and any team coordination. Powered handling equipment needs its own operator authorization. Medical assessment and complex ergonomic evaluation require the appropriate professionals; this course establishes no universal safe load.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H22_check1",
+        "prompt": "A worker repeatedly lifts awkward valve boxes from floor level and reports increasing discomfort. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Pause the aggravating task and review load, reach, repetition and the work arrangement with the worker"
+          },
+          {
+            "id": "b",
+            "label": "Teach a lifting slogan and keep the arrangement unchanged"
+          },
+          {
+            "id": "c",
+            "label": "Assign the same task to the strongest worker"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H22_check2",
+        "prompt": "A manager proposes another lifting video instead of fixing repeated floor-to-bench handling. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Repeat the same technique instruction until discomfort stops"
+          },
+          {
+            "id": "b",
+            "label": "Review task redesign and suitable assistance before relying on technique training"
+          },
+          {
+            "id": "c",
+            "label": "Keep the floor storage because each box is below an invented safe weight"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H22_check3",
+        "prompt": "A loaded trolley must cross a hose and broken threshold to reach the bench. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Push harder to cross the threshold quickly"
+          },
+          {
+            "id": "b",
+            "label": "Have a coworker steady the load with hands beneath it"
+          },
+          {
+            "id": "c",
+            "label": "Correct or change the route and verify a stable controlled movement before transport"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H22_check4",
+        "prompt": "Two workers plan to carry a long pump part through a narrow doorway without a lowering or stop instruction. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Plan the route, positions and coordinated stop/lower method or select a suitable alternative"
+          },
+          {
+            "id": "b",
+            "label": "Start lifting and decide directions while moving"
+          },
+          {
+            "id": "c",
+            "label": "Add a third worker without changing the route"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H22_check5",
+        "prompt": "A worker rotates between two packing stations that both require the same repeated overhead reach. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count every station change as an ergonomic improvement"
+          },
+          {
+            "id": "b",
+            "label": "Review and redesign the exposure rather than assuming rotation provides recovery"
+          },
+          {
+            "id": "c",
+            "label": "Require workers to wait for an injury before reporting discomfort"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H22_check6",
+        "prompt": "A purchased lift aid remains blocked by storage while workers continue lifting from the floor. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the action once the invoice is paid"
+          },
+          {
+            "id": "b",
+            "label": "Blame workers for not using inaccessible equipment"
+          },
+          {
+            "id": "c",
+            "label": "Restore usable access and verify the redesigned method in the actual task"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H22_final1",
+        "prompt": "For assess the entire handling task, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Handling risk depends on the whole task rather than weight or worker strength alone."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H22_final2",
+        "prompt": "Which evidence would most directly verify assess the entire handling task in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A task observation and worker input identifying the actual handling exposures"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H22_final3",
+        "prompt": "A relief worker proposes the following shortcut during assess the entire handling task: \"Teach a lifting slogan and keep the arrangement unchanged.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Teach a lifting slogan and keep the arrangement unchanged"
+          },
+          {
+            "id": "b",
+            "label": "Assign the same task to the strongest worker"
+          },
+          {
+            "id": "c",
+            "label": "Pause the aggravating task and review load, reach, repetition and the work arrangement with the worker"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H22_final4",
+        "prompt": "For redesign before relying on technique, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Technique alone cannot remove the force, reach and repetition built into the task."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H22_final5",
+        "prompt": "Which evidence would most directly verify redesign before relying on technique in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A redesigned handling sequence verified from receipt through final placement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H22_final6",
+        "prompt": "A relief worker proposes the following shortcut during redesign before relying on technique: \"Repeat the same technique instruction until discomfort stops.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Repeat the same technique instruction until discomfort stops"
+          },
+          {
+            "id": "b",
+            "label": "Keep the floor storage because each box is below an invented safe weight"
+          },
+          {
+            "id": "c",
+            "label": "Review task redesign and suitable assistance before relying on technique training"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H22_final7",
+        "prompt": "For use suitable aids and routes, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A handling aid can still create high force and instability on an unsuitable route."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H22_final8",
+        "prompt": "Which evidence would most directly verify use suitable aids and routes in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A pre-move route check and observation of the suitable aid with the actual load"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H22_final9",
+        "prompt": "A relief worker proposes the following shortcut during use suitable aids and routes: \"Push harder to cross the threshold quickly.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Push harder to cross the threshold quickly"
+          },
+          {
+            "id": "b",
+            "label": "Have a coworker steady the load with hands beneath it"
+          },
+          {
+            "id": "c",
+            "label": "Correct or change the route and verify a stable controlled movement before transport"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H22_final10",
+        "prompt": "For coordinate team handling, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Uncoordinated team handling can create trapping and sudden load transfer."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H22_final11",
+        "prompt": "Which evidence would most directly verify coordinate team handling in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A briefing and safe demonstration of coordinated movement and placement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H22_final12",
+        "prompt": "A relief worker proposes the following shortcut during coordinate team handling: \"Start lifting and decide directions while moving.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Start lifting and decide directions while moving"
+          },
+          {
+            "id": "b",
+            "label": "Add a third worker without changing the route"
+          },
+          {
+            "id": "c",
+            "label": "Plan the route, positions and coordinated stop/lower method or select a suitable alternative"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H22_final13",
+        "prompt": "For review repetition and workstation exposure, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Changing station does not remove risk if the same loading pattern continues."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H22_final14",
+        "prompt": "Which evidence would most directly verify review repetition and workstation exposure in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An exposure comparison and verified workstation change reducing the repeated awkward reach"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H22_final15",
+        "prompt": "A relief worker proposes the following shortcut during review repetition and workstation exposure: \"Count every station change as an ergonomic improvement.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count every station change as an ergonomic improvement"
+          },
+          {
+            "id": "b",
+            "label": "Require workers to wait for an injury before reporting discomfort"
+          },
+          {
+            "id": "c",
+            "label": "Review and redesign the exposure rather than assuming rotation provides recovery"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H22_final16",
+        "prompt": "For verify improvement in real use, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A purchased device does not control exposure when workers cannot use it."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H22_final17",
+        "prompt": "Which evidence would most directly verify verify improvement in real use in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An observed complete task using the accessible aid with worker feedback"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H22_final18",
+        "prompt": "A relief worker proposes the following shortcut during verify improvement in real use: \"Close the action once the invoice is paid.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the action once the invoice is paid"
+          },
+          {
+            "id": "b",
+            "label": "Blame workers for not using inaccessible equipment"
+          },
+          {
+            "id": "c",
+            "label": "Restore usable access and verify the redesigned method in the actual task"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H22_final19",
+        "prompt": "In Scenario 1, what is the appropriate first design question?",
+        "options": [
+          {
+            "id": "a",
+            "label": "How to remove or reduce the awkward repeated handling through the whole sequence"
+          },
+          {
+            "id": "b",
+            "label": "Which worker can lift the heaviest item"
+          },
+          {
+            "id": "c",
+            "label": "How to document that workers accept the strain"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H22_final20",
+        "prompt": "In Scenario 2, why might rotation fail?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Rotation is always prohibited"
+          },
+          {
+            "id": "b",
+            "label": "Both stations can preserve the same awkward posture and repeated reach"
+          },
+          {
+            "id": "c",
+            "label": "Only lifting tasks need ergonomic assessment"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H22_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H22_lesson1",
+          "questionIds": [
+            "H22_check1"
+          ]
+        },
+        {
+          "lessonId": "H22_lesson2",
+          "questionIds": [
+            "H22_check2"
+          ]
+        },
+        {
+          "lessonId": "H22_lesson3",
+          "questionIds": [
+            "H22_check3"
+          ]
+        },
+        {
+          "lessonId": "H22_lesson4",
+          "questionIds": [
+            "H22_check4"
+          ]
+        },
+        {
+          "lessonId": "H22_lesson5",
+          "questionIds": [
+            "H22_check5"
+          ]
+        },
+        {
+          "lessonId": "H22_lesson6",
+          "questionIds": [
+            "H22_check6"
+          ]
+        },
+        {
+          "lessonId": "H22_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H22_final",
+          "questionIds": [
+            "H22_final1",
+            "H22_final2",
+            "H22_final3",
+            "H22_final4",
+            "H22_final5",
+            "H22_final6",
+            "H22_final7",
+            "H22_final8",
+            "H22_final9",
+            "H22_final10",
+            "H22_final11",
+            "H22_final12",
+            "H22_final13",
+            "H22_final14",
+            "H22_final15",
+            "H22_final16",
+            "H22_final17",
+            "H22_final18",
+            "H22_final19",
+            "H22_final20"
+          ]
+        },
+        {
+          "lessonId": "H22_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H22_check1": "Pause the aggravating task and review load, reach, repetition and the work arrangement with the worker. Handling risk depends on the whole task rather than weight or worker strength alone.",
+        "H22_check2": "Review task redesign and suitable assistance before relying on technique training. Technique alone cannot remove the force, reach and repetition built into the task.",
+        "H22_check3": "Correct or change the route and verify a stable controlled movement before transport. A handling aid can still create high force and instability on an unsuitable route.",
+        "H22_check4": "Plan the route, positions and coordinated stop/lower method or select a suitable alternative. Uncoordinated team handling can create trapping and sudden load transfer.",
+        "H22_check5": "Review and redesign the exposure rather than assuming rotation provides recovery. Changing station does not remove risk if the same loading pattern continues.",
+        "H22_check6": "Restore usable access and verify the redesigned method in the actual task. A purchased device does not control exposure when workers cannot use it.",
+        "H22_final1": "Handling risk depends on the whole task rather than weight or worker strength alone. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H22_final2": "A task observation and worker input identifying the actual handling exposures. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H22_final3": "Pause the aggravating task and review load, reach, repetition and the work arrangement with the worker. Handling risk depends on the whole task rather than weight or worker strength alone. A staffing change does not remove this requirement.",
+        "H22_final4": "Technique alone cannot remove the force, reach and repetition built into the task. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H22_final5": "A redesigned handling sequence verified from receipt through final placement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H22_final6": "Review task redesign and suitable assistance before relying on technique training. Technique alone cannot remove the force, reach and repetition built into the task. A staffing change does not remove this requirement.",
+        "H22_final7": "A handling aid can still create high force and instability on an unsuitable route. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H22_final8": "A pre-move route check and observation of the suitable aid with the actual load. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H22_final9": "Correct or change the route and verify a stable controlled movement before transport. A handling aid can still create high force and instability on an unsuitable route. A staffing change does not remove this requirement.",
+        "H22_final10": "Uncoordinated team handling can create trapping and sudden load transfer. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H22_final11": "A briefing and safe demonstration of coordinated movement and placement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H22_final12": "Plan the route, positions and coordinated stop/lower method or select a suitable alternative. Uncoordinated team handling can create trapping and sudden load transfer. A staffing change does not remove this requirement.",
+        "H22_final13": "Changing station does not remove risk if the same loading pattern continues. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H22_final14": "An exposure comparison and verified workstation change reducing the repeated awkward reach. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H22_final15": "Review and redesign the exposure rather than assuming rotation provides recovery. Changing station does not remove risk if the same loading pattern continues. A staffing change does not remove this requirement.",
+        "H22_final16": "A purchased device does not control exposure when workers cannot use it. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H22_final17": "An observed complete task using the accessible aid with worker feedback. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H22_final18": "Restore usable access and verify the redesigned method in the actual task. A purchased device does not control exposure when workers cannot use it. A staffing change does not remove this requirement.",
+        "H22_final19": "Prevention addresses task design and usable controls. Worker strength or signed acceptance does not make the arrangement suitable.",
+        "H22_final20": "Rotation is a method whose value depends on the exposures it changes. Static and repetitive gate work also needs assessment."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

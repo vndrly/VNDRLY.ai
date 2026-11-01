@@ -24,7 +24,7 @@ export function SafetyMaturitySummary() {
             {(category.requirements ?? []).map(requirement => <section key={requirement.id} className="mt-4 space-y-2 border-t pt-3">
               <h3 className="font-semibold">{requirement.id} — {requirement.title}</h3>
               <p className="text-sm">{requirement.applicability}</p>
-              {requirement.trainingRequirement&&<p>{t('h03Course.coverage',requirement.trainingRequirement)}</p>}
+              {requirement.trainingRequirement&&<p>{t('trainingPolicy.coverage',{...requirement.trainingRequirement,familyId:requirement.id})}</p>}
               <div className="flex flex-wrap gap-x-4 gap-y-2">
                 {requirement.resources.map(resource => <Link key={resource.id} href={`/work-hub/library/${resource.id}`} className="underline underline-offset-4">{resource.title}</Link>)}
               </div>

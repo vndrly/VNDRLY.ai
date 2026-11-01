@@ -1,0 +1,789 @@
+{
+  "familyId": "H13",
+  "title": "H2S and hazardous-atmosphere awareness",
+  "description": "Complete guided H13 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Recognize gas danger and escape without unplanned rescue.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "A qualified H2S instructor or other suitable specialist must separately assess the actual assigned detection, alarm recognition, escape equipment, route selection, communication and accountability actions in safe practical exercises. Field gas testing additionally requires instrument-specific training, sampling and interpretation competence, documented practical evaluation and employer/site authorization. Respirator use requires the applicable respiratory program prerequisites, including medical evaluation and fit testing where required. Atmospheric rescue is a separate specialist capability; this awareness course neither trains nor authorizes entry rescue.",
+  "sources": [
+    {
+      "title": "Inventory source 1: H2S and hazardous-atmosphere awareness",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-12-10-24/Hydrogen%20Sulfide%20Standard.pdf"
+    },
+    {
+      "title": "Inventory source 2: H2S and hazardous-atmosphere awareness",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-6-10-25/Products%20Portable%20Gas%20Detection%20Standard_revised.pdf"
+    },
+    {
+      "title": "OSHA: Hydrogen sulfide hazards",
+      "url": "https://www.osha.gov/hydrogen-sulfide/hazards"
+    },
+    {
+      "title": "OSHA: Calibrating and testing direct-reading portable gas monitors",
+      "url": "https://www.osha.gov/publications/shib093013"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H13_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H13: H2S and hazardous-atmosphere awareness\n\nThis original VNDRLY course teaches decisions for service-specific: sour gas, production, tanks and affected support staff. Its purpose is to recognize gas danger and escape without unplanned rescue. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H13_lesson1",
+        "title": "Lesson 1: Recognize exposure without relying on your senses",
+        "body": "Hydrogen sulfide, or H2S, can be present in production fluids, sour gas, tanks, pits and other affected systems. Breathing it can injure or kill. A release can occur during sampling, opening equipment, draining or disturbing liquids, even when the routine job title sounds harmless. The risk assessment must consider what the worker will actually do and what nearby equipment can release. A gate attendant near an affected process may need awareness and escape instruction even though the attendant never opens a valve.\n\nH2S may have a rotten-egg odor, but smell is an unreliable warning. The sense of smell can stop detecting it, and a worker must not interpret disappearing odor as improving air. Irritated eyes, headache or dizziness can be warning signs, but symptoms are neither a detector nor a safe clearance test. High exposure can incapacitate rapidly. Other gases can displace oxygen or introduce fire and toxicity hazards without an H2S reading. Treat an unknown atmosphere as unknown, rather than assuming a familiar location is safe.\n\nWorked example: a driver smells an unusual odor while waiting beside a tank battery. The driver follows the site escape and notification procedure from a safe location. The driver does not walk toward the tank to identify the smell or wait for symptoms. The task and location are reassessed by the designated site authority.\n\n### Decision principles\n\nExposure follows the material and release mechanism, not the worker’s title. Sampling, draining, opening and nearby releases can expose support workers as well as process personnel.\n\nA sensor reports its own target and limitations. Oxygen deficiency, flammable gas and other toxic contaminants require their own assessed detection and control arrangements.\n\nSymptoms can have several causes and may indicate a serious exposure. The priority is escape and emergency notification; investigating or self-diagnosing inside the affected area adds exposure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H13_lesson2",
+        "title": "Lesson 2: Understand detectors, sensors and their limits",
+        "body": "A personal monitor is part of a protective system, not a permission slip. The employer selects sensors, range, hazardous-location suitability and sampling arrangements for the assessed hazards. Before reliance, an authorized user checks device identity, assigned sensors, battery, inlets, physical condition, status messages and required manufacturer checks. A monitor worn inside a sealed bag or obstructed by clothing may not sample the air the worker breathes. Position it as specified by the approved instruction and manufacturer.\n\nA functional challenge or bump test exposes the instrument to known test gas to confirm response and alarms. Calibration establishes or adjusts measurement response against a known reference. A startup self-test or fresh-air zero does not replace the specified gas challenge. A device can turn on and still have a failed, poisoned, obstructed or unsuitable sensor. Failed checks, unexplained readings or an overdue required service remove the device from reliance.\n\nWorked example: an assigned monitor starts normally but its required functional test fails. The worker obtains an approved tested replacement through the equipment system. The worker does not silence the warning, record a pass or borrow a device whose sensors cannot be identified.\n\n### Decision principles\n\nA bump test is a functional challenge of the instrument. It is not a substitute for calibration when required, assessment of the workplace, or checking that the sensors match the hazards.\n\nDifferent instruments and sensor combinations detect different substances and ranges. The task assessment and manufacturer information must support selection; the number of display channels alone is insufficient.\n\nPersonal monitoring is intended to represent the wearer’s exposure within the method’s limitations. Obstruction or remote placement can delay or prevent detection of the air reaching the worker.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H13_lesson3",
+        "title": "Lesson 3: Separate readings, limits and clearance decisions",
+        "body": "A displayed concentration is a measurement for a particular device, place and time. It is not a prediction of conditions at a hatch, behind a barrier, at another elevation or later in the shift. A qualified assessment determines where and how to sample, how long to allow for instrument and sample-line response, and what continuous or repeated monitoring is needed. Remote sampling is not performed by putting an unprotected person into the hazard to carry the instrument.\n\nOccupational exposure limits, instrument alarm settings, entry criteria and emergency action levels serve different purposes. Their legal scope and averaging periods can differ. This awareness course does not assign a universal alarm number, safe exposure duration, evacuation threshold or re-entry criterion. The approved program must identify applicable requirements and conservative site actions before the worker is exposed. An alarm setting is not permission to remain below that number indefinitely.\n\nWorked example: a tank was tested earlier, but an agitator starts and the hatch configuration changes. The previous measurement does not clear the changed task. The authorized tester and operating authority reassess the release and monitoring method before affected work resumes.\n\n### Decision principles\n\nExposure limits may use particular averaging periods and jurisdictional rules. Alarm settings trigger protective actions within a defined program; neither should be casually converted into an operating permission.\n\nSampling requires knowledge of atmosphere behavior, target hazards, instrument limitations, locations and response time. Written awareness completion does not demonstrate those field testing skills.\n\nA zero reading must be interpreted within sensor range, condition, method and location. It does not prove future safety or rule out contaminants the instrument cannot detect.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H13_lesson4",
+        "title": "Lesson 4: Prepare an escape before entering the exposure area",
+        "body": "Before entering an affected area, know the alarm signals, escape routes, wind indicators, communications, primary muster and alternatives. Routes must be practicable from the actual work position, including darkness, obstacles and changing operations. Wind can help determine a route but is not a guarantee that an area is gas-free; terrain, structures and changing releases complicate dispersion. Follow the site plan for moving away from the release and toward the designated safe area, adapting only through the emergency instructions when the planned route is compromised.\n\nEscape equipment, where required, must be selected for the assessed atmosphere and escape duration by the responsible qualified program. Workers need separate practical instruction, fitting, checks and donning practice for the actual device. An escape-only unit is not equipment for investigation, continued work, re-entry or rescue. A dust mask does not protect against H2S, and an air-purifying device is not a supply of oxygen.\n\nWorked example: a service worker can describe the alarm but cannot locate the alternate muster or use the assigned escape unit. The missing readiness is resolved with the supervisor and competent trainer before exposure. A completed online module does not fill either practical gap.\n\n### Decision principles\n\nEscape-only protection has a bounded emergency purpose. Its presence does not authorize entry, rescue or continued work, and its limitations must be taught for the exact device.\n\nAn escape plan must fit current access, obstructions, wind information and site instructions. A memorized route can become unsafe when equipment, operations or conditions change.\n\nParticulate filtering and gas or oxygen-deficiency protection are different functions. Respiratory selection must be made by the qualified program; improvising with available masks is unsafe.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H13_lesson5",
+        "title": "Lesson 5: Respond to alarms without creating a second casualty",
+        "body": "On an alarm, suspected release or emergency instruction, stop the affected activity and leave by the approved escape procedure. Do not delay evacuation to finish paperwork, close a convenient valve, silence a detector or investigate a suspected sensor fault. From a safe location, communicate the location, alarm or symptoms, people potentially affected and any missing persons. Follow the site accountability process so responders do not have to guess who is still inside.\n\nA collapsed person can trigger a strong rescue impulse. Entering an unknown or hazardous atmosphere without the designated rescue capability can rapidly create multiple casualties. Call the emergency response system and keep others from entering when this can be done safely. Only the designated trained, equipped and authorized team undertakes atmospheric rescue under its plan. A nearby coworker with a personal monitor is not thereby a rescue team.\n\nWorked example: a worker sees a colleague down beyond a gas alarm point. The worker stays outside the affected area, summons the rescue response, gives the last known location and reports their own safe location. The worker does not run in holding a breath or follow an unprotected supervisor.\n\n### Decision principles\n\nA suspected instrument fault is not atmospheric clearance. Protective response comes first; qualified investigation occurs from a safe, controlled arrangement without exposing workers to prove the alarm wrong.\n\nAccurate accountability helps the designated response team direct resources. Uncoordinated searching exposes more people and can make the missing-person count less reliable.\n\nReport observations and uncertainties distinctly. Responders need location and exposure clues, but fabricated readings or unsupported clearance claims can misdirect the rescue plan.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H13_lesson6",
+        "title": "Lesson 6: Control re-entry, investigation and evidence",
+        "body": "An alarm ending, a reset display or a worker feeling better does not authorize re-entry. The designated operating/site authority coordinates technical assessment of the cause, current atmosphere, affected equipment and safeguards. Re-entry or restart follows the approved authorization process after its conditions have been verified. Workers remain in the designated safe area unless directed through that process; they do not treat a production deadline as a change in atmospheric conditions.\n\nKeep an accurate record of the event and response: location, time, activity, device identity if known, observed alarm, evacuation and accountability, notifications, technical findings and who authorized the next stage. Do not overwrite an alarm log with a later acceptable reading. Both can be true and both matter. Review whether the release mechanism, detection placement, escape route or communication needs improvement.\n\nWorked example: after a tank alarm, operations identifies a changed vent path. A qualified review corrects the control arrangement, tests the relevant conditions and briefs the affected crews. The revised task can be considered for authorization. The training administrator merely records course evidence; that administrator does not clear the tank.\n\n### Decision principles\n\nMeasurements and events form a chronology. Later acceptable conditions do not erase the earlier exposure warning; preserving both supports cause analysis and defensible authorization.\n\nPractical instrument use, atmospheric testing strategy, respiratory equipment and rescue each require separately assessed skills and authorization. A written score cannot establish hazardous field performance.\n\nAn event without injury may still reveal failed or fragile controls. Review observable conditions and decisions, assign improvements and verify effectiveness rather than treating the outcome as proof of safety.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H13_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: Gate alarm during a delivery\n\nA delivery driver waits at an affected production gate. A fixed gas alarm activates. A coworker says the sensor often misbehaves and suggests finishing the delivery. The driver has a personal monitor but has not been assigned a gas-testing role.\n\n**Worked decision and reasoning.** The driver follows the site evacuation and accountability instructions, warns others without entering the affected area, and reports the alarm from safety. The delivery pauses. The driver does not approach the fixed sensor with the personal monitor to adjudicate which instrument is correct. The site authority arranges qualified investigation, verifies the conditions and controls, and communicates any authorized re-entry. The record preserves the initial alarm, action taken and later technical findings. A delivery schedule cannot substitute for that clearance.\n\n### Scenario 2: Tank task after a configuration change\n\nA crew has an earlier gas-test record for an external tank task. The planned work now includes opening a hatch after circulation starts. One worker argues that the old reading and their recent course completion make another review unnecessary.\n\n**Worked decision and reasoning.** The supervisor pauses the changed work and confirms the new scope with operations. Opening the hatch and changing circulation can alter release pathways, so a qualified person reassesses the atmosphere and monitoring plan, together with isolation, exposure, escape and any permit requirements. If the work could constitute entry, confined-space assessment is also required; it is not cleared by an external reading. The crew receives the revised briefing only after the responsible authorities establish the actual safeguards. The written course supports recognition of the change, not approval to test or open the tank.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H13_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H13_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nA qualified H2S instructor or other suitable specialist must separately assess the actual assigned detection, alarm recognition, escape equipment, route selection, communication and accountability actions in safe practical exercises. Field gas testing additionally requires instrument-specific training, sampling and interpretation competence, documented practical evaluation and employer/site authorization. Respirator use requires the applicable respiratory program prerequisites, including medical evaluation and fit testing where required. Atmospheric rescue is a separate specialist capability; this awareness course neither trains nor authorizes entry rescue.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H13_check1",
+        "prompt": "A worker no longer notices the odor after several minutes. What does that establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing about atmospheric safety; follow the approved response and detection system."
+          },
+          {
+            "id": "b",
+            "label": "The release has stopped."
+          },
+          {
+            "id": "c",
+            "label": "The worker has adapted and can remain."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H13_final_1_1",
+        "prompt": "Which activity can create H2S exposure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only entering a vessel marked sour."
+          },
+          {
+            "id": "b",
+            "label": "Only work performed by a gas tester."
+          },
+          {
+            "id": "c",
+            "label": "Opening or disturbing affected process equipment or liquids."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H13_final_1_2",
+        "prompt": "What does an H2S sensor alone establish about oxygen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It measures every atmospheric hazard indirectly."
+          },
+          {
+            "id": "b",
+            "label": "It does not establish oxygen concentration."
+          },
+          {
+            "id": "c",
+            "label": "It proves oxygen is sufficient whenever H2S is zero."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H13_final_1_3",
+        "prompt": "What should a worker do with possible exposure symptoms?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leave according to the emergency plan and obtain emergency help from a safe location."
+          },
+          {
+            "id": "b",
+            "label": "Remain to compare symptoms with a chart."
+          },
+          {
+            "id": "c",
+            "label": "Take a deep breath to confirm the cause."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H13_check2",
+        "prompt": "A monitor powers up but fails its required gas challenge. What is the decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use it because its display works."
+          },
+          {
+            "id": "b",
+            "label": "Use a coworker’s sense of smell as backup."
+          },
+          {
+            "id": "c",
+            "label": "Do not rely on it; obtain a suitable verified replacement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H13_final_2_1",
+        "prompt": "What is a bump test intended to demonstrate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permanent accuracy regardless of later damage."
+          },
+          {
+            "id": "b",
+            "label": "Response to test gas and alarm function under the specified test."
+          },
+          {
+            "id": "c",
+            "label": "A complete exposure survey of the work area."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H13_final_2_2",
+        "prompt": "Why must sensor suitability be checked?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A detector may lack the sensor or range needed for the actual contaminant."
+          },
+          {
+            "id": "b",
+            "label": "Every four-gas instrument detects every chemical."
+          },
+          {
+            "id": "c",
+            "label": "A newer serial number makes sensor selection unnecessary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H13_final_2_3",
+        "prompt": "Where should a personal monitor be worn?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Inside a sealed pocket to protect it from dust."
+          },
+          {
+            "id": "b",
+            "label": "On a vehicle left far from the worker."
+          },
+          {
+            "id": "c",
+            "label": "In the manufacturer and site-approved position with sampling access unobstructed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H13_check3",
+        "prompt": "A reading was acceptable before a process change. What does it authorize now?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any nearby confined-space entry."
+          },
+          {
+            "id": "b",
+            "label": "Nothing automatically; reassess the changed conditions and monitoring requirements."
+          },
+          {
+            "id": "c",
+            "label": "The entire remaining shift."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H13_final_3_1",
+        "prompt": "Which statement correctly distinguishes alarm settings from exposure limits?",
+        "options": [
+          {
+            "id": "a",
+            "label": "They serve different functions and require program-specific interpretation."
+          },
+          {
+            "id": "b",
+            "label": "They are interchangeable numbers everywhere."
+          },
+          {
+            "id": "c",
+            "label": "A personal alarm setting is a legal exposure allowance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H13_final_3_2",
+        "prompt": "Who establishes a sampling strategy for hazardous field testing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any worker who completed this online awareness course."
+          },
+          {
+            "id": "b",
+            "label": "The first person who owns a monitor."
+          },
+          {
+            "id": "c",
+            "label": "Personnel qualified and authorized for the task under the site program."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H13_final_3_3",
+        "prompt": "What does a zero target-gas reading mean?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The equipment cannot release gas later."
+          },
+          {
+            "id": "b",
+            "label": "No target gas detected within that measurement’s capabilities and conditions."
+          },
+          {
+            "id": "c",
+            "label": "The location has no possible atmospheric hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H13_check4",
+        "prompt": "Your assigned escape unit has not been practically demonstrated to you. What is missing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Task-specific practical instruction and verification before exposure."
+          },
+          {
+            "id": "b",
+            "label": "Only a signed online attendance sheet."
+          },
+          {
+            "id": "c",
+            "label": "Nothing if the unit is still sealed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H13_final_4_1",
+        "prompt": "What is an escape-only respirator intended for?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Returning to retrieve tools."
+          },
+          {
+            "id": "b",
+            "label": "Continuing a short production task."
+          },
+          {
+            "id": "c",
+            "label": "Leaving the hazardous area within its approved limitations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H13_final_4_2",
+        "prompt": "What should be confirmed about evacuation routes?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The nearest low spot is automatically safest."
+          },
+          {
+            "id": "b",
+            "label": "Routes and alternatives are understood and usable from the actual work position."
+          },
+          {
+            "id": "c",
+            "label": "The route used last year is always adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H13_final_4_3",
+        "prompt": "Why is a dust mask unsuitable for an H2S emergency?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It does not provide the required gas and atmosphere protection."
+          },
+          {
+            "id": "b",
+            "label": "It is suitable if the wearer holds their breath initially."
+          },
+          {
+            "id": "c",
+            "label": "It becomes suitable when worn with goggles."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H13_check5",
+        "prompt": "A colleague collapses inside a suspected gas area. What is the awareness-level response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Rush in while holding your breath."
+          },
+          {
+            "id": "b",
+            "label": "Enter with a normal personal monitor as protection."
+          },
+          {
+            "id": "c",
+            "label": "Raise the emergency response from safety and prevent further unprotected entry."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H13_final_5_1",
+        "prompt": "An alarm is dismissed as probably faulty. What should an affected worker do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Remove the battery so the sound does not distract."
+          },
+          {
+            "id": "b",
+            "label": "Follow the alarm and evacuation procedure pending authorized investigation."
+          },
+          {
+            "id": "c",
+            "label": "Continue until two detectors agree."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H13_final_5_2",
+        "prompt": "When should missing-person information be communicated?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Promptly through the emergency and muster system from a safe location."
+          },
+          {
+            "id": "b",
+            "label": "Only after entering to search personally."
+          },
+          {
+            "id": "c",
+            "label": "After every worker independently searches the process area."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H13_final_5_3",
+        "prompt": "What information is useful to responders?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An invented gas concentration to speed dispatch."
+          },
+          {
+            "id": "b",
+            "label": "A claim that a familiar tank is certainly safe."
+          },
+          {
+            "id": "c",
+            "label": "Last known location, observed alarm or symptoms, people affected and safe contact point."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H13_check6",
+        "prompt": "The alarm stops while the crew is at muster. Who clears re-entry?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The course administrator after checking quiz scores."
+          },
+          {
+            "id": "b",
+            "label": "The designated site authority through verified technical and emergency procedures."
+          },
+          {
+            "id": "c",
+            "label": "The first worker who hears silence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H13_final_6_1",
+        "prompt": "What should happen to the initial alarm record after a later acceptable test?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Preserve both records with their times and conditions."
+          },
+          {
+            "id": "b",
+            "label": "Replace the alarm with the later value."
+          },
+          {
+            "id": "c",
+            "label": "Delete the alarm because it may look bad."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H13_final_6_2",
+        "prompt": "Which qualification is established by this written course alone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Qualified field gas tester for every instrument."
+          },
+          {
+            "id": "b",
+            "label": "Atmospheric rescue specialist."
+          },
+          {
+            "id": "c",
+            "label": "Awareness learning and assessed written judgment only."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H13_final_6_3",
+        "prompt": "What is the purpose of reviewing an alarm response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reclassify the release as safe because no injury occurred."
+          },
+          {
+            "id": "b",
+            "label": "Identify whether detection, escape, communication and process controls worked and correct gaps."
+          },
+          {
+            "id": "c",
+            "label": "Prove that every worker was to blame."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H13_final_scenario1",
+        "prompt": "In the gate scenario, which action exceeds the driver’s awareness role?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Entering the affected area to test whether the fixed alarm is genuine."
+          },
+          {
+            "id": "b",
+            "label": "Reporting from the designated safe area."
+          },
+          {
+            "id": "c",
+            "label": "Following muster accountability instructions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H13_final_scenario2",
+        "prompt": "Why is the earlier tank reading insufficient for the changed task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All readings expire at an invented universal interval."
+          },
+          {
+            "id": "b",
+            "label": "A higher quiz score would make the reading valid."
+          },
+          {
+            "id": "c",
+            "label": "The release conditions and scope have changed, requiring qualified reassessment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H13_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H13_lesson1",
+          "questionIds": [
+            "H13_check1"
+          ]
+        },
+        {
+          "lessonId": "H13_lesson2",
+          "questionIds": [
+            "H13_check2"
+          ]
+        },
+        {
+          "lessonId": "H13_lesson3",
+          "questionIds": [
+            "H13_check3"
+          ]
+        },
+        {
+          "lessonId": "H13_lesson4",
+          "questionIds": [
+            "H13_check4"
+          ]
+        },
+        {
+          "lessonId": "H13_lesson5",
+          "questionIds": [
+            "H13_check5"
+          ]
+        },
+        {
+          "lessonId": "H13_lesson6",
+          "questionIds": [
+            "H13_check6"
+          ]
+        },
+        {
+          "lessonId": "H13_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H13_assessment",
+          "questionIds": [
+            "H13_final_1_1",
+            "H13_final_1_2",
+            "H13_final_1_3",
+            "H13_final_2_1",
+            "H13_final_2_2",
+            "H13_final_2_3",
+            "H13_final_3_1",
+            "H13_final_3_2",
+            "H13_final_3_3",
+            "H13_final_4_1",
+            "H13_final_4_2",
+            "H13_final_4_3",
+            "H13_final_5_1",
+            "H13_final_5_2",
+            "H13_final_5_3",
+            "H13_final_6_1",
+            "H13_final_6_2",
+            "H13_final_6_3",
+            "H13_final_scenario1",
+            "H13_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H13_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H13_check1": "Loss of odor can reflect loss of smell response rather than safe air. Exposure decisions require suitable monitoring and the site response plan, never a smell experiment.",
+        "H13_final_1_1": "Exposure follows the material and release mechanism, not the worker’s title. Sampling, draining, opening and nearby releases can expose support workers as well as process personnel.",
+        "H13_final_1_2": "A sensor reports its own target and limitations. Oxygen deficiency, flammable gas and other toxic contaminants require their own assessed detection and control arrangements.",
+        "H13_final_1_3": "Symptoms can have several causes and may indicate a serious exposure. The priority is escape and emergency notification; investigating or self-diagnosing inside the affected area adds exposure.",
+        "H13_check2": "Power and display checks cannot establish gas response. A failed required challenge means the detection safeguard is not verified and affected exposure must not proceed.",
+        "H13_final_2_1": "A bump test is a functional challenge of the instrument. It is not a substitute for calibration when required, assessment of the workplace, or checking that the sensors match the hazards.",
+        "H13_final_2_2": "Different instruments and sensor combinations detect different substances and ranges. The task assessment and manufacturer information must support selection; the number of display channels alone is insufficient.",
+        "H13_final_2_3": "Personal monitoring is intended to represent the wearer’s exposure within the method’s limitations. Obstruction or remote placement can delay or prevent detection of the air reaching the worker.",
+        "H13_check3": "A measurement is bounded by conditions, location, time and method. A process change can invalidate those assumptions even when the earlier record was accurate.",
+        "H13_final_3_1": "Exposure limits may use particular averaging periods and jurisdictional rules. Alarm settings trigger protective actions within a defined program; neither should be casually converted into an operating permission.",
+        "H13_final_3_2": "Sampling requires knowledge of atmosphere behavior, target hazards, instrument limitations, locations and response time. Written awareness completion does not demonstrate those field testing skills.",
+        "H13_final_3_3": "A zero reading must be interpreted within sensor range, condition, method and location. It does not prove future safety or rule out contaminants the instrument cannot detect.",
+        "H13_check4": "Having equipment is different from being able to deploy it during a rapid emergency. A competent trainer must assess the actual assigned escape actions before the worker relies on them.",
+        "H13_final_4_1": "Escape-only protection has a bounded emergency purpose. Its presence does not authorize entry, rescue or continued work, and its limitations must be taught for the exact device.",
+        "H13_final_4_2": "An escape plan must fit current access, obstructions, wind information and site instructions. A memorized route can become unsafe when equipment, operations or conditions change.",
+        "H13_final_4_3": "Particulate filtering and gas or oxygen-deficiency protection are different functions. Respiratory selection must be made by the qualified program; improvising with available masks is unsafe.",
+        "H13_check5": "A monitor warns of hazards but does not protect breathing. Unplanned entry can incapacitate the rescuer; atmospheric rescue requires the designated qualified team and protective system.",
+        "H13_final_5_1": "A suspected instrument fault is not atmospheric clearance. Protective response comes first; qualified investigation occurs from a safe, controlled arrangement without exposing workers to prove the alarm wrong.",
+        "H13_final_5_2": "Accurate accountability helps the designated response team direct resources. Uncoordinated searching exposes more people and can make the missing-person count less reliable.",
+        "H13_final_5_3": "Report observations and uncertainties distinctly. Responders need location and exposure clues, but fabricated readings or unsupported clearance claims can misdirect the rescue plan.",
+        "H13_check6": "Silence does not prove that the release has ended or the area is acceptable. Re-entry is an operating and emergency-control decision supported by qualified assessment.",
+        "H13_final_6_1": "Measurements and events form a chronology. Later acceptable conditions do not erase the earlier exposure warning; preserving both supports cause analysis and defensible authorization.",
+        "H13_final_6_2": "Practical instrument use, atmospheric testing strategy, respiratory equipment and rescue each require separately assessed skills and authorization. A written score cannot establish hazardous field performance.",
+        "H13_final_6_3": "An event without injury may still reveal failed or fragile controls. Review observable conditions and decisions, assign improvements and verify effectiveness rather than treating the outcome as proof of safety.",
+        "H13_final_scenario1": "A personal detector does not qualify its wearer as a gas tester or protect them during investigation. The proper awareness response is evacuation and reporting while qualified personnel investigate under the site system.",
+        "H13_final_scenario2": "The issue is the changed task and process assumptions, not a universal expiration invented by the learner. Qualified reassessment must match the actual configuration before exposure is authorized."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

@@ -1,0 +1,785 @@
+{
+  "familyId": "H05",
+  "title": "Confined-space entry",
+  "description": "Complete guided H05 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Control atmosphere, engulfment, access and rescue risks.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "A qualified assessor must separately evaluate each assigned entry role using the actual program and a safe representative space or simulation: hazard recognition, equipment, communications, monitoring duties, exit actions and accountability. Gas testing requires instrument and sampling competence. Rescue requires a separately qualified and equipped service with appropriate practice. This course neither authorizes entry nor replaces jurisdiction-specific entry training.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Confined-space entry",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Products%20Confined%20Space%20Entry%20Standard.pdf"
+    },
+    {
+      "title": "Inventory source 2: Confined-space entry",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+    },
+    {
+      "title": "OSHA: Permit-required confined spaces, general-industry scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H05_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H05: Confined-space entry\n\nThis original VNDRLY course teaches decisions for service-specific: tanks, pits, vessels, sewers and similar spaces. Its purpose is to control atmosphere, engulfment, access and rescue risks. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H05_lesson1",
+        "title": "Lesson 1: Recognize a space and assess its hazards",
+        "body": "A confined-space assessment begins with the space’s configuration and intended work, not its everyday name. A space large enough for bodily entry, with limited or restricted entry or exit and not designed for continuous occupancy can meet the general-industry definition. Permit-required classification then considers hazardous atmosphere, engulfment, trapping configuration or other serious hazards. Applicable construction or other sector rules must be determined separately.\n\nA tank can remain hazardous after it appears empty. Residues can release contaminants, cleaning can change the atmosphere, and connected systems can introduce material. A shallow or open-topped space can still present serious atmospheric or access hazards. No single reassuring feature replaces assessment.\n\nWorked example: a worker plans to lean through a vessel opening to retrieve a part. The task is referred to the site entry program before any part of the body crosses the boundary; calling it retrieval does not avoid entry controls.\n\n### Applying the mechanism\n\nEntry classification and task planning should consider the space as a system. Connected lines, internal moving parts, residues, sloping surfaces and access restrictions can each affect the worker. A space that was acceptable for one task may become hazardous when cleaning chemicals, welding or coatings are introduced. The assessment must also consider whether a worker can exit unaided if conditions deteriorate. Do not use size or depth alone as a shortcut. The employer determines the applicable entry rules and competent assessment. If a worker is unsure whether leaning through an opening crosses the entry boundary, resolve that question before any body part is placed through it.\n\n### Decision principles\n\nPermit classification follows defined hazards and configuration, not a visual shorthand. Atmospheric, engulfment, trapping and other serious hazards need competent assessment.\n\nVentilation and gas behavior depend on the actual conditions. An opening alone does not demonstrate acceptable conditions at the worker’s breathing location.\n\nThe proposed activity can consume oxygen, release contaminants or introduce ignition and mechanical hazards. The entry plan must address these task-created exposures.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H05_lesson2",
+        "title": "Lesson 2: Separate entry roles and their responsibilities",
+        "body": "The entry supervisor verifies the required conditions and authorization under the program. Authorized entrants understand the hazards, equipment, communication and exit duties. The attendant remains assigned outside, maintains required awareness and communication, monitors conditions and summons the planned response. Exact staffing and duties follow the applicable program; roles cannot be combined when the combination prevents safe performance.\n\nAn attendant is not a spare laborer to leave for deliveries. Their presence also does not make them an entry rescuer. Contractors and host operations must exchange hazard information and coordinate entry activities and other work that can affect the space.\n\nWorked example: the attendant is asked to fetch a tool from another building. The task cannot simply continue unattended. Entry pauses or the program’s proper relief arrangement is established before the attendant leaves.\n\n### Applying the mechanism\n\nEach entry role needs enough capacity to perform its actual duties. An attendant distracted by unrelated deliveries may miss an entrant’s condition or a change outside the space. A supervisor who cannot establish rescue readiness has not completed the authorization decision merely by signing the permit. An entrant needs to recognize alarms, communication failures and other exit triggers without waiting for a personal negotiation. When staffing changes, use the program’s controlled relief and briefing process. A person’s written course completion can support selection for further practical training, but it cannot fill an absent role or demonstrate the person can perform duties for the actual space.\n\n### Decision principles\n\nEntry authorization is a defined operational role supported by verified conditions. Written awareness completion does not grant that authority.\n\nAttendant duties include summoning the planned response and preventing unauthorized entry. Entering without rescue training and protection can create another casualty.\n\nConnected processes and concurrent work can change entry conditions. Exchanging information and coordinating responsibilities closes gaps between employers’ assumptions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H05_lesson3",
+        "title": "Lesson 3: Establish isolation and acceptable entry conditions",
+        "body": "Before authorization, the entry plan addresses connected energy and materials, atmosphere, mechanical hazards, access, lighting, communications, equipment and other task risks. Isolation must match the actual connections and required safe state. Ventilation can help control atmosphere but is not a substitute for eliminating or isolating another serious hazard.\n\nQualified personnel establish the atmospheric assessment and testing method, suitable instrument, locations, response time, sequence and monitoring needed. Measurements must represent the relevant space and work conditions. A test outside the opening or from an earlier configuration does not automatically clear every location inside.\n\nWorked example: a vessel has acceptable initial atmosphere readings but a connected feed remains uncontrolled. Entry is not ready. The missing process isolation must be resolved and all entry conditions verified; one passing category does not compensate for another failed safeguard.\n\n### Applying the mechanism\n\nAcceptable atmosphere is only one part of entry readiness. Isolation must prevent credible inflow or movement, and the work method must control hazards it introduces. Ventilation needs a suitable source, delivery and exhaust arrangement; moving air without understanding its path may not control the relevant location. A sampling method must allow the target atmosphere to reach the sensors and account for spatial differences and response time. The qualified entry program establishes how testing and ongoing monitoring fit the task. General learners should recognize these prerequisites and request competent resolution, rather than inventing acceptable concentrations or declaring a space safe from one convenient reading.\n\n### Decision principles\n\nTesting needs hazard knowledge, instrument suitability and sampling competence. A detector alone does not establish the ability to characterize the space safely.\n\nVentilation addresses a defined atmospheric control function. Other hazards require their own assessment and safeguards and cannot be dismissed because air is moving.\n\nA measurement is bounded by place, time and method. The entry authority must know that the relevant conditions still exist when people rely on the result.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H05_lesson4",
+        "title": "Lesson 4: Plan feasible rescue before entry",
+        "body": "A rescue plan must be workable for the actual space, hazards and access. It identifies the capable service, how it is summoned, expected response arrangements, equipment and any non-entry retrieval method that is appropriate and required. Listing an emergency telephone number does not demonstrate that a team can reach and remove an entrant in the needed conditions.\n\nRescue personnel require appropriate training, equipment and practice for the space and hazards. Retrieval systems must be assessed for the entrant, route and entanglement or configuration constraints. Do not attach improvised ropes and assume rescue is solved. The entry program determines the method and duties.\n\nWorked example: a vessel has an internal obstruction that prevents the proposed retrieval path. The plan is corrected and verified before entry rather than discovering the problem with an incapacitated worker inside.\n\n### Applying the mechanism\n\nRescue feasibility should be examined against the same access and internal geometry the entrant will use. A narrow opening, ladder, internal obstruction or casualty position can prevent a planned removal method from working. The rescue service must be capable of the relevant hazards and available through the agreed arrangement. Non-entry retrieval, where suitable and required, still needs a technical assessment of attachments, route and entanglement risk. Practice should use safe simulations that reveal these constraints before exposure. Do not call a general emergency number and assume a team has the equipment or knowledge for the space. The entry authority needs actual evidence of a workable response.\n\n### Decision principles\n\nRescue limitations can make an otherwise planned entry unacceptable. They must be resolved before exposure so an emergency does not become the first test of the method.\n\nImprovised retrieval can fail or injure the entrant. A suitable plan must address routing, attachments, equipment and obstructions under competent review.\n\nAn unknown atmosphere or other serious hazard can incapacitate a would-be rescuer. Only the designated qualified response undertakes rescue under the plan.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H05_lesson5",
+        "title": "Lesson 5: Monitor conditions and evacuate on loss of safeguards",
+        "body": "Entry conditions must remain acceptable for the work. Follow the specified monitoring, communication and observation arrangements throughout. Entrants leave when an alarm, prohibited condition, symptoms, evacuation instruction or other program trigger occurs. The attendant initiates the required response and maintains accountability. Do not troubleshoot a failed monitor inside the space while exposure continues.\n\nChanging weather, nearby exhaust, process operation, ventilation failure or the task itself can alter conditions. A permit duration is not a guarantee that those conditions will persist. If a critical safeguard is lost, exit first through the approved response, then reassess from safety.\n\nWorked example: the ventilation supply stops while an entrant is working. The entrant follows the evacuation instruction instead of waiting for a gas alarm to confirm deterioration. The responsible roles investigate and re-establish conditions before considering re-entry.\n\n### Applying the mechanism\n\nThe entrant and attendant should know what changes invalidate the entry basis. A ventilation failure, alarm, new release, communication loss or unexpected behavior may require immediate exit under the program even before symptoms occur. This avoids using the entrant’s body as a warning device. After evacuation, account for everyone and preserve the observations. A later acceptable reading does not automatically reactivate the entry; the responsible roles establish the cause, restored controls and current authorization. If the task changes, such as adding a solvent or hot-work tool, reassess the new hazard rather than treating it as a minor convenience within the old permit.\n\n### Decision principles\n\nCommunication is part of the entry system. Its loss can prevent warnings and accountability, so the defined failure response must be followed rather than improvised inside.\n\nAuthorization is conditional. Changed atmosphere, process state or control performance can require evacuation and revalidation before the permit’s nominal end time.\n\nA space interacts with its surroundings and connected systems. The entry arrangement must address credible external sources and concurrent operations.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H05_lesson6",
+        "title": "Lesson 6: Close, hand back and preserve role limits",
+        "body": "After exit, account for entrants, tools, materials and temporary arrangements. The designated roles close or cancel the entry authorization and communicate the actual equipment state to operations. Restoring process connections or equipment follows its own controlled process; an empty space is not automatically ready for service.\n\nRecord the conditions, monitoring, interruptions and problems so the program can improve. Preserve a failed-entry event even when a later attempt succeeds. Practical entry competence, attendant performance, gas testing and rescue remain separately assessed roles. A written course supports understanding but does not create an entry team.\n\nWorked example: a crew exits after a monitor fault. A tested replacement is later provided. Re-entry still requires the responsible authority to reassess and reauthorize the conditions; swapping the instrument alone does not silently reactivate the prior entry.\n\n### Applying the mechanism\n\nCloseout transfers the actual equipment state, not merely the fact that people left. Account for temporary ventilation, lighting, tools, blanks and other arrangements through the applicable systems. Operations needs to know whether the vessel remains isolated, open, restricted or ready for a separate restoration stage. A cancelled entry can leave equipment in a different state from a completed task, and the record must show that difference. Program review then asks whether the space assessment, communications, monitoring and rescue arrangements worked as intended. Record specific deficiencies and corrective actions without claiming that one successful entry proves the method suitable for every space.\n\n### Decision principles\n\nCloseout must communicate what is actually complete and what remains restricted. Entry completion is not equivalent to operating readiness.\n\nA complete chronology supports investigation and learning. Later success does not erase an earlier failed control or explain how it was resolved.\n\nEach role requires task-specific skills, practical evaluation and employer designation. The written course establishes awareness and assessed knowledge only.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H05_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: The quick retrieval\n\nA worker drops a tool inside a vessel and proposes leaning through the opening while a coworker watches. No space assessment or entry plan has been established.\n\n**Worked decision and reasoning.** The retrieval remains held. The site entry program assesses the boundary, space and actual task, including atmosphere, isolation and rescue. Watching from outside is not a substitute for the full required entry system. If the item can be retrieved using an approved non-entry method, that alternative is assessed without exposing a person through the opening. Any entry requires its own verified prerequisites and authorized roles.\n\n### Scenario 2: A busy attendant\n\nDuring entry, the attendant is asked to unload a delivery outside communication range. The entrant says they can finish in five minutes.\n\n**Worked decision and reasoning.** The attendant does not abandon the assigned function. The responsible entry supervisor establishes proper relief under the program or suspends entry and accounts for the entrant before the attendant leaves. Delivery pressure does not change the need for monitoring, communication and response. The interruption is recorded and any restart follows the entry system.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H05_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H05_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nA qualified assessor must separately evaluate each assigned entry role using the actual program and a safe representative space or simulation: hazard recognition, equipment, communications, monitoring duties, exit actions and accountability. Gas testing requires instrument and sampling competence. Rescue requires a separately qualified and equipped service with appropriate practice. This course neither authorizes entry nor replaces jurisdiction-specific entry training.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H05_check1",
+        "prompt": "A tank looks empty and has an open hatch. What establishes its entry classification?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The competent space and task assessment under the applicable entry program."
+          },
+          {
+            "id": "b",
+            "label": "Its clean appearance."
+          },
+          {
+            "id": "c",
+            "label": "A worker’s willingness to enter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H05_final_1_1",
+        "prompt": "Which factor can make a confined space permit-required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its paint color."
+          },
+          {
+            "id": "b",
+            "label": "Only a space deeper than a worker’s height."
+          },
+          {
+            "id": "c",
+            "label": "A credible hazardous atmosphere or another qualifying serious hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H05_final_1_2",
+        "prompt": "Does an open top guarantee atmospheric safety?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, unless the space is underground."
+          },
+          {
+            "id": "b",
+            "label": "No; hazardous atmospheres can exist despite an open top."
+          },
+          {
+            "id": "c",
+            "label": "Yes, because every gas immediately escapes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H05_final_1_3",
+        "prompt": "Why assess the work as well as the space?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cleaning, coatings, tools and connected operations can introduce new hazards."
+          },
+          {
+            "id": "b",
+            "label": "The space classification can never change with work."
+          },
+          {
+            "id": "c",
+            "label": "Only the vessel’s original contents matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H05_check2",
+        "prompt": "The attendant must leave to fetch a tool. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue because the entrant has a phone."
+          },
+          {
+            "id": "b",
+            "label": "Ask the entrant to monitor themself."
+          },
+          {
+            "id": "c",
+            "label": "Maintain the required attendant function through approved relief or suspend entry."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H05_final_2_1",
+        "prompt": "Who authorizes entry under the entry system?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The equipment supplier’s delivery driver."
+          },
+          {
+            "id": "b",
+            "label": "The designated entry supervisor after required conditions are verified."
+          },
+          {
+            "id": "c",
+            "label": "Any worker with a recent online score."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H05_final_2_2",
+        "prompt": "Does being an attendant authorize atmospheric rescue entry?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; rescue is a separately planned qualified capability."
+          },
+          {
+            "id": "b",
+            "label": "Yes, whenever an entrant collapses."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the attendant has a radio."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H05_final_2_3",
+        "prompt": "Why coordinate host and contractor information?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the entrant’s employer knows anything relevant."
+          },
+          {
+            "id": "b",
+            "label": "Separate contracts prevent physical interaction."
+          },
+          {
+            "id": "c",
+            "label": "Each may know hazards or activities that affect the shared space."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H05_check3",
+        "prompt": "Initial gas readings are acceptable but a hazardous feed is not isolated. May entry proceed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the entrant moves quickly."
+          },
+          {
+            "id": "b",
+            "label": "No; all required entry conditions, including isolation, must be established."
+          },
+          {
+            "id": "c",
+            "label": "Yes, because atmosphere is the only entry hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H05_final_3_1",
+        "prompt": "Who establishes technical atmosphere testing arrangements?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Personnel qualified and authorized for that task and program."
+          },
+          {
+            "id": "b",
+            "label": "Any entrant after reading this course."
+          },
+          {
+            "id": "c",
+            "label": "The person with the oldest detector."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H05_final_3_2",
+        "prompt": "What does ventilation prove about other hazards?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That every serious hazard is eliminated."
+          },
+          {
+            "id": "b",
+            "label": "That no permit conditions are needed."
+          },
+          {
+            "id": "c",
+            "label": "Nothing automatically about mechanical, engulfment or other hazards."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H05_final_3_3",
+        "prompt": "Why must initial readings match the work configuration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the permit number matters."
+          },
+          {
+            "id": "b",
+            "label": "Changed connections or tasks can change atmosphere and release conditions."
+          },
+          {
+            "id": "c",
+            "label": "Readings are valid for all future work in the same tank."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H05_check4",
+        "prompt": "A rescue plan lists only a general emergency number. What remains to be established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A capable, available and feasible rescue arrangement for the actual space."
+          },
+          {
+            "id": "b",
+            "label": "Nothing; the number proves rescue readiness."
+          },
+          {
+            "id": "c",
+            "label": "Only the entrant’s willingness to accept risk."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H05_final_4_1",
+        "prompt": "When is rescue feasibility checked?",
+        "options": [
+          {
+            "id": "a",
+            "label": "After the first entrant is inside."
+          },
+          {
+            "id": "b",
+            "label": "Only after a failed rescue."
+          },
+          {
+            "id": "c",
+            "label": "Before entry authorization and when relevant conditions change."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H05_final_4_2",
+        "prompt": "Can any rope arrangement be treated as a retrieval system?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if two coworkers can pull it."
+          },
+          {
+            "id": "b",
+            "label": "No; the method must suit the space, person and assessed constraints."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the rope is new."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H05_final_4_3",
+        "prompt": "What should an unqualified coworker do if an entrant collapses?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Summon the designated response and avoid unprotected entry."
+          },
+          {
+            "id": "b",
+            "label": "Enter immediately while holding a breath."
+          },
+          {
+            "id": "c",
+            "label": "Use a monitor as breathing protection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H05_check5",
+        "prompt": "A required ventilation safeguard fails during entry. What is the response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue until symptoms appear."
+          },
+          {
+            "id": "b",
+            "label": "Assume the initial readings remain valid."
+          },
+          {
+            "id": "c",
+            "label": "Follow the entry program’s evacuation and reassessment process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H05_final_5_1",
+        "prompt": "What should happen on required communication failure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ask the entrant to shout occasionally and ignore the failure."
+          },
+          {
+            "id": "b",
+            "label": "Follow the program’s exit and response arrangements."
+          },
+          {
+            "id": "c",
+            "label": "Continue because the permit has time remaining."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H05_final_5_2",
+        "prompt": "Does a valid permit guarantee continuing safe conditions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; conditions and safeguards must remain verified as required."
+          },
+          {
+            "id": "b",
+            "label": "Yes, until the printed end time."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the entrant has experience."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H05_final_5_3",
+        "prompt": "Why monitor nearby activities?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only work inside the space can change its atmosphere."
+          },
+          {
+            "id": "b",
+            "label": "Another employer’s activity is outside the entry assessment."
+          },
+          {
+            "id": "c",
+            "label": "Exhaust, releases or operating changes can affect the space."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H05_check6",
+        "prompt": "A failed monitor is replaced after evacuation. Does entry automatically resume?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the original permit has not expired."
+          },
+          {
+            "id": "b",
+            "label": "No; the responsible entry process must verify conditions and authorize re-entry."
+          },
+          {
+            "id": "c",
+            "label": "Yes, because the replacement turns on."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H05_final_6_1",
+        "prompt": "What belongs in entry closeout?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Personnel accounting, equipment state, unresolved issues and controlled handback."
+          },
+          {
+            "id": "b",
+            "label": "Only a finish time."
+          },
+          {
+            "id": "c",
+            "label": "Automatic process restart."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H05_final_6_2",
+        "prompt": "What should happen to records of interrupted entry?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Delete them once re-entry succeeds."
+          },
+          {
+            "id": "b",
+            "label": "Replace them with the final acceptable reading."
+          },
+          {
+            "id": "c",
+            "label": "Preserve the interruption, cause, response and later authorization distinctly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H05_final_6_3",
+        "prompt": "Which practical role is granted by this written course alone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Atmospheric rescue team member."
+          },
+          {
+            "id": "b",
+            "label": "None of the specialist entry, testing or rescue roles."
+          },
+          {
+            "id": "c",
+            "label": "Entry supervisor for every space."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H05_final_scenario1",
+        "prompt": "What is wrong with calling the vessel task “quick retrieval”?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The label does not remove entry exposure or its required assessment."
+          },
+          {
+            "id": "b",
+            "label": "Only long jobs need assessment."
+          },
+          {
+            "id": "c",
+            "label": "A watching coworker automatically supplies every safeguard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H05_final_scenario2",
+        "prompt": "Which arrangement resolves the attendant conflict?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Entrant self-monitoring until the delivery ends."
+          },
+          {
+            "id": "b",
+            "label": "Leaving a radio on the ground."
+          },
+          {
+            "id": "c",
+            "label": "Approved relief maintaining the function, or suspended entry with entrants accounted for."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H05_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H05_lesson1",
+          "questionIds": [
+            "H05_check1"
+          ]
+        },
+        {
+          "lessonId": "H05_lesson2",
+          "questionIds": [
+            "H05_check2"
+          ]
+        },
+        {
+          "lessonId": "H05_lesson3",
+          "questionIds": [
+            "H05_check3"
+          ]
+        },
+        {
+          "lessonId": "H05_lesson4",
+          "questionIds": [
+            "H05_check4"
+          ]
+        },
+        {
+          "lessonId": "H05_lesson5",
+          "questionIds": [
+            "H05_check5"
+          ]
+        },
+        {
+          "lessonId": "H05_lesson6",
+          "questionIds": [
+            "H05_check6"
+          ]
+        },
+        {
+          "lessonId": "H05_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H05_assessment",
+          "questionIds": [
+            "H05_final_1_1",
+            "H05_final_1_2",
+            "H05_final_1_3",
+            "H05_final_2_1",
+            "H05_final_2_2",
+            "H05_final_2_3",
+            "H05_final_3_1",
+            "H05_final_3_2",
+            "H05_final_3_3",
+            "H05_final_4_1",
+            "H05_final_4_2",
+            "H05_final_4_3",
+            "H05_final_5_1",
+            "H05_final_5_2",
+            "H05_final_5_3",
+            "H05_final_6_1",
+            "H05_final_6_2",
+            "H05_final_6_3",
+            "H05_final_scenario1",
+            "H05_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H05_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H05_check1": "Appearance cannot establish atmosphere, engulfment or other serious hazards. Classification must consider the configuration and actual work under the applicable program.",
+        "H05_final_1_1": "Permit classification follows defined hazards and configuration, not a visual shorthand. Atmospheric, engulfment, trapping and other serious hazards need competent assessment.",
+        "H05_final_1_2": "Ventilation and gas behavior depend on the actual conditions. An opening alone does not demonstrate acceptable conditions at the worker’s breathing location.",
+        "H05_final_1_3": "The proposed activity can consume oxygen, release contaminants or introduce ignition and mechanical hazards. The entry plan must address these task-created exposures.",
+        "H05_check2": "The attendant is an entry safeguard with specific duties. Leaving without a valid relief or suspension removes that safeguard even if communication equipment remains available.",
+        "H05_final_2_1": "Entry authorization is a defined operational role supported by verified conditions. Written awareness completion does not grant that authority.",
+        "H05_final_2_2": "Attendant duties include summoning the planned response and preventing unauthorized entry. Entering without rescue training and protection can create another casualty.",
+        "H05_final_2_3": "Connected processes and concurrent work can change entry conditions. Exchanging information and coordinating responsibilities closes gaps between employers’ assumptions.",
+        "H05_check3": "Entry readiness requires the complete protective system. Acceptable atmosphere readings do not control the risk of material or energy entering through an unisolated connection.",
+        "H05_final_3_1": "Testing needs hazard knowledge, instrument suitability and sampling competence. A detector alone does not establish the ability to characterize the space safely.",
+        "H05_final_3_2": "Ventilation addresses a defined atmospheric control function. Other hazards require their own assessment and safeguards and cannot be dismissed because air is moving.",
+        "H05_final_3_3": "A measurement is bounded by place, time and method. The entry authority must know that the relevant conditions still exist when people rely on the result.",
+        "H05_check4": "A contact number is not evidence of capability, access, equipment or response arrangements. Rescue readiness must be established before entry, not improvised after an emergency.",
+        "H05_final_4_1": "Rescue limitations can make an otherwise planned entry unacceptable. They must be resolved before exposure so an emergency does not become the first test of the method.",
+        "H05_final_4_2": "Improvised retrieval can fail or injure the entrant. A suitable plan must address routing, attachments, equipment and obstructions under competent review.",
+        "H05_final_4_3": "An unknown atmosphere or other serious hazard can incapacitate a would-be rescuer. Only the designated qualified response undertakes rescue under the plan.",
+        "H05_check5": "Loss of a required control invalidates the entry basis. Waiting for symptoms or a later alarm exposes the entrant while the protective system is uncertain.",
+        "H05_final_5_1": "Communication is part of the entry system. Its loss can prevent warnings and accountability, so the defined failure response must be followed rather than improvised inside.",
+        "H05_final_5_2": "Authorization is conditional. Changed atmosphere, process state or control performance can require evacuation and revalidation before the permit’s nominal end time.",
+        "H05_final_5_3": "A space interacts with its surroundings and connected systems. The entry arrangement must address credible external sources and concurrent operations.",
+        "H05_check6": "Replacing one device addresses only part of the failed safeguard. The authority must establish current entry conditions and the applicable re-entry authorization.",
+        "H05_final_6_1": "Closeout must communicate what is actually complete and what remains restricted. Entry completion is not equivalent to operating readiness.",
+        "H05_final_6_2": "A complete chronology supports investigation and learning. Later success does not erase an earlier failed control or explain how it was resolved.",
+        "H05_final_6_3": "Each role requires task-specific skills, practical evaluation and employer designation. The written course establishes awareness and assessed knowledge only.",
+        "H05_final_scenario1": "Task duration and informal labels do not determine the hazards or entry boundary. The actual exposure must be assessed under the entry program.",
+        "H05_final_scenario2": "The required role must remain effective throughout entry. Equipment left behind does not perform the attendant’s observation, communication and response duties."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

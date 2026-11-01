@@ -27,6 +27,8 @@ import {
 } from "./library-core";
 import { allocateLibraryItems, employeeChecklist } from "./library-assignments";
 import { companyLibraryPeople, libraryOptions } from "./library-audience";
+import {ensurePolicyTraining,lockCompanyTraining} from './training-course-policy';
+import {ensureRequiredTraining} from './required-training';
 export async function updateOnboardingRule(
   actor: LibraryActor,
   id: string,
@@ -200,6 +202,7 @@ export async function ensureOnboarding(actor: LibraryActor) {
         )
         .orderBy(templates.id)
         .for("update");
+    await lockCompanyTraining(tx,owner);
     for (const record of bundles) {
       const targets = (await onboardingPeople(tx, record)).filter(
         (p) => p.userId === actor.userId && p.membershipId === member.id,
@@ -208,6 +211,8 @@ export async function ensureOnboarding(actor: LibraryActor) {
       const { root, items } = await savedBundleItems(tx, record);
       await allocateLibraryItems(tx, root, items, targets, false, new Date());
     }
+    await ensurePolicyTraining(tx,owner,actor.userId);
+    await ensureRequiredTraining(tx,owner,actor.userId);
   });
   const checklist = await employeeChecklist(actor);
   return {

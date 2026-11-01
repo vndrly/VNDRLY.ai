@@ -1,0 +1,785 @@
+{
+  "familyId": "H07",
+  "title": "Lifting, rigging and suspended loads",
+  "description": "Complete guided H07 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Avoid dropped loads, overturning and line-of-fire exposure.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Operators, riggers, signal persons, lifting leads and planners require separately assessed task-specific competence and any applicable certification or licensing. Practical assessment must address the actual equipment, load information, rigging, signals, exclusion, deviations and landing. This awareness course does not authorize calculations, rigging selection or crane operation.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Lifting, rigging and suspended loads",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Updated_Lift%20Plan%20Template_High-Critical%20Cat%202%20%203_Rev1_2024.pdf"
+    },
+    {
+      "title": "Inventory source 2: Lifting, rigging and suspended loads",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y17-95-64-875_0.pdf"
+    },
+    {
+      "title": "OSHA: Sling requirements",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.184"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H07_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H07: Lifting, rigging and suspended loads\n\nThis original VNDRLY course teaches decisions for service-specific: crane, hoist and rigging work. Its purpose is to avoid dropped loads, overturning and line-of-fire exposure. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H07_lesson1",
+        "title": "Lesson 1: Define the lift and assign qualified roles",
+        "body": "A lift plan describes the actual load, equipment, configuration, route, landing area and operating conditions. The competent planner classifies the lift under the employer and site system and identifies required review. A familiar-looking lift can become different when the radius, ground, load center, rigging or nearby operation changes.\n\nRoles include the lifting lead, qualified operator, riggers and signal persons as applicable. Their qualifications must match the equipment and task. One person may perform more than one role only where allowed and where duties remain effective. A general awareness learner does not acquire these roles through a quiz.\n\nWorked example: a crew reuses yesterday’s plan but the crane must now stand farther away. The changed radius can alter capacity and geometry, so the competent plan is reviewed before setup or lifting.\n\n### Applying the mechanism\n\nPlanning must connect the load information with the equipment’s actual setup. A crane’s apparent size or maximum advertised capacity does not establish capacity at the intended radius and configuration. The plan also considers how the load will be controlled, where people stand and what happens if conditions change. Classification under the site system identifies the required technical review; workers should not downgrade a lift by calling it routine. If the work is repeated, compare the actual setup each time. A moved crane, different attachment or changed ground can make a repeated lift materially different. The competent planner resolves those differences before the team relies on the earlier plan.\n\n### Decision principles\n\nThe lift is a system of load, support, equipment and people. A plan must define the arrangement that is being assessed and authorized.\n\nClassification determines planning and approval needs and must follow the actual risks and site criteria, not an informal label.\n\nRigging competence includes selecting, attaching and controlling loads in real configurations. Written awareness alone cannot establish those skills.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H07_lesson2",
+        "title": "Lesson 2: Establish load and center-of-gravity information",
+        "body": "The plan needs a defensible load weight and relevant center-of-gravity information. Include attachments, contents, retained liquid and lifting accessories as required by the capacity calculation. An unverified estimate from appearance is not a suitable basis for a consequential lift. Use approved drawings, weighing or other competent methods.\n\nThe center of gravity affects balance and sling forces. A load can rotate or tip when lifted even if its total weight is within capacity. Lifting points must be suitable for the intended direction and load, not merely convenient holes or protrusions.\n\nWorked example: a vessel marked with an empty weight still contains residue and attached piping. The planner resolves the actual lifted weight and attachments before selecting the system; the marking is useful information but not the whole load.\n\n### Applying the mechanism\n\nWeight and balance information should have a stated basis. Drawings may describe an empty component while field attachments, retained liquid or modifications change the actual load. A center of gravity away from the expected position can cause rotation when support changes. Lifting points must suit the load and direction imposed by the arrangement. Do not use the first trial lift to discover an unknown weight or unverified attachment. The plan may include controlled checks as part of a qualified method, but that is different from guessing and hoping the equipment can carry it. Where information is missing, the safe planning outcome is a hold and competent resolution.\n\n### Decision principles\n\nLoad balance must be understood before lifting. Unexpected rotation can overload components or move the load into people or structures.\n\nA point’s appearance or accessibility does not demonstrate strength or approved loading direction. Competent technical information must support its use.\n\nThe lifting system supports more than the named component. Omitted contents or accessories can invalidate capacity and balance assumptions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H07_lesson3",
+        "title": "Lesson 3: Match equipment, rigging and support conditions",
+        "body": "Capacity depends on the actual equipment configuration, radius, boom or attachment arrangement and manufacturer limits. Rigging selection considers rated capacity, hitch, sling angles, edge protection, compatibility and condition. Do not calculate or alter these from memory when the task requires a competent plan.\n\nGround and support must withstand the imposed loads in the proposed setup. Underground services, voids, slopes, recent disturbance and nearby excavations can matter. Outriggers and mats do not automatically solve unknown ground conditions. Weather and wind limits follow the equipment and plan.\n\nWorked example: a crane is positioned beside a recent trench. The planner obtains the required support assessment and approved setup. A flat-looking surface is not proof that it can carry the crane’s reactions.\n\n### Applying the mechanism\n\nRigging geometry affects the forces carried by individual components. An acceptable sling in one hitch or angle may not support the same load in another configuration. Edges, heat, chemicals and attachments can further limit use. The qualified rigger and planner use the applicable rated information and inspect the actual items. Ground support is equally part of the system: crane reactions can be concentrated and affected by voids, trenches or weak surfaces. Mats and outriggers need the approved setup, not an improvised appearance of stability. A user should be able to identify the required configuration and report discrepancies without attempting to calculate a new lift from memory.\n\n### Decision principles\n\nA connected assembly can still be overloaded or unsuitable. The rated performance must apply to the actual hitch, geometry and service conditions.\n\nNominal capacity is not a universal rating at every radius or setup. The plan must use applicable configuration information and support conditions.\n\nUnknown rating or damage defeats the basis for selection. Informal labeling cannot restore traceability or establish load-bearing condition.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H07_lesson4",
+        "title": "Lesson 4: Control the route, landing and exclusion area",
+        "body": "Plan the full movement, not just the pick. The load path and landing area must account for structures, utilities, vehicles, workers and adjacent operations. Keep people outside the assessed fall, swing and crushing areas. Never place a person under a suspended load to guide it by hand.\n\nTag lines or other control methods are used only where suitable under the plan; they can create entanglement or pull a worker into danger if improvised. The landing arrangement must support the load and allow rigging to be removed without an uncontrolled pinch exposure.\n\nWorked example: the pick area is clear but the landing point requires a helper to reach beneath the load to position blocking. The plan is revised before lifting so support and access can be established without that exposure.\n\n### Applying the mechanism\n\nThe route plan includes the space occupied by the load and equipment during swing, travel and landing, not only a line between two points. A load can rotate or deflect, and workers can be trapped against nearby structures. Separate people from those paths and control all approaches. The landing arrangement should be ready before lifting so helpers do not reach beneath the load to insert supports. Material and rigging removal must be possible after stability is established. If the planned destination is blocked, stop and review the change rather than choosing a convenient spot while the load is suspended. The revised location needs its own support and exposure assessment.\n\n### Decision principles\n\nA lift can fail or expose people at any stage. Landing and de-rigging often introduce pinch and stability hazards that must be addressed in advance.\n\nA tag line can introduce entanglement or pulling hazards. Its use must fit the load, environment and worker positioning under the approved method.\n\nThe lifting envelope includes equipment and load movement. Utility clearances and controls require qualified planning under applicable rules and site arrangements.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H07_lesson5",
+        "title": "Lesson 5: Communicate and stop on deviation",
+        "body": "Agree the signal system, designated signal role, operator communication and response to loss of signal before the lift. Everyone must know how to raise an emergency stop through the site arrangement. Stop if a person enters the exclusion area, the load behaves unexpectedly, weather exceeds limits or the setup differs from the plan.\n\nDo not chase a swinging load or use a body to arrest its movement. The operator and lifting lead establish the controlled state according to the plan. A plan change requires the appropriate competent review and rebriefing, not an improvised discussion while people remain exposed.\n\nWorked example: radio contact fails with the load suspended. The operator follows the agreed stop and safe-state procedure rather than interpreting distant hand movements from unassigned observers.\n\n### Applying the mechanism\n\nSignals should be unambiguous and matched to the actual visibility and noise. The operator must know the designated signal arrangement and the response to conflicting or lost instructions. Workers need a clear emergency-stop channel without everyone improvising movement directions. A helper who sees danger reports the stop rather than running into the path to correct it physically. During a hold, the operator and lifting lead establish the safe condition under the plan. Do not treat a suspended load as a meeting room while a new method is discussed. People remain clear until a controlled plan and any required technical review establish the next stage.\n\n### Decision principles\n\nThe plan’s approval applies to its assumptions. A changed load, configuration or environment can invalidate that basis and requires competent reassessment.\n\nTrying to physically stop a load can place the helper in a severe crushing path. The lifting system and approved method must control movement.\n\nWorkers need a clear way to report imminent danger. The specific controlled response follows the lifting plan and operator duties.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H07_lesson6",
+        "title": "Lesson 6: Land, inspect and close the lift",
+        "body": "A landed load must be stable and supported before rigging is released. Follow the planned sequence so removing a sling or restraint does not initiate rolling, tipping or pinch exposure. The competent roles confirm the final state and clear the work area before returning access to others.\n\nInspect and control any rigging or equipment affected by abnormal loading, impact or damage. Record deviations, stops and changes, including why the final arrangement was accepted. A lift without injury is not proof that a damaged sling or unstable support was acceptable.\n\nWorked example: a load lands unevenly and remains supported partly by the crane. The rigger does not release the assembly to hurry closeout. The lifting lead establishes the approved stable condition first.\n\n### Applying the mechanism\n\nLanding transfers support from the lifting system to the destination. Confirm that the load is stable under the planned support before releasing rigging. A partly supported or uneven load can move when tension changes, exposing the rigger during removal. Follow the approved sequence and keep hands out of pinch gaps. Afterward, inspect or control equipment affected by impact, abnormal loading or damage. Record the actual deviation and disposition so the next lift does not inherit an unknown item. A successful landing is an outcome, but it does not retrospectively prove that the earlier rigging or separation was adequate. Review the controls as well as the result.\n\n### Decision principles\n\nAbnormal loading can impair future strength without obvious external failure. Traceable equipment control prevents unverified gear from reaching the next lift.\n\nRecords should explain the work actually performed and remaining equipment restrictions. The approval remains bounded to that lift and configuration.\n\nOperators, riggers, signal persons and planners have different practical skills. Awareness supports recognition but cannot replace role-specific demonstration and authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H07_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: Uncertain load\n\nA skid has a catalog weight, but field modifications and retained fluid are not documented. A supervisor suggests using the catalog figure because the crane appears large.\n\n**Worked decision and reasoning.** The lift remains held while the competent planner establishes the actual load and balance, equipment configuration, rigging and support requirements. The plan records the defensible weight basis and any approved technical assumptions. The operator does not discover adequacy by beginning to lift. Equipment appearance and slow movement cannot replace capacity verification.\n\n### Scenario 2: Changed landing\n\nThe original landing area is blocked. A helper proposes another spot beside an occupied walkway and will hold the load away from pedestrians.\n\n**Worked decision and reasoning.** The lifting lead stops the change and obtains competent review of the new path, support, exclusion and de-rigging arrangement. Pedestrians are controlled through the site system and workers are rebriefed. A helper’s body is not a load-control barrier. The lift resumes only when the revised plan and required authorization are established.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H07_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H07_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nOperators, riggers, signal persons, lifting leads and planners require separately assessed task-specific competence and any applicable certification or licensing. Practical assessment must address the actual equipment, load information, rigging, signals, exclusion, deviations and landing. This awareness course does not authorize calculations, rigging selection or crane operation.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H07_check1",
+        "prompt": "The crane location changes and the load is farther away. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Competent review of the actual configuration and plan."
+          },
+          {
+            "id": "b",
+            "label": "Reuse yesterday’s capacity assumption."
+          },
+          {
+            "id": "c",
+            "label": "Lift slowly to compensate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H07_final_1_1",
+        "prompt": "What should a lift plan identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the destination."
+          },
+          {
+            "id": "b",
+            "label": "Only the operator’s name."
+          },
+          {
+            "id": "c",
+            "label": "The actual load, equipment, configuration, route, conditions and responsible roles."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H07_final_1_2",
+        "prompt": "Who classifies the lift and required review?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The training administrator."
+          },
+          {
+            "id": "b",
+            "label": "The designated competent lifting planner under the applicable system."
+          },
+          {
+            "id": "c",
+            "label": "Any bystander who calls it routine."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H07_final_1_3",
+        "prompt": "Does this course qualify someone as a rigger?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; task-specific practical evaluation and designation are separate."
+          },
+          {
+            "id": "b",
+            "label": "Yes, for any sling with a readable tag."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if they have watched previous lifts."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H07_check2",
+        "prompt": "A vessel’s marking gives empty weight but contents remain uncertain. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the empty weight without adjustment."
+          },
+          {
+            "id": "b",
+            "label": "Add an arbitrary small percentage."
+          },
+          {
+            "id": "c",
+            "label": "Resolve the actual lifted weight and load condition through a competent method."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H07_final_2_1",
+        "prompt": "Why does center of gravity matter?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It matters only after the load is airborne."
+          },
+          {
+            "id": "b",
+            "label": "It affects balance, rotation and forces in the lifting arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Only total weight matters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H07_final_2_2",
+        "prompt": "Can any convenient hole be used as a lifting point?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; suitability must be established for the intended load and direction."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if a hook fits."
+          },
+          {
+            "id": "c",
+            "label": "Yes, for a brief lift."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H07_final_2_3",
+        "prompt": "What can be part of the total lifted load?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the bare item’s catalog weight."
+          },
+          {
+            "id": "b",
+            "label": "Only items visible from ground level."
+          },
+          {
+            "id": "c",
+            "label": "Relevant attachments, retained material and lifting accessories."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H07_check3",
+        "prompt": "The planned crane setup is beside a recent trench. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Faster lifting to reduce ground exposure."
+          },
+          {
+            "id": "b",
+            "label": "Competent assessment of ground and support for the actual setup."
+          },
+          {
+            "id": "c",
+            "label": "A visual guess that the surface is flat."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H07_final_3_1",
+        "prompt": "What determines rigging suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Rating, configuration, angles, compatibility, condition and the approved plan."
+          },
+          {
+            "id": "b",
+            "label": "Only sling color."
+          },
+          {
+            "id": "c",
+            "label": "Only whether the hardware connects."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H07_final_3_2",
+        "prompt": "Does a higher crane nominal capacity prove every configuration is safe?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the load is light by appearance."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if outriggers are visible."
+          },
+          {
+            "id": "c",
+            "label": "No; the actual configuration and manufacturer limits govern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H07_final_3_3",
+        "prompt": "What should happen to damaged or unidentified rigging?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Recreate its tag by guessing."
+          },
+          {
+            "id": "b",
+            "label": "Remove it from reliance and follow the equipment control process."
+          },
+          {
+            "id": "c",
+            "label": "Use it for the easiest portion only."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H07_check4",
+        "prompt": "The landing plan requires a helper beneath the suspended load. What is the decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Revise the approved method to prevent that exposure before lifting."
+          },
+          {
+            "id": "b",
+            "label": "Allow it if the helper is quick."
+          },
+          {
+            "id": "c",
+            "label": "Require a harder helmet."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H07_final_4_1",
+        "prompt": "Which part of the movement needs planning?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the moment the load leaves the ground."
+          },
+          {
+            "id": "b",
+            "label": "Only the crane’s parking position."
+          },
+          {
+            "id": "c",
+            "label": "Pick, travel, swing, landing and safe release of rigging."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H07_final_4_2",
+        "prompt": "Are tag lines automatically safe for every lift?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, regardless of nearby equipment."
+          },
+          {
+            "id": "b",
+            "label": "No; their suitability and safe use must be assessed."
+          },
+          {
+            "id": "c",
+            "label": "Yes, because they keep hands away from the load."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H07_final_4_3",
+        "prompt": "Why coordinate overhead and nearby utilities?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Contact or proximity can create serious hazards beyond the load itself."
+          },
+          {
+            "id": "b",
+            "label": "Only the load weight matters."
+          },
+          {
+            "id": "c",
+            "label": "Utility ownership prevents crane interaction."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H07_check5",
+        "prompt": "The agreed signal is lost during movement. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue toward the expected destination."
+          },
+          {
+            "id": "b",
+            "label": "Accept signals from whoever waves first."
+          },
+          {
+            "id": "c",
+            "label": "Stop under the plan and restore controlled communication."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H07_final_5_1",
+        "prompt": "What if actual conditions differ materially from the plan?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let the nearest worker improvise."
+          },
+          {
+            "id": "b",
+            "label": "Stop and obtain the required review before changing the lift."
+          },
+          {
+            "id": "c",
+            "label": "Continue because the plan is signed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H07_final_5_2",
+        "prompt": "What should a helper do with a swinging load?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stay clear and use the approved stop and control arrangement."
+          },
+          {
+            "id": "b",
+            "label": "Catch it with their body."
+          },
+          {
+            "id": "c",
+            "label": "Stand between it and a structure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H07_final_5_3",
+        "prompt": "What should everyone know about emergency stopping?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the signal person may ever report danger."
+          },
+          {
+            "id": "b",
+            "label": "A stop can wait until the load is landed regardless of exposure."
+          },
+          {
+            "id": "c",
+            "label": "How to communicate a stop through the agreed system."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H07_check6",
+        "prompt": "A load is touching down but is not stable. May rigging be released?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the operator holds the brake."
+          },
+          {
+            "id": "b",
+            "label": "No; establish the planned stable support before release."
+          },
+          {
+            "id": "c",
+            "label": "Yes, because contact with ground means landed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H07_final_6_1",
+        "prompt": "What should happen after abnormal rigging loading or damage?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Control the item and obtain the required competent inspection or disposition."
+          },
+          {
+            "id": "b",
+            "label": "Return it to the common bin immediately."
+          },
+          {
+            "id": "c",
+            "label": "Erase the event if the load landed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H07_final_6_2",
+        "prompt": "What does lift closeout record?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a successful outcome label."
+          },
+          {
+            "id": "b",
+            "label": "A guarantee for every future lift."
+          },
+          {
+            "id": "c",
+            "label": "Actual configuration, deviations, condition and accepted final state."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H07_final_6_3",
+        "prompt": "Who grants practical lifting role competence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any person who attended the briefing."
+          },
+          {
+            "id": "b",
+            "label": "The employer’s qualified assessment and designation process for the actual role."
+          },
+          {
+            "id": "c",
+            "label": "This written course alone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H07_final_scenario1",
+        "prompt": "Why is the catalog figure insufficient here?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It does not establish the modified skid’s actual lifted weight and balance."
+          },
+          {
+            "id": "b",
+            "label": "Catalogs are never useful for any lift."
+          },
+          {
+            "id": "c",
+            "label": "A large crane eliminates weight uncertainty."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H07_final_scenario2",
+        "prompt": "What is required before using the alternate landing area?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only verbal confidence from the helper."
+          },
+          {
+            "id": "b",
+            "label": "A faster landing to shorten exposure."
+          },
+          {
+            "id": "c",
+            "label": "Review and verify the changed route, support and people-separation controls."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H07_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H07_lesson1",
+          "questionIds": [
+            "H07_check1"
+          ]
+        },
+        {
+          "lessonId": "H07_lesson2",
+          "questionIds": [
+            "H07_check2"
+          ]
+        },
+        {
+          "lessonId": "H07_lesson3",
+          "questionIds": [
+            "H07_check3"
+          ]
+        },
+        {
+          "lessonId": "H07_lesson4",
+          "questionIds": [
+            "H07_check4"
+          ]
+        },
+        {
+          "lessonId": "H07_lesson5",
+          "questionIds": [
+            "H07_check5"
+          ]
+        },
+        {
+          "lessonId": "H07_lesson6",
+          "questionIds": [
+            "H07_check6"
+          ]
+        },
+        {
+          "lessonId": "H07_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H07_assessment",
+          "questionIds": [
+            "H07_final_1_1",
+            "H07_final_1_2",
+            "H07_final_1_3",
+            "H07_final_2_1",
+            "H07_final_2_2",
+            "H07_final_2_3",
+            "H07_final_3_1",
+            "H07_final_3_2",
+            "H07_final_3_3",
+            "H07_final_4_1",
+            "H07_final_4_2",
+            "H07_final_4_3",
+            "H07_final_5_1",
+            "H07_final_5_2",
+            "H07_final_5_3",
+            "H07_final_6_1",
+            "H07_final_6_2",
+            "H07_final_6_3",
+            "H07_final_scenario1",
+            "H07_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H07_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H07_check1": "Capacity and stability depend on configuration, including radius. Slow movement does not establish adequacy when the approved configuration has changed.",
+        "H07_final_1_1": "The lift is a system of load, support, equipment and people. A plan must define the arrangement that is being assessed and authorized.",
+        "H07_final_1_2": "Classification determines planning and approval needs and must follow the actual risks and site criteria, not an informal label.",
+        "H07_final_1_3": "Rigging competence includes selecting, attaching and controlling loads in real configurations. Written awareness alone cannot establish those skills.",
+        "H07_check2": "Uncertain contents can change weight and balance. The plan needs a defensible basis for the actual load rather than an invented allowance.",
+        "H07_final_2_1": "Load balance must be understood before lifting. Unexpected rotation can overload components or move the load into people or structures.",
+        "H07_final_2_2": "A point’s appearance or accessibility does not demonstrate strength or approved loading direction. Competent technical information must support its use.",
+        "H07_final_2_3": "The lifting system supports more than the named component. Omitted contents or accessories can invalidate capacity and balance assumptions.",
+        "H07_check3": "Support failure can overturn equipment regardless of nominal lifting capacity. Ground assessment must address the actual load reactions and adjacent excavation conditions.",
+        "H07_final_3_1": "A connected assembly can still be overloaded or unsuitable. The rated performance must apply to the actual hitch, geometry and service conditions.",
+        "H07_final_3_2": "Nominal capacity is not a universal rating at every radius or setup. The plan must use applicable configuration information and support conditions.",
+        "H07_final_3_3": "Unknown rating or damage defeats the basis for selection. Informal labeling cannot restore traceability or establish load-bearing condition.",
+        "H07_check4": "The load’s crushing energy cannot be controlled by speed or head protection. The method must keep people out of the fall and pinch path.",
+        "H07_final_4_1": "A lift can fail or expose people at any stage. Landing and de-rigging often introduce pinch and stability hazards that must be addressed in advance.",
+        "H07_final_4_2": "A tag line can introduce entanglement or pulling hazards. Its use must fit the load, environment and worker positioning under the approved method.",
+        "H07_final_4_3": "The lifting envelope includes equipment and load movement. Utility clearances and controls require qualified planning under applicable rules and site arrangements.",
+        "H07_check5": "Loss of the coordination safeguard creates conflicting assumptions. The agreed failure response prevents unplanned movement while the signal arrangement is restored.",
+        "H07_final_5_1": "The plan’s approval applies to its assumptions. A changed load, configuration or environment can invalidate that basis and requires competent reassessment.",
+        "H07_final_5_2": "Trying to physically stop a load can place the helper in a severe crushing path. The lifting system and approved method must control movement.",
+        "H07_final_5_3": "Workers need a clear way to report imminent danger. The specific controlled response follows the lifting plan and operator duties.",
+        "H07_check6": "Partial contact does not establish stability. Releasing support can cause tipping or movement and expose the rigger during de-rigging.",
+        "H07_final_6_1": "Abnormal loading can impair future strength without obvious external failure. Traceable equipment control prevents unverified gear from reaching the next lift.",
+        "H07_final_6_2": "Records should explain the work actually performed and remaining equipment restrictions. The approval remains bounded to that lift and configuration.",
+        "H07_final_6_3": "Operators, riggers, signal persons and planners have different practical skills. Awareness supports recognition but cannot replace role-specific demonstration and authorization.",
+        "H07_final_scenario1": "Catalog data can support planning, but modifications and contents change the actual load. The competent plan must resolve those differences before reliance.",
+        "H07_final_scenario2": "Changing the landing area changes load movement and human exposure. The original plan does not automatically cover the new location."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

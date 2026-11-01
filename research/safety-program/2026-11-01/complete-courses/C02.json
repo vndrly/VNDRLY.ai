@@ -1,0 +1,785 @@
+{
+  "familyId": "C02",
+  "title": "Induction, orientation and understandable communication",
+  "description": "Complete original VNDRLY C02 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Ensure workers understand hazards, reporting and emergency arrangements.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Explain stop work, reporting and emergency actions in understood language; comprehension check. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-102-training.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.marathonrefinerycontractor.com/content/documents/Refinery_Contractor/Detroit/Detroit_Safety_Documents/Other_Procedures/Misc_Procedures/202_2542_9.pdf"
+    },
+    {
+      "title": "OSHA education and training guidance",
+      "url": "https://www.osha.gov/safety-management/education-training"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "C02_intro",
+        "title": "Start here — Induction, orientation and understandable communication",
+        "body": "# C02: Induction, orientation and understandable communication\n\nEnsure workers understand hazards, reporting and emergency arrangements. This course teaches the decisions needed to implement that purpose in field operations. It covers initial/changed-role induction, language/accessibility checks and site bridging. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C02_lesson1",
+        "title": "Lesson 1 — Separate company induction from site readiness",
+        "body": "## Separate company induction from site readiness\n\nCompany induction introduces the employer's safety system, roles, reporting and general expectations. Site orientation explains the particular location's hazards, traffic, alarms and interfaces. One cannot silently replace the other. Before independent work, establish what has been completed and what remains required. A visitor or supervised access arrangement has its own boundaries; a badge is not automatic permission to perform work.\n\n### Deeper application\n\nA company induction should explain the employer's program and usable contacts; a site orientation should explain the location the worker is entering. A training coordinator can identify completion evidence, but cannot waive a site's operating prerequisites. Supervised access can be a bounded arrangement rather than independent readiness. Be precise about the worker's current status so a visitor badge or induction record does not become an unintended work authorization.\n\n### Worked oilfield example\n\nA newly hired mechanic has company induction but arrives at a production location without required site orientation. The decision is to complete the applicable site orientation and other readiness checks before independent site work.\n\nEmployer awareness does not establish knowledge of this site's hazards and emergency arrangements. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A record separating company induction scope from site-specific orientation and access conditions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the site orientation record names a different location. The appropriate correction is to arrange the relevant location-specific orientation rather than extending the unrelated record. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C02_lesson2",
+        "title": "Lesson 2 — Teach the actions people must take",
+        "body": "## Teach the actions people must take\n\nInduction should prepare a worker to recognize limits, raise a concern, report an event and respond to an alarm. Use realistic examples tied to the worker's duties. Explain who controls the work and where to obtain current instructions. Avoid overwhelming learners with a list of policy titles without showing actions. The goal is usable understanding, not memorization of a lengthy manual's contents.\n\n### Deeper application\n\nUse a job-relevant sequence: recognize the condition, protect yourself, warn affected people and reach the responsible role. Explain the alternative route if the immediate supervisor is unavailable or part of the concern. Workers should know where current instructions are found. Avoid expecting novices to infer these actions from a policy title or an organization chart that lists names without explaining their responsibilities.\n\n### Worked oilfield example\n\nA gate worker can name the safety policies but cannot explain what to do when the vehicle route is blocked. The decision is to teach the relevant stop, warning and escalation actions and check the worker's explanation.\n\nInduction must connect information to decisions the worker will make; title recall does not demonstrate that connection. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An induction record mapping actual role hazards to taught responses and comprehension results. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the emergency section lists a telephone number but not alarm response or assembly arrangements. The appropriate correction is to teach the applicable alarm actions and local arrangements and verify understanding. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C02_lesson3",
+        "title": "Lesson 3 — Use understood language and accessible delivery",
+        "body": "## Use understood language and accessible delivery\n\nDetermine how the worker can best understand the material, without confusing language needs with lack of ability. Use suitable translation, spoken explanation, clear diagrams or accessible formats as needed. Confirm technical meaning and give workers time to ask questions. Do not force someone to rely on guessing from pictures. If a translator is used, ensure the operational instructions and restrictions are communicated accurately.\n\n### Deeper application\n\nAccessible communication includes hearing, vision, literacy and the environment in which information is delivered. A noisy briefing beside operating equipment may defeat otherwise good instruction. Select a suitable setting and format, then test meaning through the learner's own explanation. Translation should include restrictions and emergency actions, not only the welcome message. Do not confuse difficulty with the delivery method with unwillingness to learn.\n\n### Worked oilfield example\n\nA worker signs an English induction but cannot explain the alarm instructions in an understood language. The decision is to provide suitable language support and verify the worker can explain the required alarm response.\n\nA signature does not prove comprehension. The worker must understand the action they are expected to take. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A record of delivery language, support provided and the worker's own corrected explanation. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the translated material omits the alternative reporting route. The appropriate correction is to supply the missing safety meaning and verify that route is understood before release. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C02_lesson4",
+        "title": "Lesson 4 — Check comprehension through relevant explanation",
+        "body": "## Check comprehension through relevant explanation\n\nAsk learners to explain what they would do in a specific situation and why. A demonstration or teach-back reveals misunderstandings better than a yes-or-no question. Correct the misunderstanding, explain the reason and ask the learner to apply the correction to a fresh example. Retain the first response and learning correction. This knowledge check does not replace a separate technical practical assessment.\n\n### Deeper application\n\nAfter a wrong answer, explain the actual error rather than announcing the correct letter. Then ask a fresh but related situation to check transfer. For example, if the worker assumes an unanswered message was received, discuss another safe warning route and acknowledgment. Retain the original and corrected response as different evidence. Copying an answer proves neither independent recall nor application of the reasoning.\n\n### Worked oilfield example\n\nDuring teach-back a worker says an unanswered radio warning means the warning was received. The decision is to explain acknowledgment and safe alternate warning routes, then recheck with another communication example.\n\nTeach-back should test meaning and application. An unanswered warning leaves a communication gap that needs safe resolution. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: First-response and corrected-comprehension evidence for the specific communication decision. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the record marks understood although the learner's incorrect explanation was never corrected. The appropriate correction is to provide specific remediation and verify understanding before recording completion. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C02_lesson5",
+        "title": "Lesson 5 — Update induction when work changes",
+        "body": "## Update induction when work changes\n\nChanged roles, sites, risks or instructions can make earlier induction incomplete for the new work. Review what changed and deliver the relevant additional content instead of automatically repeating everything. Identify the revision and affected population. A transfer from gate administration to field driving changes both task and site interfaces. Reuse only the existing learning that still matches, and separately verify any technical prerequisites.\n\n### Deeper application\n\nChanged-role induction should focus on differences while preserving valid earlier completion. A worker moving from an office to a field role needs exposure and interface instruction they did not previously require. The coordinator should identify which current content applies, deliver it and leave separate technical qualifications visible. Repeating an unchanged generic slideshow does not resolve a missing role-specific lesson.\n\n### Worked oilfield example\n\nAn administrator moves into field dispatch and driving while the training record still reflects office-only induction. The decision is to provide relevant changed-role induction and verify separate driving prerequisites before assignment.\n\nExperience in the company does not establish understanding or authorization for materially different work. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A change record identifying new duties, additional induction content and remaining qualification conditions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the update covers driving hazards but omits the new site's emergency arrangements. The appropriate correction is to complete the missing site emergency content and check understanding before relevant work. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C02_lesson6",
+        "title": "Lesson 6 — Keep evidence usable and bounded",
+        "body": "## Keep evidence usable and bounded\n\nRecord learner identity, course and version, delivery method, trainer, comprehension outcome, date and scope. Keep a record of gaps and corrections rather than only a signature. Protect personal information and make current status available to the roles allocating work. Induction evidence supports readiness checks within its stated scope; it does not prove every company control is effective or qualify someone to perform a specialist task.\n\n### Deeper application\n\nA useful completion record lets another authorized person identify the worker, material and version, language or support, trainer and comprehension outcome. Keep unnecessary personal details out of a general roster. Where the original evidence is valid but the operational status is wrong, correct status from the authentic record rather than forcing duplicate learning. Where content cannot be established, label that uncertainty honestly.\n\n### Worked oilfield example\n\nA supervisor sees induction complete but cannot identify which version or role content the worker received. The decision is to verify the underlying content and scope and resolve missing learning before relying on the status.\n\nAn unbounded status cannot show whether the relevant current content was taught and understood. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A traceable completion record identifying actual version, role scope and comprehension outcome. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the original record is valid but dispatch exports a stale incomplete status. The appropriate correction is to correct the operational status from authentic records and notify affected users without repeating valid learning unnecessarily. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C02_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA newly hired mechanic has company induction but arrives at a production location without required site orientation. At the handover, a second issue is identified: The emergency section lists a telephone number but not alarm response or assembly arrangements. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Treat the signature as evidence the English content was understood. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Complete the applicable site orientation and other readiness checks before independent site work. The reason is specific: Employer awareness does not establish knowledge of this site's hazards and emergency arrangements. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Teach the applicable alarm actions and local arrangements and verify understanding. The supporting record should show: An induction record mapping actual role hazards to taught responses and comprehension results. This is important because induction must connect information to decisions the worker will make; title recall does not demonstrate that connection. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because a signature does not prove comprehension. The worker must understand the action they are expected to take. The suitable decision is: Provide suitable language support and verify the worker can explain the required alarm response. Evidence for review would include: A record of delivery language, support provided and the worker's own corrected explanation. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nDuring teach-back a worker says an unanswered radio warning means the warning was received. At the handover, a second issue is identified: The update covers driving hazards but omits the new site's emergency arrangements. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Treat any completed status as proof of current all-role induction. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Explain acknowledgment and safe alternate warning routes, then recheck with another communication example. The reason is specific: Teach-back should test meaning and application. An unanswered warning leaves a communication gap that needs safe resolution. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Complete the missing site emergency content and check understanding before relevant work. The supporting record should show: A change record identifying new duties, additional induction content and remaining qualification conditions. This is important because experience in the company does not establish understanding or authorization for materially different work. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because an unbounded status cannot show whether the relevant current content was taught and understood. The suitable decision is: Verify the underlying content and scope and resolve missing learning before relying on the status. Evidence for review would include: A traceable completion record identifying actual version, role scope and comprehension outcome. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C02_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C02_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nExplain stop work, reporting and emergency actions in understood language; comprehension check. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "C02_check1",
+        "prompt": "A newly hired mechanic has company induction but arrives at a production location without required site orientation. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Complete the applicable site orientation and other readiness checks before independent site work."
+          },
+          {
+            "id": "b",
+            "label": "Treat the company induction card as all-site acceptance."
+          },
+          {
+            "id": "c",
+            "label": "Begin work because security issued a visitor badge."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C02_final1",
+        "prompt": "For separate company induction from site readiness, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A record separating company induction scope from site-specific orientation and access conditions."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C02_final2",
+        "prompt": "A later review finds: The site orientation record names a different location. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Arrange the relevant location-specific orientation rather than extending the unrelated record."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C02_final3",
+        "prompt": "Consider this proposed response: Treat the company induction card as all-site acceptance. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Employer awareness does not establish knowledge of this site's hazards and emergency arrangements."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C02_check2",
+        "prompt": "A gate worker can name the safety policies but cannot explain what to do when the vehicle route is blocked. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept recall of policy titles as adequate preparation."
+          },
+          {
+            "id": "b",
+            "label": "Teach the relevant stop, warning and escalation actions and check the worker's explanation."
+          },
+          {
+            "id": "c",
+            "label": "Ask the worker to discover the route during the first live conflict."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C02_final4",
+        "prompt": "For teach the actions people must take, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "An induction record mapping actual role hazards to taught responses and comprehension results."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C02_final5",
+        "prompt": "A later review finds: The emergency section lists a telephone number but not alarm response or assembly arrangements. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Teach the applicable alarm actions and local arrangements and verify understanding."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C02_final6",
+        "prompt": "Consider this proposed response: Accept recall of policy titles as adequate preparation. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Induction must connect information to decisions the worker will make; title recall does not demonstrate that connection."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C02_check3",
+        "prompt": "A worker signs an English induction but cannot explain the alarm instructions in an understood language. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the signature as evidence the English content was understood."
+          },
+          {
+            "id": "b",
+            "label": "Ask another worker to complete the quiz on their behalf."
+          },
+          {
+            "id": "c",
+            "label": "Provide suitable language support and verify the worker can explain the required alarm response."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C02_final7",
+        "prompt": "For use understood language and accessible delivery, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A record of delivery language, support provided and the worker's own corrected explanation."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C02_final8",
+        "prompt": "A later review finds: The translated material omits the alternative reporting route. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Supply the missing safety meaning and verify that route is understood before release."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C02_final9",
+        "prompt": "Consider this proposed response: Treat the signature as evidence the English content was understood. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "A signature does not prove comprehension. The worker must understand the action they are expected to take."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C02_check4",
+        "prompt": "During teach-back a worker says an unanswered radio warning means the warning was received. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Explain acknowledgment and safe alternate warning routes, then recheck with another communication example."
+          },
+          {
+            "id": "b",
+            "label": "Mark the answer correct to avoid delaying the induction."
+          },
+          {
+            "id": "c",
+            "label": "Repeat the identical sentence until the worker memorizes its sound."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C02_final10",
+        "prompt": "For check comprehension through relevant explanation, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "First-response and corrected-comprehension evidence for the specific communication decision."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C02_final11",
+        "prompt": "A later review finds: The record marks understood although the learner's incorrect explanation was never corrected. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Provide specific remediation and verify understanding before recording completion."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C02_final12",
+        "prompt": "Consider this proposed response: Mark the answer correct to avoid delaying the induction. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Teach-back should test meaning and application. An unanswered warning leaves a communication gap that needs safe resolution."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C02_check5",
+        "prompt": "An administrator moves into field dispatch and driving while the training record still reflects office-only induction. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume employment tenure covers the new duties."
+          },
+          {
+            "id": "b",
+            "label": "Provide relevant changed-role induction and verify separate driving prerequisites before assignment."
+          },
+          {
+            "id": "c",
+            "label": "Change the role label in the record without teaching the new hazards."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C02_final13",
+        "prompt": "For update induction when work changes, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A change record identifying new duties, additional induction content and remaining qualification conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C02_final14",
+        "prompt": "A later review finds: The update covers driving hazards but omits the new site's emergency arrangements. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Complete the missing site emergency content and check understanding before relevant work."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C02_final15",
+        "prompt": "Consider this proposed response: Assume employment tenure covers the new duties. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Experience in the company does not establish understanding or authorization for materially different work."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C02_check6",
+        "prompt": "A supervisor sees induction complete but cannot identify which version or role content the worker received. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat any completed status as proof of current all-role induction."
+          },
+          {
+            "id": "b",
+            "label": "Invent a version number that matches today's document."
+          },
+          {
+            "id": "c",
+            "label": "Verify the underlying content and scope and resolve missing learning before relying on the status."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C02_final16",
+        "prompt": "For keep evidence usable and bounded, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A traceable completion record identifying actual version, role scope and comprehension outcome."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C02_final17",
+        "prompt": "A later review finds: The original record is valid but dispatch exports a stale incomplete status. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Correct the operational status from authentic records and notify affected users without repeating valid learning unnecessarily."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C02_final18",
+        "prompt": "Consider this proposed response: Treat any completed status as proof of current all-role induction. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "An unbounded status cannot show whether the relevant current content was taught and understood."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C02_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Teach the applicable alarm actions and local arrangements and verify understanding."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C02_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Complete the missing site emergency content and check understanding before relevant work."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "C02_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C02_lesson1",
+          "questionIds": [
+            "C02_check1"
+          ]
+        },
+        {
+          "lessonId": "C02_lesson2",
+          "questionIds": [
+            "C02_check2"
+          ]
+        },
+        {
+          "lessonId": "C02_lesson3",
+          "questionIds": [
+            "C02_check3"
+          ]
+        },
+        {
+          "lessonId": "C02_lesson4",
+          "questionIds": [
+            "C02_check4"
+          ]
+        },
+        {
+          "lessonId": "C02_lesson5",
+          "questionIds": [
+            "C02_check5"
+          ]
+        },
+        {
+          "lessonId": "C02_lesson6",
+          "questionIds": [
+            "C02_check6"
+          ]
+        },
+        {
+          "lessonId": "C02_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C02_assessment",
+          "questionIds": [
+            "C02_final1",
+            "C02_final2",
+            "C02_final3",
+            "C02_final4",
+            "C02_final5",
+            "C02_final6",
+            "C02_final7",
+            "C02_final8",
+            "C02_final9",
+            "C02_final10",
+            "C02_final11",
+            "C02_final12",
+            "C02_final13",
+            "C02_final14",
+            "C02_final15",
+            "C02_final16",
+            "C02_final17",
+            "C02_final18",
+            "C02_final19",
+            "C02_final20"
+          ]
+        },
+        {
+          "lessonId": "C02_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "C02_check1": "Employer awareness does not establish knowledge of this site's hazards and emergency arrangements.",
+        "C02_final1": "Employer awareness does not establish knowledge of this site's hazards and emergency arrangements. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C02_final2": "Employer awareness does not establish knowledge of this site's hazards and emergency arrangements. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C02_final3": "Employer awareness does not establish knowledge of this site's hazards and emergency arrangements. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C02_check2": "Induction must connect information to decisions the worker will make; title recall does not demonstrate that connection.",
+        "C02_final4": "Induction must connect information to decisions the worker will make; title recall does not demonstrate that connection. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C02_final5": "Induction must connect information to decisions the worker will make; title recall does not demonstrate that connection. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C02_final6": "Induction must connect information to decisions the worker will make; title recall does not demonstrate that connection. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C02_check3": "A signature does not prove comprehension. The worker must understand the action they are expected to take.",
+        "C02_final7": "A signature does not prove comprehension. The worker must understand the action they are expected to take. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C02_final8": "A signature does not prove comprehension. The worker must understand the action they are expected to take. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C02_final9": "A signature does not prove comprehension. The worker must understand the action they are expected to take. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C02_check4": "Teach-back should test meaning and application. An unanswered warning leaves a communication gap that needs safe resolution.",
+        "C02_final10": "Teach-back should test meaning and application. An unanswered warning leaves a communication gap that needs safe resolution. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C02_final11": "Teach-back should test meaning and application. An unanswered warning leaves a communication gap that needs safe resolution. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C02_final12": "Teach-back should test meaning and application. An unanswered warning leaves a communication gap that needs safe resolution. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C02_check5": "Experience in the company does not establish understanding or authorization for materially different work.",
+        "C02_final13": "Experience in the company does not establish understanding or authorization for materially different work. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C02_final14": "Experience in the company does not establish understanding or authorization for materially different work. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C02_final15": "Experience in the company does not establish understanding or authorization for materially different work. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C02_check6": "An unbounded status cannot show whether the relevant current content was taught and understood.",
+        "C02_final16": "An unbounded status cannot show whether the relevant current content was taught and understood. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C02_final17": "An unbounded status cannot show whether the relevant current content was taught and understood. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C02_final18": "An unbounded status cannot show whether the relevant current content was taught and understood. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C02_final19": "Induction must connect information to decisions the worker will make; title recall does not demonstrate that connection. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "C02_final20": "Experience in the company does not establish understanding or authorization for materially different work. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

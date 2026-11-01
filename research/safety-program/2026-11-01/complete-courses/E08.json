@@ -1,0 +1,785 @@
+{
+  "familyId": "E08",
+  "title": "Shop and facility readiness",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Control fixed machinery, storage and emergency access between jobs.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "General inspection awareness does not replace electrical, fire-system, pressure-system, racking or machinery technical examination. Separate competent assessors must verify relevant systems and practical facility actions. This course authorizes no technical repair or certification.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://kmterm.kindermorgan.com/ContAlliance/SSPOMS.aspx"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.y12.doe.gov/suppliers/procurement/subcontracting/subcontracting-forecasts/upf-forecast/upf-safety-procedures"
+    },
+    {
+      "title": "OSHA Machine guarding — technical inspection remains separate",
+      "url": "https://www.osha.gov/machine-guarding"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "E08_intro",
+        "title": "Start here: Shop and facility readiness",
+        "body": "# Shop and facility readiness\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nGeneral inspection awareness does not replace electrical, fire-system, pressure-system, racking or machinery technical examination. Separate competent assessors must verify relevant systems and practical facility actions. This course authorizes no technical repair or certification.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Machine guarding — technical inspection remains separate](https://www.osha.gov/machine-guarding). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E08_lesson1",
+        "title": "Lesson 1 - Inspect by area and task",
+        "body": "A facility walk-through should follow the work: receiving, storage, machine areas, chemical use, maintenance, pedestrian routes, welfare and emergency access. Identify who uses each area and how conditions change between shifts. A daytime office inspection cannot represent an operating night yard.\n\nSeparate what a general inspector can observe from what requires technical examination. Visible cable damage can be reported, but a general walk-through does not certify an electrical installation. Use competent specialists for the relevant systems.\n\nRecord the actual location, condition and affected activity. 'Shop needs attention' is too vague to drive correction. Link each finding to a specific risk and owner without claiming an entire facility safe from a narrow sample.\n\n## Worked field example\n\nA manager declares the whole yard ready after inspecting only the office corridor.\n\nThe safe decision is to inspect the relevant operating areas and state the limits of the completed sample. A narrow walk-through cannot establish readiness of unobserved tasks and areas.\n\nA useful field record is specific: An area/task inspection record identifying coverage and unassessed locations. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nA facility inspection should have an understandable route and scope. Identify the areas in use, the activities occurring, the shifts represented and any location that cannot be accessed safely. Do not enter a restricted technical area merely to complete the checklist. Arrange the appropriate competent inspection and state the gap.\n\nLook beyond a static photograph. Receiving, maintenance and shift change can create different conditions from a quiet office visit. Workers can explain where queues form, stock accumulates or emergency access becomes difficult. Include their information while separating reported concerns from direct observations.\n\nAn inspector should describe what they actually checked. A general walk-through may confirm a visible route was clear at that time; it does not establish structural rack capacity, electrical integrity or fire-system performance. Those need their own appropriate examinations. Keeping the distinction visible makes the final conclusion more useful and prevents a broad readiness label from concealing unassessed systems.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E08_lesson2",
+        "title": "Lesson 2 - Keep fire and emergency access usable",
+        "body": "Check exits, escape routes, alarms, emergency equipment and responder access through the facility plan. Access must remain usable during operations, not just while the inspector is present. Stored materials in front of an exit create an immediate issue requiring correction and control.\n\nDo not move stock into another emergency route to clear the first one. Review where material should be received and stored so the obstruction does not recur. The responsible owner should verify the route remains clear during busy periods.\n\nA general inspection can identify an obstructed extinguisher or damaged sign, but technical fire-system testing and design belong to qualified people. Do not mark systems tested when only their external appearance was checked.\n\n## Worked field example\n\nPallets block an emergency exit and are repeatedly returned there after inspections.\n\nThe safe decision is to clear and maintain the exit and change the storage arrangement to prevent recurrence. A temporarily cleared route is not an effective control if normal storage recreates the obstruction.\n\nA useful field record is specific: A verified clear route and sustainable assigned storage arrangement checked during operations. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nFire and emergency access must remain usable when the facility is busy. Review the path from occupied areas to the designated exit and the approach for responders, considering doors, gates, stored items and vehicle queues. A clear doorway with an obstructed approach is not complete access.\n\nIf an exit is blocked, correct the immediate condition through safe handling and prevent its return. The supervisor should identify the storage decision that created the obstruction. A temporary overflow area may be needed through a reviewed layout; moving stock to another critical route is not an acceptable closure.\n\nEmergency equipment should be accessible and its required technical status verified through the proper system. A general inspector can note a damaged item, missing sign or blocked cabinet. They must not mark an alarm system functionally tested merely because a light is illuminated or a service label is visible.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E08_lesson3",
+        "title": "Lesson 3 - Control storage and cylinders",
+        "body": "Review storage for stability, compatibility, access and handling. Check racking and restraints through the approved system, and report damage rather than guessing remaining capacity. Avoid overloading or unstable stacking and keep people clear of falling-object paths.\n\nCylinders require suitable identification, securing, protection and segregation under the applicable product and facility requirements. Do not treat all cylinders as interchangeable because they share a shape. Confirm the contents and appropriate handling method.\n\nTechnical design, inspection and repair of pressure or storage systems require the appropriate competent authority. A general worker can recognize a damaged or unsecured item and stop exposure without pretending to certify it.\n\n## Worked field example\n\nAn unidentified cylinder is standing unsecured beside a busy workshop route.\n\nThe safe decision is to restrict the immediate exposure and obtain the approved identification and secure-storage arrangement. Unknown contents and unstable placement cannot be cleared by a general visual check.\n\nA useful field record is specific: A verified cylinder identity and suitable secured storage checked by the responsible role. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nStorage review considers the item, support and handling sequence. Look for unstable stacks, damaged racks, projecting material and loads that require unsafe access. Do not climb an improvised stack to read a label or estimate capacity. The responsible specialist evaluates damaged structural storage where needed.\n\nCylinder handling requires the approved method for the actual contents and package. A cap, valve or securing device should not be used in an unapproved way to move the cylinder. Keep identification and storage arrangements reliable so a new shift does not confuse gases or assume a returned cylinder is empty.\n\nWhere materials are incompatible or require special conditions, the facility owner obtains the relevant product and technical guidance. Alphabetical storage or available floor space alone is not a compatibility assessment. The inspection record identifies the observed condition, immediate protection and competent decision needed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E08_lesson4",
+        "title": "Lesson 4 - Recognize electrical and equipment defects",
+        "body": "Inspect visible condition through the safe checklist: damaged leads, covers, plugs, exposed parts, compromised guards or blocked controls. Do not open electrical enclosures or defeat guards to complete a general inspection. Report and isolate through authorized roles when a serious defect is found.\n\nWet conditions and temporary supplies can change suitability. A device used safely at a dry bench may be unsuitable in another location. Follow the approved equipment and electrical process rather than improvising protective arrangements.\n\nRepairs and technical testing require the applicable competence. A repair invoice or a newly attached label does not prove that the actual defective item is serviceable. Verify equipment identity and release status before use.\n\n## Worked field example\n\nA damaged extension lead is still powering equipment in a wet workshop area.\n\nThe safe decision is to stop reliance on the defective supply through the authorized process and obtain competent correction. Visible damage and changed conditions require action rather than a favorable checklist mark.\n\nA useful field record is specific: A defect record linked to the actual lead and verified competent repair or replacement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nVisible defects can require action before a technical examination is complete. A damaged lead, exposed part or compromised guard should be reported and controlled through the authorized process. A worker does not need to prove an electrical fault by touching or opening equipment.\n\nIdentify the actual item and location so maintenance cannot repair a similar unit while the defective one remains in use. Mark or segregate equipment as the procedure requires and communicate any fixed-area restriction to the operating shift. A work-order number does not itself establish that exposure is controlled.\n\nAfter repair or replacement, verify identity, service status and the required release through the competent authority. The general inspector checks the field arrangement and relevant evidence without claiming to have conducted technical tests they did not perform. The user still completes applicable pre-use checks before work.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E08_lesson5",
+        "title": "Lesson 5 - Prioritize and own corrective action",
+        "body": "High-consequence hazards need immediate control, such as stopping affected use or restricting access, while correction is arranged. Other findings still need an owner, due date, interim controls and a clear verification method. A color on a spreadsheet does not itself protect workers.\n\nDescribe the expected outcome, not merely an activity. 'Purchase a shelf' is an action; 'store the items stably without blocking access' is the result to verify. Track dependencies so a delayed contractor repair does not silently remove interim protection.\n\nEscalate overdue or ineffective controls through the accountable manager. Do not close a finding because the responsible person is on leave or the issue has existed for years.\n\n## Worked field example\n\nAn inspection finding remains overdue while its temporary barrier has been removed.\n\nThe safe decision is to restore suitable interim protection and escalate the unresolved correction to the accountable owner. An overdue task and lost interim control leave the original exposure unmanaged.\n\nA useful field record is specific: An updated action record and field verification of effective interim protection. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nCorrective action should have a clear protective outcome. For a damaged barrier, the objective is not merely to order parts; it is to restore effective separation for the relevant route. The owner needs resources, authority and a method to verify the result. Interim controls remain until the intended safeguard is actually available.\n\nPrioritization should consider consequence and exposure rather than the ease of closing a task. A simple housekeeping item may be easy to complete, but that does not make an unresolved critical electrical or fire-access issue acceptable. Escalate the serious condition through the appropriate operating role.\n\nIf a deadline passes, review the actual site state. A revised date must not quietly remove a restriction or imply that the condition improved. Record why the action remains open, who accepts the interim arrangement and when further escalation is required under the organization's process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E08_lesson6",
+        "title": "Lesson 6 - Verify sustained readiness",
+        "body": "After a correction, check the real area during representative work. A clear exit during shutdown may become blocked during receiving. A new rack may change vehicle routes or handling exposure. Involve the workers who use the arrangement and review new interactions.\n\nLook for recurrence across areas and shifts. Repeated housekeeping findings may reflect poor storage capacity, unclear ownership or a receiving process that overloads space. Address the system rather than repeatedly instructing people to tidy up.\n\nKeep conclusions bounded. An inspection is evidence of what was checked under recorded conditions, not a guarantee of all future safety. Separate technical examination records from the general walk-through and maintain their applicable status.\n\n## Worked field example\n\nA new storage rack clears an exit but blocks the forklift turning route during deliveries.\n\nThe safe decision is to review the changed layout and verify both emergency access and operating traffic controls. A correction can transfer risk into another part of the facility.\n\nA useful field record is specific: A representative delivery observation and layout review showing both functions remain usable. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed field application\n\nFollow-up should reproduce the conditions that generated the finding where safe and practicable. If deliveries block a route each Monday, a Friday shutdown photograph is weak effectiveness evidence. Observe receiving flow and ask the people doing the work whether the new storage method is usable.\n\nA change can create a second problem. Adding a rack may reduce floor storage while narrowing a vehicle route or increasing difficult lifts. Review the changed layout as a whole, with competent technical input for any affected specialist system.\n\nThe final report should separate corrected conditions, verified effective changes, remaining restrictions and unassessed items. Preserve the original finding and supporting evidence. A clean inspection result under one set of conditions is bounded evidence, not a promise that every future shift is safe. Workers must continue to report defects and changes after the inspection is closed.\n\nA useful shift handover identifies live facility restrictions, equipment out of service, temporary routes and outstanding technical inspections. The receiving supervisor confirms responsibility for maintaining interim controls. An unread action log does not establish that the next shift understands which area is restricted. If a barrier or alternative route cannot be maintained, the affected operation returns to the responsible authority for a safe decision.\n\nWorkers should have a practical reporting route between scheduled inspections. A newly blocked exit or damaged cable needs action when discovered, not at the next walk-through. Record the current condition, immediate response and owner. The inspection program then uses those reports to improve its sampling and prevention without pretending that the earlier favorable visit described all later conditions.\n\n## Further application\n\nKeep all remaining restrictions visible.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E08_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional yard is preparing for a client visit. Workers move pallets away from an exit into a forklift turning area. An unsecured cylinder and damaged cable remain beside a bench. The inspection form has already been signed as satisfactory.\n\n### Worked solution\n\nThe signed form is corrected to reflect the actual findings. Exit access is protected without transferring the storage into the traffic path. The cylinder and electrical defect are controlled through the responsible competent processes; a general inspector does not certify either by sight. The manager assigns owners and interim controls and checks the revised layout during real receiving work. Specialist technical records are obtained where required. The readiness conclusion states the inspected scope and unresolved restrictions. A client visit or a completed form does not authorize continued exposure to the observed defects.\n\n## Scenario 2\n\nA fictional facility clears the same emergency route every Friday, but deliveries block it again on Monday. The action log shows repeated completed housekeeping tasks with no layout change.\n\n### Worked solution\n\nThe immediate obstruction is removed and the route kept available. Management then reviews storage capacity, receiving flow and ownership with the workers. A sustainable arrangement identifies where deliveries may wait and who prevents overflow into the route. Verification occurs during the period when obstruction normally recurs, not only after cleanup. The action remains open if the route is blocked again. The evidence distinguishes repeated activity from effective prevention. No technical approval is claimed for unassessed systems simply because the housekeeping result improves.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E08_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E08_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nGeneral inspection awareness does not replace electrical, fire-system, pressure-system, racking or machinery technical examination. Separate competent assessors must verify relevant systems and practical facility actions. This course authorizes no technical repair or certification.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "E08_check1",
+        "prompt": "A manager declares the whole yard ready after inspecting only the office corridor. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Inspect the relevant operating areas and state the limits of the completed sample"
+          },
+          {
+            "id": "b",
+            "label": "Use the office result as clearance for all shifts"
+          },
+          {
+            "id": "c",
+            "label": "Assume unvisited areas are safe because nobody complained"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E08_check2",
+        "prompt": "Pallets block an emergency exit and are repeatedly returned there after inspections. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Photograph the exit after moving pallets and close the issue"
+          },
+          {
+            "id": "b",
+            "label": "Clear and maintain the exit and change the storage arrangement to prevent recurrence"
+          },
+          {
+            "id": "c",
+            "label": "Move the pallets in front of the extinguisher instead"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E08_check3",
+        "prompt": "An unidentified cylinder is standing unsecured beside a busy workshop route. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Move it by dragging the valve to a quiet corner"
+          },
+          {
+            "id": "b",
+            "label": "Assume it is empty because it feels light"
+          },
+          {
+            "id": "c",
+            "label": "Restrict the immediate exposure and obtain the approved identification and secure-storage arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E08_check4",
+        "prompt": "A damaged extension lead is still powering equipment in a wet workshop area. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stop reliance on the defective supply through the authorized process and obtain competent correction"
+          },
+          {
+            "id": "b",
+            "label": "Wrap the damage with ordinary tape and continue"
+          },
+          {
+            "id": "c",
+            "label": "Mark the inspection passed because the equipment still runs"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E08_check5",
+        "prompt": "An inspection finding remains overdue while its temporary barrier has been removed. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the finding because the planned contractor is delayed"
+          },
+          {
+            "id": "b",
+            "label": "Restore suitable interim protection and escalate the unresolved correction to the accountable owner"
+          },
+          {
+            "id": "c",
+            "label": "Change the due date without checking the area"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E08_check6",
+        "prompt": "A new storage rack clears an exit but blocks the forklift turning route during deliveries. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the original finding because the exit is now clear"
+          },
+          {
+            "id": "b",
+            "label": "Tell forklift drivers to maneuver around the rack without review"
+          },
+          {
+            "id": "c",
+            "label": "Review the changed layout and verify both emergency access and operating traffic controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E08_final1",
+        "prompt": "For inspect by area and task, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A narrow walk-through cannot establish readiness of unobserved tasks and areas."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E08_final2",
+        "prompt": "Which evidence would most directly verify inspect by area and task in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An area/task inspection record identifying coverage and unassessed locations"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E08_final3",
+        "prompt": "A relief worker proposes the following shortcut during inspect by area and task: \"Use the office result as clearance for all shifts.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the office result as clearance for all shifts"
+          },
+          {
+            "id": "b",
+            "label": "Assume unvisited areas are safe because nobody complained"
+          },
+          {
+            "id": "c",
+            "label": "Inspect the relevant operating areas and state the limits of the completed sample"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E08_final4",
+        "prompt": "For keep fire and emergency access usable, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A temporarily cleared route is not an effective control if normal storage recreates the obstruction."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E08_final5",
+        "prompt": "Which evidence would most directly verify keep fire and emergency access usable in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified clear route and sustainable assigned storage arrangement checked during operations"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E08_final6",
+        "prompt": "A relief worker proposes the following shortcut during keep fire and emergency access usable: \"Photograph the exit after moving pallets and close the issue.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Photograph the exit after moving pallets and close the issue"
+          },
+          {
+            "id": "b",
+            "label": "Move the pallets in front of the extinguisher instead"
+          },
+          {
+            "id": "c",
+            "label": "Clear and maintain the exit and change the storage arrangement to prevent recurrence"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E08_final7",
+        "prompt": "For control storage and cylinders, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Unknown contents and unstable placement cannot be cleared by a general visual check."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E08_final8",
+        "prompt": "Which evidence would most directly verify control storage and cylinders in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified cylinder identity and suitable secured storage checked by the responsible role"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E08_final9",
+        "prompt": "A relief worker proposes the following shortcut during control storage and cylinders: \"Move it by dragging the valve to a quiet corner.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Move it by dragging the valve to a quiet corner"
+          },
+          {
+            "id": "b",
+            "label": "Assume it is empty because it feels light"
+          },
+          {
+            "id": "c",
+            "label": "Restrict the immediate exposure and obtain the approved identification and secure-storage arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E08_final10",
+        "prompt": "For recognize electrical and equipment defects, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Visible damage and changed conditions require action rather than a favorable checklist mark."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E08_final11",
+        "prompt": "Which evidence would most directly verify recognize electrical and equipment defects in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A defect record linked to the actual lead and verified competent repair or replacement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E08_final12",
+        "prompt": "A relief worker proposes the following shortcut during recognize electrical and equipment defects: \"Wrap the damage with ordinary tape and continue.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wrap the damage with ordinary tape and continue"
+          },
+          {
+            "id": "b",
+            "label": "Mark the inspection passed because the equipment still runs"
+          },
+          {
+            "id": "c",
+            "label": "Stop reliance on the defective supply through the authorized process and obtain competent correction"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E08_final13",
+        "prompt": "For prioritize and own corrective action, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An overdue task and lost interim control leave the original exposure unmanaged."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E08_final14",
+        "prompt": "Which evidence would most directly verify prioritize and own corrective action in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An updated action record and field verification of effective interim protection"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E08_final15",
+        "prompt": "A relief worker proposes the following shortcut during prioritize and own corrective action: \"Close the finding because the planned contractor is delayed.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the finding because the planned contractor is delayed"
+          },
+          {
+            "id": "b",
+            "label": "Change the due date without checking the area"
+          },
+          {
+            "id": "c",
+            "label": "Restore suitable interim protection and escalate the unresolved correction to the accountable owner"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E08_final16",
+        "prompt": "For verify sustained readiness, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A correction can transfer risk into another part of the facility."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E08_final17",
+        "prompt": "Which evidence would most directly verify verify sustained readiness in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A representative delivery observation and layout review showing both functions remain usable"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E08_final18",
+        "prompt": "A relief worker proposes the following shortcut during verify sustained readiness: \"Close the original finding because the exit is now clear.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the original finding because the exit is now clear"
+          },
+          {
+            "id": "b",
+            "label": "Tell forklift drivers to maneuver around the rack without review"
+          },
+          {
+            "id": "c",
+            "label": "Review the changed layout and verify both emergency access and operating traffic controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E08_final19",
+        "prompt": "In Scenario 1, what should happen to the satisfactory inspection conclusion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Revise it to match observed conditions and retain the unresolved controls and limitations"
+          },
+          {
+            "id": "b",
+            "label": "Leave it unchanged because it was already signed"
+          },
+          {
+            "id": "c",
+            "label": "Use it as evidence that the defects are minor"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E08_final20",
+        "prompt": "In Scenario 2, what is the best effectiveness check?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the number of Friday cleanup records"
+          },
+          {
+            "id": "b",
+            "label": "Observe whether the route remains usable during the delivery conditions that previously recreated the blockage"
+          },
+          {
+            "id": "c",
+            "label": "Photograph the route while the facility is closed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "E08_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E08_lesson1",
+          "questionIds": [
+            "E08_check1"
+          ]
+        },
+        {
+          "lessonId": "E08_lesson2",
+          "questionIds": [
+            "E08_check2"
+          ]
+        },
+        {
+          "lessonId": "E08_lesson3",
+          "questionIds": [
+            "E08_check3"
+          ]
+        },
+        {
+          "lessonId": "E08_lesson4",
+          "questionIds": [
+            "E08_check4"
+          ]
+        },
+        {
+          "lessonId": "E08_lesson5",
+          "questionIds": [
+            "E08_check5"
+          ]
+        },
+        {
+          "lessonId": "E08_lesson6",
+          "questionIds": [
+            "E08_check6"
+          ]
+        },
+        {
+          "lessonId": "E08_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E08_final",
+          "questionIds": [
+            "E08_final1",
+            "E08_final2",
+            "E08_final3",
+            "E08_final4",
+            "E08_final5",
+            "E08_final6",
+            "E08_final7",
+            "E08_final8",
+            "E08_final9",
+            "E08_final10",
+            "E08_final11",
+            "E08_final12",
+            "E08_final13",
+            "E08_final14",
+            "E08_final15",
+            "E08_final16",
+            "E08_final17",
+            "E08_final18",
+            "E08_final19",
+            "E08_final20"
+          ]
+        },
+        {
+          "lessonId": "E08_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "E08_check1": "Inspect the relevant operating areas and state the limits of the completed sample. A narrow walk-through cannot establish readiness of unobserved tasks and areas.",
+        "E08_check2": "Clear and maintain the exit and change the storage arrangement to prevent recurrence. A temporarily cleared route is not an effective control if normal storage recreates the obstruction.",
+        "E08_check3": "Restrict the immediate exposure and obtain the approved identification and secure-storage arrangement. Unknown contents and unstable placement cannot be cleared by a general visual check.",
+        "E08_check4": "Stop reliance on the defective supply through the authorized process and obtain competent correction. Visible damage and changed conditions require action rather than a favorable checklist mark.",
+        "E08_check5": "Restore suitable interim protection and escalate the unresolved correction to the accountable owner. An overdue task and lost interim control leave the original exposure unmanaged.",
+        "E08_check6": "Review the changed layout and verify both emergency access and operating traffic controls. A correction can transfer risk into another part of the facility.",
+        "E08_final1": "A narrow walk-through cannot establish readiness of unobserved tasks and areas. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E08_final2": "An area/task inspection record identifying coverage and unassessed locations. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E08_final3": "Inspect the relevant operating areas and state the limits of the completed sample. A narrow walk-through cannot establish readiness of unobserved tasks and areas. A staffing change does not remove this requirement.",
+        "E08_final4": "A temporarily cleared route is not an effective control if normal storage recreates the obstruction. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E08_final5": "A verified clear route and sustainable assigned storage arrangement checked during operations. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E08_final6": "Clear and maintain the exit and change the storage arrangement to prevent recurrence. A temporarily cleared route is not an effective control if normal storage recreates the obstruction. A staffing change does not remove this requirement.",
+        "E08_final7": "Unknown contents and unstable placement cannot be cleared by a general visual check. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E08_final8": "A verified cylinder identity and suitable secured storage checked by the responsible role. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E08_final9": "Restrict the immediate exposure and obtain the approved identification and secure-storage arrangement. Unknown contents and unstable placement cannot be cleared by a general visual check. A staffing change does not remove this requirement.",
+        "E08_final10": "Visible damage and changed conditions require action rather than a favorable checklist mark. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E08_final11": "A defect record linked to the actual lead and verified competent repair or replacement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E08_final12": "Stop reliance on the defective supply through the authorized process and obtain competent correction. Visible damage and changed conditions require action rather than a favorable checklist mark. A staffing change does not remove this requirement.",
+        "E08_final13": "An overdue task and lost interim control leave the original exposure unmanaged. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E08_final14": "An updated action record and field verification of effective interim protection. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E08_final15": "Restore suitable interim protection and escalate the unresolved correction to the accountable owner. An overdue task and lost interim control leave the original exposure unmanaged. A staffing change does not remove this requirement.",
+        "E08_final16": "A correction can transfer risk into another part of the facility. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "E08_final17": "A representative delivery observation and layout review showing both functions remain usable. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "E08_final18": "Review the changed layout and verify both emergency access and operating traffic controls. A correction can transfer risk into another part of the facility. A staffing change does not remove this requirement.",
+        "E08_final19": "An inspection record must describe the observed state. Signing first does not make an unsafe condition satisfactory.",
+        "E08_final20": "Effectiveness is tested against the failure mechanism and representative conditions. Repeated cleanup activity alone does not show recurrence was prevented."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

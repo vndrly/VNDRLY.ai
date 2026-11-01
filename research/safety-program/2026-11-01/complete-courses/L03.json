@@ -1,0 +1,781 @@
+{
+  "familyId": "L03",
+  "title": "Stop-work and safe restart",
+  "description": "Complete original VNDRLY L03 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Give every worker authority to interrupt uncontrolled energy exposure.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Practice intervention and escalation; scenario and supervisor observation. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/contractor-standards/Stop%20Work%20Authority.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://ir.halliburton.com/static-files/28c6bba5-b0b3-47c3-95c3-98cffa83efa5"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "L03_intro",
+        "title": "Start here — stop work and safe restart",
+        "body": "Work through this native guided course in order. Six lesson checks and twenty final questions retain your first answers and acknowledged corrections. Completion requires all 26 answered correctly or acknowledged remediation. First-answer and remediated scores remain separate. All cases are fictional. This course teaches safe intervention and restart judgment; it does not authorize technical work or restart. The original review-edition paper passing rule has been replaced by this guided completion rule.\n\nA truck driver steps through an opening in a lifting exclusion area. The lift is already moving. You are not the crane operator, the lifting supervisor, or the driver's employer. You see a person entering the danger area.\n\nYour immediate task is to raise the stop through a safe, effective means and remain clear. You do not need to win an argument about who owns the work before raising the concern. You also must not run beneath a suspended load to pull the driver away. An intervention that places another person in danger is not a safe intervention.\n\nThe harder decision comes afterward. Someone moves the driver out of the area and says, \"All clear. Let's catch up.\" Is the work ready to resume? Not necessarily. The opening may still be uncontrolled, another delivery may be arriving, and the people controlling the lift may not have agreed on a restart. This course teaches both parts: interrupting work when protection is missing or uncertain, and preventing a premature restart.\n\nYou can complete this course using the information provided here. The people and sites in every example are fictional. No company records, field inspection, operating equipment, or paid external material is needed for the written course.\n\n### What you will be able to do\n\nBy the end, you should be able to recognize a failed or uncertain safeguard; communicate a stop from a safe position; notify the people who control the affected work; distinguish an actual correction from a promise or signature; explain what must be checked before restart; and respond to pressure, disagreement, or a failed control after restart.\n\n### How to take the guided course\n\nRead each taught lesson, answer its check, study both worked scenarios and answer the final twenty questions. Explanations appear through the guided feedback; all 26 questions require correct answers or acknowledged remediation. Your first answers remain separate from corrections.\n\nThis is instruction in stop-work judgment and communication. Passing its written assessment does not qualify you to operate equipment, isolate energy, test an atmosphere, control a lift, perform rescue, or authorize a job. Any role-specific practical evaluation must be performed separately by an employer-designated assessor competent in the activity and authorized to assess it. The closing section explains that boundary.\n\n---",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L03_lesson1",
+        "title": "Lesson 1 | Recognize the point at which work must pause",
+        "body": "### A safeguard must work in the situation that exists now\n\nA hazard is a source or situation that can cause harm. A safeguard is a measure intended to prevent exposure or reduce its consequences. On a location, hazards may include vehicle movement, suspended loads, stored pressure, electrical energy, flammable material, or an atmosphere that may be unsafe. Safeguards may include isolation, separation, access control, verified equipment condition, a permit, or a person assigned to coordinate a critical interface.\n\nA safeguard is not effective just because it appears on a checklist. A barrier with an open access point may not keep pedestrians out. A radio is not a reliable communication safeguard if the person receiving the message cannot hear it. A permit written for a different scope does not resolve uncertainty about the work now being attempted.\n\nUse this course's stop-work threshold: raise a stop when a safeguard needed for the work is **absent, uncertain, or failing**, or when a change creates an uncontrolled exposure. \"Uncertain\" matters. You may know only that the isolation cannot be confirmed or that the movement signal was not understood. You do not have to establish the technical cause before requesting a pause and clarification.\n\nOrdinary questions can often be resolved before work begins. Once people may be exposed, do not postpone the concern until the next meeting. Communicate promptly and let the responsible authority assess the technical issue.\n\n### Company stop-work authority and legal rights are different\n\nThis course teaches the broad intervention practice in VNDRLY's agreed L03 scope. Your employer and site must communicate their own operating procedures and reporting routes. A company's stop-work program is not a complete statement of legal rights in every jurisdiction. In the United States, OSHA describes specific conditions for legally protected refusal of dangerous work; do not treat every disagreement as automatically satisfying those conditions. [OSHA's explanation of refusal rights](https://www.osha.gov/workers/right-to-refuse).\n\nThe immediate learning point is practical: identify the concern, interrupt exposure through a safe means, and seek competent resolution. Do not delay a safety concern while attempting to make a legal determination.\n\n### Worked example: a familiar job changes\n\nElena's crew has used the same delivery route all morning. A maintenance vehicle parks across part of the pedestrian walkway. Arriving drivers now step into a reversing area to get around it. A completed morning briefing does not cover up this changed condition. Elena raises the concern with the movement controller and requests a pause in the affected vehicle movement. The team must restore safe separation or establish a reviewed alternative before relying on the route again.\n\n**Why this works:** Elena identifies the failed separation and the work it affects. She does not assume that familiarity or an earlier briefing makes the present condition safe.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L03_lesson2",
+        "title": "Lesson 2 | Intervene without creating another exposure",
+        "body": "### Make your message immediate and specific\n\nFrom a safe position, use the site's established stop signal, radio channel, alarm, or direct verbal warning appropriate to the situation. A useful verbal structure is:\n\n**\"Stop [affected activity]. [Person or condition] is [specific exposure] at [location]. Keep clear. [Responsible role], confirm you received this.\"**\n\nFor the opening example: \"Stop the lift. A pedestrian is entering the exclusion area at the east access point. Keep clear of the load. Lifting lead, confirm you received this.\"\n\nUse a location that the receiving person can identify. \"Over there\" is weak if people are looking in different directions. If you cannot communicate effectively, move to a safe place from which you can alert the designated coordinator, and use the established emergency route when the situation warrants it.\n\n### A stop request is not an instruction to improvise equipment control\n\nThe operator must bring equipment or a process to a safe condition using their training and the approved procedure. An abrupt, improvised action can introduce a different danger. For example, calling a stop to a lift does not instruct an untrained observer to touch controls or tell the operator to release a suspended load.\n\nDo not enter an exclusion area, touch a suspected energized object, attempt an isolation you are not authorized to perform, or enter an atmosphere to investigate an alarm. Do not attempt an unplanned rescue. Raise the alarm, keep yourself clear, and let trained responders act under the applicable plan.\n\n### Confirm the message was received\n\nSending a message and having it understood are separate events. Where the situation permits, obtain a clear acknowledgment from the person controlling the work. Repeat a location or concern if it was misunderstood. A nod from a person who is not controlling the activity may not stop the activity.\n\nDo not assume that silence on the radio means the stop was accepted. Do not repeatedly approach a hazard to be heard. Use another safe communication route and escalate. If an emergency develops, follow the site emergency instructions; ordinary notification and paperwork can wait until immediate protection has been addressed.\n\n### Worked example: poor radio reception\n\nSam sees a delivery truck moving toward an area where people are working. His first radio call receives no acknowledgment. He stays outside the vehicle path, repeats the warning on the designated channel, and alerts the nearby movement coordinator using the established signal. The coordinator acknowledges, contacts the driver, and manages the movement under the approved procedure. Sam does not stand in front of the truck to force it to stop.\n\n**Why this works:** Sam changes the communication route, not his personal exposure. The person controlling the movement confirms the warning.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L03_lesson3",
+        "title": "Lesson 3 | Establish the hold and notify the right people",
+        "body": "### Define what has stopped and why\n\nAfter the immediate interruption, the responsible work leader needs a clear description of the hold. Identify the affected activity and its interfaces. A stop on a lift may affect a delivery route and nearby crews. A concern with one isolated task does not automatically require shutting down every unrelated activity on the location. Equally, do not keep interconnected work running merely to describe the stop as small. The responsible site and operating authorities determine the safe scope of the hold.\n\nState observations separately from conclusions. \"The east barrier was open and a driver crossed while the load was moving\" is an observation. \"The driver is careless\" is a judgment that neither describes the protection gap nor helps another crew avoid it.\n\n### Coordinate across employers\n\nNotify your supervisor and the person controlling the affected site activity. They may not be the same person. A Vendor supervisor can manage their crew but may not have authority to clear a Partner's permit or another contractor's operation. Name the actual control roles: permit issuer, lifting lead, site representative, or operating authority, as applicable. Avoid treating \"management knows\" as a verified handoff.\n\nThe hold should remain clear while the concern is investigated. Where authorized personnel establish barriers, isolation, access restrictions, or other interim controls, communicate those restrictions to affected people. An interim control may keep an area stable during investigation without making the original job ready to restart.\n\n### Escalate unresolved concerns\n\nIf a supervisor dismisses the concern without resolving it, explain the missing control and request the next designated safety or site authority. If the supervisor is part of the concern, use the alternative reporting route communicated by the employer or site. Do not confuse escalation with personal confrontation. Stay with the facts, keep clear of the hazard, and keep the affected hold in place through the responsible authority.\n\nFor example: \"The driver has left, but the access opening is still uncontrolled. I cannot confirm that another person will be kept out. We need the lifting lead and site coordinator to resolve that before restart.\"",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L03_lesson4",
+        "title": "Lesson 4 | Resolve the condition, not just the conversation",
+        "body": "### Investigate what allowed the exposure\n\nThe first useful question is not \"Who caused the delay?\" It is \"What allowed the hazard to reach a person, or made us uncertain that the control worked?\" Ask what changed, which safeguard was expected, how it failed, and whether the same gap exists elsewhere in the affected work.\n\nIn the lifting example, moving one driver away addresses the immediate person at risk. It does not explain why the driver could enter. Was the access route understood? Was there a controlled entry point? Was a person assigned to manage access? Could arrivals hear or see the instruction? Did another contractor remove a barrier?\n\nChoose corrections suited to the actual failure. An engineering or physical separation measure can be more dependable than a reminder alone, but it still must suit the site and the work. The competent authority selects and approves the technical method. An observer must not improvise a barrier location, equipment modification, isolation, or operating limit beyond their role.\n\n### Ask what would demonstrate that the correction works\n\n\"We talked about it\" is evidence of a conversation. It does not, by itself, show that access is controlled. Useful verification may include inspection by an appropriate person, an authorized functional check, confirmation of the correct equipment or isolation state, or a review of the changed task and interfaces. The method depends on the hazard.\n\nA signature confirms only what the signer actually checked and had competence to judge. Do not accept a general signature as proof of a technical test that was never performed. A photograph may show a barrier at one moment, but not that the barrier will remain controlled when the next delivery arrives.\n\n### Worked example: the reminder that did not fix the route\n\nThe lifting team initially proposes to tell drivers to be careful. Their review finds that the marked arrival route leads directly to the open side of the exclusion area. The site coordinator arranges an approved alternate arrival route and an access-control arrangement with the lifting lead. Before restart, the responsible people inspect the arrangement and brief affected workers and incoming drivers. They also decide how access will be controlled while the lift is active.\n\n**Why this works:** the correction addresses the route and access-control failure. A reminder may support those controls, but it is not the only protection.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L03_lesson5",
+        "title": "Lesson 5 | Restart only after the conditions are met",
+        "body": "### Six restart questions\n\nBefore the affected work resumes, the responsible people must be able to answer these questions with evidence appropriate to the task:\n\n1. **Has the concern been understood?** The actual exposure or uncertainty is identified, including connected work and affected people.\n2. **Have the necessary corrections been completed?** Promised future work is not described as finished. Any remaining restriction has a clear owner and effect on the task.\n3. **Have the safeguards been verified?** The appropriate competent or qualified people have checked what their roles require, using the applicable technical and site procedures.\n4. **Are the work instructions and authorizations current?** Changed scope, permits, isolations, methods, or interfaces have been reviewed or revalidated where required. This course does not waive those requirements.\n5. **Have affected people been briefed and understood?** They know what changed, what remains restricted, who controls the work, and what will trigger another stop.\n6. **Has the designated authority authorized restart?** The decision comes from the person or people assigned that authority, not from schedule pressure or a training-completion record.\n\nThese questions are a decision aid, not an operating permit. Different tasks may require additional checks. If an answer remains uncertain, retain the affected hold and resolve that uncertainty.\n\n### Confirm understanding, not just attendance\n\nA brief repeat-back can reveal a misunderstanding: \"Show me the arrival route you will use,\" or \"Tell me what happens if someone needs to cross this boundary.\" Give people a chance to identify a new problem. An attendance signature does not prove that the person heard, understood, or can apply the instruction. Use language and communication support that affected workers can understand.\n\n### Who may restart?\n\nAny worker may raise a concern under the broad intervention practice taught here. Restart authority is assigned by the employer and site for the particular activity. The person who first called stop does not automatically gain authority to approve a technical correction. They should be told how their concern was resolved and be able to raise any remaining concern. If they still identify an unresolved gap, assess and escalate it; do not treat their acknowledgment as a forced waiver.\n\n### Worked example: a complete restart decision\n\nFor this fictional lift, the named restart authority is Maya, the lifting lead, with the site coordinator responsible for the traffic interface. The alternate driver route has been inspected, access control is in place, affected drivers and crews have received the changed instructions, and required lifting and site authorizations remain valid. Maya confirms the lifting team's readiness; the site coordinator confirms the route interface. Maya communicates the authorized restart under the site's procedure. The team monitors the access point as work resumes.\n\nThe result would be different if the route inspection were still pending or if an arriving contractor had not received the changed instructions. Restart is a conclusion supported by completed checks, not a way to make the unfinished checks someone else's problem.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L03_lesson6",
+        "title": "Lesson 6 | Record, learn, and keep the protection effective",
+        "body": "### Make the record useful to the next person\n\nAfter immediate protection and notification, record the facts while they are fresh. Describe the time and location, the activity, the observed condition, the safeguard that was absent or uncertain, the immediate action, who was notified, the corrections, who verified them, the restart decision, and any open restriction. Use the actual company reporting method. Do not invent an inspection result to fill a blank.\n\nFor the lifting case, a useful entry is: \"At 09:20 at the east lifting access point, a delivery driver entered the marked exclusion area while the load was moving. The stop was acknowledged by the lifting lead. The area remained held while the site coordinator reviewed the arrival route. At 09:45, the lifting lead and coordinator verified the revised route and access control; affected personnel were rebriefed before the authorized restart.\" The times are fictional teaching facts, not real evidence.\n\nA poor entry is: \"Unsafe driver; dealt with.\" It leaves the next shift unable to tell what changed or whether an exposure remains.\n\nProtect personal and medical information. Record only information needed for the safety purpose and share it through authorized routes. A teaching example must never be submitted as an actual company intervention.\n\n### Address pressure and possible retaliation\n\nA supervisor's first response should make reporting easier: acknowledge the concern, protect people, and investigate the control gap. Responses that ridicule the reporter, threaten work opportunities, or punish reporting can discourage the next person from speaking. Follow the employer's alternative reporting route when such pressure occurs. Preserve factual information about what was said or done and seek timely help through the appropriate employer, representative, or regulatory route. Do not promise that a course can prevent retaliation or decide a legal claim. OSHA's worker-participation guidance emphasizes reporting without retaliation and meaningful follow-through. [OSHA worker participation guidance](https://www.osha.gov/safety-management/worker-participation).\n\n### Follow through after restart and at handover\n\nA corrected condition can fail again. If the access-control person leaves without relief or the new route becomes obstructed, raise another stop. A restart approval is not permanent permission to continue through a changed condition.\n\nAt shift change, communicate open holds, restrictions, the condition of safeguards, remaining actions, and who has authority to clear them. Do not assume the next shift has read the earlier report. Verify the handover was received. If a hold is unresolved, it remains unresolved across the shift boundary.\n\nFor company learning, ask whether later similar work used the corrected control and whether workers still felt able to speak up. Counted reports and closed actions alone do not answer that question. Likewise, finishing this course provides evidence of learning; it does not automatically prove company implementation, confer work authorization, or increase a VNDRLY maturity score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L03_scenarios",
+        "title": "Two applied cases with worked solutions",
+        "body": "## Decision exercise 1 | A rushed restart\n\nRead the facts, then write your response before opening the assessment key's exercise feedback.\n\nYou are Jordan, a delivery coordinator at a fictional well-service location. A driver entered the lifting exclusion area through an open access point. You called stop from the designated waiting area and the lifting lead acknowledged it. The driver is now clear. The site coordinator is arranging an alternate arrival route. The lifting lead says, \"We can do one more lift while the route is being changed. Keep an eye out.\" You are not assigned or trained as the access controller. The site's designated restart authority for lifting is the lifting lead, but the site coordinator must confirm the traffic interface before the restart decision.\n\nAnswer these four prompts in complete sentences:\n\n1. What remains unresolved, and why does the driver's departure not resolve it?\n2. What would you say now, including the affected activity and the unresolved condition?\n3. What must the responsible people verify and communicate before restart?\n4. What should you do if the lifting lead dismisses the concern without obtaining the site coordinator's confirmation?\n\nYour response should explain a safe decision. Do not write a crane operating procedure or propose entering the exclusion area yourself.\n\n### Worked solution\n\n\n**1. Unresolved condition.** The access route and control arrangement are still being changed. The open access point allowed the first intrusion and could allow another. The driver leaving removes the immediate person but does not establish a functioning safeguard. \"Keep an eye out\" does not establish a reviewed access-control arrangement, and Jordan has not been assigned or trained to serve as the access controller.\n\n**2. A suitable communication.** \"Keep the lift on hold. The arrival route and access control are not confirmed yet, so another driver could enter. I am not assigned or trained to control that access. We need the site coordinator to confirm the traffic interface before the lifting lead's restart decision.\" Equivalent plain wording is acceptable if it states the affected work, actual gap, and required coordination without creating another exposure.\n\n**3. Before restart.** The responsible people must confirm the exposure is understood; complete the route and access corrections; verify the safeguards by appropriate checks; confirm the lifting/site instructions and authorizations are current; brief affected crews and drivers and check understanding; and obtain the designated restart decision after the coordinator's required interface confirmation. The answer must not rely only on a promise, a signature, or the first driver leaving.\n\n**4. Dismissal.** Jordan should remain in the safe waiting area, repeat the unresolved control concern, and use the designated site or alternative safety escalation route. Jordan should not enter the lifting area, accept an untrained controller role, or treat schedule pressure as clearance. The affected hold remains unresolved until the responsible authorities address it.\n\n**Self-check:** an adequate response contains all four elements. If one is missing, revisit the relevant lesson and explain how the missing element changes the decision. This exercise is learning practice, not part of the 20-point written score.\n\n\n\n## Decision exercise 2 | An alarm and an uncertain all-clear\n\nYou are Priya, a member of a fictional inspection crew. During preparation near a process area, a gas detector alarms. You follow the site's alarm response, withdraw by the designated safe route, and notify the site coordinator. You have not been assigned to investigate the atmosphere or perform rescue. A coworker says the instrument is probably faulty and proposes returning to finish a short inspection. The coordinator has not issued an all-clear, and the cause of the alarm has not been assessed by the designated qualified personnel.\n\n1. Is the proposed return justified by the coworker's explanation? Explain the missing verification.\n2. State your next communication and the safe limit on your own actions.\n3. If a qualified person later finds an instrument problem, what else must be resolved before work can resume?\n4. What should be handed over if the shift ends before the concern is resolved?\n\nNo gas concentration, alarm setting, rescue technique, or instrument test method is specified here. Do not invent one. This exercise assesses recognition, withdrawal, communication, and restart judgment, not gas-testing competence.\n\n---\n\n### Worked solution\n\n\n**1. Proposed return.** No. An unsupported explanation that the instrument is faulty does not establish a safe atmosphere or a valid instrument condition. Qualified assessment and the required all-clear are still outstanding.\n\n**2. Communication and role limit.** A suitable response is: \"The gas alarm has not been assessed and we do not have the site all-clear. We will remain at the designated safe location. Site coordinator, confirm that the area remains restricted and tell us when the qualified assessment and authorized clearance are complete.\" Priya must follow the alarm response, not return to investigate or attempt an unplanned rescue. No numerical reading or technical method should be invented.\n\n**3. Instrument problem confirmed.** A confirmed instrument defect does not by itself establish every condition needed for return. The designated personnel must address instrument fitness and the required atmospheric assessment under site procedures, resolve other affected safeguards and authorizations, brief the crew, and obtain the appropriate clearance and restart decision. The learner is not asked to prescribe the testing method.\n\n**4. Handover.** Communicate the alarm, affected area and activity, continuing restrictions, assessment/correction status, open actions, and who may issue clearance. Confirm that the incoming shift received that information. Do not describe an unassessed condition as safe or let the hold expire at shift change.\n\n**Self-check:** an adequate response contains all four elements and does not send Priya back into the uncertain area. Missing recognition of that restriction is a critical learning gap; review Lessons 2 and 5 before another attempt.\n\n\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L03_assessment",
+        "title": "Final assessment",
+        "body": "Answer all twenty questions. Your original choices remain visible in the training record. Read and explicitly acknowledge any corrective explanation before continuing.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L03_finish",
+        "title": "Completion and separate practical qualification",
+        "body": "Completion requires all 26 questions answered correctly or acknowledged remediation; first-answer and remediated scores remain separate.\n\n### Practical evaluation and authorization boundary\n\nThe written course is complete without operating equipment. It does not include an observed field performance result. If your role requires you to implement a stop, control a work area, verify technical safeguards, or authorize restart, the employer must separately establish and assess the applicable competence.\n\nA safe communication simulation may be evaluated by a designated assessor competent in the site's stop-work and escalation procedures. Technical verification of lifting, isolation, electrical, pressure, atmosphere, or rescue controls requires an assessor with the corresponding qualifications and authority. Do not stage a hazardous exposure or defeat a safeguard to make a training exercise realistic. The separate guidance provides a fully specified fictional communication exercise and scoring criteria; it does not claim to assess those technical skills.\n\nBefore you participate in actual site work, the employer/site briefing must establish the local signals and warning routes, emergency response, reporting contacts and alternative escalation route, who controls the work, and who may authorize restart. An unknown local arrangement is a field-readiness gap to resolve, not a reason to invent a contact or infer authority from this course.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "L03_check1",
+        "prompt": "You cannot confirm that the safeguard described in the job briefing is actually in place. The crew says there has never been a problem. What is the best response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue until there is proof that somebody will be injured."
+          },
+          {
+            "id": "b",
+            "label": "Request a pause in the affected work and have the safeguard verified."
+          },
+          {
+            "id": "c",
+            "label": "Sign the briefing to show that you raised the issue."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_check2",
+        "prompt": "Your stop call receives no reply. Which action best applies this lesson?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the operator heard it and begin documenting the event."
+          },
+          {
+            "id": "b",
+            "label": "Enter the danger area so the operator can see you."
+          },
+          {
+            "id": "c",
+            "label": "Remain clear, use another established safe warning route, and seek acknowledgment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L03_check3",
+        "prompt": "Your employer's supervisor says the job can resume, but the site permit holder says the hold has not been cleared. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Resume because your employer controls your employment."
+          },
+          {
+            "id": "b",
+            "label": "Keep the affected work on hold while the responsible authorities resolve the conflicting instructions."
+          },
+          {
+            "id": "c",
+            "label": "Ask the newest worker to decide which instruction is reasonable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_check4",
+        "prompt": "Which statement is the strongest evidence that a restart safeguard has been verified?",
+        "options": [
+          {
+            "id": "a",
+            "label": "\"The supervisor is confident and signed the page.\""
+          },
+          {
+            "id": "b",
+            "label": "\"The responsible qualified person checked the corrected safeguard using the applicable procedure and recorded the result.\""
+          },
+          {
+            "id": "c",
+            "label": "\"Nobody has complained for ten minutes.\""
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_check5",
+        "prompt": "Five restart questions are satisfied. The changed permit still needs the required revalidation. The crew has a short weather window. What is the correct decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Resume carefully because most conditions are met."
+          },
+          {
+            "id": "b",
+            "label": "Resume and obtain the revalidation afterward."
+          },
+          {
+            "id": "c",
+            "label": "Keep the affected work on hold until the required revalidation is complete."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L03_check6",
+        "prompt": "A later shift finds the corrected delivery route blocked again. The earlier stop report is closed. What should the team do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Rely on the closed report and continue."
+          },
+          {
+            "id": "b",
+            "label": "Raise the changed condition, protect people, and reassess the affected work before continuing."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier report because its correction did not last."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_final1",
+        "prompt": "A required safeguard cannot be confirmed. What is the best decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Request a pause in the affected work and verification of the safeguard."
+          },
+          {
+            "id": "b",
+            "label": "Continue until an incident proves the safeguard was needed."
+          },
+          {
+            "id": "c",
+            "label": "Accept the crew's experience as verification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L03_final2",
+        "prompt": "Which report is most useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "\"The contractor does not care about safety.\""
+          },
+          {
+            "id": "b",
+            "label": "\"The job feels wrong.\""
+          },
+          {
+            "id": "c",
+            "label": "\"The east access point is open and a pedestrian entered while the load was moving.\""
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L03_final3",
+        "prompt": "You see someone near a moving load. Which action is appropriate for an observer without an operating role?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter the exclusion area and move the person yourself."
+          },
+          {
+            "id": "b",
+            "label": "Raise the established stop warning from a safe position and alert the responsible lead."
+          },
+          {
+            "id": "c",
+            "label": "Take over the equipment controls."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_final4",
+        "prompt": "The stop call receives no reply. What should you do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the stop is understood."
+          },
+          {
+            "id": "b",
+            "label": "Wait until the next planned break to ask."
+          },
+          {
+            "id": "c",
+            "label": "Remain clear and use another established safe communication route to obtain acknowledgment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L03_final5",
+        "prompt": "Who should determine the safe scope of a hold involving connected operations?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The responsible site and operating authorities, considering affected work and interfaces."
+          },
+          {
+            "id": "b",
+            "label": "The person most concerned about the schedule, regardless of authority."
+          },
+          {
+            "id": "c",
+            "label": "Any uninvolved visitor."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L03_final6",
+        "prompt": "Who authorizes the restart?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whoever called stop, even without the required technical or site authority."
+          },
+          {
+            "id": "b",
+            "label": "The person who completes the online course first."
+          },
+          {
+            "id": "c",
+            "label": "The designated authority after the applicable safeguards and authorizations are verified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L03_final7",
+        "prompt": "A driver has left the lifting area, but the access opening remains uncontrolled. What is true?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The exposure cannot recur because that driver has left."
+          },
+          {
+            "id": "b",
+            "label": "The immediate person is clear, but the access-control gap still needs resolution."
+          },
+          {
+            "id": "c",
+            "label": "A reminder alone automatically makes the route adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_final8",
+        "prompt": "Which evidence best supports a safeguard check?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An appropriate competent person performed the relevant check and recorded the actual result."
+          },
+          {
+            "id": "b",
+            "label": "The crew has not complained recently."
+          },
+          {
+            "id": "c",
+            "label": "A form was signed without a check."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L03_final9",
+        "prompt": "An employer supervisor says restart; the site permit holder says the hold remains. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Follow the instruction that makes the job finish sooner."
+          },
+          {
+            "id": "b",
+            "label": "Keep the affected hold while the responsible authorities resolve the conflict."
+          },
+          {
+            "id": "c",
+            "label": "Ask an untrained worker to choose."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_final10",
+        "prompt": "A coworker thinks a gas alarm is faulty. Qualified assessment and the required site all-clear are outstanding. What should you do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Return briefly because the task is short."
+          },
+          {
+            "id": "b",
+            "label": "Enter to prove whether the alarm is real."
+          },
+          {
+            "id": "c",
+            "label": "Follow the site alarm response, remain in the designated safe area, and seek the required assessment and authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L03_final11",
+        "prompt": "What is the strongest check that a changed route briefing was understood?",
+        "options": [
+          {
+            "id": "a",
+            "label": "People signed a page without discussing the route."
+          },
+          {
+            "id": "b",
+            "label": "Affected people can explain the new route, restrictions, and stop conditions."
+          },
+          {
+            "id": "c",
+            "label": "A message was posted where only the day shift can see it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_final12",
+        "prompt": "A supervisor ridicules your concern and directs restart without resolving the control gap. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "State the unresolved condition, keep clear, and use the designated alternative escalation route."
+          },
+          {
+            "id": "b",
+            "label": "Withdraw the concern to avoid being unpopular."
+          },
+          {
+            "id": "c",
+            "label": "Make up a verification result so the report can close."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L03_final13",
+        "prompt": "Which statement is correct about this course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It qualifies a learner to test an atmosphere."
+          },
+          {
+            "id": "b",
+            "label": "It replaces the site's isolation procedure."
+          },
+          {
+            "id": "c",
+            "label": "It teaches intervention and restart judgment; technical tasks still require their own competence and authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L03_final14",
+        "prompt": "The corrected method requires permit revalidation, which is incomplete. What is the safe decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Start and obtain the revalidation later."
+          },
+          {
+            "id": "b",
+            "label": "Keep the affected work on hold until the required revalidation is complete."
+          },
+          {
+            "id": "c",
+            "label": "Treat the other completed checks as a substitute."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_final15",
+        "prompt": "Which information belongs in a useful stop-work record?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The observed gap, immediate action, notifications, verified corrections, restart decision, and remaining restrictions."
+          },
+          {
+            "id": "b",
+            "label": "Only the name of the worker blamed for the delay."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional scenario represented as the actual event."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L03_final16",
+        "prompt": "An open hold remains at shift end. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It expires because a new shift is starting."
+          },
+          {
+            "id": "b",
+            "label": "The next shift must guess from the equipment's appearance."
+          },
+          {
+            "id": "c",
+            "label": "The hold, restrictions, outstanding actions, and clearance authority are handed over and receipt is confirmed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L03_final17",
+        "prompt": "The original reporter still identifies a missing safeguard after a restart briefing. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Require a signature waiving the concern."
+          },
+          {
+            "id": "b",
+            "label": "Assess and escalate the remaining gap before treating the affected work as ready."
+          },
+          {
+            "id": "c",
+            "label": "Ignore it because the briefing already occurred."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L03_final18",
+        "prompt": "The revised arrival route becomes blocked again. What is the correct response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Raise another stop on the affected work and reassess the changed condition."
+          },
+          {
+            "id": "b",
+            "label": "Continue because restart was already authorized."
+          },
+          {
+            "id": "c",
+            "label": "Erase the earlier report."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L03_final19",
+        "prompt": "What does a written course pass demonstrate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All company safeguards are effective in the field."
+          },
+          {
+            "id": "b",
+            "label": "The learner is authorized for every technical task discussed."
+          },
+          {
+            "id": "c",
+            "label": "The learner met this course's written standard; practical competence, work authorization, and company evidence remain separate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L03_final20",
+        "prompt": "Which follow-up best tests whether a correction lasted?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the pages in the report."
+          },
+          {
+            "id": "b",
+            "label": "Check later comparable work for use of the corrected control and whether workers can still raise concerns."
+          },
+          {
+            "id": "c",
+            "label": "Confirm that the action was marked closed, without checking use."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "L03_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L03_lesson1",
+          "questionIds": [
+            "L03_check1"
+          ]
+        },
+        {
+          "lessonId": "L03_lesson2",
+          "questionIds": [
+            "L03_check2"
+          ]
+        },
+        {
+          "lessonId": "L03_lesson3",
+          "questionIds": [
+            "L03_check3"
+          ]
+        },
+        {
+          "lessonId": "L03_lesson4",
+          "questionIds": [
+            "L03_check4"
+          ]
+        },
+        {
+          "lessonId": "L03_lesson5",
+          "questionIds": [
+            "L03_check5"
+          ]
+        },
+        {
+          "lessonId": "L03_lesson6",
+          "questionIds": [
+            "L03_check6"
+          ]
+        },
+        {
+          "lessonId": "L03_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L03_assessment",
+          "questionIds": [
+            "L03_final1",
+            "L03_final2",
+            "L03_final3",
+            "L03_final4",
+            "L03_final5",
+            "L03_final6",
+            "L03_final7",
+            "L03_final8",
+            "L03_final9",
+            "L03_final10",
+            "L03_final11",
+            "L03_final12",
+            "L03_final13",
+            "L03_final14",
+            "L03_final15",
+            "L03_final16",
+            "L03_final17",
+            "L03_final18",
+            "L03_final19",
+            "L03_final20"
+          ]
+        },
+        {
+          "lessonId": "L03_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "L03_check1": "Uncertainty about a required safeguard is a reason to seek verification before exposure continues. Prior success does not prove the safeguard is present now. Signing a record does not correct the uncertainty. If you chose A or C, explain which physical protection is still unverified before moving on.\n\n---",
+        "L03_check2": "The missing acknowledgment means the communication may have failed. A safe alternate warning route is needed. A record can wait; placing yourself in the exposure area cannot be justified as a communication method.\n\n---",
+        "L03_check3": "An employer's instruction does not automatically remove a site or permit hold. The conflict requires coordination by the people with actual authority. The worker should not be required to guess which unresolved instruction to follow.\n\n---",
+        "L03_check4": "It identifies the person, the relevant check, and an actual result. Confidence, elapsed time, and lack of complaints are not substitutes for verifying the safeguard. The check must be appropriate to the hazard; this course does not supply technical test methods.\n\n---",
+        "L03_check5": "A deadline does not satisfy a missing authorization. A partially completed restart review is not a completed restart decision. The authorized people may reconsider the work plan, but cannot represent an outstanding prerequisite as complete.\n\n---",
+        "L03_check6": "Present conditions determine whether the safeguards work. Keep the earlier record and add the new facts. A recurring failure is information for improvement, not a reason to erase history or continue through the gap.\n\n---",
+        "L03_final1": "The uncertainty concerns a safeguard required for the work. Requesting a pause lets the appropriate person establish whether it is effective before exposure continues. Waiting for an incident reverses prevention. Experience and past success cannot confirm present conditions. Revisit Lesson 1 if missed.",
+        "L03_final2": "The location, open access point, pedestrian entry, and moving load describe the control failure. Blaming a contractor does not identify what must change. A vague feeling should still be heard, but the specific observation makes investigation and communication more effective. Revisit Lesson 3 if missed.",
+        "L03_final3": "The observer can raise the established warning and alert the person controlling the work. Entering the exclusion area or taking equipment controls would create exposure or exceed the observer's role. A stop-work concern does not authorize an untrained intervention. Revisit Lesson 2 if missed.",
+        "L03_final4": "An unanswered message may not have been heard or understood. Use another established safe warning route while staying clear. Neither assuming receipt nor postponing the issue deals with the immediate communication gap. Revisit Lesson 2 if missed.",
+        "L03_final5": "Connected activities and interfaces can extend beyond one crew. The appropriate site and operating authorities must determine what can safely continue. Schedule pressure and lack of involvement do not confer that authority. Revisit Lesson 3 if missed.",
+        "L03_final6": "Restart requires the checks and authorizations applicable to the work, followed by a decision from the assigned authority. Calling stop does not give the reporter technical approval authority. Course completion gives neither the learner nor a supervisor permission to bypass site requirements. Revisit Lesson 5 if missed.",
+        "L03_final7": "Moving the immediate person out of the area reduces that person's exposure, but another person may enter through the same uncontrolled opening. The correction must address the access arrangement. A reminder may help communication but is not automatically sufficient access control. Revisit Lesson 4 if missed.",
+        "L03_final8": "The evidence identifies a relevant check, an appropriate person, and an actual result. A signature without the check or the absence of recent complaints does not establish effectiveness. The method must match the hazard and the verifier's competence. Revisit Lesson 4 if missed.",
+        "L03_final9": "The site's outstanding permit hold remains a real constraint. An employer's instruction cannot silently erase it. The responsible authorities must agree how the applicable requirements are satisfied; a worker should not choose whichever instruction is convenient. Revisit Lesson 3 if missed.",
+        "L03_final10": "The coworker's explanation is speculation. The learner must stay within the site's response and their own role while qualified personnel assess the concern and the proper authority controls return. A short task does not make an uncertain atmosphere acceptable. Entering to investigate would exceed the role described. Revisit Lessons 2 and 5 if missed.",
+        "L03_final11": "Explaining the route, restrictions, and stop conditions demonstrates more understanding than attendance alone. A signature or a message that misses affected people does not confirm comprehension. Communication must reach the people who will apply the change. Revisit Lesson 5 if missed.",
+        "L03_final12": "Use facts and the designated alternative reporting route while remaining clear of exposure. Withdrawing a valid concern leaves the control gap unresolved. Fabricating a result creates a false assurance record and can expose the next crew. Revisit Lessons 3 and 6 if missed.",
+        "L03_final13": "The course teaches recognition, communication, coordination, and restart judgment. Gas testing, isolation, lifting, and other technical work require their own training, evaluation, procedures, and authorization. Reading about a hazard does not establish competence to perform technical work on it. Revisit the opening scope and Lesson 2 if missed.",
+        "L03_final14": "An outstanding permit revalidation is not satisfied by the other completed checks. The affected work remains held until the required authorization is valid. Starting first would defeat the purpose of the prerequisite. Revisit Lesson 5 if missed.",
+        "L03_final15": "The record must explain what happened, what protection followed, what was verified, who decided restart, and what remains unresolved. Blame alone provides little safety information. A fictional teaching case is not an actual company record and must not be presented as one. Revisit Lesson 6 if missed.",
+        "L03_final16": "The incoming shift needs explicit information about the hold, restrictions, open actions, and clearance authority, with receipt confirmed. Changing shifts does not correct a hazard. Equipment appearance cannot substitute for knowing its actual status and restrictions. Revisit Lesson 6 if missed.",
+        "L03_final17": "The purpose of the restart briefing is shared understanding of verified readiness. A remaining concrete concern must be assessed and escalated as needed. A forced signature cannot convert an unresolved condition into a verified safeguard. Revisit Lesson 5 if missed.",
+        "L03_final18": "The changed condition defeats the basis for the earlier restart. Raise another stop on the affected work and reassess. An earlier authorization is not permission to ignore a later failure. Preserve the original report and record the recurrence. Revisit Lesson 6 if missed.",
+        "L03_final19": "A written pass demonstrates this course's written learning standard, within the assessment conditions used. It does not prove field performance, confer technical authorization, or demonstrate that a company implements its safeguards. Those judgments require their own evidence and authorized review. Revisit the scope and closing sections if missed.",
+        "L03_final20": "Follow-up should examine whether the corrected control is actually used in comparable work and whether people still speak up. Page counts and an administrative \"closed\" status do not establish that the correction persisted. Revisit Lesson 6 if missed."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

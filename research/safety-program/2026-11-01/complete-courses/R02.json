@@ -1,0 +1,789 @@
+{
+  "familyId": "R02",
+  "title": "Rescue plans and emergency equipment readiness",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Avoid relying on unavailable rescue or unplanned entry.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Qualified rescue authorities must separately approve methods, verify response capability and conduct safe technical practical evaluations. This course qualifies no confined-space, rope, fall, diving, water or medical rescuer and supplies no universal rescue response-time threshold.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Products%20Confined%20Space%20Entry%20Standard.pdf"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.chevronwithtechron.com/en_us/home/safe-work-practices.html"
+    },
+    {
+      "title": "OSHA Permit-required confined spaces — general-industry scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+    },
+    {
+      "title": "OSHA Permit-required confined spaces — general-industry scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "R02_intro",
+        "title": "Start here: Rescue plans and emergency equipment readiness",
+        "body": "# Rescue plans and emergency equipment readiness\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nQualified rescue authorities must separately approve methods, verify response capability and conduct safe technical practical evaluations. This course qualifies no confined-space, rope, fall, diving, water or medical rescuer and supplies no universal rescue response-time threshold.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Permit-required confined spaces — general-industry scope](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R02_lesson1",
+        "title": "Lesson 1 - Define the actual rescue problem",
+        "body": "Rescue planning begins with a credible casualty situation in the actual task. A suspended worker, an entrant inside a vessel and a person in moving water create different access, protection and treatment problems. Identify how a casualty could be reached and removed without exposing additional people.\n\nConsider the route, openings, obstructions, working height, energy and atmosphere. A plan for an empty training vessel may not work after internal equipment or scaffolding is installed. Include the casualty's likely position and the condition of the work area during the emergency.\n\nThe qualified rescue authority evaluates feasibility. A generic rescue form or an emergency number does not prove that suitable capability is available for this scenario.\n\n## Worked field example\n\nA fall-protection plan lists an emergency number but no evaluated method for reaching a suspended worker.\n\nThe safe decision is to hold the affected elevated work until qualified rescue planning verifies feasible available capability. A telephone number alone does not establish access, removal method or capable resources.\n\nA useful field record is specific: A scenario-specific rescue review covering casualty position, access and available resources. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nWrite the rescue scenario with enough detail to test feasibility. Identify where the casualty may be, their likely condition, available access and the hazards still present. A worker suspended outside a platform may not be reachable by the same method as a worker standing on it. A casualty inside a vessel may have to pass through an opening and around internal equipment.\n\nThe qualified authority considers the full sequence from recognition to safe removal and handover for care. Do not end the plan at 'retrieve casualty' without evaluating how retrieval can occur. The ordinary workforce should be able to identify the available arrangement and its limitations, not design a technical system from this lesson.\n\nIf the scenario cannot be safely addressed with the available resources, change the work method or hold the exposure. A favorable risk score does not create rescue capability. The employer and site must make a concrete readiness decision before relying on the plan.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R02_lesson2",
+        "title": "Lesson 2 - Use qualified people and suitable methods",
+        "body": "The rescue authority needs competence for the specific hazard and method. A person trained in ordinary first aid is not automatically qualified for confined-space entry, rope rescue or water rescue. Verify the scope of the team and its equipment.\n\nMethods must protect rescuers and casualty. Non-entry arrangements may be appropriate in some confined-space situations, but their suitability is a technical decision based on geometry and hazards. A line attached to a worker is not universally sufficient and can introduce problems if not assessed.\n\nThis course does not teach rope systems, entry techniques or medical treatment. General workers learn to identify the assigned role and prevent improvised rescue while the qualified plan is activated.\n\n## Worked field example\n\nA first aider is named as the confined-space rescue team without space-rescue training or equipment.\n\nThe safe decision is to verify a qualified rescue service with capability for the actual space and method. First-aid competence does not establish technical rescue competence.\n\nA useful field record is specific: A scope-specific capability assessment and qualified approval of the rescue method. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nVerify the competence of each assigned function. A team member may be qualified for one rescue method while another task requires different equipment or protection. A general first-aid credential, fall-awareness card or swimming ability does not establish technical rescue competence. The authority responsible for the method determines the relevant requirements.\n\nEquipment configuration also belongs to the technical plan. Compatible components, suitable anchorage or support, access and protective systems must be established by competent people. This awareness course deliberately omits instructions for building rope systems or conducting hazardous entries.\n\nGeneral workers still have important actions: recognize the event, alarm, protect access and provide reliable information. Those actions can be practiced safely. Do not imply that being excluded from technical rescue makes the worker unhelpful. Preventing spontaneous entry can be essential to avoiding additional casualties.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R02_lesson3",
+        "title": "Lesson 3 - Confirm availability and response capability",
+        "body": "A service can be competent yet unavailable. Confirm its ability to respond when the work occurs, including other commitments, access, communications and expected deployment arrangements. The appropriate authority evaluates whether response is suitable for the credible hazard; this course invents no universal response time.\n\nWhere an external service is used, establish the relevant agreement and information exchange. Do not assume a public emergency number commits responders to every technical rescue or provides knowledge of the space.\n\nBefore work, verify that the planned resources remain available. A team called away, failed access route or unavailable equipment can invalidate readiness. Stop affected exposure until a suitable arrangement is restored or the work method changes.\n\n## Worked field example\n\nThe designated rescue team is diverted to another incident while entry work is about to begin.\n\nThe safe decision is to hold the affected work until suitable rescue availability is re-established and verified. Past capability does not prove that the required resources are available now.\n\nA useful field record is specific: A current availability confirmation linked to the actual work period and rescue scenario. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nAvailability should be verified for the actual work period. The team may be capable during day shift but not staffed at night, or committed to another operation. The responsible authority checks current resources and how changes will be communicated to the work supervisor.\n\nExternal service arrangements need meaningful coordination. Confirm that the service understands the relevant hazards, access and expected role. A public dispatch number does not establish a commitment to a specialist method. The qualified authority evaluates suitability and any response constraints for the credible casualty scenario.\n\nIf availability changes while work is active, use the plan's safe response and stop affected exposure as required. The worker should not remain in a task that depends on rescue capability which has disappeared. Record the interruption, interim state and verified restoration rather than treating the morning confirmation as valid indefinitely.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R02_lesson4",
+        "title": "Lesson 4 - Inspect and stage equipment for the plan",
+        "body": "Rescue equipment must be appropriate, serviceable and accessible for the approved method. Inspection, maintenance and technical testing follow the relevant manufacturer and competent program. A bag labeled rescue does not establish the contents are complete or suitable.\n\nStage equipment so deployment is possible without entering an uncontrolled hazard or blocking evacuation. Consider storage protection, access, compatibility and who is authorized to use it. Do not move equipment to another job without informing the responsible work authority.\n\nUsers and inspectors need their appropriate competence. A general worker can report a missing kit or damaged item but should not certify technical equipment outside their role. Defects create a readiness hold until resolved.\n\n## Worked field example\n\nA required rescue kit is locked in a vehicle whose driver has left the site.\n\nThe safe decision is to restore verified accessible equipment or hold the affected work. Equipment that cannot be accessed in the planned response is not an available control.\n\nA useful field record is specific: A staged-equipment check confirming identity, serviceability and access by the assigned team. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nA staged equipment check should identify the actual kit, required components, inspection status, accessibility and the assigned users. A locked cabinet may be suitable only if the responders can access it through a reliable arrangement. Do not assume somebody on site has a key.\n\nStorage and use can affect condition. Wet, contaminated, damaged or improperly stored equipment needs the relevant competent evaluation. A general observer can report a concern without certifying technical serviceability. Technical inspection and maintenance records must remain tied to the item.\n\nEquipment movements are changes. If another crew borrows a required component, the rescue authority and work supervisor need to know before the plan is relied on. A substitute item is not automatically equivalent. The approved system and practical capability must be re-established through competent review rather than improvised during the emergency.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R02_lesson5",
+        "title": "Lesson 5 - Activate the plan without spontaneous entry",
+        "body": "When a casualty is seen, raise the alarm and activate the planned rescue response. Give location, casualty information and known hazards without guessing. Maintain your assigned protective role and prevent unauthorized entry.\n\nAn unprotected rescuer can become another casualty. Do not enter a hazardous atmosphere, climb an unprotected edge or jump into water because the person is visible. Visibility is not evidence of safe access. Technical entry belongs to the qualified rescue team within the plan.\n\nIf assigned safe non-entry actions are permitted, carry them out only within training and verified conditions. Do not convert an awareness instruction into a technical retrieval attempt. Medical assistance follows the trained response and emergency coordination.\n\n## Worked field example\n\nA worker collapses inside a vessel and a coworker wants to enter wearing no protective system.\n\nThe safe decision is to prevent unplanned entry, raise the alarm and activate the qualified rescue arrangement. An unprotected rescue attempt can expose another person to the same uncontrolled hazard.\n\nA useful field record is specific: An observed safe alarm and role response in simulation without unauthorized entry. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nInformation passed during activation should distinguish known hazards from assumptions. Report location, casualty observations, active work, atmosphere or energy information and any access changes. Do not delay the alarm while trying to obtain a diagnosis, and do not enter a hazard to improve the report.\n\nThe attendant or observer maintains their assigned role. If the plan includes a permitted safe non-entry action, perform it only within training and the verified conditions. A line visible near a casualty is not permission to start pulling without the approved method.\n\nWhen emergency services arrive, provide the current information through command. Uncontrolled independent attempts can interfere with the qualified team and create additional exposure. General workers should know where to wait, how to keep access clear and how to report new observations while remaining outside the danger area.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R02_lesson6",
+        "title": "Lesson 6 - Exercise feasibility and control change",
+        "body": "A safe exercise tests the relevant method, access and coordination under qualified oversight. It must be representative enough to reveal limitations but must not create a real hazardous atmosphere, fall or uncontrolled suspension. Record what was simulated and what was actually demonstrated.\n\nChanged equipment, layout, casualty access, staffing or hazard can invalidate a plan. Return the change to the rescue authority before work relies on the earlier arrangement. A successful exercise in another structure is not automatic clearance.\n\nAfter findings, correct and retest the failed element. Keep practical capability evidence separate from online understanding. Attendance at a rescue briefing does not demonstrate technical rescue performance.\n\n## Worked field example\n\nA vessel gains internal scaffolding after the rescue exercise, restricting the planned removal route.\n\nThe safe decision is to have the qualified rescue authority reassess and verify the changed access before entry resumes. The practiced removal path may no longer be feasible in the changed geometry.\n\nA useful field record is specific: A change review and safe representative verification of the revised rescue method. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed emergency-interface application\n\nA representative exercise should reveal whether the team can use the planned access and equipment under safe controlled conditions. A dummy, simulated atmosphere and controlled test structure can support learning, while the qualified authority decides what technical practical evaluation is necessary. State the differences from the actual job.\n\nDo not conceal coaching or partial performance. If the instructor directs every step, record the teaching outcome and arrange the required independent demonstration separately. If an opening or internal obstacle prevents removal, keep the limitation visible and revise the plan before affected work.\n\nAfter a change, retest the relevant failed or altered element. There is no need to claim every unrelated capability has been reassessed. Preserve the original result, correction and subsequent verification. Written course scores, exercise participation and qualified technical assessment each remain identifiable evidence with distinct limits.\n\n## Further application\n\nA rescue readiness handover should identify the current work, casualty scenario, available team, staged equipment, access and any live restrictions. The receiving role confirms responsibility before the outgoing person leaves. If equipment or personnel become unavailable, the work authority receives prompt notice and uses the required safe response.\n\nAn exercise result also needs a clear acceptance decision from the appropriate authority. The fact that a dummy was eventually removed does not prove every objective was met. Record unsafe deviations, coaching, inaccessible equipment and any method changes. Resolve and safely retest material gaps before the plan is relied on again. A favorable final outcome cannot be used to conceal a failed protective function or claim qualification for a different rescue discipline.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R02_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional elevated-maintenance job uses fall protection. The plan names public emergency services and stores a rescue kit at a distant depot. Nobody has evaluated the suspended worker’s location or whether the available team can reach them.\n\n### Worked solution\n\nThe affected elevated work is held. A qualified rescue authority evaluates the credible casualty position, access, method, suitable equipment, personnel and response arrangements. The employer verifies actual availability and accessible staging for the work period. External services are coordinated as applicable rather than assumed capable from a telephone number. The team safely exercises the relevant arrangement and resolves limitations. Online learning, first-aid cards and the existence of a kit are separate evidence items and do not collectively imply a feasible rescue. Release requires the responsible work and rescue authorities to verify the planned capability.\n\n## Scenario 2\n\nA fictional confined-space entrant becomes unresponsive. The attendant sees the worker and is urged to enter. The planned rescue team is available, but a temporary pipe now obstructs its assessed access route.\n\n### Worked solution\n\nThe attendant raises the alarm, prevents unauthorized entry and performs only assigned safe actions. The qualified rescue authority receives the casualty and obstruction information and determines the response. The visible casualty does not make entry safe. The obstruction is a serious planning failure and may require specialist adaptation; untrained coworkers must not attempt it. After the response, affected entry remains held while access and rescue feasibility are reassessed. The investigation identifies why the temporary change was not screened. The revised plan is safely verified before future reliance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R02_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R02_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nQualified rescue authorities must separately approve methods, verify response capability and conduct safe technical practical evaluations. This course qualifies no confined-space, rope, fall, diving, water or medical rescuer and supplies no universal rescue response-time threshold.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "R02_check1",
+        "prompt": "A fall-protection plan lists an emergency number but no evaluated method for reaching a suspended worker. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the affected elevated work until qualified rescue planning verifies feasible available capability"
+          },
+          {
+            "id": "b",
+            "label": "Start because public responders can be called if needed"
+          },
+          {
+            "id": "c",
+            "label": "Ask coworkers to improvise a ladder rescue later"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R02_check2",
+        "prompt": "A first aider is named as the confined-space rescue team without space-rescue training or equipment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept any first-aid card as rescue qualification"
+          },
+          {
+            "id": "b",
+            "label": "Verify a qualified rescue service with capability for the actual space and method"
+          },
+          {
+            "id": "c",
+            "label": "Use a rope from the stores and decide the method at the opening"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R02_check3",
+        "prompt": "The designated rescue team is diverted to another incident while entry work is about to begin. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed because the team was available at the morning briefing"
+          },
+          {
+            "id": "b",
+            "label": "Assume another nearby crew will provide equivalent rescue"
+          },
+          {
+            "id": "c",
+            "label": "Hold the affected work until suitable rescue availability is re-established and verified"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R02_check4",
+        "prompt": "A required rescue kit is locked in a vehicle whose driver has left the site. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Restore verified accessible equipment or hold the affected work"
+          },
+          {
+            "id": "b",
+            "label": "Count the kit on the inventory as adequate readiness"
+          },
+          {
+            "id": "c",
+            "label": "Use unrelated lifting gear as an improvised replacement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R02_check5",
+        "prompt": "A worker collapses inside a vessel and a coworker wants to enter wearing no protective system. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter while holding a rope so others can pull later"
+          },
+          {
+            "id": "b",
+            "label": "Prevent unplanned entry, raise the alarm and activate the qualified rescue arrangement"
+          },
+          {
+            "id": "c",
+            "label": "Send the smallest coworker because the opening is narrow"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R02_check6",
+        "prompt": "A vessel gains internal scaffolding after the rescue exercise, restricting the planned removal route. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reuse the old exercise result because the vessel number is unchanged"
+          },
+          {
+            "id": "b",
+            "label": "Assume rescuers will remove scaffolding during the emergency"
+          },
+          {
+            "id": "c",
+            "label": "Have the qualified rescue authority reassess and verify the changed access before entry resumes"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R02_final1",
+        "prompt": "For define the actual rescue problem, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A telephone number alone does not establish access, removal method or capable resources."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R02_final2",
+        "prompt": "Which evidence would most directly verify define the actual rescue problem in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A scenario-specific rescue review covering casualty position, access and available resources"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R02_final3",
+        "prompt": "A relief worker proposes the following shortcut during define the actual rescue problem: \"Start because public responders can be called if needed.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Start because public responders can be called if needed"
+          },
+          {
+            "id": "b",
+            "label": "Ask coworkers to improvise a ladder rescue later"
+          },
+          {
+            "id": "c",
+            "label": "Hold the affected elevated work until qualified rescue planning verifies feasible available capability"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R02_final4",
+        "prompt": "For use qualified people and suitable methods, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "First-aid competence does not establish technical rescue competence."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R02_final5",
+        "prompt": "Which evidence would most directly verify use qualified people and suitable methods in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A scope-specific capability assessment and qualified approval of the rescue method"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R02_final6",
+        "prompt": "A relief worker proposes the following shortcut during use qualified people and suitable methods: \"Accept any first-aid card as rescue qualification.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept any first-aid card as rescue qualification"
+          },
+          {
+            "id": "b",
+            "label": "Use a rope from the stores and decide the method at the opening"
+          },
+          {
+            "id": "c",
+            "label": "Verify a qualified rescue service with capability for the actual space and method"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R02_final7",
+        "prompt": "For confirm availability and response capability, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Past capability does not prove that the required resources are available now."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R02_final8",
+        "prompt": "Which evidence would most directly verify confirm availability and response capability in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A current availability confirmation linked to the actual work period and rescue scenario"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R02_final9",
+        "prompt": "A relief worker proposes the following shortcut during confirm availability and response capability: \"Proceed because the team was available at the morning briefing.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed because the team was available at the morning briefing"
+          },
+          {
+            "id": "b",
+            "label": "Assume another nearby crew will provide equivalent rescue"
+          },
+          {
+            "id": "c",
+            "label": "Hold the affected work until suitable rescue availability is re-established and verified"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R02_final10",
+        "prompt": "For inspect and stage equipment for the plan, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Equipment that cannot be accessed in the planned response is not an available control."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R02_final11",
+        "prompt": "Which evidence would most directly verify inspect and stage equipment for the plan in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A staged-equipment check confirming identity, serviceability and access by the assigned team"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R02_final12",
+        "prompt": "A relief worker proposes the following shortcut during inspect and stage equipment for the plan: \"Count the kit on the inventory as adequate readiness.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the kit on the inventory as adequate readiness"
+          },
+          {
+            "id": "b",
+            "label": "Use unrelated lifting gear as an improvised replacement"
+          },
+          {
+            "id": "c",
+            "label": "Restore verified accessible equipment or hold the affected work"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R02_final13",
+        "prompt": "For activate the plan without spontaneous entry, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An unprotected rescue attempt can expose another person to the same uncontrolled hazard."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R02_final14",
+        "prompt": "Which evidence would most directly verify activate the plan without spontaneous entry in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An observed safe alarm and role response in simulation without unauthorized entry"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R02_final15",
+        "prompt": "A relief worker proposes the following shortcut during activate the plan without spontaneous entry: \"Enter while holding a rope so others can pull later.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter while holding a rope so others can pull later"
+          },
+          {
+            "id": "b",
+            "label": "Send the smallest coworker because the opening is narrow"
+          },
+          {
+            "id": "c",
+            "label": "Prevent unplanned entry, raise the alarm and activate the qualified rescue arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R02_final16",
+        "prompt": "For exercise feasibility and control change, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The practiced removal path may no longer be feasible in the changed geometry."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R02_final17",
+        "prompt": "Which evidence would most directly verify exercise feasibility and control change in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A change review and safe representative verification of the revised rescue method"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R02_final18",
+        "prompt": "A relief worker proposes the following shortcut during exercise feasibility and control change: \"Reuse the old exercise result because the vessel number is unchanged.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reuse the old exercise result because the vessel number is unchanged"
+          },
+          {
+            "id": "b",
+            "label": "Assume rescuers will remove scaffolding during the emergency"
+          },
+          {
+            "id": "c",
+            "label": "Have the qualified rescue authority reassess and verify the changed access before entry resumes"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R02_final19",
+        "prompt": "In Scenario 1, which condition is essential before work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A qualified feasible rescue arrangement with verified available people and equipment"
+          },
+          {
+            "id": "b",
+            "label": "An emergency number printed in large type"
+          },
+          {
+            "id": "c",
+            "label": "A general promise that coworkers will help"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R02_final20",
+        "prompt": "In Scenario 2, does seeing the casualty authorize attendant entry?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if entry appears to take less than a minute"
+          },
+          {
+            "id": "b",
+            "label": "No; the attendant activates the qualified response and stays within the assigned safe role"
+          },
+          {
+            "id": "c",
+            "label": "Yes, if a coworker holds a rope"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "R02_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R02_lesson1",
+          "questionIds": [
+            "R02_check1"
+          ]
+        },
+        {
+          "lessonId": "R02_lesson2",
+          "questionIds": [
+            "R02_check2"
+          ]
+        },
+        {
+          "lessonId": "R02_lesson3",
+          "questionIds": [
+            "R02_check3"
+          ]
+        },
+        {
+          "lessonId": "R02_lesson4",
+          "questionIds": [
+            "R02_check4"
+          ]
+        },
+        {
+          "lessonId": "R02_lesson5",
+          "questionIds": [
+            "R02_check5"
+          ]
+        },
+        {
+          "lessonId": "R02_lesson6",
+          "questionIds": [
+            "R02_check6"
+          ]
+        },
+        {
+          "lessonId": "R02_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R02_final",
+          "questionIds": [
+            "R02_final1",
+            "R02_final2",
+            "R02_final3",
+            "R02_final4",
+            "R02_final5",
+            "R02_final6",
+            "R02_final7",
+            "R02_final8",
+            "R02_final9",
+            "R02_final10",
+            "R02_final11",
+            "R02_final12",
+            "R02_final13",
+            "R02_final14",
+            "R02_final15",
+            "R02_final16",
+            "R02_final17",
+            "R02_final18",
+            "R02_final19",
+            "R02_final20"
+          ]
+        },
+        {
+          "lessonId": "R02_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "R02_check1": "Hold the affected elevated work until qualified rescue planning verifies feasible available capability. A telephone number alone does not establish access, removal method or capable resources.",
+        "R02_check2": "Verify a qualified rescue service with capability for the actual space and method. First-aid competence does not establish technical rescue competence.",
+        "R02_check3": "Hold the affected work until suitable rescue availability is re-established and verified. Past capability does not prove that the required resources are available now.",
+        "R02_check4": "Restore verified accessible equipment or hold the affected work. Equipment that cannot be accessed in the planned response is not an available control.",
+        "R02_check5": "Prevent unplanned entry, raise the alarm and activate the qualified rescue arrangement. An unprotected rescue attempt can expose another person to the same uncontrolled hazard.",
+        "R02_check6": "Have the qualified rescue authority reassess and verify the changed access before entry resumes. The practiced removal path may no longer be feasible in the changed geometry.",
+        "R02_final1": "A telephone number alone does not establish access, removal method or capable resources. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R02_final2": "A scenario-specific rescue review covering casualty position, access and available resources. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R02_final3": "Hold the affected elevated work until qualified rescue planning verifies feasible available capability. A telephone number alone does not establish access, removal method or capable resources. A staffing change does not remove this requirement.",
+        "R02_final4": "First-aid competence does not establish technical rescue competence. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R02_final5": "A scope-specific capability assessment and qualified approval of the rescue method. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R02_final6": "Verify a qualified rescue service with capability for the actual space and method. First-aid competence does not establish technical rescue competence. A staffing change does not remove this requirement.",
+        "R02_final7": "Past capability does not prove that the required resources are available now. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R02_final8": "A current availability confirmation linked to the actual work period and rescue scenario. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R02_final9": "Hold the affected work until suitable rescue availability is re-established and verified. Past capability does not prove that the required resources are available now. A staffing change does not remove this requirement.",
+        "R02_final10": "Equipment that cannot be accessed in the planned response is not an available control. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R02_final11": "A staged-equipment check confirming identity, serviceability and access by the assigned team. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R02_final12": "Restore verified accessible equipment or hold the affected work. Equipment that cannot be accessed in the planned response is not an available control. A staffing change does not remove this requirement.",
+        "R02_final13": "An unprotected rescue attempt can expose another person to the same uncontrolled hazard. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R02_final14": "An observed safe alarm and role response in simulation without unauthorized entry. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R02_final15": "Prevent unplanned entry, raise the alarm and activate the qualified rescue arrangement. An unprotected rescue attempt can expose another person to the same uncontrolled hazard. A staffing change does not remove this requirement.",
+        "R02_final16": "The practiced removal path may no longer be feasible in the changed geometry. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R02_final17": "A change review and safe representative verification of the revised rescue method. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R02_final18": "Have the qualified rescue authority reassess and verify the changed access before entry resumes. The practiced removal path may no longer be feasible in the changed geometry. A staffing change does not remove this requirement.",
+        "R02_final19": "Rescue readiness requires actual capability for the scenario. Contact information and goodwill do not establish a safe method.",
+        "R02_final20": "The hazard may be invisible and the attendant is not automatically a protected rescuer. The planned qualified response remains the boundary."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

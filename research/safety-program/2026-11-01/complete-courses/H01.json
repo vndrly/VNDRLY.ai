@@ -1,0 +1,785 @@
+{
+  "familyId": "H01",
+  "title": "Task risk assessment and JSA/JHA",
+  "description": "Complete guided H01 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Identify energy sources and effective controls before routine and nonroutine work.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "A suitable assessor must observe the learner analyze an actual or safely simulated task, identify harm pathways and affected people, select controls within role limits, verify assigned safeguards, brief a worker and respond to a change. Technical isolations, lifting, gas testing and other specialist work require their own qualified practical evaluations and authorization. A written JSA exercise does not qualify the learner to execute those hazardous tasks.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Task risk assessment and JSA/JHA",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/templates/1.%20JSA%20Template.pdf"
+    },
+    {
+      "title": "Inventory source 2: Task risk assessment and JSA/JHA",
+      "url": "https://static.conocophillips.com/files/resources/exhibit-3-health-safety-and-environment-hse-requir.pdf"
+    },
+    {
+      "title": "OSHA: Job Hazard Analysis",
+      "url": "https://www.osha.gov/sites/default/files/publications/osha3071.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H01_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H01: Task risk assessment and JSA/JHA\n\nThis original VNDRLY course teaches decisions for common; detail follows tasks. Its purpose is to identify energy sources and effective controls before routine and nonroutine work. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H01_lesson1",
+        "title": "Lesson 1: Describe the real task in usable steps",
+        "body": "A JSA or JHA is a job safety or hazard analysis: a way to examine how a task can harm people and choose controls before exposure. It is not a list of reassuring words. Begin with the actual job, equipment identity, location, people and work limits. Walk the location with the people who perform the work; they often know handling difficulties, access restrictions and informal workarounds that a desk description misses. Include setup, normal execution, interruptions, cleanup and handback.\n\nBreak the job into steps detailed enough to reveal a changing hazard but not so detailed that every hand movement becomes an unreadable line. For replacing a pump guard, useful steps might cover obtaining authorization, establishing the required safe energy state, removing and storing the guard, performing the authorized work, and controlled reinstatement. The analysis does not itself authorize isolation or maintenance.\n\nWorked example: “service pump” hides access, lifting and stored-energy exposure. “Remove the identified guard after authorized isolation verification” shows both the activity and the prerequisite. If the proposed job later includes opening a process connection, that is a different exposure needing assessment, not an unrecorded extra step.\n\n### Applying the mechanism\n\nA useful step is an observable part of the job with a clear beginning and end. If the team cannot tell when the exposure changes, combine or split the step until it supports a specific control decision. Reusing a template is efficient only after that comparison with the real task.\n\n### Decision principles\n\nHazards can arise before the main activity or during restoration and cleanup. An analysis that omits these stages can leave unplanned exposure despite describing the central task accurately.\n\nStep detail should support decisions. Overly broad steps conceal hazards, while excessive fragmentation makes the analysis hard to brief and use; group actions by meaningful changes in exposure.\n\nWorker participation supplies task knowledge that a generic form may lack. It does not remove the need for competent technical review or operating authorization when the hazards require them.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H01_lesson2",
+        "title": "Lesson 2: Explain the harm pathway, not just the hazard label",
+        "body": "For each step, identify the source of harm, how it can reach a person and who can be exposed. “Pressure” is a category; “a trapped section can release liquid toward the person loosening the connection” describes a pathway. Consider electrical, mechanical, hydraulic, pneumatic, chemical, thermal and gravitational energy, movement of vehicles and loads, airborne exposure, noise, weather and ergonomics. Look beyond the person holding the tool to helpers, gate staff, adjacent crews and the public.\n\nAsk what can go wrong during both intended and foreseeable abnormal conditions: a stuck component, dropped tool, loss of communication, failed restraint or unexpected restart. This is not an invitation to speculate without bounds. Use the equipment, material, operating state and site interactions to identify credible events, and seek specialist review when the team cannot establish them.\n\nWorked example: a hose crosses a shared walkway. The crew identifies tripping, but also asks whether a vehicle could damage the hose and expose a nearby worker to the released contents. One object can create several harm pathways requiring different controls.\n\n### Applying the mechanism\n\nDescribe the event in physical terms: what releases, moves, contacts or exposes whom. “Injury” describes a consequence but not its cause. Naming the pathway helps the crew choose a control that interrupts it and helps an observer check whether that control actually protects the intended people.\n\n### Decision principles\n\nEnergy paths and releases do not follow company boundaries. Helpers, other contractors, drivers and bystanders may need separation, coordination or information even when they are not performing the step.\n\nUncertainty about a serious hazard is a planning gap, not evidence that the hazard is small. Resolve it through suitable expertise and information before exposing people to find out.\n\nControls must account for credible departures such as a jam or lost signal. Planning these responses prevents workers from improvising inside the hazard when the normal sequence fails.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H01_lesson3",
+        "title": "Lesson 3: Choose controls that change exposure",
+        "body": "Control selection begins by asking whether the hazardous activity or exposure can be removed. If not, consider a safer method or material, then engineered separation or containment, supported by procedures, access control, training and suitable PPE. The practical choice must fit the actual task and technical constraints; the hierarchy is a way to improve the plan, not a reason for workers to redesign equipment themselves.\n\nA statement such as “stay alert” relies on continuous human performance and does not create a physical separation. A correctly designed guard, controlled route or remote method can reduce dependence on attention. PPE can be essential, but it has selection, fit, compatibility and use limitations and does not eliminate the release or moving equipment.\n\nWorked example: a worker is asked to steady a heavy part by hand in a pinch point. The team first examines an approved handling arrangement that removes the hand from the crushing zone. Gloves may still protect against minor contact hazards, but gloves do not make a hand safe between moving steel surfaces.\n\n### Applying the mechanism\n\nAsk how the proposed safeguard changes the pathway. A barrier that only marks a boundary may depend on access discipline; an engineered enclosure may physically contain movement. Both can have roles, but they have different failure modes and need different verification. Avoid calling every warning an engineering control.\n\n### Decision principles\n\nA suitable remote method can remove a person from the harm pathway. Its own limitations still need assessment, but it changes exposure more directly than a reminder alone.\n\nPPE must match the specific exposure and user. It may be necessary alongside stronger controls, but it does not automatically justify leaving a preventable energy or release hazard uncontrolled.\n\nThe hierarchy does not authorize improvised modifications. Technical changes can create new failure modes and must pass the applicable design, change and operating review processes.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H01_lesson4",
+        "title": "Lesson 4: Make each safeguard observable and owned",
+        "body": "An analysis becomes usable when each control has an owner and a way to verify it. “Area secure” is ambiguous. A better instruction identifies which access points are controlled, what barrier or separation arrangement is required, who establishes it, and who confirms it before the relevant exposure. For technical controls, the approved procedure defines the method and acceptance criteria; the JSA should link to it rather than inventing a test.\n\nThe person checking a control needs suitable competence and a view of the actual condition. A prior signature or photograph can support a record but may not establish current function. Record failed and uncertain checks honestly and hold the affected work until they are resolved. A risk score summarizes an assessment; it does not energize a missing safeguard.\n\nWorked example: the JSA requires an exclusion boundary before a pressure activity. The supervisor walks the boundary and finds a side access left open. The correct result is a failed readiness check followed by correction and re-verification. Checking the box because most of the barrier is installed would hide the very gap the check is meant to find.\n\n### Applying the mechanism\n\nAssign ownership at the point where the safeguard must exist. The person ordering a barrier and the person verifying its installed boundary may be different. Make both duties explicit so a purchasing milestone is not mistaken for field readiness. Record actual failed checks as useful findings.\n\n### Decision principles\n\nA useful record allows another reviewer to understand what was established and when. Predicting success or using vague labels obscures failures and can falsely imply current readiness.\n\nA critical safeguard is not optional because other controls passed. The failure must be resolved through the responsible process; arithmetic and favorable labels do not replace the missing barrier.\n\nEvidence has scope and currency. A photograph can document a condition but may not demonstrate current performance or the whole boundary; verification must match the control being claimed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H01_lesson5",
+        "title": "Lesson 5: Brief for understanding and coordinate interfaces",
+        "body": "The briefing is a shared operating conversation. Explain the job steps, serious harm pathways, assigned controls, stop triggers, communication method and emergency arrangements. Ask workers to describe their own part and the boundary they must not cross. A signature can record participation, but a person who cannot understand the language or explain the instruction is not ready merely because their name is on the sheet.\n\nCoordinate with the site authority and other crews when work shares equipment, access, utilities, atmosphere, lifting routes or emergency resources. One team’s safe sequence can conflict with another team’s restart or movement. Resolve those interfaces before work; do not expect two separate JSAs to coordinate themselves.\n\nWorked example: a maintenance crew briefs a pump task while another crew plans to move a load through the same access. The supervisors and site authority agree separation in time or another approved arrangement, update both briefings and identify who releases each stage. Telling each crew to “watch out” leaves the conflict unresolved.\n\n### Applying the mechanism\n\nUse a short teach-back: ask a worker what they will do if the adjacent crew starts its equipment or the planned escape route becomes blocked. The response reveals whether the briefing taught the interaction and stop trigger, rather than merely presenting a list of hazards.\n\n### Decision principles\n\nA comprehension check tests whether the instruction can guide behavior. Attendance and experience may support training history but cannot show that the current job and changed controls are understood.\n\nThe new worker can change communication and coordination needs. They must understand the actual scope, controls and role limits before participating, rather than learning them while exposed.\n\nCoordination follows credible interaction, not employer identity. Shared energy, access and operating states can affect a job even when another company owns the adjacent task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H01_lesson6",
+        "title": "Lesson 6: Reassess changes and learn from completed work",
+        "body": "A JSA is bounded by its assumptions. Stop and reassess when scope, equipment, method, crew, weather, operating state, nearby activity or a critical control changes. First protect people from the affected exposure; then involve the right operating and technical roles, revise the analysis and any linked authorization, verify controls and rebrief. Editing the form while work continues through an uncontrolled condition defeats the purpose.\n\nAt completion, account for equipment, temporary controls, remaining defects and handback responsibilities. Record what actually happened, including interventions, not an idealized version of the original plan. The program owner can compare later observations against the analysis to identify recurring gaps and improve planning. “No injury” is useful outcome information but does not prove that every control was present.\n\nWorked example: wind moves an airborne contaminant toward a nearby crew. The team stops affected work and coordinates a revised exposure arrangement. Later review checks whether the monitoring and briefing system detected the changing pathway promptly, rather than declaring the original JSA effective because everyone escaped injury.\n\n### Applying the mechanism\n\nA post-job review should compare the predicted steps with the sequence actually used. If workers needed an unplanned workaround, examine why the approved method was impractical and whether a technical change is needed. Do not simply add the unsafe workaround to tomorrow’s template as accepted practice.\n\n### Decision principles\n\nA favorable outcome can occur despite missing controls. Effectiveness review examines implementation and performance, including near misses and interventions, within the sampled work scope.\n\nCompletion of a task does not automatically establish readiness for operation. Handback communicates the actual state and unresolved restrictions to the designated operating authority.\n\nA standard analysis is a starting resource. Its scope and assumptions must be checked against the present job; reuse without field confirmation can carry obsolete controls into a different exposure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H01_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: A second crew arrives\n\nA pump-maintenance JSA was briefed in the morning. At noon another contractor begins opening an adjacent process line and uses the maintenance crew’s escape route for materials.\n\n**Worked decision and reasoning.** The maintenance supervisor pauses the affected work and establishes a safe waiting condition. Both crews and the site authority examine shared releases, access, isolation interfaces and emergency routes. They agree a controlled sequence or other approved separation, assign owners and verify the actual safeguards. The JSA and related permits are revised as required, and both crews are rebriefed before the authorized restart. The original signed sheet remains part of the history rather than being silently replaced.\n\n### Scenario 2: A completed form and a missing barrier\n\nA supervisor has a signed JSA showing a controlled vehicle route. During the pre-start walk, a worker finds an open crossing used by pedestrians. Dispatch is pressing for the first vehicle movement.\n\n**Worked decision and reasoning.** The worker reports the failed control and the affected movement remains held. The responsible supervisor resolves the crossing through the approved traffic arrangement and checks that pedestrians and drivers understand it. A suitable verifier checks the full route, including side access, before the authorized movement. The record identifies the failure and correction. The team learns that signatures are evidence of discussion, not proof that the route was physically controlled.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H01_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H01_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nA suitable assessor must observe the learner analyze an actual or safely simulated task, identify harm pathways and affected people, select controls within role limits, verify assigned safeguards, brief a worker and respond to a change. Technical isolations, lifting, gas testing and other specialist work require their own qualified practical evaluations and authorization. A written JSA exercise does not qualify the learner to execute those hazardous tasks.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H01_check1",
+        "prompt": "A reused analysis says only “service equipment.” What should happen before work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Define the specific equipment and meaningful task steps with the crew."
+          },
+          {
+            "id": "b",
+            "label": "Sign it because the title is familiar."
+          },
+          {
+            "id": "c",
+            "label": "Add more PPE names without visiting the job."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H01_final_1_1",
+        "prompt": "Which stages belong in a task analysis?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the main production movement."
+          },
+          {
+            "id": "b",
+            "label": "Only activities after someone reports an injury."
+          },
+          {
+            "id": "c",
+            "label": "Setup, work, interruptions, cleanup and handback as applicable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H01_final_1_2",
+        "prompt": "How much step detail is useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A separate line for every finger movement."
+          },
+          {
+            "id": "b",
+            "label": "Enough to identify changing hazards and controls without losing readability."
+          },
+          {
+            "id": "c",
+            "label": "One line for an entire maintenance campaign."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H01_final_1_3",
+        "prompt": "Why involve the people who perform the task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "They can identify practical access, handling and sequencing hazards."
+          },
+          {
+            "id": "b",
+            "label": "Their signatures replace technical review."
+          },
+          {
+            "id": "c",
+            "label": "Only supervisors can observe hazards accurately."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H01_check2",
+        "prompt": "Which hazard description is most useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Be careful around vehicles."
+          },
+          {
+            "id": "b",
+            "label": "General safety risk."
+          },
+          {
+            "id": "c",
+            "label": "A moving vehicle can strike workers entering the shared loading route."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H01_final_2_1",
+        "prompt": "Who should be considered as potentially exposed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only employees of the company preparing the form."
+          },
+          {
+            "id": "b",
+            "label": "Workers performing the step and others affected by its energy or movement."
+          },
+          {
+            "id": "c",
+            "label": "Only the person signing the analysis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H01_final_2_2",
+        "prompt": "What should happen when a technical hazard is uncertain?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the affected step and obtain competent technical assessment."
+          },
+          {
+            "id": "b",
+            "label": "Assign a low risk score to keep moving."
+          },
+          {
+            "id": "c",
+            "label": "Let the newest worker test it in practice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H01_final_2_3",
+        "prompt": "Why consider abnormal conditions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only successful operation matters."
+          },
+          {
+            "id": "b",
+            "label": "Abnormal conditions can always be left to emergency responders."
+          },
+          {
+            "id": "c",
+            "label": "A foreseeable failure can change the exposure and required controls."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H01_check3",
+        "prompt": "A glove is proposed as the only control for a crushing pinch point. What is the better planning response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Write “experienced worker” as the control."
+          },
+          {
+            "id": "b",
+            "label": "Remove or separate the hand from the crushing exposure using an approved method."
+          },
+          {
+            "id": "c",
+            "label": "Use thicker gloves and leave the method unchanged."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H01_final_3_1",
+        "prompt": "Which proposal most directly reduces exposure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Perform the approved inspection remotely instead of placing a person in the release path."
+          },
+          {
+            "id": "b",
+            "label": "Add the phrase “use caution.”"
+          },
+          {
+            "id": "c",
+            "label": "Require the worker to remember last year’s briefing."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H01_final_3_2",
+        "prompt": "What role can PPE have?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proof that every uncontrolled hazard is acceptable."
+          },
+          {
+            "id": "b",
+            "label": "Replacement for isolation on every maintenance job."
+          },
+          {
+            "id": "c",
+            "label": "Protection against assessed residual hazards within its limitations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H01_final_3_3",
+        "prompt": "Who approves a technical change to equipment controls?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The training platform after a passing score."
+          },
+          {
+            "id": "b",
+            "label": "The designated competent technical and operating authorities."
+          },
+          {
+            "id": "c",
+            "label": "Any crew member who prefers a different guard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H01_check4",
+        "prompt": "A critical control is listed but no one owns its verification. What is missing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A named responsible role and an observable acceptance check."
+          },
+          {
+            "id": "b",
+            "label": "A more attractive form layout."
+          },
+          {
+            "id": "c",
+            "label": "Another signature from someone not at the site."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H01_final_4_1",
+        "prompt": "What should a verification record describe?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the word “safe.”"
+          },
+          {
+            "id": "b",
+            "label": "A predicted result entered before the check."
+          },
+          {
+            "id": "c",
+            "label": "The control actually checked, result, responsible person, time and relevant conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H01_final_4_2",
+        "prompt": "What should happen after a failed critical-control check?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed if the overall risk score is green."
+          },
+          {
+            "id": "b",
+            "label": "Hold affected work, correct the gap and verify before authorization to proceed."
+          },
+          {
+            "id": "c",
+            "label": "Average it with successful checks."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H01_final_4_3",
+        "prompt": "Why might an old photograph be insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It may show a different time, configuration or incomplete view of the safeguard."
+          },
+          {
+            "id": "b",
+            "label": "Photographs can never be evidence."
+          },
+          {
+            "id": "c",
+            "label": "A photograph automatically proves every control’s function."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H01_check5",
+        "prompt": "Two crews share an access route and their plans conflict. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let the larger crew take priority informally."
+          },
+          {
+            "id": "b",
+            "label": "Keep separate signed JSAs and assume that is enough."
+          },
+          {
+            "id": "c",
+            "label": "Coordinate a defined arrangement and brief both crews before affected work."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H01_final_5_1",
+        "prompt": "What best checks briefing understanding?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assuming experience makes explanation unnecessary."
+          },
+          {
+            "id": "b",
+            "label": "Workers explain their assigned actions and stop conditions in an understandable language."
+          },
+          {
+            "id": "c",
+            "label": "Counting signatures alone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H01_final_5_2",
+        "prompt": "What should a newly arriving worker receive?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A task-specific briefing and verification of applicable prerequisites before joining exposure."
+          },
+          {
+            "id": "b",
+            "label": "Only a copy of the attendance sheet."
+          },
+          {
+            "id": "c",
+            "label": "Permission to learn by following others inside the boundary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H01_final_5_3",
+        "prompt": "Which interface belongs in coordination?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only activities on the same payroll."
+          },
+          {
+            "id": "b",
+            "label": "Only issues discovered after both jobs finish."
+          },
+          {
+            "id": "c",
+            "label": "A nearby crew’s restart that can affect the shared equipment or area."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H01_check6",
+        "prompt": "The method changes mid-job and creates a new exposure. What happens next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue because the original job title is unchanged."
+          },
+          {
+            "id": "b",
+            "label": "Pause affected work, reassess, verify revised controls and rebrief before authorized restart."
+          },
+          {
+            "id": "c",
+            "label": "Add the new method after the shift."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H01_final_6_1",
+        "prompt": "What does a job without injury prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only that no injury was observed or reported in that outcome."
+          },
+          {
+            "id": "b",
+            "label": "That every listed safeguard existed."
+          },
+          {
+            "id": "c",
+            "label": "That the analysis is suitable for all future tasks."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H01_final_6_2",
+        "prompt": "What belongs in handback?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the time the crew leaves."
+          },
+          {
+            "id": "b",
+            "label": "Automatic permission for anyone to restart equipment."
+          },
+          {
+            "id": "c",
+            "label": "Remaining defects, temporary arrangements, equipment state and responsible acceptance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H01_final_6_3",
+        "prompt": "When should a standard JSA be reused?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only after deleting old failure records."
+          },
+          {
+            "id": "b",
+            "label": "After confirming it fits the actual task and updating changed conditions and controls."
+          },
+          {
+            "id": "c",
+            "label": "Whenever its title is similar."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H01_final_scenario1",
+        "prompt": "What is the central failure in the second-crew scenario?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original analysis no longer represents shared exposure and access conditions."
+          },
+          {
+            "id": "b",
+            "label": "The first crew used too many task steps."
+          },
+          {
+            "id": "c",
+            "label": "Only the second employer needs to know about the conflict."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H01_final_scenario2",
+        "prompt": "What permits the affected movement to be reconsidered?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The existing signatures without a field check."
+          },
+          {
+            "id": "b",
+            "label": "A low calculated risk score despite the open crossing."
+          },
+          {
+            "id": "c",
+            "label": "Verified correction of the route control through the responsible site process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H01_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H01_lesson1",
+          "questionIds": [
+            "H01_check1"
+          ]
+        },
+        {
+          "lessonId": "H01_lesson2",
+          "questionIds": [
+            "H01_check2"
+          ]
+        },
+        {
+          "lessonId": "H01_lesson3",
+          "questionIds": [
+            "H01_check3"
+          ]
+        },
+        {
+          "lessonId": "H01_lesson4",
+          "questionIds": [
+            "H01_check4"
+          ]
+        },
+        {
+          "lessonId": "H01_lesson5",
+          "questionIds": [
+            "H01_check5"
+          ]
+        },
+        {
+          "lessonId": "H01_lesson6",
+          "questionIds": [
+            "H01_check6"
+          ]
+        },
+        {
+          "lessonId": "H01_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H01_assessment",
+          "questionIds": [
+            "H01_final_1_1",
+            "H01_final_1_2",
+            "H01_final_1_3",
+            "H01_final_2_1",
+            "H01_final_2_2",
+            "H01_final_2_3",
+            "H01_final_3_1",
+            "H01_final_3_2",
+            "H01_final_3_3",
+            "H01_final_4_1",
+            "H01_final_4_2",
+            "H01_final_4_3",
+            "H01_final_5_1",
+            "H01_final_5_2",
+            "H01_final_5_3",
+            "H01_final_6_1",
+            "H01_final_6_2",
+            "H01_final_6_3",
+            "H01_final_scenario1",
+            "H01_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H01_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H01_check1": "A broad task label cannot reveal where exposure occurs or what controls are needed. The analysis must represent the actual work and location before it can support a safe plan.",
+        "H01_final_1_1": "Hazards can arise before the main activity or during restoration and cleanup. An analysis that omits these stages can leave unplanned exposure despite describing the central task accurately.",
+        "H01_final_1_2": "Step detail should support decisions. Overly broad steps conceal hazards, while excessive fragmentation makes the analysis hard to brief and use; group actions by meaningful changes in exposure.",
+        "H01_final_1_3": "Worker participation supplies task knowledge that a generic form may lack. It does not remove the need for competent technical review or operating authorization when the hazards require them.",
+        "H01_check2": "A useful description names the source, exposure pathway and people. It gives the team something specific to control and verify rather than a broad warning that each person interprets differently.",
+        "H01_final_2_1": "Energy paths and releases do not follow company boundaries. Helpers, other contractors, drivers and bystanders may need separation, coordination or information even when they are not performing the step.",
+        "H01_final_2_2": "Uncertainty about a serious hazard is a planning gap, not evidence that the hazard is small. Resolve it through suitable expertise and information before exposing people to find out.",
+        "H01_final_2_3": "Controls must account for credible departures such as a jam or lost signal. Planning these responses prevents workers from improvising inside the hazard when the normal sequence fails.",
+        "H01_check3": "Gloves do not stop a crushing movement. The team should change the exposure through an approved handling or separation arrangement and then assess any remaining protective equipment needs.",
+        "H01_final_3_1": "A suitable remote method can remove a person from the harm pathway. Its own limitations still need assessment, but it changes exposure more directly than a reminder alone.",
+        "H01_final_3_2": "PPE must match the specific exposure and user. It may be necessary alongside stronger controls, but it does not automatically justify leaving a preventable energy or release hazard uncontrolled.",
+        "H01_final_3_3": "The hierarchy does not authorize improvised modifications. Technical changes can create new failure modes and must pass the applicable design, change and operating review processes.",
+        "H01_check4": "Control ownership and evidence make the plan executable. An unassigned statement can be assumed complete by everyone while no one establishes or verifies it.",
+        "H01_final_4_1": "A useful record allows another reviewer to understand what was established and when. Predicting success or using vague labels obscures failures and can falsely imply current readiness.",
+        "H01_final_4_2": "A critical safeguard is not optional because other controls passed. The failure must be resolved through the responsible process; arithmetic and favorable labels do not replace the missing barrier.",
+        "H01_final_4_3": "Evidence has scope and currency. A photograph can document a condition but may not demonstrate current performance or the whole boundary; verification must match the control being claimed.",
+        "H01_check5": "Separate analyses do not resolve shared exposure. The interaction needs an agreed control, ownership and communication that both crews and the site authority understand.",
+        "H01_final_5_1": "A comprehension check tests whether the instruction can guide behavior. Attendance and experience may support training history but cannot show that the current job and changed controls are understood.",
+        "H01_final_5_2": "The new worker can change communication and coordination needs. They must understand the actual scope, controls and role limits before participating, rather than learning them while exposed.",
+        "H01_final_5_3": "Coordination follows credible interaction, not employer identity. Shared energy, access and operating states can affect a job even when another company owns the adjacent task.",
+        "H01_check6": "The analysis must match the work actually performed. A changed exposure invalidates assumptions even if the administrative job number remains the same.",
+        "H01_final_6_1": "A favorable outcome can occur despite missing controls. Effectiveness review examines implementation and performance, including near misses and interventions, within the sampled work scope.",
+        "H01_final_6_2": "Completion of a task does not automatically establish readiness for operation. Handback communicates the actual state and unresolved restrictions to the designated operating authority.",
+        "H01_final_6_3": "A standard analysis is a starting resource. Its scope and assumptions must be checked against the present job; reuse without field confirmation can carry obsolete controls into a different exposure.",
+        "H01_final_scenario1": "The new activity changes the first crew’s exposure and escape assumptions. Both affected plans need coordination; separate employer responsibility does not isolate the physical hazards.",
+        "H01_final_scenario2": "The physical control must match the plan before people rely on it. Neither administrative completion nor a risk label compensates for an exposed pedestrian route."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

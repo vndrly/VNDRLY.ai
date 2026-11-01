@@ -1,0 +1,785 @@
+{
+  "courseId": "G02",
+  "title": "Hazardous waste and spill response: role limits and safe handoffs",
+  "description": "Complete original foundation teaching on applicability, changed conditions, response roles, zones, decontamination interfaces, exposure reporting and cleanup handoff.",
+  "purpose": "Teach workers to recognize and escalate hazardous-waste/response training gaps without claiming specialist capability.",
+  "audience": [
+    "Waste-service personnel",
+    "Affected workers",
+    "Supervisors",
+    "Response program owners"
+  ],
+  "practicalBoundary": "This foundation is not a HAZWOPER initial, refresher, responder-level or supervised-field-experience program. Appropriate employer-specific instruction, time-based requirements, medical arrangements and qualified practical evaluations remain separate.",
+  "sources": [
+    {
+      "title": "OSHA HAZWOPER standard",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
+    },
+    {
+      "title": "OSHA HAZWOPER preparedness and role training",
+      "url": "https://www.osha.gov/emergency-preparedness/hazardous-waste-operations/preparedness"
+    },
+    {
+      "title": "OSHA HAZWOPER training FAQs",
+      "url": "https://www.osha.gov/emergency-preparedness/hazardous-waste-operations/faq"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G02_intro",
+        "title": "Start here: this course and your response limits",
+        "body": "This original VNDRLY foundation teaches how to recognize an unresolved hazardous-waste or spill-response assignment, communicate changed conditions, respect response roles and handle the transition to cleanup. It is for affected workers, waste-service personnel, supervisors and program owners. The examples are fictional and do not authorize entry, cleanup, leak control or rescue.\n\nRead six lessons and complete six checks. Study the two worked scenarios, then answer twenty final questions. Completion requires all twenty-six questions resolved correctly, including explicit acknowledgment of corrections where needed. The first-answer score remains separate from the remediated score. Passing this course does not represent a time-based HAZWOPER program, supervised field experience, a specialist response qualification or an employer’s site-specific authorization. Those remain separate evidence requirements.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G02_lesson1",
+        "title": "Separate a waste-service label from a response assignment",
+        "body": "A service catalog tells you what a company offers. It does not establish what every worker may do at an incident. “Waste disposal,” “environmental cleanup” and “spill response” can describe very different work. A driver collecting a properly characterized load, a worker investigating an uncontrolled waste site and a technician approaching an active chemical leak do not have interchangeable duties. Before starting, identify the operation, the hazards and your assigned function. Ask who has assessed the task and which training and authorization cover it.\n\nHAZWOPER is not a universal certificate for anything involving waste. Its U.S. scope includes specified hazardous-waste operations and hazardous-substance emergency response. The responsible employer must determine which provisions apply. Other rules can still apply when HAZWOPER does not. A worker should not decide coverage from a waste code, a cleanup invoice or a familiar product name alone. Likewise, an employer cannot avoid needed response competence by renaming an emergency “housekeeping.”\n\nCompare the written work request with the physical conditions before committing to the task. If the request describes collecting sealed containers but you find leaking drums, vapor and people moving away, the conditions no longer match the assumed pickup. Stop the dependent work from a safe place. Tell the designated contact what you observed and what changed. Do not start opening containers or taking samples to make the job fit the original order.\n\nYour course completion is a knowledge foundation for recognizing these boundaries. It does not represent a 24-hour, 40-hour, responder-level or refresher qualification. Those programs have their own content, duration, experience, exercise and employer-verification requirements. A company must retain the actual qualification evidence needed for the work. The useful question before a task is not whether a person has “some HAZWOPER,” but whether the person is trained, assessed and assigned for this operation and this role under current conditions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G02_lesson2",
+        "title": "Recognize the difference between incidental cleanup and an emergency",
+        "body": "A small release can be dangerous, and a visible volume is not enough to decide the response. Consider the substance, its concentration and behavior, where it has gone, the people exposed, the available controls and the capabilities of the people expected to act. An unfamiliar liquid in a poorly ventilated room can create a greater immediate threat than a larger known release in a controlled setting. You must use the employer’s established decision and escalation process rather than making an unsupported downgrade.\n\nIncidental releases can be controlled by appropriately trained people under suitable conditions and procedures. That statement is not permission for every worker to absorb an unknown chemical. If the substance is uncertain, a person feels unwell, conditions are escalating, the release is uncontrolled or the required response exceeds local capability, stop and initiate the designated emergency process. Do not wait for an injury to establish that the conditions are serious.\n\nAt a safe distance, describe facts: the location, visible leak or cloud, apparent affected area, injured people, container or equipment identification already known, and any changes you observed. Clearly distinguish a confirmed material identity from a guess. Do not enter the affected area to collect better details. Information from a work order or inventory can help responders, but it must not be presented as proof that the released substance matches the record.\n\nThe site’s response leaders determine protective zones and response actions using competent assessment and monitoring. Do not choose a universal “safe distance” or decide that a wind direction alone guarantees protection. Terrain, enclosure, release behavior and changing weather can alter exposure. Keep to the route and assembly instructions that are safe for the actual situation. If the normal route is affected, use the emergency plan’s alternative and tell the designated contact.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G02_lesson3",
+        "title": "Stay within the response level you actually hold",
+        "body": "An emergency organization assigns different functions because the tasks create different exposures. Someone who recognizes a hazardous-substance emergency and notifies the designated authority has a different role from a responder who takes defensive action, a technician who approaches to stop a leak, a specialist providing substance expertise or the incident commander directing the response. Training and demonstrated capability must match the function. Familiarity with a site is useful information; it is not a substitute for role qualification.\n\nBefore an incident, understand the actions expected of you. If your employer’s emergency plan directs evacuation and notification, follow that plan. Do not convert yourself into a responder because a customer requests help or because a spill kit is visible. If you are part of a response team, confirm the actual role, equipment, procedures, team organization and current training. A certificate with a broad title does not explain which duties the employer has assessed and authorized.\n\nDefensive work does not automatically mean zero exposure or unlimited authority. Protecting an unaffected area can still require suitable equipment, competent direction and a safe position. Approaching a leaking valve to tighten it is source-control work; calling it “just a quick turn” does not remove its hazards. Do not cross a protective boundary or change roles without the incident organization’s approval and the required capability.\n\nAn online quiz cannot simulate all of the decisions and physical demands of response. Suit use, respiratory protection, communications, decontamination, emergency actions and team performance need the appropriate training and practical evaluation. Workers also need any required medical fitness and employer arrangements. For your own record, identify the exact training completed and any supervised experience or evaluation still required. Never convert this foundation’s completion into a specialist response endorsement or erase a practical requirement because the learner achieved a corrected score of 100%.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G02_lesson4",
+        "title": "Understand zones, accountability and decontamination",
+        "body": "Response zones control who enters, what work occurs and how contamination is managed. Their location depends on the incident assessment and must be adjusted as conditions change. Treat a boundary as an operating control. A person without the required assignment, equipment and permission must not enter simply because the work area appears quiet. An apparently unaffected worker or tool may still carry contamination.\n\nCheck in and out through the designated accountability process. Team leaders must know who is inside, the duties being performed and whether communications and backup arrangements are working. If your assignment changes, make that change visible through the incident organization. Walking to another sector without telling anyone can turn a manageable interruption into a missing-person emergency. If a check-in or communication control fails, follow the stop/withdrawal instructions rather than continuing on assumptions.\n\nDecontamination is part of the work plan, not an afterthought at the parking lot. The method must suit the substance, protective equipment and potential exposure. Do not invent a rinse or mix cleaning agents to deal with unknown contamination. An improvised wash can spread contamination, react with a chemical or damage protective equipment. Qualified personnel must establish the method and manage contaminated water, clothing, tools and waste.\n\nKeep clean and potentially contaminated items separated through the designated process. Do not place gloves, sampling tools or work clothing on vehicle seats, lunch tables or shared desks. A worker who leaves the scene should not carry an unresolved exposure into a medical waiting area without notifying the emergency/medical team. Emergency care must not be delayed, but responders and clinicians need accurate information so they can protect everyone involved.\n\nFor nonresponders, understanding the system means respecting the boundaries and reporting a breach. It does not mean setting zones or operating decontamination yourself. If you see a contaminated person moving into a clean area, alert the incident organization from a safe position and follow its instructions; do not create an additional exposure by grabbing the person or their equipment.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G02_lesson5",
+        "title": "Communicate exposure and rescue information without creating another casualty",
+        "body": "An incident can expose a worker through breathing, skin or eye contact, ingestion from contamination or a physical injury associated with the response. Symptoms and visible contamination do not always tell you the full exposure. Report a suspected exposure promptly through the emergency and medical process. Give the actual observations, the task, known substances and relevant equipment information. Do not make a diagnosis or declare someone safe because they say they feel better.\n\nIf someone becomes unresponsive in a hazardous area, call for the designated rescue response and provide the last known location. Do not rush into an unknown atmosphere. An unprotected rescuer can become another casualty and complicate access for the trained team. The response plan must establish rescue capability suitable for the hazard and work; a generic emergency telephone number does not demonstrate that a team can carry out the required rescue.\n\nUse the agreed communication method and keep messages concise enough to act on. State who you are, where you are, what happened, who may be affected and what help is needed. If a fact is unknown, say so. Avoid speculative messages that might cause someone to use the wrong route, protective equipment or treatment information. Keep sensitive health details within the people who need them for care and incident management.\n\nEquipment alarms or monitoring results have defined limits. A normal reading from an unsuitable instrument cannot prove that an area is safe. Do not use your personal detector to clear an area unless you hold the specific gas-testing assignment and have suitable equipment, methods and authorization. Give responders the reading and its context when requested: the device, location, time and what it was capable of measuring. The incident organization must interpret it alongside the other information.\n\nAfter reporting, follow the instruction for your role. Workers directed to evacuate should account for themselves and communicate relevant observations from the assembly location. Returning to retrieve a phone, sample or tool is still a re-entry and needs authorization; personal property does not justify exposure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G02_lesson6",
+        "title": "Control the handoff from emergency response to cleanup",
+        "body": "Stopping an active release and cleaning up afterward are different phases. The end of visible leaking does not establish that the site is ready for ordinary work. Residues, contaminated soil, damaged equipment, pressure, vapors or unstable containers can remain. The responsible organization must define the handoff: what has been stabilized, what hazards remain, which controls continue and who has authority over the next operation.\n\nWorkers joining later must receive the information needed for their actual cleanup duties. Do not treat them as covered by the briefing given to the initial response team. A separate cleanup crew may need a different training program, site plan, medical arrangements, equipment and supervised experience. The employer must determine the applicable requirements. A previous responder’s presence or a contractor’s logo does not establish that every new worker is ready.\n\nInspect the work authorization against the current phase. A waste-haul driver may be authorized to collect characterized, packaged material from a designated clean transfer point without being assigned to enter the contaminated work zone. A cleanup technician may have authority to handle waste within a defined method while lacking authority to repair the damaged process. Keep these boundaries visible in the handoff and stop when the next request goes beyond them.\n\nPreserve trustworthy training and task evidence. Record the actual course and version, original and remediated results, site-specific briefing, practical assessment and any separately required qualification. A record of attendance is not a demonstration of every response skill. A completion certificate must not be renamed to imply hours, field experience or endorsements that were not provided.\n\nBefore re-entry or restart, obtain the designated authorization after the required checks are complete. If the cleanup reveals another unidentified container, unexpected atmosphere or a damaged isolation, the earlier release decision may no longer cover the task. Stop the affected work and return the new facts to the responsible people. The safe outcome is an explicit, verified handoff, not a clean-looking photograph with unresolved hazards outside the frame.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G02_cases",
+        "title": "Two worked scenarios and decisions",
+        "body": "Scenario 1 — “Just absorb it.” A yard worker assigned to receive sealed waste containers finds a damaged package with an unfamiliar liquid spreading toward a drain. A customer says it is only a small amount and points to the spill kit. Another worker reports eye irritation.\n\nThe correct first decision is to stop the receiving task and move clear without entering the liquid or vapor area. The package condition and symptoms do not match a controlled sealed-container receipt. The worker reports the location, the damaged package, the apparent drain direction and the affected person. The worker does not identify the chemical by smell or repeat the customer’s guess as a confirmed fact. The designated response organization evaluates the conditions and controls access. Only appropriately assigned people take response action under the applicable arrangements.\n\nWhy not put absorbent down immediately? The worker does not know the substance, whether the absorbent is suitable, whether approach is safe or whether the task exceeds the assigned response level. A small puddle can coexist with a significant inhalation hazard. Why not walk to the drain for a closer look? That would add an exposure without resolving the missing competence. A safe-position report of the possible migration gives responders useful information without pretending that the observation is a complete assessment.\n\nBefore receiving resumes, the responsible people must establish what was released, what controls and cleanup remain, whether the affected worker needs care and which parts of the operation are authorized. A customer’s statement that the incident is over cannot replace that handoff.\n\nScenario 2 — A second crew after stabilization. A qualified response team stops a release from process equipment. Later, a waste-haul driver and a separate cleanup crew arrive. The supervisor suggests that everyone use the response team’s clearance and begin removing material. A cleanup worker notices an unlabelled container outside the original assessed area.\n\nThe correct decision is to define the next phase and each role. The driver’s job may be receiving characterized, correctly packaged material at a designated transfer point; it does not necessarily include entry into the contaminated area. The cleanup crew needs the applicable qualification, site briefing, protective arrangements, decontamination method and task authorization. The unlabelled container is new information that the original response decision did not resolve.\n\nThe cleanup worker stops the affected task and reports the container from a safe position. The organization assesses and characterizes the new issue before expanding the work. It does not ask the driver to sample it merely because the driver has a waste-training record. It also preserves the distinction between emergency response qualification and the training required for the new cleanup duties.\n\nThe correct closeout records the actual stabilized condition, residual restrictions, transferred responsibilities and remaining work. A photograph of a dry floor or a copied certificate would not establish these facts. Restart and return to ordinary work require the designated verified authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G02_final",
+        "title": "Final assessment",
+        "body": "Answer each final decision using the taught role boundaries and handoff process. A wrong first answer remains recorded and must be explicitly remediated. No final answer grants a response role.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G02_finish",
+        "title": "Finish the knowledge course; preserve the open requirements",
+        "body": "After all checks, scenarios and final questions are accomplished, this foundation knowledge course is complete. Retain both scores. Before any assigned hazardous-waste, emergency-response or cleanup work, the employer must establish the applicable program, role qualification, equipment, medical arrangements, site information and practical capability. A qualified assessor must evaluate the actual skills required by the assigned function. Do not record this course as a 24-hour, 40-hour, response-level or annual refresher program.\n\nIf your next work request exceeds the scope established for you, state the specific missing qualification or authorization and notify the responsible supervisor. A software completion status is useful evidence of this teaching; it cannot resolve an unidentified substance, provide field experience or make an unsupported entry safe.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G02_check1",
+        "prompt": "A routine sealed-container pickup reveals leaking drums and an unidentified vapor. What should the pickup worker do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue because the order says routine disposal."
+          },
+          {
+            "id": "b",
+            "label": "Stop the dependent task from a safe location and report the changed conditions."
+          },
+          {
+            "id": "c",
+            "label": "Open a drum to identify the material."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G02_check2",
+        "prompt": "Which fact alone is enough to label an unfamiliar release incidental?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It looks like less than one bucket."
+          },
+          {
+            "id": "b",
+            "label": "It is near a spill kit."
+          },
+          {
+            "id": "c",
+            "label": "Neither fact establishes that available people and controls can safely manage it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G02_check3",
+        "prompt": "Your assigned role is evacuation and notification. A customer asks you to enter a restricted area and tighten a leaking valve. What is correct?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Remain outside your role boundary and request the designated qualified response."
+          },
+          {
+            "id": "b",
+            "label": "Enter if the task should take less than a minute."
+          },
+          {
+            "id": "c",
+            "label": "Put on available gloves and proceed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G02_check4",
+        "prompt": "A response worker wants to place potentially contaminated gloves in a clean crew vehicle. What is the appropriate action?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Allow it if the gloves look dry."
+          },
+          {
+            "id": "b",
+            "label": "Keep them in the controlled contamination/decontamination process and notify the responsible team."
+          },
+          {
+            "id": "c",
+            "label": "Rinse them with any available cleaning chemical."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G02_check5",
+        "prompt": "A person is down inside an unidentified vapor area. You have no assigned rescue qualification. What should you do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter while holding your breath."
+          },
+          {
+            "id": "b",
+            "label": "Use a normal personal-detector reading as clearance."
+          },
+          {
+            "id": "c",
+            "label": "Stay clear, activate the designated rescue response and report the location and known facts."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G02_check6",
+        "prompt": "After the leak is stopped, a separate crew arrives for cleanup. What must be established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That the new crew has the applicable training, briefing, equipment, controls and authorization for its actual cleanup duties."
+          },
+          {
+            "id": "b",
+            "label": "That any initial response certificate covers everyone."
+          },
+          {
+            "id": "c",
+            "label": "That visible dryness proves the area is safe."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G02_final1",
+        "prompt": "Does a waste-disposal service label establish HAZWOPER coverage?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; the actual operation, exposure and applicable provisions must be assessed."
+          },
+          {
+            "id": "b",
+            "label": "Yes, for every worker in the company."
+          },
+          {
+            "id": "c",
+            "label": "No safety requirements can apply to routine waste."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G02_final2",
+        "prompt": "What can change a routine pickup into an unresolved hazard?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A customer changing the invoice address."
+          },
+          {
+            "id": "b",
+            "label": "Finding leaking containers and an unknown vapor."
+          },
+          {
+            "id": "c",
+            "label": "A vehicle having clean tires."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G02_final3",
+        "prompt": "Which observation proves an unknown spill is incidental?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Small visible volume."
+          },
+          {
+            "id": "b",
+            "label": "A spill kit in the vicinity."
+          },
+          {
+            "id": "c",
+            "label": "Neither observation alone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G02_final4",
+        "prompt": "Who should determine the response arrangements?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The responsible organization using competent assessment and applicable requirements."
+          },
+          {
+            "id": "b",
+            "label": "Whichever worker first sees the leak."
+          },
+          {
+            "id": "c",
+            "label": "The customer based only on schedule."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G02_final5",
+        "prompt": "What is a notification-only worker expected to do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approach to stop the source."
+          },
+          {
+            "id": "b",
+            "label": "Recognize, report and follow the evacuation/notification plan."
+          },
+          {
+            "id": "c",
+            "label": "Choose a response suit for entry."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G02_final6",
+        "prompt": "Does a prior general certificate authorize every response duty?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if it contains the word hazardous."
+          },
+          {
+            "id": "b",
+            "label": "Yes, when the worker is experienced at the site."
+          },
+          {
+            "id": "c",
+            "label": "No; the training and assessed capability must match the function."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G02_final7",
+        "prompt": "What is source-control work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approaching a leak to stop its release."
+          },
+          {
+            "id": "b",
+            "label": "Reporting from an unaffected assembly point."
+          },
+          {
+            "id": "c",
+            "label": "Checking yourself into evacuation accountability."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G02_final8",
+        "prompt": "What does a protective-zone boundary mean for unassigned people?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It is advisory if the scene looks quiet."
+          },
+          {
+            "id": "b",
+            "label": "They must not enter without the required assignment and controls."
+          },
+          {
+            "id": "c",
+            "label": "They may enter to take photographs."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G02_final9",
+        "prompt": "Why must workers check in and out?",
+        "options": [
+          {
+            "id": "a",
+            "label": "To replace medical evaluation."
+          },
+          {
+            "id": "b",
+            "label": "To avoid wearing protective equipment."
+          },
+          {
+            "id": "c",
+            "label": "So the response organization can account for people and their assignments."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G02_final10",
+        "prompt": "Who establishes decontamination methods?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Appropriately qualified personnel using the substance, equipment and exposure assessment."
+          },
+          {
+            "id": "b",
+            "label": "Any worker with water and soap."
+          },
+          {
+            "id": "c",
+            "label": "The first person to leave the site."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G02_final11",
+        "prompt": "What should happen to potentially contaminated tools?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Place them in the lunch area until transport arrives."
+          },
+          {
+            "id": "b",
+            "label": "Keep them within the controlled segregation/decontamination process."
+          },
+          {
+            "id": "c",
+            "label": "Wipe them once and assume they are clean."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G02_final12",
+        "prompt": "What information should you give medical/response personnel?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A guessed diagnosis."
+          },
+          {
+            "id": "b",
+            "label": "A guarantee that a worker is safe if symptoms fade."
+          },
+          {
+            "id": "c",
+            "label": "Observed exposure facts, known substances, task and relevant equipment information."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G02_final13",
+        "prompt": "A worker collapses in an unknown atmosphere. What should a nonrescuer do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Activate the designated rescue response from a safe location."
+          },
+          {
+            "id": "b",
+            "label": "Enter quickly without breathing."
+          },
+          {
+            "id": "c",
+            "label": "Follow another untrained worker inside."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G02_final14",
+        "prompt": "Can a normal personal-detector reading clear every chemical hazard?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the battery is charged."
+          },
+          {
+            "id": "b",
+            "label": "No; instruments measure only their supported hazards under defined conditions."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if no odor is present."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G02_final15",
+        "prompt": "What should happen if the planned evacuation route is affected?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use it anyway to follow the original map."
+          },
+          {
+            "id": "b",
+            "label": "Return to collect personal property first."
+          },
+          {
+            "id": "c",
+            "label": "Use the safe alternative in the emergency arrangements and notify the designated contact."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G02_final16",
+        "prompt": "What does stopped visible leakage establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only part of the incident condition; residual hazards and handoff still need assessment."
+          },
+          {
+            "id": "b",
+            "label": "Unrestricted return to work."
+          },
+          {
+            "id": "c",
+            "label": "That all containers are now correctly characterized."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G02_final17",
+        "prompt": "What must a separate cleanup crew receive?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the initial team’s attendance sheet."
+          },
+          {
+            "id": "b",
+            "label": "The applicable qualification, site information, controls and authorization for its actual duties."
+          },
+          {
+            "id": "c",
+            "label": "A verbal statement that everything is routine."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G02_final18",
+        "prompt": "What does this VNDRLY foundation course provide?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A 40-hour qualification regardless of actual duration."
+          },
+          {
+            "id": "b",
+            "label": "Authority to command an emergency."
+          },
+          {
+            "id": "c",
+            "label": "Knowledge instruction and an assessment of the decisions it teaches."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G02_final19",
+        "prompt": "A cleanup reveals an unidentified container. What is correct?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stop the affected task and have the new hazard assessed before continuing."
+          },
+          {
+            "id": "b",
+            "label": "Open it to complete the manifest quickly."
+          },
+          {
+            "id": "c",
+            "label": "Assume the old briefing covers it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G02_final20",
+        "prompt": "Which training record is truthful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A renamed certificate claiming skills never assessed."
+          },
+          {
+            "id": "b",
+            "label": "The actual course/version, scores and separately verified qualifications or outstanding requirements."
+          },
+          {
+            "id": "c",
+            "label": "A perfect corrected score with the original result removed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G02_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G02_lesson1",
+          "questionIds": [
+            "G02_check1"
+          ]
+        },
+        {
+          "lessonId": "G02_lesson2",
+          "questionIds": [
+            "G02_check2"
+          ]
+        },
+        {
+          "lessonId": "G02_lesson3",
+          "questionIds": [
+            "G02_check3"
+          ]
+        },
+        {
+          "lessonId": "G02_lesson4",
+          "questionIds": [
+            "G02_check4"
+          ]
+        },
+        {
+          "lessonId": "G02_lesson5",
+          "questionIds": [
+            "G02_check5"
+          ]
+        },
+        {
+          "lessonId": "G02_lesson6",
+          "questionIds": [
+            "G02_check6"
+          ]
+        },
+        {
+          "lessonId": "G02_cases",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G02_final",
+          "questionIds": [
+            "G02_final1",
+            "G02_final2",
+            "G02_final3",
+            "G02_final4",
+            "G02_final5",
+            "G02_final6",
+            "G02_final7",
+            "G02_final8",
+            "G02_final9",
+            "G02_final10",
+            "G02_final11",
+            "G02_final12",
+            "G02_final13",
+            "G02_final14",
+            "G02_final15",
+            "G02_final16",
+            "G02_final17",
+            "G02_final18",
+            "G02_final19",
+            "G02_final20"
+          ]
+        },
+        {
+          "lessonId": "G02_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G02_check1": "Answer: B. The physical conditions have changed the task. A routine pickup assignment does not authorize investigation or emergency control of an unknown release.",
+        "G02_check2": "Answer: C. Release size and a nearby kit do not establish substance hazards, exposure conditions or worker capability. Use the established competent assessment and escalation process.",
+        "G02_check3": "Answer: A. Customer urgency and a short task duration do not change response-level competence or authorize source-control entry.",
+        "G02_check4": "Answer: B. Appearance does not establish that contamination is removed. Uncontrolled transfer into a clean vehicle can expose others, and improvised decontamination can create further hazards.",
+        "G02_check5": "Answer: C. Unknown atmospheres and casualty rescue require suitable trained capability. Awareness knowledge and a personal detector do not authorize entry.",
+        "G02_check6": "Answer: A. The cleanup phase and a new crew require their own applicable readiness and handoff. Stabilization is not unrestricted return-to-work authorization.",
+        "G02_final1": "Answer: A. A catalog category is not the regulatory applicability determination, and other safety requirements can remain relevant.",
+        "G02_final2": "Answer: B. The changed physical conditions invalidate assumptions underlying the routine pickup.",
+        "G02_final3": "Answer: C. Hazards, exposure conditions and capable controls must be considered through the established process.",
+        "G02_final4": "Answer: A. Response organization and competence must be established; urgency and first arrival do not confer authority.",
+        "G02_final5": "Answer: B. The employee must stay within the assigned function and request the trained response.",
+        "G02_final6": "Answer: C. Site familiarity and broad titles cannot replace role-specific competence and assignment.",
+        "G02_final7": "Answer: A. Source control can create close approach and exposure; it requires the appropriate response capability.",
+        "G02_final8": "Answer: B. Zones are operating controls, not visual suggestions or permission to investigate.",
+        "G02_final9": "Answer: C. Unrecorded movement can produce missing-person risks and interfere with response decisions.",
+        "G02_final10": "Answer: A. Improvised methods can spread contamination or cause reactions.",
+        "G02_final11": "Answer: B. Contamination control protects people beyond the immediate work zone.",
+        "G02_final12": "Answer: C. Accurate facts support competent care and response without pretending to make a clinical determination.",
+        "G02_final13": "Answer: A. Unprotected entry can create additional casualties.",
+        "G02_final14": "Answer: B. Instrument capability, sampling method and gas-testing authority must match the actual hazard.",
+        "G02_final15": "Answer: C. An emergency plan must be applied to actual conditions; a route passing through danger is not made safe by being printed.",
+        "G02_final16": "Answer: A. Containment, cleanup, re-entry and restart are different decisions.",
+        "G02_final17": "Answer: B. A changed phase or crew requires an appropriate readiness assessment and handoff.",
+        "G02_final18": "Answer: C. It does not provide the duration, practical experience or specialist endorsements of other training programs.",
+        "G02_final19": "Answer: A. New hazard information can change the previous authorization and must be resolved.",
+        "G02_final20": "Answer: B. Trustworthy records preserve what was actually taught, answered and assessed."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

@@ -1,0 +1,799 @@
+{
+  "courseId": "G05",
+  "title": "Food hygiene, allergens and catering controls",
+  "description": "Complete original guided course for catering, camp food and meal handoff: six substantive lessons, two worked scenarios and 26 questions with individual explanations. Uses FDA Food Code 2026 model examples while preserving local adoption and practical qualification boundaries.",
+  "purpose": "Prevent foodborne illness and allergen exposure through understood hygiene, actual measured process control and reliable receiving-to-service handoff.",
+  "audience": [
+    "Food handlers",
+    "Catering supervisors",
+    "Camp managers",
+    "Receiving and storage staff",
+    "Meal transport personnel",
+    "Food-safety program owners"
+  ],
+  "practicalBoundary": "Knowledge completion does not supply a food-handler/manager credential, health permit, clinical clearance, approved process, allergen-free guarantee or observed practical competence. Local adoption, product/process SOPs and employer-specific assessment remain separate.",
+  "sources": [
+    {
+      "title": "FDA — Food Code 2026, current model and adoption scope",
+      "url": "https://www.fda.gov/food/fda-food-code/food-code-2026"
+    },
+    {
+      "title": "FDA — 2026 Food Code full model, Chapters 2–4; cooling/holding §§3-501.14–.16",
+      "url": "https://www.fda.gov/media/194741/download?attachment="
+    },
+    {
+      "title": "CDC — Managing sick food workers",
+      "url": "https://www.cdc.gov/restaurant-food-safety/php/practices/sick-workers.html"
+    },
+    {
+      "title": "FDA — Sesame and the nine major food allergens",
+      "url": "https://www.fda.gov/food/food-allergies/faster-act-sesame-ninth-major-food-allergen"
+    },
+    {
+      "title": "FoodSafety.gov — consumer minimum-temperature guidance; links to USDA resources",
+      "url": "https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures"
+    },
+    {
+      "title": "USDA FSIS — food thermometer placement guidance",
+      "url": "https://ask.fsis.usda.gov/article/How-to-use-a-food-thermometer"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G05_intro",
+        "title": "Start here — safe meals across the whole camp supply chain",
+        "body": "# G05 — Food hygiene, allergens and catering controls\n\nAt a remote camp, one worker receives ingredients, another cooks, a driver carries meals to a crew and a night-shift attendant opens the containers. Each can do their own job quickly while the combined process loses temperature control, ingredient identity or protection from contamination. Safe catering therefore follows food from acceptance to consumption, not only through the kitchen door.\n\nThis original course teaches the decisions needed by food handlers, caterers, receiving staff, delivery personnel and supervisors. Read six taught lessons with a check after each, study two fully worked fictional cases, then answer twenty final questions. Completion requires all 26 answered correctly or acknowledged remediation; original and remediated scores remain separate. No speed requirement substitutes for understanding.\n\nFDA's latest model Food Code is the 2026 edition. It is offered for jurisdictional adoption; publication does not make every provision the law in every location. This course clearly identifies model examples. The operation must establish the locally applicable requirements and approved food-service procedures, including specific products, processes and any exceptions. A consumer cooking chart is useful public guidance but is not automatically the catering operation's approved process specification.\n\nCourse completion is knowledge evidence. It does not issue a food-handler card, certified-manager credential, health permit, clinical clearance, allergen-free guarantee or authorization for specialized processing. Employer/site instruction, suitable practical assessment and applicable local qualifications remain separate. All examples below are fictional learning material and must not be represented as actual kitchen records.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G05_lesson1",
+        "title": "Lesson 1 — personal hygiene and illness reporting",
+        "body": "## People can transfer a hazard without seeing it\n\nFood can carry microorganisms or other hazards without an obvious change in appearance, smell or taste. A familiar cook can be a contamination source while trying to help the team. Workers should report relevant illness symptoms and conditions through the food operation's designated route, including symptoms such as vomiting or diarrhea, rather than deciding privately that gloves make continued preparation safe. The responsible person applies the applicable exclusion, restriction and return arrangements; a shift leader should not invent a medical clearance or pressure someone to hide symptoms.\n\nStaffing is a management issue. A remote camp needs a plan for an ill cook, missing cleaner or interrupted water supply. Replacing a sick employee's duties safely is better than praising attendance while exposing the crew's food. Information about illness should reach authorized decision-makers without being turned into general crew gossip. If several diners report illness, escalate through the established response and preserve relevant food, batch and service information as directed; do not diagnose an outbreak from a chat message.\n\n## Hands, gloves and clean tasks\n\nUse the designated handwashing facilities and the trained handwashing method at the appropriate points, including before food preparation and after contamination risks such as toilet use or handling raw products. A food-preparation sink is not automatically a handwashing station. Gloves are task tools, not an alternative to hand hygiene or permission to touch everything. Moving from raw poultry to a ready-to-eat salad with the same gloves transfers risk even when the hands look clean.\n\nKeep personal items, phones, chemicals and soiled clothing away from food-contact work. Manage wounds and coverings under the applicable worker-health procedure rather than improvising a loose bandage above a mixing bowl. Use the operation's approved ready-to-eat food handling method, including suitable utensils or other barriers as required. Do not infer that a clean-looking bare hand is acceptable for every food or process.\n\n## Worked example: the cook who offers to stay\n\nMira reports vomiting overnight just before breakfast preparation. The camp supervisor thanks her for reporting and activates the worker-health and coverage process. The supervisor does not ask her to prepare food alone while everyone else watches the buffet. Mira's report is not a declaration of a particular disease; it is information requiring an appropriate food-safety decision. The replacement's qualification, hygiene and preparation duties must also be checked instead of assigning the work to an uninstructed driver.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G05_lesson2",
+        "title": "Lesson 2 — prevent cross-contamination during preparation and cleaning",
+        "body": "## Follow the transfer route\n\nCross-contamination occurs when a hazard moves from its source to food, equipment or another surface. Raw animal foods, dirty packaging, hands, cloths and equipment can be parts of that route. Ready-to-eat food is particularly vulnerable because it may receive no later cooking step. Separate raw-product preparation from ready-to-eat tasks using the approved layout, equipment and work sequence. A colored board helps only if workers understand and use its assigned purpose; its color does not clean the knife lying on it.\n\nPlan receiving, storage, preparation, service and cleanup as connected activities. A clean tray can become contaminated if placed on a carton previously on a dirty vehicle floor. A worker can carry contamination from a bin to a refrigerator handle and then to food. Stop and reset the affected task when the clean boundary is compromised. Do not assume cooking later will correct contamination of a salad, a serving utensil or an allergen-sensitive meal.\n\n## Cleaning and sanitizing do different work\n\nCleaning removes food residues and soil. Sanitizing is a further controlled process for suitable cleaned surfaces and equipment. A wipe that makes a bench look tidy is not evidence that the complete approved process occurred. Follow the actual product and equipment instructions, including applicable concentration, contact conditions and compatibility. Use the appropriate test method for the sanitizer system. This course gives no universal disinfectant mixture or permission to combine chemicals.\n\nKeep cleaning chemicals identified and stored to prevent food contamination. A beverage bottle is not an acceptable way to disguise a decanted chemical. Use designated facilities and methods for food, utensil and hand cleaning; the activities are not interchangeable. Check that water and waste arrangements remain suitable in a temporary camp. If potable water or required washing/sanitizing capability is unavailable, escalate and restrict affected preparation rather than substituting an unassessed hose supply.\n\n## Worked example: the salad knife\n\nOwen trims raw chicken and then reaches for the same knife to portion tomatoes for immediate service. A colleague stops the transfer, segregates affected items and follows the approved correction. Merely changing gloves would leave the knife and board unresolved. The supervisor checks what food was already contacted and makes a supported disposition decision through the food-safety procedure. The team does not serve the affected salad on the assumption that a later visual inspection can detect contamination.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G05_lesson3",
+        "title": "Lesson 3 — identify allergens and prevent cross-contact",
+        "body": "## Ingredient identity must survive every handoff\n\nThe nine major allergens recognized under U.S. federal food-allergen law are milk, egg, fish, crustacean shellfish, tree nuts, peanuts, wheat, soybeans and sesame. This is not a list of every possible allergy. Treat a diner's stated allergy seriously even when it concerns another food. Workers must not decide whether the allergy is real, offer a personal medical opinion or promise a meal is safe without supported information.\n\nAn allergen can be an intended ingredient or unintentionally transferred through cross-contact. Labels, recipes, substitutions, shared equipment and service utensils all matter. Read the current ingredient information; the same brand or similar packaging does not establish an unchanged formulation. A supplier substitution can invalidate a menu's earlier allergen statement. Preserve the identity of decanted products with the information the operation needs, rather than leaving an anonymous white powder or sauce in a container.\n\n## Communicate accurately rather than guess\n\nWhen a customer reports an allergy, route the request to the designated responsible person and check the actual ingredients and preparation controls. If the kitchen cannot verify a suitable arrangement, say so honestly. Do not scrape an allergen topping off a finished plate and call the food allergen-free. Heat is not a reliable general method for making an allergen-containing meal safe. A gluten-free label likewise must not be treated as proof a product is free of milk, nuts or all allergens.\n\nSeparate the sensitive meal's preparation and service under the approved method, using appropriately cleaned equipment, suitable utensils and clear identification. A dedicated utensil becomes ineffective when it is put back in the common sauce pot. Keep the correct meal linked to the intended diner through packaging and delivery. A handwritten allergy note detached from the container can fail at the final service step.\n\n## Worked example: a substituted dressing\n\nThe kitchen replaces its usual dressing with a new product containing sesame. The server remembers that yesterday's salad had no sesame ingredient and prepares to reassure a diner. The correct action is to check the replacement's current label and recipe, stop the unsupported claim and obtain a suitable verified option or explain the limitation. The change also needs to reach the menu information and delivery handoff; correcting only the server's memory leaves the next shift exposed to the same mistake.\n\nIf a diner may be experiencing a serious allergic reaction, activate the established emergency response immediately. Staff should act only within their training and applicable authorization; this course neither diagnoses anaphylaxis nor qualifies administration of medication.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G05_lesson4",
+        "title": "Lesson 4 — control time and temperature with actual measurements",
+        "body": "## Different stages have different targets\n\nCooking, hot holding, cold holding, cooling and reheating are not the same process. A hot-holding temperature is not a raw-food cooking endpoint. A cooked food may become unsafe during slow cooling or uncontrolled transport. Identify whether the food needs time/temperature control for safety, then use the operation's applicable approved procedure for its actual product and process.\n\nFor a concrete model example, the 2026 FDA Food Code generally specifies hot holding of time/temperature-control-for-safety food at 135°F (57°C) or above and cold holding at 41°F (5°C) or below, with stated exceptions and other controlled processes. These are not blanket thresholds for every ingredient or exception. The site's competent food-safety owner must map the locally applicable rules and process. Merely writing time control on a container does not create an approved alternative to temperature control.\n\nThe model's ordinary cooked-food cooling route requires cooling from 135°F to 70°F within two hours and from 135°F to 41°F or below within six hours total. The second stage is not six additional hours. Other approved methods and food-specific provisions exist; do not extend this example to every process. Use the established cooling method and monitor early enough to intervene, rather than discovering a failure after the whole allowed period has passed.\n\n## Worked cooling calculation\n\nIn the fictional camp's approved ordinary cooling procedure, soup begins the monitored stage at 135°F at 14:00. It reaches 70°F by 15:30 and 41°F by 19:30. The first stage took ninety minutes and the total took five and a half hours, satisfying those example limits. If it were still 78°F at 16:00, the first-stage limit would not be met. Moving it to a refrigerator later would not erase that failure; hold it and follow the approved corrective/disposition process with the responsible person.\n\n## Cooking and reheating require their own instructions\n\nA recipe name is not enough to choose the endpoint. Product type, preparation method and the validated time/temperature combination matter. FoodSafety.gov's consumer chart is useful guidance, but food-service procedures can specify different combinations and conditions. Do not combine the temperature from one chart with the time from another. Verify the exact approved instruction, measure the food and document the actual result.\n\nAppearance, steam and smell cannot establish a safe temperature history. Reheating or chilling may not reliably correct every earlier abuse. If the history is unknown or a required limit is missed, segregate the affected food and obtain the authorized disposition instead of inventing a passing record.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G05_lesson5",
+        "title": "Lesson 5 — use instruments and records that support the decision",
+        "body": "## Measure the food, not your expectation\n\nA refrigerator display tells you about its sensor and environment; it does not automatically establish the temperature of every food portion. A hot vehicle or a briefly opened lid can affect products differently. Use the appropriate food-temperature measuring device and the trained method. Select a probe suited to the food's thickness and process, ensure the instrument is fit for use and follow the manufacturer and operation's accuracy-check or calibration arrangements.\n\nPlacement matters. A probe touching the pan, bone or a warmer outer surface may not represent the relevant food interior. For thin items, the method may require a suitable thin probe and correct insertion rather than a large dial sensor that cannot measure the intended region. Allow the instrument's specified response and check representative portions or locations under the approved procedure. An infrared surface reading is not a substitute for an internal reading when an internal endpoint is required.\n\n## Keep the measurement from becoming contamination\n\nClean and sanitize the probe as the appropriate procedure requires between uses. A thermometer moved from raw chicken into ready-to-eat food can transfer contamination. A cracked or damaged probe should not remain in food service simply because its display turns on. Report defects and use a suitable verified replacement. Do not adjust a result because a supervisor says the cook always gets it right.\n\n## Worked example: the equipment setting and the batch\n\nThe hot box is set above the camp's required holding threshold, but measured food in one container is below it. The receiving worker records the actual reading, segregates the affected batch and checks the applicable response with the responsible person. They do not substitute the controller setting for the product reading. The investigation may examine loading, equipment function, portion size or transport time, but a guessed cause cannot be entered as a completed corrective action.\n\n## Record at the point of decision\n\nA meaningful record connects food/batch identity, stage, actual time and reading, instrument or method where relevant, responsible person and any corrective action. Write what occurred; prefilled passing temperatures or copied readings from yesterday are false evidence. Distinguish an observation from a planned check. If an instrument is later found unreliable, assess which decisions depended on it and preserve the original records alongside the review. Silently replacing suspect readings with plausible values conceals the uncertainty rather than resolving it.\n\nKnowledge of a number is not practical thermometer competence. A suitable assessor should observe placement, hygiene, reading, recording and the worker's response to a failed result using a safe representative exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G05_lesson6",
+        "title": "Lesson 6 — receiving, storage and remote meal handoff",
+        "body": "## Accept the product and its information together\n\nReceiving checks should establish an approved source, correct product, intact suitable packaging, required condition and relevant temperature or history. Check ingredient and allergen information, dates and batch identifiers as applicable. A delivery arriving on time can still be unsuitable. Do not accept leaking raw product above unprotected ready-to-eat food or an unidentified substitute simply because the supplier says it is equivalent.\n\nSegregate rejected or uncertain items so they cannot quietly enter preparation. The responsible person determines disposition using the applicable process. Some products have specific receiving provisions; this course does not assign one receiving temperature to every food. Preserve enough source and batch information for traceability, recalls and questions about what was served. Unknown identity or history is a gap to resolve, not an instruction to write the expected answer on a form.\n\n## Store to protect food and control its usable life\n\nMaintain the relevant storage conditions, prevent raw-product leakage onto ready-to-eat food and keep chemicals apart from food. Use the applicable stock-rotation and date-marking system. Combining leftovers with a new batch must not erase the older food's relevant age or history. Do not invent a fresh preparation date when transferring food into a new container. Check equipment performance and alarms, including after power loss or a door left open.\n\n## Transport is part of food service\n\nFor camp deliveries, agree who controls temperature, packaging, cleanliness, allergen identity and receipt at each stage. Use suitable equipment and monitor under the approved method. A closed insulated box is not proof of adequate temperature throughout a delay. Keep food away from chemicals, dirty tools and unprotected cargo. The driver's role may include custody and a measured handoff without authorizing them to improvise cooking or make an unsupported food-safety release decision.\n\n## Worked example: the unattended night delivery\n\nA driver arrives after the night attendant leaves. Leaving hot meals beside the gate would break the agreed custody and control arrangement. The driver contacts the designated receiver or fallback and follows the controlled contingency. The record should show actual dispatch and receipt, relevant checks, meal identity and unresolved issues. A photograph of boxes outside a door proves location, not safe receipt or holding.\n\nAt service, protect food from diners and environmental contamination, use suitable utensils and monitor the operation. If a buffet utensil migrates between allergen-containing dishes, stop the affected service and resolve the cross-contact concern. A completed kitchen log does not guarantee the serving line stayed controlled after handoff.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G05_scenarios",
+        "title": "Two applied catering cases with worked solutions",
+        "body": "## Case 1: cooling for tomorrow's early shift\n\nThe camp plans cooked soup for the next morning. Its approved ordinary cooling procedure uses the example limits taught in Lesson 4. A batch begins at 135°F at 13:00. At 15:00 the center is still 76°F. The cook suggests putting it in a colder refrigerator and writing 70°F because the refrigerator setting is below 41°F. A supervisor adds that reheating tomorrow will solve any problem. The center reading was taken with a suitable probe using the proper method.\n\n### Worked solution: evaluate the stage that actually failed\n\nThe first-stage checkpoint is two hours after 13:00, which is 15:00. The actual food reading is 76°F, so the example requirement to reach 70°F within that stage is not met. The refrigerator setting cannot replace the product reading, and entering 70°F would falsify the record. Keep the actual result, identify the batch and stop its routine release into tomorrow's service plan.\n\nThe responsible person applies the approved corrective and disposition procedure. Staff do not invent a salvage method or assume every earlier failure is cured by later reheating. They can examine why cooling was inadequate, such as the batch depth, container arrangement, equipment loading or method used, but those are investigation questions until supported. If an approved competent process allows a particular correction, its actual requirements and evidence must be met; a general assurance is not equivalent.\n\n### Worked solution: prevent recurrence and protect the next meal\n\nProvide an alternative meal plan using verified food rather than pressuring the cook to create a passing number. Review whether the cooling method and monitoring checkpoints allow action early enough. A check only at the deadline leaves less opportunity to correct a developing problem within the required process. Test later batches under representative conditions with proper measurements. Buying a new pan is progress; observed compliant cooling using the revised method is stronger evidence of effectiveness.\n\nKeep worker-health, allergen identity and storage controls in the replacement plan. Solving the soup shortage by bringing an unidentified dish from a worker's room would create a different uncontrolled source and allergen problem. The lesson is to control the whole food-service decision, not merely obtain a favorable temperature entry.\n\n## Case 2: substituted dressing on a delayed delivery\n\nA remote crew orders salads, including one meal for a diner who reports a sesame allergy. The supplier substitutes a sesame-containing dressing. A kitchen worker sees the label but assumes removing visible seeds is enough. Meals are packed without a reliable meal-to-diner identifier. The cold box is delayed, and the receiving worker measures the salads at 48°F. The contract requires cold control consistent with the ordinary 41°F-or-below example; no authorized alternative time-control procedure is in use. Nobody can establish the complete temperature history.\n\n### Worked solution: deal with two independent gaps\n\nStop the unsupported allergy claim and prevent the affected meals from being served as suitable for that diner. Removing visible seeds does not remove an ingredient already in the dressing or cross-contact with other components. Check current ingredients and the actual preparation method with the responsible person. Provide a separately verified suitable option only if the kitchen can support it; otherwise state the limitation clearly. Do not use reassurance or the diner's hunger as an allergen-control method.\n\nThe 48°F product reading is above the contract's applicable cold-holding limit. Segregate the affected food and contact the responsible person for disposition under the approved procedure. Putting it back in a refrigerator does not establish its earlier history or automatically make it releasable. The closed box and a passing kitchen dispatch log do not prove continued control during the delay. Preserve dispatch, delay and receipt information without inventing missing readings.\n\n### Worked solution: rebuild the handoff\n\nFor future deliveries, make ingredient substitutions visible before preparation and carry meal/allergen identity through packing and receipt. Agree the clean transport arrangement, suitable cold-control equipment, actual monitoring and a contingency when delay or receiver absence occurs. The receiver must know what to hold and whom to contact when a result fails. Review whether the catering system can genuinely meet the requested allergy arrangement rather than promising a universal allergen-free service.\n\nLater effectiveness review should examine a real representative delivery and verify both relevant conditions: ingredient/meal identity remains intact and the agreed temperature-control method works through handoff. Passing one does not prove the other. A driver's food-hygiene quiz alone does not establish that the equipment, recipes and receiving arrangements are suitable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G05_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each final question individually. Apply the actual stage, food identity, measurement and responsibility given in the question. Your first choices remain recorded. Incorrect choices require reading and explicitly acknowledging the specific explanation. All six lesson checks and twenty final questions must be completed correctly or through acknowledged remediation; a corrected score does not overwrite the first-answer result.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G05_finish",
+        "title": "Finish — qualification and operating boundaries",
+        "body": "## What completing this course demonstrates\n\nCompletion requires all 26 answered correctly or acknowledged remediation, with first-answer and remediated scores kept separately. The result supports knowledge of hygiene, contamination, allergens, measured control and handoff decisions. It does not prove that a real kitchen complies with its permit, that every meal was safe or that the learner performed the practical tasks competently.\n\n## What remains employer- and jurisdiction-specific\n\nThe food operation must identify the adopted local requirements and applicable approved procedures for its products and processes. FDA Food Code 2026 is the latest model used here, not a declaration of adoption everywhere. Legal food-handler, manager, licensing and permitting requirements remain separate. Specialized processing, unusual foods, vulnerable populations or alternative control methods may require further competent review and approval. This course grants none of those permissions.\n\nWorkers need local instruction about illness reporting, exclusions/restrictions and return decisions; handwashing and food-contact arrangements; ingredient/allergen information; approved time/temperature combinations; instrument methods; monitoring records; corrective actions and recall/emergency routes. An unknown limit or uncertain product history must be escalated rather than guessed.\n\n## Separate practical assessment\n\nAn appropriate assessor should observe relevant safe skills: hand hygiene and clean-task transitions, preventing raw/ready-to-eat transfer, checking an actual label and substitution, using the assigned thermometer correctly, recording a genuine result and holding a failed or uncertain batch. Demonstration should use safe representative tasks; do not intentionally contaminate food or serve a hazardous meal as a test. Record which skills were not assessed and arrange further practice before expanding duties.\n\nFood-allergy emergencies and suspected foodborne illness use the established response and qualified clinical/public-health routes. Workers should preserve relevant facts and communicate promptly without diagnosing a diner or exposing unnecessary personal health information. A favorable company maturity score, a full camp or a tight dispatch schedule cannot authorize an unsupported food release.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G05_check1",
+        "prompt": "A cook reports vomiting overnight before a preparation shift. What should the supervisor do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Activate the worker-health and coverage procedure without pressuring the cook to conceal symptoms."
+          },
+          {
+            "id": "b",
+            "label": "Ask the cook to prepare food alone while others watch service."
+          },
+          {
+            "id": "c",
+            "label": "Treat gloves as clearance to ignore the report."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G05_check2",
+        "prompt": "A knife used on raw chicken is about to cut ready-to-eat tomatoes. What is the right decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Change gloves but keep the knife and board unchanged."
+          },
+          {
+            "id": "b",
+            "label": "Stop the transfer and follow the approved utensil, surface and affected-food correction."
+          },
+          {
+            "id": "c",
+            "label": "Serve the tomatoes because they look clean."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G05_check3",
+        "prompt": "A substituted dressing contains sesame. What should happen to an earlier no-sesame claim?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the claim because yesterday's product was different."
+          },
+          {
+            "id": "b",
+            "label": "Remove visible seeds and guarantee the meal is safe."
+          },
+          {
+            "id": "c",
+            "label": "Stop the unsupported claim and verify current ingredients and preparation controls."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G05_check4",
+        "prompt": "Under the ordinary cooling model example, food begins at 135°F at noon. By when must it reach 41°F or below?",
+        "options": [
+          {
+            "id": "a",
+            "label": "By 18:00 total, while also meeting the separate 70°F-within-two-hours stage."
+          },
+          {
+            "id": "b",
+            "label": "By 20:00 because six hours begin after the first two."
+          },
+          {
+            "id": "c",
+            "label": "Whenever the refrigerator reaches 41°F."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G05_check5",
+        "prompt": "A hot box setting passes but a properly measured food batch does not. Which evidence governs the food decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The controller setting alone."
+          },
+          {
+            "id": "b",
+            "label": "The actual food reading and applicable response procedure."
+          },
+          {
+            "id": "c",
+            "label": "The cook's reputation for previous good results."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G05_check6",
+        "prompt": "The remote receiver is absent and the driver plans to leave meals beside the gate. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leave the boxes because a delivery photograph proves safe receipt."
+          },
+          {
+            "id": "b",
+            "label": "Tell any passerby to decide whether to serve them."
+          },
+          {
+            "id": "c",
+            "label": "Use the designated receiver/fallback and controlled contingency rather than abandoning custody."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G05_final1",
+        "prompt": "Is FDA Food Code 2026 automatically the binding rule in every jurisdiction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; it is a model and actual local adoption and applicable requirements must be established."
+          },
+          {
+            "id": "b",
+            "label": "Yes; publication replaces every local food law."
+          },
+          {
+            "id": "c",
+            "label": "No food-service rule can apply until the learner finishes this quiz."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G05_final2",
+        "prompt": "Which behavior best supports an illness-reporting culture?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Threaten fewer shifts whenever someone reports symptoms."
+          },
+          {
+            "id": "b",
+            "label": "Thank workers for reporting and use a suitable health decision and staffing contingency."
+          },
+          {
+            "id": "c",
+            "label": "Encourage workers to hide symptoms during busy service."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G05_final3",
+        "prompt": "Why are gloves insufficient when moving from raw poultry to salad?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Gloves make every touched item sterile."
+          },
+          {
+            "id": "b",
+            "label": "A salad always receives a final cooking step."
+          },
+          {
+            "id": "c",
+            "label": "The gloves themselves can carry contamination into the ready-to-eat task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G05_final4",
+        "prompt": "A bench looks clean after wiping. What remains to verify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Completion of the applicable cleaning and sanitizing process and conditions."
+          },
+          {
+            "id": "b",
+            "label": "Nothing; appearance proves all microorganisms are controlled."
+          },
+          {
+            "id": "c",
+            "label": "Whether the worker used the strongest-smelling chemical."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G05_final5",
+        "prompt": "The potable-water arrangement fails. What should the kitchen do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use an unassessed hose supply to keep service moving."
+          },
+          {
+            "id": "b",
+            "label": "Escalate and restrict affected work until a suitable approved arrangement exists."
+          },
+          {
+            "id": "c",
+            "label": "Ignore the failure if food packaging is intact."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G05_final6",
+        "prompt": "Which major U.S. food allergen must not be omitted from a nine-allergen awareness list?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only visible seeds count as allergens."
+          },
+          {
+            "id": "b",
+            "label": "Allergen lists contain every possible human allergy."
+          },
+          {
+            "id": "c",
+            "label": "Sesame."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G05_final7",
+        "prompt": "A diner reports an allergy outside the nine major categories. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Take the request seriously and verify the operation's ability to provide a suitable arrangement."
+          },
+          {
+            "id": "b",
+            "label": "Dismiss it because only nine foods can cause allergy."
+          },
+          {
+            "id": "c",
+            "label": "Ask the server to diagnose whether it is real."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G05_final8",
+        "prompt": "Can a finished meal be called safe after an allergen topping is scraped off?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; visible removal removes all allergens."
+          },
+          {
+            "id": "b",
+            "label": "Not on that basis; ingredients and cross-contact remain unresolved."
+          },
+          {
+            "id": "c",
+            "label": "Yes; heating always destroys every food allergen."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G05_final9",
+        "prompt": "Under the ordinary holding model examples taught here, which pair is correct?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hot at least 41°F; cold at most 135°F."
+          },
+          {
+            "id": "b",
+            "label": "Every food at room temperature if a lid is closed."
+          },
+          {
+            "id": "c",
+            "label": "Hot at least 135°F; cold at most 41°F, subject to applicable exceptions and approved processes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G05_final10",
+        "prompt": "Does meeting a hot-holding threshold prove raw food was properly cooked?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; cooking and holding are different stages with their own requirements."
+          },
+          {
+            "id": "b",
+            "label": "Yes; the same endpoint governs every process."
+          },
+          {
+            "id": "c",
+            "label": "Yes; steam proves all cooking requirements were met."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G05_final11",
+        "prompt": "Why should a catering worker not mix a temperature from one chart with a time from another?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Longer-looking numbers are always safer regardless of process."
+          },
+          {
+            "id": "b",
+            "label": "A validated combination and its product/process conditions must remain together."
+          },
+          {
+            "id": "c",
+            "label": "Consumer charts override every approved food-service method."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G05_final12",
+        "prompt": "A soup reaches 70°F within two hours but misses 41°F within six hours total. Has the ordinary example cooling route passed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; the first stage alone completes cooling."
+          },
+          {
+            "id": "b",
+            "label": "Yes; the next refrigerator reading can be backdated."
+          },
+          {
+            "id": "c",
+            "label": "No; both stages must be met."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G05_final13",
+        "prompt": "What does an infrared surface reading not automatically establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An internal cooking endpoint that requires appropriate internal measurement."
+          },
+          {
+            "id": "b",
+            "label": "Whether a surface measurement was taken."
+          },
+          {
+            "id": "c",
+            "label": "The number displayed by that instrument."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G05_final14",
+        "prompt": "A probe touches the pan instead of the relevant food region. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record the pan temperature as the food's internal result."
+          },
+          {
+            "id": "b",
+            "label": "Correct placement using the trained method and obtain a representative reading."
+          },
+          {
+            "id": "c",
+            "label": "Choose whichever reading is highest."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G05_final15",
+        "prompt": "What should happen between probing raw and ready-to-eat food?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing if the display remains on."
+          },
+          {
+            "id": "b",
+            "label": "Wipe the probe on clothing and assume it is ready."
+          },
+          {
+            "id": "c",
+            "label": "Apply the required probe cleaning/sanitizing procedure to prevent transfer."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G05_final16",
+        "prompt": "A batch temperature was not measured. Which entry is truthful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The check is missing/pending and the affected decision needs resolution."
+          },
+          {
+            "id": "b",
+            "label": "A typical passing reading copied from yesterday."
+          },
+          {
+            "id": "c",
+            "label": "The expected value because the recipe usually works."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G05_final17",
+        "prompt": "A supplier replaces an ingredient with similar packaging. What should receiving and preparation staff verify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only whether the box color matches."
+          },
+          {
+            "id": "b",
+            "label": "Actual product identity, current ingredient/allergen information and relevant condition."
+          },
+          {
+            "id": "c",
+            "label": "Nothing if the delivery is on time."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G05_final18",
+        "prompt": "What happens to relevant food age/history when leftovers enter a fresh container or new batch?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It becomes newly prepared automatically."
+          },
+          {
+            "id": "b",
+            "label": "It disappears if the label is rewritten neatly."
+          },
+          {
+            "id": "c",
+            "label": "It must remain traceable; the container change does not reset history."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G05_final19",
+        "prompt": "In Case 1, the soup is 76°F at the two-hour checkpoint. What is the correct response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Retain the actual failed-stage reading, hold the batch and apply the authorized corrective/disposition process."
+          },
+          {
+            "id": "b",
+            "label": "Write 70°F because the refrigerator is colder."
+          },
+          {
+            "id": "c",
+            "label": "Assume reheating tomorrow cures any earlier abuse."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G05_final20",
+        "prompt": "In Case 2, what must later effectiveness review address?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only whether the driver passed the quiz."
+          },
+          {
+            "id": "b",
+            "label": "Both reliable ingredient/meal identity and the agreed temperature-control handoff."
+          },
+          {
+            "id": "c",
+            "label": "Only whether the containers looked closed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G05_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G05_lesson1",
+          "questionIds": [
+            "G05_check1"
+          ]
+        },
+        {
+          "lessonId": "G05_lesson2",
+          "questionIds": [
+            "G05_check2"
+          ]
+        },
+        {
+          "lessonId": "G05_lesson3",
+          "questionIds": [
+            "G05_check3"
+          ]
+        },
+        {
+          "lessonId": "G05_lesson4",
+          "questionIds": [
+            "G05_check4"
+          ]
+        },
+        {
+          "lessonId": "G05_lesson5",
+          "questionIds": [
+            "G05_check5"
+          ]
+        },
+        {
+          "lessonId": "G05_lesson6",
+          "questionIds": [
+            "G05_check6"
+          ]
+        },
+        {
+          "lessonId": "G05_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G05_assessment",
+          "questionIds": [
+            "G05_final1",
+            "G05_final2",
+            "G05_final3",
+            "G05_final4",
+            "G05_final5",
+            "G05_final6",
+            "G05_final7",
+            "G05_final8",
+            "G05_final9",
+            "G05_final10",
+            "G05_final11",
+            "G05_final12",
+            "G05_final13",
+            "G05_final14",
+            "G05_final15",
+            "G05_final16",
+            "G05_final17",
+            "G05_final18",
+            "G05_final19",
+            "G05_final20"
+          ]
+        },
+        {
+          "lessonId": "G05_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G05_check1": "Illness reporting supports a food-safety decision through the applicable process. Gloves do not remove every contamination route, and staffing pressure cannot supply a health clearance.",
+        "G05_check2": "The knife, board and any food already contacted are relevant transfer pathways. A glove change alone leaves contaminated equipment unresolved, and appearance does not establish safety.",
+        "G05_check3": "Current formulation and preparation matter. Removing visible pieces does not remove allergen ingredients or cross-contact, so earlier information cannot justify reassurance.",
+        "G05_check4": "The example allows six hours total from 135°F to 41°F or below, not two plus six. The earlier two-hour stage must also be satisfied; equipment air temperature is not a substitute.",
+        "G05_check5": "The setting does not establish the batch temperature. Record the actual reading and manage the affected food under the approved corrective/disposition process.",
+        "G05_check6": "Safe handoff includes custody, identity and relevant holding conditions. A photograph proves location, not controlled receipt or temperature; follow the planned contingency.",
+        "G05_final1": "The 2026 edition is the latest model reviewed here. A model publication and a jurisdiction's adopted requirements are different, so the operator must identify what actually governs.",
+        "G05_final2": "A usable reporting route helps management protect food and arrange coverage. Punishing reports encourages hidden illness and does not establish fitness for food duties.",
+        "G05_final3": "Gloves can transfer material just as other contaminated surfaces can. Follow the approved task transition, hygiene and utensil arrangements; do not assume a later kill step exists.",
+        "G05_final4": "Visible soil removal and sanitizing are different. Follow the actual approved product/process and checks instead of equating appearance or odor with a completed control.",
+        "G05_final5": "Water suitability affects relevant preparation and hygiene. Obtain the proper arrangement and limits; pressure to continue cannot establish that an unknown supply is safe.",
+        "G05_final6": "Sesame is one of the nine major U.S. allergens. The list is not exhaustive of individual allergies, and invisible ingredients or cross-contact can still matter.",
+        "G05_final7": "The major-allergen list is not every possible allergy. Staff should communicate accurately, check actual information and state limitations without diagnosing the diner.",
+        "G05_final8": "Scraping or general reheating does not reliably remove an allergen already present or transferred. Verify a genuinely suitable preparation or honestly explain that it cannot be provided.",
+        "G05_final9": "These are the model's general TCS holding examples, not universal rules for every product or exception. The actual operation must use its applicable approved requirements.",
+        "G05_final10": "Holding preserves appropriate conditions for prepared food; it is not the raw-food cooking process. Verify the product-specific approved cooking combination and actual measurement.",
+        "G05_final11": "Time and temperature work as a defined process combination. Consumer guidance and the operation's approved SOP may address different conditions; do not construct a guessed hybrid.",
+        "G05_final12": "The example requires the first-stage and total-time conditions. Preserve the actual result and use the authorized response; a later reading cannot be backdated to create compliance.",
+        "G05_final13": "Surface and internal measurements describe different conditions. Use a suitable probe and method when the actual endpoint requires an internal temperature.",
+        "G05_final14": "Placement affects what is measured. Pan contact can give an unrepresentative result; use the proper location, instrument response and representative checks required by the procedure.",
+        "G05_final15": "The instrument can transfer contamination. Follow the suitable hygiene procedure between uses; power status and clothing wipes do not establish food-contact readiness.",
+        "G05_final16": "A planned or assumed measurement is not an observation. Keep the gap visible and resolve the batch's readiness rather than fabricate a result.",
+        "G05_final17": "Similar packaging does not establish identical formulation or suitability. Receiving must preserve the information needed for preparation, allergen decisions and traceability.",
+        "G05_final18": "Repacking does not reverse elapsed history or applicable date requirements. Preserve relevant identity and prior history under the operation's approved marking and storage system.",
+        "G05_final19": "The model-example first-stage requirement is not met. A false reading conceals failure, and later reheating is not a universal correction for all temperature abuse.",
+        "G05_final20": "Allergen identity and temperature control are independent protections. A course result or closed box cannot establish either complete supply-chain control without relevant evidence."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

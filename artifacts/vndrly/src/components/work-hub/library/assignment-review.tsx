@@ -47,9 +47,13 @@ export default function LibraryAssignmentReview({
   kind,
   onSaved,
   initialItemId = "",
+  initialUserIds = [],
+  initialGroupIds = [],
 }: {
   kind: "form" | "policy" | "training" | "poll" | "bundle";
   initialItemId?: string;
+  initialUserIds?: number[];
+  initialGroupIds?: string[];
   onSaved: () => Promise<unknown>;
 }) {
   const { t } = useTranslation(),
@@ -61,8 +65,8 @@ export default function LibraryAssignmentReview({
     optionsSchema.parse(v),
   );
   const [itemId, setItemId] = useState(initialItemId),
-    [userIds, setUsers] = useState<number[]>([]),
-    [groupIds, setGroups] = useState<string[]>([]),
+    [userIds, setUsers] = useState<number[]>(initialUserIds),
+    [groupIds, setGroups] = useState<string[]>(initialGroupIds),
     [search, setSearch] = useState(""),
     [notice, setNotice] = useState(""),
     [review, setReview] = useState<z.infer<typeof previewSchema> | null>(null),
@@ -79,8 +83,8 @@ export default function LibraryAssignmentReview({
 
   useEffect(() => {
     setItemId(initialItemId);
-    setUsers([]);
-    setGroups([]);
+    setUsers(initialUserIds);
+    setGroups(initialGroupIds);
     setReview(null);
     setNotice("");
   }, [kind, context, initialItemId]);

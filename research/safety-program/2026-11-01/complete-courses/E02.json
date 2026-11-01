@@ -1,0 +1,781 @@
+{
+  "familyId": "E02",
+  "title": "Pre-use inspections, defects and out-of-service control",
+  "description": "Complete guided E02 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Prevent known defects from returning to work uncorrected.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "A competent assessor must observe pre-use inspection of the actual equipment class, accurate defect reporting, assigned quarantine and correct escalation. Repair, hazardous isolation, technical testing and release require separate task-specific competence and authorization. This written course does not certify equipment condition or authorize specialist repair.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Pre-use inspections, defects and out-of-service control",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y17-95-64-875_0.pdf"
+    },
+    {
+      "title": "Inventory source 2: Pre-use inspections, defects and out-of-service control",
+      "url": "https://kmterm.kindermorgan.com/ContAlliance/SSPOMS.aspx"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "E02_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# E02: Pre-use inspections, defects and out-of-service control\n\nThis original VNDRLY course teaches decisions for common where equipment is used. Its purpose is to prevent known defects from returning to work uncorrected. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E02_lesson1",
+        "title": "Lesson 1: Know what a pre-use inspection can establish",
+        "body": "A pre-use inspection checks whether the actual item is suitable for the intended task now. It can detect transport damage, missing protection, leaks, wear or a changed configuration since maintenance. It does not replace scheduled maintenance, statutory examination or specialist testing. The user needs the correct equipment identity and the manufacturer or approved task-specific criteria.\n\nInspect only from a safe state and position. Do not energize damaged equipment or reach past a guard to inspect it. Some checks need trained operators or technicians; a general user must recognize that limit and request the responsible person.\n\nWorked example: a machine has a current maintenance sticker but a guard was damaged during delivery. The current defect controls the use decision; the sticker does not erase it.\n\n### Applying the mechanism\n\nAn inspection is bounded by the task and equipment state. A visual check can reveal a missing guard but may not establish an internal protective function that requires a test. The checklist should make those distinctions clear so the user does not claim more than they actually checked. A worker who cannot safely access a required check reports the limitation and obtains the proper help. They do not crawl beneath an unsupported assembly or reach into a mechanism because the form requires an answer. Before inspecting, establish who controls movement and energy and use the approved safe arrangement. The inspection should reduce uncertainty without creating a new exposure for the checker.\n\n### Decision principles\n\nThe check must support a real use decision. It is not a substitute for other required assurance and cannot be reduced to attendance or form completion.\n\nCriteria must match the equipment and service. A generic list can miss model-specific protection or deterioration.\n\nInspection must not create the hazard it is meant to detect. Unsafe access or operation is not justified by the desire to complete a check.\n\nThe user must also recognize when inspection conditions themselves are unsuitable. Poor lighting, inaccessible components or uncontrolled movement can make a required check incomplete. Report that limitation and obtain a safe arrangement; do not record acceptance for a feature that was never actually examined.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E02_lesson2",
+        "title": "Lesson 2: Check systematically and identify the exact defect",
+        "body": "Use a systematic route that covers the relevant structure, guards, controls, connections, fluid systems, safety devices and identification for the actual item. Not every checklist applies to every machine. Record what was observed, including limitations or inaccessible checks, rather than marking an unperformed item as passed.\n\nDescribe defects so the owner can act: asset identity, location of the fault, observed condition, when found and any abnormal behavior. A photograph can help but may not capture function or hidden damage. Avoid unsupported diagnoses such as “safe crack” or “only cosmetic” unless a competent criterion establishes that conclusion.\n\nWorked example: “hose bad” becomes “asset P-12, discharge hose outer cover cut near coupling, reinforcement condition unknown, found before use.” The report identifies the concern without pretending to certify its severity.\n\n### Applying the mechanism\n\nDescribe the physical observation before offering a cause. “Fluid beneath the identified unit after shutdown” is a fact; “only a harmless old leak” is a conclusion requiring evidence. A good report tells the technician what happened, where and under what operating conditions. Include a photograph where safe and useful, but avoid placing a body near a hazard merely to get a better image. If equipment identity is unclear, preserve the location and identifying details and hold use until the owner resolves it. Specific reporting prevents repairs being applied to the wrong item and helps distinguish a new defect from an already controlled condition.\n\n### Decision principles\n\nA missing check is not evidence of acceptance. Its status must remain visible until the requirement is completed or a valid scoped disposition is made.\n\nPhotographs can document appearance but may miss hidden condition and function. The evidence must match the conclusion being claimed.\n\nSome visible damage affects strength or protection. Classification must use defensible technical criteria rather than schedule pressure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E02_lesson3",
+        "title": "Lesson 3: Stop use and establish physical and administrative control",
+        "body": "When a defect makes equipment unsafe or required readiness uncertain, stop reliance and follow the out-of-service process. Identify the item, communicate the restriction, and physically control access or operation as appropriate. The administrative status should prevent dispatch as ready. A tag alone can be ineffective if it is easily removed or ignored.\n\nDo not create a new hazard while isolating the item. Electrical or pressure safe states require their own authorized methods. Move or store equipment only through a suitable controlled arrangement.\n\nWorked example: a defective tool is returned to an open shelf with a note. Another worker could take it. The owner moves it to the designated controlled location and updates its status so physical and dispatch controls agree.\n\n### Applying the mechanism\n\nQuarantine must be effective across shifts and departments. A user may report a defect to a supervisor while dispatch, stores or another crew still sees the asset as available. The process connects those interfaces so the restriction follows the item. Physical control depends on the equipment and hazard: a portable tool may be segregated, while a large installed unit may need an authorized isolation and access arrangement. A tag communicates the reason and owner but should not be the only defense where someone can readily use the item. The owner confirms that the chosen control actually prevents inappropriate reliance, including informal borrowing and customer dispatch.\n\n### Decision principles\n\nTraceability prevents the wrong item being repaired or released and makes the restriction actionable.\n\nOut-of-service control does not waive electrical, pressure or other specialist safeguards. The item must be controlled without creating another exposure.\n\nConflicting information means readiness is uncertain. The responsible owner must align the actual accepted state and both control systems.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E02_lesson4",
+        "title": "Lesson 4: Repair through competent methods and control changes",
+        "body": "Repair requires suitable competence, parts, instructions and a safe work arrangement. A user may perform only the tasks authorized within their training; a convenient improvised repair can defeat the equipment’s design or protection. Substituted parts and modifications need the applicable technical review.\n\nThe repair record identifies the defect addressed, work performed, parts and remaining limitations. If the observed condition suggests a broader failure, the technician escalates rather than closing only the visible symptom. A purchase receipt does not prove correct installation or restored function.\n\nWorked example: a damaged guard is tied in place with wire. The item remains out of service unless the competent technical process establishes an approved repair; appearance of coverage is not proof of protective performance.\n\n### Applying the mechanism\n\nRepair planning should distinguish the user’s authorized adjustments from technical repair. Tightening a specified accessible fastener may be an assigned task on one item, while altering a guard, pressure connection or electrical circuit requires another competence. The boundary comes from the equipment program, not the worker’s confidence. The repairer also needs accurate service and contamination information. A component exposed to chemical or abnormal loading may require different disposition from ordinary wear. Substituting a part because it physically fits can change the safety function. The competent process establishes compatibility, approved installation and any tests before the repaired configuration can be accepted.\n\n### Decision principles\n\nRepair skill and authority depend on the equipment and hazard. Finding a defect does not itself qualify a person to fix it.\n\nFit alone does not establish strength, electrical rating or compatibility. The accepted repair must match technical requirements.\n\nThe release owner needs evidence of what was done, not merely ordered. Remaining limits must stay visible.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E02_lesson5",
+        "title": "Lesson 5: Verify the safety function before return",
+        "body": "A repaired item needs the required inspection and functional tests before release. The checks must address the defect and any affected safety functions. Testing itself follows a safe approved method, with separation and qualified personnel where needed. Do not use an unsuspecting operator as the first live test.\n\nThe designated release owner reviews the evidence and changes the physical and administrative status only after acceptance. An item is not ready merely because it has left the workshop. Where disposal is required, prevent rejected parts from returning to use.\n\nWorked example: a brake repair is complete but the required performance verification is pending. The vehicle remains restricted; the driver does not discover brake adequacy during dispatch.\n\n### Applying the mechanism\n\nA post-repair test should be designed to reveal whether the relevant function was restored without exposing an unprepared user. The method identifies setup, safe positions, loads or conditions, instruments, acceptance criteria and stop actions as appropriate. A power-on test may show that an engine starts while leaving a brake, overload device or guard function unverified. The release owner checks the evidence against the original defect and required work rather than accepting the word “tested” without scope. If the test fails or is incomplete, the restriction remains. Correctly identifying a pending verification is a useful control outcome, not a reason to alter the record to make the repair appear finished.\n\n### Decision principles\n\nA limited response can leave the original protective function unverified. Tests must match the acceptance criteria and repair consequences.\n\nRelease is a controlled decision based on actual work and verification. Removing a label cannot create technical readiness.\n\nDisposition must prevent accidental reuse. Rejected components can otherwise return through informal borrowing or parts recovery.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E02_lesson6",
+        "title": "Lesson 6: Review recurring findings and practical performance",
+        "body": "Inspection quality is measured by whether it finds and controls real defects, not by perfect pass rates. Repeated failures may reveal unsuitable equipment, transport damage, poor maintenance, unclear criteria or ineffective quarantine. Review patterns and verify that corrective actions reduce the problem.\n\nPractical evaluation uses the actual equipment or a safe representative item with known conditions. The learner must inspect systematically, distinguish their limits, report accurately and establish the assigned control. Do not create live hazardous defects as a training challenge.\n\nWorked example: several tools return to service with the same missing guard fastener. The owner reviews repair verification and release controls, rather than blaming inspectors for recording too many failures.\n\n### Applying the mechanism\n\nPractical evaluation can use safe representative defects and decision exercises. The learner should identify the item, follow its criteria, inspect in a safe order, record an actual observation and demonstrate the assigned hold and notification. The assessor also checks whether the learner recognizes a limitation and requests competent help. A worker who refuses to invent a rating or perform an unsafe live test demonstrates good judgment. Review later field findings against inspection records to see whether the learning transfers. Repeated missed defects may indicate unclear criteria, poor access, time pressure or weak supervision, while repeated recurrence after repair may indicate a technical cause that inspection alone cannot solve.\n\n### Decision principles\n\nPractical performance demonstrates whether knowledge can guide the actual check. Experience and written learning are supporting evidence, not substitutes.\n\nRecurring defects can have system causes. A broad evidence-based review is more useful than assuming every event is an isolated user error.\n\nAssessment must not create the dangerous event it teaches people to prevent. Safe representative conditions can test recognition and decisions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E02_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: The borrowed replacement\n\nA tagged-out grinder is replaced with a borrowed unit. Its guard is present, but the user does not know its rating, disc compatibility or condition.\n\n**Worked decision and reasoning.** The user performs the applicable pre-use and suitability checks for the actual replacement and obtains any missing information from the responsible owner. The original restriction remains on the original item. Borrowing solves availability only if the replacement is verified suitable; it does not bypass inspection or operator training.\n\n### Scenario 2: The workshop return\n\nA repaired unit returns with an invoice but no required safety-function result. Dispatch removes the tag to meet a delivery slot.\n\n**Worked decision and reasoning.** The release is held and the restriction restored. The owner obtains the missing competent verification and acceptance, then aligns workshop, physical and dispatch records. The review examines why schedule pressure could bypass the release gate. The invoice remains useful commercial evidence but is not relabeled as a test record.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E02_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E02_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nA competent assessor must observe pre-use inspection of the actual equipment class, accurate defect reporting, assigned quarantine and correct escalation. Repair, hazardous isolation, technical testing and release require separate task-specific competence and authorization. This written course does not certify equipment condition or authorize specialist repair.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "E02_check1",
+        "prompt": "A current service sticker is present but a guard is damaged. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Do not use the item; report and control the defect."
+          },
+          {
+            "id": "b",
+            "label": "Use it because maintenance is current."
+          },
+          {
+            "id": "c",
+            "label": "Remove the guard to inspect more closely."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E02_final_1_1",
+        "prompt": "What is the purpose of a pre-use check?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Replace every specialist examination."
+          },
+          {
+            "id": "b",
+            "label": "Complete paperwork regardless of condition."
+          },
+          {
+            "id": "c",
+            "label": "Establish the actual item’s condition against applicable criteria before reliance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E02_final_1_2",
+        "prompt": "Where do acceptance criteria come from?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only last year’s generic checklist."
+          },
+          {
+            "id": "b",
+            "label": "Manufacturer and applicable technical or legal requirements for the task."
+          },
+          {
+            "id": "c",
+            "label": "The user’s preference alone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E02_final_1_3",
+        "prompt": "How should inspection exposure be controlled?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the approved safe state and method, with qualified help where needed."
+          },
+          {
+            "id": "b",
+            "label": "Reach inside moving equipment for a better view."
+          },
+          {
+            "id": "c",
+            "label": "Test damaged equipment at full load."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E02_check2",
+        "prompt": "Which report is most useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "“Equipment bad.”"
+          },
+          {
+            "id": "b",
+            "label": "“Probably fine” without criteria."
+          },
+          {
+            "id": "c",
+            "label": "The identified asset, exact observed defect, location and circumstances."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E02_final_2_1",
+        "prompt": "What should an unperformed required check be recorded as?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Not applicable without a reason."
+          },
+          {
+            "id": "b",
+            "label": "Not completed or unresolved, with the resulting hold or escalation."
+          },
+          {
+            "id": "c",
+            "label": "Passed to avoid blanks."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E02_final_2_2",
+        "prompt": "What can photographs contribute?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Visible evidence linked to the item and observation, within their limits."
+          },
+          {
+            "id": "b",
+            "label": "Proof of every internal safety function."
+          },
+          {
+            "id": "c",
+            "label": "A substitute for all competent inspection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E02_final_2_3",
+        "prompt": "Who decides whether damage is merely cosmetic?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any user who needs the item."
+          },
+          {
+            "id": "b",
+            "label": "The person taking the photograph."
+          },
+          {
+            "id": "c",
+            "label": "The competent role using applicable criteria."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E02_check3",
+        "prompt": "A defective tool sits on a common shelf with a loose note. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A verbal warning to one coworker."
+          },
+          {
+            "id": "b",
+            "label": "Effective out-of-service control preventing unintended use and dispatch."
+          },
+          {
+            "id": "c",
+            "label": "Only a brighter note."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E02_final_3_1",
+        "prompt": "What should an out-of-service record identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual item, restriction, defect and responsible resolution owner."
+          },
+          {
+            "id": "b",
+            "label": "Only the supplier name."
+          },
+          {
+            "id": "c",
+            "label": "Only the next service date."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E02_final_3_2",
+        "prompt": "Can an unqualified user perform hazardous isolation to quarantine equipment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, tagging grants isolation authority."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the fault is urgent."
+          },
+          {
+            "id": "c",
+            "label": "No; the required authorized safe-state process still applies."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E02_final_3_3",
+        "prompt": "What if physical and dispatch status conflict?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ignore the physical tag."
+          },
+          {
+            "id": "b",
+            "label": "Hold use and resolve the discrepancy before release."
+          },
+          {
+            "id": "c",
+            "label": "Choose whichever says ready."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E02_check4",
+        "prompt": "A guard is tied back with wire as a quick repair. What establishes acceptance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The approved competent repair and verification process, not appearance."
+          },
+          {
+            "id": "b",
+            "label": "The fact that it covers the opening."
+          },
+          {
+            "id": "c",
+            "label": "A coworker’s confidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E02_final_4_1",
+        "prompt": "Who performs repairs beyond user-authorized tasks?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any worker who has spare time."
+          },
+          {
+            "id": "b",
+            "label": "The person who reported the fault automatically."
+          },
+          {
+            "id": "c",
+            "label": "Suitably competent and authorized personnel."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E02_final_4_2",
+        "prompt": "What should a substituted component trigger?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a new inventory nickname."
+          },
+          {
+            "id": "b",
+            "label": "The required suitability and change review."
+          },
+          {
+            "id": "c",
+            "label": "Automatic acceptance if it fits."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E02_final_4_3",
+        "prompt": "What should repair records preserve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual work, parts, findings and unresolved restrictions."
+          },
+          {
+            "id": "b",
+            "label": "Only a paid invoice."
+          },
+          {
+            "id": "c",
+            "label": "Only the intended repair plan."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E02_check5",
+        "prompt": "A repair is finished but required functional testing is pending. What is the item’s status?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ready because the mechanic has finished."
+          },
+          {
+            "id": "b",
+            "label": "Ready if the customer agrees."
+          },
+          {
+            "id": "c",
+            "label": "Still restricted pending verification and authorized acceptance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E02_final_5_1",
+        "prompt": "What should post-repair testing address?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only whether it powers on."
+          },
+          {
+            "id": "b",
+            "label": "The repaired defect and relevant affected safety functions."
+          },
+          {
+            "id": "c",
+            "label": "Only whether the item looks clean."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E02_final_5_2",
+        "prompt": "Who authorizes return to service?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The designated owner through the required evidence and release process."
+          },
+          {
+            "id": "b",
+            "label": "Anyone removing the tag."
+          },
+          {
+            "id": "c",
+            "label": "The customer waiting for the item."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E02_final_5_3",
+        "prompt": "What should happen to rejected equipment intended for disposal?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Leave it beside usable stock."
+          },
+          {
+            "id": "b",
+            "label": "Remove its defect history."
+          },
+          {
+            "id": "c",
+            "label": "Control it so it cannot re-enter service inadvertently."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E02_check6",
+        "prompt": "A team boasts that every inspection passes despite repeated field defects. What should be reviewed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the form’s color."
+          },
+          {
+            "id": "b",
+            "label": "Whether checks, criteria and defect controls reflect actual conditions."
+          },
+          {
+            "id": "c",
+            "label": "How to stop workers reporting defects."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E02_final_6_1",
+        "prompt": "What supports inspection competence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Observed correct inspection, reporting and control on the assigned equipment."
+          },
+          {
+            "id": "b",
+            "label": "Only a written score."
+          },
+          {
+            "id": "c",
+            "label": "Only years of employment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E02_final_6_2",
+        "prompt": "What should recurrence review examine?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the last user’s attitude."
+          },
+          {
+            "id": "b",
+            "label": "Only the number of forms."
+          },
+          {
+            "id": "c",
+            "label": "Equipment suitability, maintenance, handling, criteria and release effectiveness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E02_final_6_3",
+        "prompt": "What training setup is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A pressurized damaged hose."
+          },
+          {
+            "id": "b",
+            "label": "Safe simulation or controlled equipment without exposing the learner to live hazards."
+          },
+          {
+            "id": "c",
+            "label": "A hidden live electrical fault."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E02_final_scenario1",
+        "prompt": "What must be established for the borrowed grinder?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its actual suitability, condition and required user competence."
+          },
+          {
+            "id": "b",
+            "label": "Only that it turns on."
+          },
+          {
+            "id": "c",
+            "label": "Only that the original grinder was tagged."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E02_final_scenario2",
+        "prompt": "What failed at dispatch?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The repair invoice used the wrong font."
+          },
+          {
+            "id": "b",
+            "label": "Only the delivery slot was late."
+          },
+          {
+            "id": "c",
+            "label": "Return-to-service control accepted commercial paperwork without required functional evidence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "E02_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E02_lesson1",
+          "questionIds": [
+            "E02_check1"
+          ]
+        },
+        {
+          "lessonId": "E02_lesson2",
+          "questionIds": [
+            "E02_check2"
+          ]
+        },
+        {
+          "lessonId": "E02_lesson3",
+          "questionIds": [
+            "E02_check3"
+          ]
+        },
+        {
+          "lessonId": "E02_lesson4",
+          "questionIds": [
+            "E02_check4"
+          ]
+        },
+        {
+          "lessonId": "E02_lesson5",
+          "questionIds": [
+            "E02_check5"
+          ]
+        },
+        {
+          "lessonId": "E02_lesson6",
+          "questionIds": [
+            "E02_check6"
+          ]
+        },
+        {
+          "lessonId": "E02_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E02_assessment",
+          "questionIds": [
+            "E02_final_1_1",
+            "E02_final_1_2",
+            "E02_final_1_3",
+            "E02_final_2_1",
+            "E02_final_2_2",
+            "E02_final_2_3",
+            "E02_final_3_1",
+            "E02_final_3_2",
+            "E02_final_3_3",
+            "E02_final_4_1",
+            "E02_final_4_2",
+            "E02_final_4_3",
+            "E02_final_5_1",
+            "E02_final_5_2",
+            "E02_final_5_3",
+            "E02_final_6_1",
+            "E02_final_6_2",
+            "E02_final_6_3",
+            "E02_final_scenario1",
+            "E02_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "E02_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "E02_check1": "Pre-use checks address the actual present condition. Maintenance evidence cannot establish that later transport or use caused no damage.",
+        "E02_final_1_1": "The check must support a real use decision. It is not a substitute for other required assurance and cannot be reduced to attendance or form completion.",
+        "E02_final_1_2": "Criteria must match the equipment and service. A generic list can miss model-specific protection or deterioration.",
+        "E02_final_1_3": "Inspection must not create the hazard it is meant to detect. Unsafe access or operation is not justified by the desire to complete a check.",
+        "E02_check2": "Specific observations allow competent triage and traceability. Vague labels and unsupported safety conclusions can delay or misdirect the repair decision.",
+        "E02_final_2_1": "A missing check is not evidence of acceptance. Its status must remain visible until the requirement is completed or a valid scoped disposition is made.",
+        "E02_final_2_2": "Photographs can document appearance but may miss hidden condition and function. The evidence must match the conclusion being claimed.",
+        "E02_final_2_3": "Some visible damage affects strength or protection. Classification must use defensible technical criteria rather than schedule pressure.",
+        "E02_check3": "The restriction must work for everyone who could access the item. Physical segregation or other suitable control and administrative status must prevent inadvertent reuse.",
+        "E02_final_3_1": "Traceability prevents the wrong item being repaired or released and makes the restriction actionable.",
+        "E02_final_3_2": "Out-of-service control does not waive electrical, pressure or other specialist safeguards. The item must be controlled without creating another exposure.",
+        "E02_final_3_3": "Conflicting information means readiness is uncertain. The responsible owner must align the actual accepted state and both control systems.",
+        "E02_check4": "A guard must perform its designed protective function and remain secure. Improvised attachment can fail or create access gaps and requires technical disposition.",
+        "E02_final_4_1": "Repair skill and authority depend on the equipment and hazard. Finding a defect does not itself qualify a person to fix it.",
+        "E02_final_4_2": "Fit alone does not establish strength, electrical rating or compatibility. The accepted repair must match technical requirements.",
+        "E02_final_4_3": "The release owner needs evidence of what was done, not merely ordered. Remaining limits must stay visible.",
+        "E02_check5": "Repair completion and restored function are separate facts. The required test and acceptance must establish the safety function before users rely on it.",
+        "E02_final_5_1": "A limited response can leave the original protective function unverified. Tests must match the acceptance criteria and repair consequences.",
+        "E02_final_5_2": "Release is a controlled decision based on actual work and verification. Removing a label cannot create technical readiness.",
+        "E02_final_5_3": "Disposition must prevent accidental reuse. Rejected components can otherwise return through informal borrowing or parts recovery.",
+        "E02_check6": "A high pass rate is not proof of effective inspection. Comparison with real findings can reveal skipped checks or weak acceptance and release controls.",
+        "E02_final_6_1": "Practical performance demonstrates whether knowledge can guide the actual check. Experience and written learning are supporting evidence, not substitutes.",
+        "E02_final_6_2": "Recurring defects can have system causes. A broad evidence-based review is more useful than assuming every event is an isolated user error.",
+        "E02_final_6_3": "Assessment must not create the dangerous event it teaches people to prevent. Safe representative conditions can test recognition and decisions.",
+        "E02_final_scenario1": "A replacement is a different item with its own configuration and defects. Readiness must be established before reliance.",
+        "E02_final_scenario2": "The release decision needed actual verification of the relevant safety function. Payment documentation cannot supply that evidence."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

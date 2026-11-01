@@ -1,0 +1,785 @@
+{
+  "familyId": "H14",
+  "title": "Chemicals, SDS and exposure assessment",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Make process chemicals, fuels, cleaners and waste hazards visible.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate practical evaluation must verify SDS access, product/label matching and the assigned handling controls. Exposure assessment, respiratory selection, hazardous-material emergency response and medical decisions require competent specialists and applicable authorizations.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://kmterm.kindermorgan.com/ContAlliance/SSPOMS.aspx"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://static.conocophillips.com/files/resources/exhibit-3-health-safety-and-environment-hse-requir.pdf"
+    },
+    {
+      "title": "OSHA Hazard Communication",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H14_intro",
+        "title": "Start here: Chemicals, SDS and exposure assessment",
+        "body": "# Chemicals, SDS and exposure assessment\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate practical evaluation must verify SDS access, product/label matching and the assigned handling controls. Exposure assessment, respiratory selection, hazardous-material emergency response and medical decisions require competent specialists and applicable authorizations.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Hazard Communication](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H14_lesson1",
+        "title": "Lesson 1 - Identify the actual product",
+        "body": "Chemical control starts with the product that is actually present. A familiar trade name, container color or worker's memory is not a reliable identifier. Match the container label to the inventory and safety data sheet (SDS), including the supplier and product identifier. Check that the sheet describes the formulation being used. An SDS for a similar solvent can give different incompatibilities and protective measures.\n\nA decanted container must remain identifiable under the applicable workplace labeling process. Do not sniff, taste or mix an unknown liquid to identify it. Set it aside through the safe quarantine arrangement and contact the responsible person. Keep workers from using it while identification is unresolved. If the original package is unavailable, the supervisor obtains reliable product information from the supplier rather than inventing a label from a guess.\n\nSDS access must work during the task and an emergency. A link on a locked office computer is not effective access for a night cleaner without credentials. Know the approved offline or backup arrangement where network access is unreliable.\n\n## Worked field example\n\nA cleaner brings an unmarked bottle and calls it the usual degreaser.\n\nThe safe decision is to do not use the bottle until reliable identification, labeling and matching safety information are established. Similar appearance does not establish chemical identity or safe handling requirements.\n\nA useful field record is specific: The identified product, correct SDS and verified workplace label on the actual container. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nConsider a supplier delivery that contains the correct branded drum but a different concentration from the previous order. The receiver compares the product identifier and formulation information with the approved inventory entry before releasing it. If they cannot reconcile the difference, the drum remains within the safe receiving arrangement while purchasing and the program owner contact the supplier. The receiving worker does not dilute it to make it resemble the old product. The resulting decision must identify which information was checked and what work is covered.\n\nFor a mobile crew, access also includes the period when the truck is beyond reliable data coverage. Before departure, the supervisor verifies the approved means to retrieve current safety information, including emergency identification. A screenshot that omits product identity or essential emergency information may not serve the intended purpose. The crew tests the actual access method rather than assuming a folder icon means the information is available.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H14_lesson2",
+        "title": "Lesson 2 - Read hazard information as a task decision",
+        "body": "Read the SDS for the questions the job creates. Identify health hazards, routes of exposure, first-aid directions, handling and storage, exposure controls, personal protection, physical properties, stability and incompatibility. The section headings help locate information, but the job assessment must connect it to the task. A hazard statement is not a complete work method.\n\nConsider inhalation, skin and eye contact, ingestion through contaminated hands, and injection or penetration where pressure is involved. Frequency, duration, concentration, temperature and application method affect exposure. Wiping a small part and spraying the same product inside an enclosure are different exposure situations. Odor is not a reliable exposure measurement or a safe alarm.\n\nWhen an SDS contains an exposure limit, have the competent assessor determine its applicability and how exposure will be evaluated. Do not turn a value copied into a JSA into proof that the worker's exposure is below it. Record uncertainties and resolve them before selecting controls.\n\n## Worked field example\n\nA worker proposes spraying a wipe-on cleaner inside a small enclosure using the old wiping assessment.\n\nThe safe decision is to review the new application and exposure routes with the competent assessor before spraying. Spraying and enclosure change airborne exposure and cannot be cleared by the old task description.\n\nA useful field record is specific: A revised task assessment linking application method, exposure routes and selected controls. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nTake a parts-cleaning task carried out at an open bench. The assessment describes a measured quantity wiped onto cold metal, with contaminated cloths placed in the specified container. A proposal to heat the part, spray the cleaner or leave cloths spread across the bench changes release and contact conditions. The worker reports the proposed method before starting. The reviewer asks which exposure routes become more important and whether the original controls still function.\n\nAn exposure record should state operating conditions, not just the product name. Where monitoring is used, the competent person explains whom and what the sample represents and the limits of the result. A result from one worker's short task is not automatically a conclusion for a different worker spraying for an entire shift. Uncertainty is preserved and routed for decision.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H14_lesson3",
+        "title": "Lesson 3 - Choose control at the source",
+        "body": "Start with whether the chemical or task can be eliminated or substituted. A less hazardous product may introduce another hazard, such as flammability or incompatibility, so substitution needs review. Where the product remains necessary, consider enclosure, closed transfer, local extraction and work methods that reduce release. General air movement is not automatically effective capture at the source.\n\nThe competent assessor determines whether controls are adequate and whether exposure monitoring is needed. Workers should know what a functioning control looks like and the action for failure. An extraction hood positioned far from the release may be running without protecting the breathing zone. Check the approved arrangement rather than simply listening for the fan.\n\nPPE addresses residual exposure within its selected limits. Glove choice depends on chemical compatibility and task conditions; a disposable glove is not suitable merely because it is called chemical resistant. Respirator use invokes the separate respiratory protection program. Do not select a cartridge by color from memory or assume an air-purifying device supplies oxygen.\n\n## Worked field example\n\nAn extraction fan runs, but the hood is moved away from the solvent cleaning point.\n\nThe safe decision is to pause the exposed task and restore or reassess the approved capture arrangement. A running fan does not prove effective control of the release at the worker’s breathing zone.\n\nA useful field record is specific: A verified hood arrangement and competent assessment of the task exposure controls. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nSuppose a shop substitutes an aqueous product for a volatile solvent. The change may reduce one airborne hazard while introducing corrosivity, mist or a different waste issue. The program owner checks the whole substitution rather than labeling it safe from a single favorable property. Workers receive instruction on the changed handling and emergency arrangements, and old labels are not reused.\n\nAt the workstation, the operator checks the indicators or configuration specified for the local extraction system. They do not invent an acceptable airflow by holding a scrap of paper near the hood. If the approved check cannot be completed, the uncertainty is escalated. Competent ventilation assessment and maintenance remain separate from the user's pre-use recognition. After correction, verification covers capture at the actual release point and the worker's normal position.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H14_lesson4",
+        "title": "Lesson 4 - Store and transfer without creating a reaction",
+        "body": "Storage and transfer must account for incompatibility, container suitability and release prevention. Use the approved storage scheme based on product information, not alphabetical order alone. Keep incompatible materials separated by the assessed arrangement. Do not combine leftover liquids or wastes because their containers have similar labels.\n\nCheck that transfer equipment, seals and receiving containers are suitable. Confirm the receiving container's identity and capacity through the approved method. Control splash and release routes and follow any applicable ignition, bonding or grounding requirements established for the product and operation. This course supplies no universal transfer method for flammable or reactive materials.\n\nKeep aisles, emergency equipment and container access available. A damaged package, bulging container or unexpected heat requires isolation and specialist advice through the site response process. Do not open a suspect container to relieve it unless specifically trained and authorized under a competent method.\n\n## Worked field example\n\nTwo leftover cleaners are proposed for the same waste drum to save space.\n\nThe safe decision is to hold consolidation until compatibility and the approved waste route are confirmed. Waste mixtures can react even when each original product was routinely used.\n\nA useful field record is specific: A verified compatibility decision and correctly identified receiving waste container. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nA receiving area can contain both routine stock and returned partly used containers. Returned containers need the same reliable identification and compatibility review as new stock. Do not put a damaged return into any spare drum simply to stop a visible leak; the overpack or receiving method must be suitable for the material and condition. The response plan establishes who may handle that situation.\n\nFor ordinary approved transfer, check the destination before opening the source. An empty-looking container may contain residue, and a hose may retain a different product from its last use. Record the compatibility decision where required and keep the transfer controlled. If identity, residual content or receiving capacity is uncertain, stop before creating the mixture. A previous successful transfer does not resolve today's uncertainty.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H14_lesson5",
+        "title": "Lesson 5 - Use trained response boundaries",
+        "body": "Before work, know the alarm route, safe exit, emergency washing arrangements and the roles authorized for initial response. Follow product-specific first-aid information and the site's emergency process. Do not delay medical assistance while trying to complete an incident form. Give responders the reliable product identity and relevant exposure information.\n\nA spill kit is equipment, not authorization. Distinguish a release within a trained, equipped worker's assessed capability from an unknown, spreading, reactive or atmospheric hazard. Withdraw and raise the alarm when the situation exceeds that capability. Do not enter an unknown vapor area to retrieve the SDS or protect a drain.\n\nIf safe and authorized, an initial action may prevent further exposure from a protected location. The plan determines what is permitted. Never assume a worker can close a valve safely merely because it is visible. Control pressure, ignition and incompatible materials through the assigned technical roles.\n\n## Worked field example\n\nA solvent release produces an unknown atmosphere and a cleaner is told to enter with absorbent pads.\n\nThe safe decision is to keep people clear and activate the approved response instead of entering the unknown atmosphere. Spill equipment does not establish safe atmospheric conditions or responder competence.\n\nA useful field record is specific: An alarm and response record identifying the product, safe perimeter and authorized response roles. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nImagine a splash to a worker's eye during handling. The immediate action follows the product information, available emergency washing arrangement and trained response process; the worker is not sent to find a supervisor's signature before receiving help. Another person provides reliable product identification to the responder without entering the release area. The site ensures emergency equipment is usable and access remains clear.\n\nAfter the event, distinguish the actual exposure from an assumed dose. Record the task, material and observations, while clinical assessment remains confidential. The review checks why contact occurred: unsuitable transfer arrangement, failed component, inaccessible control or misunderstood method. It should not close simply because the worker was wearing gloves or because an SDS was filed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H14_lesson6",
+        "title": "Lesson 6 - Review changes and verify understanding",
+        "body": "A new product, supplier formulation, application method, ventilation arrangement or waste route can invalidate an earlier assessment. Route changes through the program owner before use. A purchasing decision should include safety information and the receiving site's ability to store and use the product safely.\n\nTeach workers in a language and form they understand. Ask them to locate the SDS, explain the task hazards, show the safe handling arrangement and describe the response to failure. Attendance alone does not demonstrate those abilities. A safe practical demonstration uses an appropriate simulation or controlled authorized task, not deliberate chemical exposure.\n\nKeep records of the product and assessed task, controls checked, competent input and unresolved conditions. Clinical details remain in the appropriate confidential process. The supervisor needs any work restrictions, not unrestricted access to medical histories. Review whether changes actually reduce exposure rather than counting the number of SDS files uploaded.\n\n## Worked field example\n\nA replacement cleaner arrives with a new formulation but the purchasing system retains the old SDS.\n\nThe safe decision is to hold use pending updated information and review of the affected handling and exposure controls. The existing assessment describes the old formulation and may not cover the replacement.\n\nA useful field record is specific: A change review connecting the new formulation to its SDS, storage and task controls. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nFor a safe practical check, use an appropriate simulated label and container arrangement. Ask the worker to locate matching information, explain the approved handling sequence, identify the failed-control response and show the emergency contact route. The assessor records which actions were demonstrated independently and which needed coaching. Do not use an unidentified real chemical as a teaching prop.\n\nA later effectiveness review samples actual tasks and considers worker feedback. It asks whether the new arrangement prevented the original release or contact route, not only whether training attendance increased. If crews revert to unmarked bottles because the approved containers are unavailable, investigate supply and work organization. Correct the usable system and verify it again; a reminder alone leaves the reason for the workaround intact.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H14_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional maintenance shop receives a new descaler in a drum bearing a supplier label. The crew transfers it into a reused bottle marked only “wash.” The existing task instruction covers wiping steel parts with a different cleaner. A worker proposes spraying the descaler near an open electrical cabinet to save time. The extraction hood is not positioned at the task. Decide whether the job is ready.\n\n### Worked solution\n\nThe job is held because reliable secondary-container identification, product/task assessment and effective controls are missing. The supervisor matches the actual descaler to current supplier information and arranges appropriate labeling. The competent assessor reviews spraying, nearby equipment, exposure routes, compatibility and release controls. They do not assume the old wiping instruction applies. The review considers substitution or a different method before relying on PPE. The receiving arrangement, emergency actions and any waste route are confirmed. Workers receive the revised instruction and demonstrate the relevant controls safely. Release follows verification of the actual arrangement, not merely uploading the new SDS. The record identifies the product, method, approved controls and the observed readiness checks.\n\n## Scenario 2\n\nDuring a fictional night shift, a waste container becomes warm and emits an unfamiliar odor after two crews add cleaning residues. The night supervisor has no reliable list of the contents. Absorbent pads are nearby and a worker volunteers to remove the lid. Describe a safe response and subsequent review.\n\n### Worked solution\n\nWorkers withdraw from the potentially affected area and raise the alarm through the site plan. Nobody opens the container to investigate or mixes another substance into it. The response coordinator receives the known additions, container location and observed condition while clearly distinguishing unknown contents. Qualified responders determine assessment and control. The company later investigates the waste compatibility failure, shared-container access and missing handover. It establishes identified waste streams and verified receiving arrangements rather than treating the event as a need for more pads. Any affected worker receives the appropriate exposure/medical response. Cleanup, disposal and return to use follow authorized specialist decisions. A favorable outcome does not erase the original uncertainty or establish that the mixture was safe.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H14_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H14_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate practical evaluation must verify SDS access, product/label matching and the assigned handling controls. Exposure assessment, respiratory selection, hazardous-material emergency response and medical decisions require competent specialists and applicable authorizations.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H14_check1",
+        "prompt": "A cleaner brings an unmarked bottle and calls it the usual degreaser. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Do not use the bottle until reliable identification, labeling and matching safety information are established"
+          },
+          {
+            "id": "b",
+            "label": "Use a small amount first to see whether it works"
+          },
+          {
+            "id": "c",
+            "label": "Write “degreaser” on the bottle from memory"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H14_check2",
+        "prompt": "A worker proposes spraying a wipe-on cleaner inside a small enclosure using the old wiping assessment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the SDS approves every possible application"
+          },
+          {
+            "id": "b",
+            "label": "Review the new application and exposure routes with the competent assessor before spraying"
+          },
+          {
+            "id": "c",
+            "label": "Use odor strength as the exposure measurement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H14_check3",
+        "prompt": "An extraction fan runs, but the hood is moved away from the solvent cleaning point. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue because the fan can be heard"
+          },
+          {
+            "id": "b",
+            "label": "Replace engineering control with any available dust mask"
+          },
+          {
+            "id": "c",
+            "label": "Pause the exposed task and restore or reassess the approved capture arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H14_check4",
+        "prompt": "Two leftover cleaners are proposed for the same waste drum to save space. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold consolidation until compatibility and the approved waste route are confirmed"
+          },
+          {
+            "id": "b",
+            "label": "Mix them slowly and stop if bubbling begins"
+          },
+          {
+            "id": "c",
+            "label": "Approve mixing because both products are cleaners"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H14_check5",
+        "prompt": "A solvent release produces an unknown atmosphere and a cleaner is told to enter with absorbent pads. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter holding a wet cloth over the nose"
+          },
+          {
+            "id": "b",
+            "label": "Keep people clear and activate the approved response instead of entering the unknown atmosphere"
+          },
+          {
+            "id": "c",
+            "label": "Retrieve the drum first and then report the release"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H14_check6",
+        "prompt": "A replacement cleaner arrives with a new formulation but the purchasing system retains the old SDS. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the old SDS until the annual review"
+          },
+          {
+            "id": "b",
+            "label": "Assume the supplier name guarantees identical hazards"
+          },
+          {
+            "id": "c",
+            "label": "Hold use pending updated information and review of the affected handling and exposure controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H14_final1",
+        "prompt": "For identify the actual product, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Similar appearance does not establish chemical identity or safe handling requirements."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H14_final2",
+        "prompt": "Which evidence would most directly verify identify the actual product in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "The identified product, correct SDS and verified workplace label on the actual container"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H14_final3",
+        "prompt": "A relief worker proposes the following shortcut during identify the actual product: \"Use a small amount first to see whether it works.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use a small amount first to see whether it works"
+          },
+          {
+            "id": "b",
+            "label": "Write “degreaser” on the bottle from memory"
+          },
+          {
+            "id": "c",
+            "label": "Do not use the bottle until reliable identification, labeling and matching safety information are established"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H14_final4",
+        "prompt": "For read hazard information as a task decision, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Spraying and enclosure change airborne exposure and cannot be cleared by the old task description."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H14_final5",
+        "prompt": "Which evidence would most directly verify read hazard information as a task decision in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A revised task assessment linking application method, exposure routes and selected controls"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H14_final6",
+        "prompt": "A relief worker proposes the following shortcut during read hazard information as a task decision: \"Assume the SDS approves every possible application.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the SDS approves every possible application"
+          },
+          {
+            "id": "b",
+            "label": "Use odor strength as the exposure measurement"
+          },
+          {
+            "id": "c",
+            "label": "Review the new application and exposure routes with the competent assessor before spraying"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H14_final7",
+        "prompt": "For choose control at the source, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A running fan does not prove effective control of the release at the worker’s breathing zone."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H14_final8",
+        "prompt": "Which evidence would most directly verify choose control at the source in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified hood arrangement and competent assessment of the task exposure controls"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H14_final9",
+        "prompt": "A relief worker proposes the following shortcut during choose control at the source: \"Continue because the fan can be heard.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue because the fan can be heard"
+          },
+          {
+            "id": "b",
+            "label": "Replace engineering control with any available dust mask"
+          },
+          {
+            "id": "c",
+            "label": "Pause the exposed task and restore or reassess the approved capture arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H14_final10",
+        "prompt": "For store and transfer without creating a reaction, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Waste mixtures can react even when each original product was routinely used."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H14_final11",
+        "prompt": "Which evidence would most directly verify store and transfer without creating a reaction in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified compatibility decision and correctly identified receiving waste container"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H14_final12",
+        "prompt": "A relief worker proposes the following shortcut during store and transfer without creating a reaction: \"Mix them slowly and stop if bubbling begins.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Mix them slowly and stop if bubbling begins"
+          },
+          {
+            "id": "b",
+            "label": "Approve mixing because both products are cleaners"
+          },
+          {
+            "id": "c",
+            "label": "Hold consolidation until compatibility and the approved waste route are confirmed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H14_final13",
+        "prompt": "For use trained response boundaries, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Spill equipment does not establish safe atmospheric conditions or responder competence."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H14_final14",
+        "prompt": "Which evidence would most directly verify use trained response boundaries in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An alarm and response record identifying the product, safe perimeter and authorized response roles"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H14_final15",
+        "prompt": "A relief worker proposes the following shortcut during use trained response boundaries: \"Enter holding a wet cloth over the nose.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter holding a wet cloth over the nose"
+          },
+          {
+            "id": "b",
+            "label": "Retrieve the drum first and then report the release"
+          },
+          {
+            "id": "c",
+            "label": "Keep people clear and activate the approved response instead of entering the unknown atmosphere"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H14_final16",
+        "prompt": "For review changes and verify understanding, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The existing assessment describes the old formulation and may not cover the replacement."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H14_final17",
+        "prompt": "Which evidence would most directly verify review changes and verify understanding in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A change review connecting the new formulation to its SDS, storage and task controls"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H14_final18",
+        "prompt": "A relief worker proposes the following shortcut during review changes and verify understanding: \"Use the old SDS until the annual review.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the old SDS until the annual review"
+          },
+          {
+            "id": "b",
+            "label": "Assume the supplier name guarantees identical hazards"
+          },
+          {
+            "id": "c",
+            "label": "Hold use pending updated information and review of the affected handling and exposure controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H14_final19",
+        "prompt": "In Scenario 1, which document alone is insufficient to release the spray task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An SDS without a task-specific assessment and verified controls"
+          },
+          {
+            "id": "b",
+            "label": "A reviewed method tied to the actual product and operation"
+          },
+          {
+            "id": "c",
+            "label": "A verified safe handling arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H14_final20",
+        "prompt": "In Scenario 2, what is the correct initial boundary?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Loosen the lid to see whether pressure escapes"
+          },
+          {
+            "id": "b",
+            "label": "Withdraw and obtain authorized specialist response rather than opening the unknown reactive container"
+          },
+          {
+            "id": "c",
+            "label": "Add water until the container cools"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H14_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H14_lesson1",
+          "questionIds": [
+            "H14_check1"
+          ]
+        },
+        {
+          "lessonId": "H14_lesson2",
+          "questionIds": [
+            "H14_check2"
+          ]
+        },
+        {
+          "lessonId": "H14_lesson3",
+          "questionIds": [
+            "H14_check3"
+          ]
+        },
+        {
+          "lessonId": "H14_lesson4",
+          "questionIds": [
+            "H14_check4"
+          ]
+        },
+        {
+          "lessonId": "H14_lesson5",
+          "questionIds": [
+            "H14_check5"
+          ]
+        },
+        {
+          "lessonId": "H14_lesson6",
+          "questionIds": [
+            "H14_check6"
+          ]
+        },
+        {
+          "lessonId": "H14_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H14_final",
+          "questionIds": [
+            "H14_final1",
+            "H14_final2",
+            "H14_final3",
+            "H14_final4",
+            "H14_final5",
+            "H14_final6",
+            "H14_final7",
+            "H14_final8",
+            "H14_final9",
+            "H14_final10",
+            "H14_final11",
+            "H14_final12",
+            "H14_final13",
+            "H14_final14",
+            "H14_final15",
+            "H14_final16",
+            "H14_final17",
+            "H14_final18",
+            "H14_final19",
+            "H14_final20"
+          ]
+        },
+        {
+          "lessonId": "H14_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H14_check1": "Do not use the bottle until reliable identification, labeling and matching safety information are established. Similar appearance does not establish chemical identity or safe handling requirements.",
+        "H14_check2": "Review the new application and exposure routes with the competent assessor before spraying. Spraying and enclosure change airborne exposure and cannot be cleared by the old task description.",
+        "H14_check3": "Pause the exposed task and restore or reassess the approved capture arrangement. A running fan does not prove effective control of the release at the worker’s breathing zone.",
+        "H14_check4": "Hold consolidation until compatibility and the approved waste route are confirmed. Waste mixtures can react even when each original product was routinely used.",
+        "H14_check5": "Keep people clear and activate the approved response instead of entering the unknown atmosphere. Spill equipment does not establish safe atmospheric conditions or responder competence.",
+        "H14_check6": "Hold use pending updated information and review of the affected handling and exposure controls. The existing assessment describes the old formulation and may not cover the replacement.",
+        "H14_final1": "Similar appearance does not establish chemical identity or safe handling requirements. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H14_final2": "The identified product, correct SDS and verified workplace label on the actual container. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H14_final3": "Do not use the bottle until reliable identification, labeling and matching safety information are established. Similar appearance does not establish chemical identity or safe handling requirements. A staffing change does not remove this requirement.",
+        "H14_final4": "Spraying and enclosure change airborne exposure and cannot be cleared by the old task description. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H14_final5": "A revised task assessment linking application method, exposure routes and selected controls. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H14_final6": "Review the new application and exposure routes with the competent assessor before spraying. Spraying and enclosure change airborne exposure and cannot be cleared by the old task description. A staffing change does not remove this requirement.",
+        "H14_final7": "A running fan does not prove effective control of the release at the worker’s breathing zone. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H14_final8": "A verified hood arrangement and competent assessment of the task exposure controls. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H14_final9": "Pause the exposed task and restore or reassess the approved capture arrangement. A running fan does not prove effective control of the release at the worker’s breathing zone. A staffing change does not remove this requirement.",
+        "H14_final10": "Waste mixtures can react even when each original product was routinely used. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H14_final11": "A verified compatibility decision and correctly identified receiving waste container. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H14_final12": "Hold consolidation until compatibility and the approved waste route are confirmed. Waste mixtures can react even when each original product was routinely used. A staffing change does not remove this requirement.",
+        "H14_final13": "Spill equipment does not establish safe atmospheric conditions or responder competence. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H14_final14": "An alarm and response record identifying the product, safe perimeter and authorized response roles. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H14_final15": "Keep people clear and activate the approved response instead of entering the unknown atmosphere. Spill equipment does not establish safe atmospheric conditions or responder competence. A staffing change does not remove this requirement.",
+        "H14_final16": "The existing assessment describes the old formulation and may not cover the replacement. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H14_final17": "A change review connecting the new formulation to its SDS, storage and task controls. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H14_final18": "Hold use pending updated information and review of the affected handling and exposure controls. The existing assessment describes the old formulation and may not cover the replacement. A staffing change does not remove this requirement.",
+        "H14_final19": "An SDS describes product hazards; it does not itself establish that the proposed spraying method and surrounding conditions are controlled.",
+        "H14_final20": "Unknown contents and unexpected heat indicate an uncontrolled situation. Opening or adding material can worsen exposure or reaction and exceeds ordinary awareness response."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

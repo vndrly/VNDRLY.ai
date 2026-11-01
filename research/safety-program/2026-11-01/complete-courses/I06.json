@@ -1,0 +1,781 @@
+{
+  "familyId": "I06",
+  "title": "Medical response, restricted records and return-to-work interfaces",
+  "description": "Complete original VNDRLY I06 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Coordinate care and safe restrictions while protecting worker privacy.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Supervisors act within role and protect health information; clinical decisions require clinicians. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.marathonrefinerycontractor.com/content/documents/Refinery_Contractor/Detroit/Detroit_Safety_Documents/Other_Procedures/Misc_Procedures/202_2542_9.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "I06_intro",
+        "title": "Start here — Medical response, restricted records and return-to-work interfaces",
+        "body": "# I06: Medical response, restricted records and return-to-work interfaces\n\nCoordinate care and safe restrictions while protecting worker privacy. This course teaches the decisions needed to implement that purpose in field operations. It covers care escalation, confidential handling, authorized restrictions and safe return coordination. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I06_lesson1",
+        "title": "Lesson 1 — Arrange care before administrative handling",
+        "body": "## Arrange care before administrative handling\n\nWhen someone needs medical help, use the established emergency or referral process promptly. Supervisors coordinate response and safe access within their roles; they do not diagnose severity to avoid calling. Protect other people from the same exposure and provide responders with relevant factual hazard information. Complete routine records after immediate care and protection. This course provides no treatment technique, clinical triage rule or clearance to perform medical care.\n\n### Deeper application\n\nA supervisor can supply responders with the known exposure, location and access information while avoiding an unsupported diagnosis. Do not require an injured or unwell worker to finish statements before care. The administrative record should reflect what actually occurred, including uncertain times and who activated the response. If the same exposure threatens others, coordinate protection through the appropriate operating route without delaying the care referral.\n\n### Worked oilfield example\n\nA worker develops symptoms after an exposure, and the supervisor delays referral while collecting a full incident statement. The decision is to arrange appropriate care through the established response route before routine statement-taking.\n\nCare must not be delayed for administrative completeness, and supervisors should not make unsupported clinical judgments. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A factual response record showing referral or emergency activation and immediate protection actions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the referral record says notified but the care route never received the request. The appropriate correction is to verify and activate the appropriate care communication immediately and correct the status to actual facts. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I06_lesson2",
+        "title": "Lesson 2 — Separate clinical records from operational status",
+        "body": "## Separate clinical records from operational status\n\nClinical notes, diagnoses and medical questionnaires need appropriately restricted handling. Operational supervisors usually need authorized capacity or restriction information relevant to assignment, not the entire clinical history. Determine recipients through the applicable legal and organizational process rather than assuming every safety employee may see everything. Do not promise that a generic privacy label satisfies every jurisdiction's requirements. Protect records in storage, sharing and exported reports.\n\n### Deeper application\n\nMinimum necessary operational information may include whether the person may perform a duty, the valid restrictions and when review is needed. The exact sharing basis must follow applicable requirements and the authorized process. A general team roster should not become a medical file. Keep clinical records and operational status linked through controlled references where appropriate, so supervisors can allocate safely without reading unrelated diagnoses or questionnaires.\n\n### Worked oilfield example\n\nA supervisor requests a worker's complete medical file to decide whether restricted duties can be allocated. The decision is to obtain necessary authorized work-capacity information through the designated process and keep clinical detail restricted.\n\nAssignment needs valid functional limits; unnecessary clinical disclosure does not improve that decision and creates privacy exposure. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A restricted clinical reference and a separate operational restriction status shared only with authorized roles. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the restricted status is correct but a diagnosis appears in an unrestricted attachment. The appropriate correction is to restrict further disclosure and follow the authorized confidentiality response while preserving necessary records. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I06_lesson3",
+        "title": "Lesson 3 — Translate restrictions into compatible duties",
+        "body": "## Translate restrictions into compatible duties\n\nA valid restriction should be understood in relation to actual task demands. Identify the proposed duties, compare them with authorized capacity information and seek clarification through the designated route where meaning is unclear. A supervisor should not reinterpret a restriction away because work is urgent. Modified duties must be genuinely compatible in practice, including access, travel and incidental tasks, rather than only a renamed job title.\n\n### Deeper application\n\nCompare restrictions with the whole assignment: main tasks, travel, access, incidental handling and credible emergency duties. A light-duty label does not establish compatibility. Provide accurate task demands to the authorized coordinator or clinician when clarification is needed. Do not make the worker privately negotiate exceptions with each supervisor. A coherent duty plan should make the limits usable and protect against incompatible ad hoc requests.\n\n### Worked oilfield example\n\nA worker has an authorized lifting restriction, but proposed desk duties routinely require moving heavy files and equipment. The decision is to review actual task demands and provide compatible duties or obtain authorized clarification before allocation.\n\nCompatibility depends on what the person must actually do, not the assignment's title or a waiver. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A duty-to-restriction review showing actual tasks, compatibility decision and unresolved clarification needs. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the main duty fits but emergency or incidental tasks exceed the restriction. The appropriate correction is to review the full duty set and implement a genuinely compatible arrangement through authorized coordination. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I06_lesson4",
+        "title": "Lesson 4 — Use clinicians for medical decisions",
+        "body": "## Use clinicians for medical decisions\n\nClinical capacity, treatment and medical clearance require appropriately qualified providers through the authorized process. Supervisors contribute accurate task information and implement valid restrictions. They must not diagnose, shorten recovery or overrule a clinician based on appearance. In respiratory-protection contexts, applicable OSHA requirements distinguish employer operational information from confidential medical evaluation content; this example does not replace the full respiratory program.\n\n### Deeper application\n\nClinical judgment and job knowledge should inform each other through the designated route. The employer can explain task demands; the qualified provider addresses capacity within their role. A supervisor should not decide that a limitation no longer matters because the worker appears comfortable. Where the note is ambiguous, seek clarification rather than silently choosing the interpretation that permits the most work.\n\n### Worked oilfield example\n\nA supervisor says a worker looks recovered and removes a valid clinical restriction without authorized review. The decision is to maintain the restriction and seek appropriate clinical clarification or updated capacity information.\n\nAppearance and supervisory experience do not authorize a clinical capacity change. Valid restrictions remain until appropriately revised. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An authorized updated capacity decision linked to communicated task demands and operational implementation. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the provider's note is unclear about a duty essential to the proposed assignment. The appropriate correction is to seek clarification through the designated authorized route before relying on an unsupported interpretation. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I06_lesson5",
+        "title": "Lesson 5 — Coordinate return without disclosing unnecessary detail",
+        "body": "## Coordinate return without disclosing unnecessary detail\n\nReturn-to-work coordination needs clear roles: the worker communicates through the designated process, authorized providers supply capacity information and the employer allocates compatible duties. Tell relevant supervisors what restrictions apply and when review is due, without distributing diagnosis or unrelated clinical detail. Confirm changes reach all allocating roles. A worker's return to the site is not automatically unrestricted clearance for every task.\n\n### Deeper application\n\nA return plan should distinguish presence at work from the capacity to resume all previous duties. Communicate necessary restrictions to the people who allocate tasks, including temporary cover and incoming shifts. Confirm that the worker understands the plan and knows how to raise difficulty. Updated clinical information should reach the operational decision through the authorized process, rather than circulate informally through colleagues.\n\n### Worked oilfield example\n\nA returning worker's supervisor receives valid restrictions, but dispatch assigns the worker's previous unrestricted field route. The decision is to stop the incompatible allocation and communicate the current necessary restrictions to authorized dispatch roles.\n\nReturn and unrestricted clearance are different states; assignment must use current valid limits with appropriate confidentiality. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A coordinated return record showing current capacity status, compatible duty limits and acknowledged allocation changes. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the restriction changes but the incoming shift uses an old duty plan. The appropriate correction is to update the operational plan and confirm receipt of the necessary change before allocation. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I06_lesson6",
+        "title": "Lesson 6 — Review changes and confidentiality incidents",
+        "body": "## Review changes and confidentiality incidents\n\nRestrictions and capacity information can change, so record current status, review needs and the source of authorized updates. Do not invent a universal medical renewal period. Preserve a traceable history with controlled access. If health information is misdirected, limit further disclosure and activate the designated privacy process without deleting required evidence or concealing the incident. Review whether the assignment process actually maintained restrictions in later work.\n\n### Deeper application\n\nReview whether real assignments matched restrictions and whether updates reached operational users. A correct file can coexist with incompatible work if allocation uses stale information. Confidentiality incidents need their own response even when capacity status is corrected. Limit further disclosure and follow the authorized process; do not destroy required records to hide the mistake. Preserve a traceable history of both the status update and the privacy response.\n\n### Worked oilfield example\n\nAn outdated restriction remains in dispatch after an authorized update, while a diagnosis was mistakenly shared in a general chat. The decision is to correct authorized operational status and separately initiate the confidentiality response for the disclosure.\n\nStatus accuracy and privacy response are separate obligations; resolving one does not erase the other. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A traceable status update and a separately restricted confidentiality incident response record. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the updated plan is filed but later job records still show incompatible duties. The appropriate correction is to reopen the coordination failure and verify real assignment controls and compatible work before claiming effectiveness. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I06_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA worker develops symptoms after an exposure, and the supervisor delays referral while collecting a full incident statement. At the handover, a second issue is identified: The restricted status is correct but a diagnosis appears in an unrestricted attachment. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Rename the assignment office work and ignore its physical tasks. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Arrange appropriate care through the established response route before routine statement-taking. The reason is specific: Care must not be delayed for administrative completeness, and supervisors should not make unsupported clinical judgments. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Restrict further disclosure and follow the authorized confidentiality response while preserving necessary records. The supporting record should show: A restricted clinical reference and a separate operational restriction status shared only with authorized roles. This is important because assignment needs valid functional limits; unnecessary clinical disclosure does not improve that decision and creates privacy exposure. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because compatibility depends on what the person must actually do, not the assignment's title or a waiver. The suitable decision is: Review actual task demands and provide compatible duties or obtain authorized clarification before allocation. Evidence for review would include: A duty-to-restriction review showing actual tasks, compatibility decision and unresolved clarification needs. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA supervisor says a worker looks recovered and removes a valid clinical restriction without authorized review. At the handover, a second issue is identified: The restriction changes but the incoming shift uses an old duty plan. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Delete every medical and incident record to eliminate the problem. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Maintain the restriction and seek appropriate clinical clarification or updated capacity information. The reason is specific: Appearance and supervisory experience do not authorize a clinical capacity change. Valid restrictions remain until appropriately revised. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Update the operational plan and confirm receipt of the necessary change before allocation. The supporting record should show: A coordinated return record showing current capacity status, compatible duty limits and acknowledged allocation changes. This is important because return and unrestricted clearance are different states; assignment must use current valid limits with appropriate confidentiality. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because status accuracy and privacy response are separate obligations; resolving one does not erase the other. The suitable decision is: Correct authorized operational status and separately initiate the confidentiality response for the disclosure. Evidence for review would include: A traceable status update and a separately restricted confidentiality incident response record. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I06_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I06_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nSupervisors act within role and protect health information; clinical decisions require clinicians. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "I06_check1",
+        "prompt": "A worker develops symptoms after an exposure, and the supervisor delays referral while collecting a full incident statement. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Arrange appropriate care through the established response route before routine statement-taking."
+          },
+          {
+            "id": "b",
+            "label": "Finish every administrative field before allowing referral."
+          },
+          {
+            "id": "c",
+            "label": "Diagnose the condition informally and direct the worker back to exposure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I06_final1",
+        "prompt": "For arrange care before administrative handling, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A factual response record showing referral or emergency activation and immediate protection actions."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I06_final2",
+        "prompt": "A later review finds: The referral record says notified but the care route never received the request. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Verify and activate the appropriate care communication immediately and correct the status to actual facts."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I06_final3",
+        "prompt": "Consider this proposed response: Finish every administrative field before allowing referral. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Care must not be delayed for administrative completeness, and supervisors should not make unsupported clinical judgments."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I06_check2",
+        "prompt": "A supervisor requests a worker's complete medical file to decide whether restricted duties can be allocated. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Upload the full file to the general work roster."
+          },
+          {
+            "id": "b",
+            "label": "Obtain necessary authorized work-capacity information through the designated process and keep clinical detail restricted."
+          },
+          {
+            "id": "c",
+            "label": "Ask colleagues to guess the diagnosis from observed symptoms."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I06_final4",
+        "prompt": "For separate clinical records from operational status, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A restricted clinical reference and a separate operational restriction status shared only with authorized roles."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I06_final5",
+        "prompt": "A later review finds: The restricted status is correct but a diagnosis appears in an unrestricted attachment. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Restrict further disclosure and follow the authorized confidentiality response while preserving necessary records."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I06_final6",
+        "prompt": "Consider this proposed response: Upload the full file to the general work roster. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Assignment needs valid functional limits; unnecessary clinical disclosure does not improve that decision and creates privacy exposure."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I06_check3",
+        "prompt": "A worker has an authorized lifting restriction, but proposed desk duties routinely require moving heavy files and equipment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Rename the assignment office work and ignore its physical tasks."
+          },
+          {
+            "id": "b",
+            "label": "Ask the worker to waive the restriction for short lifts."
+          },
+          {
+            "id": "c",
+            "label": "Review actual task demands and provide compatible duties or obtain authorized clarification before allocation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I06_final7",
+        "prompt": "For translate restrictions into compatible duties, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A duty-to-restriction review showing actual tasks, compatibility decision and unresolved clarification needs."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I06_final8",
+        "prompt": "A later review finds: The main duty fits but emergency or incidental tasks exceed the restriction. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Review the full duty set and implement a genuinely compatible arrangement through authorized coordination."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I06_final9",
+        "prompt": "Consider this proposed response: Rename the assignment office work and ignore its physical tasks. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Compatibility depends on what the person must actually do, not the assignment's title or a waiver."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I06_check4",
+        "prompt": "A supervisor says a worker looks recovered and removes a valid clinical restriction without authorized review. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Maintain the restriction and seek appropriate clinical clarification or updated capacity information."
+          },
+          {
+            "id": "b",
+            "label": "Remove the restriction because the supervisor knows the job best."
+          },
+          {
+            "id": "c",
+            "label": "Ask coworkers to vote on the worker's fitness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I06_final10",
+        "prompt": "For use clinicians for medical decisions, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "An authorized updated capacity decision linked to communicated task demands and operational implementation."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I06_final11",
+        "prompt": "A later review finds: The provider's note is unclear about a duty essential to the proposed assignment. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Seek clarification through the designated authorized route before relying on an unsupported interpretation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I06_final12",
+        "prompt": "Consider this proposed response: Remove the restriction because the supervisor knows the job best. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Appearance and supervisory experience do not authorize a clinical capacity change. Valid restrictions remain until appropriately revised."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I06_check5",
+        "prompt": "A returning worker's supervisor receives valid restrictions, but dispatch assigns the worker's previous unrestricted field route. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume physical return to site means unrestricted work."
+          },
+          {
+            "id": "b",
+            "label": "Stop the incompatible allocation and communicate the current necessary restrictions to authorized dispatch roles."
+          },
+          {
+            "id": "c",
+            "label": "Send the entire medical file to all drivers so they know the situation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I06_final13",
+        "prompt": "For coordinate return without disclosing unnecessary detail, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A coordinated return record showing current capacity status, compatible duty limits and acknowledged allocation changes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I06_final14",
+        "prompt": "A later review finds: The restriction changes but the incoming shift uses an old duty plan. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Update the operational plan and confirm receipt of the necessary change before allocation."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I06_final15",
+        "prompt": "Consider this proposed response: Assume physical return to site means unrestricted work. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Return and unrestricted clearance are different states; assignment must use current valid limits with appropriate confidentiality."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I06_check6",
+        "prompt": "An outdated restriction remains in dispatch after an authorized update, while a diagnosis was mistakenly shared in a general chat. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Delete every medical and incident record to eliminate the problem."
+          },
+          {
+            "id": "b",
+            "label": "Ignore the disclosure because the operational restriction is now correct."
+          },
+          {
+            "id": "c",
+            "label": "Correct authorized operational status and separately initiate the confidentiality response for the disclosure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I06_final16",
+        "prompt": "For review changes and confidentiality incidents, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A traceable status update and a separately restricted confidentiality incident response record."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I06_final17",
+        "prompt": "A later review finds: The updated plan is filed but later job records still show incompatible duties. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Reopen the coordination failure and verify real assignment controls and compatible work before claiming effectiveness."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I06_final18",
+        "prompt": "Consider this proposed response: Delete every medical and incident record to eliminate the problem. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Status accuracy and privacy response are separate obligations; resolving one does not erase the other."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I06_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Restrict further disclosure and follow the authorized confidentiality response while preserving necessary records."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I06_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Update the operational plan and confirm receipt of the necessary change before allocation."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "I06_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I06_lesson1",
+          "questionIds": [
+            "I06_check1"
+          ]
+        },
+        {
+          "lessonId": "I06_lesson2",
+          "questionIds": [
+            "I06_check2"
+          ]
+        },
+        {
+          "lessonId": "I06_lesson3",
+          "questionIds": [
+            "I06_check3"
+          ]
+        },
+        {
+          "lessonId": "I06_lesson4",
+          "questionIds": [
+            "I06_check4"
+          ]
+        },
+        {
+          "lessonId": "I06_lesson5",
+          "questionIds": [
+            "I06_check5"
+          ]
+        },
+        {
+          "lessonId": "I06_lesson6",
+          "questionIds": [
+            "I06_check6"
+          ]
+        },
+        {
+          "lessonId": "I06_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I06_assessment",
+          "questionIds": [
+            "I06_final1",
+            "I06_final2",
+            "I06_final3",
+            "I06_final4",
+            "I06_final5",
+            "I06_final6",
+            "I06_final7",
+            "I06_final8",
+            "I06_final9",
+            "I06_final10",
+            "I06_final11",
+            "I06_final12",
+            "I06_final13",
+            "I06_final14",
+            "I06_final15",
+            "I06_final16",
+            "I06_final17",
+            "I06_final18",
+            "I06_final19",
+            "I06_final20"
+          ]
+        },
+        {
+          "lessonId": "I06_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "I06_check1": "Care must not be delayed for administrative completeness, and supervisors should not make unsupported clinical judgments.",
+        "I06_final1": "Care must not be delayed for administrative completeness, and supervisors should not make unsupported clinical judgments. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I06_final2": "Care must not be delayed for administrative completeness, and supervisors should not make unsupported clinical judgments. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I06_final3": "Care must not be delayed for administrative completeness, and supervisors should not make unsupported clinical judgments. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I06_check2": "Assignment needs valid functional limits; unnecessary clinical disclosure does not improve that decision and creates privacy exposure.",
+        "I06_final4": "Assignment needs valid functional limits; unnecessary clinical disclosure does not improve that decision and creates privacy exposure. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I06_final5": "Assignment needs valid functional limits; unnecessary clinical disclosure does not improve that decision and creates privacy exposure. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I06_final6": "Assignment needs valid functional limits; unnecessary clinical disclosure does not improve that decision and creates privacy exposure. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I06_check3": "Compatibility depends on what the person must actually do, not the assignment's title or a waiver.",
+        "I06_final7": "Compatibility depends on what the person must actually do, not the assignment's title or a waiver. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I06_final8": "Compatibility depends on what the person must actually do, not the assignment's title or a waiver. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I06_final9": "Compatibility depends on what the person must actually do, not the assignment's title or a waiver. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I06_check4": "Appearance and supervisory experience do not authorize a clinical capacity change. Valid restrictions remain until appropriately revised.",
+        "I06_final10": "Appearance and supervisory experience do not authorize a clinical capacity change. Valid restrictions remain until appropriately revised. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I06_final11": "Appearance and supervisory experience do not authorize a clinical capacity change. Valid restrictions remain until appropriately revised. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I06_final12": "Appearance and supervisory experience do not authorize a clinical capacity change. Valid restrictions remain until appropriately revised. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I06_check5": "Return and unrestricted clearance are different states; assignment must use current valid limits with appropriate confidentiality.",
+        "I06_final13": "Return and unrestricted clearance are different states; assignment must use current valid limits with appropriate confidentiality. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I06_final14": "Return and unrestricted clearance are different states; assignment must use current valid limits with appropriate confidentiality. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I06_final15": "Return and unrestricted clearance are different states; assignment must use current valid limits with appropriate confidentiality. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I06_check6": "Status accuracy and privacy response are separate obligations; resolving one does not erase the other.",
+        "I06_final16": "Status accuracy and privacy response are separate obligations; resolving one does not erase the other. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I06_final17": "Status accuracy and privacy response are separate obligations; resolving one does not erase the other. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I06_final18": "Status accuracy and privacy response are separate obligations; resolving one does not erase the other. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I06_final19": "Assignment needs valid functional limits; unnecessary clinical disclosure does not improve that decision and creates privacy exposure. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "I06_final20": "Return and unrestricted clearance are different states; assignment must use current valid limits with appropriate confidentiality. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

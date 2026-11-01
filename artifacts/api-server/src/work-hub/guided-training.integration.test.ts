@@ -7,7 +7,7 @@ import {saveLibrary,changeLibraryState} from './library-service';
 import {previewLibraryAssignment,assignLibrary,employeeChecklist,ownerAssignmentDetail} from './library-assignments';
 import {getAssignedLibrary,submitAssignedLibrary,submitGuidedTraining} from './training-service';
 import {companySafetyReadiness} from '../lib/company-safety-readiness';
-it('stores original/remediated scores, blocks bypass and cross-user access, and credits the existing training metric',async()=>{
+it.each(['H03','H20','C05'] as const)('stores original/remediated scores for %s, blocks bypass/cross-user access, and rejects untrusted score credit',async(familyId)=>{
  if(process.env.VNDRLY_TEST_DB_MODE!=='fresh-local'||new URL(process.env.DATABASE_URL!).hostname!=='127.0.0.1')throw Error('Fresh isolated database required');
  const key=randomUUID();const[v]=await db.insert(vendors).values({name:'H03 synthetic '+key,contactName:'Synthetic',contactEmail:key+'@example.invalid'}).returning();
  async function person(role:'admin'|'member'){const[u]=await db.insert(users).values({username:randomUUID(),displayName:'H03 synthetic',passwordHash:'test-only',role:'vendor'}).returning();const[m]=await db.insert(members).values({userId:u.id,orgType:'vendor',vendorId:v.id,role}).returning();return{userId:u.id,role:'vendor',vendorId:v.id,activeMembershipId:m.id,membershipRole:role,sv:u.sessionVersion,source:'web' as const};}
@@ -15,7 +15,7 @@ it('stores original/remediated scores, blocks bypass and cross-user access, and 
  const command=(payload:unknown,expectedVersion=0)=>({operationId:randomUUID(),owner,context:{kind:'organization' as const,id:v.id},payloadVersion:1 as const,payload,expectedVersion});
  const created=await saveLibrary(admin,command({kind:'training',title:'H03 synthetic course',safetyRelated:true,training:{lessons:[{id:'intro',title:'Intro',body:'Read the introduction.'},{id:'lesson',title:'Lesson',body:'Verify the safeguard.'},{id:'finish',title:'Finish',body:'Practical evaluation is separate.'}],questions:[{id:'q',prompt:'Choose safe',options:[{id:'a',label:'Safe'},{id:'b',label:'Unsafe'}],correctOptionIds:['a']}],guided:{steps:[{lessonId:'intro',questionIds:[]},{lessonId:'lesson',questionIds:['q']},{lessonId:'finish',questionIds:[]}],explanations:{q:'Verify the actual safeguard, not just the signature.'}}}}));
  const itemId=String(created.resource.itemId);await changeLibraryState(admin,itemId,command({},0),'publish');
- const[row]=await db.select().from(templates).where(eq(templates.id,itemId));const metadata=LibraryMetadataSchema.parse(row.libraryMetadata);metadata.safetyResource={familyId:'H03',categoryId:'hazards',resourceType:'training',sourceVersion:'3.0',sourceSha256:'a'.repeat(64)};await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,itemId));
+ const[row]=await db.select().from(templates).where(eq(templates.id,itemId));const metadata=LibraryMetadataSchema.parse(row.libraryMetadata);metadata.safetyResource={familyId,categoryId:familyId.startsWith('C')?'competence':'hazards',resourceType:'training',sourceVersion:'3.0',sourceSha256:'a'.repeat(64)};await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,itemId));
  const request={itemId,audience:{mode:'selected',userIds:[learner.userId],groupIds:[]}};const preview=await previewLibraryAssignment(admin,request);await assignLibrary(admin,command({...request,previewFingerprint:preview.previewFingerprint},preview.version));
  const id=(await employeeChecklist(learner)).items[0].instanceId;
  const before=(await companySafetyReadiness(admin)).categories.find(c=>c.id==='training')!;
@@ -30,6 +30,6 @@ it('stores original/remediated scores, blocks bypass and cross-user access, and 
  await submitGuidedTraining(learner,id,command({action:'advance',acknowledged:true},read.version));read=await getAssignedLibrary(learner,id);
  expect(read.assignment.status).toBe('completed');expect(read.assignment.progress.guided?.scores).toMatchObject({originalPercent:0,remediatedPercent:100,remediationCount:1});
  const ownerRead=await ownerAssignmentDetail(admin,id);expect(ownerRead.assignment.progress.guided?.scores?.originalPercent).toBe(0);
- const after=(await companySafetyReadiness(admin)).categories.find(c=>c.id==='training')!;expect(after.completed).toBe(before.completed+1);expect(after.required).toBe(before.required);expect(after.points).toBeGreaterThan(before.points);
+ const after=(await companySafetyReadiness(admin)).categories.find(c=>c.id==='training')!;expect(after.completed).toBe(before.completed);expect(after.required).toBe(before.required);expect(after.points).toBe(before.points);
  expect(read.history.some(h=>(h.values as any).progress?.responses?.q?.originalOptionIds?.[0]==='b')).toBe(true);
 },30000);

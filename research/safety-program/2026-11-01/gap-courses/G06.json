@@ -1,0 +1,786 @@
+{
+  "courseId": "G06",
+  "title": "Laboratory chemical hygiene and analytical task safety",
+  "description": "Complete original G06 guided knowledge course: six taught lessons, two fully worked cases and 26 individually explained questions. Practical qualification and employer-specific implementation remain separate.",
+  "purpose": "Connect sample and method hazards with effective chemical hygiene, equipment, waste and emergency controls.",
+  "audience": [
+    "Laboratory analysts",
+    "Sample-preparation technicians",
+    "Laboratory supervisors",
+    "Chemical hygiene program owners",
+    "Instrument service coordinators"
+  ],
+  "practicalBoundary": "Knowledge completion does not validate a method, implement a chemical hygiene plan or qualify specialized analytical, biological, radiation, medical or instrument-repair work. Method-specific instruction, assessment and authorization remain separate.",
+  "sources": [
+    {
+      "title": "OSHA — Laboratory chemical exposure standard, scope and chemical hygiene plan",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450"
+    },
+    {
+      "title": "OSHA — Nonmandatory chemical hygiene recommendations",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450AppA"
+    },
+    {
+      "title": "OSHA — Laboratory Safety Guidance; advisory publication",
+      "url": "https://www.osha.gov/sites/default/files/publications/OSHA3404laboratory-safety-guidance.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G06_intro",
+        "title": "Start here — an analytical result does not justify an uncontrolled method",
+        "body": "# G06 — Laboratory chemical hygiene and analytical task safety\n\nA sample arrives from a wellsite with an incomplete identity. An analyst is asked to prepare it quickly using a familiar solvent method. The sample may contain volatile material, the hood has an unresolved alarm and the waste bottle already contains a different reagent. Each uncertainty can change the task's hazard even though the requested report looks routine.\n\nThis course teaches laboratory workers and supervisors to connect sample and method hazards with the chemical hygiene plan, effective controls, equipment readiness and safe waste and emergency decisions. Six substantive lessons have one check each. Two fictional cases contain complete worked solutions, followed by twenty final questions. All 26 must be answered correctly or completed through acknowledged remediation. Original and remediated scores remain separate.\n\nOSHA 1910.1450 applies to defined laboratory use of hazardous chemicals. A room called a laboratory does not automatically settle coverage or remove other applicable requirements. The employer must determine the actual activities and governing rules. Its chemical hygiene plan, methods, technical limits and qualified roles must reflect the real work; this generic course cannot implement them by itself.\n\nNo analytical recipe, reagent-addition sequence, pressure limit, exposure limit or universal glove choice is provided here. Product- and method-specific instruction, safe supervised practice and practical assessment remain necessary before independent work. Clinical, biological, radiation and specialized instrument duties may need additional programs and qualifications. A written pass does not authorize any of those tasks.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G06_lesson1",
+        "title": "Lesson 1 — characterize the sample, reagents and exposure pathways",
+        "body": "## Start with identity and uncertainty\n\nAn analytical request names a result, not necessarily every hazard of obtaining it. Identify the sample source, known constituents, physical state, preservation, container and any pressure or temperature conditions. Review reagent information and the approved method before opening or preparing material. An SDS can explain a known chemical's hazards, but may not fully characterize an unknown field mixture or a reaction created during preparation.\n\nAsk how exposure could occur: inhaling vapor or aerosol, skin or eye contact, accidental ingestion from contaminated hands, or puncture/cut contact. A sample may also introduce fire, reactivity, pressure, oxygen-displacement or biological hazards. Small quantity is not proof of low risk, especially when a material is particularly hazardous or a preparation concentrates it. Do not sniff an unknown to identify it or open a suspect container to see whether pressure is present.\n\n## Consider the preparation, not only the starting bottle\n\nGrinding can generate dust; transferring can splash; heating can increase vapor; mixing can produce heat or gas; concentrating can change the hazard. A method validated for one sample matrix may not be suitable for another. The laboratory's competent method owner should evaluate changes in material, scale, concentration or equipment. A successful result obtained previously does not demonstrate that today's variant is safe.\n\n## Worked example: incomplete well-fluid information\n\nAn oilfield-fluid sample reaches the lab in a damaged container with a handwritten label. The paperwork does not establish whether volatile or toxic constituents are present. The analyst segregates it under the receiving procedure, protects the area and contacts the responsible supervisor and sample source. The analyst does not treat the most convenient assumption as fact or transfer it on an open bench simply because the requested test is familiar.\n\nThe eventual acceptance decision should establish both analytical suitability and a safe handling method. Rejecting or holding a sample is not an admission that every unknown is highly hazardous; it is an accurate response to missing information needed for the task. Record the uncertainty and restrictions so the next analyst does not repeat the unsupported opening attempt.\n\nLaboratory eating, drinking and food storage create avoidable ingestion pathways and do not belong in chemical work areas. Keep personal items and clean communication surfaces separate from contaminated handling. A glove that touched a sample container should not automatically touch a phone, door or keyboard.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G06_lesson2",
+        "title": "Lesson 2 — make the chemical hygiene plan govern the actual task",
+        "body": "## The plan is a working system\n\nA chemical hygiene plan connects laboratory hazards with procedures, control selection, functioning protective equipment, training, prior approvals and appropriate consultation or medical response. It should identify responsible roles, including the chemical hygiene officer where applicable. The plan must be accessible and relevant to the actual facility rather than a generic purchased binder nobody can use.\n\nBefore a task, find the approved method and establish prerequisites: sample acceptance, compatible equipment, appropriate ventilation, suitable PPE, waste arrangements, emergency resources and authorization. Identify steps needing prior approval or special precautions. Work involving particularly hazardous substances can need additional designated arrangements and decontamination planning under the applicable program. Do not substitute general chemical awareness for these task decisions.\n\n## Changes need a competent decision\n\nChanging reagent, concentration, sample matrix, scale or instrument may change reactivity and exposure. Scaling up a small preparation is not merely multiplying a recipe: heat removal, gas generation, mixing and containment can behave differently. The analyst should take the change to the competent method/safety owner before performing it. The approved review determines whether the method remains suitable and what updates, controls and training are needed.\n\nNew or unfamiliar workers need suitable instruction and supervision. The supervisor must not assume experience in a different laboratory covers this method. Verify understanding of stop conditions, including an unexpected reaction, equipment alarm, loss of ventilation or uncertain sample identity. Ask what the worker would do, not only whether they have read the plan.\n\n## Worked example: faster reporting by doubling the batch\n\nTo meet a deadline, a supervisor suggests doubling the preparation quantity in the same vessel. The analyst explains that the approved scope does not cover the change. The task is held pending competent review of the actual chemistry, vessel, heat and gas behavior and control capacity. A larger vessel alone might not resolve all effects and is not chosen by guesswork.\n\nIf the change is accepted, issue the applicable revised method and arrange relevant instruction and assessment. If it is not accepted, use the original supported scope or another approved plan. The change record should state what was evaluated and what remains restricted; a signature cannot turn an unreviewed reaction into a validated analytical process.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G06_lesson3",
+        "title": "Lesson 3 — choose effective ventilation and compatible protective barriers",
+        "body": "## Enclose or capture exposure where appropriate\n\nEngineering controls reduce exposure before relying on personal barriers. A suitable chemical fume hood can capture relevant vapors when used under its intended conditions. It must be appropriate to the task and function as required by the laboratory's checks. A sash position, airflow indication, alarm or certification label has meaning only within that actual system; this course gives no universal face velocity or sash height.\n\nCheck readiness before using a hood-dependent method. Do not ignore an airflow alarm because the fan makes noise. Keep the work arrangement within the approved method and avoid blocking capture with excessive equipment or storage. A hood is not a general chemical storeroom. If control performance is uncertain, stop the dependent preparation, keep material in a safe condition within your role and obtain the designated help.\n\n## Different enclosures are not interchangeable\n\nA chemical fume hood, a biological safety cabinet and other ventilated enclosures have different designs and purposes. An enclosure suitable for one biological task is not automatically suitable for flammable solvent vapor, and a chemical hood does not establish biological containment. The responsible technical program selects the correct equipment for actual combined hazards. A label saying ventilated is not enough.\n\n## PPE follows compatibility and exposure\n\nSelect gloves, eye/face protection and protective clothing through the actual assessment. Glove performance varies with chemical, concentration, contact and task. No glove color or material is universally protective. Check condition and follow the trained replacement/removal method. PPE does not make an uncontrolled reaction, blocked hood or unassessed instrument safe.\n\nRespirators, when required, involve a separate suitable program and prerequisites. An analyst should not put on an unfamiliar mask to compensate for failed engineering control or continue a method without the authorized plan.\n\n## Worked example: hood alarm during solvent preparation\n\nThe hood alarm activates before a volatile-solvent transfer. The analyst holds the transfer, keeps the material contained as appropriate and reports the control failure. Opening the bottle on the bench or moving it into an unassessed cabinet would change the exposure pathway without resolving it. Resume only when the actual required control and authorization are verified, not when somebody silences the sound.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G06_lesson4",
+        "title": "Lesson 4 — control analytical equipment and physical energy",
+        "body": "## Chemicals are not the only laboratory hazard\n\nAnalytical systems can combine electricity, hot surfaces, moving parts, pressure, vacuum, compressed gases, cryogens or radiation sources. A trained analyst's method authority does not automatically include instrument repair. Identify the equipment and energy involved, use current operating instructions and stay within assessed limits. A service engineer likewise needs the actual contamination and process information before opening an instrument.\n\nPressure can remain in sample systems, pumps or lines after an instrument stops. Vacuum vessels can fail if unsuitable or damaged. Gas cylinders need suitable securement, connections and handling by prepared people. A centrifuge's safe use depends on the appropriate vessel, rotor condition and operating arrangement. These examples require their own specific procedures; this course supplies no universal pressure setting, centrifuge speed or gas-regulator assembly method.\n\n## Defects and interlocks are decision points\n\nPerform the relevant readiness checks and report damaged glass, leaking connections, abnormal noise or failed safeguards. Do not defeat an interlock or remove a guard to make the run finish. If a failure develops, follow the actual stop/emergency route without creating an exposure through hurried opening. A rotating system is not made safe merely because the display has stopped updating.\n\nMaintenance requires suitable isolation, contamination information and release arrangements. The laboratory should explain residues and reagents to the service person through the authorized process. A maintenance ticket closed after a part replacement is not proof that the instrument has been safely restored and is analytically ready. Required operating and quality checks remain separate.\n\n## Worked example: the instrument service call\n\nA technician arrives to replace a component in an instrument previously used with a hazardous reagent. The analyst says the unit is powered off but cannot confirm line pressure or decontamination status. The technician does not open it on that statement alone. The responsible roles establish the actual equipment state, required isolation and residue precautions before access.\n\nAfter the work, qualified personnel verify safe restoration and the appropriate method readiness before the next run. An accurate analytical result from one trial cannot be used as a substitute for verifying a missing guard, uncertain leak condition or incomplete energy-control handback.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G06_lesson5",
+        "title": "Lesson 5 — segregate chemicals, waste and contaminated items",
+        "body": "## Compatibility is more important than convenient shelving\n\nChemicals that can react dangerously must not be stored or mixed merely because their names are adjacent alphabetically. Use the actual compatibility assessment, labels, SDS information and laboratory procedure. Containers need suitable material, condition, identity and containment. A label reading solvent does not necessarily establish which chemical or mixture is present or which waste stream it belongs in.\n\nSeparate clean supplies from contaminated handling and keep work areas organized enough to prevent accidental contact or mistaken addition. Do not place a reagent in a drink container or leave a transferred material unidentified. A colleague should not have to infer contents from color or location. If identity is lost, hold the material and obtain competent direction rather than testing by smell or pouring it into the most plausible bottle.\n\n## Waste chemistry can be more complex than the method\n\nWaste can contain residual reagents, sample components, reaction products and cleaning solutions. Two individually accepted waste streams may be incompatible when combined. The method should identify suitable collection, labeling, containment and disposal arrangements before work starts. Do not add an unknown liquid to an existing waste bottle just because both appear clear, and do not use a drain as the default solution to a full container.\n\nAccount for gas generation or pressure where relevant under the approved waste method. This course does not prescribe a closure type for every reaction or waste; a universal instruction could itself create a hazard. Use the competent program's actual container and handling requirements. Protect waste handlers by communicating the real material and restrictions rather than assuming laboratory staff alone will touch it.\n\n## Worked example: the convenient waste bottle\n\nAn analyst finishes an unfamiliar preparation and finds the designated waste container unavailable. A nearby bottle contains another method's reagent waste. The analyst stops disposal, keeps the material safely identified and obtains the approved compatible collection arrangement. Empty space is not compatibility evidence. A new label added after mixing cannot reverse an uncontrolled reaction.\n\nReview why the method began without adequate waste capacity. The corrective action should make suitable collection available and understood, rather than tell staff to decide at the end. Later observation of actual segregation is stronger evidence than an inventory showing several empty containers somewhere in the building.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G06_lesson6",
+        "title": "Lesson 6 — respond to spills and exposure without exceeding your role",
+        "body": "## Emergency readiness belongs before the experiment\n\nKnow the laboratory's alarm, evacuation, exposure-response and reporting routes; the location and access to applicable eyewash, safety shower and other emergency equipment; and who is trained for spill response. Keep access clear. A kit is not a response plan if nobody knows its contents or limits. Check local arrangements during induction and before unfamiliar methods rather than discovering them during an incident.\n\nA spill decision depends on the substance, quantity, volatility, reactivity, exposure, location and the responder's capability. This course sets no universal volume below which every spill is safe to clean. An apparently small unknown or highly hazardous material can exceed a worker's role. Warn others, keep clear and use the established emergency route when conditions are unsafe or uncertain. Do not enter a vapor cloud or improvise neutralization to demonstrate initiative.\n\n## Care and containment have different roles\n\nFor an exposure, use the actual immediate-response instructions and obtain appropriate medical assistance promptly. Provide the known chemical, sample and method information to responders through suitable channels. Do not delay care to finish an incident form or ask the exposed worker to diagnose severity. Qualified clinicians decide evaluation and treatment. A supervisor may coordinate work restrictions without needing the full clinical file.\n\nSecure the remaining hazard through authorized roles. Preserve factual information and relevant evidence without reentering danger for photographs or reopening suspect containers. Separate direct observations from assumptions. An abnormal reaction, near miss or hood failure is worth reporting even when nobody was injured.\n\n## Worked example: a small unknown spill\n\nA vial breaks beside an analytical instrument. Its transferred label is unreadable, and a colleague proposes wiping it with ordinary tissues. The analyst keeps people clear, alerts the responsible laboratory role and provides the known sample history. Unknown identity and uncertain response compatibility mean routine cleanup cannot be assumed safe from the spill's size.\n\nAfter competent control and release of the area, review the labeling, handling and method arrangements. If a procedure changes, communicate it and assess relevant practical capability before resuming dependent work. A deidentified learning alert can explain the control failure without exposing unnecessary medical information. A completed report or clean-looking bench does not by itself establish that the laboratory is ready to restart.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G06_scenarios",
+        "title": "Two analytical-task cases and fully worked solutions",
+        "body": "## Case 1: the urgent sample and unavailable hood\n\nA field sample arrives with an incomplete label and a request for an urgent solvent-based preparation. The analyst has done the method on another sample type but not this one. The sample container appears damaged. The required hood shows an unresolved airflow alarm. A supervisor proposes opening the sample quickly on the bench while maintenance checks the hood. The waste receptacle specified by the method is also unavailable.\n\n### Worked solution: hold the dependent preparation\n\nThe analyst should not open the sample on the bench. Sample identity and container condition, method applicability, ventilation readiness and waste arrangements are all unresolved. A deadline does not supply any of those prerequisites. Keep the material under the receiving/segregation procedure, protect people from unplanned contact and notify the responsible laboratory and sample-source roles.\n\nObtain sufficient information for competent review of the actual sample and method. The earlier experience supports familiarity but does not establish suitability for a changed matrix. A transfer into a biological cabinet or use of an unfamiliar respirator would not automatically replace the required chemical-control arrangement. The proper technical owner determines whether any alternative is suitable; the analyst does not create a private workaround.\n\n### Worked solution: resolve readiness as a chain\n\nUse appropriate equipment/specialist roles to resolve the hood condition and verify the control required by the accepted method. Obtain the compatible waste collection and labeling arrangement before starting. Confirm suitable PPE, emergency resources and the worker's actual preparation/authorization. Do not record these checks as complete merely because repairs or supplies have been requested.\n\nIf the sample is accepted and the method authorized, record the actual scope and limitations. If not, maintain the hold or use a separately approved alternative. The later review should examine why an urgent request arrived without sample information and why the method could be scheduled without verified control and waste capacity. A paid hood service ticket alone does not demonstrate that the full analytical task became safe.\n\n## Case 2: instrument repair and unidentified waste\n\nAn instrument stops during a preparation. An analyst asks a visiting service technician to open the unit, saying it is off and therefore safe. The system's residual pressure and reagent contamination have not been established. A nearby waste bottle labeled only laboratory waste is nearly full. A coworker starts pouring a new clear waste liquid into it and notices an unexpected change. Another person suggests finishing the transfer so the worktop is clear.\n\n### Worked solution: stop new exposure\n\nThe technician does not open the unit on the power-off statement alone. The proper laboratory, maintenance and operating roles establish energy state, contamination and required safe access. The analyst supplies actual reagent and method information, including uncertainty, rather than asking the technician to infer residues from the instrument model.\n\nStop the unsupported waste addition through the appropriate safe route and keep clear of the uncertain reaction. Do not add another chemical to neutralize it or close a container by guesswork. Use the laboratory's abnormal/emergency response and competent personnel to control the condition. A clear liquid and available bottle space are not compatibility evidence; an unexpected change is a reason to protect people and seek the actual response instructions.\n\n### Worked solution: restore both safety and method readiness\n\nAfter competent resolution, identify and manage waste through the approved compatible arrangement. Review the ambiguous label and missing segregation, preserving the actual incident facts. Complete appropriate instrument restoration and required method checks before reuse. A successful result on a test sample does not clear an unverified pressure path or reagent residue.\n\nCorrect the system that allowed unidentified waste and unsupported maintenance access. Ensure analysts and service providers share the relevant hazard and handback information. Later follow-up should observe real waste segregation and a representative service handoff, not merely count labels purchased or training attendance. Keep medical details restricted if an exposure occurred; communicate deidentified prevention information to the affected workers.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G06_assessment",
+        "title": "Final assessment — twenty analytical decisions",
+        "body": "Answer all twenty final questions individually. First responses remain recorded. An incorrect response requires reading and explicitly acknowledging the specific correction. The final results cover six lesson checks and twenty final questions; a remediated score demonstrates learning after feedback and does not replace the original first-answer result.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G06_finish",
+        "title": "Finish — chemical hygiene and method competence are separate",
+        "body": "## Written completion\n\nCompletion requires all 26 answered correctly or acknowledged remediation, with separate first-answer and remediated scores. The course teaches laboratory chemical-safety judgment through original fictional cases. It does not validate an analytical method, certify an instrument, implement the employer's chemical hygiene plan or show that a person has performed a practical task safely.\n\n## Employer and technical requirements\n\nThe employer must determine applicable legal requirements, including whether activities meet OSHA's defined laboratory-use scope. The chemical hygiene plan, approved methods, equipment conditions, exposure arrangements and emergency procedures need to reflect the actual laboratory. Biological samples, radiation sources, high-energy equipment and specialized work may require additional qualified programs. A generic SDS lesson cannot replace method-specific reaction and compatibility assessment.\n\nBefore independent work, provide relevant instruction, accessible current methods, suitable supervised practice and practical evaluation. An appropriate assessor should observe sample acceptance and identity checks, selection of controls and PPE, safe equipment use, clean/contaminated boundaries, compatible waste handling and response to abnormal conditions. Use safe simulation where appropriate rather than creating a hazardous reaction or exposure for training. Record unassessed items and retain restrictions until the needed competence and authority are established.\n\nThis course supplies no universal glove, ventilation setting, instrument operating limit, reagent-addition order, spill-size threshold or neutralization recipe. Resolve uncertainty through the laboratory's responsible competent roles before continuing the affected task. Clinical assessment, medical treatment, specialized spill response and instrument repair remain with the appropriately qualified and authorized people.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G06_check1",
+        "prompt": "A field sample has uncertain identity and a damaged container. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold/segregate it under the receiving procedure and obtain the needed competent review."
+          },
+          {
+            "id": "b",
+            "label": "Sniff it to identify volatile constituents."
+          },
+          {
+            "id": "c",
+            "label": "Open it on the bench because the requested test is routine."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G06_check2",
+        "prompt": "A supervisor proposes doubling a preparation quantity in the same setup. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Multiply every quantity and assume the same hazard."
+          },
+          {
+            "id": "b",
+            "label": "Obtain competent review of chemistry, scale, equipment and controls before the changed task."
+          },
+          {
+            "id": "c",
+            "label": "Use a larger vessel without reviewing anything else."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G06_check3",
+        "prompt": "A hood-dependent transfer is planned while the hood has an unresolved alarm. What is sound?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Silence the alarm and use the hood as normal."
+          },
+          {
+            "id": "b",
+            "label": "Move the bottle to an unassessed cabinet."
+          },
+          {
+            "id": "c",
+            "label": "Hold the dependent transfer and verify the required control through the proper route."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G06_check4",
+        "prompt": "An instrument is powered off, but pressure and contamination are unknown. Can the technician open it?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Not on that statement alone; establish the actual safe access prerequisites."
+          },
+          {
+            "id": "b",
+            "label": "Yes; power off eliminates every form of energy and residue."
+          },
+          {
+            "id": "c",
+            "label": "Yes; the visiting technician need not know previous reagents."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G06_check5",
+        "prompt": "The designated waste container is missing. What should the analyst do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Pour it into another clear-liquid waste bottle."
+          },
+          {
+            "id": "b",
+            "label": "Keep material identified and obtain an approved compatible collection arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Use a drain by default."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G06_check6",
+        "prompt": "A small spill has unknown identity. What governs response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any small spill is safe for every worker to wipe up."
+          },
+          {
+            "id": "b",
+            "label": "A worker should smell it before deciding."
+          },
+          {
+            "id": "c",
+            "label": "Actual hazards and responder capability through the lab response procedure, not size alone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G06_final1",
+        "prompt": "Does naming a room laboratory settle OSHA 1910.1450 applicability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; the actual activity and defined scope must be evaluated."
+          },
+          {
+            "id": "b",
+            "label": "Yes; every room with glassware has identical legal coverage."
+          },
+          {
+            "id": "c",
+            "label": "No chemical safety requirement can apply there."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G06_final2",
+        "prompt": "What can an SDS fail to fully characterize?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The name of the known chemical it addresses."
+          },
+          {
+            "id": "b",
+            "label": "An unknown field mixture or hazards created by a particular preparation reaction."
+          },
+          {
+            "id": "c",
+            "label": "Any hazard under all circumstances."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G06_final3",
+        "prompt": "Which preparation can change exposure compared with the starting sample?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only reading the sample request."
+          },
+          {
+            "id": "b",
+            "label": "Nothing once the bottle has a label."
+          },
+          {
+            "id": "c",
+            "label": "Grinding, heating, transferring or concentrating material."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G06_final4",
+        "prompt": "Is a small quantity automatically safe?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; toxicity, reactivity, concentration and exposure route still matter."
+          },
+          {
+            "id": "b",
+            "label": "Yes; every small vial is harmless."
+          },
+          {
+            "id": "c",
+            "label": "Yes; small tasks need no emergency arrangements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G06_final5",
+        "prompt": "What should the chemical hygiene plan provide?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a generic binder title."
+          },
+          {
+            "id": "b",
+            "label": "A usable connection between actual laboratory hazards, controls, procedures, preparation and responsible roles."
+          },
+          {
+            "id": "c",
+            "label": "Permission to ignore method-specific conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G06_final6",
+        "prompt": "A method differs from the approved scope. What should the analyst avoid?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Asking the competent owner to evaluate the change."
+          },
+          {
+            "id": "b",
+            "label": "Keeping the affected task held pending review."
+          },
+          {
+            "id": "c",
+            "label": "Creating a private unreviewed revision to meet a deadline."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G06_final7",
+        "prompt": "A chemical hood and biological safety cabinet are available. Are they interchangeable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; selection depends on the actual chemical/biological hazards and equipment design."
+          },
+          {
+            "id": "b",
+            "label": "Yes; any fan makes an enclosure suitable."
+          },
+          {
+            "id": "c",
+            "label": "Yes; whichever is closest is always acceptable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G06_final8",
+        "prompt": "What does a running fan not prove?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That the worker can hear a sound."
+          },
+          {
+            "id": "b",
+            "label": "That the required hood control performs suitably for the task."
+          },
+          {
+            "id": "c",
+            "label": "That equipment exists in the room."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G06_final9",
+        "prompt": "Which glove choice is universally valid for every chemical task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any glove of the usual color."
+          },
+          {
+            "id": "b",
+            "label": "The thickest glove regardless of chemical."
+          },
+          {
+            "id": "c",
+            "label": "None; compatibility and task assessment must determine suitable protection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G06_final10",
+        "prompt": "May an unfamiliar respirator automatically replace a failed hood?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; respiratory protection requires a suitable program and authorized assessment."
+          },
+          {
+            "id": "b",
+            "label": "Yes; every mask filters every laboratory vapor."
+          },
+          {
+            "id": "c",
+            "label": "Yes; wearing any mask removes the need to stop."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G06_final11",
+        "prompt": "What must an analyst communicate before instrument service?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only that the display is off."
+          },
+          {
+            "id": "b",
+            "label": "Relevant actual reagent/sample contamination and equipment-state information, including uncertainty."
+          },
+          {
+            "id": "c",
+            "label": "Only the desired report deadline."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G06_final12",
+        "prompt": "An interlock prevents a run. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Bypass it to finish the report."
+          },
+          {
+            "id": "b",
+            "label": "Remove the guard because the analyst is experienced."
+          },
+          {
+            "id": "c",
+            "label": "Use the actual defect/stop route and resolve the condition without unauthorized defeat."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G06_final13",
+        "prompt": "Should incompatible chemicals be stored together because their names are alphabetically adjacent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; use the actual compatibility and storage assessment."
+          },
+          {
+            "id": "b",
+            "label": "Yes; alphabetic convenience establishes chemical compatibility."
+          },
+          {
+            "id": "c",
+            "label": "Yes; labels prevent reactions by themselves."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G06_final14",
+        "prompt": "A transferred bottle is labeled only solvent. What may remain unresolved?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Whether a bottle exists."
+          },
+          {
+            "id": "b",
+            "label": "Its actual identity, mixture and compatible handling/waste route."
+          },
+          {
+            "id": "c",
+            "label": "Whether the word is readable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G06_final15",
+        "prompt": "Two waste liquids are clear. May they be mixed on that basis?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; clear liquids cannot react."
+          },
+          {
+            "id": "b",
+            "label": "Yes; a new label after mixing reverses any reaction."
+          },
+          {
+            "id": "c",
+            "label": "No; establish compatibility through the approved waste method."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G06_final16",
+        "prompt": "Can a worker set one universal spill-volume threshold for every chemical?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; substance, conditions and response capability determine the decision."
+          },
+          {
+            "id": "b",
+            "label": "Yes; small always means routine cleanup."
+          },
+          {
+            "id": "c",
+            "label": "Yes; quantity overrides toxicity and reactivity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G06_final17",
+        "prompt": "Why keep eyewash and emergency routes accessible before work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only to improve inspection photographs."
+          },
+          {
+            "id": "b",
+            "label": "So the applicable immediate response is usable without searching or obstruction during exposure."
+          },
+          {
+            "id": "c",
+            "label": "Because equipment ownership alone guarantees response."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G06_final18",
+        "prompt": "A near miss occurs without injury. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Erase it because only injuries matter."
+          },
+          {
+            "id": "b",
+            "label": "Publish a guessed diagnosis to motivate learning."
+          },
+          {
+            "id": "c",
+            "label": "Report the factual condition and review relevant controls proportionately."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G06_final19",
+        "prompt": "In Case 1, can a repaired hood alone release the whole preparation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; sample, method, waste and other relevant prerequisites still need resolution."
+          },
+          {
+            "id": "b",
+            "label": "Yes; one repaired control offsets all gaps."
+          },
+          {
+            "id": "c",
+            "label": "Yes; the deadline becomes the only remaining criterion."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G06_final20",
+        "prompt": "In Case 2, what best tests the improvement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The number of labels purchased."
+          },
+          {
+            "id": "b",
+            "label": "Representative real waste segregation and instrument-service handoffs using the corrected controls."
+          },
+          {
+            "id": "c",
+            "label": "Only the analyst's written quiz score."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G06_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G06_lesson1",
+          "questionIds": [
+            "G06_check1"
+          ]
+        },
+        {
+          "lessonId": "G06_lesson2",
+          "questionIds": [
+            "G06_check2"
+          ]
+        },
+        {
+          "lessonId": "G06_lesson3",
+          "questionIds": [
+            "G06_check3"
+          ]
+        },
+        {
+          "lessonId": "G06_lesson4",
+          "questionIds": [
+            "G06_check4"
+          ]
+        },
+        {
+          "lessonId": "G06_lesson5",
+          "questionIds": [
+            "G06_check5"
+          ]
+        },
+        {
+          "lessonId": "G06_lesson6",
+          "questionIds": [
+            "G06_check6"
+          ]
+        },
+        {
+          "lessonId": "G06_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G06_assessment",
+          "questionIds": [
+            "G06_final1",
+            "G06_final2",
+            "G06_final3",
+            "G06_final4",
+            "G06_final5",
+            "G06_final6",
+            "G06_final7",
+            "G06_final8",
+            "G06_final9",
+            "G06_final10",
+            "G06_final11",
+            "G06_final12",
+            "G06_final13",
+            "G06_final14",
+            "G06_final15",
+            "G06_final16",
+            "G06_final17",
+            "G06_final18",
+            "G06_final19",
+            "G06_final20"
+          ]
+        },
+        {
+          "lessonId": "G06_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G06_check1": "Unknown identity and condition can change safe handling. Resolve the acceptance and method prerequisites without deliberately exposing someone to discover the hazard.",
+        "G06_check2": "Scale can affect heat, gas and control performance. A larger vessel alone does not evaluate the complete changed method.",
+        "G06_check3": "Control uncertainty is not corrected by silencing a warning or changing enclosure without assessment. Obtain the appropriate verified arrangement.",
+        "G06_check4": "Electrical status does not establish pressure or contamination. Coordinate the actual isolation, residue and safe-access requirements before intervention.",
+        "G06_check5": "Appearance and empty space are not compatibility or disposal authorization. Establish the approved collection route before combining or discarding material.",
+        "G06_check6": "An unknown small quantity can still exceed routine cleanup capability. Keep clear, warn and obtain the responsible response rather than creating exposure to identify it.",
+        "G06_final1": "Applicability follows the real work and governing definitions. A room label neither establishes all coverage nor removes other relevant requirements.",
+        "G06_final2": "An SDS supports known-chemical review but does not automatically evaluate a changed sample matrix or the full analytical process. Method-specific assessment remains needed.",
+        "G06_final3": "Preparation can generate dust, vapor, splashes, heat or other changed hazards. Assess the actual method rather than assuming the starting container defines all exposure.",
+        "G06_final4": "Quantity matters but is not the only risk factor. Particularly hazardous or reactive material can need stringent controls even in small amounts.",
+        "G06_final5": "The plan must guide real work. A purchased or inaccessible binder does not establish implemented arrangements for the task.",
+        "G06_final6": "Private improvisation can change chemistry or protection without proper evaluation. Use the approved change/authorization route rather than silently altering the method.",
+        "G06_final7": "Enclosures have different purposes and limitations. The responsible technical program selects a suitable control for the actual task and combined hazards.",
+        "G06_final8": "Noise or apparent operation does not verify appropriate capture. Use the actual readiness indicators, checks and limits rather than inferring safety from a fan sound.",
+        "G06_final9": "Glove performance depends on chemical and exposure conditions. Appearance or thickness alone cannot establish suitability.",
+        "G06_final10": "A failed engineering control does not authorize an improvised mask solution. Use the actual competent program and hold unsupported dependent work.",
+        "G06_final11": "Service personnel need relevant energy and contamination information. Power status and deadlines cannot establish safe access.",
+        "G06_final12": "A safeguard conflict requires the proper technical response. Experience or urgency does not authorize defeating the protection.",
+        "G06_final13": "Storage must reflect hazard compatibility and suitable containment. Names and labels communicate information but do not make incompatible materials safe together.",
+        "G06_final14": "A generic label may not identify the actual material needed for safe use and disposal. Resolve identity rather than infer contents from appearance or location.",
+        "G06_final15": "Visual similarity is not chemistry evidence. Waste can contain interacting reagents and products; do not combine it without the supported arrangement.",
+        "G06_final16": "Spill capability depends on multiple actual hazards. This course deliberately supplies no universal volume or neutralization recipe.",
+        "G06_final17": "Readiness includes actual access, understanding and a working response route. An item on inventory does not establish that a worker can use it when needed.",
+        "G06_final18": "Near misses can reveal method or control weaknesses. Record facts and supported learning without inventing clinical conclusions or deleting the event.",
+        "G06_final19": "Readiness is a chain of relevant prerequisites. Fixing ventilation does not identify an unknown sample or establish compatible waste handling.",
+        "G06_final20": "Effectiveness concerns actual handling and communication in later work. Supplies and knowledge scores alone do not prove the operational system works."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

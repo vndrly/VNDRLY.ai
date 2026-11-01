@@ -1,0 +1,785 @@
+{
+  "familyId": "C01",
+  "title": "Role/task competence matrix and authorization",
+  "description": "Complete original VNDRLY C01 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Tie capability to the actual tasks each worker may perform.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Supervisors map tasks to evidence and recognize expired/out-of-scope credentials. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-102-training.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.enbridge.com/~/media/Enb/Documents/Governance/GTM-Construction-Safety-Manual.pdf?hash=E601FF20539F4465EBD7F924A763ED62&rev=d6109a102e68445a843001f7c26f18ec"
+    },
+    {
+      "title": "OSHA education and training guidance",
+      "url": "https://www.osha.gov/safety-management/education-training"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "C01_intro",
+        "title": "Start here — Role/task competence matrix and authorization",
+        "body": "# C01: Role/task competence matrix and authorization\n\nTie capability to the actual tasks each worker may perform. This course teaches the decisions needed to implement that purpose in field operations. It covers role standards, prerequisites, assessment, authorization, renewal and suspension. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C01_lesson1",
+        "title": "Lesson 1 — Define tasks rather than job titles",
+        "body": "## Define tasks rather than job titles\n\nA competence matrix connects people with specific work they may perform. Start with tasks, equipment, conditions and abnormal duties, not a broad title such as operator. Two people with the same title may have different limits. Include the task's prerequisites and who may authorize it. The matrix should help dispatch prevent an unsuitable assignment, rather than simply display a list of training dates.\n\n### Deeper application\n\nBreak each role into verbs that can be assessed: inspect, operate, communicate, isolate within a defined role or stop on a defect. Attach the equipment and conditions that make those verbs meaningful. A matrix entry saying lifting does not distinguish operating from rigging or signaling. The person approving the matrix should understand those boundaries, while specialist task standards remain with the relevant technical owner.\n\n### Worked oilfield example\n\nA worker marked operator is assigned equipment outside the scope of the recorded practical assessment. The decision is to hold the unmatched assignment and verify task-specific competence and authorization.\n\nA job title cannot establish the boundaries of assessed performance; the actual task and equipment must match. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A person-to-task matrix identifying assessed equipment, limitations and employer authorization. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the matrix lists only job titles and course dates. The appropriate correction is to add bounded task and equipment scope and verify the supporting assessment before relying on the matrix. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C01_lesson2",
+        "title": "Lesson 2 — Map prerequisites and standards",
+        "body": "## Map prerequisites and standards\n\nFor each task identify required knowledge, practical assessment, licenses where applicable and site conditions. Separate mandatory prerequisites from desirable experience. A certificate may demonstrate a course result without covering the workplace task. Include abnormal decisions such as recognizing defects and stopping safely. Use the appropriate technical standard and competent assessor rather than writing an invented universal qualification rule.\n\n### Deeper application\n\nA prerequisite map is a chain, not a collection of interchangeable cards. If the task requires relevant knowledge, practical evaluation and a legal credential, one strong record does not compensate for a missing different prerequisite. State what each item demonstrates. A provider's assessment may support the employer's decision, but the employer still needs to define the assignment's permitted scope and conditions.\n\n### Worked oilfield example\n\nA supervisor has course attendance evidence but no practical assessment required for the planned equipment task. The decision is to obtain the required practical evaluation or assign a person already authorized for that task.\n\nKnowledge and observed performance are different evidence; attendance does not establish the missing practical prerequisite. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A task standard and prerequisite map showing the practical evidence required for authorization. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the task standard omits abnormal-condition decisions. The appropriate correction is to have a competent owner revise the assessment scope to include relevant stop and abnormal decisions. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C01_lesson3",
+        "title": "Lesson 3 — Verify authenticity and matching identity",
+        "body": "## Verify authenticity and matching identity\n\nCheck the issuing organization, worker identity, credential scope, restrictions and validity. Verification should use appropriate issuer channels and protect personal information. A clear photograph of a card is still only a submitted record until checked. Resolve name differences through a documented identity process, not assumptions. Do not publish sensitive identifiers in an unrestricted matrix when a verified status and controlled reference will suffice.\n\n### Deeper application\n\nVerify only the personal information necessary for identity and credential matching and keep sensitive identifiers in appropriate restricted records. The public-facing or dispatch matrix can show verified status and a controlled reference. When a mismatch is unresolved, record pending verification rather than guessing. An issuer's confirmation of authenticity answers a different question from whether the credential covers this worker's intended task.\n\n### Worked oilfield example\n\nA card has the right surname but a different person identifier and cannot be connected to the assigned worker. The decision is to resolve identity with appropriate verification before accepting the credential for that worker.\n\nEvidence belongs to a particular person. An unresolved identity mismatch cannot support authorization. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A restricted verification record connecting the authentic credential to the assigned person's identity and scope. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the issuer confirms the credential is authentic but covers a narrower equipment class. The appropriate correction is to record the verified scope and restrict assignments to the supported class pending further assessment. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C01_lesson4",
+        "title": "Lesson 4 — Make employer authorization explicit",
+        "body": "## Make employer authorization explicit\n\nThe employer decides what work a person may perform based on verified prerequisites and performance. State scope, supervision, equipment/site limits, authorizer and relevant dates. A training provider does not automatically issue the employer's operating authority. A site may add its own acceptance requirements. Dispatch needs the current usable decision, including restrictions, rather than access to a confusing folder of unrelated certificates.\n\n### Deeper application\n\nAuthorization should be usable without reconstructing the whole training file. For example, specify the assessed task, relevant equipment scope and whether supervision is required. An authorization label must not broaden what the assessment supports. If the site adds familiarization or acceptance conditions, show those as pending readiness items rather than altering the authentic provider result. Record who made the employer decision.\n\n### Worked oilfield example\n\nA worker has a valid training certificate but no employer decision authorizing independent operation. The decision is to obtain a supported employer authorization before independent assignment.\n\nThe employer must make the assignment decision; a credential alone does not state that employer's operational limits. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A named employer authorization referencing verified evidence and stating independent or supervised task limits. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the signed authorization says equipment work without identifying equipment or restrictions. The appropriate correction is to clarify and approve bounded scope before dispatch relies on it. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C01_lesson5",
+        "title": "Lesson 5 — Suspend and reassess affected scope",
+        "body": "## Suspend and reassess affected scope\n\nExpiry, revocation, role change or a verified competence gap can require restriction. Restrict the affected scope promptly and communicate it to dispatch and site supervision. Preserve unaffected authorizations only where their basis remains valid. Create a reassessment route with feedback and appropriate practice. Do not treat a restriction as erasing historical training or assume an expired credential automatically means every unrelated task is prohibited.\n\n### Deeper application\n\nRestricting one task can leave other assignments valid when their evidence remains sound, but check interfaces before reallocating. A worker restricted from an attachment might still perform unrelated authorized work. Do not interpret that as permission to continue the unsupported operation through a renamed task. Give the worker specific feedback and a realistic route to reassessment, while ensuring dispatch cannot accidentally use the old scope.\n\n### Worked oilfield example\n\nA verified assessment gap is found for one attachment while the matrix still displays unrestricted authorization. The decision is to restrict the affected attachment task and arrange suitable reassessment with dispatch notified.\n\nAuthorization must reflect current evidence. The restriction should target the unsupported task and preserve the history. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A dated scope restriction, dispatch notification and reassessment plan linked to the finding. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the restriction was entered but the site still uses an exported old roster. The appropriate correction is to notify affected users and replace the stale operational roster with the current restriction status. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C01_lesson6",
+        "title": "Lesson 6 — Sample the matrix against assignments",
+        "body": "## Sample the matrix against assignments\n\nAssurance traces an actual job to the person, task standard, verified evidence and authorization in force at the time. Also sample people who were not assigned because prerequisites were missing. A matrix full of green cells is not enough if cells lack supporting records or use the wrong scope. Review after changed work and relevant performance findings, with renewal periods determined by applicable sources rather than a universal assumption.\n\n### Deeper application\n\nAudit at the time of the job. A credential renewed today does not prove it was valid last month's assignment. Trace evidence dates and authorization history without rewriting earlier decisions. Include rejected allocations in the sample: they show whether the matrix prevented unsupported work. Investigate inconsistencies between the matrix and dispatch as a system problem, not simply an administrative typo until the actual impact is known.\n\n### Worked oilfield example\n\nAn audit finds every matrix cell green, but sampled dispatch records include a worker whose assessment was pending. The decision is to investigate the mismatch and correct assignment controls while preserving the original records.\n\nAssurance tests whether the matrix controlled real assignments, not merely whether the display looked complete. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A traceable sample comparing assignment dates, supported task scopes and authorization decisions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the sample checked only current credentials and ignored their status at the job date. The appropriate correction is to reconcile validity and authorization as they stood when the sampled work occurred. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C01_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA worker marked operator is assigned equipment outside the scope of the recorded practical assessment. At the handover, a second issue is identified: The task standard omits abnormal-condition decisions. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Accept the card because the surname matches. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Hold the unmatched assignment and verify task-specific competence and authorization. The reason is specific: A job title cannot establish the boundaries of assessed performance; the actual task and equipment must match. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Have a competent owner revise the assessment scope to include relevant stop and abnormal decisions. The supporting record should show: A task standard and prerequisite map showing the practical evidence required for authorization. This is important because knowledge and observed performance are different evidence; attendance does not establish the missing practical prerequisite. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because evidence belongs to a particular person. An unresolved identity mismatch cannot support authorization. The suitable decision is: Resolve identity with appropriate verification before accepting the credential for that worker. Evidence for review would include: A restricted verification record connecting the authentic credential to the assigned person's identity and scope. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA worker has a valid training certificate but no employer decision authorizing independent operation. At the handover, a second issue is identified: The restriction was entered but the site still uses an exported old roster. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Accept the green matrix as stronger evidence than actual dispatch. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Obtain a supported employer authorization before independent assignment. The reason is specific: The employer must make the assignment decision; a credential alone does not state that employer's operational limits. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Notify affected users and replace the stale operational roster with the current restriction status. The supporting record should show: A dated scope restriction, dispatch notification and reassessment plan linked to the finding. This is important because authorization must reflect current evidence. The restriction should target the unsupported task and preserve the history. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because assurance tests whether the matrix controlled real assignments, not merely whether the display looked complete. The suitable decision is: Investigate the mismatch and correct assignment controls while preserving the original records. Evidence for review would include: A traceable sample comparing assignment dates, supported task scopes and authorization decisions. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C01_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C01_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nSupervisors map tasks to evidence and recognize expired/out-of-scope credentials. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "C01_check1",
+        "prompt": "A worker marked operator is assigned equipment outside the scope of the recorded practical assessment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the unmatched assignment and verify task-specific competence and authorization."
+          },
+          {
+            "id": "b",
+            "label": "Treat the operator title as authorization for all equipment."
+          },
+          {
+            "id": "c",
+            "label": "Ask the worker to sign a waiver for the unfamiliar task."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C01_final1",
+        "prompt": "For define tasks rather than job titles, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A person-to-task matrix identifying assessed equipment, limitations and employer authorization."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C01_final2",
+        "prompt": "A later review finds: The matrix lists only job titles and course dates. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Add bounded task and equipment scope and verify the supporting assessment before relying on the matrix."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C01_final3",
+        "prompt": "Consider this proposed response: Treat the operator title as authorization for all equipment. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A job title cannot establish the boundaries of assessed performance; the actual task and equipment must match."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C01_check2",
+        "prompt": "A supervisor has course attendance evidence but no practical assessment required for the planned equipment task. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record attendance as practical competence."
+          },
+          {
+            "id": "b",
+            "label": "Obtain the required practical evaluation or assign a person already authorized for that task."
+          },
+          {
+            "id": "c",
+            "label": "Delete the assessment prerequisite because the job is urgent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C01_final4",
+        "prompt": "For map prerequisites and standards, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A task standard and prerequisite map showing the practical evidence required for authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C01_final5",
+        "prompt": "A later review finds: The task standard omits abnormal-condition decisions. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Have a competent owner revise the assessment scope to include relevant stop and abnormal decisions."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C01_final6",
+        "prompt": "Consider this proposed response: Record attendance as practical competence. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Knowledge and observed performance are different evidence; attendance does not establish the missing practical prerequisite."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C01_check3",
+        "prompt": "A card has the right surname but a different person identifier and cannot be connected to the assigned worker. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the card because the surname matches."
+          },
+          {
+            "id": "b",
+            "label": "Change the name on the uploaded image to match the roster."
+          },
+          {
+            "id": "c",
+            "label": "Resolve identity with appropriate verification before accepting the credential for that worker."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C01_final7",
+        "prompt": "For verify authenticity and matching identity, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A restricted verification record connecting the authentic credential to the assigned person's identity and scope."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C01_final8",
+        "prompt": "A later review finds: The issuer confirms the credential is authentic but covers a narrower equipment class. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Record the verified scope and restrict assignments to the supported class pending further assessment."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C01_final9",
+        "prompt": "Consider this proposed response: Accept the card because the surname matches. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Evidence belongs to a particular person. An unresolved identity mismatch cannot support authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C01_check4",
+        "prompt": "A worker has a valid training certificate but no employer decision authorizing independent operation. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain a supported employer authorization before independent assignment."
+          },
+          {
+            "id": "b",
+            "label": "Assume the provider certificate is the employer's authorization."
+          },
+          {
+            "id": "c",
+            "label": "Let dispatch infer authorization from years of service."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C01_final10",
+        "prompt": "For make employer authorization explicit, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A named employer authorization referencing verified evidence and stating independent or supervised task limits."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C01_final11",
+        "prompt": "A later review finds: The signed authorization says equipment work without identifying equipment or restrictions. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Clarify and approve bounded scope before dispatch relies on it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C01_final12",
+        "prompt": "Consider this proposed response: Assume the provider certificate is the employer's authorization. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The employer must make the assignment decision; a credential alone does not state that employer's operational limits."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C01_check5",
+        "prompt": "A verified assessment gap is found for one attachment while the matrix still displays unrestricted authorization. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep unrestricted status until the next annual review."
+          },
+          {
+            "id": "b",
+            "label": "Restrict the affected attachment task and arrange suitable reassessment with dispatch notified."
+          },
+          {
+            "id": "c",
+            "label": "Delete every historical training record for the worker."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C01_final13",
+        "prompt": "For suspend and reassess affected scope, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A dated scope restriction, dispatch notification and reassessment plan linked to the finding."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C01_final14",
+        "prompt": "A later review finds: The restriction was entered but the site still uses an exported old roster. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Notify affected users and replace the stale operational roster with the current restriction status."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C01_final15",
+        "prompt": "Consider this proposed response: Keep unrestricted status until the next annual review. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Authorization must reflect current evidence. The restriction should target the unsupported task and preserve the history."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C01_check6",
+        "prompt": "An audit finds every matrix cell green, but sampled dispatch records include a worker whose assessment was pending. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the green matrix as stronger evidence than actual dispatch."
+          },
+          {
+            "id": "b",
+            "label": "Change the assessment date to precede the job."
+          },
+          {
+            "id": "c",
+            "label": "Investigate the mismatch and correct assignment controls while preserving the original records."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C01_final16",
+        "prompt": "For sample the matrix against assignments, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A traceable sample comparing assignment dates, supported task scopes and authorization decisions."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C01_final17",
+        "prompt": "A later review finds: The sample checked only current credentials and ignored their status at the job date. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Reconcile validity and authorization as they stood when the sampled work occurred."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C01_final18",
+        "prompt": "Consider this proposed response: Accept the green matrix as stronger evidence than actual dispatch. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Assurance tests whether the matrix controlled real assignments, not merely whether the display looked complete."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C01_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Have a competent owner revise the assessment scope to include relevant stop and abnormal decisions."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C01_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Notify affected users and replace the stale operational roster with the current restriction status."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "C01_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C01_lesson1",
+          "questionIds": [
+            "C01_check1"
+          ]
+        },
+        {
+          "lessonId": "C01_lesson2",
+          "questionIds": [
+            "C01_check2"
+          ]
+        },
+        {
+          "lessonId": "C01_lesson3",
+          "questionIds": [
+            "C01_check3"
+          ]
+        },
+        {
+          "lessonId": "C01_lesson4",
+          "questionIds": [
+            "C01_check4"
+          ]
+        },
+        {
+          "lessonId": "C01_lesson5",
+          "questionIds": [
+            "C01_check5"
+          ]
+        },
+        {
+          "lessonId": "C01_lesson6",
+          "questionIds": [
+            "C01_check6"
+          ]
+        },
+        {
+          "lessonId": "C01_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C01_assessment",
+          "questionIds": [
+            "C01_final1",
+            "C01_final2",
+            "C01_final3",
+            "C01_final4",
+            "C01_final5",
+            "C01_final6",
+            "C01_final7",
+            "C01_final8",
+            "C01_final9",
+            "C01_final10",
+            "C01_final11",
+            "C01_final12",
+            "C01_final13",
+            "C01_final14",
+            "C01_final15",
+            "C01_final16",
+            "C01_final17",
+            "C01_final18",
+            "C01_final19",
+            "C01_final20"
+          ]
+        },
+        {
+          "lessonId": "C01_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "C01_check1": "A job title cannot establish the boundaries of assessed performance; the actual task and equipment must match.",
+        "C01_final1": "A job title cannot establish the boundaries of assessed performance; the actual task and equipment must match. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C01_final2": "A job title cannot establish the boundaries of assessed performance; the actual task and equipment must match. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C01_final3": "A job title cannot establish the boundaries of assessed performance; the actual task and equipment must match. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C01_check2": "Knowledge and observed performance are different evidence; attendance does not establish the missing practical prerequisite.",
+        "C01_final4": "Knowledge and observed performance are different evidence; attendance does not establish the missing practical prerequisite. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C01_final5": "Knowledge and observed performance are different evidence; attendance does not establish the missing practical prerequisite. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C01_final6": "Knowledge and observed performance are different evidence; attendance does not establish the missing practical prerequisite. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C01_check3": "Evidence belongs to a particular person. An unresolved identity mismatch cannot support authorization.",
+        "C01_final7": "Evidence belongs to a particular person. An unresolved identity mismatch cannot support authorization. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C01_final8": "Evidence belongs to a particular person. An unresolved identity mismatch cannot support authorization. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C01_final9": "Evidence belongs to a particular person. An unresolved identity mismatch cannot support authorization. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C01_check4": "The employer must make the assignment decision; a credential alone does not state that employer's operational limits.",
+        "C01_final10": "The employer must make the assignment decision; a credential alone does not state that employer's operational limits. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C01_final11": "The employer must make the assignment decision; a credential alone does not state that employer's operational limits. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C01_final12": "The employer must make the assignment decision; a credential alone does not state that employer's operational limits. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C01_check5": "Authorization must reflect current evidence. The restriction should target the unsupported task and preserve the history.",
+        "C01_final13": "Authorization must reflect current evidence. The restriction should target the unsupported task and preserve the history. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C01_final14": "Authorization must reflect current evidence. The restriction should target the unsupported task and preserve the history. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C01_final15": "Authorization must reflect current evidence. The restriction should target the unsupported task and preserve the history. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C01_check6": "Assurance tests whether the matrix controlled real assignments, not merely whether the display looked complete.",
+        "C01_final16": "Assurance tests whether the matrix controlled real assignments, not merely whether the display looked complete. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C01_final17": "Assurance tests whether the matrix controlled real assignments, not merely whether the display looked complete. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C01_final18": "Assurance tests whether the matrix controlled real assignments, not merely whether the display looked complete. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C01_final19": "Knowledge and observed performance are different evidence; attendance does not establish the missing practical prerequisite. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "C01_final20": "Authorization must reflect current evidence. The restriction should target the unsupported task and preserve the history. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

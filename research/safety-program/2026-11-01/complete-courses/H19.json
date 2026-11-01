@@ -1,0 +1,785 @@
+{
+  "familyId": "H19",
+  "title": "Driving, journey planning and fatigue",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Manage remote roads, long shifts and vehicle travel.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate licence verification, vehicle-specific practical driving assessment, load and equipment competence and applicable legal authorization remain necessary. This online course does not qualify driving, towing, dangerous-goods transport or emergency response.",
+  "sources": [
+    {
+      "title": "SLB Driving policy — company-specific example",
+      "url": "https://www.slb.com/-/media/files/about-us/2023-policies-and-procedures/driving-policy-2023.ashx"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.slb.com/about/health-safety-and-environment/worker-safety-and-incident-prevention"
+    },
+    {
+      "title": "SLB Driving policy — company-specific example",
+      "url": "https://www.slb.com/-/media/files/about-us/2023-policies-and-procedures/driving-policy-2023.ashx"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H19_intro",
+        "title": "Start here: Driving, journey planning and fatigue",
+        "body": "# Driving, journey planning and fatigue\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate licence verification, vehicle-specific practical driving assessment, load and equipment competence and applicable legal authorization remain necessary. This online course does not qualify driving, towing, dangerous-goods transport or emergency response.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[SLB Driving policy — company-specific example](https://www.slb.com/-/media/files/about-us/2023-policies-and-procedures/driving-policy-2023.ashx). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H19_lesson1",
+        "title": "Lesson 1 - Approve the actual driver, vehicle and task",
+        "body": "Driving for work requires more than possession of a licence. The employer verifies the driver's approval for the vehicle, task and conditions, alongside applicable legal requirements. A light-vehicle approval does not establish competence for a loaded specialist vehicle. Confirm any required training and restrictions through the authorized process.\n\nThe vehicle must be suitable and serviceable for the journey and load. Use the approved pre-use check, report defects and hold a vehicle where a critical condition is unresolved. A completed checklist is not permission to ignore a defect found immediately afterward. Include passengers and load security in the readiness decision.\n\n## Worked field example\n\nA supervisor substitutes an unassessed driver for a specialist loaded vehicle at short notice.\n\nThe safe decision is to hold dispatch until the actual driver’s applicable approval and vehicle suitability are verified. Approval must cover the assigned vehicle and task rather than driving in general.\n\nA useful field record is specific: A verified driver authorization and serviceable vehicle/load check for the actual journey. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nApproval should be checked against the assignment, not merely the employee name. A driver may be authorized for a light vehicle while the new trip involves a trailer, different load or specialist vehicle. The assigning role verifies the appropriate evidence and conditions before dispatch. Short notice does not convert a different task into the same approval.\n\nThe pre-use check also belongs to the actual vehicle and journey. A record completed before a defect arose cannot clear that defect. The driver reports the condition through the approved process, and the competent authority determines repair or replacement. The journey remains held where required readiness is not established. Borrowing another vehicle may require a fresh suitability check rather than only moving the paperwork.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H19_lesson2",
+        "title": "Lesson 2 - Build a usable journey plan",
+        "body": "A journey plan connects route, destination, conditions, timing, rest and communication. Identify road quality, weather, closures, remote coverage gaps, fuel and safe stopping options. Coordinate the receiving location and usable entrance rather than relying on an old map pin.\n\nPlan for deviations. The driver needs to know who can approve a route change and how to report delay from a safe stop. Avoid plans that require driving faster to recover an administrative schedule. If the intended route is unsafe, revise the journey or defer it through the responsible role.\n\nThe receiving or monitoring person must know the expected contact and arrival arrangements. A plan saved on the driver's phone alone cannot trigger assistance if the driver never arrives.\n\n## Worked field example\n\nA remote delivery plan has an arrival time but no route, safe stops or monitoring contact.\n\nThe safe decision is to complete the route, conditions, rest and missed-arrival arrangements before dispatch. An arrival estimate alone does not manage route hazards or enable a reliable response.\n\nA useful field record is specific: A journey plan accepted by the driver and named monitor with actionable destination and escalation details. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nConsider a remote destination whose map pin leads to the old entrance. The journey planner confirms the receiving contact, current approach and any vehicle restrictions. That information reaches the driver before travel and the monitor who would need to help if arrival is missed. A correct street address can still be operationally inadequate.\n\nA plan should allow safe delay. Build realistic rest, stopping and receiving arrangements so a small interruption does not force the driver to choose between schedule and safety. If the destination closes or the route changes, the responsible role revises the plan. The driver is not expected to solve an unsuitable route while moving or to accept a shortcut simply because a navigation device offers it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H19_lesson3",
+        "title": "Lesson 3 - Recognize fatigue before it controls the trip",
+        "body": "Fatigue affects attention and judgment and may build through long work, inadequate sleep, night duty and the journey itself. A person may be unfit to drive even when a legal maximum has not been reached. Do not use a limit as a target or as proof that the individual is alert.\n\nWorkers must be able to report unfitness without pressure to complete the delivery. Plan rest, safe accommodation, relief or alternative transport through the employer's process. A promise to drink coffee, open a window or play loud music is not a reliable replacement for adequate rest.\n\nIf fatigue emerges during travel, stop at a safe location and contact the responsible role. Do not continue to an arbitrary destination merely because it is close.\n\n## Worked field example\n\nAfter an extended shift, a driver says they are too tired for the remote return journey.\n\nThe safe decision is to do not dispatch; arrange safe rest or alternative transport and revise the journey plan. Reported unfitness requires action even if a scheduling or legal ceiling has not been reached.\n\nA useful field record is specific: A recorded fitness concern and verified rest, relief or alternative-transport arrangement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nFatigue reporting should be specific enough to trigger action without requiring a worker to prove incapacity. The supervisor listens to the report, considers the work and travel history through the employer's process, and arranges a safe alternative. The driver should not be challenged to demonstrate alertness by completing part of the road trip.\n\nAccommodation and alternative transport need their own safe arrangements. A proposed hotel that requires the tired person to drive a long distance does not necessarily resolve the immediate problem. The responsible role coordinates a safe stopping and support option. Records distinguish the original concern, actual decision and confirmed arrangements. A signed willingness to continue does not remove the reported unfitness.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H19_lesson4",
+        "title": "Lesson 4 - Keep restraints and attention effective",
+        "body": "Use the required restraints and ensure passengers do the same under company and legal rules. Secure the load so braking or a change of direction does not create a second hazard. Do not reach for loose objects while moving.\n\nPlan navigation and communications before departure. Stop safely for calls, messages, paperwork or route review under the applicable company rules. A work-related message can be as distracting as a personal one; dispatchers should not create pressure for immediate replies from a moving vehicle.\n\nImpairment includes alcohol, drugs and other conditions affecting safe driving. Follow the employer's reporting and health process for medication concerns without making an unqualified medical decision. If fitness is uncertain, resolve it before driving.\n\n## Worked field example\n\nA dispatcher asks a moving driver to read and reply to a detailed route-change message immediately.\n\nThe safe decision is to have the driver stop safely before reviewing and responding through the approved process. Work-related communication can divert attention from driving.\n\nA useful field record is specific: A communication instruction and journey record showing route review occurred from a safe stop. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nDispatchers share responsibility for a usable communication process. Agree expected contact points and do not demand live responses that conflict with driving. A message marked urgent should tell the driver to contact the dispatcher from a safe stop, rather than implying that work messages are exempt from distraction rules.\n\nPassengers also need a clear role. They may help with navigation where the plan permits, but they do not take over vehicle control informally or distract the driver with paperwork. Restraints and safe load placement remain effective for everyone. A loose tablet or tool can become a hazard during braking. Prepare the cab and route before departure so routine information is accessible without unsafe reaching.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H19_lesson5",
+        "title": "Lesson 5 - Manage change during the journey",
+        "body": "Conditions can invalidate the departure plan: flooding, dust, road works, fatigue, vehicle defects or an inaccessible destination. The driver should stop safely and contact the journey authority rather than improvise a hazardous shortcut.\n\nGive a useful report: location, observed condition, people affected, vehicle status and available safe options. Clearly distinguish what is known from what is assumed. A navigation app's suggestion does not establish that a road is suitable for a loaded vehicle.\n\nIf an emergency occurs, protect yourself and passengers within the safe response plan and summon appropriate help. Do not walk into traffic, floodwater or another uncontrolled hazard to preserve the schedule. Maintain contact or activate the missed-arrival arrangements as the plan requires.\n\n## Worked field example\n\nA navigation app diverts a loaded vehicle onto an unfamiliar narrow track after a road closure.\n\nThe safe decision is to stop at a safe location and obtain a reviewed suitable route through the journey authority. An automated route suggestion does not verify suitability for the vehicle, load and conditions.\n\nA useful field record is specific: A documented route-change decision based on actual vehicle and road constraints. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nWhen conditions change, the driver gives the monitor a usable description from a safe location. Include current position, road condition, vehicle/load constraints and the decision needed. Avoid reporting a guessed route as confirmed suitable. The planner can seek reliable local information and consult the receiving site.\n\nAn emergency response must also consider the road environment. Protect yourself and passengers through the approved process without standing in traffic or entering floodwater. Provide accurate location and hazards to responders. If a breakdown creates another danger, the driver follows the emergency arrangement rather than attempting an unqualified repair in the exposure area. Continuing contact and any handover remain explicit until welfare and journey status are resolved.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H19_lesson6",
+        "title": "Lesson 6 - Learn from exceptions and verify practical ability",
+        "body": "Review delays, route changes, defects, fatigue reports and monitoring exceptions with drivers. Telematics can inform coaching but needs context; a data point alone may not explain a necessary evasive maneuver or road condition. Protect personal information through the approved process.\n\nPractical driving assessment must cover the relevant vehicle and assigned conditions through a qualified process. This course can teach journey judgment, but it cannot observe vehicle control, maneuvering or defensive driving.\n\nClose improvements by verifying their effect. If a new schedule still routinely requires tired workers to drive home, the action has not resolved the exposure. Preserve driver feedback and distinguish a safe delay from a failure to meet an unrealistic timetable.\n\n## Worked field example\n\nA review treats every late arrival as poor performance, including safe stops for fatigue and road closures.\n\nThe safe decision is to review the cause and improve journey controls without penalizing the required safe intervention. Schedule pressure can discourage the stopping and reporting needed to manage changing road risk.\n\nA useful field record is specific: A contextual review of journey exceptions and verified changes to route, timing or support. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nReview exception data with the driver before drawing a conclusion. A harsh-braking flag could reflect a developing hazard, poor following distance or a data issue; the context matters. A review should identify a useful action and protect personal information rather than publishing a punitive league table.\n\nPractical competence requires the appropriate evaluator and actual vehicle scope. An online journey course cannot observe reversing, braking, load response or defensive driving. Record assessment limits and restrictions. If a vehicle or duty changes, revisit those limits before assignment. Improvement is verified through relevant evidence, such as safer schedules and observed approved practice, while a low incident count remains only one part of the picture.\n\nA journey handover should identify whether the trip is active, delayed, safely stopped or completed. Transfer the current route, last confirmed position, expected next contact, occupants and any live concerns to a named receiver. An outgoing monitor does not end responsibility by leaving a message that nobody has accepted. The receiving person confirms access to the plan and understands the escalation process.\n\nWhen the driver reports arrival, use the planned confirmation rather than assuming a vehicle location indicator proves everyone is safe. Resolve any open incident or welfare check with the response coordinator. A journey can be physically complete while an unresolved vehicle defect still prevents the next dispatch.\n\nFor improvement, compare the plan with what actually happened. If safe stops repeatedly make the schedule impossible, revise scheduling and receiving windows. Do not redefine successful performance to discourage necessary breaks. Record the change and ask drivers whether the revised timing is usable. A new schedule is not effective simply because it has been published; later representative journeys must show that the intended support and rest arrangements can be used. Driver feedback remains part of the evidence and should not be removed from the record because it contradicts an optimistic arrival target.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H19_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional technician finishes a long emergency repair and is assigned a remote return trip. Rain has closed the usual road. The dispatcher offers a shorter unverified track and asks for progress messages while driving. The technician reports heavy eyelids.\n\n### Worked solution\n\nDispatch is held. The fatigue concern is addressed with safe rest, relief or alternative transport; coffee is not the readiness decision. The journey authority reviews the closure and suitability of any alternative for the actual vehicle and load. Communication is arranged from safe stops and a named monitor receives the revised plan. The original arrival time is changed rather than recovered by faster driving. Driver approval and vehicle condition remain separate prerequisites. The record captures the concern and actual safe arrangement, not merely “driver agreed.” The employer later reviews why emergency work and return travel were scheduled without adequate fatigue support.\n\n## Scenario 2\n\nA fictional delivery vehicle misses an agreed arrival contact in a remote area. The last message identifies a road closure. The monitor assumes the driver has no signal and leaves at shift end without handover.\n\n### Worked solution\n\nThe monitor applies the agreed missed-arrival process and transfers any ongoing response explicitly to the designated backup. The last known location, vehicle, occupants, route and closure information are assembled for safe verification. Lack of signal is one possibility, not a confirmed welfare check. Appropriate contact attempts and escalation follow the plan; any immediate danger information is acted on promptly. Nobody is sent alone onto an unsafe closed road to search. Once welfare is confirmed, the response coordinator is informed and monitoring restored before onward travel. The review addresses coverage gaps and the failed shift handover.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H19_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H19_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate licence verification, vehicle-specific practical driving assessment, load and equipment competence and applicable legal authorization remain necessary. This online course does not qualify driving, towing, dangerous-goods transport or emergency response.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H19_check1",
+        "prompt": "A supervisor substitutes an unassessed driver for a specialist loaded vehicle at short notice. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold dispatch until the actual driver’s applicable approval and vehicle suitability are verified"
+          },
+          {
+            "id": "b",
+            "label": "Dispatch because the substitute holds any driving licence"
+          },
+          {
+            "id": "c",
+            "label": "Use the regular driver’s training record for the substitute"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H19_check2",
+        "prompt": "A remote delivery plan has an arrival time but no route, safe stops or monitoring contact. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let the driver choose everything after departure"
+          },
+          {
+            "id": "b",
+            "label": "Complete the route, conditions, rest and missed-arrival arrangements before dispatch"
+          },
+          {
+            "id": "c",
+            "label": "Use the delivery booking as the complete journey plan"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H19_check3",
+        "prompt": "After an extended shift, a driver says they are too tired for the remote return journey. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Require coffee and insist on the original return time"
+          },
+          {
+            "id": "b",
+            "label": "Dispatch because the trip is shorter than the shift"
+          },
+          {
+            "id": "c",
+            "label": "Do not dispatch; arrange safe rest or alternative transport and revise the journey plan"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H19_check4",
+        "prompt": "A dispatcher asks a moving driver to read and reply to a detailed route-change message immediately. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Have the driver stop safely before reviewing and responding through the approved process"
+          },
+          {
+            "id": "b",
+            "label": "Read the message while following a slow truck"
+          },
+          {
+            "id": "c",
+            "label": "Ask a passenger to steer while the driver types"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H19_check5",
+        "prompt": "A navigation app diverts a loaded vehicle onto an unfamiliar narrow track after a road closure. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Follow the app because it gives the shortest arrival time"
+          },
+          {
+            "id": "b",
+            "label": "Stop at a safe location and obtain a reviewed suitable route through the journey authority"
+          },
+          {
+            "id": "c",
+            "label": "Accelerate before darkness makes the track harder to see"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H19_check6",
+        "prompt": "A review treats every late arrival as poor performance, including safe stops for fatigue and road closures. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Require drivers to recover delays by reducing rest"
+          },
+          {
+            "id": "b",
+            "label": "Delete fatigue reports to improve the arrival metric"
+          },
+          {
+            "id": "c",
+            "label": "Review the cause and improve journey controls without penalizing the required safe intervention"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H19_final1",
+        "prompt": "For approve the actual driver, vehicle and task, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approval must cover the assigned vehicle and task rather than driving in general."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H19_final2",
+        "prompt": "Which evidence would most directly verify approve the actual driver, vehicle and task in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified driver authorization and serviceable vehicle/load check for the actual journey"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H19_final3",
+        "prompt": "A relief worker proposes the following shortcut during approve the actual driver, vehicle and task: \"Dispatch because the substitute holds any driving licence.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Dispatch because the substitute holds any driving licence"
+          },
+          {
+            "id": "b",
+            "label": "Use the regular driver’s training record for the substitute"
+          },
+          {
+            "id": "c",
+            "label": "Hold dispatch until the actual driver’s applicable approval and vehicle suitability are verified"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H19_final4",
+        "prompt": "For build a usable journey plan, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An arrival estimate alone does not manage route hazards or enable a reliable response."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H19_final5",
+        "prompt": "Which evidence would most directly verify build a usable journey plan in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A journey plan accepted by the driver and named monitor with actionable destination and escalation details"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H19_final6",
+        "prompt": "A relief worker proposes the following shortcut during build a usable journey plan: \"Let the driver choose everything after departure.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let the driver choose everything after departure"
+          },
+          {
+            "id": "b",
+            "label": "Use the delivery booking as the complete journey plan"
+          },
+          {
+            "id": "c",
+            "label": "Complete the route, conditions, rest and missed-arrival arrangements before dispatch"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H19_final7",
+        "prompt": "For recognize fatigue before it controls the trip, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reported unfitness requires action even if a scheduling or legal ceiling has not been reached."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H19_final8",
+        "prompt": "Which evidence would most directly verify recognize fatigue before it controls the trip in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A recorded fitness concern and verified rest, relief or alternative-transport arrangement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H19_final9",
+        "prompt": "A relief worker proposes the following shortcut during recognize fatigue before it controls the trip: \"Require coffee and insist on the original return time.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Require coffee and insist on the original return time"
+          },
+          {
+            "id": "b",
+            "label": "Dispatch because the trip is shorter than the shift"
+          },
+          {
+            "id": "c",
+            "label": "Do not dispatch; arrange safe rest or alternative transport and revise the journey plan"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H19_final10",
+        "prompt": "For keep restraints and attention effective, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Work-related communication can divert attention from driving."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H19_final11",
+        "prompt": "Which evidence would most directly verify keep restraints and attention effective in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A communication instruction and journey record showing route review occurred from a safe stop"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H19_final12",
+        "prompt": "A relief worker proposes the following shortcut during keep restraints and attention effective: \"Read the message while following a slow truck.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Read the message while following a slow truck"
+          },
+          {
+            "id": "b",
+            "label": "Ask a passenger to steer while the driver types"
+          },
+          {
+            "id": "c",
+            "label": "Have the driver stop safely before reviewing and responding through the approved process"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H19_final13",
+        "prompt": "For manage change during the journey, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An automated route suggestion does not verify suitability for the vehicle, load and conditions."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H19_final14",
+        "prompt": "Which evidence would most directly verify manage change during the journey in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A documented route-change decision based on actual vehicle and road constraints"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H19_final15",
+        "prompt": "A relief worker proposes the following shortcut during manage change during the journey: \"Follow the app because it gives the shortest arrival time.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Follow the app because it gives the shortest arrival time"
+          },
+          {
+            "id": "b",
+            "label": "Accelerate before darkness makes the track harder to see"
+          },
+          {
+            "id": "c",
+            "label": "Stop at a safe location and obtain a reviewed suitable route through the journey authority"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H19_final16",
+        "prompt": "For learn from exceptions and verify practical ability, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Schedule pressure can discourage the stopping and reporting needed to manage changing road risk."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H19_final17",
+        "prompt": "Which evidence would most directly verify learn from exceptions and verify practical ability in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A contextual review of journey exceptions and verified changes to route, timing or support"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H19_final18",
+        "prompt": "A relief worker proposes the following shortcut during learn from exceptions and verify practical ability: \"Require drivers to recover delays by reducing rest.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Require drivers to recover delays by reducing rest"
+          },
+          {
+            "id": "b",
+            "label": "Delete fatigue reports to improve the arrival metric"
+          },
+          {
+            "id": "c",
+            "label": "Review the cause and improve journey controls without penalizing the required safe intervention"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H19_final19",
+        "prompt": "In Scenario 1, which problem must not be solved by a shorter route alone?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The driver’s reported fatigue and unfitness"
+          },
+          {
+            "id": "b",
+            "label": "The existence of a destination"
+          },
+          {
+            "id": "c",
+            "label": "The need to tell the monitor about a revised plan"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H19_final20",
+        "prompt": "In Scenario 2, what does poor coverage justify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assuming the driver is safe until next shift"
+          },
+          {
+            "id": "b",
+            "label": "Using the planned backup and escalation arrangements, not abandoning monitoring"
+          },
+          {
+            "id": "c",
+            "label": "Closing the journey without welfare confirmation"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H19_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H19_lesson1",
+          "questionIds": [
+            "H19_check1"
+          ]
+        },
+        {
+          "lessonId": "H19_lesson2",
+          "questionIds": [
+            "H19_check2"
+          ]
+        },
+        {
+          "lessonId": "H19_lesson3",
+          "questionIds": [
+            "H19_check3"
+          ]
+        },
+        {
+          "lessonId": "H19_lesson4",
+          "questionIds": [
+            "H19_check4"
+          ]
+        },
+        {
+          "lessonId": "H19_lesson5",
+          "questionIds": [
+            "H19_check5"
+          ]
+        },
+        {
+          "lessonId": "H19_lesson6",
+          "questionIds": [
+            "H19_check6"
+          ]
+        },
+        {
+          "lessonId": "H19_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H19_final",
+          "questionIds": [
+            "H19_final1",
+            "H19_final2",
+            "H19_final3",
+            "H19_final4",
+            "H19_final5",
+            "H19_final6",
+            "H19_final7",
+            "H19_final8",
+            "H19_final9",
+            "H19_final10",
+            "H19_final11",
+            "H19_final12",
+            "H19_final13",
+            "H19_final14",
+            "H19_final15",
+            "H19_final16",
+            "H19_final17",
+            "H19_final18",
+            "H19_final19",
+            "H19_final20"
+          ]
+        },
+        {
+          "lessonId": "H19_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H19_check1": "Hold dispatch until the actual driver’s applicable approval and vehicle suitability are verified. Approval must cover the assigned vehicle and task rather than driving in general.",
+        "H19_check2": "Complete the route, conditions, rest and missed-arrival arrangements before dispatch. An arrival estimate alone does not manage route hazards or enable a reliable response.",
+        "H19_check3": "Do not dispatch; arrange safe rest or alternative transport and revise the journey plan. Reported unfitness requires action even if a scheduling or legal ceiling has not been reached.",
+        "H19_check4": "Have the driver stop safely before reviewing and responding through the approved process. Work-related communication can divert attention from driving.",
+        "H19_check5": "Stop at a safe location and obtain a reviewed suitable route through the journey authority. An automated route suggestion does not verify suitability for the vehicle, load and conditions.",
+        "H19_check6": "Review the cause and improve journey controls without penalizing the required safe intervention. Schedule pressure can discourage the stopping and reporting needed to manage changing road risk.",
+        "H19_final1": "Approval must cover the assigned vehicle and task rather than driving in general. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H19_final2": "A verified driver authorization and serviceable vehicle/load check for the actual journey. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H19_final3": "Hold dispatch until the actual driver’s applicable approval and vehicle suitability are verified. Approval must cover the assigned vehicle and task rather than driving in general. A staffing change does not remove this requirement.",
+        "H19_final4": "An arrival estimate alone does not manage route hazards or enable a reliable response. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H19_final5": "A journey plan accepted by the driver and named monitor with actionable destination and escalation details. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H19_final6": "Complete the route, conditions, rest and missed-arrival arrangements before dispatch. An arrival estimate alone does not manage route hazards or enable a reliable response. A staffing change does not remove this requirement.",
+        "H19_final7": "Reported unfitness requires action even if a scheduling or legal ceiling has not been reached. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H19_final8": "A recorded fitness concern and verified rest, relief or alternative-transport arrangement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H19_final9": "Do not dispatch; arrange safe rest or alternative transport and revise the journey plan. Reported unfitness requires action even if a scheduling or legal ceiling has not been reached. A staffing change does not remove this requirement.",
+        "H19_final10": "Work-related communication can divert attention from driving. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H19_final11": "A communication instruction and journey record showing route review occurred from a safe stop. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H19_final12": "Have the driver stop safely before reviewing and responding through the approved process. Work-related communication can divert attention from driving. A staffing change does not remove this requirement.",
+        "H19_final13": "An automated route suggestion does not verify suitability for the vehicle, load and conditions. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H19_final14": "A documented route-change decision based on actual vehicle and road constraints. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H19_final15": "Stop at a safe location and obtain a reviewed suitable route through the journey authority. An automated route suggestion does not verify suitability for the vehicle, load and conditions. A staffing change does not remove this requirement.",
+        "H19_final16": "Schedule pressure can discourage the stopping and reporting needed to manage changing road risk. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H19_final17": "A contextual review of journey exceptions and verified changes to route, timing or support. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H19_final18": "Review the cause and improve journey controls without penalizing the required safe intervention. Schedule pressure can discourage the stopping and reporting needed to manage changing road risk. A staffing change does not remove this requirement.",
+        "H19_final19": "A shorter route does not restore alertness. Fitness and route suitability are distinct conditions that both need resolution.",
+        "H19_final20": "Coverage limitations must be anticipated in journey planning and response. They do not establish the driver’s condition or end monitoring responsibility."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

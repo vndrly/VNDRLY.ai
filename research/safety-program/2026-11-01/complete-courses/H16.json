@@ -1,0 +1,785 @@
+{
+  "familyId": "H16",
+  "title": "Silica, asbestos, lead and coating hazards",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Control chronic exposure and contaminated materials.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate competent material surveys, sampling, exposure assessment, specialist licensing/training, respiratory-program prerequisites and applicable clearance are required. This awareness course authorizes no asbestos abatement, lead removal, hazardous sampling or technical handback.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y72-95-003_5.pdf"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://kmterm.kindermorgan.com/ContAlliance/SSPOMS.aspx"
+    },
+    {
+      "title": "OSHA Crystalline silica",
+      "url": "https://www.osha.gov/silica-crystalline"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H16_intro",
+        "title": "Start here: Silica, asbestos, lead and coating hazards",
+        "body": "# Silica, asbestos, lead and coating hazards\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate competent material surveys, sampling, exposure assessment, specialist licensing/training, respiratory-program prerequisites and applicable clearance are required. This awareness course authorizes no asbestos abatement, lead removal, hazardous sampling or technical handback.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Crystalline silica](https://www.osha.gov/silica-crystalline). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H16_lesson1",
+        "title": "Lesson 1 - Recognize materials before disturbance",
+        "body": "Dust and coatings can contain hazards that are not apparent from appearance. Concrete and other silica-containing materials can release respirable crystalline silica during cutting or grinding. Older insulation and building products may contain asbestos; coatings may contain lead or other hazardous constituents. The safe starting point is reliable material information and task assessment before disturbance.\n\nDo not identify asbestos by sight or clear an old coating because it is a familiar color. The appropriate competent survey or sampling process determines the material status where needed. Sampling itself can disturb material and requires suitable methods and competence.\n\nTreat unexpected suspect material as a change. Stop the disturbance, prevent unnecessary access and contact the responsible authority. Do not sweep up the evidence or continue until a sample is available. Maintain the boundary without making unsupported claims about exactly what the material contains.\n\n## Worked field example\n\nA crew exposes unknown old insulation behind a panel scheduled for removal.\n\nThe safe decision is to stop disturbance, restrict affected access and obtain competent material identification and method review. Unknown suspect material cannot be cleared by visual familiarity or schedule pressure.\n\nA useful field record is specific: A competent material determination linked to the exact location and planned disturbance. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nA site may have several generations of insulation, coatings and repair patches. A survey's drawings and sample identifiers should let the competent reviewer determine which material and location were assessed. If the crew cannot match the work item to that scope, it reports the gap before disturbance. A contractor's experience at a neighboring facility does not identify this material.\n\nUnexpected debris also matters. A worker opening an access panel may encounter material that has already deteriorated or been disturbed by another crew. The response is to protect the affected area and obtain competent advice without spreading the debris. Do not bag or photograph it in a way that requires unsafe contact. The report describes observed condition and location while avoiding an unsupported material diagnosis.\n\n## Field application and verification\n\nA material-specific determination does not remove the need to verify the work area before each affected task. The responsible supervisor checks that the identified location matches the current instruction, the relevant controls remain present and other employers understand the boundary. A mismatch returns to the competent authority instead of being resolved by guessing which document is newest.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H16_lesson2",
+        "title": "Lesson 2 - Connect the material to the task exposure",
+        "body": "Material presence and exposure are different questions. A sound undisturbed product may present a different situation from cutting, blasting, grinding or removal. Identify how the task releases material, who may inhale it, how long work lasts and how contamination can spread. Include other crews, cleaners and people outside the immediate work zone.\n\nThe competent assessor determines applicable exposure requirements and evaluation methods. Do not assume a small visible cloud means a small inhalation exposure, or that no visible dust means no respirable hazard. Sampling and interpretation require suitable competence.\n\nA survey for one wall or component does not cover every surface on a site. Match the survey scope and results to the exact task and location. Resolve gaps before disturbance. A contractor's generic method statement does not establish the contents of this particular insulation or coating.\n\n## Worked field example\n\nA survey covers the office walls but a crew uses it to clear process-pipe insulation removal.\n\nThe safe decision is to hold the removal until material information and exposure assessment cover the actual pipe insulation. Survey conclusions apply to their sampled and assessed scope rather than the whole property.\n\nA useful field record is specific: A location-specific survey scope and reviewed task exposure assessment. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nA competent exposure assessment examines the complete sequence: setup, disturbance, tool changes, waste removal, cleanup and handback. A method may control the main cutting operation but expose a helper changing a dust-filled collection unit. Include that helper and others who pass through or work nearby.\n\nThe reviewer also considers whether the existing information matches the operating conditions. A test completed with a different tool, material, enclosure or duration may have limited relevance. Workers should understand the resulting instructions and what a failure looks like. They are not expected to interpret all analytical uncertainty independently, but they must not convert an unread report into a blanket statement that no protection is required.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H16_lesson3",
+        "title": "Lesson 3 - Control release at the work method",
+        "body": "Use elimination, prefabrication or a different method where practicable to avoid disturbing hazardous material. Where disturbance remains necessary, the competent method may use suitable wet processes, extraction, enclosure or specialist containment. The control must fit the material, tool and task. A household vacuum or a hose attached to any machine is not automatically an effective hazardous-dust control.\n\nVerify the equipment configuration and work-area boundary before starting. Check that extraction or suppression works as intended and does not create electrical, slipping or other hazards. Keep people clear of the release path and protect adjacent work.\n\nPPE and respiratory protection address assessed residual risks within their specific programs. They do not authorize uncontrolled dust generation or substitute for missing material identification. If the engineered control fails, stop the affected disturbance rather than merely asking workers to tighten masks.\n\n## Worked field example\n\nA grinder’s approved extraction system stops while concrete cutting continues beside another crew.\n\nThe safe decision is to stop the affected cutting and restore or reassess the approved dust-control method. Respiratory PPE does not make a failed source-control arrangement acceptable by itself.\n\nA useful field record is specific: A verified extraction configuration and observed control performance for the actual cutting task. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nSource controls have operating requirements. A reviewed wet method needs suitable delivery and collection arrangements; a reviewed extraction method needs the specified compatible tool and collection system. Either can be undermined by a missing component or a change made to improve convenience. The operator reports those conditions before continuing.\n\nConsider a temporary screen intended to keep dust away from another employer. If the screen redirects contaminated air into a doorway, the local control has transferred exposure. Coordinate the complete boundary and adjacent work through the responsible authority. Do not choose a barrier arrangement solely from available materials. Verification checks what happens at the source, worker and surrounding area under the approved method, not just whether a screen was installed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H16_lesson4",
+        "title": "Lesson 4 - Prevent contamination during hygiene and cleanup",
+        "body": "Hazardous dust can be carried on clothing, tools, boots and waste. Plan clean/dirty boundaries and the applicable decontamination and hygiene arrangements before work. Keep eating and drinking out of contaminated areas and follow the task's hand-cleaning process. Do not take contaminated work clothing home for ordinary family laundering.\n\nCleanup must use the competent approved method for the material. Dry sweeping or compressed air can re-suspend dust and expose workers who were not present during the original task. Waste packaging, identification, transport and disposal depend on the material and governing requirements; a general trash bin may be unsuitable.\n\nGive cleaners and waste handlers the relevant hazard information and controls. The task is not finished when the operator stops the tool. Handback includes the condition of adjacent surfaces, equipment and waste, with the appropriate competent verification where required.\n\n## Worked field example\n\nA supervisor suggests blowing dusty coveralls clean with compressed air before the crew enters a lunchroom.\n\nThe safe decision is to use the approved contamination-control and hygiene process instead of blowing dust into the air. Compressed air can redistribute hazardous dust and expose the wearer and nearby people.\n\nA useful field record is specific: A verified clean/dirty arrangement and material-appropriate cleaning and waste records. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nThe waste route is part of the work design. Determine where contaminated consumables, removed material and collection contents go, who handles them and how they remain identified. A sealed package that is later opened by an uninformed waste handler has not preserved the control through disposal. Communicate relevant information to each responsible role.\n\nDecontamination needs a usable sequence and facilities where required. Workers should know the clean boundary, how to remove or manage contaminated items and where personal belongings remain protected. Do not confuse an ordinary welfare sink with a fully assessed decontamination arrangement. The competent plan determines the method, and the employer verifies that the required facilities are actually available before work.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H16_lesson5",
+        "title": "Lesson 5 - Use the correct specialist scope",
+        "body": "Asbestos abatement, lead work and other regulated activities can require specific training, licensing, supervision, exposure controls and notifications. Requirements vary by jurisdiction and task. Verify the actual contractor and personnel scope through the responsible technical authority rather than treating a general safety certificate as specialist qualification.\n\nA surveyor, laboratory, abatement contractor and occupational health professional perform different functions. One document should not be used to imply all roles were fulfilled. Confirm who identified the material, who approved the method, who performs the work and who verifies handback.\n\nWorkers outside the specialist scope need enough awareness to recognize boundaries and stop unexpected disturbance. They do not need to pretend they can perform sampling, interpret every laboratory result or approve containment. Keep those decisions with the qualified people and communicate the resulting restrictions clearly.\n\n## Worked field example\n\nA general maintenance contractor offers asbestos removal using only a broad online safety certificate.\n\nThe safe decision is to hold the specialist activity until the applicable qualified personnel, permissions and approved method are verified. General awareness training does not establish regulated abatement competence or authorization.\n\nA useful field record is specific: Scope-specific qualification and licensing evidence plus a competent approved work method. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nCheck specialist evidence against the contract scope. A company may hold competence for one material or method while another task requires a different permission, trained role or supervisory arrangement. Verify the people who will actually attend, not only a corporate brochure. Where licensing is applicable, the responsible authority confirms its relevance and status.\n\nA laboratory result is also bounded evidence. It does not by itself approve the removal contractor, containment method, exposure controls or reoccupation. Keep those decisions identifiable. The general supervisor coordinates the interface and ensures required approvals exist while the specialist makes the technical determination. This prevents an administrative review from silently becoming an unqualified abatement design.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H16_lesson6",
+        "title": "Lesson 6 - Manage change and controlled handback",
+        "body": "Unexpected material, a changed tool, damaged containment or a different removal quantity can alter exposure and waste needs. Stop the affected operation and return the change to the competent authority. An earlier permit does not authorize a materially different disturbance.\n\nHandback must address the actual area and any applicable clearance or verification requirements. Do not equate a tidy appearance with a competent determination that the area can be reoccupied. Communicate remaining restrictions, locations not assessed and any ongoing monitoring or waste controls.\n\nThe records should make scope visible: material location, survey reference, task, selected controls, responsible people, control checks, failures and handback decision. Preserve original findings and uncertainty. A negative sample from one location is not a universal assurance for neighboring material.\n\n## Worked field example\n\nA removal crew discovers a different coating under the assessed surface and continues using the same method.\n\nThe safe decision is to stop the changed disturbance and obtain competent review of the newly exposed material and controls. The original determination may not cover a different underlying coating.\n\nA useful field record is specific: A change review and scope-specific handback decision identifying any unassessed material. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Applying the control through the work cycle\n\nA handback should tell the receiving employer what area and condition were verified, which competent process was used and what remains restricted. If a neighboring space was not assessed, preserve that limitation. Do not reopen it merely because the main work area looks tidy. Temporary access changes and waste movements also need communication.\n\nFollow-up should address the failure mechanism. If unexpected material was disturbed because drawings were unclear, improve location identification and pre-work scope matching, then check those actions in use. Repeating awareness training alone may not repair the information gap. Preserve the original finding and correction so later crews understand the uncertainty that was resolved and the material that remains outside the assessed scope.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H16_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional repair crew plans to cut a concrete plinth and remove adjacent pipe insulation. Its pack contains a silica-control method for the saw and a survey limited to the office building. During preparation, a worker finds brittle insulation and asks whether the dust mask issued for cutting can also be used for removal.\n\n### Worked solution\n\nThe two tasks require separate material and exposure decisions. The saw-control method does not identify the insulation, and the office survey does not cover the process pipe. Insulation disturbance is held and access protected while a competent authority arranges identification and a suitable specialist method. The concrete task is reviewed for its own controls and any interaction with the restricted area. Respirator selection remains within the separate program; a mask issued for one task is not a general clearance. The work can be staged only if the responsible authority verifies that one task will not compromise the other’s boundary. The record preserves the survey gap rather than labeling the entire site assessed.\n\n## Scenario 2\n\nAfter fictional coating removal, the crew leaves dust on a stair and unsealed waste bags in a shared yard. A manager proposes reopening the area because the coating work is finished and no workers feel ill. Describe the remaining obligations.\n\n### Worked solution\n\nThe area remains controlled while the competent authority assesses contamination, suitable cleanup and the required handback. The crew does not dry-sweep the stair or move unsealed waste through occupied areas. Waste handlers receive the material information and use the approved packaging, identification and disposal route. The manager verifies the actual area condition and any required specialist clearance before reopening. Absence of symptoms is not a contamination measurement and does not rule out delayed health effects. The review includes adjacent surfaces, pedestrian access and whether the handover allowed another employer to enter prematurely. Records distinguish completion of removal from verification of safe reoccupation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H16_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H16_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate competent material surveys, sampling, exposure assessment, specialist licensing/training, respiratory-program prerequisites and applicable clearance are required. This awareness course authorizes no asbestos abatement, lead removal, hazardous sampling or technical handback.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H16_check1",
+        "prompt": "A crew exposes unknown old insulation behind a panel scheduled for removal. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stop disturbance, restrict affected access and obtain competent material identification and method review"
+          },
+          {
+            "id": "b",
+            "label": "Pull out a small piece to see whether it looks fibrous"
+          },
+          {
+            "id": "c",
+            "label": "Continue because the building was renovated recently"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H16_check2",
+        "prompt": "A survey covers the office walls but a crew uses it to clear process-pipe insulation removal. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat any site survey as clearance for every material"
+          },
+          {
+            "id": "b",
+            "label": "Hold the removal until material information and exposure assessment cover the actual pipe insulation"
+          },
+          {
+            "id": "c",
+            "label": "Approve removal because the contractor has a generic method"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H16_check3",
+        "prompt": "A grinder’s approved extraction system stops while concrete cutting continues beside another crew. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue if the operator is wearing a mask"
+          },
+          {
+            "id": "b",
+            "label": "Move the nearby crew a few steps and keep cutting"
+          },
+          {
+            "id": "c",
+            "label": "Stop the affected cutting and restore or reassess the approved dust-control method"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H16_check4",
+        "prompt": "A supervisor suggests blowing dusty coveralls clean with compressed air before the crew enters a lunchroom. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the approved contamination-control and hygiene process instead of blowing dust into the air"
+          },
+          {
+            "id": "b",
+            "label": "Blow the clothing outdoors so the lunchroom stays clean"
+          },
+          {
+            "id": "c",
+            "label": "Allow contaminated coveralls in the lunchroom if workers sit separately"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H16_check5",
+        "prompt": "A general maintenance contractor offers asbestos removal using only a broad online safety certificate. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the certificate because it includes the word asbestos"
+          },
+          {
+            "id": "b",
+            "label": "Hold the specialist activity until the applicable qualified personnel, permissions and approved method are verified"
+          },
+          {
+            "id": "c",
+            "label": "Let the contractor decide after work begins"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H16_check6",
+        "prompt": "A removal crew discovers a different coating under the assessed surface and continues using the same method. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume underlying layers have the same composition"
+          },
+          {
+            "id": "b",
+            "label": "Approve the area because no dust is visible"
+          },
+          {
+            "id": "c",
+            "label": "Stop the changed disturbance and obtain competent review of the newly exposed material and controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H16_final1",
+        "prompt": "For recognize materials before disturbance, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Unknown suspect material cannot be cleared by visual familiarity or schedule pressure."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H16_final2",
+        "prompt": "Which evidence would most directly verify recognize materials before disturbance in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A competent material determination linked to the exact location and planned disturbance"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H16_final3",
+        "prompt": "A relief worker proposes the following shortcut during recognize materials before disturbance: \"Pull out a small piece to see whether it looks fibrous.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Pull out a small piece to see whether it looks fibrous"
+          },
+          {
+            "id": "b",
+            "label": "Continue because the building was renovated recently"
+          },
+          {
+            "id": "c",
+            "label": "Stop disturbance, restrict affected access and obtain competent material identification and method review"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H16_final4",
+        "prompt": "For connect the material to the task exposure, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Survey conclusions apply to their sampled and assessed scope rather than the whole property."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H16_final5",
+        "prompt": "Which evidence would most directly verify connect the material to the task exposure in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A location-specific survey scope and reviewed task exposure assessment"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H16_final6",
+        "prompt": "A relief worker proposes the following shortcut during connect the material to the task exposure: \"Treat any site survey as clearance for every material.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat any site survey as clearance for every material"
+          },
+          {
+            "id": "b",
+            "label": "Approve removal because the contractor has a generic method"
+          },
+          {
+            "id": "c",
+            "label": "Hold the removal until material information and exposure assessment cover the actual pipe insulation"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H16_final7",
+        "prompt": "For control release at the work method, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Respiratory PPE does not make a failed source-control arrangement acceptable by itself."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H16_final8",
+        "prompt": "Which evidence would most directly verify control release at the work method in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified extraction configuration and observed control performance for the actual cutting task"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H16_final9",
+        "prompt": "A relief worker proposes the following shortcut during control release at the work method: \"Continue if the operator is wearing a mask.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue if the operator is wearing a mask"
+          },
+          {
+            "id": "b",
+            "label": "Move the nearby crew a few steps and keep cutting"
+          },
+          {
+            "id": "c",
+            "label": "Stop the affected cutting and restore or reassess the approved dust-control method"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H16_final10",
+        "prompt": "For prevent contamination during hygiene and cleanup, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Compressed air can redistribute hazardous dust and expose the wearer and nearby people."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H16_final11",
+        "prompt": "Which evidence would most directly verify prevent contamination during hygiene and cleanup in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified clean/dirty arrangement and material-appropriate cleaning and waste records"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H16_final12",
+        "prompt": "A relief worker proposes the following shortcut during prevent contamination during hygiene and cleanup: \"Blow the clothing outdoors so the lunchroom stays clean.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Blow the clothing outdoors so the lunchroom stays clean"
+          },
+          {
+            "id": "b",
+            "label": "Allow contaminated coveralls in the lunchroom if workers sit separately"
+          },
+          {
+            "id": "c",
+            "label": "Use the approved contamination-control and hygiene process instead of blowing dust into the air"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H16_final13",
+        "prompt": "For use the correct specialist scope, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "General awareness training does not establish regulated abatement competence or authorization."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H16_final14",
+        "prompt": "Which evidence would most directly verify use the correct specialist scope in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "Scope-specific qualification and licensing evidence plus a competent approved work method"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H16_final15",
+        "prompt": "A relief worker proposes the following shortcut during use the correct specialist scope: \"Accept the certificate because it includes the word asbestos.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the certificate because it includes the word asbestos"
+          },
+          {
+            "id": "b",
+            "label": "Let the contractor decide after work begins"
+          },
+          {
+            "id": "c",
+            "label": "Hold the specialist activity until the applicable qualified personnel, permissions and approved method are verified"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H16_final16",
+        "prompt": "For manage change and controlled handback, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original determination may not cover a different underlying coating."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H16_final17",
+        "prompt": "Which evidence would most directly verify manage change and controlled handback in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A change review and scope-specific handback decision identifying any unassessed material"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H16_final18",
+        "prompt": "A relief worker proposes the following shortcut during manage change and controlled handback: \"Assume underlying layers have the same composition.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume underlying layers have the same composition"
+          },
+          {
+            "id": "b",
+            "label": "Approve the area because no dust is visible"
+          },
+          {
+            "id": "c",
+            "label": "Stop the changed disturbance and obtain competent review of the newly exposed material and controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H16_final19",
+        "prompt": "In Scenario 1, what is the central scope error?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Using documents for one material or location to clear a different disturbance"
+          },
+          {
+            "id": "b",
+            "label": "Having separate methods for different hazards"
+          },
+          {
+            "id": "c",
+            "label": "Keeping the suspect insulation undisturbed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H16_final20",
+        "prompt": "In Scenario 2, what does “nobody feels ill” demonstrate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It proves the material was harmless"
+          },
+          {
+            "id": "b",
+            "label": "It does not establish that contamination is controlled or handback requirements are met"
+          },
+          {
+            "id": "c",
+            "label": "It replaces any required clearance process"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H16_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H16_lesson1",
+          "questionIds": [
+            "H16_check1"
+          ]
+        },
+        {
+          "lessonId": "H16_lesson2",
+          "questionIds": [
+            "H16_check2"
+          ]
+        },
+        {
+          "lessonId": "H16_lesson3",
+          "questionIds": [
+            "H16_check3"
+          ]
+        },
+        {
+          "lessonId": "H16_lesson4",
+          "questionIds": [
+            "H16_check4"
+          ]
+        },
+        {
+          "lessonId": "H16_lesson5",
+          "questionIds": [
+            "H16_check5"
+          ]
+        },
+        {
+          "lessonId": "H16_lesson6",
+          "questionIds": [
+            "H16_check6"
+          ]
+        },
+        {
+          "lessonId": "H16_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H16_final",
+          "questionIds": [
+            "H16_final1",
+            "H16_final2",
+            "H16_final3",
+            "H16_final4",
+            "H16_final5",
+            "H16_final6",
+            "H16_final7",
+            "H16_final8",
+            "H16_final9",
+            "H16_final10",
+            "H16_final11",
+            "H16_final12",
+            "H16_final13",
+            "H16_final14",
+            "H16_final15",
+            "H16_final16",
+            "H16_final17",
+            "H16_final18",
+            "H16_final19",
+            "H16_final20"
+          ]
+        },
+        {
+          "lessonId": "H16_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H16_check1": "Stop disturbance, restrict affected access and obtain competent material identification and method review. Unknown suspect material cannot be cleared by visual familiarity or schedule pressure.",
+        "H16_check2": "Hold the removal until material information and exposure assessment cover the actual pipe insulation. Survey conclusions apply to their sampled and assessed scope rather than the whole property.",
+        "H16_check3": "Stop the affected cutting and restore or reassess the approved dust-control method. Respiratory PPE does not make a failed source-control arrangement acceptable by itself.",
+        "H16_check4": "Use the approved contamination-control and hygiene process instead of blowing dust into the air. Compressed air can redistribute hazardous dust and expose the wearer and nearby people.",
+        "H16_check5": "Hold the specialist activity until the applicable qualified personnel, permissions and approved method are verified. General awareness training does not establish regulated abatement competence or authorization.",
+        "H16_check6": "Stop the changed disturbance and obtain competent review of the newly exposed material and controls. The original determination may not cover a different underlying coating.",
+        "H16_final1": "Unknown suspect material cannot be cleared by visual familiarity or schedule pressure. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H16_final2": "A competent material determination linked to the exact location and planned disturbance. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H16_final3": "Stop disturbance, restrict affected access and obtain competent material identification and method review. Unknown suspect material cannot be cleared by visual familiarity or schedule pressure. A staffing change does not remove this requirement.",
+        "H16_final4": "Survey conclusions apply to their sampled and assessed scope rather than the whole property. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H16_final5": "A location-specific survey scope and reviewed task exposure assessment. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H16_final6": "Hold the removal until material information and exposure assessment cover the actual pipe insulation. Survey conclusions apply to their sampled and assessed scope rather than the whole property. A staffing change does not remove this requirement.",
+        "H16_final7": "Respiratory PPE does not make a failed source-control arrangement acceptable by itself. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H16_final8": "A verified extraction configuration and observed control performance for the actual cutting task. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H16_final9": "Stop the affected cutting and restore or reassess the approved dust-control method. Respiratory PPE does not make a failed source-control arrangement acceptable by itself. A staffing change does not remove this requirement.",
+        "H16_final10": "Compressed air can redistribute hazardous dust and expose the wearer and nearby people. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H16_final11": "A verified clean/dirty arrangement and material-appropriate cleaning and waste records. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H16_final12": "Use the approved contamination-control and hygiene process instead of blowing dust into the air. Compressed air can redistribute hazardous dust and expose the wearer and nearby people. A staffing change does not remove this requirement.",
+        "H16_final13": "General awareness training does not establish regulated abatement competence or authorization. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H16_final14": "Scope-specific qualification and licensing evidence plus a competent approved work method. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H16_final15": "Hold the specialist activity until the applicable qualified personnel, permissions and approved method are verified. General awareness training does not establish regulated abatement competence or authorization. A staffing change does not remove this requirement.",
+        "H16_final16": "The original determination may not cover a different underlying coating. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H16_final17": "A change review and scope-specific handback decision identifying any unassessed material. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H16_final18": "Stop the changed disturbance and obtain competent review of the newly exposed material and controls. The original determination may not cover a different underlying coating. A staffing change does not remove this requirement.",
+        "H16_final19": "The material survey and tool-control method answer different bounded questions. Neither establishes the pipe-insulation contents or removal readiness.",
+        "H16_final20": "Some harmful exposures do not produce immediate symptoms. Area condition and applicable clearance must be assessed through the competent process."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

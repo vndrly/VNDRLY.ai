@@ -1,0 +1,785 @@
+{
+  "familyId": "C04",
+  "title": "Training delivery and practical assessor assurance",
+  "description": "Complete original VNDRLY C04 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Prevent attendance certificates from being mistaken for competence.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Assessors distinguish knowledge from performance; calibrate using a sample assessment. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-102-training.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178"
+    },
+    {
+      "title": "OSHA education and training guidance",
+      "url": "https://www.osha.gov/safety-management/education-training"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "C04_intro",
+        "title": "Start here — Training delivery and practical assessor assurance",
+        "body": "# C04: Training delivery and practical assessor assurance\n\nPrevent attendance certificates from being mistaken for competence. This course teaches the decisions needed to implement that purpose in field operations. It covers trainer/assessor suitability, objectives, accessible delivery, evaluation and retraining. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C04_lesson1",
+        "title": "Lesson 1 — Define measurable learning and performance objectives",
+        "body": "## Define measurable learning and performance objectives\n\nAn objective says what the learner must explain or demonstrate and under which conditions. Distinguish knowledge, practical skill and employer authorization. Reading a method can support understanding; performing it safely requires observation by someone capable of judging it. Identify critical steps and abnormal decisions before choosing a course. A provider's impressive catalogue does not show that a particular course covers your actual task.\n\n### Deeper application\n\nAn assessable objective might require identifying a defect and selecting the safe escalation route under stated conditions. Understand equipment is too vague to determine success. Define the knowledge to explain, the performance to observe and the limits of the assessment environment. A course may legitimately cover awareness only if that boundary is explicit and the employer arranges the additional required qualification separately.\n\n### Worked oilfield example\n\nA purchased operator course promises competence but lists only attendance and a reading quiz. The decision is to map the task objectives and arrange the missing practical performance assessment.\n\nA course label cannot establish that required practical performance was assessed. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A course-to-task mapping distinguishing knowledge results from observed performance criteria. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the mapping omits the task's defect and stop decisions. The appropriate correction is to add relevant abnormal decisions and ensure they are taught and appropriately assessed. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C04_lesson2",
+        "title": "Lesson 2 — Select suitable trainers and assessors",
+        "body": "## Select suitable trainers and assessors\n\nTechnical knowledge, practical experience and instructional ability all matter. A good operator may need support to teach; a skilled presenter may lack the technical competence to assess. Verify provider and assessor scope for the actual equipment and environment. For U.S. powered industrial trucks, the applicable OSHA rule specifically requires trainers and evaluators with suitable knowledge, training and experience. Do not generalize that example into one universal credential for every role.\n\n### Deeper application\n\nReview an assessor's suitability against the judgment they will make. Relevant operating experience supports technical recognition; instructional skill supports learning; assessment skill supports consistent observation and feedback. These qualities can be shared across a teaching team, but the practical signatory must be suitable for the result claimed. A provider's brand or a presenter's confidence cannot stand in for evidence of relevant competence.\n\n### Worked oilfield example\n\nA provider assigns a polished instructor with no relevant equipment experience to judge practical operation. The decision is to obtain a suitably competent practical evaluator for the actual task.\n\nAssessment quality depends on the evaluator's ability to recognize safe and unsafe performance in that task. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Verified assessor suitability linked to the specific task and equipment scope. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the assessor's experience covers different equipment with materially different operating demands. The appropriate correction is to verify matching competence or appoint an appropriately qualified evaluator. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C04_lesson3",
+        "title": "Lesson 3 — Deliver accessible current instruction safely",
+        "body": "## Deliver accessible current instruction safely\n\nTeach using current relevant material, understandable language and appropriate equipment. Practice must be controlled and supervised; assessment is not permission to expose learners to danger. Use safe simulation for abnormal judgment where needed. Check that the worker understands technical terms rather than merely repeating them. If the operational method changes during the course, evaluate and communicate the change before continuing dependent practice.\n\n### Deeper application\n\nSafe practice has prerequisites: suitable equipment, controlled surroundings, appropriate supervision and clear stop conditions. A simulation should faithfully test the intended judgment without claiming to demonstrate capabilities it cannot validly assess. For example, a tabletop exercise can test communication decisions but not establish physical equipment handling. Record that limitation so the employer does not treat every completed exercise as equivalent practical evidence.\n\n### Worked oilfield example\n\nA training exercise proposes disabling an actual guard so the candidate can demonstrate detecting the hazard. The decision is to use a safe simulation or other suitable method without defeating the operational safeguard.\n\nTraining must not create the hazardous exposure it is meant to prevent. Instructor presence does not make a defeated safeguard acceptable. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A safe lesson plan identifying current material, accessible delivery and controlled practice conditions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the translated lesson uses obsolete equipment controls. The appropriate correction is to correct the technical content and verify understood instruction before further practice. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C04_lesson4",
+        "title": "Lesson 4 — Observe performance against a standard",
+        "body": "## Observe performance against a standard\n\nA defensible assessment records what the learner actually did, the conditions, criteria and outcome. Avoid vague impressions such as confident or experienced. Observe relevant routine checks, operation, communication and abnormal decisions within safe conditions. State which items were not assessed. An online quiz can demonstrate knowledge within its limits but cannot truthfully be recorded as a field observation.\n\n### Deeper application\n\nUse criteria describing observable behavior. Record what the candidate checked, communicated or did, and any prompts required. An evaluator should identify unassessed items rather than infer success from a smooth routine sequence. Knowledge can be tested through questions, while task performance needs an appropriate practical method. Neither a blank checklist nor a retrospective description of what probably happened constitutes an observation.\n\n### Worked oilfield example\n\nA forklift candidate passes a quiz, and the provider marks workplace evaluation complete without observing operation. The decision is to retain the quiz as knowledge evidence and arrange the required genuine practical evaluation.\n\nA practical result requires actual appropriate evaluation; reputation and a quiz cannot supply an unperformed observation. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An authentic evaluation record stating observed tasks, workplace conditions, results and evaluator. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the checklist shows passed but leaves critical observed criteria blank. The appropriate correction is to resolve the missing performance evidence and reassess unobserved criteria before accepting the result. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C04_lesson5",
+        "title": "Lesson 5 — Remediate and reassess specific gaps",
+        "body": "## Remediate and reassess specific gaps\n\nFeedback should identify the deficient action, its safety significance and the standard to meet. Provide suitable additional explanation and supervised practice, then reassess the relevant capability. Retain the first attempt and correction separately. Do not issue a competence result merely because the candidate stayed for the full session. Reassessment must establish performance rather than teach the candidate to imitate an answer without understanding.\n\n### Deeper application\n\nRemediation should target the gap. If the candidate misunderstands the stop signal, additional routine driving practice alone may not correct it. Explain the signal's meaning, practice the response safely and reassess application. Retain both outcomes and the assessor's reasoning. A later satisfactory result can support a new decision without changing the historical first attempt into something that did not occur.\n\n### Worked oilfield example\n\nA candidate operates smoothly but repeatedly ignores an established stop signal during assessment. The decision is to record the deficiency, remediate the stop response and reassess before passing the task.\n\nA safety-critical response gap cannot be hidden by averaging unrelated strengths or rewriting the original assessment. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Separate original and reassessment observations documenting the stop-response standard and outcome. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the reassessment repeats a memorized verbal answer but does not evaluate the relevant response. The appropriate correction is to use an appropriate safe performance assessment that tests application of the corrected decision. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C04_lesson6",
+        "title": "Lesson 6 — Calibrate and assure assessor decisions",
+        "body": "## Calibrate and assure assessor decisions\n\nAssessors should interpret criteria consistently and explain their decisions. Compare judgments on a safe sample case, discuss differences and resolve ambiguous criteria with the technical owner. Check provider records and authentic outcomes rather than trusting card counts. Independence and conflicts should be transparent. Course completion supports employer decisions but does not itself grant work authority or establish company effectiveness.\n\n### Deeper application\n\nCalibration uses the same criteria on a shared sample so assessors can discuss different judgments. Resolve ambiguity with the competent technical owner and update controlled assessment material when needed. Check whether previous outcomes were affected rather than assuming the problem begins today. A useful quality review also samples provider evidence and whether employer authorizations stay within the assessed scope.\n\n### Worked oilfield example\n\nTwo evaluators apply different standards to the same communication error, and both issue unrestricted passes. The decision is to calibrate the criteria and review affected decisions through a competent assessment process.\n\nInconsistent interpretation weakens the assessment's meaning; the criterion and resulting decisions need competent review. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A calibration record showing the disputed criterion, technical resolution and review of affected outcomes. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that calibration occurred but the outdated checklist remains in use. The appropriate correction is to issue the controlled corrected criteria and confirm assessors apply them in subsequent evaluations. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C04_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA purchased operator course promises competence but lists only attendance and a reading quiz. At the handover, a second issue is identified: The assessor's experience covers different equipment with materially different operating demands. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Disable the guard briefly because an instructor is present. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Map the task objectives and arrange the missing practical performance assessment. The reason is specific: A course label cannot establish that required practical performance was assessed. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Verify matching competence or appoint an appropriately qualified evaluator. The supporting record should show: Verified assessor suitability linked to the specific task and equipment scope. This is important because assessment quality depends on the evaluator's ability to recognize safe and unsafe performance in that task. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because training must not create the hazardous exposure it is meant to prevent. Instructor presence does not make a defeated safeguard acceptable. The suitable decision is: Use a safe simulation or other suitable method without defeating the operational safeguard. Evidence for review would include: A safe lesson plan identifying current material, accessible delivery and controlled practice conditions. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA forklift candidate passes a quiz, and the provider marks workplace evaluation complete without observing operation. At the handover, a second issue is identified: The reassessment repeats a memorized verbal answer but does not evaluate the relevant response. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Accept both results because consistency is unimportant. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Retain the quiz as knowledge evidence and arrange the required genuine practical evaluation. The reason is specific: A practical result requires actual appropriate evaluation; reputation and a quiz cannot supply an unperformed observation. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Use an appropriate safe performance assessment that tests application of the corrected decision. The supporting record should show: Separate original and reassessment observations documenting the stop-response standard and outcome. This is important because a safety-critical response gap cannot be hidden by averaging unrelated strengths or rewriting the original assessment. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because inconsistent interpretation weakens the assessment's meaning; the criterion and resulting decisions need competent review. The suitable decision is: Calibrate the criteria and review affected decisions through a competent assessment process. Evidence for review would include: A calibration record showing the disputed criterion, technical resolution and review of affected outcomes. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C04_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C04_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nAssessors distinguish knowledge from performance; calibrate using a sample assessment. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "C04_check1",
+        "prompt": "A purchased operator course promises competence but lists only attendance and a reading quiz. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Map the task objectives and arrange the missing practical performance assessment."
+          },
+          {
+            "id": "b",
+            "label": "Accept the word competence in the advertisement as proof."
+          },
+          {
+            "id": "c",
+            "label": "Remove practical objectives to match the cheap course."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C04_final1",
+        "prompt": "For define measurable learning and performance objectives, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A course-to-task mapping distinguishing knowledge results from observed performance criteria."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C04_final2",
+        "prompt": "A later review finds: The mapping omits the task's defect and stop decisions. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Add relevant abnormal decisions and ensure they are taught and appropriately assessed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C04_final3",
+        "prompt": "Consider this proposed response: Accept the word competence in the advertisement as proof. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A course label cannot establish that required practical performance was assessed."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C04_check2",
+        "prompt": "A provider assigns a polished instructor with no relevant equipment experience to judge practical operation. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept presentation skill as technical assessment competence."
+          },
+          {
+            "id": "b",
+            "label": "Obtain a suitably competent practical evaluator for the actual task."
+          },
+          {
+            "id": "c",
+            "label": "Let the learner select their own passing result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C04_final4",
+        "prompt": "For select suitable trainers and assessors, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "Verified assessor suitability linked to the specific task and equipment scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C04_final5",
+        "prompt": "A later review finds: The assessor's experience covers different equipment with materially different operating demands. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify matching competence or appoint an appropriately qualified evaluator."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C04_final6",
+        "prompt": "Consider this proposed response: Accept presentation skill as technical assessment competence. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Assessment quality depends on the evaluator's ability to recognize safe and unsafe performance in that task."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C04_check3",
+        "prompt": "A training exercise proposes disabling an actual guard so the candidate can demonstrate detecting the hazard. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Disable the guard briefly because an instructor is present."
+          },
+          {
+            "id": "b",
+            "label": "Ask the candidate to accept the risk in writing."
+          },
+          {
+            "id": "c",
+            "label": "Use a safe simulation or other suitable method without defeating the operational safeguard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C04_final7",
+        "prompt": "For deliver accessible current instruction safely, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A safe lesson plan identifying current material, accessible delivery and controlled practice conditions."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C04_final8",
+        "prompt": "A later review finds: The translated lesson uses obsolete equipment controls. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Correct the technical content and verify understood instruction before further practice."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C04_final9",
+        "prompt": "Consider this proposed response: Disable the guard briefly because an instructor is present. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Training must not create the hazardous exposure it is meant to prevent. Instructor presence does not make a defeated safeguard acceptable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C04_check4",
+        "prompt": "A forklift candidate passes a quiz, and the provider marks workplace evaluation complete without observing operation. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Retain the quiz as knowledge evidence and arrange the required genuine practical evaluation."
+          },
+          {
+            "id": "b",
+            "label": "Accept the completed checkbox because the provider is well known."
+          },
+          {
+            "id": "c",
+            "label": "Invent observations from the candidate's description."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C04_final10",
+        "prompt": "For observe performance against a standard, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "An authentic evaluation record stating observed tasks, workplace conditions, results and evaluator."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C04_final11",
+        "prompt": "A later review finds: The checklist shows passed but leaves critical observed criteria blank. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Resolve the missing performance evidence and reassess unobserved criteria before accepting the result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C04_final12",
+        "prompt": "Consider this proposed response: Accept the completed checkbox because the provider is well known. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A practical result requires actual appropriate evaluation; reputation and a quiz cannot supply an unperformed observation."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C04_check5",
+        "prompt": "A candidate operates smoothly but repeatedly ignores an established stop signal during assessment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Average the missed stop response against good routine movements."
+          },
+          {
+            "id": "b",
+            "label": "Record the deficiency, remediate the stop response and reassess before passing the task."
+          },
+          {
+            "id": "c",
+            "label": "Change the first attempt to passed after explaining the answer verbally."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C04_final13",
+        "prompt": "For remediate and reassess specific gaps, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "Separate original and reassessment observations documenting the stop-response standard and outcome."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C04_final14",
+        "prompt": "A later review finds: The reassessment repeats a memorized verbal answer but does not evaluate the relevant response. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use an appropriate safe performance assessment that tests application of the corrected decision."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C04_final15",
+        "prompt": "Consider this proposed response: Average the missed stop response against good routine movements. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "A safety-critical response gap cannot be hidden by averaging unrelated strengths or rewriting the original assessment."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C04_check6",
+        "prompt": "Two evaluators apply different standards to the same communication error, and both issue unrestricted passes. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept both results because consistency is unimportant."
+          },
+          {
+            "id": "b",
+            "label": "Choose whichever evaluator passes the most candidates."
+          },
+          {
+            "id": "c",
+            "label": "Calibrate the criteria and review affected decisions through a competent assessment process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C04_final16",
+        "prompt": "For calibrate and assure assessor decisions, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A calibration record showing the disputed criterion, technical resolution and review of affected outcomes."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C04_final17",
+        "prompt": "A later review finds: Calibration occurred but the outdated checklist remains in use. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Issue the controlled corrected criteria and confirm assessors apply them in subsequent evaluations."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C04_final18",
+        "prompt": "Consider this proposed response: Accept both results because consistency is unimportant. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Inconsistent interpretation weakens the assessment's meaning; the criterion and resulting decisions need competent review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C04_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify matching competence or appoint an appropriately qualified evaluator."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C04_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Use an appropriate safe performance assessment that tests application of the corrected decision."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "C04_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C04_lesson1",
+          "questionIds": [
+            "C04_check1"
+          ]
+        },
+        {
+          "lessonId": "C04_lesson2",
+          "questionIds": [
+            "C04_check2"
+          ]
+        },
+        {
+          "lessonId": "C04_lesson3",
+          "questionIds": [
+            "C04_check3"
+          ]
+        },
+        {
+          "lessonId": "C04_lesson4",
+          "questionIds": [
+            "C04_check4"
+          ]
+        },
+        {
+          "lessonId": "C04_lesson5",
+          "questionIds": [
+            "C04_check5"
+          ]
+        },
+        {
+          "lessonId": "C04_lesson6",
+          "questionIds": [
+            "C04_check6"
+          ]
+        },
+        {
+          "lessonId": "C04_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C04_assessment",
+          "questionIds": [
+            "C04_final1",
+            "C04_final2",
+            "C04_final3",
+            "C04_final4",
+            "C04_final5",
+            "C04_final6",
+            "C04_final7",
+            "C04_final8",
+            "C04_final9",
+            "C04_final10",
+            "C04_final11",
+            "C04_final12",
+            "C04_final13",
+            "C04_final14",
+            "C04_final15",
+            "C04_final16",
+            "C04_final17",
+            "C04_final18",
+            "C04_final19",
+            "C04_final20"
+          ]
+        },
+        {
+          "lessonId": "C04_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "C04_check1": "A course label cannot establish that required practical performance was assessed.",
+        "C04_final1": "A course label cannot establish that required practical performance was assessed. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C04_final2": "A course label cannot establish that required practical performance was assessed. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C04_final3": "A course label cannot establish that required practical performance was assessed. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C04_check2": "Assessment quality depends on the evaluator's ability to recognize safe and unsafe performance in that task.",
+        "C04_final4": "Assessment quality depends on the evaluator's ability to recognize safe and unsafe performance in that task. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C04_final5": "Assessment quality depends on the evaluator's ability to recognize safe and unsafe performance in that task. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C04_final6": "Assessment quality depends on the evaluator's ability to recognize safe and unsafe performance in that task. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C04_check3": "Training must not create the hazardous exposure it is meant to prevent. Instructor presence does not make a defeated safeguard acceptable.",
+        "C04_final7": "Training must not create the hazardous exposure it is meant to prevent. Instructor presence does not make a defeated safeguard acceptable. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C04_final8": "Training must not create the hazardous exposure it is meant to prevent. Instructor presence does not make a defeated safeguard acceptable. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C04_final9": "Training must not create the hazardous exposure it is meant to prevent. Instructor presence does not make a defeated safeguard acceptable. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C04_check4": "A practical result requires actual appropriate evaluation; reputation and a quiz cannot supply an unperformed observation.",
+        "C04_final10": "A practical result requires actual appropriate evaluation; reputation and a quiz cannot supply an unperformed observation. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C04_final11": "A practical result requires actual appropriate evaluation; reputation and a quiz cannot supply an unperformed observation. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C04_final12": "A practical result requires actual appropriate evaluation; reputation and a quiz cannot supply an unperformed observation. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C04_check5": "A safety-critical response gap cannot be hidden by averaging unrelated strengths or rewriting the original assessment.",
+        "C04_final13": "A safety-critical response gap cannot be hidden by averaging unrelated strengths or rewriting the original assessment. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C04_final14": "A safety-critical response gap cannot be hidden by averaging unrelated strengths or rewriting the original assessment. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C04_final15": "A safety-critical response gap cannot be hidden by averaging unrelated strengths or rewriting the original assessment. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C04_check6": "Inconsistent interpretation weakens the assessment's meaning; the criterion and resulting decisions need competent review.",
+        "C04_final16": "Inconsistent interpretation weakens the assessment's meaning; the criterion and resulting decisions need competent review. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C04_final17": "Inconsistent interpretation weakens the assessment's meaning; the criterion and resulting decisions need competent review. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C04_final18": "Inconsistent interpretation weakens the assessment's meaning; the criterion and resulting decisions need competent review. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C04_final19": "Assessment quality depends on the evaluator's ability to recognize safe and unsafe performance in that task. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "C04_final20": "A safety-critical response gap cannot be hidden by averaging unrelated strengths or rewriting the original assessment. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

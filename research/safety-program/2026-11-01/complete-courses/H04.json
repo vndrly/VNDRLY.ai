@@ -1,0 +1,781 @@
+{
+  "familyId": "H04",
+  "title": "Hazardous energy isolation / LOTO",
+  "description": "Complete guided H04 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Control unexpected startup and residual energy.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Authorized isolation personnel require equipment-specific instruction and a practical evaluation of source identification, device application, stored-energy control, verification, group participation, handover and restoration. Electrical testing and process isolation may require additional specialist qualifications. Affected workers need practical instruction in respecting restrictions and communicating changes. This written course grants no device-removal, test or restoration authority.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Hazardous energy isolation / LOTO",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-12-10-24/Products%20Isolation%20of%20Hazardous%20Energy%20Standard.pdf"
+    },
+    {
+      "title": "OSHA: Control of hazardous energy, including scope exclusions",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H04_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H04: Hazardous energy isolation / LOTO\n\nThis original VNDRLY course teaches decisions for service-specific: maintenance, electrical, machinery and pressure systems. Its purpose is to control unexpected startup and residual energy. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H04_lesson1",
+        "title": "Lesson 1: Identify every energy source and the correct equipment",
+        "body": "Isolation prevents unexpected energization, movement or release during a defined task. Stopping equipment is different from isolating its energy. A pushbutton, software command or emergency stop can stop motion while power, pressure, gravity or automatic restart remains available. Begin with the equipment identity and actual work limits, using the approved equipment-specific procedure and competent operating knowledge.\n\nConsider electrical feeds and backfeeds, pressure, hydraulic accumulators, pneumatic supplies, springs, elevated components, heat, chemical contents and connected systems. A single motor disconnect cannot establish the state of every connected energy source. Identify stored energy and whether it can reaccumulate while work continues.\n\nWorked example: a pump motor is stopped, but its connected piping remains pressurized. A maintenance worker must not treat the stop command as clearance to open the casing. The isolation authority identifies the complete task boundary and required safe state.\n\n### Applying the mechanism\n\nBuild the energy picture around the work the person will actually perform. External inspection may not expose the same sources as removing a guard, opening a casing or reaching into a mechanism. Connected equipment can feed energy across an apparently local boundary. The authorized planner uses controlled equipment information and field confirmation to identify those interfaces. If the machine has been modified, the old procedure may need technical review before use. A worker who finds an unlisted connection should report it and hold the affected exposure. The safe response is not to add another guessed isolation point but to resolve whether the whole task boundary and verification method remain valid.\n\n### Decision principles\n\nIsolation must protect the equipment being worked on and its interfaces. Wrong identity or incomplete scope can leave an apparently isolated worker connected to live energy.\n\nEnergy sources are independent. Electrical disconnection alone does not restrain an elevated part or release trapped pressure; each relevant source needs its approved control.\n\nLeakage, connected systems or process conditions can restore hazardous energy. The procedure must establish how the safe state is maintained and rechecked when required.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H04_lesson2",
+        "title": "Lesson 2: Understand authorized and affected roles",
+        "body": "An authorized isolation worker is trained and designated for the employer’s isolation system and equipment. An affected worker operates or works around equipment controlled by that system and must understand restrictions. These are functional roles, not permissions created by a job title or an online score. A contractor and site operator must coordinate their systems before exposure.\n\nPersonal protection depends on the approved lock, tag and control arrangement. Never borrow keys, remove someone else’s device informally or assume a supervisor’s presence substitutes for your assigned protection. A tag communicates a restriction but does not physically restrain an isolating device in the way a lock can; tagout conditions require the applicable approved system.\n\nWorked example: a helper is asked to enter guarded equipment under another worker’s informal assurance. The helper stops and obtains the specific protection and authorization required by the group arrangement before exposure.\n\n### Applying the mechanism\n\nRole clarity matters most when several employers or shifts share the equipment. One organization may operate the process while another performs maintenance, and neither should assume the other controls every worker’s protection. Before exposure, establish the applicable procedure, who coordinates the boundary, how personal participation is controlled and how verification is communicated. An affected operator needs to know the restriction and must not try to start the equipment. An authorized isolation person needs the equipment-specific skills to establish the control. A supervisor may coordinate both without personally performing technical tests. Documenting these distinctions prevents a broad job title from becoming an unsupported claim of isolation competence.\n\n### Decision principles\n\nThe restriction protects people who may be exposed inside the equipment. Unauthorized operation or device removal can defeat their protection without their knowledge.\n\nDifferent systems can create gaps in device control, verification and handover. Coordination establishes whose procedure and roles protect each exposed person.\n\nA personal device can represent someone still exposed. Removal outside the controlled exceptional procedure can energize equipment before that person is accounted for and protected.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H04_lesson3",
+        "title": "Lesson 3: Establish isolation and control stored energy",
+        "body": "The authorized procedure defines notification, shutdown, isolation devices, application of protection and control of stored energy. Follow that sequence and the equipment-specific requirements; this lesson is not an operating procedure. Isolation points must actually separate or restrain the energy and be secured as required. Control circuits and selector switches are not automatically energy-isolating devices.\n\nStored energy may need discharge, dissipation, blocking, restraint or another engineered method. Venting a gauge connection does not necessarily drain every trapped pocket. An elevated part must not be assumed safe because a hydraulic control is neutral. Technical methods and acceptance criteria belong to the competent procedure.\n\nWorked example: a raised machine assembly can fall under gravity after hydraulic pressure is released. The authorized plan includes its prescribed mechanical support before access; the worker does not place a body beneath it to improvise a block.\n\n### Applying the mechanism\n\nStored energy can remain mechanically even after the active supply is isolated. A spring can move a part, an elevated load can descend and a trapped pressure volume can release. The approved method establishes suitable blocking, restraint, discharge or other control before people enter those paths. It also addresses what happens if the source can return during work. A temporary block selected by appearance can fail or be displaced, so technical support methods must be approved for the actual load and geometry. The worker should understand which controls they must preserve and must not remove one to improve access without reassessment and authorization.\n\n### Decision principles\n\nDifferent systems have different sources, trapped energy and hazards. The procedure must match the actual equipment rather than a convenient universal sequence.\n\nAn operating control can fail, be overridden or receive another command while energy remains connected. The approved system identifies actual isolating devices.\n\nTrapped sections and blocked paths can conceal energy. Opening equipment as an improvised test can release it toward the worker; verification must use the prescribed safe method.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H04_lesson4",
+        "title": "Lesson 4: Verify before relying on the safe state",
+        "body": "Applying devices is not the same as verifying the required safe state. The authorized person uses the prescribed test or inspection method for each source, from a safe arrangement. A try-start may be part of a procedure but cannot establish absence of every electrical or process hazard. Electrical absence-of-voltage testing requires its own qualified methods and suitable instruments.\n\nVerification must match the scope and provide a clear result. An unreadable indicator, failed tester, unidentified point or unexpected response means the condition is not established. Do not proceed by assuming the result that was expected. Maintain any required monitoring where energy can return.\n\nWorked example: the machine does not start, but the electrical worker has not performed the prescribed voltage verification. The maintenance lead does not treat the failed start as proof that exposed conductors are deenergized.\n\n### Applying the mechanism\n\nVerification is a test of the actual condition, not a ritual performed to complete the sheet. The prescribed method must address the relevant sources and remain safe if the expected state is wrong. For electrical work, that means qualified testing and protection while parts may still be energized. For process energy, the method must consider trapped sections and the representation of indicators. If a tester is unsuitable, a gauge is blocked or equipment responds unexpectedly, the result is uncertain. The job stays held while the authorized roles resolve it. A signature made before the check cannot override the physical observation.\n\n### Decision principles\n\nThe safeguard must be established before exposure. Changes, reaccumulation or procedure-defined stages can require additional checks during the task.\n\nA discrepancy shows the assumed safe state is uncertain or wrong. Paper approval cannot override the observed condition; the boundary and method must be reassessed.\n\nElectrical testing can itself expose a person to shock or arc hazards. Instrument suitability and qualified technique require separate practical competence and authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H04_lesson5",
+        "title": "Lesson 5: Protect every person through group work and handover",
+        "body": "Group isolation must provide protection for each exposed worker under the approved system. A group list without control of personal participation can lose track of who is inside the hazard. The procedure identifies coordination, device control, verification responsibilities and how people join or leave the job. New participants must not enter merely because the group has already started.\n\nShift and personnel changes require a controlled transfer that preserves protection continuously. Do not create a gap by removing outgoing protection before the incoming arrangement is established. A change in task scope can require a changed isolation boundary and re-verification.\n\nWorked example: a night-shift worker arrives after the day shift leaves. The worker follows the group handover and personal protection procedure, confirms the actual equipment state and receives the task briefing. An abandoned lockbox with no accountable handover is not a completed transfer.\n\n### Applying the mechanism\n\nA group system needs a reliable way to know who is exposed and whose protection must remain in place. Joining and leaving the group are controlled actions, not just attendance updates. Before a person enters, they receive the required personal protection and understand the equipment state and task limits. During handover, incoming and outgoing roles transfer responsibility without an unprotected gap. If the group cannot account for a person or a device, restoration remains held under the approved process. Do not assume absence from the immediate work area means a worker is clear; they may be in another part of the equipment boundary.\n\n### Decision principles\n\nGroup arrangements still need individual accountability and protection. Joining late does not remove the need to establish the worker’s authorized participation before exposure.\n\nIsolation is bounded by equipment and sources, not an administrative job number. Expanded work can expose energy not controlled by the original arrangement.\n\nThe incoming responsible people need the actual protection and work state. Counting devices cannot establish which sources and workers they protect.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H04_lesson6",
+        "title": "Lesson 6: Restore through controlled clearance and communication",
+        "body": "Return to service is a separate controlled stage. The authorized process checks the work area, component condition, tools and temporary arrangements; accounts for people; handles each isolation device under its rules; and notifies affected personnel. A completed repair invoice or maintenance signature does not itself authorize energization.\n\nTesting that temporarily requires energy must use the approved controlled sequence, including clearing people and re-establishing protection before further exposed work. Never alternate informally between maintenance and operation while workers assume the previous safe state still applies.\n\nWorked example: a technician wants to jog a motor to check rotation while a colleague is still inside the guarded area. The request is held. The approved testing sequence must establish clearance and communication, and any subsequent maintenance requires its specified re-isolation and verification.\n\n### Applying the mechanism\n\nRestoration should be planned while the job is prepared, particularly where testing introduces temporary energized stages. Define how people, tools and temporary arrangements are cleared, who communicates the state change and how protection is re-established before further exposed work. A technician should not ask for a quick jog while another worker still relies on isolation. The accepted sequence may require several transitions, each with its own checks. Preserve any unresolved defect or temporary restriction in handback so operations does not interpret “maintenance finished” as unrestricted readiness. The isolation system protects both the current crew and people who approach after the equipment state changes.\n\n### Decision principles\n\nRestoration can expose people who still believe isolation is in place. The controlled process establishes readiness and communicates the changed state to affected workers.\n\nThe powered test changed the energy state. Previous verification cannot establish the post-test condition; protection must be restored before the next exposed stage.\n\nRegulatory scope varies: OSHA 1910.147 has explicit exclusions, including oil and gas well drilling and servicing. Exclusion from that specific provision is not a declaration that uncontrolled energy is acceptable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H04_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: The wrong skid\n\nThe isolation sheet names compressor C-17. The crew reaches C-18 because both units look alike and the operator says one switch serves the area.\n\n**Worked decision and reasoning.** The crew holds the affected work and resolves identity with the authorized operating and isolation roles. The plan must establish the actual equipment, all relevant sources, stored energy and verification. Nobody relabels the skid to fit the sheet or transfers protection by assumption. After the correct boundary is established, each exposed person follows the approved protection arrangement and the task is rebriefed.\n\n### Scenario 2: The missing worker at restoration\n\nA group repair is finished, but one worker cannot be reached. Their personal device remains in the protection arrangement. Operations wants immediate restart.\n\n**Worked decision and reasoning.** Restoration remains held while the approved personnel accounting and exceptional device-removal process, if applicable, is followed by the designated authority. The crew does not cut the device based on an assumption that the worker went home. The process must establish the worker is not exposed and satisfy all required checks and notification before any permitted removal and restoration. Production urgency cannot replace those safeguards.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H04_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H04_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nAuthorized isolation personnel require equipment-specific instruction and a practical evaluation of source identification, device application, stored-energy control, verification, group participation, handover and restoration. Electrical testing and process isolation may require additional specialist qualifications. Affected workers need practical instruction in respecting restrictions and communicating changes. This written course grants no device-removal, test or restoration authority.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H04_check1",
+        "prompt": "A pump has stopped after a button is pressed. What is established?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only that it stopped; isolation and verification remain required for the task."
+          },
+          {
+            "id": "b",
+            "label": "All connected energy is absent."
+          },
+          {
+            "id": "c",
+            "label": "Every worker may begin maintenance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H04_final_1_1",
+        "prompt": "What starts an isolation plan?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The nearest convenient switch."
+          },
+          {
+            "id": "b",
+            "label": "A similar machine’s photograph alone."
+          },
+          {
+            "id": "c",
+            "label": "Correct equipment identity and the actual task boundary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H04_final_1_2",
+        "prompt": "Which source can remain after electrical disconnection?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only hazards visible on the control display."
+          },
+          {
+            "id": "b",
+            "label": "Stored hydraulic pressure, gravity or other non-electrical energy."
+          },
+          {
+            "id": "c",
+            "label": "None, because electricity creates all energy."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H04_final_1_3",
+        "prompt": "Why consider energy reaccumulation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A previously reduced energy state can change during the work."
+          },
+          {
+            "id": "b",
+            "label": "Verification permanently prevents pressure from returning."
+          },
+          {
+            "id": "c",
+            "label": "Only the first moment of the task matters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H04_check2",
+        "prompt": "Does this course make its graduate an authorized isolation worker?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, for every electrical disconnect."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the worker has a supervisor title."
+          },
+          {
+            "id": "c",
+            "label": "No; equipment-specific training, practical evaluation and employer designation remain separate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H04_final_2_1",
+        "prompt": "What should an affected worker do with an isolation restriction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ask an unassigned coworker to override it."
+          },
+          {
+            "id": "b",
+            "label": "Respect it and never attempt unauthorized operation or device removal."
+          },
+          {
+            "id": "c",
+            "label": "Test the machine to see if the restriction is real."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H04_final_2_2",
+        "prompt": "Why must contractors and operations coordinate isolation systems?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Their work and protection can depend on shared equipment and boundaries."
+          },
+          {
+            "id": "b",
+            "label": "Each employer’s paperwork physically separates energy."
+          },
+          {
+            "id": "c",
+            "label": "Only the contractor’s preferred method matters."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H04_final_2_3",
+        "prompt": "Can a worker casually remove someone else’s lock?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, when production is waiting."
+          },
+          {
+            "id": "b",
+            "label": "Yes, after asking any coworker."
+          },
+          {
+            "id": "c",
+            "label": "No; only the specific approved exceptional process can address such removal."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H04_check3",
+        "prompt": "A raised component can fall after pressure is released. What must the plan address?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A warning to move quickly underneath."
+          },
+          {
+            "id": "b",
+            "label": "The gravitational movement using an approved restraint or support method."
+          },
+          {
+            "id": "c",
+            "label": "Only the hydraulic gauge reading."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H04_final_3_1",
+        "prompt": "What determines the isolation sequence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The approved equipment-specific procedure and responsible authorized roles."
+          },
+          {
+            "id": "b",
+            "label": "A generic online order used for all machines."
+          },
+          {
+            "id": "c",
+            "label": "Whichever device is easiest to reach."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H04_final_3_2",
+        "prompt": "Why is a selector switch not automatically sufficient isolation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its color is usually wrong."
+          },
+          {
+            "id": "b",
+            "label": "Only old equipment needs physical isolation."
+          },
+          {
+            "id": "c",
+            "label": "It may control operation without physically isolating the energy source."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H04_final_3_3",
+        "prompt": "What should happen to trapped-energy uncertainty?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Loosen a connection to find out."
+          },
+          {
+            "id": "b",
+            "label": "Resolve it through the competent isolation plan before exposure."
+          },
+          {
+            "id": "c",
+            "label": "Assume a single zero gauge clears every pocket."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H04_check4",
+        "prompt": "Is a failed start attempt proof that every hazard is isolated?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; each relevant source needs its prescribed verification."
+          },
+          {
+            "id": "b",
+            "label": "Yes, including all exposed conductors."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the motor is silent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H04_final_4_1",
+        "prompt": "When is verification performed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only after the job is complete."
+          },
+          {
+            "id": "b",
+            "label": "Only when a device appears damaged."
+          },
+          {
+            "id": "c",
+            "label": "Before reliance on isolation and again at required triggers."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H04_final_4_2",
+        "prompt": "What does an unexpected verification result require?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed if the isolation sheet is signed."
+          },
+          {
+            "id": "b",
+            "label": "Hold the work and resolve the discrepancy through authorized personnel."
+          },
+          {
+            "id": "c",
+            "label": "Record the expected value instead."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H04_final_4_3",
+        "prompt": "Who performs electrical absence-of-voltage testing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A person qualified and authorized for that electrical task with suitable equipment and method."
+          },
+          {
+            "id": "b",
+            "label": "Any learner who owns a multimeter."
+          },
+          {
+            "id": "c",
+            "label": "The nearest unaffected operator."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H04_check5",
+        "prompt": "What is the essential aim of an isolation shift transfer?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Remove all devices before the new crew arrives."
+          },
+          {
+            "id": "b",
+            "label": "Let incoming workers rely on an informal text."
+          },
+          {
+            "id": "c",
+            "label": "Maintain continuous protection and clear responsibility for every exposed person."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H04_final_5_1",
+        "prompt": "What must a new worker do before joining a group isolation job?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter first and add their name later."
+          },
+          {
+            "id": "b",
+            "label": "Meet the approved participation, protection and briefing requirements."
+          },
+          {
+            "id": "c",
+            "label": "Assume another worker’s device covers them."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H04_final_5_2",
+        "prompt": "What if the task expands beyond the protected boundary?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the added work and reassess the isolation and authorization."
+          },
+          {
+            "id": "b",
+            "label": "Use the original locks because the job number is unchanged."
+          },
+          {
+            "id": "c",
+            "label": "Ask a coworker to watch the new section."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H04_final_5_3",
+        "prompt": "What should a handover communicate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the estimated finish time."
+          },
+          {
+            "id": "b",
+            "label": "Only the number of locks on site."
+          },
+          {
+            "id": "c",
+            "label": "Equipment state, protection arrangement, people, scope and unresolved restrictions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H04_check6",
+        "prompt": "A repaired machine needs a powered test while people remain exposed. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let workers stay inside if they wear PPE."
+          },
+          {
+            "id": "b",
+            "label": "Hold energization and follow the approved clearance and testing sequence."
+          },
+          {
+            "id": "c",
+            "label": "Jog briefly because the repair is complete."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H04_final_6_1",
+        "prompt": "What must precede authorized restoration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Required equipment checks, personnel accounting, controlled device handling and notification."
+          },
+          {
+            "id": "b",
+            "label": "Only the repairer’s invoice."
+          },
+          {
+            "id": "c",
+            "label": "Only the end of the shift."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H04_final_6_2",
+        "prompt": "What happens after a powered test if more exposed maintenance is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Rely on the earlier pre-test verification."
+          },
+          {
+            "id": "b",
+            "label": "Assume the test proves the machine is safe to touch."
+          },
+          {
+            "id": "c",
+            "label": "Re-establish the prescribed isolation and verify before exposure resumes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H04_final_6_3",
+        "prompt": "What does this course establish about legal applicability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That no isolation requirements apply to drilling."
+          },
+          {
+            "id": "b",
+            "label": "Awareness principles; the employer must determine the rules applying to its work."
+          },
+          {
+            "id": "c",
+            "label": "That OSHA 1910.147 applies identically to all oilfield work."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H04_final_scenario1",
+        "prompt": "What is the decisive gap in the wrong-skid scenario?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The actual equipment and energy boundary have not been established."
+          },
+          {
+            "id": "b",
+            "label": "The sheet needs a more general equipment name."
+          },
+          {
+            "id": "c",
+            "label": "The crew should work on either unit to save time."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H04_final_scenario2",
+        "prompt": "What is the correct response to the missing worker and device?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cut the device because the repair is complete."
+          },
+          {
+            "id": "b",
+            "label": "Ask any coworker to remove it."
+          },
+          {
+            "id": "c",
+            "label": "Keep restoration held and follow the approved accounting and exceptional-removal process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H04_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H04_lesson1",
+          "questionIds": [
+            "H04_check1"
+          ]
+        },
+        {
+          "lessonId": "H04_lesson2",
+          "questionIds": [
+            "H04_check2"
+          ]
+        },
+        {
+          "lessonId": "H04_lesson3",
+          "questionIds": [
+            "H04_check3"
+          ]
+        },
+        {
+          "lessonId": "H04_lesson4",
+          "questionIds": [
+            "H04_check4"
+          ]
+        },
+        {
+          "lessonId": "H04_lesson5",
+          "questionIds": [
+            "H04_check5"
+          ]
+        },
+        {
+          "lessonId": "H04_lesson6",
+          "questionIds": [
+            "H04_check6"
+          ]
+        },
+        {
+          "lessonId": "H04_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H04_assessment",
+          "questionIds": [
+            "H04_final_1_1",
+            "H04_final_1_2",
+            "H04_final_1_3",
+            "H04_final_2_1",
+            "H04_final_2_2",
+            "H04_final_2_3",
+            "H04_final_3_1",
+            "H04_final_3_2",
+            "H04_final_3_3",
+            "H04_final_4_1",
+            "H04_final_4_2",
+            "H04_final_4_3",
+            "H04_final_5_1",
+            "H04_final_5_2",
+            "H04_final_5_3",
+            "H04_final_6_1",
+            "H04_final_6_2",
+            "H04_final_6_3",
+            "H04_final_scenario1",
+            "H04_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H04_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H04_check1": "A stop command can leave power, pressure and automatic restart available. The approved isolation procedure must address all relevant sources and establish the required safe state.",
+        "H04_final_1_1": "Isolation must protect the equipment being worked on and its interfaces. Wrong identity or incomplete scope can leave an apparently isolated worker connected to live energy.",
+        "H04_final_1_2": "Energy sources are independent. Electrical disconnection alone does not restrain an elevated part or release trapped pressure; each relevant source needs its approved control.",
+        "H04_final_1_3": "Leakage, connected systems or process conditions can restore hazardous energy. The procedure must establish how the safe state is maintained and rechecked when required.",
+        "H04_check2": "Authorization depends on demonstrated task-specific competence and the employer’s system. Written awareness cannot establish skill in identifying and controlling an actual equipment boundary.",
+        "H04_final_2_1": "The restriction protects people who may be exposed inside the equipment. Unauthorized operation or device removal can defeat their protection without their knowledge.",
+        "H04_final_2_2": "Different systems can create gaps in device control, verification and handover. Coordination establishes whose procedure and roles protect each exposed person.",
+        "H04_final_2_3": "A personal device can represent someone still exposed. Removal outside the controlled exceptional procedure can energize equipment before that person is accounted for and protected.",
+        "H04_check3": "Removing one energy source can expose another. The isolation plan must control the elevated mass before a person enters its movement path.",
+        "H04_final_3_1": "Different systems have different sources, trapped energy and hazards. The procedure must match the actual equipment rather than a convenient universal sequence.",
+        "H04_final_3_2": "An operating control can fail, be overridden or receive another command while energy remains connected. The approved system identifies actual isolating devices.",
+        "H04_final_3_3": "Trapped sections and blocked paths can conceal energy. Opening equipment as an improvised test can release it toward the worker; verification must use the prescribed safe method.",
+        "H04_check4": "A try-start checks a bounded operating response. It does not prove the absence of all electrical, pressure, gravitational or stored-energy hazards.",
+        "H04_final_4_1": "The safeguard must be established before exposure. Changes, reaccumulation or procedure-defined stages can require additional checks during the task.",
+        "H04_final_4_2": "A discrepancy shows the assumed safe state is uncertain or wrong. Paper approval cannot override the observed condition; the boundary and method must be reassessed.",
+        "H04_final_4_3": "Electrical testing can itself expose a person to shock or arc hazards. Instrument suitability and qualified technique require separate practical competence and authorization.",
+        "H04_check5": "A handover must preserve the safe state and personal protection through the transition. Informal reassurance can leave a gap in who is protected and who controls restoration.",
+        "H04_final_5_1": "Group arrangements still need individual accountability and protection. Joining late does not remove the need to establish the worker’s authorized participation before exposure.",
+        "H04_final_5_2": "Isolation is bounded by equipment and sources, not an administrative job number. Expanded work can expose energy not controlled by the original arrangement.",
+        "H04_final_5_3": "The incoming responsible people need the actual protection and work state. Counting devices cannot establish which sources and workers they protect.",
+        "H04_check6": "Restoration and testing change the energy state. Exposed people must be protected through the approved clearance and re-isolation sequence rather than a quick informal test.",
+        "H04_final_6_1": "Restoration can expose people who still believe isolation is in place. The controlled process establishes readiness and communicates the changed state to affected workers.",
+        "H04_final_6_2": "The powered test changed the energy state. Previous verification cannot establish the post-test condition; protection must be restored before the next exposed stage.",
+        "H04_final_6_3": "Regulatory scope varies: OSHA 1910.147 has explicit exclusions, including oil and gas well drilling and servicing. Exclusion from that specific provision is not a declaration that uncontrolled energy is acceptable.",
+        "H04_final_scenario1": "Isolation depends on correct identity and scope. Similar appearance and an unverified claim about a shared switch cannot establish protection for the equipment being touched.",
+        "H04_final_scenario2": "A personal protection device may represent someone still exposed. Only the controlled procedure can establish the conditions for exceptional removal; convenience is not evidence of clearance."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

@@ -1,0 +1,785 @@
+{
+  "familyId": "I01",
+  "title": "Incident, near-miss and hazard reporting",
+  "description": "Complete original VNDRLY I01 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Enable timely learning without hiding events or rewarding report volume.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Distinguish hazard/near miss/incident; scenario-based reporting and emergency escalation. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://static.conocophillips.com/files/resources/exhibit-3-health-safety-and-environment-hse-requir.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://ir.halliburton.com/static-files/28c6bba5-b0b3-47c3-95c3-98cffa83efa5"
+    },
+    {
+      "title": "OSHA incident investigation guidance",
+      "url": "https://www.osha.gov/incident-investigation"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "I01_intro",
+        "title": "Start here — Incident, near-miss and hazard reporting",
+        "body": "# I01: Incident, near-miss and hazard reporting\n\nEnable timely learning without hiding events or rewarding report volume. This course teaches the decisions needed to implement that purpose in field operations. It covers report routes, immediate care/control, escalation, preservation and non-retaliation. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I01_lesson1",
+        "title": "Lesson 1 — Recognize hazards near misses and incidents",
+        "body": "## Recognize hazards near misses and incidents\n\nA hazard is a condition with potential for harm. A near miss is an event in which harm did not occur but could have under slightly different circumstances. An incident may involve injury, illness, damage or release. Use the company's defined categories and retain uncertainty rather than arguing labels while exposure remains. Serious potential harm can justify prompt escalation even when actual consequences were small.\n\n### Deeper application\n\nDo not let classification delay protective action. A loose object above a walkway is a hazard; if it falls past someone without injury, an event has occurred. Both can require response and learning. Record actual outcome separately from credible potential consequence. A near miss should not be exaggerated into an injury, but neither should absence of injury make the event disappear from the reporting process.\n\n### Worked oilfield example\n\nA dropped item narrowly misses a worker, and the foreman says there is nothing to report because nobody was hurt. The decision is to record the near miss, protect remaining exposure and route it for proportionate review.\n\nAbsence of injury does not eliminate learning from an event or the need to address continuing exposure. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A factual event record distinguishing actual outcome, credible potential harm and immediate controls. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the record describes only no injury and omits the dropped item and people exposed. The appropriate correction is to add the factual event sequence and potential exposure without inventing a consequence. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I01_lesson2",
+        "title": "Lesson 2 — Prioritize care and immediate protection",
+        "body": "## Prioritize care and immediate protection\n\nFirst use the appropriate emergency and warning routes, arrange care and prevent additional exposure within your safe role. Completing a form is not the first response to an emergency. Do not enter a hazardous area or operate unfamiliar equipment to preserve evidence. Once immediate needs are addressed, notify the responsible supervisor/site roles and document what happened. Legal notifications require separate competent review of applicability and timing.\n\n### Deeper application\n\nCare, protection and reporting interact but have different urgency. A witness may safely warn others and activate help while another authorized person coordinates the area. Nobody should enter uncontrolled energy or atmosphere to obtain a better photograph. Once immediate response is organized, record actual times and actions, distinguishing estimates. If an urgent notification may be required, refer promptly to the competent responsible role rather than inventing a legal deadline.\n\n### Worked oilfield example\n\nA worker is injured near moving equipment while a colleague begins typing a detailed report instead of calling for help. The decision is to activate the emergency response and safe warning arrangements before completing the administrative report.\n\nImmediate care and protection cannot wait for administrative completeness; responding must also avoid another casualty. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A response timeline showing actual alarm, care coordination and protection actions before routine reporting. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the report says emergency services notified but nobody can confirm a call was made. The appropriate correction is to verify activation through the established route immediately and correct the record to the actual facts. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I01_lesson3",
+        "title": "Lesson 3 — Use understood reporting and escalation routes",
+        "body": "## Use understood reporting and escalation routes\n\nExplain how workers report hazards, near misses, injuries, illness concerns and releases, including out-of-hours and alternative routes. Reporting should not depend on access to a single application or manager. A worker without connectivity needs a usable fallback, followed by a traceable record. Clarify urgent escalation separately from routine submission. A submitted message is not necessarily received, understood or acted upon.\n\n### Deeper application\n\nA reporting system needs a fallback for lost connectivity, unavailable managers and concerns about the direct supervisor. Explain how to distinguish urgent warnings from routine submissions. A message can be delivered electronically without being acted upon. For continuing serious exposure, seek acknowledgment through the established safe route. The application record can be completed later with the actual communication history rather than implying the first submission itself controlled the hazard.\n\n### Worked oilfield example\n\nA remote worker submits an urgent hazard message into an unmonitored mailbox and receives no acknowledgment. The decision is to use the established safe urgent escalation route and confirm the concern reaches the responsible role.\n\nAn urgent report needs effective communication; an unacknowledged message cannot establish that exposure is being controlled. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A reporting record showing route, receipt, urgency, responsible role and protective response. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the fallback route is documented only in a language the affected crew does not understand. The appropriate correction is to communicate a usable understood route and verify crew comprehension. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I01_lesson4",
+        "title": "Lesson 4 — Record facts and uncertainty without blame",
+        "body": "## Record facts and uncertainty without blame\n\nWrite what was observed, when and where, who was exposed and what immediate actions occurred. Separate direct observations, worker accounts and assumptions. Use neutral descriptions such as barrier opening observed rather than careless contractor. Mark unknowns and identify evidence needed. A factual first report is not a final causal conclusion. Do not speculate about diagnosis or fault to make an incomplete report appear complete.\n\n### Deeper application\n\nA first report should be useful without pretending to be final. Write the equipment or location identifier, event sequence, people exposed, observed conditions and immediate response. Attribute accounts to their source and identify what the reporter did not see. Neutral language supports investigation: pedestrian entered through an open barrier describes a fact to examine; irresponsible person may conceal the missing access control behind a label.\n\n### Worked oilfield example\n\nA witness says the driver must have been distracted but did not see the driver's actions before the event. The decision is to record the observed facts and identify distraction as an unverified interpretation.\n\nAn interpretation may be worth examining but cannot be represented as an observed fact without evidence. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A first report distinguishing observations, attributed accounts, unknowns and evidence references. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that a later reviewer discovers the recorded event time was estimated. The appropriate correction is to mark the time as estimated and preserve a traceable correction with its basis. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I01_lesson5",
+        "title": "Lesson 5 — Preserve evidence and restrict personal information",
+        "body": "## Preserve evidence and restrict personal information\n\nPreserve relevant photographs, equipment status, documents and accounts without compromising care or safety. Do not alter an unsafe scene merely to improve the photograph. Use authorized channels for personal and medical information, sharing only what the recipient needs. A general learning alert should not contain an unnecessary identifiable medical file. Record provenance so later investigators know what each item represents.\n\n### Deeper application\n\nKeep an evidence index indicating the original file, collector, time and context where known. Preserve originals and label permitted annotated copies as derivatives. Safety and care take precedence over preserving a scene unchanged. If equipment must be moved to protect people, document the actual change when safe. Personal information should be shared according to role and need, rather than distributed to everyone interested in the event.\n\n### Worked oilfield example\n\nA supervisor proposes posting an injured worker's clinical documents in the general crew chat to explain the incident. The decision is to keep clinical information restricted and share only necessary deidentified safety facts through approved routes.\n\nEvidence preservation and privacy are compatible: retain relevant material while controlling unnecessary disclosure. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A controlled evidence index with provenance and appropriately restricted personal information. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that a photograph was edited to remove an inconvenient equipment condition. The appropriate correction is to preserve the original and document any permitted derivative without concealing relevant evidence. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I01_lesson6",
+        "title": "Lesson 6 — Acknowledge reports and support learning",
+        "body": "## Acknowledge reports and support learning\n\nTell the reporter the concern was received, what protection is in place and how follow-up will occur. Avoid promising conclusions before investigation. Prohibit pressure to suppress reports and use alternative escalation for retaliation concerns. Raw report volume is not a maturity measure: high numbers may reflect trust, while low numbers may reflect gaps. Follow the event into proportionate review and action instead of closing it when a form arrives.\n\n### Deeper application\n\nAcknowledgment can confirm receipt, current protection and the next review owner without promising an investigation outcome. Give affected workers useful follow-up when decisions are made. A manager asking for fewer reports may unintentionally encourage suppression, so focus performance review on response quality and verified controls. An honest increase in reports after introducing a usable route can reveal previously hidden information rather than an increase in actual harm.\n\n### Worked oilfield example\n\nA manager asks staff not to record near misses so the company's reported history looks better. The decision is to accept the reports and escalate the suppression concern through the designated alternative route.\n\nSuppression hides exposure and undermines learning; a clean-looking count is not evidence of effective practice. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An acknowledged report and protected follow-up record retaining event history and action status. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that reports are accepted but no owners or feedback are assigned. The appropriate correction is to assign proportionate review ownership and communicate actual next steps to affected workers. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I01_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA dropped item narrowly misses a worker, and the foreman says there is nothing to report because nobody was hurt. At the handover, a second issue is identified: The report says emergency services notified but nobody can confirm a call was made. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Assume submission proves the urgent concern has been handled. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Record the near miss, protect remaining exposure and route it for proportionate review. The reason is specific: Absence of injury does not eliminate learning from an event or the need to address continuing exposure. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Verify activation through the established route immediately and correct the record to the actual facts. The supporting record should show: A response timeline showing actual alarm, care coordination and protection actions before routine reporting. This is important because immediate care and protection cannot wait for administrative completeness; responding must also avoid another casualty. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because an urgent report needs effective communication; an unacknowledged message cannot establish that exposure is being controlled. The suitable decision is: Use the established safe urgent escalation route and confirm the concern reaches the responsible role. Evidence for review would include: A reporting record showing route, receipt, urgency, responsible role and protective response. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA witness says the driver must have been distracted but did not see the driver's actions before the event. At the handover, a second issue is identified: A photograph was edited to remove an inconvenient equipment condition. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Reward the manager for achieving fewer reported events. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Record the observed facts and identify distraction as an unverified interpretation. The reason is specific: An interpretation may be worth examining but cannot be represented as an observed fact without evidence. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Preserve the original and document any permitted derivative without concealing relevant evidence. The supporting record should show: A controlled evidence index with provenance and appropriately restricted personal information. This is important because evidence preservation and privacy are compatible: retain relevant material while controlling unnecessary disclosure. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because suppression hides exposure and undermines learning; a clean-looking count is not evidence of effective practice. The suitable decision is: Accept the reports and escalate the suppression concern through the designated alternative route. Evidence for review would include: An acknowledged report and protected follow-up record retaining event history and action status. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I01_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I01_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nDistinguish hazard/near miss/incident; scenario-based reporting and emergency escalation. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "I01_check1",
+        "prompt": "A dropped item narrowly misses a worker, and the foreman says there is nothing to report because nobody was hurt. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record the near miss, protect remaining exposure and route it for proportionate review."
+          },
+          {
+            "id": "b",
+            "label": "Exclude the event because no injury occurred."
+          },
+          {
+            "id": "c",
+            "label": "Wait for an identical event to cause harm before reporting."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I01_final1",
+        "prompt": "For recognize hazards near misses and incidents, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A factual event record distinguishing actual outcome, credible potential harm and immediate controls."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I01_final2",
+        "prompt": "A later review finds: The record describes only no injury and omits the dropped item and people exposed. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Add the factual event sequence and potential exposure without inventing a consequence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I01_final3",
+        "prompt": "Consider this proposed response: Exclude the event because no injury occurred. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Absence of injury does not eliminate learning from an event or the need to address continuing exposure."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I01_check2",
+        "prompt": "A worker is injured near moving equipment while a colleague begins typing a detailed report instead of calling for help. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Finish the form first so responders have a reference number."
+          },
+          {
+            "id": "b",
+            "label": "Activate the emergency response and safe warning arrangements before completing the administrative report."
+          },
+          {
+            "id": "c",
+            "label": "Move into the uncontrolled equipment area without suitable safeguards."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I01_final4",
+        "prompt": "For prioritize care and immediate protection, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A response timeline showing actual alarm, care coordination and protection actions before routine reporting."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I01_final5",
+        "prompt": "A later review finds: The report says emergency services notified but nobody can confirm a call was made. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify activation through the established route immediately and correct the record to the actual facts."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I01_final6",
+        "prompt": "Consider this proposed response: Finish the form first so responders have a reference number. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Immediate care and protection cannot wait for administrative completeness; responding must also avoid another casualty."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I01_check3",
+        "prompt": "A remote worker submits an urgent hazard message into an unmonitored mailbox and receives no acknowledgment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume submission proves the urgent concern has been handled."
+          },
+          {
+            "id": "b",
+            "label": "Wait until the next office day despite continuing exposure."
+          },
+          {
+            "id": "c",
+            "label": "Use the established safe urgent escalation route and confirm the concern reaches the responsible role."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I01_final7",
+        "prompt": "For use understood reporting and escalation routes, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A reporting record showing route, receipt, urgency, responsible role and protective response."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I01_final8",
+        "prompt": "A later review finds: The fallback route is documented only in a language the affected crew does not understand. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Communicate a usable understood route and verify crew comprehension."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I01_final9",
+        "prompt": "Consider this proposed response: Assume submission proves the urgent concern has been handled. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "An urgent report needs effective communication; an unacknowledged message cannot establish that exposure is being controlled."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I01_check4",
+        "prompt": "A witness says the driver must have been distracted but did not see the driver's actions before the event. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record the observed facts and identify distraction as an unverified interpretation."
+          },
+          {
+            "id": "b",
+            "label": "Enter distraction as the proven root cause."
+          },
+          {
+            "id": "c",
+            "label": "Remove the witness account because it contains uncertainty."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I01_final10",
+        "prompt": "For record facts and uncertainty without blame, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A first report distinguishing observations, attributed accounts, unknowns and evidence references."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I01_final11",
+        "prompt": "A later review finds: A later reviewer discovers the recorded event time was estimated. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Mark the time as estimated and preserve a traceable correction with its basis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I01_final12",
+        "prompt": "Consider this proposed response: Enter distraction as the proven root cause. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An interpretation may be worth examining but cannot be represented as an observed fact without evidence."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I01_check5",
+        "prompt": "A supervisor proposes posting an injured worker's clinical documents in the general crew chat to explain the incident. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Post the full file because it concerns a workplace event."
+          },
+          {
+            "id": "b",
+            "label": "Keep clinical information restricted and share only necessary deidentified safety facts through approved routes."
+          },
+          {
+            "id": "c",
+            "label": "Delete all evidence to avoid a privacy concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I01_final13",
+        "prompt": "For preserve evidence and restrict personal information, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A controlled evidence index with provenance and appropriately restricted personal information."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I01_final14",
+        "prompt": "A later review finds: A photograph was edited to remove an inconvenient equipment condition. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Preserve the original and document any permitted derivative without concealing relevant evidence."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I01_final15",
+        "prompt": "Consider this proposed response: Post the full file because it concerns a workplace event. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Evidence preservation and privacy are compatible: retain relevant material while controlling unnecessary disclosure."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I01_check6",
+        "prompt": "A manager asks staff not to record near misses so the company's reported history looks better. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reward the manager for achieving fewer reported events."
+          },
+          {
+            "id": "b",
+            "label": "Reclassify all events as informal conversations to remove them from history."
+          },
+          {
+            "id": "c",
+            "label": "Accept the reports and escalate the suppression concern through the designated alternative route."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I01_final16",
+        "prompt": "For acknowledge reports and support learning, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An acknowledged report and protected follow-up record retaining event history and action status."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I01_final17",
+        "prompt": "A later review finds: Reports are accepted but no owners or feedback are assigned. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Assign proportionate review ownership and communicate actual next steps to affected workers."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I01_final18",
+        "prompt": "Consider this proposed response: Reward the manager for achieving fewer reported events. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Suppression hides exposure and undermines learning; a clean-looking count is not evidence of effective practice."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I01_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify activation through the established route immediately and correct the record to the actual facts."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I01_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Preserve the original and document any permitted derivative without concealing relevant evidence."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "I01_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I01_lesson1",
+          "questionIds": [
+            "I01_check1"
+          ]
+        },
+        {
+          "lessonId": "I01_lesson2",
+          "questionIds": [
+            "I01_check2"
+          ]
+        },
+        {
+          "lessonId": "I01_lesson3",
+          "questionIds": [
+            "I01_check3"
+          ]
+        },
+        {
+          "lessonId": "I01_lesson4",
+          "questionIds": [
+            "I01_check4"
+          ]
+        },
+        {
+          "lessonId": "I01_lesson5",
+          "questionIds": [
+            "I01_check5"
+          ]
+        },
+        {
+          "lessonId": "I01_lesson6",
+          "questionIds": [
+            "I01_check6"
+          ]
+        },
+        {
+          "lessonId": "I01_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I01_assessment",
+          "questionIds": [
+            "I01_final1",
+            "I01_final2",
+            "I01_final3",
+            "I01_final4",
+            "I01_final5",
+            "I01_final6",
+            "I01_final7",
+            "I01_final8",
+            "I01_final9",
+            "I01_final10",
+            "I01_final11",
+            "I01_final12",
+            "I01_final13",
+            "I01_final14",
+            "I01_final15",
+            "I01_final16",
+            "I01_final17",
+            "I01_final18",
+            "I01_final19",
+            "I01_final20"
+          ]
+        },
+        {
+          "lessonId": "I01_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "I01_check1": "Absence of injury does not eliminate learning from an event or the need to address continuing exposure.",
+        "I01_final1": "Absence of injury does not eliminate learning from an event or the need to address continuing exposure. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I01_final2": "Absence of injury does not eliminate learning from an event or the need to address continuing exposure. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I01_final3": "Absence of injury does not eliminate learning from an event or the need to address continuing exposure. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I01_check2": "Immediate care and protection cannot wait for administrative completeness; responding must also avoid another casualty.",
+        "I01_final4": "Immediate care and protection cannot wait for administrative completeness; responding must also avoid another casualty. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I01_final5": "Immediate care and protection cannot wait for administrative completeness; responding must also avoid another casualty. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I01_final6": "Immediate care and protection cannot wait for administrative completeness; responding must also avoid another casualty. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I01_check3": "An urgent report needs effective communication; an unacknowledged message cannot establish that exposure is being controlled.",
+        "I01_final7": "An urgent report needs effective communication; an unacknowledged message cannot establish that exposure is being controlled. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I01_final8": "An urgent report needs effective communication; an unacknowledged message cannot establish that exposure is being controlled. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I01_final9": "An urgent report needs effective communication; an unacknowledged message cannot establish that exposure is being controlled. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I01_check4": "An interpretation may be worth examining but cannot be represented as an observed fact without evidence.",
+        "I01_final10": "An interpretation may be worth examining but cannot be represented as an observed fact without evidence. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I01_final11": "An interpretation may be worth examining but cannot be represented as an observed fact without evidence. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I01_final12": "An interpretation may be worth examining but cannot be represented as an observed fact without evidence. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I01_check5": "Evidence preservation and privacy are compatible: retain relevant material while controlling unnecessary disclosure.",
+        "I01_final13": "Evidence preservation and privacy are compatible: retain relevant material while controlling unnecessary disclosure. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I01_final14": "Evidence preservation and privacy are compatible: retain relevant material while controlling unnecessary disclosure. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I01_final15": "Evidence preservation and privacy are compatible: retain relevant material while controlling unnecessary disclosure. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I01_check6": "Suppression hides exposure and undermines learning; a clean-looking count is not evidence of effective practice.",
+        "I01_final16": "Suppression hides exposure and undermines learning; a clean-looking count is not evidence of effective practice. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I01_final17": "Suppression hides exposure and undermines learning; a clean-looking count is not evidence of effective practice. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I01_final18": "Suppression hides exposure and undermines learning; a clean-looking count is not evidence of effective practice. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I01_final19": "Immediate care and protection cannot wait for administrative completeness; responding must also avoid another casualty. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "I01_final20": "Evidence preservation and privacy are compatible: retain relevant material while controlling unnecessary disclosure. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

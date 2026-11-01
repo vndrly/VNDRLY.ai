@@ -1,0 +1,785 @@
+{
+  "familyId": "L01",
+  "title": "Leadership commitment and accountable safety roles",
+  "description": "Complete original VNDRLY L01 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Make safety decisions owned and resourced across dispersed crews.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Explain responsibilities and escalation; supervisor scenario discussion. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.bechtel.com/getmedia/0b4fd69e-be6c-4e09-b085-b5caf826009b/2023-Supplier-Guide_1.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://static.conocophillips.com/files/resources/exhibit-3-health-safety-and-environment-hse-requir.pdf"
+    },
+    {
+      "title": "OSHA safety management leadership guidance",
+      "url": "https://www.osha.gov/safety-management/management-leadership"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "L01_intro",
+        "title": "Start here — Leadership commitment and accountable safety roles",
+        "body": "# L01: Leadership commitment and accountable safety roles\n\nMake safety decisions owned and resourced across dispersed crews. This course teaches the decisions needed to implement that purpose in field operations. It covers signed commitment; responsibilities; worker access; resources; review cycle. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L01_lesson1",
+        "title": "Lesson 1 — Translate commitment into decisions",
+        "body": "## Translate commitment into decisions\n\nLeadership commitment means accepting responsibility for the conditions under which work is sold and performed. A signature expresses intent; staffing, equipment and decisions show whether intent is implemented. Name a leader accountable for the program and an owner able to coordinate its daily use. The person accepting a contract must know when missing safeguards make delivery unready, even when a customer expects immediate mobilization.\n\n### Deeper application\n\nA useful commitment has a decision consequence. If sales accepts simultaneous jobs, leadership must either provide enough suitable coverage, change the schedule or reduce accepted scope. The missing resource is not the worker's personal failure to improvise. Separate commercial acceptance from readiness release: accepting an order can create an obligation to plan, but cannot make the task safe to start. Documenting that distinction helps crews resist the claim that the customer has already paid so work must proceed.\n\n### Worked oilfield example\n\nA small well-service company accepts two simultaneous jobs but has one suitable detector and one assessed user. The decision is to hold the dependent second job and arrange suitable equipment and competent coverage.\n\nA promise does not duplicate a safeguard. Resourcing must match each job's actual dependency before exposure begins. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A job allocation showing the equipment and competent coverage assigned before release. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the allocation names equipment already assigned elsewhere. The appropriate correction is to correct the allocation and verify available coverage before releasing the second job. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L01_lesson2",
+        "title": "Lesson 2 — Define accountable roles and deputies",
+        "body": "## Define accountable roles and deputies\n\nSeparate accountability for the program from authority over a technical decision. The company leader provides resources; the supervisor coordinates a crew; a qualified specialist decides within their expertise. A deputy must know the handover and have real authority, not merely a name on a chart. Include nights, remote work and absences. Workers need an understood route when the usual supervisor cannot be reached.\n\n### Deeper application\n\nDelegation should answer three questions: which decisions can the deputy make, which need specialist support and how unresolved concerns reach leadership. A deputy may arrange a replacement detector but still lack authority to validate a gas-testing method. Name both the coordination role and the technical decision role where they differ. Test the arrangement with an out-of-hours contact check that does not create a false emergency. A telephone number nobody answers is a failed interface, not merely an incomplete chart.\n\n### Worked oilfield example\n\nAt midnight the chart names a manager who is off duty, and nobody knows who can resolve an equipment-readiness hold. The decision is to keep the hold and contact the designated available deputy through the escalation route.\n\nSeniority is not technical authority. A deputy must be available and know the limits of the delegated decision. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A shift responsibility record with named available deputies and acknowledged handover. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the deputy acknowledges the role but lacks the necessary technical authority. The appropriate correction is to obtain the appropriately qualified decision-maker while maintaining the affected restriction. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L01_lesson3",
+        "title": "Lesson 3 — Provide workable resources",
+        "body": "## Provide workable resources\n\nResources include time to plan, competent people, maintained equipment, communication and practical supervision. Purchasing a device is not enough if nobody can use it or it arrives after the exposure. A useful request explains the task, missing protection, interim restriction, responsible buyer and readiness evidence. Management resolves the gap rather than asking workers to compensate through extra vigilance.\n\n### Deeper application\n\nResource prioritization should follow exposure and dependencies. Buying several low-cost supplies cannot offset the absence of one critical safeguard. Consider the whole readiness chain: procurement, delivery, suitability verification, maintenance status, user competence and availability at the point of use. A spare device stored far away may not support simultaneous remote jobs. When a resource cannot be provided, revise the plan explicitly rather than leaving workers to discover the shortage after mobilization.\n\n### Worked oilfield example\n\nA maintenance crew requests suitable access equipment, but purchasing proposes delivery after the job is finished. The decision is to reschedule the dependent work until suitable access and competent use are verified.\n\nA future delivery cannot protect today's work. Timing and usable readiness are part of the resource decision. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A resourcing decision linking delivery, inspection and user readiness to the revised job release. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the equipment arrived but its suitability was not checked. The appropriate correction is to retain the work restriction until a competent suitability check is complete. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L01_lesson4",
+        "title": "Lesson 4 — Protect reporting and intervention",
+        "body": "## Protect reporting and intervention\n\nLeaders establish expectations through their response to inconvenient news. Thank a worker for raising a concern, establish the facts and protect the person from pressure to withdraw it. Discuss whether protection is effective instead of treating delay as disloyalty. Provide an alternative route outside the immediate supervisor when that supervisor is implicated. A safety policy is undermined if workers lose assignments for good-faith reporting.\n\n### Deeper application\n\nWatch for indirect punishment as well as explicit threats: exclusion from preferred shifts, ridicule, pressure to withdraw a report or unexplained loss of overtime after a concern. A supervisor can disagree with an interpretation while still protecting good-faith participation. Separate the investigation of conduct from the examination of the physical hazard so neither is lost. Tell the worker what the alternative route can do and who may need the information; do not promise secrecy that the process cannot guarantee.\n\n### Worked oilfield example\n\nA driver who reports failed pedestrian separation is threatened with removal from tomorrow's roster. The decision is to protect the immediate exposure and escalate the retaliation concern through an alternative route.\n\nProtecting reporting and correcting the hazard are both necessary; resolving one does not excuse ignoring the other. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A confidential escalation record and a separate documented response to the physical hazard. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the hazard was corrected but the roster threat was never reviewed. The appropriate correction is to refer the retaliation concern for appropriate review without exposing unnecessary personal details. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L01_lesson5",
+        "title": "Lesson 5 — Review critical gaps and delivery pressure",
+        "body": "## Review critical gaps and delivery pressure\n\nLeadership review prioritizes unresolved exposure, overdue safeguards and repeated failures. An action list should show what risk remains, who owns it and what restriction protects people meanwhile. Review critical items even when an overall score is favorable. A deadline is a planning fact, not permission to omit a prerequisite. Escalation should lead to a decision about resources or scope rather than another reminder to the same unsupported owner.\n\n### Deeper application\n\nA leadership review should make a small number of consequential decisions rather than merely accept a dashboard. Ask which critical gaps remain open, whether temporary controls are still suitable, whether owners have enough authority and what must change before release. Repeated due-date extensions can conceal the same unsupported exposure. Record the reason for a revised date and reassess protection; a new calendar entry does not renew the safety of an old temporary arrangement.\n\n### Worked oilfield example\n\nA high company score is used to justify dispatch despite an unresolved task-specific isolation prerequisite. The decision is to maintain the task hold and have the proper authority resolve the isolation prerequisite.\n\nAggregate performance does not establish the missing task control. Leadership must support, rather than replace, technical verification. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Leadership minutes identifying the specific gap, interim hold, resource decision and responsible follow-up. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that minutes say discussed but name no owner or interim control. The appropriate correction is to record a responsible owner, protective restriction and evidence needed for resolution. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L01_lesson6",
+        "title": "Lesson 6 — Verify leadership follow-through",
+        "body": "## Verify leadership follow-through\n\nFollow-through connects a decision with later field conditions. Sample whether resources were actually available, workers understood escalation and deputies answered when needed. A closed purchase request proves administration, not control effectiveness. Ask affected crews whether the decision worked in the conditions it was meant to address. Preserve unfavorable findings so the next review can see recurrence and respond to its cause.\n\n### Deeper application\n\nA suitable follow-up sample includes the conditions that challenged the original decision. If the gap involved two concurrent crews, checking one well-equipped crew on a quiet morning is insufficient. Include workers who were affected by the shortage and ask whether the actual allocation matched the plan. Distinguish positive evidence from lack of complaints: people may remain silent if reporting previously led to pressure. Leadership assurance therefore examines both physical resourcing and whether escalation remains usable.\n\n### Worked oilfield example\n\nThe detector resourcing action is closed, but the next simultaneous job again leaves one crew without coverage. The decision is to reopen the action and correct the allocation process before dependent work proceeds.\n\nRecurrence shows the allocation process remains unreliable even if a previous purchase was completed. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Later job allocation and worker checks showing suitable coverage across simultaneous work. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the follow-up sample includes only a single day-shift job. The appropriate correction is to extend the bounded review to the simultaneous and out-of-hours conditions the action was meant to control. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L01_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA small well-service company accepts two simultaneous jobs but has one suitable detector and one assessed user. At the handover, a second issue is identified: The deputy acknowledges the role but lacks the necessary technical authority. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Record the purchase order as proof the access control exists. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Hold the dependent second job and arrange suitable equipment and competent coverage. The reason is specific: A promise does not duplicate a safeguard. Resourcing must match each job's actual dependency before exposure begins. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Obtain the appropriately qualified decision-maker while maintaining the affected restriction. The supporting record should show: A shift responsibility record with named available deputies and acknowledged handover. This is important because seniority is not technical authority. A deputy must be available and know the limits of the delegated decision. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because a future delivery cannot protect today's work. Timing and usable readiness are part of the resource decision. The suitable decision is: Reschedule the dependent work until suitable access and competent use are verified. Evidence for review would include: A resourcing decision linking delivery, inspection and user readiness to the revised job release. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA driver who reports failed pedestrian separation is threatened with removal from tomorrow's roster. At the handover, a second issue is identified: Minutes say discussed but name no owner or interim control. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Keep it closed because the invoice is paid. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Protect the immediate exposure and escalate the retaliation concern through an alternative route. The reason is specific: Protecting reporting and correcting the hazard are both necessary; resolving one does not excuse ignoring the other. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Record a responsible owner, protective restriction and evidence needed for resolution. The supporting record should show: Leadership minutes identifying the specific gap, interim hold, resource decision and responsible follow-up. This is important because aggregate performance does not establish the missing task control. Leadership must support, rather than replace, technical verification. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because recurrence shows the allocation process remains unreliable even if a previous purchase was completed. The suitable decision is: Reopen the action and correct the allocation process before dependent work proceeds. Evidence for review would include: Later job allocation and worker checks showing suitable coverage across simultaneous work. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L01_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L01_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nExplain responsibilities and escalation; supervisor scenario discussion. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "L01_check1",
+        "prompt": "A small well-service company accepts two simultaneous jobs but has one suitable detector and one assessed user. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the dependent second job and arrange suitable equipment and competent coverage."
+          },
+          {
+            "id": "b",
+            "label": "Start both jobs because the owner signed the safety policy."
+          },
+          {
+            "id": "c",
+            "label": "Ask the unassessed crew to share readings by telephone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L01_final1",
+        "prompt": "For translate commitment into decisions, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A job allocation showing the equipment and competent coverage assigned before release."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L01_final2",
+        "prompt": "A later review finds: The allocation names equipment already assigned elsewhere. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Correct the allocation and verify available coverage before releasing the second job."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L01_final3",
+        "prompt": "Consider this proposed response: Start both jobs because the owner signed the safety policy. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A promise does not duplicate a safeguard. Resourcing must match each job's actual dependency before exposure begins."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L01_check2",
+        "prompt": "At midnight the chart names a manager who is off duty, and nobody knows who can resolve an equipment-readiness hold. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let the most senior worker approve every technical issue."
+          },
+          {
+            "id": "b",
+            "label": "Keep the hold and contact the designated available deputy through the escalation route."
+          },
+          {
+            "id": "c",
+            "label": "Treat the absence of a manager as approval to continue."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L01_final4",
+        "prompt": "For define accountable roles and deputies, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A shift responsibility record with named available deputies and acknowledged handover."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L01_final5",
+        "prompt": "A later review finds: The deputy acknowledges the role but lacks the necessary technical authority. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain the appropriately qualified decision-maker while maintaining the affected restriction."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L01_final6",
+        "prompt": "Consider this proposed response: Let the most senior worker approve every technical issue. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Seniority is not technical authority. A deputy must be available and know the limits of the delegated decision."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L01_check3",
+        "prompt": "A maintenance crew requests suitable access equipment, but purchasing proposes delivery after the job is finished. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record the purchase order as proof the access control exists."
+          },
+          {
+            "id": "b",
+            "label": "Tell workers to be especially careful using the unsuitable arrangement."
+          },
+          {
+            "id": "c",
+            "label": "Reschedule the dependent work until suitable access and competent use are verified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L01_final7",
+        "prompt": "For provide workable resources, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A resourcing decision linking delivery, inspection and user readiness to the revised job release."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L01_final8",
+        "prompt": "A later review finds: The equipment arrived but its suitability was not checked. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Retain the work restriction until a competent suitability check is complete."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L01_final9",
+        "prompt": "Consider this proposed response: Record the purchase order as proof the access control exists. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "A future delivery cannot protect today's work. Timing and usable readiness are part of the resource decision."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L01_check4",
+        "prompt": "A driver who reports failed pedestrian separation is threatened with removal from tomorrow's roster. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Protect the immediate exposure and escalate the retaliation concern through an alternative route."
+          },
+          {
+            "id": "b",
+            "label": "Withdraw the report so the driver keeps the shift."
+          },
+          {
+            "id": "c",
+            "label": "Reward the supervisor for reducing the report count."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L01_final10",
+        "prompt": "For protect reporting and intervention, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A confidential escalation record and a separate documented response to the physical hazard."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L01_final11",
+        "prompt": "A later review finds: The hazard was corrected but the roster threat was never reviewed. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Refer the retaliation concern for appropriate review without exposing unnecessary personal details."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L01_final12",
+        "prompt": "Consider this proposed response: Withdraw the report so the driver keeps the shift. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Protecting reporting and correcting the hazard are both necessary; resolving one does not excuse ignoring the other."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L01_check5",
+        "prompt": "A high company score is used to justify dispatch despite an unresolved task-specific isolation prerequisite. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Average the missing safeguard against stronger paperwork elsewhere."
+          },
+          {
+            "id": "b",
+            "label": "Maintain the task hold and have the proper authority resolve the isolation prerequisite."
+          },
+          {
+            "id": "c",
+            "label": "Allow production management to sign in place of technical verification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L01_final13",
+        "prompt": "For review critical gaps and delivery pressure, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "Leadership minutes identifying the specific gap, interim hold, resource decision and responsible follow-up."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L01_final14",
+        "prompt": "A later review finds: Minutes say discussed but name no owner or interim control. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Record a responsible owner, protective restriction and evidence needed for resolution."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L01_final15",
+        "prompt": "Consider this proposed response: Average the missing safeguard against stronger paperwork elsewhere. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Aggregate performance does not establish the missing task control. Leadership must support, rather than replace, technical verification."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L01_check6",
+        "prompt": "The detector resourcing action is closed, but the next simultaneous job again leaves one crew without coverage. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep it closed because the invoice is paid."
+          },
+          {
+            "id": "b",
+            "label": "Remove the second crew from the review sample."
+          },
+          {
+            "id": "c",
+            "label": "Reopen the action and correct the allocation process before dependent work proceeds."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L01_final16",
+        "prompt": "For verify leadership follow-through, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Later job allocation and worker checks showing suitable coverage across simultaneous work."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L01_final17",
+        "prompt": "A later review finds: The follow-up sample includes only a single day-shift job. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Extend the bounded review to the simultaneous and out-of-hours conditions the action was meant to control."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L01_final18",
+        "prompt": "Consider this proposed response: Keep it closed because the invoice is paid. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Recurrence shows the allocation process remains unreliable even if a previous purchase was completed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L01_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain the appropriately qualified decision-maker while maintaining the affected restriction."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L01_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Record a responsible owner, protective restriction and evidence needed for resolution."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "L01_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L01_lesson1",
+          "questionIds": [
+            "L01_check1"
+          ]
+        },
+        {
+          "lessonId": "L01_lesson2",
+          "questionIds": [
+            "L01_check2"
+          ]
+        },
+        {
+          "lessonId": "L01_lesson3",
+          "questionIds": [
+            "L01_check3"
+          ]
+        },
+        {
+          "lessonId": "L01_lesson4",
+          "questionIds": [
+            "L01_check4"
+          ]
+        },
+        {
+          "lessonId": "L01_lesson5",
+          "questionIds": [
+            "L01_check5"
+          ]
+        },
+        {
+          "lessonId": "L01_lesson6",
+          "questionIds": [
+            "L01_check6"
+          ]
+        },
+        {
+          "lessonId": "L01_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L01_assessment",
+          "questionIds": [
+            "L01_final1",
+            "L01_final2",
+            "L01_final3",
+            "L01_final4",
+            "L01_final5",
+            "L01_final6",
+            "L01_final7",
+            "L01_final8",
+            "L01_final9",
+            "L01_final10",
+            "L01_final11",
+            "L01_final12",
+            "L01_final13",
+            "L01_final14",
+            "L01_final15",
+            "L01_final16",
+            "L01_final17",
+            "L01_final18",
+            "L01_final19",
+            "L01_final20"
+          ]
+        },
+        {
+          "lessonId": "L01_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "L01_check1": "A promise does not duplicate a safeguard. Resourcing must match each job's actual dependency before exposure begins.",
+        "L01_final1": "A promise does not duplicate a safeguard. Resourcing must match each job's actual dependency before exposure begins. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L01_final2": "A promise does not duplicate a safeguard. Resourcing must match each job's actual dependency before exposure begins. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L01_final3": "A promise does not duplicate a safeguard. Resourcing must match each job's actual dependency before exposure begins. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L01_check2": "Seniority is not technical authority. A deputy must be available and know the limits of the delegated decision.",
+        "L01_final4": "Seniority is not technical authority. A deputy must be available and know the limits of the delegated decision. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L01_final5": "Seniority is not technical authority. A deputy must be available and know the limits of the delegated decision. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L01_final6": "Seniority is not technical authority. A deputy must be available and know the limits of the delegated decision. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L01_check3": "A future delivery cannot protect today's work. Timing and usable readiness are part of the resource decision.",
+        "L01_final7": "A future delivery cannot protect today's work. Timing and usable readiness are part of the resource decision. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L01_final8": "A future delivery cannot protect today's work. Timing and usable readiness are part of the resource decision. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L01_final9": "A future delivery cannot protect today's work. Timing and usable readiness are part of the resource decision. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L01_check4": "Protecting reporting and correcting the hazard are both necessary; resolving one does not excuse ignoring the other.",
+        "L01_final10": "Protecting reporting and correcting the hazard are both necessary; resolving one does not excuse ignoring the other. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L01_final11": "Protecting reporting and correcting the hazard are both necessary; resolving one does not excuse ignoring the other. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L01_final12": "Protecting reporting and correcting the hazard are both necessary; resolving one does not excuse ignoring the other. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L01_check5": "Aggregate performance does not establish the missing task control. Leadership must support, rather than replace, technical verification.",
+        "L01_final13": "Aggregate performance does not establish the missing task control. Leadership must support, rather than replace, technical verification. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L01_final14": "Aggregate performance does not establish the missing task control. Leadership must support, rather than replace, technical verification. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L01_final15": "Aggregate performance does not establish the missing task control. Leadership must support, rather than replace, technical verification. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L01_check6": "Recurrence shows the allocation process remains unreliable even if a previous purchase was completed.",
+        "L01_final16": "Recurrence shows the allocation process remains unreliable even if a previous purchase was completed. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L01_final17": "Recurrence shows the allocation process remains unreliable even if a previous purchase was completed. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L01_final18": "Recurrence shows the allocation process remains unreliable even if a previous purchase was completed. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L01_final19": "Seniority is not technical authority. A deputy must be available and know the limits of the delegated decision. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "L01_final20": "Aggregate performance does not establish the missing task control. Leadership must support, rather than replace, technical verification. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

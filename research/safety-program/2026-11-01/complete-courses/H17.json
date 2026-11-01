@@ -1,0 +1,785 @@
+{
+  "familyId": "H17",
+  "title": "Noise and hearing conservation",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Prevent cumulative hearing loss in shops and field operations.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Competent noise assessment, hearing-protection selection and practical fit/use instruction remain separate. Applicable audiometric surveillance and clinical interpretation belong to qualified health services. Online completion is not a noise survey, fit verification or medical clearance.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-312_Rev5.pdf"
+    },
+    {
+      "title": "OSHA Occupational noise",
+      "url": "https://www.osha.gov/noise"
+    },
+    {
+      "title": "OSHA Occupational noise exposure",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.95"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H17_intro",
+        "title": "Start here: Noise and hearing conservation",
+        "body": "# Noise and hearing conservation\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nCompetent noise assessment, hearing-protection selection and practical fit/use instruction remain separate. Applicable audiometric surveillance and clinical interpretation belong to qualified health services. Online completion is not a noise survey, fit verification or medical clearance.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Occupational noise exposure](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.95). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H17_lesson1",
+        "title": "Lesson 1 - Assess the exposure pattern",
+        "body": "Noise exposure depends on level and time across the worker's activities. A machine specification or a single reading beside the compressor may not describe a worker moving between a bench, loading area and engine room. A competent person determines suitable assessment, affected workers and applicable program requirements.\n\nDifficulty hearing speech is a warning to review exposure, not an instrument reading. A phone app or a worker's impression should not be treated as a substitute for the competent assessment needed to make technical decisions. Include intermittent and impulsive sources and changes through the shift.\n\nAsk whether contractors, cleaners and people passing through are also exposed. Their shorter visits still need assessment within the relevant method. Record what task and operating state were assessed; a reading from an idle workshop does not describe production with several machines running.\n\n## Worked field example\n\nA new compressor is installed next to a packing bench without reviewing the worker’s shift exposure.\n\nThe safe decision is to arrange competent assessment and appropriate interim protection or restriction before routine exposure continues. Equipment relocation can change worker exposure even when the machine itself is unchanged.\n\nA useful field record is specific: A task and shift exposure assessment covering the operating compressor and affected workers. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nA useful noise assessment records equipment state and the worker's path through the shift. A worker may spend little time at the loudest source but several hours at a moderately noisy bench. The competent assessor chooses suitable measurement and interpretation for that pattern. The crew should not select whichever reading is most favorable and omit the rest.\n\nInclude foreseeable nonroutine work. Maintenance with an enclosure open, testing several units together or unloading beside running engines can create exposures absent from normal production. Identify who authorizes those arrangements and how affected people are protected. A permanent area sign does not fully describe every task. The assessment and communication need enough detail for the worker to recognize when conditions have left the reviewed scope.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H17_lesson2",
+        "title": "Lesson 2 - Reduce noise before relying on PPE",
+        "body": "Consider removing the noisy process, buying quieter equipment, enclosing or isolating a source, maintaining equipment and increasing separation through a reviewed layout. Engineering changes must preserve ventilation, access, guarding and other functions. A makeshift box around a machine can create another hazard.\n\nWork organization can reduce exposure but should not shift an excessive exposure to another worker without assessment. A remote control station or rearranged workflow may reduce time near the source. Verify that the worker actually uses the new arrangement.\n\nA hearing protector is not evidence that the noise source was controlled. The program should define what happens when an enclosure is open, a silencer is damaged or another machine starts nearby. Treat these as changed conditions requiring action, not routine reasons to wear the protector more tightly.\n\n## Worked field example\n\nA compressor enclosure is left open for convenience while a worker remains at the adjacent bench.\n\nThe safe decision is to restore or reassess the approved noise-control arrangement before continued affected exposure. Opening the enclosure can defeat the engineered control on which the exposure assessment relied.\n\nA useful field record is specific: An observed closed and functional enclosure plus assessment of the actual operating arrangement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nA quieter machine purchase can be a strong preventive measure, but the installed result still needs review. Mounting, reflective surfaces, nearby equipment and the worker's location affect the exposure. The purchasing specification and the field assessment answer related but different questions. Do not close the action solely on the supplier's sound figure.\n\nMaintenance can preserve control. Loose panels, deteriorated isolation mounts or a damaged silencer may change performance. Workers report the observed fault and use the defined safe restriction rather than attempting repair during operation. After competent correction, verify the actual arrangement at the worker's task. Keep any remaining operating limits clear, including what happens when access doors must be opened for authorized service.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H17_lesson3",
+        "title": "Lesson 3 - Select and fit protection correctly",
+        "body": "Select hearing protection through the program's assessment of exposure and the work. The labeled rating is not automatically the reduction achieved by a particular person. Fit, condition, compatibility and consistent use matter. The competent program determines suitable protection and any verification method.\n\nTeach the actual product. Earplugs need the manufacturer's correct insertion method; earmuff cushions must seal without interference from incompatible eyewear, hair or other PPE. A damaged cushion or partly inserted plug can reduce protection. Do not improvise by adding unapproved material or assuming two protectors always solve every exposure.\n\nCommunication and warning signals must remain effective within the work arrangement. If workers remove protection to hear instructions, review the communication system and protector suitability. Do not tell them to choose between hearing protection and safe coordination.\n\n## Worked field example\n\nA worker repeatedly lifts an earmuff cup to hear radio instructions beside the running compressor.\n\nThe safe decision is to review protection fit and establish effective communication without intermittent unprotected exposure. Protection that must be removed for essential communication is not a reliable work arrangement.\n\nA useful field record is specific: An observed fitted protector and verified communication method in the assessed task. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nProtection fitting is a practical skill. In a quiet teaching area, the worker demonstrates the manufacturer's steps, checks condition and explains what would prevent a seal or correct placement. The assessor records the actual product and performance. A worker who watched a video but cannot demonstrate the method needs further instruction before reliance.\n\nConsider compatibility across the complete PPE set. Safety glasses, helmet attachments and face protection may affect earmuff placement. Resolve the combination through the competent program rather than having the worker remove another required item. Where a selected system interferes with alarms or radio communication, review the task interface. The solution must preserve both hearing protection and the information needed to work safely.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H17_lesson4",
+        "title": "Lesson 4 - Understand surveillance and confidentiality",
+        "body": "Where the applicable program requires hearing surveillance, use appropriate health professionals and follow their process. Audiometric results help identify changes and guide follow-up; they do not measure the day's noise exposure or prove a task is controlled.\n\nWorkers should report concerns such as reduced hearing or ringing through the designated health route. Do not diagnose a cause from symptoms or discourage reporting because the worker has outside noise exposure. The appropriate professional determines evaluation and any work-related action.\n\nProtect clinical records. Supervisors need the relevant restrictions and program actions, not public access to every result. The employer should investigate control and use issues through a fair process rather than treating an adverse result solely as evidence that the worker failed to wear plugs.\n\n## Worked field example\n\nA supervisor posts individual hearing test results on a shared noticeboard to encourage compliance.\n\nThe safe decision is to keep clinical results restricted and communicate only appropriate operational actions through the authorized process. Hearing surveillance information is sensitive and does not justify public clinical disclosure.\n\nA useful field record is specific: Restricted health follow-up and documented operational control actions without exposed clinical details. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nThe health provider's role is distinct from the production supervisor's. A hearing result may require follow-up, review of protection or other actions through the applicable program. The supervisor receives the relevant operational recommendation while the clinical detail remains restricted. A colleague should not interpret another worker's chart or decide that a change must be caused by personal hobbies.\n\nWorkers need confidence to report difficulty hearing, ringing or protector problems without being dismissed. Reports are useful inputs even before a formal test result exists. The employer considers them alongside exposure and field evidence. No single symptom or test establishes the entire cause, and no favorable result proves that today's equipment configuration is controlled.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H17_lesson5",
+        "title": "Lesson 5 - Respond to defects and changed work",
+        "body": "Reassess after changed equipment, layout, maintenance condition, work duration or simultaneous operations. A temporary generator can create a new exposure at a previously quiet gate. A worn bearing can also increase noise and signal a machine fault.\n\nWorkers should recognize the approved boundary and the action when a control fails. Stop or restrict the affected exposure through the site process, notify the responsible role and obtain competent reassessment. A worker should not attempt unqualified maintenance on a running machine to quiet it.\n\nA repaired source needs verification under its actual operating condition. Record what was corrected and whether exposure control is effective. A maintenance ticket marked closed is not a substitute for checking the result at the worker's location.\n\n## Worked field example\n\nA temporary generator is placed beside an attended gatehouse outside the previous noise assessment.\n\nThe safe decision is to review the changed exposure and implement verified controls for the gate worker. A temporary source can invalidate the earlier assessment of the work location.\n\nA useful field record is specific: A change record and competent check at the occupied gate position during generator operation. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nA changed work schedule can alter exposure even when every machine remains in place. If a worker spends longer at the noisy station, the earlier work-pattern assessment may no longer describe their shift. A temporary assignment or overtime decision therefore belongs in the review of exposure and protection.\n\nHandovers should identify failed or changed controls in actionable language. Instead of 'compressor louder,' state the observed condition, affected area, restriction and contact for competent review. The incoming shift confirms the arrangement before assigning people. Do not leave a warning in a maintenance system that the receiving supervisor cannot access. The purpose is to preserve protection during the period between discovery and verified correction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H17_lesson6",
+        "title": "Lesson 6 - Verify actual program use",
+        "body": "A suitable practical observation asks the worker to identify the protection required for the task, inspect it, fit it and explain limitations and reporting. Use a safe teaching setting; do not deliberately expose someone to high noise to test whether they recognize it.\n\nProgram review should connect assessment, engineering controls, protector availability, fit instruction, required surveillance and field practice. A box of earplugs at the door is only an availability measure. Observe whether people use the selected protection before entering the relevant area and keep it effective during the task.\n\nFindings need specific corrective action. If a worker cannot hear an alarm while protected, resolve that interface rather than merely recording noncompliance. Sample different shifts and tasks and state the limits of the review. Do not certify all locations from one quiet daytime visit.\n\n## Worked field example\n\nAn audit counts unopened earplug boxes and declares every shift protected without observing work.\n\nThe safe decision is to limit the conclusion to availability and verify fit, use and the actual exposure-control arrangements. Stock availability does not demonstrate that suitable protection is fitted and used effectively.\n\nA useful field record is specific: A representative task observation linked to assessment and the worker’s demonstrated protection use. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Field application and verification\n\nEffectiveness sampling should represent how the task is actually done. Observe workers entering the area, communicating, taking breaks and returning to work. A protector may be fitted during inspection and removed later because instructions cannot be heard. Ask about that conflict without creating pressure to conceal it.\n\nA corrective action is not successful simply because fewer concerns are reported afterward. Check whether reporting remains accessible and whether the control operates. Preserve the observed limitations, such as one shift or one equipment state. Practical learning, exposure measurement and clinical surveillance each contribute different evidence. The review should connect them through the responsible roles while avoiding the claim that one completed record proves the whole program.\n\nA short safe practical follow-up can test whether the worker recognizes a changed source and knows whom to notify. Describe a fictional additional generator and ask for the response under the program; do not operate a loud source merely to create a test. The assessor also checks that the receiver can act on the report. Record the equipment, location, assigned actions and limitations. A successful demonstration supports that bounded learning outcome while competent exposure assessment and clinical surveillance remain separate. If the worker needs prompting, record it and provide focused instruction before reassessment. Preserve both observations rather than turning the first result into a pass. The program should make reporting possible during every shift, including periods when the usual supervisor is unavailable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H17_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional shop moves a compressor next to a packing station. The old survey describes the compressor in a separate room. Workers receive earmuffs, but one lifts a cup to hear the forklift horn and another finds the cushion damaged. The supervisor cites the old survey as evidence that the station is safe.\n\n### Worked solution\n\nThe old location assessment is not adequate for the changed arrangement. The supervisor restricts or otherwise protects affected exposure through the competent process and obtains a task/shift review. The damaged protector is removed from service and replaced with a suitable item. The program reviews communication and warning signals so workers can remain protected while detecting required information. Engineering options such as source isolation or layout change are assessed alongside other machine functions. A practical check verifies the actual protector fit and use. Records connect the revised controls to the changed station, not just to the compressor serial number.\n\n## Scenario 2\n\nA fictional worker reports ringing ears after a shift. The supervisor wants to put the worker’s hearing-test chart in a toolbox talk and close the issue by ordering more plugs.\n\n### Worked solution\n\nThe concern follows the appropriate health process with clinical confidentiality. The supervisor communicates necessary work restrictions and obtains competent review of exposure, engineering controls, protector suitability and actual use. More stock may be useful but does not establish that the selected system fits or remains effective. The review includes changes in duration and simultaneous sources. The employer records corrective actions and checks their results. The worker is supported in reporting; the symptom is not used to make an unqualified diagnosis or assign blame. Learning can be shared in deidentified form while preserving the individual record.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H17_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H17_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nCompetent noise assessment, hearing-protection selection and practical fit/use instruction remain separate. Applicable audiometric surveillance and clinical interpretation belong to qualified health services. Online completion is not a noise survey, fit verification or medical clearance.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H17_check1",
+        "prompt": "A new compressor is installed next to a packing bench without reviewing the worker’s shift exposure. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Arrange competent assessment and appropriate interim protection or restriction before routine exposure continues"
+          },
+          {
+            "id": "b",
+            "label": "Use the old office-area reading for the bench"
+          },
+          {
+            "id": "c",
+            "label": "Assume a quiet idle test represents production"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H17_check2",
+        "prompt": "A compressor enclosure is left open for convenience while a worker remains at the adjacent bench. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count issued earplugs as proof the enclosure is unnecessary"
+          },
+          {
+            "id": "b",
+            "label": "Restore or reassess the approved noise-control arrangement before continued affected exposure"
+          },
+          {
+            "id": "c",
+            "label": "Ignore the opening because the equipment was quiet last week"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H17_check3",
+        "prompt": "A worker repeatedly lifts an earmuff cup to hear radio instructions beside the running compressor. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tell the worker to lift the cup only for short messages"
+          },
+          {
+            "id": "b",
+            "label": "Turn the radio up without reviewing the whole arrangement"
+          },
+          {
+            "id": "c",
+            "label": "Review protection fit and establish effective communication without intermittent unprotected exposure"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H17_check4",
+        "prompt": "A supervisor posts individual hearing test results on a shared noticeboard to encourage compliance. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep clinical results restricted and communicate only appropriate operational actions through the authorized process"
+          },
+          {
+            "id": "b",
+            "label": "Publish the results because everyone signed attendance"
+          },
+          {
+            "id": "c",
+            "label": "Use the result as the only measure of current noise exposure"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H17_check5",
+        "prompt": "A temporary generator is placed beside an attended gatehouse outside the previous noise assessment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wait until the next routine survey regardless of conditions"
+          },
+          {
+            "id": "b",
+            "label": "Review the changed exposure and implement verified controls for the gate worker"
+          },
+          {
+            "id": "c",
+            "label": "Assume temporary equipment is exempt from noise control"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H17_check6",
+        "prompt": "An audit counts unopened earplug boxes and declares every shift protected without observing work. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept stock counts as proof of effective protection"
+          },
+          {
+            "id": "b",
+            "label": "Use the absence of reported hearing loss as complete evidence"
+          },
+          {
+            "id": "c",
+            "label": "Limit the conclusion to availability and verify fit, use and the actual exposure-control arrangements"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H17_final1",
+        "prompt": "For assess the exposure pattern, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Equipment relocation can change worker exposure even when the machine itself is unchanged."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H17_final2",
+        "prompt": "Which evidence would most directly verify assess the exposure pattern in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A task and shift exposure assessment covering the operating compressor and affected workers"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H17_final3",
+        "prompt": "A relief worker proposes the following shortcut during assess the exposure pattern: \"Use the old office-area reading for the bench.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the old office-area reading for the bench"
+          },
+          {
+            "id": "b",
+            "label": "Assume a quiet idle test represents production"
+          },
+          {
+            "id": "c",
+            "label": "Arrange competent assessment and appropriate interim protection or restriction before routine exposure continues"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H17_final4",
+        "prompt": "For reduce noise before relying on ppe, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Opening the enclosure can defeat the engineered control on which the exposure assessment relied."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H17_final5",
+        "prompt": "Which evidence would most directly verify reduce noise before relying on ppe in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An observed closed and functional enclosure plus assessment of the actual operating arrangement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H17_final6",
+        "prompt": "A relief worker proposes the following shortcut during reduce noise before relying on ppe: \"Count issued earplugs as proof the enclosure is unnecessary.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count issued earplugs as proof the enclosure is unnecessary"
+          },
+          {
+            "id": "b",
+            "label": "Ignore the opening because the equipment was quiet last week"
+          },
+          {
+            "id": "c",
+            "label": "Restore or reassess the approved noise-control arrangement before continued affected exposure"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H17_final7",
+        "prompt": "For select and fit protection correctly, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Protection that must be removed for essential communication is not a reliable work arrangement."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H17_final8",
+        "prompt": "Which evidence would most directly verify select and fit protection correctly in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An observed fitted protector and verified communication method in the assessed task"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H17_final9",
+        "prompt": "A relief worker proposes the following shortcut during select and fit protection correctly: \"Tell the worker to lift the cup only for short messages.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tell the worker to lift the cup only for short messages"
+          },
+          {
+            "id": "b",
+            "label": "Turn the radio up without reviewing the whole arrangement"
+          },
+          {
+            "id": "c",
+            "label": "Review protection fit and establish effective communication without intermittent unprotected exposure"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H17_final10",
+        "prompt": "For understand surveillance and confidentiality, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hearing surveillance information is sensitive and does not justify public clinical disclosure."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H17_final11",
+        "prompt": "Which evidence would most directly verify understand surveillance and confidentiality in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "Restricted health follow-up and documented operational control actions without exposed clinical details"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H17_final12",
+        "prompt": "A relief worker proposes the following shortcut during understand surveillance and confidentiality: \"Publish the results because everyone signed attendance.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Publish the results because everyone signed attendance"
+          },
+          {
+            "id": "b",
+            "label": "Use the result as the only measure of current noise exposure"
+          },
+          {
+            "id": "c",
+            "label": "Keep clinical results restricted and communicate only appropriate operational actions through the authorized process"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H17_final13",
+        "prompt": "For respond to defects and changed work, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A temporary source can invalidate the earlier assessment of the work location."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H17_final14",
+        "prompt": "Which evidence would most directly verify respond to defects and changed work in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A change record and competent check at the occupied gate position during generator operation"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H17_final15",
+        "prompt": "A relief worker proposes the following shortcut during respond to defects and changed work: \"Wait until the next routine survey regardless of conditions.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wait until the next routine survey regardless of conditions"
+          },
+          {
+            "id": "b",
+            "label": "Assume temporary equipment is exempt from noise control"
+          },
+          {
+            "id": "c",
+            "label": "Review the changed exposure and implement verified controls for the gate worker"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H17_final16",
+        "prompt": "For verify actual program use, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stock availability does not demonstrate that suitable protection is fitted and used effectively."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H17_final17",
+        "prompt": "Which evidence would most directly verify verify actual program use in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A representative task observation linked to assessment and the worker’s demonstrated protection use"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H17_final18",
+        "prompt": "A relief worker proposes the following shortcut during verify actual program use: \"Accept stock counts as proof of effective protection.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept stock counts as proof of effective protection"
+          },
+          {
+            "id": "b",
+            "label": "Use the absence of reported hearing loss as complete evidence"
+          },
+          {
+            "id": "c",
+            "label": "Limit the conclusion to availability and verify fit, use and the actual exposure-control arrangements"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H17_final19",
+        "prompt": "In Scenario 1, why does the old survey not clear the packing station?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It describes a different source-to-worker arrangement and does not assess the changed exposure"
+          },
+          {
+            "id": "b",
+            "label": "Noise surveys always expire after one week"
+          },
+          {
+            "id": "c",
+            "label": "Earmuffs make all previous information irrelevant"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H17_final20",
+        "prompt": "In Scenario 2, which response best supports prevention?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Public display of the audiogram"
+          },
+          {
+            "id": "b",
+            "label": "Confidential health follow-up combined with review of the actual exposure-control system"
+          },
+          {
+            "id": "c",
+            "label": "Closing the issue once new earplug boxes arrive"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H17_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H17_lesson1",
+          "questionIds": [
+            "H17_check1"
+          ]
+        },
+        {
+          "lessonId": "H17_lesson2",
+          "questionIds": [
+            "H17_check2"
+          ]
+        },
+        {
+          "lessonId": "H17_lesson3",
+          "questionIds": [
+            "H17_check3"
+          ]
+        },
+        {
+          "lessonId": "H17_lesson4",
+          "questionIds": [
+            "H17_check4"
+          ]
+        },
+        {
+          "lessonId": "H17_lesson5",
+          "questionIds": [
+            "H17_check5"
+          ]
+        },
+        {
+          "lessonId": "H17_lesson6",
+          "questionIds": [
+            "H17_check6"
+          ]
+        },
+        {
+          "lessonId": "H17_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H17_final",
+          "questionIds": [
+            "H17_final1",
+            "H17_final2",
+            "H17_final3",
+            "H17_final4",
+            "H17_final5",
+            "H17_final6",
+            "H17_final7",
+            "H17_final8",
+            "H17_final9",
+            "H17_final10",
+            "H17_final11",
+            "H17_final12",
+            "H17_final13",
+            "H17_final14",
+            "H17_final15",
+            "H17_final16",
+            "H17_final17",
+            "H17_final18",
+            "H17_final19",
+            "H17_final20"
+          ]
+        },
+        {
+          "lessonId": "H17_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H17_check1": "Arrange competent assessment and appropriate interim protection or restriction before routine exposure continues. Equipment relocation can change worker exposure even when the machine itself is unchanged.",
+        "H17_check2": "Restore or reassess the approved noise-control arrangement before continued affected exposure. Opening the enclosure can defeat the engineered control on which the exposure assessment relied.",
+        "H17_check3": "Review protection fit and establish effective communication without intermittent unprotected exposure. Protection that must be removed for essential communication is not a reliable work arrangement.",
+        "H17_check4": "Keep clinical results restricted and communicate only appropriate operational actions through the authorized process. Hearing surveillance information is sensitive and does not justify public clinical disclosure.",
+        "H17_check5": "Review the changed exposure and implement verified controls for the gate worker. A temporary source can invalidate the earlier assessment of the work location.",
+        "H17_check6": "Limit the conclusion to availability and verify fit, use and the actual exposure-control arrangements. Stock availability does not demonstrate that suitable protection is fitted and used effectively.",
+        "H17_final1": "Equipment relocation can change worker exposure even when the machine itself is unchanged. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H17_final2": "A task and shift exposure assessment covering the operating compressor and affected workers. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H17_final3": "Arrange competent assessment and appropriate interim protection or restriction before routine exposure continues. Equipment relocation can change worker exposure even when the machine itself is unchanged. A staffing change does not remove this requirement.",
+        "H17_final4": "Opening the enclosure can defeat the engineered control on which the exposure assessment relied. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H17_final5": "An observed closed and functional enclosure plus assessment of the actual operating arrangement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H17_final6": "Restore or reassess the approved noise-control arrangement before continued affected exposure. Opening the enclosure can defeat the engineered control on which the exposure assessment relied. A staffing change does not remove this requirement.",
+        "H17_final7": "Protection that must be removed for essential communication is not a reliable work arrangement. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H17_final8": "An observed fitted protector and verified communication method in the assessed task. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H17_final9": "Review protection fit and establish effective communication without intermittent unprotected exposure. Protection that must be removed for essential communication is not a reliable work arrangement. A staffing change does not remove this requirement.",
+        "H17_final10": "Hearing surveillance information is sensitive and does not justify public clinical disclosure. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H17_final11": "Restricted health follow-up and documented operational control actions without exposed clinical details. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H17_final12": "Keep clinical results restricted and communicate only appropriate operational actions through the authorized process. Hearing surveillance information is sensitive and does not justify public clinical disclosure. A staffing change does not remove this requirement.",
+        "H17_final13": "A temporary source can invalidate the earlier assessment of the work location. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H17_final14": "A change record and competent check at the occupied gate position during generator operation. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H17_final15": "Review the changed exposure and implement verified controls for the gate worker. A temporary source can invalidate the earlier assessment of the work location. A staffing change does not remove this requirement.",
+        "H17_final16": "Stock availability does not demonstrate that suitable protection is fitted and used effectively. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H17_final17": "A representative task observation linked to assessment and the worker’s demonstrated protection use. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H17_final18": "Limit the conclusion to availability and verify fit, use and the actual exposure-control arrangements. Stock availability does not demonstrate that suitable protection is fitted and used effectively. A staffing change does not remove this requirement.",
+        "H17_final19": "Assessment scope includes location and work pattern. Relocation changes the exposure question and requires appropriate review, without inventing a universal expiry period.",
+        "H17_final20": "A symptom needs the proper health route, while prevention requires checking the controls. Neither public disclosure nor a stock purchase establishes effective protection."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

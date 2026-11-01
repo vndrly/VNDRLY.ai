@@ -1,0 +1,781 @@
+{
+  "familyId": "I05",
+  "title": "Incident history and exposure-data integrity",
+  "description": "Complete original VNDRLY I05 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Keep transparent event context without treating zero reports as maturity.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Reconcile denominators and distinguish unknown from verified zero; data exercise. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.enbridge.com/~/media/Enb/Documents/Governance/Subcontractor_Safety_Checklist.pdf?hash=CE8972D0C4E22CBDEE879E80300D7731&rev=87f628b7c81b47e092d8e7984c3a91ec"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://ir.halliburton.com/static-files/28c6bba5-b0b3-47c3-95c3-98cffa83efa5"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "I05_intro",
+        "title": "Start here — Incident history and exposure-data integrity",
+        "body": "# I05: Incident history and exposure-data integrity\n\nKeep transparent event context without treating zero reports as maturity. This course teaches the decisions needed to implement that purpose in field operations. It covers consistent definitions, hours/population, period, corrections and privacy controls. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I05_lesson1",
+        "title": "Lesson 1 — Define the population period and measures",
+        "body": "## Define the population period and measures\n\nAn incident summary needs a defined time period, workforce and event definitions. State whether employees, subcontractors or both are included and how hours are attributed. A company-wide count cannot be compared with a single-site denominator. Separate actual events from reporting activity and maturity review. A favorable outcome history is not proof that the underlying safety practices are implemented or effective.\n\n### Deeper application\n\nWrite a measure definition before entering numbers. Identify the event category, time period, included workforce and exposure units. Distinguish employee hours from contractor hours and site-specific work from the whole business. A statement such as no events may be valid for one bounded population but misleading when displayed as all-company history. Keep the scope alongside the figure so it survives export and presentation.\n\n### Worked oilfield example\n\nA vendor combines subcontractor incidents with employee-only hours and presents the resulting rate as company-wide. The decision is to reconcile a consistent event and exposure population before calculating or comparing the measure.\n\nA rate requires compatible numerator and denominator scope; real numbers can still produce a misleading comparison. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A period and population definition linking included event categories to matching exposure sources. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the report says year-to-date but includes hours from a different cutoff date. The appropriate correction is to align the event and exposure period and disclose the correction before using the measure. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I05_lesson2",
+        "title": "Lesson 2 — Reconcile exposure data to traceable sources",
+        "body": "## Reconcile exposure data to traceable sources\n\nIdentify where hours or other exposure measures come from and what they represent. Payroll, timekeeping and subcontractor submissions may use different cutoffs or include nonworking categories. Reconcile differences rather than choosing the largest denominator. Keep source references and review notes so another suitable reviewer can reproduce the summary. Do not invent missing hours or assume a standard number for each worker without an approved valid basis.\n\n### Deeper application\n\nReconciliation explains differences rather than concealing them. One source may include leave, another only productive hours, and a subcontractor may submit on a different cutoff. Determine which values match the defined exposure and document justified adjustments. Two accurate source totals can legitimately differ because they measure different things. Do not resolve that difference by selecting whichever denominator gives the most favorable rate.\n\n### Worked oilfield example\n\nTimekeeping and payroll show different hours, and the preparer selects the higher figure because it lowers the reported rate. The decision is to investigate the scope and cutoff differences and use a supported consistent exposure total.\n\nThe denominator must represent the defined exposure. Choosing a convenient number distorts the measure. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A reconciliation documenting source definitions, differences, adjustments and accepted exposure total. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the reconciliation includes office hours while the stated measure covers only a field contract. The appropriate correction is to correct the exposure scope and retain the adjustment trail and calculation basis. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I05_lesson3",
+        "title": "Lesson 3 — Distinguish verified zero from missing coverage",
+        "body": "## Distinguish verified zero from missing coverage\n\nNo reports received, verified zero events and unknown reporting coverage are different states. A zero requires a defined covered population and appropriate source checks. If subcontractors did not submit information, label the gap instead of assuming zero. A blank field should not become a favorable number. Explain what is known and what evidence is still needed before presenting a complete history.\n\n### Deeper application\n\nA verified zero needs a defined coverage statement and appropriate checks of relevant sources. No email received is evidence only about that inbox, not the whole workforce. Mark missing submissions and unknown periods separately. Where part of the population is verified, report that bounded result without extending it to the unverified part. A blank or unavailable measure must not appear as a green zero in a dashboard.\n\n### Worked oilfield example\n\nA vendor reports zero incidents but cannot confirm whether any subcontractor supplied event information. The decision is to show subcontractor coverage as unknown and reconcile it before claiming a complete zero.\n\nMissing information is not evidence of absence. A zero must be bounded by verified reporting coverage. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A coverage declaration identifying checked sources, confirmed zero scope and outstanding gaps. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that employee coverage is verified but the summary labels the whole company zero. The appropriate correction is to limit the claim to the verified population and disclose the unresolved coverage separately. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I05_lesson4",
+        "title": "Lesson 4 — Calculate only supported comparisons",
+        "body": "## Calculate only supported comparisons\n\nBefore calculating a rate, verify event definitions, exposure units, population, period and any normalization basis required by the intended measure. This course does not invent a universal formula or compare unrelated rates. Small denominators can make changes unstable; explain limits rather than treating a rank as a precise measure of competence. For a fictional count, two qualifying events over a defined exposure are meaningful only once the relevant measure's basis is established.\n\n### Deeper application\n\nUse the specified normalization and category rules for the intended measure, with an authoritative basis where needed. This course deliberately does not provide one rate formula for every comparison. Explain small exposure and incompatible definitions rather than ranking numbers without context. A measure can be unavailable while the underlying event count is known; do not invent exposure data to force every cell into a numeric format.\n\n### Worked oilfield example\n\nA customer asks for a rate comparison, but the vendors use different event definitions and one lacks verified hours. The decision is to mark the comparison unsupported and explain the missing compatible definitions and exposure evidence.\n\nA numerical comparison is only meaningful when its inputs and definitions are compatible and known. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A measure specification and compatibility review showing why a calculation or comparison is supported or unavailable. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the underlying data is valid but the displayed rate uses an undocumented normalization factor. The appropriate correction is to establish and disclose the applicable measure basis and recalculate transparently if needed. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I05_lesson5",
+        "title": "Lesson 5 — Correct errors while preserving occurrences",
+        "body": "## Correct errors while preserving occurrences\n\nAn investigation can refine classification or correct a duplicate, but closing it does not erase that the event occurred. Record the original entry, correction reason, supporting evidence, authorized decision and affected summary versions. A duplicate should be linked and resolved, not silently hidden. Corrections must improve accuracy rather than manipulate outcomes. Retain confidential raw material in restricted channels with deidentified summaries where appropriate.\n\n### Deeper application\n\nAn audit trail should show what changed, why, who authorized it and which summary versions are affected. A duplicate resolution removes double counting while preserving a link to the actual occurrence. A later classification decision can alter a category without denying the event. Neither investigation closure nor a successful corrective action justifies deleting history. Accuracy, rather than favorable appearance, is the correction's purpose.\n\n### Worked oilfield example\n\nA manager deletes an incident from history when its investigation closes and corrective actions are complete. The decision is to restore a traceable occurrence record and separate event history from investigation and action status.\n\nClosure describes process progress, not whether an event happened. Event history must remain accurate and traceable. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An auditable correction preserving the occurrence and documenting classification and status changes. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that a genuine duplicate is removed without linking the surviving event or recording the reason. The appropriate correction is to document the duplicate resolution and preserve a reproducible audit trail to the surviving occurrence. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I05_lesson6",
+        "title": "Lesson 6 — Keep outcomes separate from maturity and privacy",
+        "body": "## Keep outcomes separate from maturity and privacy\n\nIncident history describes outcomes and reporting coverage; maturity describes verified company practices. Zero incidents earns no automatic full maturity credit, and an occurrence alone does not prove every practice failed. Relevant verified findings can affect the specific evidence decision. Share only necessary deidentified summary data and restrict raw medical or personal records. Reviewer conclusions should state coverage and uncertainty alongside the numbers.\n\n### Deeper application\n\nKeep outcome history visible alongside reporting coverage and verified practice evidence. A company with no recorded injuries may still lack proof of implementation, while one reported event may reveal a strong reporting response and a specific control weakness. Evaluate the relevant findings rather than automatically converting the event count into a maturity penalty or reward. Restrict raw sensitive records and provide necessary bounded summaries.\n\n### Worked oilfield example\n\nA vendor requests full maturity credit solely because its summary shows zero reported injuries. The decision is to assess the required practice evidence separately and disclose the outcome summary's scope and uncertainty.\n\nOutcomes and implementation answer different questions; neither a zero nor a private-file dump establishes company maturity. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Separate outcome and maturity records with bounded coverage and controlled access to supporting evidence. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that a dashboard displays missing exposure data as a green zero rate. The appropriate correction is to display the measure as unavailable with its coverage gap until supported data is reconciled. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I05_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA vendor combines subcontractor incidents with employee-only hours and presents the resulting rate as company-wide. At the handover, a second issue is identified: The reconciliation includes office hours while the stated measure covers only a field contract. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Enter zero because no report reached the office. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Reconcile a consistent event and exposure population before calculating or comparing the measure. The reason is specific: A rate requires compatible numerator and denominator scope; real numbers can still produce a misleading comparison. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Correct the exposure scope and retain the adjustment trail and calculation basis. The supporting record should show: A reconciliation documenting source definitions, differences, adjustments and accepted exposure total. This is important because the denominator must represent the defined exposure. Choosing a convenient number distorts the measure. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because missing information is not evidence of absence. A zero must be bounded by verified reporting coverage. The suitable decision is: Show subcontractor coverage as unknown and reconcile it before claiming a complete zero. Evidence for review would include: A coverage declaration identifying checked sources, confirmed zero scope and outstanding gaps. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA customer asks for a rate comparison, but the vendors use different event definitions and one lacks verified hours. At the handover, a second issue is identified: A genuine duplicate is removed without linking the surviving event or recording the reason. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Award full credit for a favorable number alone. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Mark the comparison unsupported and explain the missing compatible definitions and exposure evidence. The reason is specific: A numerical comparison is only meaningful when its inputs and definitions are compatible and known. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Document the duplicate resolution and preserve a reproducible audit trail to the surviving occurrence. The supporting record should show: An auditable correction preserving the occurrence and documenting classification and status changes. This is important because closure describes process progress, not whether an event happened. Event history must remain accurate and traceable. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because outcomes and implementation answer different questions; neither a zero nor a private-file dump establishes company maturity. The suitable decision is: Assess the required practice evidence separately and disclose the outcome summary's scope and uncertainty. Evidence for review would include: Separate outcome and maturity records with bounded coverage and controlled access to supporting evidence. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I05_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "I05_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nReconcile denominators and distinguish unknown from verified zero; data exercise. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "I05_check1",
+        "prompt": "A vendor combines subcontractor incidents with employee-only hours and presents the resulting rate as company-wide. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reconcile a consistent event and exposure population before calculating or comparing the measure."
+          },
+          {
+            "id": "b",
+            "label": "Publish the mixed-scope rate because both numbers are real."
+          },
+          {
+            "id": "c",
+            "label": "Remove subcontractor events solely to improve the result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I05_final1",
+        "prompt": "For define the population period and measures, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A period and population definition linking included event categories to matching exposure sources."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I05_final2",
+        "prompt": "A later review finds: The report says year-to-date but includes hours from a different cutoff date. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Align the event and exposure period and disclose the correction before using the measure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I05_final3",
+        "prompt": "Consider this proposed response: Publish the mixed-scope rate because both numbers are real. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A rate requires compatible numerator and denominator scope; real numbers can still produce a misleading comparison."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I05_check2",
+        "prompt": "Timekeeping and payroll show different hours, and the preparer selects the higher figure because it lowers the reported rate. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Always choose the largest available number."
+          },
+          {
+            "id": "b",
+            "label": "Investigate the scope and cutoff differences and use a supported consistent exposure total."
+          },
+          {
+            "id": "c",
+            "label": "Average the figures without understanding their meaning."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I05_final4",
+        "prompt": "For reconcile exposure data to traceable sources, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A reconciliation documenting source definitions, differences, adjustments and accepted exposure total."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I05_final5",
+        "prompt": "A later review finds: The reconciliation includes office hours while the stated measure covers only a field contract. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Correct the exposure scope and retain the adjustment trail and calculation basis."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I05_final6",
+        "prompt": "Consider this proposed response: Always choose the largest available number. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "The denominator must represent the defined exposure. Choosing a convenient number distorts the measure."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I05_check3",
+        "prompt": "A vendor reports zero incidents but cannot confirm whether any subcontractor supplied event information. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Enter zero because no report reached the office."
+          },
+          {
+            "id": "b",
+            "label": "Exclude the subcontractor population without telling readers."
+          },
+          {
+            "id": "c",
+            "label": "Show subcontractor coverage as unknown and reconcile it before claiming a complete zero."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I05_final7",
+        "prompt": "For distinguish verified zero from missing coverage, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A coverage declaration identifying checked sources, confirmed zero scope and outstanding gaps."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I05_final8",
+        "prompt": "A later review finds: Employee coverage is verified but the summary labels the whole company zero. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Limit the claim to the verified population and disclose the unresolved coverage separately."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I05_final9",
+        "prompt": "Consider this proposed response: Enter zero because no report reached the office. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Missing information is not evidence of absence. A zero must be bounded by verified reporting coverage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I05_check4",
+        "prompt": "A customer asks for a rate comparison, but the vendors use different event definitions and one lacks verified hours. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Mark the comparison unsupported and explain the missing compatible definitions and exposure evidence."
+          },
+          {
+            "id": "b",
+            "label": "Rank the vendors from the displayed numbers anyway."
+          },
+          {
+            "id": "c",
+            "label": "Convert the unknown hours to zero to finish the spreadsheet."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I05_final10",
+        "prompt": "For calculate only supported comparisons, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A measure specification and compatibility review showing why a calculation or comparison is supported or unavailable."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I05_final11",
+        "prompt": "A later review finds: The underlying data is valid but the displayed rate uses an undocumented normalization factor. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Establish and disclose the applicable measure basis and recalculate transparently if needed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I05_final12",
+        "prompt": "Consider this proposed response: Rank the vendors from the displayed numbers anyway. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A numerical comparison is only meaningful when its inputs and definitions are compatible and known."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I05_check5",
+        "prompt": "A manager deletes an incident from history when its investigation closes and corrective actions are complete. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the deletion because the problem is now fixed."
+          },
+          {
+            "id": "b",
+            "label": "Restore a traceable occurrence record and separate event history from investigation and action status."
+          },
+          {
+            "id": "c",
+            "label": "Move the event to an unreported category to preserve the same rate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I05_final13",
+        "prompt": "For correct errors while preserving occurrences, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "An auditable correction preserving the occurrence and documenting classification and status changes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I05_final14",
+        "prompt": "A later review finds: A genuine duplicate is removed without linking the surviving event or recording the reason. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Document the duplicate resolution and preserve a reproducible audit trail to the surviving occurrence."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I05_final15",
+        "prompt": "Consider this proposed response: Keep the deletion because the problem is now fixed. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Closure describes process progress, not whether an event happened. Event history must remain accurate and traceable."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I05_check6",
+        "prompt": "A vendor requests full maturity credit solely because its summary shows zero reported injuries. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Award full credit for a favorable number alone."
+          },
+          {
+            "id": "b",
+            "label": "Demand every worker's unrestricted medical file to validate the summary."
+          },
+          {
+            "id": "c",
+            "label": "Assess the required practice evidence separately and disclose the outcome summary's scope and uncertainty."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I05_final16",
+        "prompt": "For keep outcomes separate from maturity and privacy, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Separate outcome and maturity records with bounded coverage and controlled access to supporting evidence."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I05_final17",
+        "prompt": "A later review finds: A dashboard displays missing exposure data as a green zero rate. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Display the measure as unavailable with its coverage gap until supported data is reconciled."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "I05_final18",
+        "prompt": "Consider this proposed response: Award full credit for a favorable number alone. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Outcomes and implementation answer different questions; neither a zero nor a private-file dump establishes company maturity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "I05_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Correct the exposure scope and retain the adjustment trail and calculation basis."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "I05_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Document the duplicate resolution and preserve a reproducible audit trail to the surviving occurrence."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "I05_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I05_lesson1",
+          "questionIds": [
+            "I05_check1"
+          ]
+        },
+        {
+          "lessonId": "I05_lesson2",
+          "questionIds": [
+            "I05_check2"
+          ]
+        },
+        {
+          "lessonId": "I05_lesson3",
+          "questionIds": [
+            "I05_check3"
+          ]
+        },
+        {
+          "lessonId": "I05_lesson4",
+          "questionIds": [
+            "I05_check4"
+          ]
+        },
+        {
+          "lessonId": "I05_lesson5",
+          "questionIds": [
+            "I05_check5"
+          ]
+        },
+        {
+          "lessonId": "I05_lesson6",
+          "questionIds": [
+            "I05_check6"
+          ]
+        },
+        {
+          "lessonId": "I05_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "I05_assessment",
+          "questionIds": [
+            "I05_final1",
+            "I05_final2",
+            "I05_final3",
+            "I05_final4",
+            "I05_final5",
+            "I05_final6",
+            "I05_final7",
+            "I05_final8",
+            "I05_final9",
+            "I05_final10",
+            "I05_final11",
+            "I05_final12",
+            "I05_final13",
+            "I05_final14",
+            "I05_final15",
+            "I05_final16",
+            "I05_final17",
+            "I05_final18",
+            "I05_final19",
+            "I05_final20"
+          ]
+        },
+        {
+          "lessonId": "I05_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "I05_check1": "A rate requires compatible numerator and denominator scope; real numbers can still produce a misleading comparison.",
+        "I05_final1": "A rate requires compatible numerator and denominator scope; real numbers can still produce a misleading comparison. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I05_final2": "A rate requires compatible numerator and denominator scope; real numbers can still produce a misleading comparison. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I05_final3": "A rate requires compatible numerator and denominator scope; real numbers can still produce a misleading comparison. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I05_check2": "The denominator must represent the defined exposure. Choosing a convenient number distorts the measure.",
+        "I05_final4": "The denominator must represent the defined exposure. Choosing a convenient number distorts the measure. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I05_final5": "The denominator must represent the defined exposure. Choosing a convenient number distorts the measure. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I05_final6": "The denominator must represent the defined exposure. Choosing a convenient number distorts the measure. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I05_check3": "Missing information is not evidence of absence. A zero must be bounded by verified reporting coverage.",
+        "I05_final7": "Missing information is not evidence of absence. A zero must be bounded by verified reporting coverage. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I05_final8": "Missing information is not evidence of absence. A zero must be bounded by verified reporting coverage. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I05_final9": "Missing information is not evidence of absence. A zero must be bounded by verified reporting coverage. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I05_check4": "A numerical comparison is only meaningful when its inputs and definitions are compatible and known.",
+        "I05_final10": "A numerical comparison is only meaningful when its inputs and definitions are compatible and known. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I05_final11": "A numerical comparison is only meaningful when its inputs and definitions are compatible and known. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I05_final12": "A numerical comparison is only meaningful when its inputs and definitions are compatible and known. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I05_check5": "Closure describes process progress, not whether an event happened. Event history must remain accurate and traceable.",
+        "I05_final13": "Closure describes process progress, not whether an event happened. Event history must remain accurate and traceable. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I05_final14": "Closure describes process progress, not whether an event happened. Event history must remain accurate and traceable. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I05_final15": "Closure describes process progress, not whether an event happened. Event history must remain accurate and traceable. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I05_check6": "Outcomes and implementation answer different questions; neither a zero nor a private-file dump establishes company maturity.",
+        "I05_final16": "Outcomes and implementation answer different questions; neither a zero nor a private-file dump establishes company maturity. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "I05_final17": "Outcomes and implementation answer different questions; neither a zero nor a private-file dump establishes company maturity. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "I05_final18": "Outcomes and implementation answer different questions; neither a zero nor a private-file dump establishes company maturity. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "I05_final19": "The denominator must represent the defined exposure. Choosing a convenient number distorts the measure. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "I05_final20": "Closure describes process progress, not whether an event happened. Event history must remain accurate and traceable. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

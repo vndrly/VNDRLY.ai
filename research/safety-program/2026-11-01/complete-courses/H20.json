@@ -1,0 +1,785 @@
+{
+  "familyId": "H20",
+  "title": "Traffic, gate access and pedestrian separation",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Prevent vehicle/pedestrian conflict and unsafe admission.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate site-specific practical evaluation must verify gate positioning, communication, access checks, pedestrian protection, handover and escalation. Spotter, traffic-control and equipment-operation duties require their own applicable training, assessment and authorization. This course does not qualify a worker to direct public-road traffic or conduct security enforcement.",
+  "sources": [
+    {
+      "title": "Chevron safe work practices — client-specific reference index",
+      "url": "https://www.chevronwithtechron.com/en_us/home/safe-work-practices.html"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Simplified%20PTW%20and%20JSA%20template.pdf"
+    },
+    {
+      "title": "OSHA: Motor vehicle safety",
+      "url": "https://www.osha.gov/motor-vehicle-safety"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H20_intro",
+        "title": "Start here: Traffic, gate access and pedestrian separation",
+        "body": "# Traffic, gate access and pedestrian separation\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate site-specific practical evaluation must verify gate positioning, communication, access checks, pedestrian protection, handover and escalation. Spotter, traffic-control and equipment-operation duties require their own applicable training, assessment and authorization. This course does not qualify a worker to direct public-road traffic or conduct security enforcement.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[Chevron safe work practices — client-specific reference index](https://www.chevronwithtechron.com/en_us/home/safe-work-practices.html). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H20_lesson1",
+        "title": "Lesson 1 - Design the gate as a traffic system",
+        "body": "A gate is a conflict point between moving vehicles, stationary queues, pedestrians, security checks and emergency access. The gate attendant cannot control these conflicts simply by being careful. A driver may be looking for a sign while an attendant approaches a cab; another vehicle can move even when the first driver has stopped. Start with a site traffic arrangement that makes the safe position the normal position.\n\nTrace arrivals from the public approach to the holding point, identification position, parking area and work destination. Trace departures separately. Identify where a long trailer turns, where a driver can stop without projecting into another lane, and where people leave vehicles. Look at pedestrian journeys from the parking area to the office, toilets and muster point. A painted line gives information but does not physically prevent a vehicle crossing it. The site assessment determines suitable separation, barriers and controlled crossings.\n\nThe plan must work for the vehicles actually expected. A pickup layout may fail when a low-loader arrives. Waiting capacity, surface condition, lighting and visibility also matter. Do not invent a clearance distance: have the responsible site authority verify the layout for vehicle dimensions and operating conditions. A delivery booking is useful planning information, but it is not proof that the receiving area is ready.\n\nBefore opening the gate, walk the pedestrian route from the protected side and inspect for pallets, ice, temporary hoses or displaced barriers. Report a route that forces pedestrians into a vehicle lane. Agree the holding and diversion arrangements before a queue forms; an attendant should not improvise by standing in the road. Keep the emergency approach available even when ordinary admission pauses.\n\n## Worked field example\n\nA temporary office is installed across the delivery lane, so every visitor must walk through the turning area.\n\nThe safe decision is to hold the affected pedestrian movement and obtain a revised separated route from the site traffic authority. Office relocation changes pedestrian exposure; the original vehicle plan no longer covers the layout.\n\nA useful field record is specific: A revised layout plus an observed visitor journey using the protected route. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H20_lesson2",
+        "title": "Lesson 2 - Use a safe identification position",
+        "body": "Admission involves two independent questions: is the person or delivery authorized, and can the check be performed without entering a vehicle conflict area? A valid badge answers neither the layout question nor the driver's readiness to move. Stay at the designated protected checking position. Arrange a safe means for the driver to present identity, delivery details and destination from that position.\n\nNever squeeze between queued vehicles to read a plate or reach a cab. A stopped truck may roll, release its brakes, turn its steering or be struck from behind. Avoid positions alongside moving wheels, between a truck and a gatepost, behind a reversing vehicle, or where a trailer's sweep could reach you. Eye contact alone does not establish a controlled movement. High-visibility clothing helps detection but does not create separation or remove blind spots.\n\nUse the site holding instruction clearly: identify the vehicle, the stop point and the action expected. Confirm understanding through the agreed communication method. If documents cannot be read safely, keep the vehicle held while the receiving supervisor arranges another method, such as a safe parking location or a digital verification process. Do not make the unsafe approach the price of doing the security check.\n\nA queue can produce social pressure: horns, impatient drivers and a supervisor demanding throughput. Treat that as a reason to activate the planned queue response. It does not justify entering the squeeze space. If a driver's identity remains uncertain, retain the safe hold and escalate the access decision to the authorized contact. Do not admit someone merely because their truck is blocking the lane, and do not physically block an aggressive driver with your body.\n\n## Worked field example\n\nTwo trucks are queued bumper to bumper and a visitor holds a badge at the rear window of the first cab.\n\nThe safe decision is to keep clear of the gap and arrange badge verification at the protected checking position. A stationary queue still contains vehicle movement and crushing hazards.\n\nA useful field record is specific: An observed admission showing the attendant outside the vehicle path throughout verification. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H20_lesson3",
+        "title": "Lesson 3 - Control reversing and communications",
+        "body": "Remove unnecessary reversing through traffic layout where practicable. When a maneuver still requires a spotter under the assessed site method, assign someone competent for that role and make sure the driver and spotter agree how the movement will be controlled. An attendant does not become a qualified spotter simply because they are nearest the truck.\n\nBefore movement, establish the route, exclusion area, communication method, stop instruction and the driver's response if contact is lost. The spotter needs a safe position with an escape route and must remain clear of the vehicle's travel and sweep. Other people should be kept out of the maneuver area. One person should coordinate the signals under the agreed method; conflicting instructions from several bystanders are unsafe.\n\nRadio communication needs unambiguous identification when several vehicles share a channel. A message such as 'back up a little' can be heard by the wrong driver. Use the site's agreed call signs and closed-loop instructions. Do not improvise signals that the driver has never learned. The required response to lost sight, lost radio contact, an uncertain signal or a person entering the exclusion area is to stop the affected movement and restore safe conditions.\n\nDo not walk backward into an unchecked route while trying to guide a truck. Do not stand between the truck and an immovable object to judge a final gap. The movement must be achievable without putting the guide at risk. If darkness, dust, equipment noise or a second delivery defeats the approved method, hold the maneuver and involve the site traffic authority. More shouting does not repair a failed communication system.\n\n## Worked field example\n\nA delivery reverses toward a laydown area and the spotter disappears behind stacked pipe.\n\nThe safe decision is to stop the maneuver and restore the approved visible communication arrangement before moving again. The driver cannot safely continue when the agreed movement control is lost.\n\nA useful field record is specific: A pre-maneuver briefing and observation of a stopped vehicle when spotter contact is lost. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H20_lesson4",
+        "title": "Lesson 4 - Admit visitors without transferring risk",
+        "body": "Visitors may know their own company but be unfamiliar with this location. Explain the safe parking point, check-in process, pedestrian route, required escort and destination. Check any required induction or access permission through the approved system. A roster entry shows an administrative status; the gate worker must still manage the physical arrival safely.\n\nGive instructions before the visitor leaves the vehicle where the site method allows it. Avoid an arrangement in which drivers wander among moving trucks looking for reception. If the visitor cannot understand the instruction, obtain an effective translation or other accessible communication method before releasing them into the site. A nod is not reliable confirmation. Ask them to describe the next step in their own words.\n\nSome arrivals need additional coordination: oversize loads, first-time couriers, contractors carrying hazardous goods, passengers who are not listed, or people arriving at the wrong entrance. Hold them at the approved safe point and contact the receiving authority. Verify the receiving area is available, the escort is ready and the route is suitable. A delivery deadline does not authorize bypassing these checks.\n\nThe gate attendant should know the limit of their authority. They may verify an approved access decision and enforce the safe hold; they should not invent an exception to a work permit, licensing requirement or restricted-area rule. Record refusals and exceptions factually. Separate identity details from the hazard report and protect personal information under the site's process.\n\nIf the receiving contact says 'just send them through,' explain the unresolved condition precisely: for example, no escort is available and the delivery destination is inside an operating crane area. Ask for an authorized safe arrangement, rather than accepting an instruction that leaves the conflict unchanged.\n\n## Worked field example\n\nA first-time courier is told to walk across the operating yard because the receiving contact is busy.\n\nThe safe decision is to hold the visitor at the safe check-in point until the receiving authority provides the approved route and escort arrangement. Administrative permission does not control an unfamiliar visitor’s exposure to yard traffic.\n\nA useful field record is specific: A verified access decision, visitor briefing and actual handover to the agreed escort. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H20_lesson5",
+        "title": "Lesson 5 - Respond to congestion and changing conditions",
+        "body": "Traffic risk changes through a shift. Rain can obscure markings; dust can hide a pedestrian; temporary lighting can glare into a driver's eyes; a new load can block the route that was inspected at opening. Monitor the controls, not merely the number of entries completed. Keep the gate supervisor informed of developing queue and visibility problems before they become emergencies.\n\nUse the planned holding, booking adjustment or diversion arrangement when receiving capacity is exhausted. Avoid releasing vehicles into a yard that has nowhere safe to receive them. A gate worker should not send a driver onto a public road shoulder without an approved arrangement. Public-road traffic control may require another authority and specific competence; it is not something to improvise with a hand signal.\n\nEmergency access is a separate function of the gate. Know how the site will identify responders, open the correct entrance and provide a guide from a safe location. Keep access routes clear, including the space needed for the responding vehicle to turn. The fact that the gate itself is open does not help if a trailer blocks the approach.\n\nWhen an alarm occurs, use the emergency traffic arrangements and move yourself to the designated safe position. Do not attempt to process ordinary arrivals while simultaneously directing responders if that creates conflicting tasks. Inform the command contact of blocked routes, queue location and people awaiting admission. Follow the site's instructions about stopping entry and preserving exits.\n\nAfter a material change, the designated authority must review the affected route and safeguards before routine flow resumes. An attendant may identify the problem and maintain a hold, but should not design unreviewed barrier layouts around moving vehicles. Record the change, interim arrangement and the person who accepted the revised operation.\n\n## Worked field example\n\nA waiting tanker blocks the emergency entrance while rain obscures the normal pedestrian crossing.\n\nThe safe decision is to pause affected admissions and coordinate safe queue relocation and a reviewed crossing arrangement. Congestion and reduced visibility can defeat emergency access and pedestrian separation at the same time.\n\nA useful field record is specific: A recorded queue intervention and field check that emergency access and pedestrian protection are restored. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H20_lesson6",
+        "title": "Lesson 6 - Handover and verify the traffic controls",
+        "body": "A shift handover must transfer the gate's live operating state. Include vehicles waiting, denied access decisions, escorts outstanding, temporary routes, defective radios, lighting issues, closed areas and emergency access restrictions. A new attendant needs to know which instruction is current and who is available to resolve an exception. An unread logbook left on the desk is not a confirmed handover.\n\nExplain restrictions in terms of their exposure and required control. 'Watch the north side' is vague. 'The north pedestrian barrier is displaced; that route is held pending replacement and visitors use the escorted south route' tells the relief worker what action is required. Confirm the receiving worker understands and accepts the monitoring responsibility before the outgoing worker leaves.\n\nObserve actual arrivals to check whether the plan works. Look for repeated unsafe badge approaches, pedestrian shortcuts, vehicles overshooting the hold point or instructions that drivers misunderstand. Ask workers why the workaround occurs. A sign may be positioned too late for a loaded truck to stop comfortably, or a protected checking booth may have poor visibility. Fix the system rather than merely reminding people to be careful.\n\nEvidence should distinguish a written plan, implementation and effectiveness. A drawing establishes intended routes. A representative observed arrival can demonstrate implementation for that sample. Repeated observations under relevant conditions can support a bounded conclusion about effectiveness. None proves every shift, vehicle and weather condition is covered.\n\nClose an action only after its safeguard is verified in the actual operation. If a new barrier forces the driver into another conflict area, installation alone is not success. Keep the issue open, protect the affected movement and review the design. Practical assessment should include safe positioning, a lost-communication stop, visitor handover and escalation under queue pressure in a controlled exercise.\n\n## Worked field example\n\nThe outgoing attendant leaves a note saying “radio intermittent” but the relief worker starts guiding reversals.\n\nThe safe decision is to hold radio-dependent maneuvers until effective communication and responsibility are confirmed. A defect note does not restore the control or transfer a safe operating arrangement.\n\nA useful field record is specific: A confirmed handover plus a successful approved communication check before affected movement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H20_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nAt a fictional gas-service yard, Lina works the gate during a morning delivery surge. A pipe truck stops short of the checking booth because a pickup is parked in the holding position. A second truck closes the gap behind it. The first driver waves a delivery note from a side window and says the receiving crew is waiting. Lina can only reach the note by walking between the first truck and a gatepost. A pedestrian contractor then starts toward the same gap, trying to reach reception. An ambulance entrance lies beyond the queue.\n\nDecide what Lina should control first, how admission can continue, and what must be checked before the arrangement is released. Assume Lina can contact the site traffic supervisor and receiving coordinator. She is not authorized to direct public-road traffic or approve changes to the layout.\n\n### Worked solution\n\nLina remains at the protected position and uses the agreed stop instruction to hold the affected movement. She tells the pedestrian to remain at the safe check-in point using a communication method that does not require entering the vehicle lane. She does not stand between the truck and the post or use her body to stop the second truck. The immediate problem is a lost safe checking arrangement, not an uncooperative delivery note.\n\nShe contacts the site traffic supervisor with the specific state: the holding point is occupied, two trucks are queued, the pedestrian route is compromised and emergency access may be affected. The supervisor coordinates a safe removal of the pickup and a controlled movement to the proper hold point. Lina does not improvise a reversing maneuver with an unbriefed bystander. The receiving coordinator confirms the destination and any escort while the traffic hold remains.\n\nOnce the physical arrangement is restored, Lina verifies the delivery and visitor authorization from the safe position. She gives the pedestrian the approved route and confirms the escort handover where required. The responsible authority checks that the queue does not block emergency access and that the approach can receive the next vehicle safely.\n\nThe log records the actual conflict, hold, responsible contacts, revised arrangement and observed safe admission. It does not merely say 'queue cleared.' Later review asks why the pickup occupied the holding point and whether bookings, parking enforcement or layout contributed. Throughput can resume after safeguards are restored; pressure from waiting crews cannot replace them.\n\n## Scenario 2\n\nDuring a fictional night shift, a low-loader arrives carrying a replacement compressor. Its booked route passes the north pedestrian walkway. The day shift moved the walkway barrier to admit a crane but did not update the gate handover. Rain reflects the temporary lights, and the driver cannot see the proposed spotter's position. The gate radio cuts out during a test message. The receiving supervisor says the load is urgently needed and suggests continuing slowly, with the gate attendant standing at the trailer corner.\n\nExplain which parts of the operation are not ready, who must resolve them and how a safe restart should be demonstrated. The attendant has completed this online course but has not been assessed as a spotter for this delivery.\n\n### Worked solution\n\nThe delivery is held at the approved safe location. Moving slowly does not replace a visible route, reliable communication or a safe position. The missing pedestrian barrier, impaired visibility and failed radio are separate control failures; each can invalidate the planned maneuver. The attendant does not accept the spotter role merely because the load is urgent.\n\nThe site traffic authority and receiving supervisor review the actual low-loader dimensions, turning and trailer sweep, destination readiness and protected pedestrian route. They arrange a competent assigned spotter if the reviewed method requires one. The method must provide a safe spotter position and escape route, agreed signals, a clear stop response and a way for the driver to maintain the required contact. If those conditions cannot be established in the current weather and lighting, the maneuver remains held.\n\nThe responsible people restore or revise the pedestrian separation and communicate the current layout to everyone affected. They correct and test the radio or approve another effective communication method through the site process. A test is performed without introducing live vehicle conflict. The driver and assigned spotter confirm the instruction and loss-of-contact stop arrangement.\n\nBefore release, the authority verifies the route, exclusion, communication, vehicle suitability and receiving readiness in the actual conditions. A named person accepts the revised operation. The log captures why the old method was unsuitable and what was changed. Handover records then carry the live restrictions to relief staff. Online learning supports the attendant's recognition and escalation; it does not establish practical spotter competence or approve the maneuver.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H20_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H20_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate site-specific practical evaluation must verify gate positioning, communication, access checks, pedestrian protection, handover and escalation. Spotter, traffic-control and equipment-operation duties require their own applicable training, assessment and authorization. This course does not qualify a worker to direct public-road traffic or conduct security enforcement.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H20_check1",
+        "prompt": "A temporary office is installed across the delivery lane, so every visitor must walk through the turning area. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the affected pedestrian movement and obtain a revised separated route from the site traffic authority"
+          },
+          {
+            "id": "b",
+            "label": "Tell visitors to watch for trucks and keep the old route"
+          },
+          {
+            "id": "c",
+            "label": "Use the delivery booking list as authorization to cross"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H20_check2",
+        "prompt": "Two trucks are queued bumper to bumper and a visitor holds a badge at the rear window of the first cab. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Step between the trucks quickly before the queue moves"
+          },
+          {
+            "id": "b",
+            "label": "Keep clear of the gap and arrange badge verification at the protected checking position"
+          },
+          {
+            "id": "c",
+            "label": "Stand at the front bumper so the driver cannot leave"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H20_check3",
+        "prompt": "A delivery reverses toward a laydown area and the spotter disappears behind stacked pipe. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue slowly because the route was clear at the start"
+          },
+          {
+            "id": "b",
+            "label": "Ask an unbriefed visitor to wave the truck backward"
+          },
+          {
+            "id": "c",
+            "label": "Stop the maneuver and restore the approved visible communication arrangement before moving again"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H20_check4",
+        "prompt": "A first-time courier is told to walk across the operating yard because the receiving contact is busy. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the visitor at the safe check-in point until the receiving authority provides the approved route and escort arrangement"
+          },
+          {
+            "id": "b",
+            "label": "Point toward the building and let the courier find the route"
+          },
+          {
+            "id": "c",
+            "label": "Allow the courier to follow any vehicle entering the yard"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H20_check5",
+        "prompt": "A waiting tanker blocks the emergency entrance while rain obscures the normal pedestrian crossing. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep admitting trucks to clear the public approach faster"
+          },
+          {
+            "id": "b",
+            "label": "Pause affected admissions and coordinate safe queue relocation and a reviewed crossing arrangement"
+          },
+          {
+            "id": "c",
+            "label": "Have pedestrians weave through parked tankers until rain stops"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H20_check6",
+        "prompt": "The outgoing attendant leaves a note saying “radio intermittent” but the relief worker starts guiding reversals. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the previous shift accepted the defect and continue"
+          },
+          {
+            "id": "b",
+            "label": "Sign the handover without checking which maneuvers depend on the radio"
+          },
+          {
+            "id": "c",
+            "label": "Hold radio-dependent maneuvers until effective communication and responsibility are confirmed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H20_final1",
+        "prompt": "For design the gate as a traffic system, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Office relocation changes pedestrian exposure; the original vehicle plan no longer covers the layout."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H20_final2",
+        "prompt": "Which evidence would most directly verify design the gate as a traffic system in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A revised layout plus an observed visitor journey using the protected route"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H20_final3",
+        "prompt": "A relief worker proposes the following shortcut during design the gate as a traffic system: \"Tell visitors to watch for trucks and keep the old route.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Tell visitors to watch for trucks and keep the old route"
+          },
+          {
+            "id": "b",
+            "label": "Use the delivery booking list as authorization to cross"
+          },
+          {
+            "id": "c",
+            "label": "Hold the affected pedestrian movement and obtain a revised separated route from the site traffic authority"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H20_final4",
+        "prompt": "For use a safe identification position, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A stationary queue still contains vehicle movement and crushing hazards."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H20_final5",
+        "prompt": "Which evidence would most directly verify use a safe identification position in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An observed admission showing the attendant outside the vehicle path throughout verification"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H20_final6",
+        "prompt": "A relief worker proposes the following shortcut during use a safe identification position: \"Step between the trucks quickly before the queue moves.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Step between the trucks quickly before the queue moves"
+          },
+          {
+            "id": "b",
+            "label": "Stand at the front bumper so the driver cannot leave"
+          },
+          {
+            "id": "c",
+            "label": "Keep clear of the gap and arrange badge verification at the protected checking position"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H20_final7",
+        "prompt": "For control reversing and communications, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The driver cannot safely continue when the agreed movement control is lost."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H20_final8",
+        "prompt": "Which evidence would most directly verify control reversing and communications in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A pre-maneuver briefing and observation of a stopped vehicle when spotter contact is lost"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H20_final9",
+        "prompt": "A relief worker proposes the following shortcut during control reversing and communications: \"Continue slowly because the route was clear at the start.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue slowly because the route was clear at the start"
+          },
+          {
+            "id": "b",
+            "label": "Ask an unbriefed visitor to wave the truck backward"
+          },
+          {
+            "id": "c",
+            "label": "Stop the maneuver and restore the approved visible communication arrangement before moving again"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H20_final10",
+        "prompt": "For admit visitors without transferring risk, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Administrative permission does not control an unfamiliar visitor’s exposure to yard traffic."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H20_final11",
+        "prompt": "Which evidence would most directly verify admit visitors without transferring risk in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A verified access decision, visitor briefing and actual handover to the agreed escort"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H20_final12",
+        "prompt": "A relief worker proposes the following shortcut during admit visitors without transferring risk: \"Point toward the building and let the courier find the route.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Point toward the building and let the courier find the route"
+          },
+          {
+            "id": "b",
+            "label": "Allow the courier to follow any vehicle entering the yard"
+          },
+          {
+            "id": "c",
+            "label": "Hold the visitor at the safe check-in point until the receiving authority provides the approved route and escort arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H20_final13",
+        "prompt": "For respond to congestion and changing conditions, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Congestion and reduced visibility can defeat emergency access and pedestrian separation at the same time."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H20_final14",
+        "prompt": "Which evidence would most directly verify respond to congestion and changing conditions in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A recorded queue intervention and field check that emergency access and pedestrian protection are restored"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H20_final15",
+        "prompt": "A relief worker proposes the following shortcut during respond to congestion and changing conditions: \"Keep admitting trucks to clear the public approach faster.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep admitting trucks to clear the public approach faster"
+          },
+          {
+            "id": "b",
+            "label": "Have pedestrians weave through parked tankers until rain stops"
+          },
+          {
+            "id": "c",
+            "label": "Pause affected admissions and coordinate safe queue relocation and a reviewed crossing arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H20_final16",
+        "prompt": "For handover and verify the traffic controls, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A defect note does not restore the control or transfer a safe operating arrangement."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H20_final17",
+        "prompt": "Which evidence would most directly verify handover and verify the traffic controls in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A confirmed handover plus a successful approved communication check before affected movement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H20_final18",
+        "prompt": "A relief worker proposes the following shortcut during handover and verify the traffic controls: \"Assume the previous shift accepted the defect and continue.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the previous shift accepted the defect and continue"
+          },
+          {
+            "id": "b",
+            "label": "Sign the handover without checking which maneuvers depend on the radio"
+          },
+          {
+            "id": "c",
+            "label": "Hold radio-dependent maneuvers until effective communication and responsibility are confirmed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H20_final19",
+        "prompt": "In Scenario 1, what must be resolved before ordinary badge checks resume?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Restore the protected checking arrangement and control pedestrian and queue conflicts"
+          },
+          {
+            "id": "b",
+            "label": "Walk into the gap only while both drivers promise not to move"
+          },
+          {
+            "id": "c",
+            "label": "Approve admission first and resolve the layout after the queue clears"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H20_final20",
+        "prompt": "In Scenario 2, why is the attendant’s course completion insufficient to release the low-loader?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The online course expires automatically whenever it rains"
+          },
+          {
+            "id": "b",
+            "label": "The maneuver still needs verified site controls and an appropriately assessed movement team"
+          },
+          {
+            "id": "c",
+            "label": "Only the delivery booking is relevant once a driver is on site"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H20_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H20_lesson1",
+          "questionIds": [
+            "H20_check1"
+          ]
+        },
+        {
+          "lessonId": "H20_lesson2",
+          "questionIds": [
+            "H20_check2"
+          ]
+        },
+        {
+          "lessonId": "H20_lesson3",
+          "questionIds": [
+            "H20_check3"
+          ]
+        },
+        {
+          "lessonId": "H20_lesson4",
+          "questionIds": [
+            "H20_check4"
+          ]
+        },
+        {
+          "lessonId": "H20_lesson5",
+          "questionIds": [
+            "H20_check5"
+          ]
+        },
+        {
+          "lessonId": "H20_lesson6",
+          "questionIds": [
+            "H20_check6"
+          ]
+        },
+        {
+          "lessonId": "H20_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H20_final",
+          "questionIds": [
+            "H20_final1",
+            "H20_final2",
+            "H20_final3",
+            "H20_final4",
+            "H20_final5",
+            "H20_final6",
+            "H20_final7",
+            "H20_final8",
+            "H20_final9",
+            "H20_final10",
+            "H20_final11",
+            "H20_final12",
+            "H20_final13",
+            "H20_final14",
+            "H20_final15",
+            "H20_final16",
+            "H20_final17",
+            "H20_final18",
+            "H20_final19",
+            "H20_final20"
+          ]
+        },
+        {
+          "lessonId": "H20_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H20_check1": "Hold the affected pedestrian movement and obtain a revised separated route from the site traffic authority. Office relocation changes pedestrian exposure; the original vehicle plan no longer covers the layout.",
+        "H20_check2": "Keep clear of the gap and arrange badge verification at the protected checking position. A stationary queue still contains vehicle movement and crushing hazards.",
+        "H20_check3": "Stop the maneuver and restore the approved visible communication arrangement before moving again. The driver cannot safely continue when the agreed movement control is lost.",
+        "H20_check4": "Hold the visitor at the safe check-in point until the receiving authority provides the approved route and escort arrangement. Administrative permission does not control an unfamiliar visitor’s exposure to yard traffic.",
+        "H20_check5": "Pause affected admissions and coordinate safe queue relocation and a reviewed crossing arrangement. Congestion and reduced visibility can defeat emergency access and pedestrian separation at the same time.",
+        "H20_check6": "Hold radio-dependent maneuvers until effective communication and responsibility are confirmed. A defect note does not restore the control or transfer a safe operating arrangement.",
+        "H20_final1": "Office relocation changes pedestrian exposure; the original vehicle plan no longer covers the layout. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H20_final2": "A revised layout plus an observed visitor journey using the protected route. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H20_final3": "Hold the affected pedestrian movement and obtain a revised separated route from the site traffic authority. Office relocation changes pedestrian exposure; the original vehicle plan no longer covers the layout. A staffing change does not remove this requirement.",
+        "H20_final4": "A stationary queue still contains vehicle movement and crushing hazards. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H20_final5": "An observed admission showing the attendant outside the vehicle path throughout verification. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H20_final6": "Keep clear of the gap and arrange badge verification at the protected checking position. A stationary queue still contains vehicle movement and crushing hazards. A staffing change does not remove this requirement.",
+        "H20_final7": "The driver cannot safely continue when the agreed movement control is lost. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H20_final8": "A pre-maneuver briefing and observation of a stopped vehicle when spotter contact is lost. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H20_final9": "Stop the maneuver and restore the approved visible communication arrangement before moving again. The driver cannot safely continue when the agreed movement control is lost. A staffing change does not remove this requirement.",
+        "H20_final10": "Administrative permission does not control an unfamiliar visitor’s exposure to yard traffic. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H20_final11": "A verified access decision, visitor briefing and actual handover to the agreed escort. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H20_final12": "Hold the visitor at the safe check-in point until the receiving authority provides the approved route and escort arrangement. Administrative permission does not control an unfamiliar visitor’s exposure to yard traffic. A staffing change does not remove this requirement.",
+        "H20_final13": "Congestion and reduced visibility can defeat emergency access and pedestrian separation at the same time. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H20_final14": "A recorded queue intervention and field check that emergency access and pedestrian protection are restored. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H20_final15": "Pause affected admissions and coordinate safe queue relocation and a reviewed crossing arrangement. Congestion and reduced visibility can defeat emergency access and pedestrian separation at the same time. A staffing change does not remove this requirement.",
+        "H20_final16": "A defect note does not restore the control or transfer a safe operating arrangement. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H20_final17": "A confirmed handover plus a successful approved communication check before affected movement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H20_final18": "Hold radio-dependent maneuvers until effective communication and responsibility are confirmed. A defect note does not restore the control or transfer a safe operating arrangement. A staffing change does not remove this requirement.",
+        "H20_final19": "The failed safeguard is safe separation at the checking point. Holding and restoring it addresses the vehicle conflict; a verbal promise or fast admission leaves the exposure in place.",
+        "H20_final20": "The course teaches awareness and judgment. It cannot verify the route, repair communications, restore separation or practically assess the spotter for the actual maneuver."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

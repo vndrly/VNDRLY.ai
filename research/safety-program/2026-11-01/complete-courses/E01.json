@@ -1,0 +1,781 @@
+{
+  "familyId": "E01",
+  "title": "Asset register and preventive maintenance",
+  "description": "Complete guided E01 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Maintain traceable safety-critical equipment across fleets and shops.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Maintenance personnel and technical release owners require separately assessed competence for the actual equipment and work. Practical evaluation should cover identity, maintenance method, measurements, safety-function testing, defects and release restrictions. Users need equipment-specific pre-use instruction. This course does not qualify repair, statutory examination or engineering certification.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Asset register and preventive maintenance",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y17-95-64-875_0.pdf"
+    },
+    {
+      "title": "Inventory source 2: Asset register and preventive maintenance",
+      "url": "https://kindermorgan.com/content/docs/KMContractorSafetyManual.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "E01_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# E01: Asset register and preventive maintenance\n\nThis original VNDRLY course teaches decisions for common asset screening; requirements by asset. Its purpose is to maintain traceable safety-critical equipment across fleets and shops. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E01_lesson1",
+        "title": "Lesson 1: Identify assets and assign ownership",
+        "body": "An asset register links a physical item to its identity, owner, service and required controls. Use a unique identifier suitable for the equipment and preserve manufacturer identity where relevant. A description such as “blue pump” is not enough when several similar units exist. Include hired or borrowed equipment in the applicable control arrangement, even if another company owns it.\n\nOwnership means responsibility for the maintenance basis, status, records and release decision. The user still performs assigned pre-use checks. A rental company’s invoice does not prove that the item delivered matches a current accepted record.\n\nWorked example: two identical pumps are exchanged between locations. Their maintenance histories must follow their identities, not the parking space or nickname.\n\n### Applying the mechanism\n\nIdentity needs to survive ordinary equipment movement. A register should not depend solely on a location that changes every week or a nickname understood by one supervisor. Use an identifier suited to the asset and preserve any manufacturer serial or design information needed for technical decisions. When components are maintained separately, determine whether their histories must also be linked; replacing a pump drive or protective device can change the accepted assembly. Receipt is a useful control point: compare the delivered item against the order and technical requirements before it enters usable stock. If a rental substitution arrives, create or verify its own record rather than transferring another unit’s service date. This preserves the difference between model suitability and item readiness.\n\n### Decision principles\n\nThe register must connect equipment to its safety and maintenance obligations. Financial inventory alone cannot support readiness decisions.\n\nOwnership does not eliminate exposure. The user and supplier must establish who controls maintenance, inspection, defects and release for the delivered item.\n\nMaintenance and pre-use checks serve different purposes. A current service record does not establish that transport or recent use caused no defect.\n\nA changed component can also change the maintenance obligation. If a replacement protective device has different service instructions, the owner updates the asset basis rather than leaving the old schedule attached to a new configuration. The change record connects the accepted parts, required checks and user information so a future service technician does not unknowingly follow obsolete instructions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E01_lesson2",
+        "title": "Lesson 2: Classify criticality and establish the maintenance basis",
+        "body": "Criticality considers what failure can do: harm people, release material, defeat a safeguard or disrupt essential response. It guides attention and escalation but does not permit neglect of lower-ranked equipment. Identify safety-critical functions such as braking, overload protection, guarding or alarm response for the actual asset.\n\nMaintenance and inspection requirements come from applicable law, manufacturer information, technical assessment and service conditions. Calendar, usage and condition triggers can coexist. Do not invent a universal annual interval or extend a required interval because the item has not recently failed.\n\nWorked example: a standby emergency unit has low operating hours but an important protective function. Low use does not eliminate age-related or readiness checks.\n\n### Applying the mechanism\n\nFailure consequences should be discussed in functional terms. A brake prevents uncontrolled movement; an alarm warns of an assessed condition; a guard separates people from machinery. The maintenance basis should identify how each relied-on function can fail and what work or test supports continued confidence. High utilization may accelerate wear, while standby service may create deterioration that appears only on demand. Environmental exposure can affect both. The owner therefore avoids a single convenience rule such as “service everything after the same number of hours.” Technical and legal requirements set the foundation, and a competent review considers actual duty. Operators contribute evidence by reporting changed use, harsh conditions and symptoms rather than silently continuing under an obsolete schedule.\n\n### Decision principles\n\nA low-cost component can protect against severe harm. Criticality must follow failure consequences rather than financial value alone.\n\nIntervals must be technically and legally supported for the equipment and use. Generic convenience cannot replace the required basis.\n\nDifferent deterioration mechanisms require different triggers. The program must identify which requirement becomes due and prevent one schedule from hiding another.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E01_lesson3",
+        "title": "Lesson 3: Plan work and prevent overdue dispatch",
+        "body": "Translate the maintenance basis into tasks, due triggers, required competence, parts and verification. The dispatch system must make relevant restrictions visible and prevent use when safety-critical work is overdue or status uncertain. A reminder email alone is not control if the item can still be sent to a job as ready.\n\nPlan downtime and suitable substitutes rather than routinely extending dates under pressure. Any permitted deviation needs the applicable technical and authorization process; the planner cannot waive a legal or manufacturer requirement casually.\n\nWorked example: a vehicle is booked for a remote job, but a required brake-related service is overdue. Dispatch holds it and arranges a suitable alternative instead of treating the booking as approval.\n\n### Applying the mechanism\n\nScheduling has to connect to the moment of use. An asset can appear available in a booking system while its maintenance system shows an unresolved safety task. The program should define which status controls dispatch and how conflicts are resolved. The planner identifies upcoming work early enough to obtain parts, competent service and a suitable substitute. When a task becomes overdue, the restriction must follow the physical item even if someone changes its location or customer booking. A proposed deviation needs the proper technical basis and authority, with any temporary limits visible to users. Simply moving the due date removes a warning from the screen but does not perform maintenance or establish the asset’s actual condition.\n\n### Decision principles\n\nSpecific tasks allow competent execution and acceptance. Vague instructions can leave safety functions unchecked while the schedule appears complete.\n\nThe control must affect actual use. Administrative reminders are useful only when linked to restrictions and accountable action.\n\nChanging dates can conceal unmet obligations. Any allowed deviation must have a defensible basis and cannot override requirements that do not permit it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E01_lesson4",
+        "title": "Lesson 4: Record competent maintenance and verify function",
+        "body": "Maintenance completion records identify the asset, work, findings, parts, measurements and responsible person. The required functional verification must show that the relevant safety functions work after maintenance. An invoice proves a transaction, not necessarily that the right task was performed on the right item.\n\nTechnical repairs and tests require suitably competent personnel. If a finding exceeds their scope, the item remains controlled until the appropriate specialist resolves it. Do not mark a task complete while a required test is still pending.\n\nWorked example: a pump service invoice lists oil replacement but no evidence for the required protective shutdown check. The shutdown task remains unverified; it is not inferred from payment.\n\n### Applying the mechanism\n\nMaintenance evidence should distinguish observation, work and acceptance. “Seal leaking” is a finding; “seal replaced with identified part” is work; “required leak and protective-function checks passed under the specified method” supports acceptance. These are related but not interchangeable statements. A technician can finish replacing a part while a separate test remains pending. The owner must keep that pending status visible. Measurements should identify the method and item sufficiently for another competent person to understand their scope. Where a repair changes configuration, the technical change process determines any additional review. A receipt for a part does not prove it was installed correctly, and an invoice for general service does not prove every safety-critical function was tested.\n\n### Decision principles\n\nTraceability allows review of what was done and whether the required functions were verified for the actual item.\n\nTask competence must match the technical work. Administrative access does not establish repair or test capability.\n\nPlanning milestones are not completed maintenance. The record must distinguish pending work from observed results.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E01_lesson5",
+        "title": "Lesson 5: Control changes and recurring defects",
+        "body": "A change in fluid, duty, environment, attachment or operating pattern can invalidate the maintenance basis. The technical owner reviews the new service and updates tasks, limits, parts and training as needed. Do not assume an asset suitable for one chemical or load remains suitable for another.\n\nRecurring faults need cause analysis beyond repeated repair. Review installation, use, service conditions, parts, maintenance method and whether the chosen asset fits the duty. Preserve failures rather than resetting history with each work order.\n\nWorked example: a hose on one unit repeatedly fails soon after replacement. The owner examines compatibility, routing, pressure behavior and component selection instead of simply shortening the replacement interval without understanding the mechanism.\n\n### Applying the mechanism\n\nRepeated failure often points to a system interaction. A coupling repeatedly loosening may involve alignment, installation, vibration or duty rather than a sequence of unrelated bad parts. A protective sensor repeatedly failing may be exposed to conditions outside its selected range. The technical review should preserve as-found observations and compare events across assets, locations and service conditions. Do not erase the history when a component is replaced, because that history may show whether the corrective action worked. Follow-up needs a relevant outcome: the targeted fault mechanism is controlled and the required function performs in the reviewed duty. A longer period without a reported failure is useful evidence, but its strength depends on actual use and observation.\n\n### Decision principles\n\nDifferent duty or environment can change degradation and protective requirements. The accepted basis must match actual service.\n\nHistory helps distinguish isolated defects from recurring mechanisms. Removing it can hide deterioration and weaken future decisions.\n\nAction completion is not proof of outcome. Follow-up should examine whether the failure mechanism and protective performance improved.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E01_lesson6",
+        "title": "Lesson 6: Release, audit and distinguish evidence from permission",
+        "body": "The designated owner accepts the asset after required work, verification and restrictions are resolved. Dispatch and users must see the same current status. Remove stale ready labels and prevent duplicate records from presenting one item as both available and quarantined.\n\nSample the register against physical equipment and maintenance evidence. Missing items, identity mismatches and overdue critical work require correction and review. Course completion can support the equipment program’s training evidence; it does not sign a maintenance release or certify machinery.\n\nWorked example: the database says ready while a red tag remains on the unit. The contradiction is resolved with the responsible owner before dispatch; neither record is ignored merely because the other is convenient.\n\n### Applying the mechanism\n\nPhysical sampling makes a register review concrete. Select an item shown as ready, locate it and compare its identity, configuration, visible restrictions and supporting work history. Then sample in the other direction: choose equipment in use and find the record that supports its status. The two directions can reveal missing assets, duplicate identities and stale release labels. Reviewers should state what they sampled rather than claim every asset is safe from a small check. An inconsistency requires a hold where readiness is uncertain and an accountable correction. If several inconsistencies share a cause, improve the receipt, maintenance or dispatch interface so the next asset does not inherit the same problem.\n\n### Decision principles\n\nRelease depends on actual maintenance, verification and restrictions. Training knowledge or commercial demand cannot substitute for acceptance authority.\n\nCross-checking actual equipment reveals mismatches that document counts can miss. Assurance must test whether records describe the item in use.\n\nHands-on repair and technical acceptance require separately assessed competence and authority. The course supplies knowledge, not a machinery release.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E01_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: The rental swap\n\nA rental supplier substitutes an identical-looking unit. The site has maintenance documents for the original serial number only.\n\n**Worked decision and reasoning.** Dispatch or use is held until the delivered identity and required service and inspection status are established. The supplier and user clarify responsibilities and restrictions, and the asset record follows the actual unit. The old documents remain linked to the original asset; they are not relabeled to make the replacement appear accepted.\n\n### Scenario 2: Overdue protective function\n\nA low-use standby unit is booked for emergency support. Its required protective-function check is overdue, but the engine starts.\n\n**Worked decision and reasoning.** The asset remains restricted while the responsible owner completes the required work and verification or establishes a valid permitted disposition. A suitable ready alternative is arranged. Starting the engine demonstrates only that response, not the overdue safety function or full readiness. The dispatch system is checked to ensure it cannot repeatedly bypass the restriction.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E01_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E01_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nMaintenance personnel and technical release owners require separately assessed competence for the actual equipment and work. Practical evaluation should cover identity, maintenance method, measurements, safety-function testing, defects and release restrictions. Users need equipment-specific pre-use instruction. This course does not qualify repair, statutory examination or engineering certification.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "E01_check1",
+        "prompt": "Two identical pumps swap locations. What must follow each pump?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its unique identity, status and maintenance history."
+          },
+          {
+            "id": "b",
+            "label": "The history of the parking space."
+          },
+          {
+            "id": "c",
+            "label": "Whichever record is most recent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E01_final_1_1",
+        "prompt": "What makes an asset register useful?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a purchase price list."
+          },
+          {
+            "id": "b",
+            "label": "Only photographs without identifiers."
+          },
+          {
+            "id": "c",
+            "label": "Traceable identity, ownership, service and applicable control requirements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E01_final_1_2",
+        "prompt": "Does hired equipment need a control arrangement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only if it is damaged."
+          },
+          {
+            "id": "b",
+            "label": "Yes; responsibilities, identity and accepted status must be established."
+          },
+          {
+            "id": "c",
+            "label": "No, the rental invoice covers everything."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E01_final_1_3",
+        "prompt": "Who remains responsible for assigned pre-use checks?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The designated user or operator under the equipment system."
+          },
+          {
+            "id": "b",
+            "label": "Only the asset accountant."
+          },
+          {
+            "id": "c",
+            "label": "Nobody when scheduled maintenance is current."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E01_check2",
+        "prompt": "A standby emergency asset has low hours. Can maintenance be waived automatically?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, low use means no deterioration."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if it started once last year."
+          },
+          {
+            "id": "c",
+            "label": "No; the maintenance basis must address its critical function and applicable triggers."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E01_final_2_1",
+        "prompt": "What does safety criticality consider?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only how often equipment is used."
+          },
+          {
+            "id": "b",
+            "label": "Consequences of failure and the function being protected."
+          },
+          {
+            "id": "c",
+            "label": "Only purchase cost."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E01_final_2_2",
+        "prompt": "Where do maintenance intervals come from?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Applicable requirements, manufacturer guidance and competent service assessment."
+          },
+          {
+            "id": "b",
+            "label": "A universal period chosen by this course."
+          },
+          {
+            "id": "c",
+            "label": "Only the supervisor’s preference."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E01_final_2_3",
+        "prompt": "Can multiple maintenance triggers apply?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No, only the easiest trigger matters."
+          },
+          {
+            "id": "b",
+            "label": "Only operating hours ever matter."
+          },
+          {
+            "id": "c",
+            "label": "Yes, time, use and condition requirements can operate together."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E01_check3",
+        "prompt": "A booked asset has overdue safety-critical maintenance. What is the decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Change the due date to tomorrow."
+          },
+          {
+            "id": "b",
+            "label": "Hold dispatch and resolve readiness through the responsible process."
+          },
+          {
+            "id": "c",
+            "label": "Send it because the customer expects it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E01_final_3_1",
+        "prompt": "What should a maintenance task specify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Work scope, due basis, competence, parts and required verification."
+          },
+          {
+            "id": "b",
+            "label": "Only the phrase “service as needed.”"
+          },
+          {
+            "id": "c",
+            "label": "Only an invoice destination."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E01_final_3_2",
+        "prompt": "What makes an overdue control effective?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It sends an email nobody acts on."
+          },
+          {
+            "id": "b",
+            "label": "It hides the asset from reports."
+          },
+          {
+            "id": "c",
+            "label": "It prevents inappropriate release or dispatch and identifies the responsible resolution."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E01_final_3_3",
+        "prompt": "Can a planner casually extend a required interval?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the asset looks clean."
+          },
+          {
+            "id": "b",
+            "label": "No; applicable technical and legal limits and authorization govern any deviation."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if utilization is high."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E01_check4",
+        "prompt": "An invoice exists but a required safety-function test is missing. What is the status?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That required verification remains incomplete."
+          },
+          {
+            "id": "b",
+            "label": "The asset is automatically fully accepted."
+          },
+          {
+            "id": "c",
+            "label": "Payment proves every check passed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E01_final_4_1",
+        "prompt": "What should maintenance records identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the supplier’s logo."
+          },
+          {
+            "id": "b",
+            "label": "Only a planned completion date."
+          },
+          {
+            "id": "c",
+            "label": "Asset, actual work, findings, parts, tests and responsible personnel."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E01_final_4_2",
+        "prompt": "Who performs specialist repair or testing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The person entering the invoice."
+          },
+          {
+            "id": "b",
+            "label": "Personnel competent and authorized for the specific work."
+          },
+          {
+            "id": "c",
+            "label": "Any operator to avoid downtime."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E01_final_4_3",
+        "prompt": "When can a maintenance task be marked complete?",
+        "options": [
+          {
+            "id": "a",
+            "label": "After its required work and verification are actually completed and accepted."
+          },
+          {
+            "id": "b",
+            "label": "When parts are ordered."
+          },
+          {
+            "id": "c",
+            "label": "When the appointment is booked."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E01_check5",
+        "prompt": "The same fault recurs after several repairs. What additional action is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep replacing parts without review."
+          },
+          {
+            "id": "b",
+            "label": "Delete earlier work orders."
+          },
+          {
+            "id": "c",
+            "label": "Review the underlying cause and asset suitability, then verify corrective effectiveness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E01_final_5_1",
+        "prompt": "What should a changed service trigger?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a new nickname."
+          },
+          {
+            "id": "b",
+            "label": "Technical review of suitability and the maintenance basis."
+          },
+          {
+            "id": "c",
+            "label": "Automatic use of the old schedule."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E01_final_5_2",
+        "prompt": "Why preserve fault history?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Patterns can reveal unreliable controls or unsuitable equipment."
+          },
+          {
+            "id": "b",
+            "label": "Only successful services matter."
+          },
+          {
+            "id": "c",
+            "label": "Old failures are irrelevant once parts change."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E01_final_5_3",
+        "prompt": "What demonstrates corrective effectiveness?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only closing the work order."
+          },
+          {
+            "id": "b",
+            "label": "Only buying a more expensive part."
+          },
+          {
+            "id": "c",
+            "label": "Later evidence that the relevant function performs and recurrence is addressed within the reviewed scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E01_check6",
+        "prompt": "The register says ready but the physical item is tagged out. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Remove the tag without checking."
+          },
+          {
+            "id": "b",
+            "label": "Hold release and resolve the conflicting status with the responsible owner."
+          },
+          {
+            "id": "c",
+            "label": "Ignore the tag because the database is newer-looking."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E01_final_6_1",
+        "prompt": "Who accepts equipment release?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The designated responsible owner through the required technical process."
+          },
+          {
+            "id": "b",
+            "label": "Any person who completed this course."
+          },
+          {
+            "id": "c",
+            "label": "The customer placing the order."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E01_final_6_2",
+        "prompt": "What should an asset audit compare?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only total purchase value."
+          },
+          {
+            "id": "b",
+            "label": "Only the number of completed forms."
+          },
+          {
+            "id": "c",
+            "label": "Physical identity and condition against register, due status and supporting records."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E01_final_6_3",
+        "prompt": "What is not established by a written pass?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Understanding of record traceability."
+          },
+          {
+            "id": "b",
+            "label": "Competent maintenance execution or equipment certification."
+          },
+          {
+            "id": "c",
+            "label": "Awareness of overdue controls."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E01_final_scenario1",
+        "prompt": "What is missing after the rental swap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verified status for the actual delivered asset."
+          },
+          {
+            "id": "b",
+            "label": "Only a new photograph for appearance."
+          },
+          {
+            "id": "c",
+            "label": "Nothing because the model matches."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E01_final_scenario2",
+        "prompt": "Why is engine startup insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any startup proves every component works."
+          },
+          {
+            "id": "b",
+            "label": "Standby equipment does not need maintenance."
+          },
+          {
+            "id": "c",
+            "label": "It does not verify the overdue protective function or complete readiness requirements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "E01_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E01_lesson1",
+          "questionIds": [
+            "E01_check1"
+          ]
+        },
+        {
+          "lessonId": "E01_lesson2",
+          "questionIds": [
+            "E01_check2"
+          ]
+        },
+        {
+          "lessonId": "E01_lesson3",
+          "questionIds": [
+            "E01_check3"
+          ]
+        },
+        {
+          "lessonId": "E01_lesson4",
+          "questionIds": [
+            "E01_check4"
+          ]
+        },
+        {
+          "lessonId": "E01_lesson5",
+          "questionIds": [
+            "E01_check5"
+          ]
+        },
+        {
+          "lessonId": "E01_lesson6",
+          "questionIds": [
+            "E01_check6"
+          ]
+        },
+        {
+          "lessonId": "E01_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E01_assessment",
+          "questionIds": [
+            "E01_final_1_1",
+            "E01_final_1_2",
+            "E01_final_1_3",
+            "E01_final_2_1",
+            "E01_final_2_2",
+            "E01_final_2_3",
+            "E01_final_3_1",
+            "E01_final_3_2",
+            "E01_final_3_3",
+            "E01_final_4_1",
+            "E01_final_4_2",
+            "E01_final_4_3",
+            "E01_final_5_1",
+            "E01_final_5_2",
+            "E01_final_5_3",
+            "E01_final_6_1",
+            "E01_final_6_2",
+            "E01_final_6_3",
+            "E01_final_scenario1",
+            "E01_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "E01_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "E01_check1": "Asset assurance depends on the actual physical item. Location and appearance cannot transfer maintenance evidence between similar equipment.",
+        "E01_final_1_1": "The register must connect equipment to its safety and maintenance obligations. Financial inventory alone cannot support readiness decisions.",
+        "E01_final_1_2": "Ownership does not eliminate exposure. The user and supplier must establish who controls maintenance, inspection, defects and release for the delivered item.",
+        "E01_final_1_3": "Maintenance and pre-use checks serve different purposes. A current service record does not establish that transport or recent use caused no defect.",
+        "E01_check2": "Standby assets can degrade or fail on demand. Required calendar, condition and functional checks remain governed by the maintenance basis.",
+        "E01_final_2_1": "A low-cost component can protect against severe harm. Criticality must follow failure consequences rather than financial value alone.",
+        "E01_final_2_2": "Intervals must be technically and legally supported for the equipment and use. Generic convenience cannot replace the required basis.",
+        "E01_final_2_3": "Different deterioration mechanisms require different triggers. The program must identify which requirement becomes due and prevent one schedule from hiding another.",
+        "E01_check3": "A booking does not establish equipment readiness. The restriction must remain effective until required work and acceptance are completed or a valid authorized disposition exists.",
+        "E01_final_3_1": "Specific tasks allow competent execution and acceptance. Vague instructions can leave safety functions unchecked while the schedule appears complete.",
+        "E01_final_3_2": "The control must affect actual use. Administrative reminders are useful only when linked to restrictions and accountable action.",
+        "E01_final_3_3": "Changing dates can conceal unmet obligations. Any allowed deviation must have a defensible basis and cannot override requirements that do not permit it.",
+        "E01_check4": "Commercial evidence and technical verification answer different questions. The release decision needs the actual required function check and its result.",
+        "E01_final_4_1": "Traceability allows review of what was done and whether the required functions were verified for the actual item.",
+        "E01_final_4_2": "Task competence must match the technical work. Administrative access does not establish repair or test capability.",
+        "E01_final_4_3": "Planning milestones are not completed maintenance. The record must distinguish pending work from observed results.",
+        "E01_check5": "Recurrence suggests the repair may not address the failure mechanism. The technical owner must examine service and system causes rather than treating each event as isolated.",
+        "E01_final_5_1": "Different duty or environment can change degradation and protective requirements. The accepted basis must match actual service.",
+        "E01_final_5_2": "History helps distinguish isolated defects from recurring mechanisms. Removing it can hide deterioration and weaken future decisions.",
+        "E01_final_5_3": "Action completion is not proof of outcome. Follow-up should examine whether the failure mechanism and protective performance improved.",
+        "E01_check6": "Conflicting status means readiness is uncertain. The owner must establish the actual accepted condition and align physical and administrative controls.",
+        "E01_final_6_1": "Release depends on actual maintenance, verification and restrictions. Training knowledge or commercial demand cannot substitute for acceptance authority.",
+        "E01_final_6_2": "Cross-checking actual equipment reveals mismatches that document counts can miss. Assurance must test whether records describe the item in use.",
+        "E01_final_6_3": "Hands-on repair and technical acceptance require separately assessed competence and authority. The course supplies knowledge, not a machinery release.",
+        "E01_final_scenario1": "Maintenance evidence is item-specific. Matching model and appearance do not transfer the original unit’s history or acceptance to another serial number.",
+        "E01_final_scenario2": "Different functions require their own checks. A successful start cannot stand in for an unperformed safety-critical verification."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

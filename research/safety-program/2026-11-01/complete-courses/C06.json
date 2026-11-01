@@ -1,0 +1,781 @@
+{
+  "familyId": "C06",
+  "title": "Mobile equipment, forklift and lifting-role assessment",
+  "description": "Complete original VNDRLY C06 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Match authorization to equipment and work environment.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Qualified practical evaluation; forklift rule requires suitable evaluator, not reading or generic card alone. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Updated_Lift%20Plan%20Template_High-Critical%20Cat%202%20%203_Rev1_2024.pdf"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "C06_intro",
+        "title": "Start here — Mobile equipment, forklift and lifting-role assessment",
+        "body": "# C06: Mobile equipment, forklift and lifting-role assessment\n\nMatch authorization to equipment and work environment. This course teaches the decisions needed to implement that purpose in field operations. It covers equipment-specific training, workplace evaluation and retraining triggers. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C06_lesson1",
+        "title": "Lesson 1 — Define equipment and lifting-role scope",
+        "body": "## Define equipment and lifting-role scope\n\nSeparate equipment operation, rigging and signaling; capability in one does not automatically establish another. Define equipment type, attachments, loads, workplace conditions and duties. A forklift assessment for one arrangement may not support a changed attachment or environment. Technical suitability and operating limits come from current manufacturer and competent sources. A generic operator card cannot state every workplace condition the person can safely manage.\n\n### Deeper application\n\nDefine equipment scope with enough detail to identify meaningful differences, including attachment and relevant workplace conditions. Do not turn every cosmetic difference into an entirely new qualification requirement, but do not ignore changes affecting operation. The competent equipment owner and evaluator decide what additional assessment is needed. Keep equipment suitability, operator competence and lifting-role assignment as related but separate prerequisites.\n\n### Worked oilfield example\n\nA forklift operator assessed with standard forks is assigned a materially different attachment without scope review. The decision is to hold the changed operation and verify equipment suitability plus relevant training and evaluation.\n\nChanging the attachment can change the operation and the competence needed; a generic card cannot resolve that gap. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A scoped evaluation and authorization identifying attachment and relevant workplace conditions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the equipment assessment lists a different attachment model with different relevant characteristics. The appropriate correction is to have the competent owner review actual suitability and matching assessment before release. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C06_lesson2",
+        "title": "Lesson 2 — Combine instruction supervised practice and evaluation",
+        "body": "## Combine instruction supervised practice and evaluation\n\nEffective preparation connects relevant formal instruction, practical training and workplace evaluation. In U.S. powered industrial truck work, OSHA's applicable rule explicitly distinguishes these elements. Use suitable equipment and safe controlled conditions. Do not count a video or online quiz as observed operation. For other equipment and lifting roles, identify the applicable role-specific requirements rather than assuming the forklift rule governs everything.\n\n### Deeper application\n\nFormal instruction teaches concepts and controls; supervised practice develops the actions; workplace evaluation checks the resulting capability in context. The appropriate balance and requirements depend on the actual equipment and governing rules. An awareness lesson can support the first element without completing the others. Document each element honestly rather than allowing a provider's course card to imply an evaluation that never occurred.\n\n### Worked oilfield example\n\nAn online forklift course issues a card after a quiz with no practical training or workplace evaluation. The decision is to retain the knowledge evidence and arrange the missing suitable practical elements before authorization.\n\nThe learning elements establish different evidence. A written quiz cannot stand in for practical performance. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: An authentic record distinguishing instruction, practical training and workplace evaluation results. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the practical training record is present but the required workplace evaluation is missing. The appropriate correction is to complete the appropriate workplace evaluation before treating the preparation as sufficient. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C06_lesson3",
+        "title": "Lesson 3 — Use a suitable evaluator and criteria",
+        "body": "## Use a suitable evaluator and criteria\n\nThe evaluator must be capable of recognizing safe task performance in the relevant equipment and conditions. Observe pre-use decisions, operation, load handling, communication and response to abnormal conditions as applicable. State which criteria were assessed and what was not observed. Assessment should occur safely; never create an uncontrolled suspended-load or traffic exposure as a test. The assessor's authority is bounded by their competence.\n\n### Deeper application\n\nThe evaluator needs criteria for routine and abnormal decisions. A candidate who maneuvers accurately but ignores a defect or communication failure has not demonstrated every necessary capability. Use safe controlled methods to test the decision. Record conditions, equipment, prompts and limitations. An assessment performed in one environment should not be represented as covering materially different conditions that were never examined.\n\n### Worked oilfield example\n\nA crane-related role is evaluated by someone whose experience covers only unrelated warehouse equipment. The decision is to obtain a suitably qualified evaluator for the actual lifting role and assessment scope.\n\nEvaluator suitability must match the role and conditions being judged; unrelated experience cannot establish that match. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A role-specific evaluation identifying evaluator competence, actual criteria and observed outcomes. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the checklist records only smooth movement and omits communication or stop decisions. The appropriate correction is to complete relevant safe evaluation of communication and abnormal decisions before accepting the full scope. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C06_lesson4",
+        "title": "Lesson 4 — Keep operator rigger and signal duties distinct",
+        "body": "## Keep operator rigger and signal duties distinct\n\nA lift requires coordinated roles and understood communication. An equipment operator may not be qualified to select rigging, and a rigger may not be authorized to direct movement as a designated signal person. Identify applicable requirements and assess each assigned role separately. When communication fails or the work exceeds the plan, use the established stop route. This course supplies no load-chart instruction or rigging-selection qualification.\n\n### Deeper application\n\nThe crew should know who performs each lifting function and how a change is communicated. Role boundaries help prevent a worker taking on an unassessed task during a rushed handover. Stop when communication becomes uncertain through the established route; do not invent signals during movement. This lesson supports recognition of a role gap, while the actual signaling and rigging techniques require appropriate specialist training and evaluation.\n\n### Worked oilfield example\n\nAn authorized equipment operator is asked to serve as signal person based solely on the operator card. The decision is to verify the separate signal-role competence and authorization before assigning that duty.\n\nDifferent roles have different tasks and assessment bases. Authority for one cannot simply transfer to another. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A lifting-role roster linking each assigned role to its matching verified assessment and authority. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the signal person changes at shift handover without a role or communication check. The appropriate correction is to verify the replacement's scope and communicate the agreed interface before movement resumes. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C06_lesson5",
+        "title": "Lesson 5 — Authorize bounded work and respond to defects",
+        "body": "## Authorize bounded work and respond to defects\n\nEmployer authorization should reflect the assessed equipment, attachments, conditions and supervision. Workers must know what to do when the equipment is defective or the work changes. A signature cannot authorize use contrary to a required safeguard. Report defects through the appropriate route and keep affected equipment or operation out of service as required by the responsible authority. Do not attempt repairs beyond assessed competence.\n\n### Deeper application\n\nAuthorization does not override the equipment's condition or the work plan. An operator can be fully competent and still correctly refuse a defective or unsuitable arrangement. Report the specific concern and preserve the equipment status through the authorized maintenance and release process. A maintenance signature should represent the required actual work and checks, not merely the completion of a request in an office system.\n\n### Worked oilfield example\n\nAn operator's pre-use check identifies a safety-related defect, but dispatch points to the valid operator authorization. The decision is to stop the affected operation and report the defect for competent resolution before use.\n\nPersonal competence does not make defective equipment ready; equipment condition and operator authority are separate prerequisites. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A defect report and equipment status linked to the responsible release decision and operator limits. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the maintenance action is marked complete but required return-to-service verification is absent. The appropriate correction is to maintain the applicable restriction until the responsible authority verifies readiness. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C06_lesson6",
+        "title": "Lesson 6 — Reassess after relevant changes and findings",
+        "body": "## Reassess after relevant changes and findings\n\nUnsafe performance, changed equipment or workplace conditions can require refresher training and evaluation. Applicable rules may also set specific evaluation intervals; determine those for the actual role instead of imposing a universal expiry. A near miss should trigger review of the relevant performance and system conditions, not automatic blame. Preserve the assessment history and make current restrictions visible to allocation staff.\n\n### Deeper application\n\nA change review asks what is different and whether existing competence remains applicable. A materially changed workplace can need review even when the operator's record is current. Relevant unsafe performance may require targeted refresher training and evaluation. Use the applicable governing requirements for any set intervals; do not infer that every equipment or lifting-role certificate has the same renewal schedule.\n\n### Worked oilfield example\n\nA new site has materially different slopes and traffic, but dispatch relies solely on evaluation at a previous flat warehouse. The decision is to review changed workplace demands and arrange relevant training or evaluation before independent operation.\n\nEvaluation must support the conditions of assigned work; materially different conditions need review even before expiry. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A workplace-change review recording relevant assessment, limits and employer decision. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the new evaluation is complete but the roster still shows the old unrestricted scope. The appropriate correction is to reconcile authorization with the actual assessed limits and communicate them to dispatch and supervision. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C06_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA forklift operator assessed with standard forks is assigned a materially different attachment without scope review. At the handover, a second issue is identified: The practical training record is present but the required workplace evaluation is missing. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Treat all equipment experience as interchangeable assessor competence. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Hold the changed operation and verify equipment suitability plus relevant training and evaluation. The reason is specific: Changing the attachment can change the operation and the competence needed; a generic card cannot resolve that gap. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Complete the appropriate workplace evaluation before treating the preparation as sufficient. The supporting record should show: An authentic record distinguishing instruction, practical training and workplace evaluation results. This is important because the learning elements establish different evidence. A written quiz cannot stand in for practical performance. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because evaluator suitability must match the role and conditions being judged; unrelated experience cannot establish that match. The suitable decision is: Obtain a suitably qualified evaluator for the actual lifting role and assessment scope. Evidence for review would include: A role-specific evaluation identifying evaluator competence, actual criteria and observed outcomes. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nAn authorized equipment operator is asked to serve as signal person based solely on the operator card. At the handover, a second issue is identified: The maintenance action is marked complete but required return-to-service verification is absent. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Extend the previous evaluation to every workplace without review. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Verify the separate signal-role competence and authorization before assigning that duty. The reason is specific: Different roles have different tasks and assessment bases. Authority for one cannot simply transfer to another. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Maintain the applicable restriction until the responsible authority verifies readiness. The supporting record should show: A defect report and equipment status linked to the responsible release decision and operator limits. This is important because personal competence does not make defective equipment ready; equipment condition and operator authority are separate prerequisites. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because evaluation must support the conditions of assigned work; materially different conditions need review even before expiry. The suitable decision is: Review changed workplace demands and arrange relevant training or evaluation before independent operation. Evidence for review would include: A workplace-change review recording relevant assessment, limits and employer decision. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C06_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C06_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nQualified practical evaluation; forklift rule requires suitable evaluator, not reading or generic card alone. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "C06_check1",
+        "prompt": "A forklift operator assessed with standard forks is assigned a materially different attachment without scope review. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the changed operation and verify equipment suitability plus relevant training and evaluation."
+          },
+          {
+            "id": "b",
+            "label": "Treat the forklift card as covering every attachment."
+          },
+          {
+            "id": "c",
+            "label": "Let the operator discover attachment effects during a live lift."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C06_final1",
+        "prompt": "For define equipment and lifting-role scope, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A scoped evaluation and authorization identifying attachment and relevant workplace conditions."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C06_final2",
+        "prompt": "A later review finds: The equipment assessment lists a different attachment model with different relevant characteristics. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Have the competent owner review actual suitability and matching assessment before release."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C06_final3",
+        "prompt": "Consider this proposed response: Treat the forklift card as covering every attachment. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Changing the attachment can change the operation and the competence needed; a generic card cannot resolve that gap."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C06_check2",
+        "prompt": "An online forklift course issues a card after a quiz with no practical training or workplace evaluation. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the online card as proof of all required workplace performance."
+          },
+          {
+            "id": "b",
+            "label": "Retain the knowledge evidence and arrange the missing suitable practical elements before authorization."
+          },
+          {
+            "id": "c",
+            "label": "Ask the worker to upload a stock video of another operator."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C06_final4",
+        "prompt": "For combine instruction supervised practice and evaluation, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "An authentic record distinguishing instruction, practical training and workplace evaluation results."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C06_final5",
+        "prompt": "A later review finds: The practical training record is present but the required workplace evaluation is missing. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Complete the appropriate workplace evaluation before treating the preparation as sufficient."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C06_final6",
+        "prompt": "Consider this proposed response: Accept the online card as proof of all required workplace performance. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "The learning elements establish different evidence. A written quiz cannot stand in for practical performance."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C06_check3",
+        "prompt": "A crane-related role is evaluated by someone whose experience covers only unrelated warehouse equipment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat all equipment experience as interchangeable assessor competence."
+          },
+          {
+            "id": "b",
+            "label": "Let a course administrator sign the practical result without observation."
+          },
+          {
+            "id": "c",
+            "label": "Obtain a suitably qualified evaluator for the actual lifting role and assessment scope."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C06_final7",
+        "prompt": "For use a suitable evaluator and criteria, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A role-specific evaluation identifying evaluator competence, actual criteria and observed outcomes."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C06_final8",
+        "prompt": "A later review finds: The checklist records only smooth movement and omits communication or stop decisions. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Complete relevant safe evaluation of communication and abnormal decisions before accepting the full scope."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C06_final9",
+        "prompt": "Consider this proposed response: Treat all equipment experience as interchangeable assessor competence. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Evaluator suitability must match the role and conditions being judged; unrelated experience cannot establish that match."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C06_check4",
+        "prompt": "An authorized equipment operator is asked to serve as signal person based solely on the operator card. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify the separate signal-role competence and authorization before assigning that duty."
+          },
+          {
+            "id": "b",
+            "label": "Assume an operator card qualifies every lifting role."
+          },
+          {
+            "id": "c",
+            "label": "Let the crew choose signals spontaneously during the lift."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C06_final10",
+        "prompt": "For keep operator rigger and signal duties distinct, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A lifting-role roster linking each assigned role to its matching verified assessment and authority."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C06_final11",
+        "prompt": "A later review finds: The signal person changes at shift handover without a role or communication check. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Verify the replacement's scope and communicate the agreed interface before movement resumes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C06_final12",
+        "prompt": "Consider this proposed response: Assume an operator card qualifies every lifting role. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Different roles have different tasks and assessment bases. Authority for one cannot simply transfer to another."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C06_check5",
+        "prompt": "An operator's pre-use check identifies a safety-related defect, but dispatch points to the valid operator authorization. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Operate because personal authorization overrides equipment condition."
+          },
+          {
+            "id": "b",
+            "label": "Stop the affected operation and report the defect for competent resolution before use."
+          },
+          {
+            "id": "c",
+            "label": "Repair the defect immediately without relevant maintenance authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C06_final13",
+        "prompt": "For authorize bounded work and respond to defects, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A defect report and equipment status linked to the responsible release decision and operator limits."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C06_final14",
+        "prompt": "A later review finds: The maintenance action is marked complete but required return-to-service verification is absent. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Maintain the applicable restriction until the responsible authority verifies readiness."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C06_final15",
+        "prompt": "Consider this proposed response: Operate because personal authorization overrides equipment condition. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Personal competence does not make defective equipment ready; equipment condition and operator authority are separate prerequisites."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C06_check6",
+        "prompt": "A new site has materially different slopes and traffic, but dispatch relies solely on evaluation at a previous flat warehouse. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Extend the previous evaluation to every workplace without review."
+          },
+          {
+            "id": "b",
+            "label": "Wait for an incident before considering the changed conditions."
+          },
+          {
+            "id": "c",
+            "label": "Review changed workplace demands and arrange relevant training or evaluation before independent operation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C06_final16",
+        "prompt": "For reassess after relevant changes and findings, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A workplace-change review recording relevant assessment, limits and employer decision."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C06_final17",
+        "prompt": "A later review finds: The new evaluation is complete but the roster still shows the old unrestricted scope. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Reconcile authorization with the actual assessed limits and communicate them to dispatch and supervision."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C06_final18",
+        "prompt": "Consider this proposed response: Extend the previous evaluation to every workplace without review. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Evaluation must support the conditions of assigned work; materially different conditions need review even before expiry."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C06_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Complete the appropriate workplace evaluation before treating the preparation as sufficient."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C06_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Maintain the applicable restriction until the responsible authority verifies readiness."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "C06_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C06_lesson1",
+          "questionIds": [
+            "C06_check1"
+          ]
+        },
+        {
+          "lessonId": "C06_lesson2",
+          "questionIds": [
+            "C06_check2"
+          ]
+        },
+        {
+          "lessonId": "C06_lesson3",
+          "questionIds": [
+            "C06_check3"
+          ]
+        },
+        {
+          "lessonId": "C06_lesson4",
+          "questionIds": [
+            "C06_check4"
+          ]
+        },
+        {
+          "lessonId": "C06_lesson5",
+          "questionIds": [
+            "C06_check5"
+          ]
+        },
+        {
+          "lessonId": "C06_lesson6",
+          "questionIds": [
+            "C06_check6"
+          ]
+        },
+        {
+          "lessonId": "C06_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C06_assessment",
+          "questionIds": [
+            "C06_final1",
+            "C06_final2",
+            "C06_final3",
+            "C06_final4",
+            "C06_final5",
+            "C06_final6",
+            "C06_final7",
+            "C06_final8",
+            "C06_final9",
+            "C06_final10",
+            "C06_final11",
+            "C06_final12",
+            "C06_final13",
+            "C06_final14",
+            "C06_final15",
+            "C06_final16",
+            "C06_final17",
+            "C06_final18",
+            "C06_final19",
+            "C06_final20"
+          ]
+        },
+        {
+          "lessonId": "C06_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "C06_check1": "Changing the attachment can change the operation and the competence needed; a generic card cannot resolve that gap.",
+        "C06_final1": "Changing the attachment can change the operation and the competence needed; a generic card cannot resolve that gap. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C06_final2": "Changing the attachment can change the operation and the competence needed; a generic card cannot resolve that gap. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C06_final3": "Changing the attachment can change the operation and the competence needed; a generic card cannot resolve that gap. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C06_check2": "The learning elements establish different evidence. A written quiz cannot stand in for practical performance.",
+        "C06_final4": "The learning elements establish different evidence. A written quiz cannot stand in for practical performance. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C06_final5": "The learning elements establish different evidence. A written quiz cannot stand in for practical performance. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C06_final6": "The learning elements establish different evidence. A written quiz cannot stand in for practical performance. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C06_check3": "Evaluator suitability must match the role and conditions being judged; unrelated experience cannot establish that match.",
+        "C06_final7": "Evaluator suitability must match the role and conditions being judged; unrelated experience cannot establish that match. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C06_final8": "Evaluator suitability must match the role and conditions being judged; unrelated experience cannot establish that match. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C06_final9": "Evaluator suitability must match the role and conditions being judged; unrelated experience cannot establish that match. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C06_check4": "Different roles have different tasks and assessment bases. Authority for one cannot simply transfer to another.",
+        "C06_final10": "Different roles have different tasks and assessment bases. Authority for one cannot simply transfer to another. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C06_final11": "Different roles have different tasks and assessment bases. Authority for one cannot simply transfer to another. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C06_final12": "Different roles have different tasks and assessment bases. Authority for one cannot simply transfer to another. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C06_check5": "Personal competence does not make defective equipment ready; equipment condition and operator authority are separate prerequisites.",
+        "C06_final13": "Personal competence does not make defective equipment ready; equipment condition and operator authority are separate prerequisites. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C06_final14": "Personal competence does not make defective equipment ready; equipment condition and operator authority are separate prerequisites. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C06_final15": "Personal competence does not make defective equipment ready; equipment condition and operator authority are separate prerequisites. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C06_check6": "Evaluation must support the conditions of assigned work; materially different conditions need review even before expiry.",
+        "C06_final16": "Evaluation must support the conditions of assigned work; materially different conditions need review even before expiry. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C06_final17": "Evaluation must support the conditions of assigned work; materially different conditions need review even before expiry. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C06_final18": "Evaluation must support the conditions of assigned work; materially different conditions need review even before expiry. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C06_final19": "The learning elements establish different evidence. A written quiz cannot stand in for practical performance. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "C06_final20": "Personal competence does not make defective equipment ready; equipment condition and operator authority are separate prerequisites. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

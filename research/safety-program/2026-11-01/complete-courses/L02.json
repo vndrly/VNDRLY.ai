@@ -1,0 +1,785 @@
+{
+  "familyId": "L02",
+  "title": "Worker participation and safety meetings",
+  "description": "Complete original VNDRLY L02 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Surface changing field hazards through worker input.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Raise a concern, contribute to risk review, confirm understanding; facilitated exercise. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://static.conocophillips.com/files/resources/exhibit-3-health-safety-and-environment-hse-requir.pdf"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.marathonpetroleum.com/Sustainability/Safety/"
+    },
+    {
+      "title": "OSHA worker participation guidance",
+      "url": "https://www.osha.gov/safety-management/worker-participation"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "L02_intro",
+        "title": "Start here — Worker participation and safety meetings",
+        "body": "# L02: Worker participation and safety meetings\n\nSurface changing field hazards through worker input. This course teaches the decisions needed to implement that purpose in field operations. It covers consultation, understandable communication, feedback and non-retaliation. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L02_lesson1",
+        "title": "Lesson 1 — Make participation operational",
+        "body": "## Make participation operational\n\nParticipation means workers influence the identification of hazards, selection of controls and review of results. Invite observations from people doing the work, including lower-tier and temporary workers. A meeting should have a decision purpose tied to current conditions. Attendance proves presence, not that a worker could contribute or that concerns changed the plan. Make time available and avoid shifting consultation into unpaid preparation.\n\n### Deeper application\n\nPrepare a meeting around current decisions: what changed since the last shift, what controls are uncertain and which concerns need an owner. Invite observations before presenting management's preferred solution, since early framing can silence different evidence. A night worker may know a visibility problem that never appears during an office visit. Allow an alternative way to contribute for people unable to attend. Representing their concern accurately is more useful than collecting an absent worker's signature later.\n\n### Worked oilfield example\n\nNight gate staff report glare hiding pedestrians, but the agenda repeats last month's generic topic. The decision is to discuss the glare, restrict the affected movement and agree a competent site assessment.\n\nA current exposure needs a current response. Participation must influence decisions rather than merely add names to attendance. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Minutes recording the night-shift observation, interim traffic restriction and assessment owner. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that only day-shift managers were asked whether the glare was resolved. The appropriate correction is to include affected night staff and assess conditions at the relevant operating time. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L02_lesson2",
+        "title": "Lesson 2 — Make communication understandable",
+        "body": "## Make communication understandable\n\nUse language, examples and communication methods the crew understands. Short sentences, photographs and demonstration may help, but each must convey the actual decision. Ask people to explain the control in their own words. Silence may reflect embarrassment or uncertainty. Avoid asking only whether everyone understands. Translate safety meaning accurately and use suitable support rather than assuming a bilingual colleague knows technical terminology.\n\n### Deeper application\n\nA strong comprehension question asks the worker to apply information: show the route you would use, identify the point where movement must stop and explain whom you would contact if it is blocked. A weak question asks only whether the worker understands. The learner may say yes to avoid embarrassment. Give time for an answer and correct the message rather than criticizing accent, literacy or speed. Practical task qualification remains separate even when a meeting uses demonstration to explain a route.\n\n### Worked oilfield example\n\nA Spanish-speaking worker signs a meeting sheet but cannot explain the revised pedestrian route. The decision is to explain through suitable language support and verify the worker can identify the route and restrictions.\n\nUnderstanding is demonstrated by a relevant explanation, not by a signature or a copied response. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A comprehension record identifying the communicated change, language support and corrected explanation. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the interpreter translated attendance instructions but not the route restrictions. The appropriate correction is to provide accurate safety communication and check the specific restrictions again. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L02_lesson3",
+        "title": "Lesson 3 — Invite concerns without retaliation",
+        "body": "## Invite concerns without retaliation\n\nPeople may avoid reporting when their supervisor controls future shifts or treats questions as complaints. Offer a confidential alternative and explain its limits honestly. A confidential process is not necessarily anonymous; disclose information only to roles needing it. Good-faith concerns should be heard even if investigation later finds the safeguard adequate. Recognizing contributions is different from rewarding a raw number of reports.\n\n### Deeper application\n\nConfidential reporting needs an intake route, responsible recipient and response process. A locked suggestion box is not a usable urgent warning system, and an anonymous message may limit clarification. Explain both the option and its limitations. Assess whether the person needs immediate protection from pressure while the concern is reviewed. Thanking someone publicly may unintentionally identify a confidential reporter, so use judgment about how recognition is given. Measure trust by usable participation, rather than demanding a target number of reports.\n\n### Worked oilfield example\n\nA worker knows a traffic concern but fears losing assignments if the foreman learns who spoke. The decision is to offer the designated confidential route and protect the worker from retaliation while assessing the hazard.\n\nTrust requires a usable alternative route and truthful confidentiality expectations, alongside action on the hazard. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A restricted concern record with controlled recipients and documented protective follow-through. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the concern was copied to an unrestricted crew distribution list. The appropriate correction is to restrict further disclosure and activate the appropriate privacy and retaliation response. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L02_lesson4",
+        "title": "Lesson 4 — Turn discussion into decisions",
+        "body": "## Turn discussion into decisions\n\nSeparate observations, proposed solutions and accepted actions in the record. For each issue state the affected work, decision, accountable owner, due date and temporary protection. A concern can be unresolved without being ignored if the uncertainty and next step are visible. If a suggestion is declined, explain the reason and an effective alternative. Voting cannot approve a technical safeguard outside the group's competence.\n\n### Deeper application\n\nMinutes should distinguish a concern from its disposition. For example, record glare reported at crossing, temporary hold on affected movements, lighting review assigned to site owner and next feedback date. Avoid replacing the concern with discussion held. If a proposed change is rejected, explain which constraint prevented it and what alternative addresses the exposure. A worker suggestion should neither be dismissed without examination nor accepted as an engineered solution solely because several people support it.\n\n### Worked oilfield example\n\nWorkers suggest moving floodlights, but the change could affect adjacent operations and nobody has assessed it. The decision is to maintain interim protection and obtain competent site review before changing the lighting arrangement.\n\nConsultation supplies valuable observations; technical compatibility still needs the appropriate review before implementation. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A decision record distinguishing the proposed lighting change from the approved interim traffic arrangement. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the minutes describe the proposal as approved although review is pending. The appropriate correction is to correct the status and notify anyone who might implement the unapproved change. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L02_lesson5",
+        "title": "Lesson 5 — Close the feedback loop",
+        "body": "## Close the feedback loop\n\nWorkers should learn what happened to their concern, including pending decisions and reasons for changes. Choose channels reaching all affected shifts and contractors. A notice in the day office will not reliably reach a remote night crew. Confirm understanding when the decision changes work. Give people a chance to identify new difficulties introduced by the correction. Feedback is a two-way check, not only broadcasting a management answer.\n\n### Deeper application\n\nFeedback can say an assessment is pending while confirming a temporary protection remains. That is more truthful than declaring a concern resolved to finish the minutes. Choose a route reaching the affected people before the relevant work, including workers away during the original meeting. Ask whether the correction makes the job workable. If a new route forces pedestrians into another reversing zone, the feedback loop has revealed a new interface that needs review before the change is relied upon.\n\n### Worked oilfield example\n\nThe traffic assessment changes the delivery route, but night drivers receive no briefing. The decision is to brief affected night workers and verify their understanding before using the changed route.\n\nAn implemented control can fail when the people relying on it do not know the change. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Shift-specific communication and worker explanations of the changed route and stop conditions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the briefing register omits subcontract delivery drivers. The appropriate correction is to reach the omitted affected drivers and verify the operational message before reliance. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L02_lesson6",
+        "title": "Lesson 6 — Check meetings against field results",
+        "body": "## Check meetings against field results\n\nEvaluate the meeting process by tracing selected concerns into decisions and later observations. A large attendance total or many reports does not show that hazards were controlled. Include difficult or declined concerns, night shifts and repeated issues in a proportionate sample. Ask whether workers still feel able to raise uncertainty. A recurring concern may show an ineffective correction or a communication gap rather than worker resistance.\n\n### Deeper application\n\nReview the meeting system by selecting issues and tracing their lives: first observation, response, decision, implementation and later check. Include an issue management declined and one workers raised repeatedly. This tests whether the process listens and explains decisions, not only whether its paperwork is tidy. Separate an honest unresolved concern from a forgotten one. A rising report count after an improved reporting route can be a sign of better visibility; it is not automatically worsening field performance.\n\n### Worked oilfield example\n\nThree meetings list the same glare concern as closed, while staff still cannot see the crossing. The decision is to reopen the issue and verify the actual lighting and traffic controls with affected workers.\n\nRepetition of a closed item is evidence to examine; administrative closure cannot establish field effectiveness. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A later observation under night conditions linked to the original concern and revised action. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that follow-up occurred at noon when the glare condition does not exist. The appropriate correction is to repeat the effectiveness check under representative night operating conditions. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L02_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nNight gate staff report glare hiding pedestrians, but the agenda repeats last month's generic topic. At the handover, a second issue is identified: The interpreter translated attendance instructions but not the route restrictions. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Promise absolute anonymity without knowing the process. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Discuss the glare, restrict the affected movement and agree a competent site assessment. The reason is specific: A current exposure needs a current response. Participation must influence decisions rather than merely add names to attendance. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Provide accurate safety communication and check the specific restrictions again. The supporting record should show: A comprehension record identifying the communicated change, language support and corrected explanation. This is important because understanding is demonstrated by a relevant explanation, not by a signature or a copied response. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because trust requires a usable alternative route and truthful confidentiality expectations, alongside action on the hazard. The suitable decision is: Offer the designated confidential route and protect the worker from retaliation while assessing the hazard. Evidence for review would include: A restricted concern record with controlled recipients and documented protective follow-through. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nWorkers suggest moving floodlights, but the change could affect adjacent operations and nobody has assessed it. At the handover, a second issue is identified: The briefing register omits subcontract delivery drivers. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Count the three discussions as evidence of effectiveness. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Maintain interim protection and obtain competent site review before changing the lighting arrangement. The reason is specific: Consultation supplies valuable observations; technical compatibility still needs the appropriate review before implementation. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Reach the omitted affected drivers and verify the operational message before reliance. The supporting record should show: Shift-specific communication and worker explanations of the changed route and stop conditions. This is important because an implemented control can fail when the people relying on it do not know the change. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because repetition of a closed item is evidence to examine; administrative closure cannot establish field effectiveness. The suitable decision is: Reopen the issue and verify the actual lighting and traffic controls with affected workers. Evidence for review would include: A later observation under night conditions linked to the original concern and revised action. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L02_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "L02_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nRaise a concern, contribute to risk review, confirm understanding; facilitated exercise. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "L02_check1",
+        "prompt": "Night gate staff report glare hiding pedestrians, but the agenda repeats last month's generic topic. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Discuss the glare, restrict the affected movement and agree a competent site assessment."
+          },
+          {
+            "id": "b",
+            "label": "Close the issue because attendance is complete."
+          },
+          {
+            "id": "c",
+            "label": "Require staff to wait for next month's meeting."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L02_final1",
+        "prompt": "For make participation operational, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "Minutes recording the night-shift observation, interim traffic restriction and assessment owner."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L02_final2",
+        "prompt": "A later review finds: Only day-shift managers were asked whether the glare was resolved. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Include affected night staff and assess conditions at the relevant operating time."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L02_final3",
+        "prompt": "Consider this proposed response: Close the issue because attendance is complete. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A current exposure needs a current response. Participation must influence decisions rather than merely add names to attendance."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L02_check2",
+        "prompt": "A Spanish-speaking worker signs a meeting sheet but cannot explain the revised pedestrian route. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the signature as proof of understanding."
+          },
+          {
+            "id": "b",
+            "label": "Explain through suitable language support and verify the worker can identify the route and restrictions."
+          },
+          {
+            "id": "c",
+            "label": "Ask the worker to copy a colleague's answer."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L02_final4",
+        "prompt": "For make communication understandable, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A comprehension record identifying the communicated change, language support and corrected explanation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L02_final5",
+        "prompt": "A later review finds: The interpreter translated attendance instructions but not the route restrictions. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Provide accurate safety communication and check the specific restrictions again."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L02_final6",
+        "prompt": "Consider this proposed response: Accept the signature as proof of understanding. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Understanding is demonstrated by a relevant explanation, not by a signature or a copied response."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L02_check3",
+        "prompt": "A worker knows a traffic concern but fears losing assignments if the foreman learns who spoke. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Promise absolute anonymity without knowing the process."
+          },
+          {
+            "id": "b",
+            "label": "Tell the worker only signed public complaints are accepted."
+          },
+          {
+            "id": "c",
+            "label": "Offer the designated confidential route and protect the worker from retaliation while assessing the hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L02_final7",
+        "prompt": "For invite concerns without retaliation, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A restricted concern record with controlled recipients and documented protective follow-through."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L02_final8",
+        "prompt": "A later review finds: The concern was copied to an unrestricted crew distribution list. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Restrict further disclosure and activate the appropriate privacy and retaliation response."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L02_final9",
+        "prompt": "Consider this proposed response: Promise absolute anonymity without knowing the process. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Trust requires a usable alternative route and truthful confidentiality expectations, alongside action on the hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L02_check4",
+        "prompt": "Workers suggest moving floodlights, but the change could affect adjacent operations and nobody has assessed it. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Maintain interim protection and obtain competent site review before changing the lighting arrangement."
+          },
+          {
+            "id": "b",
+            "label": "Install the lights immediately because most attendees voted for it."
+          },
+          {
+            "id": "c",
+            "label": "Mark the concern resolved when the suggestion is written down."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L02_final10",
+        "prompt": "For turn discussion into decisions, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A decision record distinguishing the proposed lighting change from the approved interim traffic arrangement."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L02_final11",
+        "prompt": "A later review finds: The minutes describe the proposal as approved although review is pending. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Correct the status and notify anyone who might implement the unapproved change."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L02_final12",
+        "prompt": "Consider this proposed response: Install the lights immediately because most attendees voted for it. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Consultation supplies valuable observations; technical compatibility still needs the appropriate review before implementation."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L02_check5",
+        "prompt": "The traffic assessment changes the delivery route, but night drivers receive no briefing. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the daytime noticeboard as notification to everyone."
+          },
+          {
+            "id": "b",
+            "label": "Brief affected night workers and verify their understanding before using the changed route."
+          },
+          {
+            "id": "c",
+            "label": "Assume dispatch will mention it eventually."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L02_final13",
+        "prompt": "For close the feedback loop, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "Shift-specific communication and worker explanations of the changed route and stop conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L02_final14",
+        "prompt": "A later review finds: The briefing register omits subcontract delivery drivers. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reach the omitted affected drivers and verify the operational message before reliance."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L02_final15",
+        "prompt": "Consider this proposed response: Treat the daytime noticeboard as notification to everyone. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "An implemented control can fail when the people relying on it do not know the change."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L02_check6",
+        "prompt": "Three meetings list the same glare concern as closed, while staff still cannot see the crossing. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the three discussions as evidence of effectiveness."
+          },
+          {
+            "id": "b",
+            "label": "Remove the recurring issue from future agendas."
+          },
+          {
+            "id": "c",
+            "label": "Reopen the issue and verify the actual lighting and traffic controls with affected workers."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L02_final16",
+        "prompt": "For check meetings against field results, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A later observation under night conditions linked to the original concern and revised action."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L02_final17",
+        "prompt": "A later review finds: Follow-up occurred at noon when the glare condition does not exist. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Repeat the effectiveness check under representative night operating conditions."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "L02_final18",
+        "prompt": "Consider this proposed response: Count the three discussions as evidence of effectiveness. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Repetition of a closed item is evidence to examine; administrative closure cannot establish field effectiveness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "L02_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Provide accurate safety communication and check the specific restrictions again."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "L02_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Reach the omitted affected drivers and verify the operational message before reliance."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "L02_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L02_lesson1",
+          "questionIds": [
+            "L02_check1"
+          ]
+        },
+        {
+          "lessonId": "L02_lesson2",
+          "questionIds": [
+            "L02_check2"
+          ]
+        },
+        {
+          "lessonId": "L02_lesson3",
+          "questionIds": [
+            "L02_check3"
+          ]
+        },
+        {
+          "lessonId": "L02_lesson4",
+          "questionIds": [
+            "L02_check4"
+          ]
+        },
+        {
+          "lessonId": "L02_lesson5",
+          "questionIds": [
+            "L02_check5"
+          ]
+        },
+        {
+          "lessonId": "L02_lesson6",
+          "questionIds": [
+            "L02_check6"
+          ]
+        },
+        {
+          "lessonId": "L02_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "L02_assessment",
+          "questionIds": [
+            "L02_final1",
+            "L02_final2",
+            "L02_final3",
+            "L02_final4",
+            "L02_final5",
+            "L02_final6",
+            "L02_final7",
+            "L02_final8",
+            "L02_final9",
+            "L02_final10",
+            "L02_final11",
+            "L02_final12",
+            "L02_final13",
+            "L02_final14",
+            "L02_final15",
+            "L02_final16",
+            "L02_final17",
+            "L02_final18",
+            "L02_final19",
+            "L02_final20"
+          ]
+        },
+        {
+          "lessonId": "L02_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "L02_check1": "A current exposure needs a current response. Participation must influence decisions rather than merely add names to attendance.",
+        "L02_final1": "A current exposure needs a current response. Participation must influence decisions rather than merely add names to attendance. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L02_final2": "A current exposure needs a current response. Participation must influence decisions rather than merely add names to attendance. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L02_final3": "A current exposure needs a current response. Participation must influence decisions rather than merely add names to attendance. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L02_check2": "Understanding is demonstrated by a relevant explanation, not by a signature or a copied response.",
+        "L02_final4": "Understanding is demonstrated by a relevant explanation, not by a signature or a copied response. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L02_final5": "Understanding is demonstrated by a relevant explanation, not by a signature or a copied response. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L02_final6": "Understanding is demonstrated by a relevant explanation, not by a signature or a copied response. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L02_check3": "Trust requires a usable alternative route and truthful confidentiality expectations, alongside action on the hazard.",
+        "L02_final7": "Trust requires a usable alternative route and truthful confidentiality expectations, alongside action on the hazard. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L02_final8": "Trust requires a usable alternative route and truthful confidentiality expectations, alongside action on the hazard. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L02_final9": "Trust requires a usable alternative route and truthful confidentiality expectations, alongside action on the hazard. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L02_check4": "Consultation supplies valuable observations; technical compatibility still needs the appropriate review before implementation.",
+        "L02_final10": "Consultation supplies valuable observations; technical compatibility still needs the appropriate review before implementation. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L02_final11": "Consultation supplies valuable observations; technical compatibility still needs the appropriate review before implementation. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L02_final12": "Consultation supplies valuable observations; technical compatibility still needs the appropriate review before implementation. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L02_check5": "An implemented control can fail when the people relying on it do not know the change.",
+        "L02_final13": "An implemented control can fail when the people relying on it do not know the change. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L02_final14": "An implemented control can fail when the people relying on it do not know the change. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L02_final15": "An implemented control can fail when the people relying on it do not know the change. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L02_check6": "Repetition of a closed item is evidence to examine; administrative closure cannot establish field effectiveness.",
+        "L02_final16": "Repetition of a closed item is evidence to examine; administrative closure cannot establish field effectiveness. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "L02_final17": "Repetition of a closed item is evidence to examine; administrative closure cannot establish field effectiveness. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "L02_final18": "Repetition of a closed item is evidence to examine; administrative closure cannot establish field effectiveness. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "L02_final19": "Understanding is demonstrated by a relevant explanation, not by a signature or a copied response. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "L02_final20": "An implemented control can fail when the people relying on it do not know the change. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

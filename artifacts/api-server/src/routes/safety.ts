@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { companySafetyReadiness } from "../lib/company-safety-readiness";
 import { companySafetyMaturity } from "../lib/company-safety-maturity";
+import {safetyTrainingCatalogView}from'../lib/safety-training-catalog-view';
 import { randomBytes } from "crypto";
 import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import {
@@ -132,6 +133,11 @@ router.get("/safety/readiness", requireSession, async (req, res): Promise<void> 
   if (!session.userId) { sendApiError(res, 401, "auth.unauthorized", "Sign in required"); return; }
   try { res.json({ success: true, data: await companySafetyReadiness({ ...session, userId: session.userId }) }); }
   catch (error) { const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 403; sendApiError(res, status === 403 ? 403 : 500, "safety.readiness_unavailable", "Company safety readiness is unavailable"); }
+});
+router.get('/safety/training-catalog',requireSession,async(req,res):Promise<void>=>{
+ const session=readSession(req);if(!session.userId){sendApiError(res,401,'auth.unauthorized','Sign in required');return;}
+ try{res.json({success:true,data:await safetyTrainingCatalogView({...session,userId:session.userId},{search:typeof req.query.search==='string'?req.query.search:'',familyId:typeof req.query.familyId==='string'?req.query.familyId:'',offset:typeof req.query.offset==='string'?Number(req.query.offset)||0:0})});}
+ catch(error){const status=error&&typeof error==='object'&&'status'in error?Number(error.status):403;sendApiError(res,status===403?403:500,'safety.training_catalog_unavailable','Training service mapping is unavailable');}
 });
 
 router.get("/safety/maturity", requireSession, async (req, res): Promise<void> => {

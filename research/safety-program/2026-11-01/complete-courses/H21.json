@@ -1,0 +1,781 @@
+{
+  "familyId": "H21",
+  "title": "Lone work, workplace violence and remote check-ins",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Ensure help reaches isolated workers and threatening encounters are escalated.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "A separate practical evaluation must verify task limits, check-in and receiver handover, end-to-end alarms, safe withdrawal and missed-contact escalation in a safe simulation. Security enforcement, rescue, medical response and hazardous-area device approval require their own qualified authorities. This course does not qualify a worker to physically restrain people, enter hazards for rescue or approve lone technical work.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.travisperkinsplc.co.uk/media/wnadnny2/2599597-lone-working-policy-external-hr.pdf"
+    },
+    {
+      "title": "OSHA Workplace violence",
+      "url": "https://www.osha.gov/workplace-violence"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H21_intro",
+        "title": "Start here: Lone work, workplace violence and remote check-ins",
+        "body": "# Lone work, workplace violence and remote check-ins\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nA separate practical evaluation must verify task limits, check-in and receiver handover, end-to-end alarms, safe withdrawal and missed-contact escalation in a safe simulation. Security enforcement, rescue, medical response and hazardous-area device approval require their own qualified authorities. This course does not qualify a worker to physically restrain people, enter hazards for rescue or approve lone technical work.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Workplace violence](https://www.osha.gov/workplace-violence). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H21_lesson1",
+        "title": "Lesson 1 - Decide whether the task may be done alone",
+        "body": "Lone work means help may not be immediately available when a person is injured, threatened or unable to communicate. It can occur in a gatehouse, a remote pump station, a yard after other workers leave or a room where a person is isolated from the rest of the crew. Being on a busy site does not guarantee someone will notice distress. A delivery driver passing the gate is not a designated responder.\n\nAssess the actual task, location, time and foreseeable failure. Consider traffic exposure, illness, slips, violence, communications coverage, access for help and tasks that could incapacitate the person. Ask how the worker could raise the alarm after the credible event, not just before it. A worker pinned by a vehicle or unconscious from illness may be unable to make a phone call. The assessment must address that limitation rather than assuming the phone solves it.\n\nSome activities require another trained person or a specialist team under the applicable procedure. The lone-work assessment cannot waive those requirements. Do not turn a required attendant, standby person, rescue team or traffic spotter into a remote telephone contact. Where risks cannot be adequately controlled, change the staffing, method or schedule, or do not perform the task alone.\n\nDistinguish planned duty from scope creep. A gate worker authorized to monitor admissions may be asked to inspect a remote drainage pit after dark. That is a new task with different exposure and rescue access. Report the request and obtain assessment before leaving the agreed location. An urgent request from a client does not automatically amend the employer's lone-work boundary.\n\nThe worker should know the exact permitted area, tasks, communications, withdrawal conditions and responsible monitor before starting. 'Call if you need anything' is an offer of help, not a complete arrangement. A practical pre-start discussion should expose uncertainty before the worker becomes isolated.\n\n## Worked field example\n\nA lone gate attendant is asked to leave the booth and inspect an unlit remote pit.\n\nThe safe decision is to hold the additional task until the employer assesses its lone-work suitability and establishes the required controls. Approval for gate duty does not cover a different remote task or its rescue limitations.\n\nA useful field record is specific: A task-specific assessment showing permitted activities, location limits and available response arrangements. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H21_lesson2",
+        "title": "Lesson 2 - Make check-ins an active response system",
+        "body": "A check-in arrangement needs a sender, a receiver and a defined action when the expected contact does not occur. Agree the worker's location, task, expected contacts, method, risk-based timing, backup method and escalation before the shift. Do not invent a universal interval. The interval and response stages must reflect how rapidly harm could develop, communications reliability, travel time and the available response.\n\nThe receiver must be a named, available person or a monitored service with a defined duty. A message sent to an unattended group chat may look documented while nobody is responsible for reading it. Confirm the receiver accepts the assignment and knows when the next contact is due. A worker saying 'all good' is useful only if the message can be linked to the right person, location and task.\n\nPlan what happens if the primary receiver becomes unavailable. A supervisor attending a meeting, going off shift or losing their phone must transfer monitoring to the designated backup. That handover includes last successful contact, next expected contact, known hazards, current location and escalation status. Do not leave a gap while assuming the other person is watching.\n\nCheck-ins should confirm the agreed information without encouraging unsafe phone use. A driver must not type while moving, and a worker handling equipment should first make the task safe. Arrange the method and work timing so the communication can occur safely. If the contact method repeatedly conflicts with the task, redesign the arrangement.\n\nThe check-in record must be usable during an emergency. Include a location description that another person can act on, not just 'north gate.' Distinguish scheduled contacts from occasional friendly messages. An informal message earlier in the shift does not automatically reset the next due contact or close an unresolved alarm.\n\n## Worked field example\n\nA lone gate worker sends scheduled messages to a group chat after the assigned supervisor goes off duty.\n\nThe safe decision is to restore a named available receiver and transfer the live monitoring information to the backup. A sent message does not establish that anyone accepted responsibility to act on a missed contact.\n\nA useful field record is specific: A confirmed receiver handover recording last contact, next due contact, location and escalation duty. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H21_lesson3",
+        "title": "Lesson 3 - Test devices, coverage and duress routes",
+        "body": "Test communication where the worker will actually work. A phone that works at the office may fail behind steel tanks or in a remote gatehouse. Consider battery life, charging, weather protection, network coverage, radio interoperability and the worker's ability to use the device while wearing required clothing. Follow site restrictions on electronic equipment in hazardous areas; this awareness course does not approve a device for an explosive atmosphere.\n\nA test must include the receiving and response side. Verify the correct person receives the alarm, recognizes the location and can start the required escalation. A successful outgoing call proves only part of that chain. A duress device that sends an alert to an unmonitored address is not an effective control. Know how accidental alerts are handled without teaching people to ignore them.\n\nA duress arrangement should allow a person to seek help when an overt call could worsen a threat. Use only the employer's agreed method, code or device; do not improvise a secret phrase that the receiver does not understand. Keep sensitive details within the approved access controls. Training must make the worker's action clear while preserving the security of the arrangement.\n\nDiscuss incapacitation. Some assessed systems may include monitored devices or automatic alerts, but no technology removes the need to assess coverage and response. A device can fail, be left on a desk or be unable to describe a changing location. The worker should know the fallback and the point at which the lone activity must pause because the control is unavailable.\n\nWhen a test fails, stop relying on the affected arrangement. Report the failure, obtain a verified alternative or change the work so isolation is removed. Do not keep working alone while treating 'battery low' as a maintenance note for tomorrow. The failure changes today's readiness.\n\n## Worked field example\n\nA duress test sends an alert, but the monitoring contact receives no location and cannot identify the gate.\n\nThe safe decision is to hold reliance on the arrangement until the alert and actionable location reach the responsible receiver. An alarm is useful only when the receiver can interpret it and initiate an effective response.\n\nA useful field record is specific: A documented end-to-end test from the actual work location to the assigned receiving and escalation roles. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H21_lesson4",
+        "title": "Lesson 4 - Manage threats without escalating the encounter",
+        "body": "Violence can include threats, intimidation, assault and behavior that creates a credible safety concern. Gate workers can face conflict over denied access, delays, alcohol or drugs, employment disputes and personal grievances. The job is to apply the authorized access process from a safe position, not to win an argument or physically enforce every refusal.\n\nKnow the safe retreat route and the site's duress and emergency contacts before an encounter. Arrange the work area so the worker can withdraw rather than becoming trapped behind a visitor or a locked barrier. Use physical separation and access design where the assessment calls for it. Do not publicly disclose personal details, shift patterns or sensitive security information while trying to calm someone.\n\nCommunicate briefly and calmly. Explain the decision and the authorized contact who can review it, without insults, threats or a promise outside your authority. Keep distance and avoid touching the person or reaching into a vehicle. If behavior becomes threatening, disengage and seek help through the agreed procedure. You do not need to remain at the counter to preserve a perfect entry record.\n\nAn aggressive driver may try to force a gate or follow another vehicle. Do not stand in front of the vehicle or hold the barrier with your body. Withdraw, activate the site response and give location, direction of travel and a factual description from a safe place. Protect other workers by using the approved notification route; do not chase the vehicle.\n\nAfter the immediate danger, support the affected worker and record observable behavior, exact threats where appropriate, actions taken and witnesses. Avoid speculative diagnoses or blame. The employer should review the controls, staffing and support needs before resuming the same arrangement. A worker asking for help is reporting a safety issue, not failing a customer-service test.\n\n## Worked field example\n\nA refused driver threatens the attendant and moves the truck toward the closed barrier.\n\nThe safe decision is to withdraw to the designated safe position and activate the agreed duress or emergency response. The attendant’s access role does not authorize physical confrontation or standing in a vehicle path.\n\nA useful field record is specific: A factual incident account and review of retreat, separation, response and staffing arrangements. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H21_lesson5",
+        "title": "Lesson 5 - Act on missed contact and uncertain welfare",
+        "body": "A missed check-in is information requiring the agreed response. It is not proof of injury, but it is also not proof that everything is fine. The plan should define the initial contact attempt, backup method, escalation responsibility and conditions requiring emergency services. Apply those instructions promptly rather than inventing a new waiting period because the worker is usually reliable.\n\nUse the last known location, task and hazards to guide escalation. A call going to voicemail could mean poor coverage, a flat battery or incapacity. Try the approved alternatives while the designated role assesses the situation. Where information indicates immediate danger, activate the emergency route without delaying for routine paperwork or repeated administrative calls.\n\nDo not send an unbriefed coworker alone into an unknown hazard to 'have a look.' The checking response must itself be safe. A gate welfare check may require controlled vehicle access; a remote industrial area may require isolation, atmospheric assessment or trained responders. The lone-work plan should identify how a safe verification can occur within the site's emergency system.\n\nPreserve the timeline. Record when contact was due, attempts made, information received, escalation started and responsibility transferred. Distinguish an actual successful welfare confirmation from a message that merely shows the phone is online. If the worker makes contact during an escalation, tell the response coordinator so resources are not left searching. Confirm the worker's condition, location and ability to continue before closing the event.\n\nA missed contact that turns out to be a device failure is still useful learning. Restore effective monitoring before more lone work, investigate the failure and determine whether the risk-based arrangement needs revision. Do not silently disable alerts to avoid future inconvenience.\n\n## Worked field example\n\nA worker misses a planned check-in; calls go unanswered and the last task was beside an active delivery lane.\n\nThe safe decision is to activate the agreed missed-contact escalation and arrange a safe welfare verification through the responsible roles. Uncertain welfare beside a known hazard requires the planned response rather than an improvised delay.\n\nA useful field record is specific: A timeline of due contact, attempts, escalation, safe welfare confirmation and restored monitoring. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H21_lesson6",
+        "title": "Lesson 6 - Review readiness and hand over the whole arrangement",
+        "body": "Lone-work controls must survive shift changes, holidays, staffing shortages and device faults. Before accepting a lone assignment, confirm that the task is within the assessment, the location is known, the receiver is available, the device works and the response resources can reach the worker. If one element is missing, raise the gap before the isolation begins.\n\nReview events and near misses with the people who perform the work. Repeated late check-ins may reveal a poor schedule, inaccessible device, excessive task load or unclear receiver duty. Repeated threats may indicate a need for revised access design, staffing, escort or security support. Training the same worker again will not repair a physical trap or an unmonitored phone.\n\nAssess performance through safe simulation. A worker can demonstrate a check-in, a communication failure, withdrawal from a fictional threatening encounter and the escalation information without being exposed to an aggressive person or live traffic. The receiving role should demonstrate its own actions; testing only the worker misses half the control.\n\nRecords should distinguish understanding from readiness. A course result shows answers to learning questions. A practical observation shows demonstrated actions under recorded conditions. A shift confirmation shows the actual monitoring and response resources were available. These are related but different kinds of evidence. None should be used to conceal the absence of another.\n\nClose an improvement only after the revised arrangement has been checked. If a backup receiver is named but has never accepted the duty or received access to the contact information, the action is not implemented. Keep sensitive threat and health records restricted while giving operational staff the information they need. Reassess when the worker's task, location, schedule or foreseeable response changes.\n\n## Worked field example\n\nA new backup monitor is listed on the roster but has not been briefed or accepted the duty.\n\nThe safe decision is to confirm the backup’s capability and acceptance before relying on that person for lone-work monitoring. A name on a roster does not establish an available and competent response function.\n\nA useful field record is specific: A safe end-to-end exercise and confirmed acceptance of the monitoring and escalation role. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H21_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional remote gate is staffed by Sam alone overnight. The assessment permits admission checks from the protected booth but excludes remote yard inspections. At midnight the supervisor hands the monitoring phone to a relief supervisor without discussing current contacts. Sam's next check-in is missed. The relief supervisor sees an old message saying 'all quiet' and assumes no action is needed. A caller then reports a truck standing oddly near the gate. Sam's radio does not answer.\n\nWork through the response without assuming Sam is injured, safe, or merely forgetful. Identify what information the receiving supervisor needs and what must be restored before the next lone shift.\n\n### Worked solution\n\nThe relief supervisor activates the agreed missed-contact response using the actual due contact and known hazards. The old message does not confirm Sam's present welfare or reset the schedule. The report about the truck adds relevant information; it should be passed to the response coordinator, not treated as a reason to walk into the vehicle area alone.\n\nThe receiver establishes Sam's last confirmed location, assigned task, expected contact method, due time and any live restrictions. Approved alternative contact attempts can continue while the responsible role arranges safe welfare verification. If the available information indicates immediate danger, emergency assistance is requested through the site route without waiting for routine reporting. The verification method must address vehicle and access hazards and remain within the responder's competence.\n\nThe supervisor records times and actions accurately and gives responders usable directions to the actual entrance. Nobody assumes Sam entered the remote yard simply because a call is unanswered. If Sam is found safe with a failed radio, the response coordinator is told, his condition and location are confirmed, and the event is closed through the agreed process. If medical help is needed, the site emergency arrangement governs it.\n\nBefore further lone work, effective monitoring is restored and tested. The handover failure is reviewed: the relief role needs explicit acceptance, current location and task, last contact, next due contact, backup and escalation instructions. The employer checks why the old message was mistaken for a current confirmation and whether the monitoring system makes due contacts visible. A completed incident form does not by itself restore a functioning receiver.\n\nThe learning is about both sides of the arrangement. Sam's obligation to check in does not excuse an unassigned monitoring role. The supervisor's missed handover does not justify unsafe spontaneous rescue. The company must provide an arrangement that detects uncertainty and produces a safe response.\n\n## Scenario 2\n\nAt a fictional equipment yard, Amina handles the late gate shift alone. A driver denied entry becomes verbally threatening and says he knows when her shift ends. The driver's truck is stopped beside the booth exit. Amina has a duress button, but the last test only confirmed a light on the device; nobody verified receipt. The regular monitor has left early. A manager tells Amina to keep the driver talking while he finishes another call and suggests she take a photo of the driver's licence at the cab.\n\nIdentify immediate safe actions and the changes needed before the same lone arrangement is used again. Do not assume Amina is a security officer or has authority to detain the driver.\n\n### Worked solution\n\nAmina prioritizes withdrawal and assistance through the available safe route. She does not approach the cab, take a photograph in the conflict area or attempt to detain the driver. The threat and blocked exit are information for the emergency contact. She uses the agreed duress or emergency method that can summon help and, from safety, provides the gate location, observable behavior and vehicle position. If one method fails, she uses the approved alternative or emergency route; she does not remain exposed to prove the button is faulty.\n\nThe manager treats this as a safety response, rather than asking Amina to prolong the encounter. The responsible site roles manage access, security and any emergency-service involvement. Other workers are warned through the authorized route. The driver is not physically confronted by an untrained coworker sent to protect the gate record.\n\nAfter the immediate event, Amina receives appropriate support and the employer reviews the threat, escape access, booth layout, monitoring gap and duress failure. The threat about her shift is recorded factually and handled with appropriate confidentiality. The review considers whether lone staffing remains suitable and whether separation, changed access procedures or additional support is necessary.\n\nBefore any approved resumption, the communications test must cover the whole chain from Amina's actual position to a named receiver with actionable location and escalation duty. The receiver and backup must accept monitoring. A safe exercise demonstrates withdrawal, alarm receipt and response coordination without exposing Amina to a real confrontation.\n\nThe fact that the device illuminated is insufficient: it proves a local indication, not receipt or response. The fact that the driver eventually leaves is also insufficient: it does not show that the lone-work arrangement was effective. The company must verify the controls it plans to rely on and record the scope of that verification.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H21_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H21_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nA separate practical evaluation must verify task limits, check-in and receiver handover, end-to-end alarms, safe withdrawal and missed-contact escalation in a safe simulation. Security enforcement, rescue, medical response and hazardous-area device approval require their own qualified authorities. This course does not qualify a worker to physically restrain people, enter hazards for rescue or approve lone technical work.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H21_check1",
+        "prompt": "A lone gate attendant is asked to leave the booth and inspect an unlit remote pit. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the additional task until the employer assesses its lone-work suitability and establishes the required controls"
+          },
+          {
+            "id": "b",
+            "label": "Take a phone and treat the gate authorization as permission for the pit inspection"
+          },
+          {
+            "id": "c",
+            "label": "Ask a passing driver to check whether the worker returns"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H21_check2",
+        "prompt": "A lone gate worker sends scheduled messages to a group chat after the assigned supervisor goes off duty. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume any group member will notice a missed message"
+          },
+          {
+            "id": "b",
+            "label": "Restore a named available receiver and transfer the live monitoring information to the backup"
+          },
+          {
+            "id": "c",
+            "label": "Cancel check-ins because previous shifts had no incidents"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H21_check3",
+        "prompt": "A duress test sends an alert, but the monitoring contact receives no location and cannot identify the gate. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the device beep as a successful emergency test"
+          },
+          {
+            "id": "b",
+            "label": "Use an unagreed code word in an unrelated chat"
+          },
+          {
+            "id": "c",
+            "label": "Hold reliance on the arrangement until the alert and actionable location reach the responsible receiver"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H21_check4",
+        "prompt": "A refused driver threatens the attendant and moves the truck toward the closed barrier. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Withdraw to the designated safe position and activate the agreed duress or emergency response"
+          },
+          {
+            "id": "b",
+            "label": "Stand in front of the truck so the driver cannot enter"
+          },
+          {
+            "id": "c",
+            "label": "Approach the cab and argue until the driver accepts the decision"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H21_check5",
+        "prompt": "A worker misses a planned check-in; calls go unanswered and the last task was beside an active delivery lane. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wait until shift end because the worker often forgets messages"
+          },
+          {
+            "id": "b",
+            "label": "Activate the agreed missed-contact escalation and arrange a safe welfare verification through the responsible roles"
+          },
+          {
+            "id": "c",
+            "label": "Send an unbriefed visitor into the lane to find the worker"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H21_check6",
+        "prompt": "A new backup monitor is listed on the roster but has not been briefed or accepted the duty. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the roster update as proof that the arrangement is implemented"
+          },
+          {
+            "id": "b",
+            "label": "Remove the backup requirement to simplify the handover"
+          },
+          {
+            "id": "c",
+            "label": "Confirm the backup’s capability and acceptance before relying on that person for lone-work monitoring"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H21_final1",
+        "prompt": "For decide whether the task may be done alone, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approval for gate duty does not cover a different remote task or its rescue limitations."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H21_final2",
+        "prompt": "Which evidence would most directly verify decide whether the task may be done alone in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A task-specific assessment showing permitted activities, location limits and available response arrangements"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H21_final3",
+        "prompt": "A relief worker proposes the following shortcut during decide whether the task may be done alone: \"Take a phone and treat the gate authorization as permission for the pit inspection.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Take a phone and treat the gate authorization as permission for the pit inspection"
+          },
+          {
+            "id": "b",
+            "label": "Ask a passing driver to check whether the worker returns"
+          },
+          {
+            "id": "c",
+            "label": "Hold the additional task until the employer assesses its lone-work suitability and establishes the required controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H21_final4",
+        "prompt": "For make check-ins an active response system, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A sent message does not establish that anyone accepted responsibility to act on a missed contact."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H21_final5",
+        "prompt": "Which evidence would most directly verify make check-ins an active response system in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A confirmed receiver handover recording last contact, next due contact, location and escalation duty"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H21_final6",
+        "prompt": "A relief worker proposes the following shortcut during make check-ins an active response system: \"Assume any group member will notice a missed message.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume any group member will notice a missed message"
+          },
+          {
+            "id": "b",
+            "label": "Cancel check-ins because previous shifts had no incidents"
+          },
+          {
+            "id": "c",
+            "label": "Restore a named available receiver and transfer the live monitoring information to the backup"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H21_final7",
+        "prompt": "For test devices, coverage and duress routes, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An alarm is useful only when the receiver can interpret it and initiate an effective response."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H21_final8",
+        "prompt": "Which evidence would most directly verify test devices, coverage and duress routes in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A documented end-to-end test from the actual work location to the assigned receiving and escalation roles"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H21_final9",
+        "prompt": "A relief worker proposes the following shortcut during test devices, coverage and duress routes: \"Count the device beep as a successful emergency test.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count the device beep as a successful emergency test"
+          },
+          {
+            "id": "b",
+            "label": "Use an unagreed code word in an unrelated chat"
+          },
+          {
+            "id": "c",
+            "label": "Hold reliance on the arrangement until the alert and actionable location reach the responsible receiver"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H21_final10",
+        "prompt": "For manage threats without escalating the encounter, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The attendant’s access role does not authorize physical confrontation or standing in a vehicle path."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H21_final11",
+        "prompt": "Which evidence would most directly verify manage threats without escalating the encounter in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A factual incident account and review of retreat, separation, response and staffing arrangements"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H21_final12",
+        "prompt": "A relief worker proposes the following shortcut during manage threats without escalating the encounter: \"Stand in front of the truck so the driver cannot enter.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stand in front of the truck so the driver cannot enter"
+          },
+          {
+            "id": "b",
+            "label": "Approach the cab and argue until the driver accepts the decision"
+          },
+          {
+            "id": "c",
+            "label": "Withdraw to the designated safe position and activate the agreed duress or emergency response"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H21_final13",
+        "prompt": "For act on missed contact and uncertain welfare, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Uncertain welfare beside a known hazard requires the planned response rather than an improvised delay."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H21_final14",
+        "prompt": "Which evidence would most directly verify act on missed contact and uncertain welfare in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A timeline of due contact, attempts, escalation, safe welfare confirmation and restored monitoring"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H21_final15",
+        "prompt": "A relief worker proposes the following shortcut during act on missed contact and uncertain welfare: \"Wait until shift end because the worker often forgets messages.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Wait until shift end because the worker often forgets messages"
+          },
+          {
+            "id": "b",
+            "label": "Send an unbriefed visitor into the lane to find the worker"
+          },
+          {
+            "id": "c",
+            "label": "Activate the agreed missed-contact escalation and arrange a safe welfare verification through the responsible roles"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H21_final16",
+        "prompt": "For review readiness and hand over the whole arrangement, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A name on a roster does not establish an available and competent response function."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H21_final17",
+        "prompt": "Which evidence would most directly verify review readiness and hand over the whole arrangement in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A safe end-to-end exercise and confirmed acceptance of the monitoring and escalation role"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H21_final18",
+        "prompt": "A relief worker proposes the following shortcut during review readiness and hand over the whole arrangement: \"Treat the roster update as proof that the arrangement is implemented.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the roster update as proof that the arrangement is implemented"
+          },
+          {
+            "id": "b",
+            "label": "Remove the backup requirement to simplify the handover"
+          },
+          {
+            "id": "c",
+            "label": "Confirm the backup’s capability and acceptance before relying on that person for lone-work monitoring"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H21_final19",
+        "prompt": "In Scenario 1, how should the old “all quiet” message be treated?",
+        "options": [
+          {
+            "id": "a",
+            "label": "As historical information, not a current welfare confirmation or cancellation of escalation"
+          },
+          {
+            "id": "b",
+            "label": "As permission to wait until morning"
+          },
+          {
+            "id": "c",
+            "label": "As proof that the radio works now"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H21_final20",
+        "prompt": "In Scenario 2, what is the strongest reason not to approach the cab for identification?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All denied visitors must be photographed from the cab window"
+          },
+          {
+            "id": "b",
+            "label": "The threatening encounter requires safe withdrawal and response, not an exposed administrative check"
+          },
+          {
+            "id": "c",
+            "label": "A completed online course authorizes detention"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H21_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H21_lesson1",
+          "questionIds": [
+            "H21_check1"
+          ]
+        },
+        {
+          "lessonId": "H21_lesson2",
+          "questionIds": [
+            "H21_check2"
+          ]
+        },
+        {
+          "lessonId": "H21_lesson3",
+          "questionIds": [
+            "H21_check3"
+          ]
+        },
+        {
+          "lessonId": "H21_lesson4",
+          "questionIds": [
+            "H21_check4"
+          ]
+        },
+        {
+          "lessonId": "H21_lesson5",
+          "questionIds": [
+            "H21_check5"
+          ]
+        },
+        {
+          "lessonId": "H21_lesson6",
+          "questionIds": [
+            "H21_check6"
+          ]
+        },
+        {
+          "lessonId": "H21_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H21_final",
+          "questionIds": [
+            "H21_final1",
+            "H21_final2",
+            "H21_final3",
+            "H21_final4",
+            "H21_final5",
+            "H21_final6",
+            "H21_final7",
+            "H21_final8",
+            "H21_final9",
+            "H21_final10",
+            "H21_final11",
+            "H21_final12",
+            "H21_final13",
+            "H21_final14",
+            "H21_final15",
+            "H21_final16",
+            "H21_final17",
+            "H21_final18",
+            "H21_final19",
+            "H21_final20"
+          ]
+        },
+        {
+          "lessonId": "H21_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H21_check1": "Hold the additional task until the employer assesses its lone-work suitability and establishes the required controls. Approval for gate duty does not cover a different remote task or its rescue limitations.",
+        "H21_check2": "Restore a named available receiver and transfer the live monitoring information to the backup. A sent message does not establish that anyone accepted responsibility to act on a missed contact.",
+        "H21_check3": "Hold reliance on the arrangement until the alert and actionable location reach the responsible receiver. An alarm is useful only when the receiver can interpret it and initiate an effective response.",
+        "H21_check4": "Withdraw to the designated safe position and activate the agreed duress or emergency response. The attendant’s access role does not authorize physical confrontation or standing in a vehicle path.",
+        "H21_check5": "Activate the agreed missed-contact escalation and arrange a safe welfare verification through the responsible roles. Uncertain welfare beside a known hazard requires the planned response rather than an improvised delay.",
+        "H21_check6": "Confirm the backup’s capability and acceptance before relying on that person for lone-work monitoring. A name on a roster does not establish an available and competent response function.",
+        "H21_final1": "Approval for gate duty does not cover a different remote task or its rescue limitations. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H21_final2": "A task-specific assessment showing permitted activities, location limits and available response arrangements. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H21_final3": "Hold the additional task until the employer assesses its lone-work suitability and establishes the required controls. Approval for gate duty does not cover a different remote task or its rescue limitations. A staffing change does not remove this requirement.",
+        "H21_final4": "A sent message does not establish that anyone accepted responsibility to act on a missed contact. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H21_final5": "A confirmed receiver handover recording last contact, next due contact, location and escalation duty. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H21_final6": "Restore a named available receiver and transfer the live monitoring information to the backup. A sent message does not establish that anyone accepted responsibility to act on a missed contact. A staffing change does not remove this requirement.",
+        "H21_final7": "An alarm is useful only when the receiver can interpret it and initiate an effective response. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H21_final8": "A documented end-to-end test from the actual work location to the assigned receiving and escalation roles. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H21_final9": "Hold reliance on the arrangement until the alert and actionable location reach the responsible receiver. An alarm is useful only when the receiver can interpret it and initiate an effective response. A staffing change does not remove this requirement.",
+        "H21_final10": "The attendant’s access role does not authorize physical confrontation or standing in a vehicle path. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H21_final11": "A factual incident account and review of retreat, separation, response and staffing arrangements. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H21_final12": "Withdraw to the designated safe position and activate the agreed duress or emergency response. The attendant’s access role does not authorize physical confrontation or standing in a vehicle path. A staffing change does not remove this requirement.",
+        "H21_final13": "Uncertain welfare beside a known hazard requires the planned response rather than an improvised delay. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H21_final14": "A timeline of due contact, attempts, escalation, safe welfare confirmation and restored monitoring. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H21_final15": "Activate the agreed missed-contact escalation and arrange a safe welfare verification through the responsible roles. Uncertain welfare beside a known hazard requires the planned response rather than an improvised delay. A staffing change does not remove this requirement.",
+        "H21_final16": "A name on a roster does not establish an available and competent response function. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "H21_final17": "A safe end-to-end exercise and confirmed acceptance of the monitoring and escalation role. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "H21_final18": "Confirm the backup’s capability and acceptance before relying on that person for lone-work monitoring. A name on a roster does not establish an available and competent response function. A staffing change does not remove this requirement.",
+        "H21_final19": "The missed scheduled contact and new observation require the agreed response. A previous message establishes only what was reported at its own time.",
+        "H21_final20": "Identification paperwork does not justify moving toward a threatening person or vehicle conflict. The worker must remain within their authority and use the agreed safety response."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

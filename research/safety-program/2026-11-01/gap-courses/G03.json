@@ -1,0 +1,782 @@
+{
+  "courseId": "G03",
+  "title": "Process safety and operating-procedure competence",
+  "description": "Complete original G03 guided knowledge course: six taught lessons, two fully worked cases and 26 individually explained questions. Practical qualification and employer-specific implementation remain separate.",
+  "purpose": "Recognize loss-of-control pathways and support disciplined procedure, safeguard, change and handback decisions.",
+  "audience": [
+    "Operators",
+    "Maintenance personnel",
+    "Service contractors",
+    "Supervisors",
+    "Technical reviewers"
+  ],
+  "practicalBoundary": "Foundation knowledge does not qualify plant operation, safeguard testing, bypasses, process changes or restart. Actual process information, procedures, assessment and employer/site authority remain separate.",
+  "sources": [
+    {
+      "title": "OSHA — Process safety management, applicability and required process systems",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119"
+    },
+    {
+      "title": "OSHA — Nonmandatory PSM compliance guidance",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119AppC"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "G03_intro",
+        "title": "Start here — prevent a loss of process control",
+        "body": "# G03 — Process safety and operating-procedure competence\n\nA production facility can have an excellent personal-injury record while a wrong valve lineup, degraded safeguard or unmanaged change creates potential for a major release. Process safety focuses on preventing and limiting releases, fires, explosions and other severe process events. It asks whether the operating system remains within a justified safe envelope, not simply whether people are wearing PPE or avoiding slips.\n\nThis course is a foundation for operators, maintenance workers, service contractors, supervisors and technical reviewers. Six lessons explain process information, procedure use, operating limits, safeguards, change and disciplined handback. Two fictional cases work through the decisions. Six lesson checks and twenty final questions retain your first choices and any acknowledged corrections. Completion requires all 26 answered correctly or acknowledged remediation; the original result remains distinct from the remediated result.\n\nOSHA's U.S. process safety management standard, 1910.119, has specific coverage criteria and exceptions. The presence of hydrocarbons or an oilfield service label alone does not establish that a particular operation is legally covered. A competent employer review must determine applicability. Principles taught here can support safe judgment beyond a covered process without pretending that every facility has the same legal duties.\n\nThe course supplies no operating limits, startup sequence, isolation method, bypass permission or plant qualification. Those must come from the actual process design basis, approved operating procedures, competent technical decisions and employer/site authorization. You can learn the decisions here without manipulating a live process. A knowledge pass cannot release equipment or authorize an unassessed person to operate it.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G03_lesson1",
+        "title": "Lesson 1 — understand the process and its hazard pathways",
+        "body": "## Start with what can be released and why\n\nA process hazard can involve toxic material, flammable inventory, reactive chemistry, pressure, temperature or an incompatible combination. The event may develop through several linked failures: an unsuitable material, a blocked path, a faulty indication and a misunderstood response. Think beyond the final person touching a control. Ask which conditions could allow a release and which protections are intended to prevent or limit it.\n\nProcess safety information provides the basis for decisions. Relevant information includes chemical hazards, process technology and equipment design. In practice this can involve the identified material, a process flow description, safe operating boundaries, equipment information and the basis for protective functions. The information must match the actual installation. A drawing with the right title but an obsolete line connection can mislead a maintenance crew as badly as no drawing at all.\n\n## Read equipment identity and interfaces together\n\nUse the site's identification system to distinguish the exact equipment, line, operating area and connected systems. A familiar-looking valve is not enough. Check whether the task can affect upstream supply, downstream pressure, shared utilities, relief paths, drains, vents or another crew. The responsible technical people determine the real interfaces; a worker should report uncertainty rather than invent a process explanation from appearance.\n\nPersonal protection and process protection have different roles. A hard hat does not prevent overpressure. A sound relief arrangement does not prevent every slip. Both may matter, but a strong result in one area cannot compensate for a missing safeguard in the other. A low incident count likewise does not prove the system's protective functions are intact.\n\n## Worked example: an apparently identical branch\n\nRavi is assigned to service one branch of a fluid system. The field identification does not agree with the current work pack. A colleague says the branches are interchangeable. Ravi stops the affected intervention and asks the responsible operations/technical roles to resolve identity and connectivity. He does not trace the line by opening a drain or moving a valve. The decision preserves protection while the information gap is resolved through an authorized method.\n\nThe eventual record should distinguish the actual installation from the corrected documentation. Updating a drawing is necessary where appropriate, but does not by itself verify that isolation, maintenance or restart prerequisites have been met. Each operating decision still needs its own valid basis.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G03_lesson2",
+        "title": "Lesson 2 — use the correct procedure for the actual operating phase",
+        "body": "## Procedure identity matters as much as availability\n\nAn operating procedure turns technical intent into an executable sequence for a defined process and phase. Normal operation, initial startup, temporary operation, emergency shutdown, normal shutdown and restart after interruption can have different prerequisites and risks. A normal-running checklist is not automatically a startup instruction. The current revision must match the equipment and operating state being handled.\n\nBefore acting, understand the task's purpose, entry conditions, responsibilities, sequence, limits and expected indications. Identify the points at which a result is checked before the next step. A check is not complete merely because the operator intends to perform it later. If an expected indication is missing or conflicting, use the procedure's abnormal route and obtain clarification; do not skip ahead to make the sequence appear complete.\n\n## A procedure is not permission for everyone to perform it\n\nAn experienced mechanic may understand equipment but lack authority to operate a process. A qualified operator may still need site-specific instruction for an unfamiliar unit. Training should address the actual procedure and verify understanding, with separate practical evaluation and authorization. Contractors need the relevant process hazards and interface information without being assigned operating decisions outside their scope.\n\nReadbacks, checklists and peer checks can support reliable execution when specified. Their purpose is to confirm a critical action or state, not add decorative signatures. Record actual completion and communicate any restriction. If a procedure cannot be executed as written, stop the affected sequence and have the proper owner resolve it. Do not create a private field revision that others cannot see.\n\n## Worked example: the wrong startup checklist\n\nLena receives a checklist used before a modification. Its equipment identifiers look familiar, but the updated system now has a different monitored prerequisite. She does not assume the missing step is optional. She checks the applicable controlled startup procedure with operations and the technical owner and maintains the hold on dependent actions.\n\nThe correction should address both the current work and distribution of obsolete instructions. The team must not backfill a signature claiming the prerequisite was checked before it actually was. A later genuine check can support a later release decision while the original gap remains part of the traceable history.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G03_lesson3",
+        "title": "Lesson 3 — distinguish operating limits, alarms and protective actions",
+        "body": "## Know the safe envelope and the response boundary\n\nOperating limits describe the conditions within which the process is intended to operate safely. The applicable procedure should explain the consequence of deviation and the steps required to correct or respond. Limits may involve pressure, temperature, flow, inventory, composition or another relevant parameter. This course intentionally gives none of their values: a number valid for one system can be dangerous on another.\n\nAn alarm alerts someone to a condition; a trip or interlock may perform a protective action. They are not interchangeable, and their relationship depends on the actual design. Do not assume that the absence of an alarm proves a process variable is safe or that one protective layer makes every other check unnecessary. A faulty sensor can affect more than one displayed function, so apparent agreement is not automatically independent confirmation.\n\n## Respond to uncertainty without inventing a control move\n\nIf an indication conflicts with another or the expected response does not occur, use the approved abnormal or emergency procedure and contact the responsible operating role. A worker who is not authorized to control the process should raise the concern and keep clear rather than moving unfamiliar controls. A trained operator follows the plant-specific response, including shutdown where required. This course does not specify which valve to move or which device to reset.\n\nSchedule pressure is not an operating parameter. A customer deadline cannot redefine a limit, extend an unapproved temporary condition or make an unreliable indicator trustworthy. Likewise, a successful previous run does not prove today's indication or safeguard is sound.\n\n## Worked example: two readings disagree\n\nA panel display shows the expected pressure while a local indication differs materially. A supervisor suggests choosing the favorable reading to finish a transfer. The operator does not average the readings or select the convenient one. The actual approved response to uncertain process state governs. The team identifies the affected operation, communicates the restriction and obtains competent evaluation of the instruments and process before relying on the disputed condition.\n\nAfterward, distinguish the faulty instrument from the process state during the event. Finding an instrument defect later does not prove every earlier condition was acceptable. Preserve the uncertainty and evaluate its implications using the actual evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G03_lesson4",
+        "title": "Lesson 4 — preserve safeguards and mechanical integrity",
+        "body": "## A safeguard must be suitable and available\n\nSafeguards can include design features, containment, protective instrument functions, relief arrangements, detection, operating procedures and emergency provisions. Each has a function and conditions needed to work. A relief device recorded on an asset list cannot protect the process if its required path is improperly blocked. A detector with an unresolved fault cannot be treated as ready merely because a dashboard icon remains green.\n\nMechanical integrity addresses the condition of relevant equipment through appropriate inspection, testing, maintenance and correction of deficiencies. The technical requirements must match the equipment and service. Maintenance completion and operating readiness are related but different: fitting a replacement does not necessarily complete required checks, restore every protective function or authorize return to service.\n\n## Bypasses and temporary arrangements need real control\n\nA disabled or bypassed safeguard changes the protection available. Do not silence, defeat or reset a protection just to stop an inconvenience or complete a test. The actual site's authorized process determines whether a temporary arrangement is permissible, what technical review is needed, what alternative protection applies and how the condition is tracked and restored. This course grants no bypass permission.\n\nTemporary conditions should be visible at the point of operation and through handover. A note in a private maintenance diary is inadequate when operators rely on the safeguard. Check duration, scope, responsible role and restoration criteria through the applicable procedure. An authorized temporary decision is not proof that the permanent protection has been repaired.\n\n## Worked example: the maintenance shortcut\n\nA service technician discovers that a protective function prevents the planned test. Someone proposes disconnecting the input briefly and reconnecting it before shift end. The technician stops the unsupported action and routes the conflict through the responsible operating and technical authorities. The test plan and protective requirements must be reconciled without improvisation.\n\nWhen the approved work is complete, the team verifies the actual restored configuration and any required functional evidence. A statement that it should be back to normal is not the same as confirmation. If restoration cannot be verified, the remaining condition and its operating restrictions must be handed over explicitly rather than hidden by closing the maintenance ticket.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G03_lesson5",
+        "title": "Lesson 5 — manage changes before they alter the hazard",
+        "body": "## Similar appearance does not prove replacement in kind\n\nA change can involve equipment, material, software, process conditions, operating procedure or an organizational arrangement that affects safe execution. The site's management-of-change process establishes what requires review. Replacement in kind is a bounded determination that the replacement satisfies the existing design specification; a supplier describing an item as equivalent does not make that technical decision.\n\nReview what changes, why it is proposed, the technical basis, safety implications, operating-procedure effects, required authorization and necessary duration if temporary. Include affected workers and interfaces. A change can introduce a new hazard or weaken an existing protective function even when its immediate purpose is reliability or efficiency. Do not treat a lower purchase price or identical connection as evidence of compatibility with the process service.\n\n## Carry the change into real readiness\n\nAccepted technical review must reach drawings, equipment information, procedures, training and the people performing the work. An approved change file in the office is not enough if the next shift still uses the old startup sequence. Some changes need a pre-startup safety review under applicable requirements and the site's system. That review checks readiness; it is not simply a celebration that construction is complete.\n\nContractors should communicate proposed deviations from the accepted scope rather than making them silently. If a change is discovered during a task, preserve the safe condition and obtain the required review before continuing dependent work. A risk-assessment signature for the old method does not automatically accept the new one.\n\n## Worked example: a different replacement component\n\nThe specified component is unavailable, and procurement offers one with the same fittings but a different material and operating characteristic. The installer cannot approve process compatibility from the fitting size. The technical owner evaluates the actual specification, hazards and affected procedure. Pending that decision, the component is not represented as an accepted replacement in kind.\n\nIf the change is accepted, complete the required updates and readiness checks before restart. Keep original and revised records traceable. A later discovery that the replacement was unsuitable requires prompt protective action and review of affected equipment, not editing the specification to make the installed item appear compliant.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G03_lesson6",
+        "title": "Lesson 6 — hand over, return to service and learn from weak signals",
+        "body": "## Transfer the actual state, not a reassuring summary\n\nA handover should tell the receiving role what system is affected, operating state, open permits or holds, unavailable safeguards, temporary arrangements, abnormal indications and outstanding actions. Identify who has authority to clear each restriction. Confirm receipt and understanding where the procedure requires it. Shift change does not expire an operating hold, and an incoming operator should not have to infer a plant's state from its sound or appearance.\n\nReturn to service depends on the actual maintenance, operating and technical prerequisites. Work completion, permit handback, restoration of isolations and safeguards, current procedures and necessary training may have separate owners. The responsible authority coordinates them under the applicable process. A contractor's statement that the repair is finished does not alone authorize startup of the plant.\n\n## Treat abnormal events as information\n\nRepeated trips, unexplained leaks, unreliable indications or recurring temporary arrangements can signal a deeper weakness. Record and escalate them through the relevant process rather than normalizing them because no major event occurred. Incident and near-miss review should examine failed controls and contributing system conditions. A reminder to operators may be insufficient when the process information, equipment or plan is wrong.\n\nUse follow-up that tests the intended correction in relevant conditions. A closed action proves a workflow state, not necessarily a reliable safeguard. Preserve event history and changed decisions. Share deidentified useful learning with affected crews, and update the actual work instructions where necessary.\n\n## Worked example: an unfinished restoration at night\n\nAt the end of maintenance, one required safeguard-restoration check remains pending. The outgoing supervisor describes the equipment as repaired. The incoming operator asks for the actual status and keeps the dependent start on hold. The handover is corrected to identify the pending check, responsible role and release authority.\n\nWhen the check is genuinely completed and the authorized readiness decision is made, the next shift can act on a supported basis. The earlier handover gap should still be reviewed: why did repaired become ready in the message? Improving the communication system and observing later handovers is more useful than asking everyone to sign a form saying they will be careful.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G03_scenarios",
+        "title": "Two applied process-safety cases with worked solutions",
+        "body": "## Case 1: a substitute part and a rushed restart\n\nA maintenance contractor replaces a component on a process system. The approved specification is unavailable locally, so a visually similar item with different material information is installed. Procurement calls it equivalent. The old operating checklist remains in the work pack, and a safeguard restoration check is still pending. The customer asks the night shift to restart immediately because the repair ticket is marked complete.\n\n### Worked solution: identify the independent gaps\n\nThere are at least three unresolved prerequisites: technical suitability of the replacement, applicability of the operating procedure and completion of the safeguard restoration. A completed repair ticket proves none of them by itself. The responsible operating role keeps the dependent restart on hold and communicates the actual state to affected people. The contractor does not move process controls to demonstrate that the part seems to work.\n\nThe technical owner checks the specification and determines whether the proposed replacement is in kind or a change requiring the site's management-of-change process. Matching fittings are not the technical basis. If a change is accepted, its consequences for equipment information, operating steps, limits, inspection and training must be addressed. Do not revise the drawing retrospectively to claim the original installation was already approved.\n\n### Worked solution: establish real release evidence\n\nOperations obtains the applicable controlled procedure for the actual configuration and phase. The responsible qualified personnel complete the required restoration and readiness checks. Any required pre-startup review and authorizations are completed under the actual system. The incoming shift receives the supported status, remaining restrictions and who authorized the release. If one condition remains unresolved, the other completed checks do not average it away.\n\nThe later review should examine how procurement, installation and ticket status became disconnected. Useful actions might improve specification verification, change notification and handback language, subject to competent review. Effectiveness needs later evidence that replacement decisions and restart handovers follow the corrected process. An invoice for the proper part or a new form alone is not proof that the system works.\n\n## Case 2: a recurring alarm becomes normal practice\n\nDuring a transfer, operators receive a recurring abnormal indication. A colleague says it happens frequently and suggests suppressing the input to finish the transfer. A local indication disagrees with the panel display. A temporary arrangement mentioned last week has no clear current status in the shift log. The next crew expects an ordinary handover and has not been told a safeguard may be unavailable.\n\n### Worked solution: do not normalize uncertain protection\n\nFrequent occurrence does not prove the condition is benign. The disagreement and unclear temporary status mean the process state or protection basis cannot be assumed from the favorable display. The authorized operator follows the actual abnormal/emergency procedure and coordinates with the responsible operations and technical roles. This case deliberately supplies no valve movement or shutdown sequence; inventing one would exceed a foundation course.\n\nDo not suppress the input through an improvised workaround. The site's formal route governs any proposed temporary protection change, including technical review, authority, suitable alternative measures and restoration. A past temporary decision is not necessarily current, and an undocumented memory is not a valid release basis. Record and communicate the actual restriction to the incoming crew rather than reporting normal operation.\n\n### Worked solution: correct the cause and test the follow-through\n\nCompetent personnel examine the process and instruments using appropriate safe methods. Finding a faulty sensor later can explain an indication but does not automatically prove that all earlier conditions stayed within limits. Preserve what was known and uncertain at the time. Investigate recurring signals, temporary arrangements and operating pressure as supported factors rather than blaming the last operator alone.\n\nBefore renewed reliance, complete the applicable technical restoration and operating release. Hand over actual evidence and any remaining limits. Later assurance should check that the corrected indication and safeguard perform as intended and that crews no longer rely on an informal suppression habit. A stable-looking dashboard immediately after reset is not a complete effectiveness conclusion.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G03_assessment",
+        "title": "Final assessment — twenty process decisions",
+        "body": "Answer each question using the process phase, authority and evidence given. First answers remain recorded. For an incorrect answer, read and explicitly acknowledge the specific correction. All six checks and twenty final questions require a correct answer or acknowledged remediation; the remediated result does not overwrite the original score.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "G03_finish",
+        "title": "Finish — plant-specific competence remains separate",
+        "body": "## What this knowledge result means\n\nCompletion requires all 26 answered correctly or acknowledged remediation, retaining first-answer and remediated scores separately. You have studied process-safety decisions and fictional examples. You have not demonstrated the ability to operate a real unit, interpret all its hazards, test a safeguard or authorize restart.\n\n## What the employer must establish\n\nThe employer and competent technical authorities determine legal applicability, process hazards, design information, operating limits, approved procedures, safeguards and change/release responsibilities. OSHA 1910.119 has specific coverage and exceptions; a service name does not settle that determination. Current plant information and accessible procedures must be available to the people relying on them. Contractor interfaces must identify the actual work and the limits of each party's authority.\n\nBefore operational duties, a worker needs the relevant process- and role-specific training, verification of understanding, supervised practice and practical assessment under the actual program. An appropriate assessor should test routine execution, phase identification, abnormal recognition, safe stop/escalation decisions and handover using suitable controlled methods. Do not defeat a live safeguard or create a process upset to make training realistic. Record unassessed items and retain restrictions until the required capability and authority are established.\n\nThis course issues no operator license, bypass permit, change approval, isolation authorization or technical certification. A written pass cannot replace a pre-startup review or clear a site hold. If the governing procedure, responsible role or required condition cannot be identified, keep that uncertainty visible and resolve it through the actual operating system before relying on the affected work.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "G03_check1",
+        "prompt": "The field equipment identity conflicts with the work pack. What should the worker do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold the affected intervention and obtain authorized resolution of identity and connectivity."
+          },
+          {
+            "id": "b",
+            "label": "Open a drain to see which branch is live."
+          },
+          {
+            "id": "c",
+            "label": "Assume similar-looking branches are interchangeable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G03_check2",
+        "prompt": "A normal-operation checklist is offered for startup after a modification. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use it because it has the correct company logo."
+          },
+          {
+            "id": "b",
+            "label": "Verify the current procedure for the actual configuration and operating phase before dependent actions."
+          },
+          {
+            "id": "c",
+            "label": "Skip unfamiliar prerequisites to preserve the old sequence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G03_check3",
+        "prompt": "Two process readings disagree. Which response is sound?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Average the readings and continue automatically."
+          },
+          {
+            "id": "b",
+            "label": "Choose the reading that meets the delivery target."
+          },
+          {
+            "id": "c",
+            "label": "Use the approved abnormal-response route and competent evaluation rather than choosing the favorable reading."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G03_check4",
+        "prompt": "A safeguard obstructs a planned test. Can the technician disconnect it briefly on personal initiative?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; resolve the test/protection conflict through the authorized operating and technical process."
+          },
+          {
+            "id": "b",
+            "label": "Yes; any short bypass is automatically acceptable."
+          },
+          {
+            "id": "c",
+            "label": "Yes; reconnecting it later erases the need for review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G03_check5",
+        "prompt": "A replacement has matching fittings but different material information. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approval based only on appearance."
+          },
+          {
+            "id": "b",
+            "label": "A competent specification and change review before treating it as an accepted replacement."
+          },
+          {
+            "id": "c",
+            "label": "A supplier invoice declaring it equivalent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G03_check6",
+        "prompt": "One required restoration check remains pending at shift change. What should handover say?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Call the system ready because maintenance is mostly complete."
+          },
+          {
+            "id": "b",
+            "label": "Let the incoming shift infer status from the equipment sound."
+          },
+          {
+            "id": "c",
+            "label": "State the pending condition, restriction, responsible role and release authority explicitly."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G03_final1",
+        "prompt": "Does an oilfield service label alone establish OSHA PSM coverage?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; competent review must apply actual coverage criteria and exceptions."
+          },
+          {
+            "id": "b",
+            "label": "Yes; every hydrocarbon task is legally identical."
+          },
+          {
+            "id": "c",
+            "label": "No safety practice applies unless the company chooses a label."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G03_final2",
+        "prompt": "What is a key distinction between personal and process safety?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A hard hat prevents every loss of containment."
+          },
+          {
+            "id": "b",
+            "label": "Process safety addresses severe process-event pathways and cannot be inferred solely from a good personal-injury record."
+          },
+          {
+            "id": "c",
+            "label": "A low injury count proves protective systems function."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G03_final3",
+        "prompt": "A correct-looking drawing shows an obsolete connection. What matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its title alone makes it reliable."
+          },
+          {
+            "id": "b",
+            "label": "A worker should move valves until the drawing appears correct."
+          },
+          {
+            "id": "c",
+            "label": "Resolve the mismatch with actual installation information before relying on the work boundary."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G03_final4",
+        "prompt": "Which information supports process decisions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Relevant chemical hazards, process technology and equipment design information matching the installation."
+          },
+          {
+            "id": "b",
+            "label": "Only the number of pages in a manual."
+          },
+          {
+            "id": "c",
+            "label": "Only a statement that the crew is experienced."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G03_final5",
+        "prompt": "A mechanic has equipment experience. Does reading this course authorize plant operation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; all maintenance experience transfers automatically."
+          },
+          {
+            "id": "b",
+            "label": "No; plant- and role-specific competence and authorization remain separate."
+          },
+          {
+            "id": "c",
+            "label": "Yes; a written pass is a startup permit."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G03_final6",
+        "prompt": "An expected indication is missing during a procedure. What should happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Sign the check now and perform it later."
+          },
+          {
+            "id": "b",
+            "label": "Skip ahead to make the sequence look complete."
+          },
+          {
+            "id": "c",
+            "label": "Use the applicable abnormal route and resolve the uncertainty before unsupported dependent steps."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G03_final7",
+        "prompt": "What is wrong with privately editing a field procedure to make the job possible?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It bypasses the required competent review and controlled communication to affected users."
+          },
+          {
+            "id": "b",
+            "label": "Nothing if only one worker uses it."
+          },
+          {
+            "id": "c",
+            "label": "The edit automatically changes the design basis."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G03_final8",
+        "prompt": "Are alarms and trips interchangeable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; either one proves every protective layer works."
+          },
+          {
+            "id": "b",
+            "label": "No; their functions and relationship depend on the actual design."
+          },
+          {
+            "id": "c",
+            "label": "Yes; an alarm always shuts the plant down automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G03_final9",
+        "prompt": "Can a delivery deadline redefine a process operating limit?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; customer urgency is a safety parameter."
+          },
+          {
+            "id": "b",
+            "label": "Yes; a manager can erase any limit verbally."
+          },
+          {
+            "id": "c",
+            "label": "No; schedule pressure does not supply technical justification or authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G03_final10",
+        "prompt": "A relief device is on the asset list. What else matters?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its actual suitable condition and required functional path/configuration."
+          },
+          {
+            "id": "b",
+            "label": "Nothing; listing alone proves protection."
+          },
+          {
+            "id": "c",
+            "label": "Only whether its photograph is recent."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G03_final11",
+        "prompt": "Maintenance is complete. Does that alone authorize startup?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; a closed ticket replaces every operating check."
+          },
+          {
+            "id": "b",
+            "label": "No; required restoration, operating readiness and release conditions must also be satisfied."
+          },
+          {
+            "id": "c",
+            "label": "Yes; the contractor decides all plant operating authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G03_final12",
+        "prompt": "A temporary protection arrangement is mentioned only in a private diary. What is missing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A larger diary."
+          },
+          {
+            "id": "b",
+            "label": "Proof that temporary arrangements never matter."
+          },
+          {
+            "id": "c",
+            "label": "Visible controlled status and communication to the people relying on that protection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G03_final13",
+        "prompt": "Who determines whether a proposed replacement is in kind?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The appropriate technical/authorized process using the actual specification and service."
+          },
+          {
+            "id": "b",
+            "label": "Any buyer who sees matching fittings."
+          },
+          {
+            "id": "c",
+            "label": "The installer based only on appearance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G03_final14",
+        "prompt": "A change is approved in the office but workers retain the old startup instructions. What is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing because the approval signature exists."
+          },
+          {
+            "id": "b",
+            "label": "Complete applicable procedure/information updates, communication and training before dependent work."
+          },
+          {
+            "id": "c",
+            "label": "Delete the old job record to conceal the mismatch."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G03_final15",
+        "prompt": "What does a pre-startup readiness review not represent?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A process for examining readiness where required."
+          },
+          {
+            "id": "b",
+            "label": "A point for checking necessary updates and preparation."
+          },
+          {
+            "id": "c",
+            "label": "A substitute for actually satisfying the applicable safety prerequisites."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G03_final16",
+        "prompt": "A recurring trip causes no injury. What is appropriate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Report and examine it as a possible weak signal using the relevant process."
+          },
+          {
+            "id": "b",
+            "label": "Normalize it and suppress it informally."
+          },
+          {
+            "id": "c",
+            "label": "Delete it from history because consequences were small."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G03_final17",
+        "prompt": "A new shift begins with an open operating hold. Does the hold expire?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes; every shift starts with a clean slate."
+          },
+          {
+            "id": "b",
+            "label": "No; actual clearance must follow the designated authority and prerequisites."
+          },
+          {
+            "id": "c",
+            "label": "Yes; the incoming worker can infer clearance from silence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "G03_final18",
+        "prompt": "What best tests a handover correction?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The new form has more fields."
+          },
+          {
+            "id": "b",
+            "label": "The training invoice was paid."
+          },
+          {
+            "id": "c",
+            "label": "Later representative handovers accurately carry actual state, restrictions and clearance responsibility."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "G03_final19",
+        "prompt": "In Case 1, which unresolved point can the completed repair ticket offset?",
+        "options": [
+          {
+            "id": "a",
+            "label": "None; suitability, procedure and restoration prerequisites each need their actual supported resolution."
+          },
+          {
+            "id": "b",
+            "label": "Any missing technical condition if the score is high."
+          },
+          {
+            "id": "c",
+            "label": "Every operating condition once a contractor signs."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "G03_final20",
+        "prompt": "In Case 2, a faulty sensor is found later. What follows about earlier process conditions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "All previous uncertainty automatically disappears."
+          },
+          {
+            "id": "b",
+            "label": "Evaluate the actual evidence; the defect alone does not prove every earlier condition was safe."
+          },
+          {
+            "id": "c",
+            "label": "Every earlier reading can be rewritten as normal."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "G03_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G03_lesson1",
+          "questionIds": [
+            "G03_check1"
+          ]
+        },
+        {
+          "lessonId": "G03_lesson2",
+          "questionIds": [
+            "G03_check2"
+          ]
+        },
+        {
+          "lessonId": "G03_lesson3",
+          "questionIds": [
+            "G03_check3"
+          ]
+        },
+        {
+          "lessonId": "G03_lesson4",
+          "questionIds": [
+            "G03_check4"
+          ]
+        },
+        {
+          "lessonId": "G03_lesson5",
+          "questionIds": [
+            "G03_check5"
+          ]
+        },
+        {
+          "lessonId": "G03_lesson6",
+          "questionIds": [
+            "G03_check6"
+          ]
+        },
+        {
+          "lessonId": "G03_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "G03_assessment",
+          "questionIds": [
+            "G03_final1",
+            "G03_final2",
+            "G03_final3",
+            "G03_final4",
+            "G03_final5",
+            "G03_final6",
+            "G03_final7",
+            "G03_final8",
+            "G03_final9",
+            "G03_final10",
+            "G03_final11",
+            "G03_final12",
+            "G03_final13",
+            "G03_final14",
+            "G03_final15",
+            "G03_final16",
+            "G03_final17",
+            "G03_final18",
+            "G03_final19",
+            "G03_final20"
+          ]
+        },
+        {
+          "lessonId": "G03_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "G03_check1": "Uncertain identity undermines the work boundary. Resolve it through the proper operating/technical route without introducing an exposure or improvising a test.",
+        "G03_check2": "Procedure scope includes phase and configuration. A normal checklist or obsolete revision cannot establish the new startup prerequisites.",
+        "G03_check3": "Conflicting evidence creates uncertainty; an average or convenient reading does not verify the real process state. The actual procedure and authorized roles govern the response.",
+        "G03_check4": "Disabling a safeguard changes protection. This course gives no bypass permission; the proper controlled route must address the actual conflict and prerequisites.",
+        "G03_check5": "Connection compatibility does not establish suitability for the process service. The technical owner determines specification match and whether change control is required.",
+        "G03_check6": "Actual state and outstanding prerequisites must transfer. Shift change does not clear a hold, and repaired cannot be equated with ready without its required evidence.",
+        "G03_final1": "Applicability follows actual operations and governing criteria. Useful principles do not justify claiming the same legal coverage for every service.",
+        "G03_final2": "Personal protection and process-event prevention have different functions. Good results in one area do not verify the controls needed in the other.",
+        "G03_final3": "The information must match the real system. An obsolete connection can mislead safe work; resolve the discrepancy without unauthorized physical manipulation.",
+        "G03_final4": "A technical basis needs relevant current information. Document volume and experience do not establish actual hazards, boundaries or equipment design.",
+        "G03_final5": "Foundation knowledge does not establish assessed performance or employer/site authority for a real operating role.",
+        "G03_final6": "An expected prerequisite cannot be represented as verified when evidence is absent. Follow the actual procedure and authority rather than backfilling completion.",
+        "G03_final7": "A private revision can create incompatible instructions. Route the difficulty through the proper procedure/change owner and communicate an approved resolution.",
+        "G03_final8": "An alarm may alert while a trip may act. Understand the real design rather than inferring automatic protection from a label.",
+        "G03_final9": "Limits come from the relevant technical basis and controlled decisions. A deadline cannot turn an unsupported deviation into safe operation.",
+        "G03_final10": "A listed safeguard may be ineffective if condition or configuration prevents its function. Verify the actual relevant readiness through competent methods.",
+        "G03_final11": "Repair completion and plant release are distinct. The responsible operating system coordinates all applicable prerequisites before startup.",
+        "G03_final12": "Affected operators need the real protection state and restrictions. A private note cannot serve as a reliable operating handover.",
+        "G03_final13": "Replacement-in-kind is a supported technical determination, not a purchasing description or visual assumption.",
+        "G03_final14": "An approved change must reach operational users. Preserving history and issuing usable current instructions are different from leaving obsolete guidance active.",
+        "G03_final15": "A review must examine real prerequisites. A label or meeting does not make unfinished checks complete or replace the evidence they require.",
+        "G03_final16": "Repeated abnormal events can reveal degraded controls. Lack of injury does not establish that the condition is harmless or justify suppression.",
+        "G03_final17": "A shift boundary is not technical release evidence. Transfer the restriction and actual clearance responsibility explicitly.",
+        "G03_final18": "Effectiveness concerns use in relevant work, not document appearance or purchasing. Observe whether the intended communication actually occurs.",
+        "G03_final19": "Independent prerequisites cannot be averaged away by administrative completion. Keep the dependent restart held until its actual requirements are met.",
+        "G03_final20": "A later finding may explain an indication without establishing the full earlier process state. Preserve evidence and uncertainty rather than rewriting history."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

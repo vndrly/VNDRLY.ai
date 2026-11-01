@@ -1,0 +1,793 @@
+{
+  "familyId": "E06",
+  "title": "Lifting gear, access equipment and fall protection inspection",
+  "description": "Complete guided E06 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Ensure critical load-bearing equipment is fit and traceable.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Practical assessment must match the role: user pre-use checks, competent examination, rigging, scaffold erection or inspection, and fall-protection use or design are distinct capabilities. Qualified assessors must observe the actual equipment class and method. This course does not grant lifting, scaffold, anchorage design or rescue authority.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Lifting gear, access equipment and fall protection inspection",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y17-95-64-875_0.pdf"
+    },
+    {
+      "title": "Inventory source 2: Lifting gear, access equipment and fall protection inspection",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Updated_Lift%20Plan%20Template_High-Critical%20Cat%202%20%203_Rev1_2024.pdf"
+    },
+    {
+      "title": "Inventory source 3: Lifting gear, access equipment and fall protection inspection",
+      "url": "https://www.chevronwithtechron.com/en_us/home/safe-work-practices.html"
+    },
+    {
+      "title": "OSHA: Slings",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.184"
+    },
+    {
+      "title": "OSHA: Scaffolds",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.451"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "E06_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# E06: Lifting gear, access equipment and fall protection inspection\n\nThis original VNDRLY course teaches decisions for service-specific: lifting and elevated work. Its purpose is to ensure critical load-bearing equipment is fit and traceable. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E06_lesson1",
+        "title": "Lesson 1: Separate equipment classes and protective functions",
+        "body": "Lifting gear, access equipment and fall protection share a need for traceable assurance, but they perform different functions. A sling supports a load, a scaffold or ladder provides access, and a harness system protects a person under a defined arrangement. A rating or inspection for one purpose does not establish suitability for another.\n\nIdentify the actual item, intended use, manufacturer limitations and required competent inspection or examination. Never use a cargo tie-down as a lifting sling or a convenient handrail as an unverified fall-protection anchor. Similar appearance is not technical equivalence.\n\nWorked example: a worker proposes using a lifting sling to secure a person because it is strong. Human fall protection requires its own approved complete system, compatibility and technical basis; strength alone does not establish that use.\n\n### Applying the mechanism\n\nA user should first ask what the item is designed to support or prevent. Lifting gear carries a material load through an approved configuration. Access equipment supports a person while reaching the work. A personal fall-protection system manages a specific fall exposure and requires the correct connectors, anchors, clearance and rescue. These functions can involve different directions and types of loading even when the material looks similar. A catalog rating only applies within its defined use. The safe selection process therefore checks intended function before comparing capacity. This prevents a common mistake: choosing the strongest-looking available item and inventing a use that its manufacturer and technical assessment never approved.\n\n### Decision principles\n\nSuitability follows intended performance and use conditions. Visual similarity or convenience cannot establish a safe substitute.\n\nCargo restraint and lifting impose different requirements and use conditions. A device must be approved and rated for the actual function.\n\nA handrail’s purpose and capacity may not support fall-protection loads. Appearance cannot establish an approved anchorage system.\n\nAn item’s storage location is not its identity. When equipment moves between crews, the accepted records and restrictions must still follow the actual item. A borrowing arrangement should include the required condition and suitability check; informal transfer does not turn another crew’s recent successful use into proof for a different task.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E06_lesson2",
+        "title": "Lesson 2: Maintain identity, ratings and required status",
+        "body": "Traceability connects an item to its rating, inspection, examination, repairs and retirement criteria. Preserve manufacturer markings and assigned identifiers where required. Color coding can communicate a local status but does not replace the underlying item-specific evidence or a current pre-use check.\n\nSet inspection and examination requirements from applicable rules, manufacturer information and competent assessment. There is no universal interval for every sling, ladder and harness. Rental equipment needs clear responsibilities and accepted status for the actual delivered items.\n\nWorked example: a sling has a current-looking color mark but its identification is unreadable. The user holds it for competent resolution rather than assuming the color establishes capacity.\n\n### Applying the mechanism\n\nAn inspection record has value only when the user can connect it to the item in hand. A batch certificate may support manufacture, while periodic examination and event history may be item-specific. The equipment program defines how those records fit together. A replacement tag must follow an authorized traceability process; a user cannot copy the rating from a similar item because the original tag was lost. Likewise, a local color mark may show that a review period was addressed without stating every limitation. Before selecting equipment, read the actual identity and required status, then perform the pre-use check. If either technical identity or current condition cannot be established, hold reliance rather than combining two uncertain clues into a pass.\n\n### Decision principles\n\nAssurance evidence must follow the item being used. Without that link, another item’s records can be mistaken for proof of suitability.\n\nEquipment functions and deterioration differ. The program must establish the correct requirement for each class and service.\n\nThe delivered equipment can have damage or mismatched identity. The user must establish accepted status and perform assigned checks before reliance.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E06_lesson3",
+        "title": "Lesson 3: Inspect lifting gear against its own criteria",
+        "body": "Lifting gear checks cover the actual type and manufacturer criteria: identification, wear, cuts, deformation, corrosion, heat or chemical damage, stitching, hooks, latches and connectors as relevant. Do not apply one rejection rule blindly to every material. A competent examiner handles technical disposition beyond the user’s scope.\n\nInspect in a safe unloaded arrangement. Never proof-test questionable gear by lifting a valuable load or placing people nearby. Configuration, hitch, angle and edge conditions still affect suitability even when an item passes its condition check.\n\nWorked example: an intact sling is selected for a sharp-edged load without suitable protection. The inspection pass does not establish that this configuration is acceptable; the lift plan must address the edge and geometry.\n\n### Applying the mechanism\n\nConfiguration changes the forces carried by lifting gear. Sling legs, hitches and attachment directions must match the competent lift plan and applicable rated information. An item can be undamaged yet overloaded in an unsuitable geometry. Edges can cut or concentrate load, and heat or chemicals can degrade materials that look acceptable from a distance. The user’s inspection should therefore include the proposed contact points and environment as well as the loose item on the rack. If the lift requires a configuration the user does not understand, the correct response is the qualified rigger or planner, not a rough calculation made beside a suspended load. Condition inspection supports selection; it does not replace lifting engineering.\n\n### Decision principles\n\nDifferent materials and components have different deterioration and rejection conditions. The check must use the relevant criteria.\n\nAn improvised trial can fail violently and does not establish technical rating. Testing requires its own safe qualified method.\n\nTechnical disposition needs suitable expertise and evidence. Schedule pressure cannot classify uncertain load-bearing damage as acceptable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E06_lesson4",
+        "title": "Lesson 4: Inspect access equipment and fall protection distinctly",
+        "body": "Access checks examine the relevant structure, feet, rungs, connections, platform, support and protective components. Scaffold inspection and authorization follow the competent system; ordinary users do not alter or certify it. Portable access must match the task and support conditions.\n\nFall-protection checks examine the specific harness, lanyard, connectors and other system parts under manufacturer criteria. Cuts, damaged stitching, corrosion, deformation or an arrest event may require removal and competent disposition. A harness pass does not prove anchorage, clearance or rescue adequacy.\n\nWorked example: a harness is undamaged but the proposed anchor is unverified. Work remains held until the complete system is technically established; the equipment inspection does not certify the installation.\n\n### Applying the mechanism\n\nFor access equipment, inspect the features that keep the worker supported and separated from a fall: the structure, connections, feet or base, platform and required protective components. For personal fall protection, inspect the actual webbing or other material, stitching, connectors and event indicators where provided under the manufacturer’s criteria. Neither class should be judged only by cleanliness. A clean ladder can have a damaged structural member, and a clean harness can have chemical degradation. Users must know which findings they can classify and which require competent disposition. Where equipment is already installed, its setup and support also need acceptance. A sound portable item placed on unsuitable support remains an unsafe access arrangement.\n\n### Decision principles\n\nScaffold changes can affect stability and protection. User awareness does not grant erection, alteration or competent inspection authority.\n\nArrest forces can impair equipment beyond visible damage. Manufacturer and program requirements determine inspection or retirement.\n\nAn intact ladder or platform can still be wrong for the task. Selection and setup must fit actual use conditions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E06_lesson5",
+        "title": "Lesson 5: Quarantine, store and retire without recirculation",
+        "body": "Control damaged, unidentified, overdue or rejected equipment physically and administratively. A common storage bin must not mix ready and held items. Protect accepted equipment from moisture, chemicals, sunlight, heat, abrasion and other conditions relevant to its material and manufacturer instructions.\n\nRepairs require the approved qualified method; some items cannot be field repaired. Retired equipment must be disposed of so it cannot be mistaken for usable gear. Do not cut identifiers off and then return an item as an anonymous spare.\n\nWorked example: a rejected sling is left near usable stock for later disposal. The owner secures its disposition and status immediately, preventing a worker from borrowing it during a busy shift.\n\n### Applying the mechanism\n\nStorage should be designed around how people issue and return equipment. A clearly controlled rejected area prevents a busy worker from taking an item whose defect was reported on a different shift. Ready stock should be protected from sharp surfaces, incompatible chemicals, excessive heat and other identified degradation sources. Returned gear needs a defined check before it becomes ready again; placing it back on the hook is not an inspection. If an item was exposed to an abnormal event, preserve that information even when no visible damage is found. Retirement should make the decision durable through the approved disposal process. Leaving a rejected item available as an unofficial emergency spare defeats the reason it was rejected.\n\n### Decision principles\n\nStorage can degrade protective and load-bearing equipment. The program must preserve condition, not merely inventory count.\n\nUnapproved repairs can change strength or protective performance. Some equipment requires retirement rather than repair.\n\nA retired item must not become a hidden fallback. Its final disposition must preserve the rejection decision and prevent inadvertent use.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E06_lesson6",
+        "title": "Lesson 6: Release with evidence and qualify the assigned role",
+        "body": "The responsible owner releases an item only after required inspection, examination, repair and acceptance are complete. The record identifies the actual item, criteria, findings, examiner and limitations. Current status must agree across the item, storage and issue system.\n\nReview recurring findings to improve selection, handling, storage and maintenance. Practical qualification distinguishes users, examiners, riggers, scaffold personnel and fall-protection specialists. A written awareness score cannot establish all those roles.\n\nWorked example: several harnesses show similar chemical damage. The owner controls affected equipment and reviews the exposure and storage arrangement, rather than repeatedly replacing harnesses without addressing the cause.\n\n### Applying the mechanism\n\nAssessors should distinguish recognition from technical examination. A user may correctly identify a cut sling and remove it from service without being qualified to measure remaining strength or approve repair. An examiner may assess one equipment class without authority to design a fall-protection installation. A scaffold user may recognize a missing rail without authority to rebuild the scaffold. Record these role boundaries in the competence matrix so a broad training title is not mistaken for unlimited authority. In practical evaluation, ask the learner to explain the item’s function, identify applicable criteria, perform safe checks and make the correct hold or escalation decision. Do not require hazardous loading to prove that the learner can recognize an uncertain item.\n\n### Decision principles\n\nItem-specific evidence supports a defensible status. Aggregate counts cannot establish that the selected item was examined and accepted.\n\nTechnical examination requires demonstrated skill for the class and method. Ownership and written awareness are not substitutes.\n\nAn item can be in good condition yet unsuitable for the load or task. Selection and site readiness need their own decisions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E06_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: A color-coded sling\n\nA sling has the current local color but its rating is unreadable and it has been stored beside chemicals. The crew needs a quick lift.\n\n**Worked decision and reasoning.** The sling is not used. The owner resolves identity and condition through the competent process or supplies verified suitable gear. The lift plan still checks the actual configuration and edge conditions. The color is preserved as one status cue but is not treated as evidence of rating or chemical integrity.\n\n### Scenario 2: The undamaged harness\n\nA harness passes inspection. A worker proposes attaching it to a nearby rail without a clearance or rescue review.\n\n**Worked decision and reasoning.** The work remains held. A qualified person establishes the complete fall-protection arrangement, including suitable anchorage, connectors, geometry, clearance and feasible rescue. The worker receives practical instruction for that system before authorization. The harness inspection remains valid evidence of that component’s checked condition, not a certificate for the whole installation.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E06_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E06_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nPractical assessment must match the role: user pre-use checks, competent examination, rigging, scaffold erection or inspection, and fall-protection use or design are distinct capabilities. Qualified assessors must observe the actual equipment class and method. This course does not grant lifting, scaffold, anchorage design or rescue authority.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "E06_check1",
+        "prompt": "A strong lifting sling is proposed as personal fall protection. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use a system approved and assessed for protecting a person, not strength by analogy."
+          },
+          {
+            "id": "b",
+            "label": "Accept it because its load rating is high."
+          },
+          {
+            "id": "c",
+            "label": "Use it briefly without review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E06_final_1_1",
+        "prompt": "What should equipment selection begin with?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only apparent strength."
+          },
+          {
+            "id": "b",
+            "label": "Only what is nearby."
+          },
+          {
+            "id": "c",
+            "label": "The actual protective function, intended use and manufacturer limitations."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E06_final_1_2",
+        "prompt": "Can a cargo tie-down automatically be used as a lifting sling?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if its color matches other slings."
+          },
+          {
+            "id": "b",
+            "label": "No; lifting suitability must be specifically established."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the strap is wide."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E06_final_1_3",
+        "prompt": "Does a handrail automatically qualify as an anchor?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; a qualified assessment must establish anchorage suitability."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if it feels solid."
+          },
+          {
+            "id": "c",
+            "label": "Yes, for light workers."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E06_check2",
+        "prompt": "A sling has a current color mark but unreadable identity and rating. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the color as proof of capacity."
+          },
+          {
+            "id": "b",
+            "label": "Write a guessed rating."
+          },
+          {
+            "id": "c",
+            "label": "Hold reliance and resolve traceability through the equipment system."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E06_final_2_1",
+        "prompt": "What does traceability link?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a generic batch photograph."
+          },
+          {
+            "id": "b",
+            "label": "The physical item, rating, history and current accepted status."
+          },
+          {
+            "id": "c",
+            "label": "Only the storage shelf."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E06_final_2_2",
+        "prompt": "Who sets examination intervals and criteria?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Applicable requirements, manufacturer and competent technical review."
+          },
+          {
+            "id": "b",
+            "label": "A universal annual date for all classes."
+          },
+          {
+            "id": "c",
+            "label": "The stock clerk’s convenience."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E06_final_2_3",
+        "prompt": "Does rental ownership remove user checks?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, an invoice replaces inspection."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if delivery was on time."
+          },
+          {
+            "id": "c",
+            "label": "No; supplier and user responsibilities must be defined and fulfilled."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E06_check3",
+        "prompt": "A sling passes condition checks but contacts a sharp load edge. Is selection complete?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the sling is new."
+          },
+          {
+            "id": "b",
+            "label": "No; configuration and required edge protection still need assessment."
+          },
+          {
+            "id": "c",
+            "label": "Yes, inspection proves every use is suitable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E06_final_3_1",
+        "prompt": "What should lifting-gear checks match?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The specific gear type and applicable manufacturer criteria."
+          },
+          {
+            "id": "b",
+            "label": "One visual rule for every material."
+          },
+          {
+            "id": "c",
+            "label": "Only the item’s color."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E06_final_3_2",
+        "prompt": "Can questionable gear be tested by trying a lift?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the load is lifted only slightly."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if nobody photographs it."
+          },
+          {
+            "id": "c",
+            "label": "No; use the approved competent examination or test process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E06_final_3_3",
+        "prompt": "Who resolves damage beyond user criteria?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The customer needing the lift."
+          },
+          {
+            "id": "b",
+            "label": "The designated competent examiner or technical owner."
+          },
+          {
+            "id": "c",
+            "label": "Any coworker who thinks it looks minor."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E06_check4",
+        "prompt": "A harness passes inspection but its anchor is unverified. May work begin?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; complete-system suitability remains unestablished."
+          },
+          {
+            "id": "b",
+            "label": "Yes, the harness pass covers the anchor."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the worker stays still."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E06_final_4_1",
+        "prompt": "May an ordinary scaffold user certify an altered scaffold?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, after this written course."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the alteration looks small."
+          },
+          {
+            "id": "c",
+            "label": "No; the required competent inspection and authorization apply."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E06_final_4_2",
+        "prompt": "What should happen after fall-arrest equipment is involved in an event?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Let another worker test it."
+          },
+          {
+            "id": "b",
+            "label": "Remove it from use pending the specified disposition."
+          },
+          {
+            "id": "c",
+            "label": "Return it if no tear is visible."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E06_final_4_3",
+        "prompt": "What does access suitability include besides condition?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Task, load, support, reach and surrounding hazards."
+          },
+          {
+            "id": "b",
+            "label": "Only clean rungs."
+          },
+          {
+            "id": "c",
+            "label": "Only a current sticker."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E06_check5",
+        "prompt": "A rejected sling is left beside ready gear. What must happen?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only tell the current crew."
+          },
+          {
+            "id": "b",
+            "label": "Remove the rejection tag to avoid confusion."
+          },
+          {
+            "id": "c",
+            "label": "Control it so it cannot be selected and complete approved disposition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E06_final_5_1",
+        "prompt": "What should storage protect against?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only dust on the label."
+          },
+          {
+            "id": "b",
+            "label": "The material-specific environmental and mechanical damage identified by the manufacturer."
+          },
+          {
+            "id": "c",
+            "label": "Only theft."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E06_final_5_2",
+        "prompt": "Can users perform any convenient repair?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; repairs must be permitted and performed through the approved competent process."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the gear is expensive."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if appearance is restored."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E06_final_5_3",
+        "prompt": "What is the aim of retirement control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Make its history harder to find."
+          },
+          {
+            "id": "b",
+            "label": "Keep it available as an emergency spare."
+          },
+          {
+            "id": "c",
+            "label": "Prevent the rejected item from re-entering service."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E06_check6",
+        "prompt": "Several items show the same chemical damage. What additional review is needed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Changing the inspection form’s title."
+          },
+          {
+            "id": "b",
+            "label": "The exposure, storage and handling cause and corrective effectiveness."
+          },
+          {
+            "id": "c",
+            "label": "Only replacing each item without review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E06_final_6_1",
+        "prompt": "What should release evidence identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual item, criteria, findings, required work, examiner and accepted limitations."
+          },
+          {
+            "id": "b",
+            "label": "Only a generic certificate title."
+          },
+          {
+            "id": "c",
+            "label": "Only the total count inspected."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E06_final_6_2",
+        "prompt": "Who grants specialist examination competence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "This course automatically."
+          },
+          {
+            "id": "b",
+            "label": "The equipment’s owner by verbal preference only."
+          },
+          {
+            "id": "c",
+            "label": "The applicable qualified assessment and designation process."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E06_final_6_3",
+        "prompt": "What must remain separate from equipment condition inspection?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only purchase approval."
+          },
+          {
+            "id": "b",
+            "label": "Task suitability, complete-system design and work authorization."
+          },
+          {
+            "id": "c",
+            "label": "Nothing; a pass clears all uses."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E06_final_scenario1",
+        "prompt": "Why is the color mark insufficient?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It cannot establish missing rating or the item’s actual condition."
+          },
+          {
+            "id": "b",
+            "label": "Color marks are always forbidden."
+          },
+          {
+            "id": "c",
+            "label": "Current color permits every lifting configuration."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E06_final_scenario2",
+        "prompt": "What distinction matters in this scenario?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A harness pass authorizes any rail."
+          },
+          {
+            "id": "b",
+            "label": "Only the worker’s body weight matters."
+          },
+          {
+            "id": "c",
+            "label": "Component condition does not establish complete-system suitability."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "E06_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E06_lesson1",
+          "questionIds": [
+            "E06_check1"
+          ]
+        },
+        {
+          "lessonId": "E06_lesson2",
+          "questionIds": [
+            "E06_check2"
+          ]
+        },
+        {
+          "lessonId": "E06_lesson3",
+          "questionIds": [
+            "E06_check3"
+          ]
+        },
+        {
+          "lessonId": "E06_lesson4",
+          "questionIds": [
+            "E06_check4"
+          ]
+        },
+        {
+          "lessonId": "E06_lesson5",
+          "questionIds": [
+            "E06_check5"
+          ]
+        },
+        {
+          "lessonId": "E06_lesson6",
+          "questionIds": [
+            "E06_check6"
+          ]
+        },
+        {
+          "lessonId": "E06_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E06_assessment",
+          "questionIds": [
+            "E06_final_1_1",
+            "E06_final_1_2",
+            "E06_final_1_3",
+            "E06_final_2_1",
+            "E06_final_2_2",
+            "E06_final_2_3",
+            "E06_final_3_1",
+            "E06_final_3_2",
+            "E06_final_3_3",
+            "E06_final_4_1",
+            "E06_final_4_2",
+            "E06_final_4_3",
+            "E06_final_5_1",
+            "E06_final_5_2",
+            "E06_final_5_3",
+            "E06_final_6_1",
+            "E06_final_6_2",
+            "E06_final_6_3",
+            "E06_final_scenario1",
+            "E06_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "E06_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "E06_check1": "Different equipment functions have different design and compatibility requirements. A lifting rating cannot be casually converted into personal fall-protection approval.",
+        "E06_final_1_1": "Suitability follows intended performance and use conditions. Visual similarity or convenience cannot establish a safe substitute.",
+        "E06_final_1_2": "Cargo restraint and lifting impose different requirements and use conditions. A device must be approved and rated for the actual function.",
+        "E06_final_1_3": "A handrail’s purpose and capacity may not support fall-protection loads. Appearance cannot establish an approved anchorage system.",
+        "E06_check2": "Color can support a status system but cannot recreate missing technical identity or rating. The actual item must have a defensible basis for selection.",
+        "E06_final_2_1": "Assurance evidence must follow the item being used. Without that link, another item’s records can be mistaken for proof of suitability.",
+        "E06_final_2_2": "Equipment functions and deterioration differ. The program must establish the correct requirement for each class and service.",
+        "E06_final_2_3": "The delivered equipment can have damage or mismatched identity. The user must establish accepted status and perform assigned checks before reliance.",
+        "E06_check3": "Condition and application are separate questions. An undamaged sling can fail when used outside its approved configuration or protection requirements.",
+        "E06_final_3_1": "Different materials and components have different deterioration and rejection conditions. The check must use the relevant criteria.",
+        "E06_final_3_2": "An improvised trial can fail violently and does not establish technical rating. Testing requires its own safe qualified method.",
+        "E06_final_3_3": "Technical disposition needs suitable expertise and evidence. Schedule pressure cannot classify uncertain load-bearing damage as acceptable.",
+        "E06_check4": "Inspection of one component cannot establish anchorage, clearance or rescue. The actual protective system must meet its qualified design and use requirements.",
+        "E06_final_4_1": "Scaffold changes can affect stability and protection. User awareness does not grant erection, alteration or competent inspection authority.",
+        "E06_final_4_2": "Arrest forces can impair equipment beyond visible damage. Manufacturer and program requirements determine inspection or retirement.",
+        "E06_final_4_3": "An intact ladder or platform can still be wrong for the task. Selection and setup must fit actual use conditions.",
+        "E06_check5": "Rejected equipment can recirculate through informal borrowing. Effective segregation and status control must protect future users who did not hear the warning.",
+        "E06_final_5_1": "Storage can degrade protective and load-bearing equipment. The program must preserve condition, not merely inventory count.",
+        "E06_final_5_2": "Unapproved repairs can change strength or protective performance. Some equipment requires retirement rather than repair.",
+        "E06_final_5_3": "A retired item must not become a hidden fallback. Its final disposition must preserve the rejection decision and prevent inadvertent use.",
+        "E06_check6": "Repeated damage suggests a common mechanism. Immediate replacement protects current users, while cause review prevents the next items from degrading the same way.",
+        "E06_final_6_1": "Item-specific evidence supports a defensible status. Aggregate counts cannot establish that the selected item was examined and accepted.",
+        "E06_final_6_2": "Technical examination requires demonstrated skill for the class and method. Ownership and written awareness are not substitutes.",
+        "E06_final_6_3": "An item can be in good condition yet unsuitable for the load or task. Selection and site readiness need their own decisions.",
+        "E06_final_scenario1": "A status cue has a limited function. Item identity, condition and application must each support the use decision.",
+        "E06_final_scenario2": "Fall protection depends on the full system and task. Inspection of one part cannot supply missing design and rescue decisions."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

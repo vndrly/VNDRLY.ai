@@ -1,44 +1,38 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
-import { db, vendorsTable, vendorPeopleTable, employeeCertificationsTable, workHubFormTemplatesTable as templates, workHubFormInstancesTable as instances, safetyTrainingModulesTable as modules, safetyTrainingCompletionsTable as completions, safetyEventsTable as events, safetyCorrectiveActionsTable as actions } from "@workspace/db";
+import { and, eq, inArray, isNull,sql } from "drizzle-orm";
+import { db, vendorsTable, vendorPeopleTable, employeeCertificationsTable, workHubFormTemplatesTable as templates, workHubFormInstancesTable as instances, safetyEventsTable as events, safetyCorrectiveActionsTable as actions } from "@workspace/db";
 import { FleetStateSchema } from "../services/fleet-repository";
 import { AssignmentMetadataSchema, LibraryMetadataSchema } from "@workspace/api-zod";
 import { libraryAuthority, type LibraryActor } from "../work-hub/library-core";
 import { companyLibraryPeople } from "../work-hub/library-audience";
 import { computeSafetyMetrics } from "./safety-metrics";
 import { assessSafetyReadiness, currentCredential, currentFleetInspection, type ReadinessEvidence } from "./safety-readiness";
+import {companyRequiredTraining}from'./company-required-training';
 
 export async function companySafetyReadiness(actor: LibraryActor) {
   const { owner, member } = await libraryAuthority(db, actor);
   const people = await companyLibraryPeople(db, owner);
   const userIds = people.map(p => p.userId);
-  const [incident, published, activeModules, completedModules, assigned] = await Promise.all([
+  const [incident, published, assigned, requiredTraining] = await Promise.all([
     computeSafetyMetrics(owner.type === "vendor" ? { vendorId: owner.id } : { partnerId: owner.id }),
-    db.select().from(templates).where(and(eq(templates.ownerOrgType, owner.type), eq(templates.ownerOrgId, owner.id))),
-    db.select().from(modules).where(eq(modules.isActive, true)),
-    userIds.length ? db.select().from(completions).where(inArray(completions.userId, userIds)) : Promise.resolve([] as (typeof completions.$inferSelect)[]),
-    db.select().from(instances).innerJoin(templates, eq(templates.id, instances.templateId)).where(and(eq(templates.ownerOrgType, owner.type), eq(templates.ownerOrgId, owner.id))),
+    db.select({id:templates.id,libraryMetadata:sql<unknown>`CASE WHEN ${templates.libraryMetadata}->>'kind'='training' THEN ${templates.libraryMetadata}-'content'-'fileSnapshots'-'trainingPolicy' ELSE ${templates.libraryMetadata} END`}).from(templates).where(and(eq(templates.ownerOrgType, owner.type), eq(templates.ownerOrgId, owner.id))),
+    db.select({templateId:instances.templateId,templateVersion:instances.templateVersion,assigneeUserId:instances.assigneeUserId,assignment:sql<unknown>`jsonb_build_object('status',${instances.assignmentMetadata}->'status','membershipId',${instances.assignmentMetadata}->'membershipId','refresherDueAt',${instances.assignmentMetadata}->'refresherDueAt')`}).from(instances).innerJoin(templates, eq(templates.id, instances.templateId)).where(and(eq(templates.ownerOrgType, owner.type), eq(templates.ownerOrgId, owner.id))),
+    companyRequiredTraining(db,owner),
   ]);
   const completedAssignments = new Set(assigned.flatMap(joined => {
-    const row=joined.work_hub_form_instances, parsed=AssignmentMetadataSchema.safeParse(row.assignmentMetadata);
+    const row=joined, parsed=AssignmentMetadataSchema.pick({status:true,membershipId:true,refresherDueAt:true}).safeParse(row.assignment);
     return parsed.success && parsed.data.status === "completed" && (!parsed.data.refresherDueAt || new Date(parsed.data.refresherDueAt).getTime() > Date.now()) ? [`${row.templateId}:${row.templateVersion}:${row.assigneeUserId}:${parsed.data.membershipId}`] : [];
   }));
-  const training: ReadinessEvidence = { id: "training", completed: 0, required: 0, unknown: 0 };
+  const training: ReadinessEvidence = { id: "training", completed: requiredTraining.completed, required: requiredTraining.required, unknown: requiredTraining.unavailable };
   const acknowledgements: ReadinessEvidence = { id: "acknowledgements", completed: 0, required: 0, unknown: 0 };
-  for (const module of activeModules) for (const person of people) {
-    const role = person.role === "field_employee" ? "field_employee" : owner.type === "vendor" ? "vendor_office" : "partner_office";
-    if (!module.requiredRoles.includes(role) && !module.requiredRoles.includes("all")) continue;
-    training.required++;
-    if (module.version > 1) { training.unknown++; continue; }
-    if (completedModules.some(c => c.userId === person.userId && c.moduleId === module.id && c.watchProgressPct >= 100 && c.completedAt >= module.createdAt)) training.completed++;
-  }
   const candidates = published.flatMap(t => {
     const parsed = LibraryMetadataSchema.safeParse(t.libraryMetadata);
     return parsed.success && parsed.data.state !== "draft" ? [{ row: t, metadata: parsed.data }] : [];
   });
   const marked = candidates.filter(item => !candidates.some(other => other.metadata.seriesId === item.metadata.seriesId && other.metadata.contentVersion > item.metadata.contentVersion)).filter(item => item.metadata.state === "published" && item.metadata.content?.safetyRelated && ["training", "policy", "form"].includes(item.metadata.kind));
-  // Current published versions define company-wide requirements. Missing assignments are outstanding.
+  // Keep existing acknowledgment evidence separate from the role/service training baseline.
   for (const item of marked) for (const person of people) {
-    const category = item.metadata.kind === "training" ? training : acknowledgements;
+    if(item.metadata.kind==='training')continue;
+    const category = acknowledgements;
     category.required++;
     const evidence = completedAssignments.has(`${item.row.id}:${item.metadata.contentVersion}:${person.userId}:${person.membershipId}`);
     if (evidence) category.completed++;
@@ -81,5 +75,5 @@ export async function companySafetyReadiness(actor: LibraryActor) {
   const correctiveRows = await db.select({ status: actions.status, verifiedAt: actions.verifiedAt }).from(actions).innerJoin(events, eq(events.id, actions.eventId)).where(owner.type === "vendor" ? eq(events.vendorId, owner.id) : eq(events.partnerId, owner.id));
   const correctiveActions = { id: "correctiveActions", required: correctiveRows.length, completed: correctiveRows.filter(a => a.status === "verified" && a.verifiedAt).length, unknown: 0 };
   const assessment = assessSafetyReadiness(incident.safetyScore, [training, acknowledgements, credentials, drivers, inspections, correctiveActions]);
-  return { ...assessment, activePeople: people.length, canManage: member.role === "admin", incident, asOf: new Date().toISOString() };
+  return { ...assessment, provisional:assessment.provisional||requiredTraining.provisional,categories:assessment.categories.map(category=>category.id==='training'?{...category,provisional:category.provisional||requiredTraining.provisional}:category),activePeople: people.length, canManage: member.role === "admin", incident, trainingBaseline:{catalogServices:963,services:requiredTraining.services,required:requiredTraining.required,completed:requiredTraining.completed,unavailable:requiredTraining.unavailable,provisional:requiredTraining.provisional,unmappedServiceIds:requiredTraining.unmappedServiceIds,unresolvedRoles:requiredTraining.unresolvedRoles,scopeIssues:requiredTraining.scopeIssues,conditionalCourseGaps:requiredTraining.conditionalCourseGaps,vendorExtrasCountTowardScore:false},asOf: new Date().toISOString() };
 }

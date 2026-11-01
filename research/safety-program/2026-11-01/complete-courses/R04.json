@@ -1,0 +1,785 @@
+{
+  "familyId": "R04",
+  "title": "Assurance audits and critical-control observations",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Check actual implementation beyond document existence.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Technical assurance requires reviewers competent in the relevant subject and safe authorized observation. This course does not qualify technical certification, regulatory inspection, rescue approval or operating permission. Company review remains separate from site readiness.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.bechtel.com/getmedia/0b4fd69e-be6c-4e09-b085-b5caf826009b/2023-Supplier-Guide_1.pdf"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/Y15-95-301_0.pdf"
+    },
+    {
+      "title": "OSHA Program evaluation and improvement — recommended practices",
+      "url": "https://www.osha.gov/safety-management/program-evaluation"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "R04_intro",
+        "title": "Start here: Assurance audits and critical-control observations",
+        "body": "# Assurance audits and critical-control observations\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nTechnical assurance requires reviewers competent in the relevant subject and safe authorized observation. This course does not qualify technical certification, regulatory inspection, rescue approval or operating permission. Company review remains separate from site readiness.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Program evaluation and improvement — recommended practices](https://www.osha.gov/safety-management/program-evaluation). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R04_lesson1",
+        "title": "Lesson 1 - Select assurance around actual risk",
+        "body": "Assurance asks whether important controls are present and working, using a defined scope and evidence. Start with actual services, locations, critical hazards, changes and unresolved findings. Do not choose only the cleanest office or easiest files.\n\nDefine the population and sample. If three night shifts and several subcontractors perform the work, one day-shift file is a limited sample. Explain why the selected observations are useful and what they cannot establish.\n\nA review should inform action, not produce a predetermined score. Keep high-consequence unassessed work visible and arrange competent coverage. A narrow sample cannot justify a broad company-wide assurance statement.\n\n## Worked field example\n\nAn audit samples only office documents while high-risk night operations remain unobserved.\n\nThe safe decision is to state the coverage gap and plan risk-based review of the relevant operations. Assurance conclusions cannot extend beyond the evidence and sample scope.\n\nA useful field record is specific: A sampling plan linking actual services and critical controls to reviewed populations and limitations. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nThe assurance scope should identify what decision the evidence will support. A company-program review may examine whether a vendor has implemented a control process, while the site still decides whether a specific job is ready. Do not use a favorable program score to bypass a missing job safeguard.\n\nList relevant operations, shifts, locations, assets and subcontractors before sampling. Choose a justified sample based on consequence, exposure, change and previous gaps. Explain exclusions and unassessed high-risk work so leadership does not mistake silence for a favorable result.\n\nSampling is not a guarantee. One observed arrival can show how that arrival was handled; repeated relevant observations may support a broader but still bounded conclusion. The report should state that reasoning rather than imply that a small convenient sample certifies every future activity. Preserve the population and method so another reviewer can understand the coverage.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R04_lesson2",
+        "title": "Lesson 2 - Use competent reviewers and clear independence",
+        "body": "A reviewer needs competence for the subject and the type of conclusion. A general program reviewer can assess document control but may need a technical specialist for an isolation or rescue method. Do not turn confidence or seniority into technical authority.\n\nDistinguish a self-check, supervisory review, independent review and field observation. Each can be useful, but their nature must be reported accurately. A worker reviewing their own form does not become independent because another name is added.\n\nDisclose relevant limitations and conflicts through the review process. Seek specialist input where needed and preserve the boundary between company evidence review and the operating site's authorization.\n\n## Worked field example\n\nA general reviewer approves a specialist rescue method without relevant technical competence.\n\nThe safe decision is to limit the general review and obtain the appropriate specialist evaluation. Review competence must match the technical decision being made.\n\nA useful field record is specific: A reviewer-scope record and specialist input for the technical element. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nReviewer competence should match the evidence and conclusion. A document-control specialist may verify current versions and approvals without being qualified to assess a pressure test method. Where technical judgment is required, obtain the relevant specialist and state who made that decision.\n\nIndependence also needs accurate description. A supervisor observing their own crew provides supervisory evidence. An author checking their own procedure provides a self-check. Both may be useful, but relabeling them independent creates a misleading assurance claim.\n\nBefore the review, clarify access and safe observation boundaries. The reviewer should not interrupt a critical task or ask workers to create an unsafe condition for demonstration. Arrange an appropriate safe representative observation or simulation and record its limits. A review team must remain within its own site induction and authorization requirements while gathering evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R04_lesson3",
+        "title": "Lesson 3 - Triangulate documents, people and practice",
+        "body": "A policy describes intended practice. A completed record may show a decision was documented. Observation and worker discussion can test whether the control was actually used. Compare these sources rather than treating any one as complete proof.\n\nAsk workers to explain the assigned action and what happens when a control fails. Observe a safe representative activity where authorized. Do not create a hazardous condition to test a worker or interfere with critical work.\n\nInvestigate inconsistencies fairly. A form saying 'barrier checked' alongside a missing barrier is evidence requiring clarification and immediate risk control, not automatic proof of intentional misconduct. Preserve the facts and correct the exposure.\n\n## Worked field example\n\nAn audit finds a signed barrier check while the required barrier is absent during the task.\n\nThe safe decision is to control the exposure and investigate the discrepancy using records, people and actual conditions. A signed record cannot override a directly observed missing control.\n\nA useful field record is specific: A factual comparison of the record, worker explanation and field condition. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nTriangulation means comparing evidence that answers different questions. A procedure tells the expected method; a job record describes a documented decision; worker discussion tests understanding; observation checks actual practice under the recorded conditions. Agreement strengthens a bounded conclusion, while disagreement creates a question to resolve.\n\nDo not treat every discrepancy as misconduct. A missing barrier may reflect a layout change, unavailable equipment, misunderstanding or inaccurate paperwork. Control the current exposure first through the responsible operating authority, then establish the facts fairly.\n\nAsk practical questions without prompting the answer. A worker can explain what they would do if communication fails and show the approved safe stop in simulation where appropriate. Record any assistance. A rehearsed answer delivered after the reviewer has supplied it does not demonstrate the same understanding as an independent explanation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R04_lesson4",
+        "title": "Lesson 4 - Write findings that support action",
+        "body": "A useful finding states the requirement or expected control, evidence, location, affected scope and consequence. Separate confirmed facts from uncertainty. 'Safety culture poor' is too broad to verify or correct.\n\nAssign appropriate immediate response where a critical control is absent. The review does not need to wait for a final report before notifying the operating authority of an uncontrolled exposure. Stay within the agreed stop and escalation process.\n\nProtect confidential material. Use the information needed to substantiate the finding without publishing medical, personal or security details. Keep the evidence traceable through authorized access rather than copying sensitive content into a general report.\n\n## Worked field example\n\nA finding says only “training inadequate” without identifying task, evidence or consequence.\n\nThe safe decision is to describe the specific expected capability, observed gap and affected scope with an accountable response. A vague label does not tell an owner what must be corrected or how to verify it.\n\nA useful field record is specific: A finding with traceable task evidence, risk response, owner and verification outcome. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nFindings should connect evidence to a specific expected control. Identify the task, location, affected people, observed gap and immediate response. Avoid vague judgments such as poor attitude or weak culture when the evidence concerns an unmonitored alarm or missing equipment.\n\nDescribe uncertainty honestly. If a record cannot be located, state that the evidence was unavailable within the review; do not automatically claim the task never occurred. Conversely, an owner's statement that a record exists is not the same as inspecting it. Define the additional evidence needed.\n\nProtect confidentiality and security. Use references and restricted supporting material where appropriate instead of placing clinical or sensitive site information in a general report. Traceability does not require unrestricted disclosure. The accountable owner still needs enough factual detail to correct the condition and verify the outcome.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R04_lesson5",
+        "title": "Lesson 5 - Verify implementation and effectiveness separately",
+        "body": "Implementation asks whether the corrective change was made. Effectiveness asks whether it controls the problem under relevant conditions. A new form can be implemented while the unsafe practice continues.\n\nDefine the verification when assigning the action. If the failure occurs on night shift, check the corrected arrangement on that shift or a justified representative equivalent. Include workers and actual use rather than accepting only the owner's completion statement.\n\nDo not require unnecessary repeat audits of unrelated passed areas. Focus follow-up on the failed mechanism, changed controls and affected scope. Keep a finding open or reopen it when the correction fails or evidence is inadequate.\n\n## Worked field example\n\nA new gate form is uploaded after unsafe positioning, but no arrival is observed afterward.\n\nThe safe decision is to verify actual safe positioning during representative arrivals before claiming effectiveness. Document implementation does not establish that the unsafe field behavior changed.\n\nA useful field record is specific: A representative observation of the corrected arrival process and recorded limitations. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nA follow-up should distinguish the action from the protective result. A barrier purchase, revised form or completed briefing may establish implementation activity. Effectiveness requires evidence that the intended control operates in the relevant work. Ask whether the original failure can still recur.\n\nUse representative conditions. If the finding concerned a busy delivery period, observe the corrected arrangement under a suitable comparable condition. A quiet shutdown visit may not test the same mechanism. State any remaining limits and decide whether further assurance is needed.\n\nDo not close a finding from a vague promise or a shifted due date. Maintain suitable interim controls and escalation until the responsible authority verifies correction. If the result fails, preserve both the attempted action and the failed follow-up. Reopening is an honest response to evidence, not a reason to remove the earlier record.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R04_lesson6",
+        "title": "Lesson 6 - Report conclusions with coverage limits",
+        "body": "An assurance report should identify scope, reviewer competence, methods, sample, evidence, findings and limitations. State what is documented, implemented, reviewed or effective within the verified scope. Do not compress those stages into a single unqualified safe label.\n\nCommunicate unresolved high-risk findings to the accountable authority and maintain interim controls. A positive score elsewhere does not cancel a missing critical safeguard. Company maturity review and site task authorization remain distinct decisions.\n\nPreserve previous findings and follow-up history. Deleting failures after correction hides what was learned. A reliable record shows the original state, action, verification and any remaining uncertainty.\n\n## Worked field example\n\nA report claims full company implementation after confirming only that policy PDFs exist.\n\nThe safe decision is to limit the conclusion to documented arrangements and obtain implementation and effectiveness evidence. Policy existence is evidence of documentation, not observed practice or control effectiveness.\n\nA useful field record is specific: A bounded report separating documentation, field implementation and effectiveness findings. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nA useful conclusion separates documented arrangements, demonstrated implementation and verified effectiveness. It identifies scope, reviewer competence, methods, samples, findings and unresolved matters. Avoid language that suggests regulatory certification or technical approval the review did not provide.\n\nCommunicate critical unresolved issues promptly to the responsible role. The final report schedule does not justify delaying a live control concern. The operating authority determines safe restriction and restart, while the reviewer records the evidence and follows up within their competence.\n\nPreserve history through correction. A resolved finding should show what failed, what changed and how the result was checked. That history helps identify recurrence and informs future sampling. A new favorable sample does not require deleting the original failure. Company maturity credit and site job readiness continue to rely on their own defined evidence and decisions.\n\n## Further application\n\nA field observation should have an agreed safety boundary. The reviewer confirms induction, access permission and how to report a critical concern before entering. They do not distract an operator during a critical movement or ask for a guard to be opened to improve their view. If the needed evidence cannot be collected safely, arrange an appropriate controlled observation or technical review and record the limit.\n\nWhen sampling records, identify the actual population and selection basis. A set chosen by the process owner may be useful but can omit failures or unusual work. Ask whether unresolved findings, new services and different shifts are represented. The aim is not to manufacture an unfavorable result; it is to avoid an unsupported favorable generalization.\n\nA conclusion should also identify evidence age and change. An observation made before a major layout revision may not establish the current arrangement. Reuse relevant evidence only where its scope and assumptions remain valid. A reviewer should explain what changed and what further verification is needed.\n\nFor follow-up, give the owner a concrete effectiveness question. Instead of asking whether a reminder was sent, ask whether workers can now perform the task using the required safeguard under representative conditions. Preserve the answer and its basis. If evidence remains insufficient, say so and keep the conclusion bounded. Honest uncertainty supports a better operational decision than an unqualified pass inferred from a completed action list.\n\nRecord the verification basis.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R04_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional vendor receives a favorable audit after a reviewer checks five policy files. No worker is interviewed and no task observed. A night-shift gate incident later reveals the approved checking point is not used.\n\n### Worked solution\n\nThe original audit conclusion is limited to the documents actually reviewed. The company controls the current gate exposure and arranges competent sampling of the relevant shifts and arrivals. Worker discussion explores why the approved point is bypassed, while observation checks the layout and actual method. Findings identify the control, evidence and scope rather than blaming a worker from the incident alone. Corrective action is verified in use and later checked for effectiveness. The positive document score is retained as historical evidence but not used as proof of operational readiness.\n\n## Scenario 2\n\nA fictional reviewer finds expired rescue availability evidence during active entry work. The report is due next month. The reviewer proposes leaving the issue in draft to avoid disrupting production.\n\n### Worked solution\n\nThe reviewer promptly notifies the responsible work authority through the agreed escalation route. The authority controls affected work until required current rescue capability is verified. The reviewer records the actual gap, scope and action without claiming technical rescue approval outside their competence. The final report can follow, but it does not delay response to a potentially missing critical safeguard. Follow-up verifies actual capability and preserves the original finding. Unrelated positive findings do not cancel this exposure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R04_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R04_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nTechnical assurance requires reviewers competent in the relevant subject and safe authorized observation. This course does not qualify technical certification, regulatory inspection, rescue approval or operating permission. Company review remains separate from site readiness.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "R04_check1",
+        "prompt": "An audit samples only office documents while high-risk night operations remain unobserved. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "State the coverage gap and plan risk-based review of the relevant operations"
+          },
+          {
+            "id": "b",
+            "label": "Declare all operations implemented from the office sample"
+          },
+          {
+            "id": "c",
+            "label": "Exclude difficult activities so the review can finish favorably"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R04_check2",
+        "prompt": "A general reviewer approves a specialist rescue method without relevant technical competence. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the approval because the reviewer is a senior manager"
+          },
+          {
+            "id": "b",
+            "label": "Limit the general review and obtain the appropriate specialist evaluation"
+          },
+          {
+            "id": "c",
+            "label": "Call the review independent even though the author checked their own work"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R04_check3",
+        "prompt": "An audit finds a signed barrier check while the required barrier is absent during the task. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the signature and ignore the field observation"
+          },
+          {
+            "id": "b",
+            "label": "Accuse the worker of fraud before establishing the facts"
+          },
+          {
+            "id": "c",
+            "label": "Control the exposure and investigate the discrepancy using records, people and actual conditions"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R04_check4",
+        "prompt": "A finding says only “training inadequate” without identifying task, evidence or consequence. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Describe the specific expected capability, observed gap and affected scope with an accountable response"
+          },
+          {
+            "id": "b",
+            "label": "Close the finding by adding a generic policy"
+          },
+          {
+            "id": "c",
+            "label": "Publish private medical records to make the report more persuasive"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R04_check5",
+        "prompt": "A new gate form is uploaded after unsafe positioning, but no arrival is observed afterward. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close effectiveness because the form exists"
+          },
+          {
+            "id": "b",
+            "label": "Verify actual safe positioning during representative arrivals before claiming effectiveness"
+          },
+          {
+            "id": "c",
+            "label": "Use the absence of a reported injury as the only follow-up"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R04_check6",
+        "prompt": "A report claims full company implementation after confirming only that policy PDFs exist. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Call every uploaded policy fully implemented"
+          },
+          {
+            "id": "b",
+            "label": "Average away a missing critical control using unrelated high scores"
+          },
+          {
+            "id": "c",
+            "label": "Limit the conclusion to documented arrangements and obtain implementation and effectiveness evidence"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R04_final1",
+        "prompt": "For select assurance around actual risk, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assurance conclusions cannot extend beyond the evidence and sample scope."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R04_final2",
+        "prompt": "Which evidence would most directly verify select assurance around actual risk in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A sampling plan linking actual services and critical controls to reviewed populations and limitations"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R04_final3",
+        "prompt": "A relief worker proposes the following shortcut during select assurance around actual risk: \"Declare all operations implemented from the office sample.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Declare all operations implemented from the office sample"
+          },
+          {
+            "id": "b",
+            "label": "Exclude difficult activities so the review can finish favorably"
+          },
+          {
+            "id": "c",
+            "label": "State the coverage gap and plan risk-based review of the relevant operations"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R04_final4",
+        "prompt": "For use competent reviewers and clear independence, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Review competence must match the technical decision being made."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R04_final5",
+        "prompt": "Which evidence would most directly verify use competent reviewers and clear independence in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A reviewer-scope record and specialist input for the technical element"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R04_final6",
+        "prompt": "A relief worker proposes the following shortcut during use competent reviewers and clear independence: \"Accept the approval because the reviewer is a senior manager.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the approval because the reviewer is a senior manager"
+          },
+          {
+            "id": "b",
+            "label": "Call the review independent even though the author checked their own work"
+          },
+          {
+            "id": "c",
+            "label": "Limit the general review and obtain the appropriate specialist evaluation"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R04_final7",
+        "prompt": "For triangulate documents, people and practice, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed record cannot override a directly observed missing control."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R04_final8",
+        "prompt": "Which evidence would most directly verify triangulate documents, people and practice in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A factual comparison of the record, worker explanation and field condition"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R04_final9",
+        "prompt": "A relief worker proposes the following shortcut during triangulate documents, people and practice: \"Accept the signature and ignore the field observation.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept the signature and ignore the field observation"
+          },
+          {
+            "id": "b",
+            "label": "Accuse the worker of fraud before establishing the facts"
+          },
+          {
+            "id": "c",
+            "label": "Control the exposure and investigate the discrepancy using records, people and actual conditions"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R04_final10",
+        "prompt": "For write findings that support action, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A vague label does not tell an owner what must be corrected or how to verify it."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R04_final11",
+        "prompt": "Which evidence would most directly verify write findings that support action in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A finding with traceable task evidence, risk response, owner and verification outcome"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R04_final12",
+        "prompt": "A relief worker proposes the following shortcut during write findings that support action: \"Close the finding by adding a generic policy.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the finding by adding a generic policy"
+          },
+          {
+            "id": "b",
+            "label": "Publish private medical records to make the report more persuasive"
+          },
+          {
+            "id": "c",
+            "label": "Describe the specific expected capability, observed gap and affected scope with an accountable response"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R04_final13",
+        "prompt": "For verify implementation and effectiveness separately, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Document implementation does not establish that the unsafe field behavior changed."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R04_final14",
+        "prompt": "Which evidence would most directly verify verify implementation and effectiveness separately in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A representative observation of the corrected arrival process and recorded limitations"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R04_final15",
+        "prompt": "A relief worker proposes the following shortcut during verify implementation and effectiveness separately: \"Close effectiveness because the form exists.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close effectiveness because the form exists"
+          },
+          {
+            "id": "b",
+            "label": "Use the absence of a reported injury as the only follow-up"
+          },
+          {
+            "id": "c",
+            "label": "Verify actual safe positioning during representative arrivals before claiming effectiveness"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R04_final16",
+        "prompt": "For report conclusions with coverage limits, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Policy existence is evidence of documentation, not observed practice or control effectiveness."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R04_final17",
+        "prompt": "Which evidence would most directly verify report conclusions with coverage limits in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A bounded report separating documentation, field implementation and effectiveness findings"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R04_final18",
+        "prompt": "A relief worker proposes the following shortcut during report conclusions with coverage limits: \"Call every uploaded policy fully implemented.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Call every uploaded policy fully implemented"
+          },
+          {
+            "id": "b",
+            "label": "Average away a missing critical control using unrelated high scores"
+          },
+          {
+            "id": "c",
+            "label": "Limit the conclusion to documented arrangements and obtain implementation and effectiveness evidence"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R04_final19",
+        "prompt": "In Scenario 1, what did the original audit establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "That the sampled policy files existed, within the limits of that review"
+          },
+          {
+            "id": "b",
+            "label": "That every shift followed all controls"
+          },
+          {
+            "id": "c",
+            "label": "That the site was authorized for every activity"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R04_final20",
+        "prompt": "In Scenario 2, should notification wait for the final report?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, because draft findings cannot affect work"
+          },
+          {
+            "id": "b",
+            "label": "No; the potentially missing critical control requires prompt operating-authority escalation"
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the overall audit score is high"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "R04_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R04_lesson1",
+          "questionIds": [
+            "R04_check1"
+          ]
+        },
+        {
+          "lessonId": "R04_lesson2",
+          "questionIds": [
+            "R04_check2"
+          ]
+        },
+        {
+          "lessonId": "R04_lesson3",
+          "questionIds": [
+            "R04_check3"
+          ]
+        },
+        {
+          "lessonId": "R04_lesson4",
+          "questionIds": [
+            "R04_check4"
+          ]
+        },
+        {
+          "lessonId": "R04_lesson5",
+          "questionIds": [
+            "R04_check5"
+          ]
+        },
+        {
+          "lessonId": "R04_lesson6",
+          "questionIds": [
+            "R04_check6"
+          ]
+        },
+        {
+          "lessonId": "R04_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R04_final",
+          "questionIds": [
+            "R04_final1",
+            "R04_final2",
+            "R04_final3",
+            "R04_final4",
+            "R04_final5",
+            "R04_final6",
+            "R04_final7",
+            "R04_final8",
+            "R04_final9",
+            "R04_final10",
+            "R04_final11",
+            "R04_final12",
+            "R04_final13",
+            "R04_final14",
+            "R04_final15",
+            "R04_final16",
+            "R04_final17",
+            "R04_final18",
+            "R04_final19",
+            "R04_final20"
+          ]
+        },
+        {
+          "lessonId": "R04_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "R04_check1": "State the coverage gap and plan risk-based review of the relevant operations. Assurance conclusions cannot extend beyond the evidence and sample scope.",
+        "R04_check2": "Limit the general review and obtain the appropriate specialist evaluation. Review competence must match the technical decision being made.",
+        "R04_check3": "Control the exposure and investigate the discrepancy using records, people and actual conditions. A signed record cannot override a directly observed missing control.",
+        "R04_check4": "Describe the specific expected capability, observed gap and affected scope with an accountable response. A vague label does not tell an owner what must be corrected or how to verify it.",
+        "R04_check5": "Verify actual safe positioning during representative arrivals before claiming effectiveness. Document implementation does not establish that the unsafe field behavior changed.",
+        "R04_check6": "Limit the conclusion to documented arrangements and obtain implementation and effectiveness evidence. Policy existence is evidence of documentation, not observed practice or control effectiveness.",
+        "R04_final1": "Assurance conclusions cannot extend beyond the evidence and sample scope. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R04_final2": "A sampling plan linking actual services and critical controls to reviewed populations and limitations. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R04_final3": "State the coverage gap and plan risk-based review of the relevant operations. Assurance conclusions cannot extend beyond the evidence and sample scope. A staffing change does not remove this requirement.",
+        "R04_final4": "Review competence must match the technical decision being made. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R04_final5": "A reviewer-scope record and specialist input for the technical element. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R04_final6": "Limit the general review and obtain the appropriate specialist evaluation. Review competence must match the technical decision being made. A staffing change does not remove this requirement.",
+        "R04_final7": "A signed record cannot override a directly observed missing control. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R04_final8": "A factual comparison of the record, worker explanation and field condition. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R04_final9": "Control the exposure and investigate the discrepancy using records, people and actual conditions. A signed record cannot override a directly observed missing control. A staffing change does not remove this requirement.",
+        "R04_final10": "A vague label does not tell an owner what must be corrected or how to verify it. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R04_final11": "A finding with traceable task evidence, risk response, owner and verification outcome. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R04_final12": "Describe the specific expected capability, observed gap and affected scope with an accountable response. A vague label does not tell an owner what must be corrected or how to verify it. A staffing change does not remove this requirement.",
+        "R04_final13": "Document implementation does not establish that the unsafe field behavior changed. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R04_final14": "A representative observation of the corrected arrival process and recorded limitations. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R04_final15": "Verify actual safe positioning during representative arrivals before claiming effectiveness. Document implementation does not establish that the unsafe field behavior changed. A staffing change does not remove this requirement.",
+        "R04_final16": "Policy existence is evidence of documentation, not observed practice or control effectiveness. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R04_final17": "A bounded report separating documentation, field implementation and effectiveness findings. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R04_final18": "Limit the conclusion to documented arrangements and obtain implementation and effectiveness evidence. Policy existence is evidence of documentation, not observed practice or control effectiveness. A staffing change does not remove this requirement.",
+        "R04_final19": "The audit method did not observe implementation or test effectiveness. Its conclusion must stay within that evidence.",
+        "R04_final20": "Assurance supports prevention. A report timetable cannot justify withholding a critical control concern from the responsible operating role."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

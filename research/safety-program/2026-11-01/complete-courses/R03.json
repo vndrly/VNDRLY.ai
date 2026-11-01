@@ -1,0 +1,789 @@
+{
+  "familyId": "R03",
+  "title": "Drills, exercises and after-action improvement",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Test whether plans and people work together under credible conditions.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate qualified oversight is needed for technical rescue and equipment exercises. Practical emergency capability must be observed safely within the actual scope. This course qualifies no rescuer and authorizes no live exposure, hazardous drill condition or universal readiness certification.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.slb.com/about/health-safety-and-environment/worker-safety-and-incident-prevention"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.marathonpetroleum.com/Sustainability/Safety/"
+    },
+    {
+      "title": "Inventory reference 3",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+    },
+    {
+      "title": "OSHA Emergency preparedness and response",
+      "url": "https://www.osha.gov/emergency-preparedness"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "R03_intro",
+        "title": "Start here: Drills, exercises and after-action improvement",
+        "body": "# Drills, exercises and after-action improvement\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate qualified oversight is needed for technical rescue and equipment exercises. Practical emergency capability must be observed safely within the actual scope. This course qualifies no rescuer and authorizes no live exposure, hazardous drill condition or universal readiness certification.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Emergency preparedness and response](https://www.osha.gov/emergency-preparedness). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R03_lesson1",
+        "title": "Lesson 1 - Choose a risk-based exercise objective",
+        "body": "A drill should test an important capability, not merely produce attendance evidence. Select a credible scenario from actual work, changes, prior failures and the site interface. Define what participants should demonstrate and what an observer can see.\n\nAn objective such as 'test emergency readiness' is too broad. A more useful one is to verify that the night-shift alarm reaches the assigned receiver and that contractors and visitors are reconciled at muster. The exercise scope determines what conclusions can be drawn.\n\nUse the right format. A tabletop can test decision and communication logic without moving people; a functional exercise can test an interface. Neither automatically establishes technical rescue competence. Match the format to the question and record its limits.\n\n## Worked field example\n\nA drill plan says only “everyone participates” and contains no observable response objective.\n\nThe safe decision is to define the risk-based capability and observable success criteria before the exercise. Attendance does not specify which response function has been tested.\n\nA useful field record is specific: A documented scenario, bounded objectives and observation plan. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nAn exercise objective should identify the capability, conditions and evidence. For example, the controller may test whether a remote worker's alarm is received by the night monitor and passed to the site coordinator with usable location information. The observer can then record receipt, interpretation and handover rather than simply whether someone made a call.\n\nChoose scenarios from the work and known weaknesses. A recent layout change, new contractor group or failed radio interface can provide a useful focus. Do not repeatedly exercise only a familiar office evacuation while more consequential field interfaces remain untested.\n\nThe exercise plan should state which elements are outside scope. A tabletop on decisions does not test physical access or equipment deployment. A functional alarm test does not establish technical rescue performance. These limitations make the result honest and help leadership decide what further evaluation is needed rather than creating an all-purpose readiness claim.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R03_lesson2",
+        "title": "Lesson 2 - Design a safe exercise",
+        "body": "The exercise must not create the emergency it is meant to prepare for. Use safe simulation and qualified supervision for technical elements. Do not introduce hazardous atmospheres, live falls, uncontrolled traffic or a genuine threatening encounter.\n\nAssign control of the exercise, observer roles, communications and a clear way to stop it. Coordinate notifications with the site and any external parties so simulated messages are not mistaken for real emergencies. A real emergency takes priority and must be recognized through the agreed process.\n\nConsider people outside the exercise, essential operations, accessibility and contractors. Surprise is not valuable if it causes unsafe movement or confusion about a real alarm. The responsible authority approves the safe boundaries.\n\n## Worked field example\n\nA supervisor proposes using a real irritant release to make an evacuation drill realistic.\n\nThe safe decision is to replace the exposure with a safe approved simulation and controlled exercise boundaries. A drill must test capability without creating uncontrolled harm.\n\nA useful field record is specific: An approved exercise safety plan with controller, stop process and necessary notifications. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nExercise safety needs its own assessment. Consider movements, traffic, work interruption, accessibility and people who may mistake the simulation for a real event. Assign a controller with authority to stop the activity and an understood process for recognizing an actual emergency.\n\nTechnical elements require qualified oversight. A casualty dummy can be placed only through a safe controlled arrangement; do not expose a participant to uncontrolled suspension or an atmosphere to make the event realistic. A surprise threat encounter can also create real harm and is not justified by a desire to test reactions.\n\nCoordinate external notifications where required and protect essential operations. State how simulated messages are identified and how they differ from real emergency traffic. Participants should know the safety boundaries even when they do not know every scenario detail. Uncertainty about the exercise is not permission to defeat ordinary safeguards.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R03_lesson3",
+        "title": "Lesson 3 - Observe behavior and preserve facts",
+        "body": "Observers record what actually happens: alarm receipt, decisions, routes, accountability, role handovers and deviations. Distinguish observed facts, participant explanations and assumptions. Use timestamps where they help understand sequence, without inventing a universal response-time requirement.\n\nDo not coach every action and then report independent performance. Coaching may be appropriate for a teaching exercise, but the result must say so. Record which actions were simulated or not attempted.\n\nCapture good performance as well as gaps. A clear communication handover may be worth retaining. Protect personal information and avoid public blame; the purpose is to understand capability and conditions, not to embarrass a worker.\n\n## Worked field example\n\nAn observer tells every participant each next step and then marks the response fully independent.\n\nThe safe decision is to record the coaching and limit the conclusion to the performance actually demonstrated. Prompted actions do not establish the same capability as independent execution.\n\nA useful field record is specific: Factual observation notes distinguishing independent, prompted and unassessed actions. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nAn observer should position themselves where they can see the relevant actions safely without obstructing participants. Record the actual sequence, communication, decisions and conditions. A blank form completed from memory afterward can miss important differences between what was intended and what occurred.\n\nDistinguish independent performance from coaching. If a participant is told where to muster or whom to call, record the assistance. The exercise can still be useful learning, but the result cannot be described as unaided capability. Similarly, a simulated action should not be marked as physically performed.\n\nUse evidence proportionately and protect privacy. Photographs or recordings may help only through the approved process and should not expose unnecessary personal or security information. Clear notes about observed facts and limitations can support a useful finding without public embarrassment. The purpose is improvement of the response system.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R03_lesson4",
+        "title": "Lesson 4 - Debrief the system rather than blame",
+        "body": "Debrief soon enough that participants remember the sequence. Ask what they expected, what happened, what made the task easier or harder and what should change. Include workers, receiving roles and relevant site interfaces.\n\nA failure may involve unclear instructions, unavailable equipment, poor layout or conflicting responsibilities. Do not stop at 'worker error' when the system set up the failure. Equally, do not invent a cause without evidence. Identify further investigation where necessary.\n\nPreserve the exercise result, including failed objectives. A debrief is not a negotiation to turn a failure into a pass. Explain the operational implications and any interim restriction while improvement is arranged.\n\n## Worked field example\n\nA contractor crew is omitted from muster and the debrief proposes deleting them from the exercise scope afterward.\n\nThe safe decision is to keep the failed accountability result and investigate the roster and interface gap. Changing scope after failure conceals the capability that the exercise actually tested.\n\nA useful field record is specific: A debrief record with the observed failure, participant input and agreed investigation or action. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nThe debrief should allow participants to describe conditions that were not visible to observers. A worker may have received an unclear alarm, encountered a blocked route or lacked access to the current roster. Those reports inform investigation; they should not be dismissed because the written plan looked adequate.\n\nAsk what supported success as well as what failed. A clear receiver handover or effective visitor briefing can become a retained practice. Do not generalize a positive feature to untested functions.\n\nWhere accounts differ, preserve the uncertainty and seek relevant evidence rather than forcing immediate agreement. A debrief should not rewrite the event to protect a score. The report can distinguish a confirmed failed objective from a cause still under investigation. Assign the next decision and any interim control so learning produces a concrete response.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R03_lesson5",
+        "title": "Lesson 5 - Assign actions and retest material gaps",
+        "body": "An action needs an owner, expected outcome, resources, due date and verification method. 'Remind everyone' may be insufficient when the problem is an inaccessible roster or unmonitored phone. Select a correction linked to the observed cause.\n\nKeep required interim controls until the gap is resolved. If the exercise shows required rescue capability unavailable, affected work may need to remain held. The drill report itself does not restore that capability.\n\nRetest the material failed element under safe representative conditions. Confirm the correction works rather than only checking a document was updated. A focused retest can be appropriate; there is no need to repeat unrelated passed elements without a reason.\n\n## Worked field example\n\nA new muster procedure is uploaded after a failed drill but the contractor interface is never retested.\n\nThe safe decision is to verify implementation and safely retest the failed accountability function before claiming resolution. A document change does not prove that the previously failed response now works.\n\nA useful field record is specific: A corrected interface and observed focused retest covering the omitted contractor group. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nAn action should address the identified mechanism. If contractors were omitted because the arrival register was not connected to muster, another general alarm poster is unlikely to solve accountability. The owner needs authority and resources to correct the interface, brief affected roles and verify operation.\n\nDefine the retest when assigning the action. A focused safe test can confirm the corrected contractor process without repeating every unrelated exercise element. It should include the conditions that caused the original gap, such as night staffing or temporary visitors.\n\nDo not leave required capability assumed while a long-term action is open. The responsible operating authority determines suitable interim restrictions. A drill report marked completed is not an operational control. If the correction fails, retain the result and reopen the action rather than resetting the history to an optimistic status.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R03_lesson6",
+        "title": "Lesson 6 - Report bounded readiness and maintain learning",
+        "body": "The exercise report should state scenario, objectives, participants, conditions, limitations, observed results and outstanding actions. Separate completion of the exercise from capability demonstrated. A drill can be completed while objectives fail.\n\nShare lessons with affected shifts and contractors without exposing unnecessary personal information. Check whether the same interface exists elsewhere before generalizing the result. A day-shift success does not automatically verify night coverage.\n\nReview exercise selection after work, staffing or site changes. Practical technical competence still needs the appropriate qualified assessment. The online course and exercise attendance are learning records, not accreditation or proof of all emergency readiness.\n\n## Worked field example\n\nA day-shift tabletop is reported as proof that every shift can perform technical rescue.\n\nThe safe decision is to limit the report to the decisions and participants actually tested and arrange the separate required evaluations. A tabletop cannot demonstrate unperformed technical rescue or untested shift capability.\n\nA useful field record is specific: A bounded report identifying tested functions, unassessed elements and follow-up. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nThe final report should be understandable to someone who did not attend. Identify the scenario, objectives, participants, operating conditions, safety controls, evidence and limitations. State whether each objective was met, partly demonstrated or not demonstrated and why. Avoid turning a simple attendance total into a universal readiness measure.\n\nCommunicate relevant learning to other shifts and employers, while keeping their untested status clear. A shared procedure can justify checking for the same weakness elsewhere, but it does not prove every location has the problem or that every location has been corrected.\n\nLeadership uses the result to resource improvement and plan future exercises. Review new risks and changes rather than selecting the next scenario solely from a calendar. No fixed drill frequency is invented here; governing requirements and the assessed work determine the applicable arrangements. Technical qualifications remain separate from participation.\n\n## Further application\n\nConsider a focused retest after a failed night-shift notification. The controller uses a safe simulated message from the relevant work point. The observer records whether the assigned receiver recognizes the location, starts the correct escalation and transfers responsibility if needed. Include the backup role when that link failed originally. Do not coach silently and call the result independent.\n\nAfter the retest, document the specific result and remaining limits. If the message now arrives but the receiver cannot act, the full objective is still not met. Correct the next failed link and maintain any operating restriction needed while capability remains uncertain. A sequence of narrow successful tests may support a larger conclusion only when their interfaces and coverage are also justified.\n\nParticipants should receive feedback about what improved and what still needs work. Keep the first failed result and later retest together. That history demonstrates learning and prevents future reviewers from mistaking an eventual correction for evidence that the original arrangement was effective. Exercise completion, learning and operational readiness remain distinct conclusions supported by different evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R03_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional evacuation drill reaches the muster point without injury. The employee roster reconciles, but a contractor crew and a visitor are absent from the count. Management wants a success announcement because everyone ultimately returned to work.\n\n### Worked solution\n\nThe exercise is recorded as completed with a failed accountability objective. Observers preserve the sequence and roster gap. The debrief includes contractor and visitor interfaces, not just employee behavior. An owner corrects the current-person process and provides any necessary interim control. A safe focused retest verifies that all relevant groups are reconciled and unresolved names reach command. The report distinguishes the eventual favorable outcome from the failed control. Lessons are shared with other shifts that use the same process, while untested shifts remain unverified.\n\n## Scenario 2\n\nA fictional rescue exercise uses a dummy in a training structure. The controller gives continuous instructions and access differs from the production vessel. The report proposes authorizing entry at all sites.\n\n### Worked solution\n\nThe report records the training setting, coaching and different access. It can support learning but cannot establish independent technical performance or feasibility in every production vessel. The qualified rescue authority determines the required safe representative assessment for the actual geometry and hazards. Any missing capability remains a hold for affected work. The exercise safety arrangement is retained; realism is increased only through safe simulation, never a hazardous atmosphere or uncontrolled casualty exposure. Management receives a bounded conclusion and the exact additional verification needed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R03_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R03_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate qualified oversight is needed for technical rescue and equipment exercises. Practical emergency capability must be observed safely within the actual scope. This course qualifies no rescuer and authorizes no live exposure, hazardous drill condition or universal readiness certification.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "R03_check1",
+        "prompt": "A drill plan says only “everyone participates” and contains no observable response objective. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Define the risk-based capability and observable success criteria before the exercise"
+          },
+          {
+            "id": "b",
+            "label": "Declare success if everyone signs the sheet"
+          },
+          {
+            "id": "c",
+            "label": "Choose the easiest scenario to guarantee a favorable report"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R03_check2",
+        "prompt": "A supervisor proposes using a real irritant release to make an evacuation drill realistic. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use a small release because it is only training"
+          },
+          {
+            "id": "b",
+            "label": "Replace the exposure with a safe approved simulation and controlled exercise boundaries"
+          },
+          {
+            "id": "c",
+            "label": "Keep the controller uninformed to maximize surprise"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R03_check3",
+        "prompt": "An observer tells every participant each next step and then marks the response fully independent. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Remove coaching notes so the result appears simpler"
+          },
+          {
+            "id": "b",
+            "label": "Use attendance as proof of independent performance"
+          },
+          {
+            "id": "c",
+            "label": "Record the coaching and limit the conclusion to the performance actually demonstrated"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R03_check4",
+        "prompt": "A contractor crew is omitted from muster and the debrief proposes deleting them from the exercise scope afterward. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the failed accountability result and investigate the roster and interface gap"
+          },
+          {
+            "id": "b",
+            "label": "Reclassify the contractor omission as out of scope after the event"
+          },
+          {
+            "id": "c",
+            "label": "Mark success because the employee count was correct"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R03_check5",
+        "prompt": "A new muster procedure is uploaded after a failed drill but the contractor interface is never retested. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the action when the file upload completes"
+          },
+          {
+            "id": "b",
+            "label": "Verify implementation and safely retest the failed accountability function before claiming resolution"
+          },
+          {
+            "id": "c",
+            "label": "Repeat only the parts of the drill that passed"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R03_check6",
+        "prompt": "A day-shift tabletop is reported as proof that every shift can perform technical rescue. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the tabletop result as universal rescue qualification"
+          },
+          {
+            "id": "b",
+            "label": "Remove limitations to avoid confusing management"
+          },
+          {
+            "id": "c",
+            "label": "Limit the report to the decisions and participants actually tested and arrange the separate required evaluations"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R03_final1",
+        "prompt": "For choose a risk-based exercise objective, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Attendance does not specify which response function has been tested."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R03_final2",
+        "prompt": "Which evidence would most directly verify choose a risk-based exercise objective in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A documented scenario, bounded objectives and observation plan"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R03_final3",
+        "prompt": "A relief worker proposes the following shortcut during choose a risk-based exercise objective: \"Declare success if everyone signs the sheet.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Declare success if everyone signs the sheet"
+          },
+          {
+            "id": "b",
+            "label": "Choose the easiest scenario to guarantee a favorable report"
+          },
+          {
+            "id": "c",
+            "label": "Define the risk-based capability and observable success criteria before the exercise"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R03_final4",
+        "prompt": "For design a safe exercise, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A drill must test capability without creating uncontrolled harm."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R03_final5",
+        "prompt": "Which evidence would most directly verify design a safe exercise in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An approved exercise safety plan with controller, stop process and necessary notifications"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R03_final6",
+        "prompt": "A relief worker proposes the following shortcut during design a safe exercise: \"Use a small release because it is only training.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use a small release because it is only training"
+          },
+          {
+            "id": "b",
+            "label": "Keep the controller uninformed to maximize surprise"
+          },
+          {
+            "id": "c",
+            "label": "Replace the exposure with a safe approved simulation and controlled exercise boundaries"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R03_final7",
+        "prompt": "For observe behavior and preserve facts, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Prompted actions do not establish the same capability as independent execution."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R03_final8",
+        "prompt": "Which evidence would most directly verify observe behavior and preserve facts in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "Factual observation notes distinguishing independent, prompted and unassessed actions"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R03_final9",
+        "prompt": "A relief worker proposes the following shortcut during observe behavior and preserve facts: \"Remove coaching notes so the result appears simpler.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Remove coaching notes so the result appears simpler"
+          },
+          {
+            "id": "b",
+            "label": "Use attendance as proof of independent performance"
+          },
+          {
+            "id": "c",
+            "label": "Record the coaching and limit the conclusion to the performance actually demonstrated"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R03_final10",
+        "prompt": "For debrief the system rather than blame, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Changing scope after failure conceals the capability that the exercise actually tested."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R03_final11",
+        "prompt": "Which evidence would most directly verify debrief the system rather than blame in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A debrief record with the observed failure, participant input and agreed investigation or action"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R03_final12",
+        "prompt": "A relief worker proposes the following shortcut during debrief the system rather than blame: \"Reclassify the contractor omission as out of scope after the event.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reclassify the contractor omission as out of scope after the event"
+          },
+          {
+            "id": "b",
+            "label": "Mark success because the employee count was correct"
+          },
+          {
+            "id": "c",
+            "label": "Keep the failed accountability result and investigate the roster and interface gap"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R03_final13",
+        "prompt": "For assign actions and retest material gaps, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A document change does not prove that the previously failed response now works."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R03_final14",
+        "prompt": "Which evidence would most directly verify assign actions and retest material gaps in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A corrected interface and observed focused retest covering the omitted contractor group"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R03_final15",
+        "prompt": "A relief worker proposes the following shortcut during assign actions and retest material gaps: \"Close the action when the file upload completes.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Close the action when the file upload completes"
+          },
+          {
+            "id": "b",
+            "label": "Repeat only the parts of the drill that passed"
+          },
+          {
+            "id": "c",
+            "label": "Verify implementation and safely retest the failed accountability function before claiming resolution"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R03_final16",
+        "prompt": "For report bounded readiness and maintain learning, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A tabletop cannot demonstrate unperformed technical rescue or untested shift capability."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R03_final17",
+        "prompt": "Which evidence would most directly verify report bounded readiness and maintain learning in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A bounded report identifying tested functions, unassessed elements and follow-up"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R03_final18",
+        "prompt": "A relief worker proposes the following shortcut during report bounded readiness and maintain learning: \"Use the tabletop result as universal rescue qualification.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the tabletop result as universal rescue qualification"
+          },
+          {
+            "id": "b",
+            "label": "Remove limitations to avoid confusing management"
+          },
+          {
+            "id": "c",
+            "label": "Limit the report to the decisions and participants actually tested and arrange the separate required evaluations"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R03_final19",
+        "prompt": "In Scenario 1, what is the correct result?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Exercise completed; accountability objective failed and requires correction and retest"
+          },
+          {
+            "id": "b",
+            "label": "All objectives passed because nobody was injured"
+          },
+          {
+            "id": "c",
+            "label": "The omitted groups should be deleted from the scope"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R03_final20",
+        "prompt": "In Scenario 2, what limits the conclusion?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The use of a dummy automatically invalidates all learning"
+          },
+          {
+            "id": "b",
+            "label": "Coaching, different geometry and unassessed actual-site technical performance"
+          },
+          {
+            "id": "c",
+            "label": "Only the number of attendees matters"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "R03_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R03_lesson1",
+          "questionIds": [
+            "R03_check1"
+          ]
+        },
+        {
+          "lessonId": "R03_lesson2",
+          "questionIds": [
+            "R03_check2"
+          ]
+        },
+        {
+          "lessonId": "R03_lesson3",
+          "questionIds": [
+            "R03_check3"
+          ]
+        },
+        {
+          "lessonId": "R03_lesson4",
+          "questionIds": [
+            "R03_check4"
+          ]
+        },
+        {
+          "lessonId": "R03_lesson5",
+          "questionIds": [
+            "R03_check5"
+          ]
+        },
+        {
+          "lessonId": "R03_lesson6",
+          "questionIds": [
+            "R03_check6"
+          ]
+        },
+        {
+          "lessonId": "R03_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R03_final",
+          "questionIds": [
+            "R03_final1",
+            "R03_final2",
+            "R03_final3",
+            "R03_final4",
+            "R03_final5",
+            "R03_final6",
+            "R03_final7",
+            "R03_final8",
+            "R03_final9",
+            "R03_final10",
+            "R03_final11",
+            "R03_final12",
+            "R03_final13",
+            "R03_final14",
+            "R03_final15",
+            "R03_final16",
+            "R03_final17",
+            "R03_final18",
+            "R03_final19",
+            "R03_final20"
+          ]
+        },
+        {
+          "lessonId": "R03_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "R03_check1": "Define the risk-based capability and observable success criteria before the exercise. Attendance does not specify which response function has been tested.",
+        "R03_check2": "Replace the exposure with a safe approved simulation and controlled exercise boundaries. A drill must test capability without creating uncontrolled harm.",
+        "R03_check3": "Record the coaching and limit the conclusion to the performance actually demonstrated. Prompted actions do not establish the same capability as independent execution.",
+        "R03_check4": "Keep the failed accountability result and investigate the roster and interface gap. Changing scope after failure conceals the capability that the exercise actually tested.",
+        "R03_check5": "Verify implementation and safely retest the failed accountability function before claiming resolution. A document change does not prove that the previously failed response now works.",
+        "R03_check6": "Limit the report to the decisions and participants actually tested and arrange the separate required evaluations. A tabletop cannot demonstrate unperformed technical rescue or untested shift capability.",
+        "R03_final1": "Attendance does not specify which response function has been tested. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R03_final2": "A documented scenario, bounded objectives and observation plan. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R03_final3": "Define the risk-based capability and observable success criteria before the exercise. Attendance does not specify which response function has been tested. A staffing change does not remove this requirement.",
+        "R03_final4": "A drill must test capability without creating uncontrolled harm. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R03_final5": "An approved exercise safety plan with controller, stop process and necessary notifications. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R03_final6": "Replace the exposure with a safe approved simulation and controlled exercise boundaries. A drill must test capability without creating uncontrolled harm. A staffing change does not remove this requirement.",
+        "R03_final7": "Prompted actions do not establish the same capability as independent execution. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R03_final8": "Factual observation notes distinguishing independent, prompted and unassessed actions. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R03_final9": "Record the coaching and limit the conclusion to the performance actually demonstrated. Prompted actions do not establish the same capability as independent execution. A staffing change does not remove this requirement.",
+        "R03_final10": "Changing scope after failure conceals the capability that the exercise actually tested. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R03_final11": "A debrief record with the observed failure, participant input and agreed investigation or action. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R03_final12": "Keep the failed accountability result and investigate the roster and interface gap. Changing scope after failure conceals the capability that the exercise actually tested. A staffing change does not remove this requirement.",
+        "R03_final13": "A document change does not prove that the previously failed response now works. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R03_final14": "A corrected interface and observed focused retest covering the omitted contractor group. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R03_final15": "Verify implementation and safely retest the failed accountability function before claiming resolution. A document change does not prove that the previously failed response now works. A staffing change does not remove this requirement.",
+        "R03_final16": "A tabletop cannot demonstrate unperformed technical rescue or untested shift capability. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R03_final17": "A bounded report identifying tested functions, unassessed elements and follow-up. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R03_final18": "Limit the report to the decisions and participants actually tested and arrange the separate required evaluations. A tabletop cannot demonstrate unperformed technical rescue or untested shift capability. A staffing change does not remove this requirement.",
+        "R03_final19": "Exercise completion and objective success are distinct. A favorable outcome does not erase the observed accountability failure.",
+        "R03_final20": "Safe simulation is useful, but its observed conditions and assistance define what it demonstrates. It cannot certify untested technical execution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

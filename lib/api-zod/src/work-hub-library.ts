@@ -146,9 +146,25 @@ export const LibraryDraftSchema = z
     )
       c.addIssue({ code: "custom", message: "Poll requires valid options" });
   });
+export const TrainingPolicyDetailsSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().max(20000).default(''),
+  purpose: z.string().max(20000).default(''),
+  requiredUserIds: z.array(z.number().int().positive()).max(5000).default([]),
+  requiredStaffRoleIds: z.array(z.string().min(1).max(200)).max(500).default([]),
+  requiredGroupIds: z.array(z.string().regex(/^(?:[0-9a-f-]{36}|crew:[1-9][0-9]*)$/i)).max(100).default([]),
+  serviceApplicability:z.array(z.object({serviceId:z.string().min(1).max(120),applies:z.boolean(),reason:z.string().trim().min(1).max(2000)})).max(1000).default([]),
+  newHireRequired: z.boolean().default(false),
+  roleChangeRequired: z.boolean().default(false),
+  activatedAt: z.iso.datetime().nullable().default(null),
+  nextScanAt: z.iso.datetime().nullable().default(null),
+  attachmentFileIds: z.array(z.uuid()).max(100).default([]),
+  links: z.array(z.object({title:z.string().trim().min(1).max(200),url:z.url().refine(x=>/^https?:\/\//.test(x))})).max(50).default([]),
+}).refine(policy=>new Set(policy.serviceApplicability.map(item=>item.serviceId)).size===policy.serviceApplicability.length,'Each service needs one applicability decision');
 export const LibraryMetadataSchema = z.object({
+  trainingPolicy: TrainingPolicyDetailsSchema.optional(),
   safetyResource: z.object({
-    familyId: z.string().regex(/^[LHCEIR][0-9]{2}$/),
+    familyId: z.string().regex(/^[LHCEIRG][0-9]{2}$/),
     categoryId: z.enum(["leadership", "hazards", "competence", "equipment", "learning", "emergency"]),
     resourceType: z.enum(["policy", "form", "training", "evidence-examples"]),
     sourceVersion: z.string().min(1),
@@ -319,6 +335,7 @@ export const AssignedLibraryReadSchema = z.object({
   canSubmit: z.boolean(),
   assignment: AssignmentMetadataSchema,
   metadata: z.object({
+    safetyResource: LibraryMetadataSchema.shape.safetyResource,
     kind: z.enum(["policy", "form", "poll", "training", "bundle"]),
     contentVersion: z.number(),
     state: z.string(),

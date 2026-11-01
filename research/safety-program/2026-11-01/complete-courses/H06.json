@@ -1,0 +1,785 @@
+{
+  "familyId": "H06",
+  "title": "Hot work and fire watch",
+  "description": "Complete guided H06 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Prevent fire/explosion during work around flammable materials.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Separately assess the assigned hot-work craft skill, fire-watch duties, extinguisher and emergency actions, area preparation and permit acceptance in safe practical exercises. Gas testing and permit issuing require their own qualified evaluation and designation. This course is not a welding qualification, gas-testing certificate or authorization to fight fires beyond assigned safe limits.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Hot work and fire watch",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-12-10-24/Products_%20Hot%20Work%20Standard.pdf"
+    },
+    {
+      "title": "Inventory source 2: Hot work and fire watch",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Simplified%20PTW%20and%20JSA%20template.pdf"
+    },
+    {
+      "title": "OSHA: Welding, cutting and brazing general requirements",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.252"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H06_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H06: Hot work and fire watch\n\nThis original VNDRLY course teaches decisions for service-specific: welding, cutting, grinding and ignition-producing tasks. Its purpose is to prevent fire/explosion during work around flammable materials. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H06_lesson1",
+        "title": "Lesson 1: Identify ignition sources and safer alternatives",
+        "body": "Hot work includes activities capable of producing ignition energy, such as welding, cutting and many grinding operations. The hazard is not limited to a visible flame. Sparks, hot surfaces and heat conducted through metal can ignite materials away from the immediate tool. First ask whether the work can be avoided, performed by an approved non-ignition method or relocated to a suitably controlled area.\n\nChanging to a battery-powered tool does not automatically make an activity cold work. The actual mechanism, equipment suitability and atmosphere determine the hazard. The site authority classifies and authorizes the task under its rules.\n\nWorked example: a crew proposes grinding a bracket beside process drains. The task is assessed as an ignition source; familiarity with the bracket does not establish the drains are free of flammable material.\n\n### Applying the mechanism\n\nIgnition assessment follows energy and material paths. A spark can travel through a gap, while heat can conduct through metal into an area the operator cannot see. Flammable material may come from the equipment being worked on or from a separate process, drain or nearby activity. That is why classifying only the tool is insufficient. The authority assesses the task in its surroundings and considers alternatives that avoid introducing ignition. A cold-cutting proposal also needs technical assessment; changing the method can introduce mechanical or chemical hazards. The goal is a suitable controlled task, not replacing one familiar label with another and assuming the risks disappeared.\n\n### Decision principles\n\nEliminating or relocating the ignition task can reduce exposure more directly than adding precautions around a process hazard, provided the alternative is technically assessed.\n\nThe assessment must consider heat transfer and hidden combustibles, not just the tool’s immediate location. Adjacent spaces may need protection and observation.\n\nClassification is an operating-control decision. A convenient job label or familiar tool does not remove the requirement to assess ignition and surrounding hazards.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H06_lesson2",
+        "title": "Lesson 2: Prepare the area and connected interfaces",
+        "body": "The permit and assessment identify the work location, equipment, time and conditions. Remove combustibles where practicable or provide the approved protection. Examine openings, drains, ducts, wall penetrations, lower levels and opposite sides through which sparks, heat or flammable material can travel. Process systems and vessels need their own preparation and isolation; never weld or cut a container merely because it appears empty.\n\nCoordinate with operations and nearby crews. A separate transfer or venting activity can introduce flammable material after the area was prepared. Barriers and signs control access but do not make the atmosphere safe.\n\nWorked example: a floor opening leads to an occupied lower level with stored packaging. The plan addresses that level before hot work starts; a screen beside the welder alone does not control the opening.\n\n### Applying the mechanism\n\nWalk the area beyond the operator’s immediate position. Examine where hot material can fall or travel and what lies on the other side of surfaces receiving heat. Stored packaging, oily deposits and hidden voids can create delayed ignition. The preparation plan identifies what is removed, protected or isolated and who verifies each part. It also defines how the arrangement remains effective as materials and people move. If a screen is shifted for access, the crew reassesses the exposed path rather than assuming the original preparation still applies. Nearby operations must know the ignition task is active so they do not introduce a release into the protected area.\n\n### Decision principles\n\nContainer preparation requires the approved technical assessment and methods. Visual appearance cannot establish the absence of hazardous residues or connected sources.\n\nHot work interacts with process operations and adjacent work. Physical releases and spark paths do not follow employer or paperwork boundaries.\n\nScreens can control particular light or spark exposures, but they do not remove flammable gases or establish process isolation.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H06_lesson3",
+        "title": "Lesson 3: Verify atmosphere and authorization prerequisites",
+        "body": "Where required, qualified personnel establish gas testing, instrument suitability, locations, frequency and acceptance criteria under the site procedure. A measurement is bounded by the actual atmosphere and sampling method. The course does not invent a universal acceptable gas number or permit duration. The authorized issuer and performing lead confirm the required safeguards before the task starts.\n\nA detector that powers on is not necessarily fit for the target hazards. Failed required checks or monitoring remove the safeguard from reliance. The crew must not use a favorable older reading to override a present alarm or changed process condition.\n\nWorked example: the area passed an initial test before a nearby transfer began. The transfer changes the assessment assumptions, so the authority reassesses and revalidates the work rather than relying on the earlier result.\n\n### Applying the mechanism\n\nAtmospheric testing must support the actual hot-work decision. The qualified tester selects suitable sensors and locations and follows the specified timing and monitoring requirements. A reading from an accessible point may not represent a drain, enclosed pocket or changing process release. The authority establishes the applicable criteria; workers do not convert a detector alarm setting into a universal hot-work allowance. If the instrument is unsuitable or its required checks fail, the safeguard is missing. The task remains held until a verified arrangement is restored. A signed permit can record authorization but cannot make an inadequate measurement method representative of the work area.\n\n### Decision principles\n\nInstrument possession does not establish sampling and interpretation competence. Testing is a separately assessed technical task.\n\nReadings cannot predict every future condition. The monitoring arrangement and change triggers must maintain the basis for safe work.\n\nA failed monitoring control invalidates reliance on that safeguard. Workers must not expose themselves while troubleshooting or guessing the atmosphere.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H06_lesson4",
+        "title": "Lesson 4: Understand the fire watch function",
+        "body": "A fire watch is a trained assigned role with suitable extinguishing equipment, communication and a clear view of the areas being protected. The watch looks for ignition, unsafe change and spread, and has authority to stop the work and raise the alarm. Work assignments must not distract from those duties. A watch may need coverage of more than one level or side where the assessment identifies hidden spark or heat pathways.\n\nThe watch acts only within training and safe response limits. The priority is alerting, evacuation and the site emergency system when a fire cannot be safely managed by the assigned initial response. A portable extinguisher is not permission to enter smoke or a hazardous atmosphere.\n\nWorked example: the watch is asked to help carry materials out of view. The required coverage is maintained by proper relief or hot work stops; the welder does not become their own effective watch by glancing around.\n\n### Applying the mechanism\n\nThe fire watch must understand the assigned coverage and the response limits. Observation should include the identified spark and heat pathways, not merely watching the operator. The watch needs a way to stop the work promptly and summon help without leaving the protected area unobserved. Where several levels or sides require coverage, the plan establishes suitable staffing or another approved arrangement. The watch does not accept unrelated work that prevents those duties. Extinguisher readiness includes the person’s training and a safe escape, not just a cylinder on the floor. A developing fire beyond safe initial response requires the emergency system and evacuation rather than a heroic attempt to protect the equipment.\n\n### Decision principles\n\nThe role is bounded by the plan, training and safe response conditions. It does not replace the emergency response system or authorize hazardous entry.\n\nCoverage must match the identified ignition pathways. Hidden or lower areas can require additional arrangements rather than assuming one viewpoint is sufficient.\n\nInitial response must preserve the responder’s safety and escape. Training and the emergency plan determine limits; equipment availability does not justify uncontrolled exposure.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H06_lesson5",
+        "title": "Lesson 5: Stop when conditions change",
+        "body": "Stop hot work when a required control fails, a gas alarm occurs, the fire watch is unavailable, conditions change or the site issues an emergency instruction. Secure the activity only as the approved response allows without delaying escape or creating exposure. Notify the responsible authority from safety. Do not reset the alarm and relight the torch as an informal restart.\n\nChanges include new combustibles, shifted screens, blocked access, process release, weather affecting sparks or ventilation, and a different work method. The authority determines whether the existing authorization can be revalidated or a new one is needed.\n\nWorked example: wind begins carrying sparks beyond the protected area. The crew stops and reassesses the actual path and protection. The original briefing is not a guarantee that the area remains controlled.\n\n### Applying the mechanism\n\nStop triggers should be discussed before work so they do not become debates under pressure. The operator and watch should know what to do on alarm, failed monitoring, loss of coverage, new combustibles or changed wind. The response must not require a person to remain exposed simply to make the work look tidy. After the stop, the authority reviews both the initiating change and any unfinished task state. An incomplete cut or hot component may require a controlled follow-up method, but it does not justify relighting without clearance. Rebriefing should explain what changed and what has been verified, not merely announce that the permit is still within its time window.\n\n### Decision principles\n\nProtective response comes before fault investigation. A suspected false alarm cannot be treated as atmospheric clearance.\n\nA changed method can introduce a new ignition source and controls. The administrative job title does not authorize every technique.\n\nRestart is conditional on restored safeguards and site authorization. Silencing a warning or production urgency does not establish readiness.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H06_lesson6",
+        "title": "Lesson 6: Complete post-work monitoring and handback",
+        "body": "Ignition can occur or become visible after the tool stops. Maintain the watch and inspections for the period required by the applicable rules and approved permit, including any additional monitoring identified by the assessment. Do not invent a shorter universal interval or assume departure is allowed because no flame is visible.\n\nCloseout confirms the work area and affected adjacent spaces, equipment state, temporary protection, remaining restrictions and responsible acceptance. Preserve records of stops, alarms and corrective actions. The operating authority controls return to service; the welder’s completion does not clear a process system.\n\nWorked example: the weld is complete, but hot material remains near a protected penetration. The watch completes the specified post-work duties and the authority accepts handback only after the required checks, rather than treating tool shutdown as job clearance.\n\n### Applying the mechanism\n\nDelayed ignition is a reason for defined post-work duties. Heat can remain in material or conceal smoldering beyond the operator’s direct view. The applicable rules and permit establish the watch and inspection period, and the task assessment may require additional coverage. Do not substitute a number remembered from another site. Closeout checks the affected adjacent areas and records unresolved conditions before handback. If an area cannot be inspected as required, that gap remains visible to the authority. The operating owner accepts the actual final state and any continuing restriction; stopping the tool and collecting the permit do not themselves establish that every ignition pathway is clear.\n\n### Decision principles\n\nRequirements depend on applicable law and site controls. This course does not replace them with an invented duration.\n\nHandback must inform the operating authority of readiness and remaining limits. Craft completion and process restoration are distinct decisions.\n\nWelding, testing, fire watch and permit roles require their own task-specific practical evaluation and designation. A quiz cannot demonstrate those field skills.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H06_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: Hidden ignition path\n\nA welder has a prepared area upstairs. Sparks can pass through a cable penetration to packaging below, where no watch or protection is assigned.\n\n**Worked decision and reasoning.** Hot work remains held. The lead and site authority assess the complete spark and heat paths, remove or protect affected materials using approved methods, establish required coverage and verify access and response. The lower area is included in the briefing and closeout. A screen upstairs and a signed permit do not control an unassessed space below.\n\n### Scenario 2: Alarm near the finish\n\nA crew is nearly finished when a gas alarm sounds. The operator wants thirty seconds to complete the cut and avoid rework.\n\n**Worked decision and reasoning.** The crew follows the prescribed stop and emergency response without bargaining for completion time. The watch raises the appropriate notification, and people move through the site plan. Qualified investigation establishes the cause and the authority verifies conditions before any restart. The unfinished cut is treated as a task state needing controlled reassessment, not as a reason to remain exposed.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H06_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H06_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nSeparately assess the assigned hot-work craft skill, fire-watch duties, extinguisher and emergency actions, area preparation and permit acceptance in safe practical exercises. Gas testing and permit issuing require their own qualified evaluation and designation. This course is not a welding qualification, gas-testing certificate or authorization to fight fires beyond assigned safe limits.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H06_check1",
+        "prompt": "A battery grinder is proposed beside process drains. What is the correct classification approach?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assess its actual ignition potential and site hot-work requirements."
+          },
+          {
+            "id": "b",
+            "label": "Treat all battery tools as cold work."
+          },
+          {
+            "id": "c",
+            "label": "Assume no flame means no ignition hazard."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H06_final_1_1",
+        "prompt": "What should be considered before selecting hot work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only how quickly the permit can be signed."
+          },
+          {
+            "id": "b",
+            "label": "Only the welder’s preferred tool."
+          },
+          {
+            "id": "c",
+            "label": "An approved safer method or relocation that avoids the ignition exposure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H06_final_1_2",
+        "prompt": "Can heat create a hazard on the opposite side of a metal wall?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only if the wall is transparent."
+          },
+          {
+            "id": "b",
+            "label": "Yes; conducted heat can affect hidden or adjacent materials."
+          },
+          {
+            "id": "c",
+            "label": "No; only visible sparks matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H06_final_1_3",
+        "prompt": "Who decides whether the site requires hot-work authorization?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The designated site authority using the actual task and rules."
+          },
+          {
+            "id": "b",
+            "label": "Any worker who calls the task minor."
+          },
+          {
+            "id": "c",
+            "label": "The tool’s owner automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H06_check2",
+        "prompt": "Sparks can fall through an opening to a lower level. What must be addressed?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the welder’s immediate floor area."
+          },
+          {
+            "id": "b",
+            "label": "Only a sign at the tool."
+          },
+          {
+            "id": "c",
+            "label": "The complete spark path, affected materials and people below."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H06_final_2_1",
+        "prompt": "Why is an apparently empty container not automatically safe to cut?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A clean exterior proves internal preparation."
+          },
+          {
+            "id": "b",
+            "label": "Residue or connected material can create fire, explosion or toxic hazards."
+          },
+          {
+            "id": "c",
+            "label": "Empty containers cannot contain vapor."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H06_final_2_2",
+        "prompt": "What should coordination include?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nearby transfers, venting, access and work that can change ignition or exposure conditions."
+          },
+          {
+            "id": "b",
+            "label": "Only people employed by the welder’s company."
+          },
+          {
+            "id": "c",
+            "label": "Only tasks using the same permit number."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H06_final_2_3",
+        "prompt": "Does a welding screen establish a safe atmosphere?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if it surrounds the tool."
+          },
+          {
+            "id": "b",
+            "label": "Yes, when the screen is new."
+          },
+          {
+            "id": "c",
+            "label": "No; it has a limited protective function and does not replace atmosphere controls."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H06_check3",
+        "prompt": "A nearby transfer changes conditions after the initial test. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ignore it because the test was once acceptable."
+          },
+          {
+            "id": "b",
+            "label": "Pause affected hot work and obtain reassessment and required revalidation."
+          },
+          {
+            "id": "c",
+            "label": "Continue until the permit’s printed end time."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H06_final_3_1",
+        "prompt": "Who performs required technical gas testing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A qualified and authorized tester using the approved method."
+          },
+          {
+            "id": "b",
+            "label": "Any worker carrying a detector."
+          },
+          {
+            "id": "c",
+            "label": "The fire watch automatically after this course."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H06_final_3_2",
+        "prompt": "What does a previous acceptable reading establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permanent clearance for every nearby task."
+          },
+          {
+            "id": "b",
+            "label": "Proof that no later release can occur."
+          },
+          {
+            "id": "c",
+            "label": "A bounded result for its time, place and method."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H06_final_3_3",
+        "prompt": "What if a required monitor fails during work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Substitute smell for monitoring."
+          },
+          {
+            "id": "b",
+            "label": "Stop affected work and restore the verified safeguard through the responsible process."
+          },
+          {
+            "id": "c",
+            "label": "Silence the fault and continue."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H06_check4",
+        "prompt": "The fire watch is asked to work elsewhere out of view. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Maintain qualified coverage or stop the affected hot work."
+          },
+          {
+            "id": "b",
+            "label": "Continue because the watch is still on site."
+          },
+          {
+            "id": "c",
+            "label": "Let the welder watch while welding."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H06_final_4_1",
+        "prompt": "What is a fire watch responsible for?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Providing blanket rescue capability."
+          },
+          {
+            "id": "b",
+            "label": "Guaranteeing every fire can be extinguished alone."
+          },
+          {
+            "id": "c",
+            "label": "Observing assigned areas, stopping unsafe work and initiating the planned response."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H06_final_4_2",
+        "prompt": "Why might multiple sides or levels need observation?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the tool operator’s floor matters."
+          },
+          {
+            "id": "b",
+            "label": "Heat and sparks can reach areas not visible from one position."
+          },
+          {
+            "id": "c",
+            "label": "One observer can always see through walls."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H06_final_4_3",
+        "prompt": "What should happen if a fire exceeds safe initial-response limits?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Raise the alarm and follow evacuation and emergency instructions."
+          },
+          {
+            "id": "b",
+            "label": "Continue fighting regardless of smoke or escape."
+          },
+          {
+            "id": "c",
+            "label": "Re-enter to retrieve the extinguisher."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H06_check5",
+        "prompt": "Wind carries sparks beyond the protected area. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continue because wind is natural."
+          },
+          {
+            "id": "b",
+            "label": "Ask nearby workers to watch their clothing."
+          },
+          {
+            "id": "c",
+            "label": "Stop and reassess the changed ignition pathway before authorized restart."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H06_final_5_1",
+        "prompt": "What does a gas alarm require during affected hot work?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Continued work until a second alarm occurs."
+          },
+          {
+            "id": "b",
+            "label": "The prescribed stop, escape and notification response."
+          },
+          {
+            "id": "c",
+            "label": "A vote about whether the instrument is reliable."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H06_final_5_2",
+        "prompt": "What if the work changes from fitting to grinding?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reassess scope and required authorization before introducing ignition."
+          },
+          {
+            "id": "b",
+            "label": "Use the fitting authorization automatically."
+          },
+          {
+            "id": "c",
+            "label": "Call the grinder a hand tool."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H06_final_5_3",
+        "prompt": "Who permits restart after a control failure?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The operator who needs to finish fastest."
+          },
+          {
+            "id": "b",
+            "label": "Anyone who silenced the alarm."
+          },
+          {
+            "id": "c",
+            "label": "The designated authority after required conditions are verified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H06_check6",
+        "prompt": "The tool is off but the required post-work watch is incomplete. May the crew simply leave?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if the permit is signed now."
+          },
+          {
+            "id": "b",
+            "label": "No; complete the applicable watch and closeout requirements."
+          },
+          {
+            "id": "c",
+            "label": "Yes, because ignition stops with the tool."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H06_final_6_1",
+        "prompt": "Who sets the applicable post-work watch requirement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The governing rules and approved site permit or procedure."
+          },
+          {
+            "id": "b",
+            "label": "The learner’s preferred universal number."
+          },
+          {
+            "id": "c",
+            "label": "The tool’s battery capacity."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H06_final_6_2",
+        "prompt": "What should hot-work handback communicate?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the weld length."
+          },
+          {
+            "id": "b",
+            "label": "Automatic process restart permission."
+          },
+          {
+            "id": "c",
+            "label": "Actual area and equipment state, completed checks and unresolved restrictions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H06_final_6_3",
+        "prompt": "What does a written course pass establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Authority to issue any hot-work permit."
+          },
+          {
+            "id": "b",
+            "label": "Knowledge and judgment learning, with practical roles still separately assessed."
+          },
+          {
+            "id": "c",
+            "label": "Qualified welding skill and fire-watch competence automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H06_final_scenario1",
+        "prompt": "What must be corrected before the upstairs work starts?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The unprotected ignition pathway and required coverage below."
+          },
+          {
+            "id": "b",
+            "label": "Only the permit’s spelling."
+          },
+          {
+            "id": "c",
+            "label": "The lower crew must accept the risk informally."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H06_final_scenario2",
+        "prompt": "Why must the crew not finish the cut during the alarm?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Alarms are only administrative interruptions."
+          },
+          {
+            "id": "b",
+            "label": "A nearly completed task has no remaining hazard."
+          },
+          {
+            "id": "c",
+            "label": "The atmosphere safeguard is no longer established, and ignition can have immediate consequences."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H06_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H06_lesson1",
+          "questionIds": [
+            "H06_check1"
+          ]
+        },
+        {
+          "lessonId": "H06_lesson2",
+          "questionIds": [
+            "H06_check2"
+          ]
+        },
+        {
+          "lessonId": "H06_lesson3",
+          "questionIds": [
+            "H06_check3"
+          ]
+        },
+        {
+          "lessonId": "H06_lesson4",
+          "questionIds": [
+            "H06_check4"
+          ]
+        },
+        {
+          "lessonId": "H06_lesson5",
+          "questionIds": [
+            "H06_check5"
+          ]
+        },
+        {
+          "lessonId": "H06_lesson6",
+          "questionIds": [
+            "H06_check6"
+          ]
+        },
+        {
+          "lessonId": "H06_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H06_assessment",
+          "questionIds": [
+            "H06_final_1_1",
+            "H06_final_1_2",
+            "H06_final_1_3",
+            "H06_final_2_1",
+            "H06_final_2_2",
+            "H06_final_2_3",
+            "H06_final_3_1",
+            "H06_final_3_2",
+            "H06_final_3_3",
+            "H06_final_4_1",
+            "H06_final_4_2",
+            "H06_final_4_3",
+            "H06_final_5_1",
+            "H06_final_5_2",
+            "H06_final_5_3",
+            "H06_final_6_1",
+            "H06_final_6_2",
+            "H06_final_6_3",
+            "H06_final_scenario1",
+            "H06_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H06_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H06_check1": "Grinding can produce sparks and hot material regardless of the power source. The actual activity and surrounding atmosphere determine the required controls.",
+        "H06_final_1_1": "Eliminating or relocating the ignition task can reduce exposure more directly than adding precautions around a process hazard, provided the alternative is technically assessed.",
+        "H06_final_1_2": "The assessment must consider heat transfer and hidden combustibles, not just the tool’s immediate location. Adjacent spaces may need protection and observation.",
+        "H06_final_1_3": "Classification is an operating-control decision. A convenient job label or familiar tool does not remove the requirement to assess ignition and surrounding hazards.",
+        "H06_check2": "Area preparation follows the possible ignition pathway. Lower levels and openings can receive hot material even when the immediate work area looks clean.",
+        "H06_final_2_1": "Container preparation requires the approved technical assessment and methods. Visual appearance cannot establish the absence of hazardous residues or connected sources.",
+        "H06_final_2_2": "Hot work interacts with process operations and adjacent work. Physical releases and spark paths do not follow employer or paperwork boundaries.",
+        "H06_final_2_3": "Screens can control particular light or spark exposures, but they do not remove flammable gases or establish process isolation.",
+        "H06_check3": "Atmosphere and release pathways can change during authorization. The permit is conditional on safeguards and conditions remaining valid.",
+        "H06_final_3_1": "Instrument possession does not establish sampling and interpretation competence. Testing is a separately assessed technical task.",
+        "H06_final_3_2": "Readings cannot predict every future condition. The monitoring arrangement and change triggers must maintain the basis for safe work.",
+        "H06_final_3_3": "A failed monitoring control invalidates reliance on that safeguard. Workers must not expose themselves while troubleshooting or guessing the atmosphere.",
+        "H06_check4": "The watch must be able to perform the assigned observation and response duties continuously. A name on the permit does not supply actual coverage.",
+        "H06_final_4_1": "The role is bounded by the plan, training and safe response conditions. It does not replace the emergency response system or authorize hazardous entry.",
+        "H06_final_4_2": "Coverage must match the identified ignition pathways. Hidden or lower areas can require additional arrangements rather than assuming one viewpoint is sufficient.",
+        "H06_final_4_3": "Initial response must preserve the responder’s safety and escape. Training and the emergency plan determine limits; equipment availability does not justify uncontrolled exposure.",
+        "H06_check5": "The protection was based on an assumed spark path. Changed conditions can defeat it; the control arrangement must be re-established before reliance.",
+        "H06_final_5_1": "Protective response comes before fault investigation. A suspected false alarm cannot be treated as atmospheric clearance.",
+        "H06_final_5_2": "A changed method can introduce a new ignition source and controls. The administrative job title does not authorize every technique.",
+        "H06_final_5_3": "Restart is conditional on restored safeguards and site authorization. Silencing a warning or production urgency does not establish readiness.",
+        "H06_check6": "Heat and smoldering material can create delayed ignition. The defined post-work period and inspections remain part of the protective system.",
+        "H06_final_6_1": "Requirements depend on applicable law and site controls. This course does not replace them with an invented duration.",
+        "H06_final_6_2": "Handback must inform the operating authority of readiness and remaining limits. Craft completion and process restoration are distinct decisions.",
+        "H06_final_6_3": "Welding, testing, fire watch and permit roles require their own task-specific practical evaluation and designation. A quiz cannot demonstrate those field skills.",
+        "H06_final_scenario1": "The hazard follows sparks and heat into adjacent areas. The protective arrangement must cover those areas before ignition work is authorized.",
+        "H06_final_scenario2": "Task progress does not reduce the significance of a flammable-atmosphere warning. Protective response and qualified clearance precede further ignition work."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

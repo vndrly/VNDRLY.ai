@@ -1,0 +1,785 @@
+{
+  "familyId": "E04",
+  "title": "Gas detectors and measurement assurance",
+  "description": "Complete guided E04 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Avoid relying on unserviceable or unsuitable gas instruments.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Gas testers require instrument- and task-specific practical assessment of selection, checks, safe sampling, timing, limitations, interpretation, logging and emergency response, plus employer/site authorization. Calibration and repair require the appropriate competent service role. This course does not qualify confined-space clearance, hazardous entry, respiratory use or rescue.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Gas detectors and measurement assurance",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/updates-6-10-25/Products%20Portable%20Gas%20Detection%20Standard_revised.pdf"
+    },
+    {
+      "title": "Inventory source 2: Gas detectors and measurement assurance",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/templates/3.%20Additional%20gas%20test%20Log.pdf"
+    },
+    {
+      "title": "OSHA: Calibrating and testing direct-reading portable gas monitors",
+      "url": "https://www.osha.gov/publications/shib093013"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "E04_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# E04: Gas detectors and measurement assurance\n\nThis original VNDRLY course teaches decisions for service-specific: gas testing and exposure detection. Its purpose is to avoid relying on unserviceable or unsuitable gas instruments. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E04_lesson1",
+        "title": "Lesson 1: Select the measurement for the hazard",
+        "body": "A gas detector is a measurement system with specific sensors, range, response and environmental limitations. Selection begins with the actual contaminants, oxygen and flammability hazards, task and sampling method. A four-channel display does not mean every chemical is detected. The qualified program determines personal, area or remote sampling arrangements and hazardous-location suitability.\n\nThe measurement purpose matters: warning a wearer, characterizing a space and documenting a technical test are different uses. A personal monitor does not automatically qualify its wearer to clear a vessel. Instrument selection must fit both the hazard and the decision being made.\n\nWorked example: a solvent task uses a detector with an H2S sensor but no demonstrated capability for the relevant vapor. A zero H2S display cannot clear the solvent exposure.\n\n### Applying the mechanism\n\nSelection needs a clear statement of the decision. A personal monitor warns its wearer about selected hazards; an area instrument observes a defined location; a pumped sample system obtains air from another point. These uses are not automatically interchangeable. The qualified program considers target substances, range, response, environment and any ignition-safety approval. It also considers what the instrument cannot detect. A device with oxygen, flammable-gas and two toxic sensors still does not measure every vapor. If a task introduces another chemical, review capability rather than interpreting a familiar zero display as universal clearance. Document the selected function so users know the measurement’s scope and their own role limits.\n\n### Decision principles\n\nThe program must match sensing capability and method to the actual decision. Channel count and price cannot establish suitability.\n\nPersonal monitoring and technical atmosphere assessment have different demands. Instrument possession does not demonstrate sampling and interpretation skill.\n\nElectrical equipment can introduce ignition hazards. The actual equipment approval and use conditions must match the assessed location.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E04_lesson2",
+        "title": "Lesson 2: Maintain identity and understand assurance checks",
+        "body": "Identify each instrument and its sensors so tests, calibration, repairs and measurements can be traced to the actual device. Follow manufacturer and qualified program requirements for inspection, functional challenge, calibration and service. A startup self-test, fresh-air zero, bump test and calibration are different actions.\n\nA bump test challenges response and alarms with known test gas under the specified method. Calibration checks or adjusts response against a reference as required. Neither a clean display nor a green battery icon proves sensor performance. Test gas, regulators, adapters and expiry or concentration information must suit the method.\n\nWorked example: a shared monitor’s case number differs from the test log. The user resolves the identity before relying on the claimed test rather than assuming all devices in the cabinet were checked.\n\n### Applying the mechanism\n\nAssurance requires a suitable reference and delivery method as well as an instrument. Test gas concentration, mixture, condition and expiry information must support the manufacturer’s specified check. Regulators, adapters and tubing can affect delivery. A completed test on the wrong setup may not establish the intended response. The program distinguishes a functional challenge, calibration check, adjustment and service so users do not treat every dock event as the same evidence. Preserve the actual result, including a failed check. If calibration or repair is needed, the device remains restricted until the required work and verification are complete. Do not allow an attractive ready label to replace that sequence.\n\n### Decision principles\n\nA functional challenge verifies a bounded instrument response. It does not replace calibration when required or establish workplace conditions.\n\nElectronic startup checks may not demonstrate sensor response to gas. Required challenge testing remains a separate safeguard.\n\nThe reference mixture and delivery arrangement must support the specified check. An incorrect challenge can create false confidence in the instrument.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E04_lesson3",
+        "title": "Lesson 3: Inspect and operate within manufacturer limits",
+        "body": "Before use, check physical condition, inlets, filters, pump or sampling line where fitted, battery, sensor identification, status and required assurance. Position personal monitors as instructed with sampling access unobstructed. A sealed pocket, contaminated filter or damaged line can delay or prevent representative sampling.\n\nEnvironmental conditions and exposure to interfering substances can affect performance. Sensors can be poisoned, inhibited, overloaded or cross-sensitive depending on technology. The qualified user must know the actual model’s limitations and escalation instructions rather than interpreting every number as exact truth.\n\nWorked example: a pumped sample line is kinked. The user does not accept the displayed value as representative of the remote point until the sampling system and required checks are restored.\n\n### Applying the mechanism\n\nThe sensing path must remain open and appropriate. Dust, moisture, blocked filters, kinked lines or an obstructed inlet can prevent representative sampling. A pumped system’s flow indication is part of its method and must be understood for the actual instrument. A personal monitor hidden beneath impermeable clothing may encounter different air from the wearer’s breathing zone. Environmental limits and sensor interference also matter: a plausible-looking number is not a guarantee of accuracy under every condition. Users must follow the model-specific instructions and recognize fault or over-range responses. They should not invent an interpretation when the display is unfamiliar; the protective response and qualified help take priority.\n\n### Decision principles\n\nThe device must encounter air relevant to the wearer within its intended method. Obstruction or remote placement can defeat timely warning.\n\nSensor technology has limitations beyond power supply. Users must understand the manufacturer’s interference and exposure instructions for the actual instrument.\n\nThe complete sampling and sensing system must function. A readable display does not prove that the target atmosphere reaches a suitable working sensor.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E04_lesson4",
+        "title": "Lesson 4: Plan sampling and interpret bounded results",
+        "body": "Qualified sampling considers where contaminants can occur, process configuration, layering or local sources, sample-line delay and sensor response, and the needed repeated or continuous measurements. Do not send an unprotected person into a hazard to carry the detector to a desired point. Use the approved safe sampling method.\n\nRecord location, time, task, conditions, device identity and responsible tester. A reading applies within those bounds. Exposure limits, alarm settings, entry criteria and emergency actions have different purposes and are interpreted through the approved program. This course supplies no universal safe number or sampling duration.\n\nWorked example: an acceptable reading at a vessel opening does not automatically represent the bottom or an obstructed compartment. The qualified strategy must address the locations relevant to the planned work.\n\n### Applying the mechanism\n\nA sampling plan connects the physical atmosphere to the instrument. Where the air is drawn from, how it reaches the sensor, and how long the system takes to respond all affect the result. A long line can introduce delay, and some materials or contaminants can interact with sampling equipment. The qualified method addresses these issues for the actual setup. Locations may differ because of release sources, ventilation, geometry and changing operations. Record the measurement and relevant conditions so another competent reviewer can understand what it represents. Do not broaden a point result to an entire space, shift or process without the technical basis and required ongoing monitoring.\n\n### Decision principles\n\nTransport and sensor response affect when a representative result appears. The approved method defines the required timing for the actual setup.\n\nTraceability makes the result interpretable and prevents reuse for an unrelated place, time or configuration.\n\nLimits can have different scopes and averaging periods. Alarm settings trigger protective actions and cannot be casually converted into safe-work permission.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E04_lesson5",
+        "title": "Lesson 5: Respond to failed checks, faults and alarms",
+        "body": "A failed required check, unsuitable sensor, unexplained fault or overdue mandatory service removes the instrument from reliance. Obtain a suitable verified replacement and address any work that depended on the missing safeguard. Do not reset, silence or relabel the device to make it appear ready.\n\nAn exposure alarm triggers the site protective response. A suspected instrument fault is investigated under safe conditions by qualified personnel; it is not a reason for workers to remain in the affected area. Preserve event and fault data when available.\n\nWorked example: a monitor alarms during a task and then displays an over-range or fault condition. The worker follows the emergency response and reports both indications rather than interpreting the fault as proof that no gas was present.\n\n### Applying the mechanism\n\nDisagreement between instruments is a reason for safe investigation, not a vote. Devices may be in different locations, have different sensors or response times, or have different faults. A worker follows the site alarm response rather than remaining in exposure until the cause is resolved. From safety, report the device identity, indication, location and sequence as accurately as possible. Preserve electronic logs when available through the program. An instrument fault after an alarm does not prove the earlier alarm was false; both observations need assessment. The responsible technical team establishes instrument condition and current atmosphere using a controlled method, and the site authority determines any authorized return.\n\n### Decision principles\n\nFailed assurance means the detection safeguard is not established. The program must restore suitability before workers depend on it.\n\nDifferent placement, timing or condition can explain disagreement. A quiet device cannot casually cancel a protective alarm.\n\nA complete chronology supports diagnosis and control review. Later results do not erase earlier warnings or explain them automatically.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E04_lesson6",
+        "title": "Lesson 6: Service, release and assess gas-testing competence",
+        "body": "Repair, sensor replacement and calibration must follow the manufacturer and qualified program requirements. After service, perform the required verification before release and update device and sensor records. Configuration changes, including alarm settings, need controlled authorization rather than casual adjustment by users.\n\nPractical testing competence includes instrument preparation, safe sampling, response-time understanding, interpretation, recording and alarm actions for the actual task. A written pass does not demonstrate those skills. The equipment owner ensures users and dispatch see the correct ready or restricted status.\n\nWorked example: a sensor is replaced but the required post-service checks are pending. The device remains restricted; a new sensor is not itself proof of a ready measurement system.\n\n### Applying the mechanism\n\nCompetence should be scoped to the measurement task. A worker can learn to inspect and wear a personal monitor without being qualified to design a confined-space testing strategy. A technician can calibrate a model without being the person authorized to issue an entry permit. Record these distinctions in the role matrix and assess practical performance on the actual instrument and method. The learner should demonstrate preparation, safe sampling, response timing, interpretation, records and alarm actions within their scope. Do not introduce hazardous gas exposure to make the assessment realistic. Use suitable test arrangements and simulations, with qualified assessors and controlled reference gases under the applicable procedure.\n\n### Decision principles\n\nAlarm settings are part of the protective system. Changes need a defined basis, authority and record rather than convenience.\n\nTechnical testing is a field skill with method-specific limits. Knowledge supports but does not replace observed performance and authorization.\n\nMeasurement assurance requires current traceable readiness, not just availability. Users must not receive a device whose technical status is unknown.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E04_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: A shared instrument cabinet\n\nA worker selects a monitor from a cabinet. A nearby log shows a passed challenge for a different serial number, and the selected unit’s required status cannot be established.\n\n**Worked decision and reasoning.** The selected unit is not relied on. The responsible equipment owner resolves identity and performs or documents the required assurance for that actual device, or provides a verified suitable replacement. The user confirms sensors, condition and task suitability. A shared storage location does not transfer one instrument’s test history to another.\n\n### Scenario 2: A changed remote sample\n\nA tester uses a longer sample line than planned and immediately records the displayed value as the remote atmosphere. The line and response timing have not been assessed.\n\n**Worked decision and reasoning.** The result is not used for clearance. The qualified method is reviewed for the actual line, flow, compatibility and response delay, and the required instrument and sampling checks are performed. A representative measurement is then taken and recorded with its conditions. The earlier value remains identified as unverified rather than silently relabeled.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E04_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E04_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nGas testers require instrument- and task-specific practical assessment of selection, checks, safe sampling, timing, limitations, interpretation, logging and emergency response, plus employer/site authorization. Calibration and repair require the appropriate competent service role. This course does not qualify confined-space clearance, hazardous entry, respiratory use or rescue.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "E04_check1",
+        "prompt": "A detector lacks a suitable sensor for the assessed contaminant. Can a zero display clear the task?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; the measurement does not address that hazard."
+          },
+          {
+            "id": "b",
+            "label": "Yes, all gas instruments detect all vapors."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the device is newly purchased."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E04_final_1_1",
+        "prompt": "What should instrument selection start with?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The number of display channels alone."
+          },
+          {
+            "id": "b",
+            "label": "The lowest purchase price."
+          },
+          {
+            "id": "c",
+            "label": "Actual hazards, measurement purpose and sampling conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E04_final_1_2",
+        "prompt": "Does a personal warning monitor establish gas-tester qualification?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, after startup."
+          },
+          {
+            "id": "b",
+            "label": "No; technical testing requires separate competence and authorization."
+          },
+          {
+            "id": "c",
+            "label": "Yes, ownership grants testing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E04_final_1_3",
+        "prompt": "Why check hazardous-location suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The instrument itself must be suitable for the atmosphere where used."
+          },
+          {
+            "id": "b",
+            "label": "Only the sensor color matters."
+          },
+          {
+            "id": "c",
+            "label": "Any battery device is intrinsically safe."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E04_check2",
+        "prompt": "The monitor identity does not match the test log. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the log from any identical model."
+          },
+          {
+            "id": "b",
+            "label": "Write the desired serial number onto the log."
+          },
+          {
+            "id": "c",
+            "label": "Resolve traceability and required status before reliance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E04_final_2_1",
+        "prompt": "What does a bump test check?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Permanent accuracy under all conditions."
+          },
+          {
+            "id": "b",
+            "label": "Specified gas response and alarm function."
+          },
+          {
+            "id": "c",
+            "label": "The atmosphere of every future workplace."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E04_final_2_2",
+        "prompt": "Does startup self-test replace a required gas challenge?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; follow the manufacturer and program’s distinct requirements."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the screen says ready."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the battery is full."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E04_final_2_3",
+        "prompt": "Why verify test-gas suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Any gas cylinder works."
+          },
+          {
+            "id": "b",
+            "label": "Only cylinder size matters."
+          },
+          {
+            "id": "c",
+            "label": "Wrong, expired or unsuitable gas can invalidate the assurance result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E04_check3",
+        "prompt": "A remote sample line is kinked. What does the display establish about the remote location?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The pump automatically corrects every blockage."
+          },
+          {
+            "id": "b",
+            "label": "No reliable clearance until the sampling fault is resolved and the method verified."
+          },
+          {
+            "id": "c",
+            "label": "The remote location is safe if the display is zero."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E04_final_3_1",
+        "prompt": "Where should a personal detector be worn?",
+        "options": [
+          {
+            "id": "a",
+            "label": "In the approved position with sampling access unobstructed."
+          },
+          {
+            "id": "b",
+            "label": "Inside a sealed bag."
+          },
+          {
+            "id": "c",
+            "label": "On a vehicle far from the wearer."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E04_final_3_2",
+        "prompt": "Can sensors be affected by other substances or conditions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No, sensor readings are always exact."
+          },
+          {
+            "id": "b",
+            "label": "Only a flat battery affects performance."
+          },
+          {
+            "id": "c",
+            "label": "Yes; model-specific interference and environmental limits matter."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E04_final_3_3",
+        "prompt": "What should physical inspection include?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the carrying clip."
+          },
+          {
+            "id": "b",
+            "label": "The relevant case, inlets, filters, lines, sensors, battery and status."
+          },
+          {
+            "id": "c",
+            "label": "Only whether a number appears."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E04_check4",
+        "prompt": "A reading at the opening is acceptable. Does it clear every location inside?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; the qualified sampling strategy must represent the relevant locations and conditions."
+          },
+          {
+            "id": "b",
+            "label": "Yes, all air is identical."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the monitor has several sensors."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E04_final_4_1",
+        "prompt": "Why allow for sample-line and sensor response time?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Readings are instantaneous everywhere."
+          },
+          {
+            "id": "b",
+            "label": "Only battery charging creates delay."
+          },
+          {
+            "id": "c",
+            "label": "The display may lag the atmosphere at the sampling point."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E04_final_4_2",
+        "prompt": "What should a measurement record link?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the permit title."
+          },
+          {
+            "id": "b",
+            "label": "Device, status, time, location, conditions, result and tester."
+          },
+          {
+            "id": "c",
+            "label": "Only the most favorable number."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E04_final_4_3",
+        "prompt": "Are alarm settings identical to legal exposure limits?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; they serve different functions under the applicable program."
+          },
+          {
+            "id": "b",
+            "label": "Yes, every alarm is a legal work allowance."
+          },
+          {
+            "id": "c",
+            "label": "Yes, below an alarm means unlimited exposure."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E04_check5",
+        "prompt": "An alarm is followed by a fault display. What should the worker do?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assume the alarm was false and continue."
+          },
+          {
+            "id": "b",
+            "label": "Remove the battery and remain."
+          },
+          {
+            "id": "c",
+            "label": "Follow the protective response and report both observations from safety."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E04_final_5_1",
+        "prompt": "What happens after a failed required functional check?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Mark it passed because it powers up."
+          },
+          {
+            "id": "b",
+            "label": "Remove the device from reliance and obtain approved disposition or replacement."
+          },
+          {
+            "id": "c",
+            "label": "Use it for low-risk jobs without review."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E04_final_5_2",
+        "prompt": "Can a worker ignore an alarm because another monitor is quiet?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; follow the site response and qualified investigation process."
+          },
+          {
+            "id": "b",
+            "label": "Yes, majority readings decide safety."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if the quiet unit is newer."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E04_final_5_3",
+        "prompt": "What should happen to alarm and fault records?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Delete them after a later acceptable reading."
+          },
+          {
+            "id": "b",
+            "label": "Replace them with a guessed cause."
+          },
+          {
+            "id": "c",
+            "label": "Preserve them with context for investigation and assurance."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E04_check6",
+        "prompt": "A sensor was replaced but required verification is pending. What is the status?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ready if a fresh-air zero is performed informally."
+          },
+          {
+            "id": "b",
+            "label": "Restricted until the specified checks and authorized release are complete."
+          },
+          {
+            "id": "c",
+            "label": "Ready because the sensor is new."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E04_final_6_1",
+        "prompt": "Who may change alarm configuration?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Personnel authorized under the controlled technical program."
+          },
+          {
+            "id": "b",
+            "label": "Any user annoyed by frequent alarms."
+          },
+          {
+            "id": "c",
+            "label": "The first person with the menu password."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E04_final_6_2",
+        "prompt": "What must practical gas-tester evaluation cover?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only naming the gas sensors."
+          },
+          {
+            "id": "b",
+            "label": "Only a written score."
+          },
+          {
+            "id": "c",
+            "label": "The actual instrument, safe sampling, interpretation, records and response."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E04_final_6_3",
+        "prompt": "What is the release owner’s responsibility?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only charge every battery."
+          },
+          {
+            "id": "b",
+            "label": "Ensure the actual device’s verified status and restrictions are accurate and visible."
+          },
+          {
+            "id": "c",
+            "label": "Only store the purchase receipt."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E04_final_scenario1",
+        "prompt": "What is wrong with relying on the nearby log?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Its assurance evidence is not linked to the selected instrument."
+          },
+          {
+            "id": "b",
+            "label": "The log must always be paper."
+          },
+          {
+            "id": "c",
+            "label": "Identical models share one calibration automatically."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E04_final_scenario2",
+        "prompt": "Why is the immediate value unreliable for clearance?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Every long line always reads high."
+          },
+          {
+            "id": "b",
+            "label": "The display font is too small."
+          },
+          {
+            "id": "c",
+            "label": "The changed sampling system and response timing have not been established."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "E04_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E04_lesson1",
+          "questionIds": [
+            "E04_check1"
+          ]
+        },
+        {
+          "lessonId": "E04_lesson2",
+          "questionIds": [
+            "E04_check2"
+          ]
+        },
+        {
+          "lessonId": "E04_lesson3",
+          "questionIds": [
+            "E04_check3"
+          ]
+        },
+        {
+          "lessonId": "E04_lesson4",
+          "questionIds": [
+            "E04_check4"
+          ]
+        },
+        {
+          "lessonId": "E04_lesson5",
+          "questionIds": [
+            "E04_check5"
+          ]
+        },
+        {
+          "lessonId": "E04_lesson6",
+          "questionIds": [
+            "E04_check6"
+          ]
+        },
+        {
+          "lessonId": "E04_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E04_assessment",
+          "questionIds": [
+            "E04_final_1_1",
+            "E04_final_1_2",
+            "E04_final_1_3",
+            "E04_final_2_1",
+            "E04_final_2_2",
+            "E04_final_2_3",
+            "E04_final_3_1",
+            "E04_final_3_2",
+            "E04_final_3_3",
+            "E04_final_4_1",
+            "E04_final_4_2",
+            "E04_final_4_3",
+            "E04_final_5_1",
+            "E04_final_5_2",
+            "E04_final_5_3",
+            "E04_final_6_1",
+            "E04_final_6_2",
+            "E04_final_6_3",
+            "E04_final_scenario1",
+            "E04_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "E04_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "E04_check1": "A reading only represents the instrument’s capabilities and method. A missing or unsuitable sensor cannot establish absence of an unmeasured contaminant.",
+        "E04_final_1_1": "The program must match sensing capability and method to the actual decision. Channel count and price cannot establish suitability.",
+        "E04_final_1_2": "Personal monitoring and technical atmosphere assessment have different demands. Instrument possession does not demonstrate sampling and interpretation skill.",
+        "E04_final_1_3": "Electrical equipment can introduce ignition hazards. The actual equipment approval and use conditions must match the assessed location.",
+        "E04_check2": "Assurance evidence must apply to the actual instrument. Similar appearance cannot transfer another device’s functional or calibration history.",
+        "E04_final_2_1": "A functional challenge verifies a bounded instrument response. It does not replace calibration when required or establish workplace conditions.",
+        "E04_final_2_2": "Electronic startup checks may not demonstrate sensor response to gas. Required challenge testing remains a separate safeguard.",
+        "E04_final_2_3": "The reference mixture and delivery arrangement must support the specified check. An incorrect challenge can create false confidence in the instrument.",
+        "E04_check3": "A sampling-system fault can prevent the target air reaching the sensors. The instrument display must be interpreted with the complete method and flow condition.",
+        "E04_final_3_1": "The device must encounter air relevant to the wearer within its intended method. Obstruction or remote placement can defeat timely warning.",
+        "E04_final_3_2": "Sensor technology has limitations beyond power supply. Users must understand the manufacturer’s interference and exposure instructions for the actual instrument.",
+        "E04_final_3_3": "The complete sampling and sensing system must function. A readable display does not prove that the target atmosphere reaches a suitable working sensor.",
+        "E04_check4": "Atmospheres can vary by location and process condition. A single point cannot be generalized beyond the method’s demonstrated coverage.",
+        "E04_final_4_1": "Transport and sensor response affect when a representative result appears. The approved method defines the required timing for the actual setup.",
+        "E04_final_4_2": "Traceability makes the result interpretable and prevents reuse for an unrelated place, time or configuration.",
+        "E04_final_4_3": "Limits can have different scopes and averaging periods. Alarm settings trigger protective actions and cannot be casually converted into safe-work permission.",
+        "E04_check5": "A fault does not establish safe atmosphere. Protective action comes first, and qualified investigation determines instrument and exposure conditions.",
+        "E04_final_5_1": "Failed assurance means the detection safeguard is not established. The program must restore suitability before workers depend on it.",
+        "E04_final_5_2": "Different placement, timing or condition can explain disagreement. A quiet device cannot casually cancel a protective alarm.",
+        "E04_final_5_3": "A complete chronology supports diagnosis and control review. Later results do not erase earlier warnings or explain them automatically.",
+        "E04_check6": "Service changes the measurement system. Required post-service verification must establish performance before reliance.",
+        "E04_final_6_1": "Alarm settings are part of the protective system. Changes need a defined basis, authority and record rather than convenience.",
+        "E04_final_6_2": "Technical testing is a field skill with method-specific limits. Knowledge supports but does not replace observed performance and authorization.",
+        "E04_final_6_3": "Measurement assurance requires current traceable readiness, not just availability. Users must not receive a device whose technical status is unknown.",
+        "E04_final_scenario1": "Instrument status is item-specific. A valid result for another serial number cannot establish the selected device’s condition.",
+        "E04_final_scenario2": "Sampling transport and sensor response can delay or alter the result. The actual setup must be validated under the approved method before the value supports a decision."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

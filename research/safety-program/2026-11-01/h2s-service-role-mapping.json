@@ -1,0 +1,76 @@
+{
+  "service": {
+    "existingCanonicalId": 111,
+    "existingCanonicalCode": "h2s_monitoring_safety_trailer",
+    "name": "H2S Monitoring & Safety Trailer",
+    "masterCatalogRelationship": "The 963-service research snapshot has no exact H2S monitoring/safety-trailer label. Preserve this existing application service and its ID; do not manufacture an equivalent VMS ID or silently merge it into a broad inspection category.",
+    "catalogChangesApplied": false
+  },
+  "evidence": [
+    {
+      "url": "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
+      "supports": "Published separate gas-monitoring, breathing-air and emergency-response service functions."
+    },
+    {
+      "url": "https://hseintegrated.com/service/h2s-safety/",
+      "supports": "Published H2S service roles include technicians, safety supervisors and rescue personnel, with detection/sampling equipment and breathing-air equipment."
+    },
+    {
+      "url": "https://www.totalsafety.uk.com/gas-detection-services",
+      "supports": "Provider describes manufacturer-trained service technicians, calibration/maintenance and user instruction as distinct work."
+    }
+  ],
+  "roleMappings": [
+    {
+      "role": "Worker exposed to H2S who wears an assigned personal detector",
+      "familyIds": ["H13", "E04"],
+      "trigger": "Actual exposure and assigned detector use; teach only the relevant user functions.",
+      "rationale": "Recognize the exposure, alarm response and escape boundaries, and understand the assigned detector's checks and limitations. Wearing a detector does not authorize clearance testing, service or rescue."
+    },
+    {
+      "role": "Gas-monitoring installation and monitoring technician",
+      "familyIds": ["H13", "E04", "H01", "H02", "E02"],
+      "trigger": "Actual setup, operation, checking or monitoring duties.",
+      "rationale": "The technician must understand detector selection, bounded sampling/measurement, assurance checks, defects, positioning and alarm communication within the monitoring plan."
+    },
+    {
+      "role": "Designated gas tester or permit-atmosphere verifier",
+      "familyIds": ["H13", "E04", "C07", "H03"],
+      "trigger": "Only a formally assigned gas-testing or permit-verification duty.",
+      "rationale": "C07 teaches endorsement assurance. Instrument- and task-specific practical assessment and employer/site authorization remain necessary; these courses do not grant gas-clearance authority."
+    },
+    {
+      "role": "Breathing-air equipment technician or assigned respirator user",
+      "familyIds": ["H15", "E07", "E02"],
+      "trigger": "Only actual respiratory-equipment duties or required respirator use; not every H2S worker.",
+      "rationale": "Respirator selection, medical evaluation, fit testing where applicable, breathing-air quality and equipment-specific operation require the appropriate program and separately verified task capability."
+    },
+    {
+      "role": "Assigned H2S rescue/response team",
+      "familyIds": ["H13", "H15", "R01", "R02", "C08"],
+      "trigger": "Actual assigned emergency/rescue responsibilities.",
+      "rationale": "Knowledge foundations support response planning; the rescue mode, equipment, team exercises, medical/first-aid competence and applicable response-level qualification must be separately assessed. No unprotected rescue entry is authorized."
+    },
+    {
+      "role": "Detector calibration/repair technician",
+      "familyIds": ["E04", "E01", "E02"],
+      "trigger": "Only calibration, maintenance or repair functions actually supplied.",
+      "rationale": "Manufacturer- and model-specific service instruction, reference standards and release-to-service competence are not established by a user's bump-test knowledge."
+    }
+  ],
+  "conditionalRules": [
+    {"trigger": "Actual confined-space entry/attendant duties", "familyIds": ["H05", "R02"]},
+    {"trigger": "Electrical installation rather than instrument placement only", "familyIds": ["H12", "H04", "C07"]},
+    {"trigger": "Driving or towing the safety trailer", "familyIds": ["H19", "E03", "H20"]},
+    {"trigger": "Regulated commercial driving duties", "familyIds": ["C05"]},
+    {"trigger": "Remote or lone monitoring duties", "familyIds": ["H21"]}
+  ],
+  "remainingTrainingEvidence": [
+    "Approved instrument/model and actual-task instruction, including sensor limits, sample system timing, response checks, alarm configuration authority and communication.",
+    "Qualified practical evaluation of the assigned gas-monitoring or gas-testing task and documented employer/site authorization.",
+    "Separate manufacturer-level calibration/repair capability where those services are supplied.",
+    "Separate respiratory and rescue program qualifications where those duties are actually assigned."
+  ],
+  "scoringBoundary": "Deduplicate applicable course/person requirements. Do not assign the union of these roles to everyone. Vendor extras do not become VNDRLY baseline requirements. Online course completion contributes to the training component and does not close practical/site or credential requirements.",
+  "status": "Source-backed role mapping saved; not activated in production."
+}

@@ -1,0 +1,785 @@
+{
+  "familyId": "R06",
+  "title": "Management of change and renewal review",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Reassess controls when services, people, assets or procedures change.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate qualified technical review, applicable practical equipment assessment and employer/site startup authorization remain required. This course does not authorize protective-system bypasses, engineering design or expired work. No universal change or renewal period is established.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/other-hse-policies-standards/Management%20of%20Change%20Final.pdf"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-318_Rev3.pdf"
+    },
+    {
+      "title": "OSHA Process safety management — covered processes only; check applicability",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "R06_intro",
+        "title": "Start here: Management of change and renewal review",
+        "body": "# Management of change and renewal review\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate qualified technical review, applicable practical equipment assessment and employer/site startup authorization remain required. This course does not authorize protective-system bypasses, engineering design or expired work. No universal change or renewal period is established.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Process safety management — covered processes only; check applicability](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R06_lesson1",
+        "title": "Lesson 1 - Recognize a safety-relevant change",
+        "body": "Changes can involve services, people, equipment, materials, software, layout, work methods, schedules and surrounding operations. Temporary changes can be as consequential as permanent ones. Screen the actual effect before implementation rather than only checking whether purchasing calls it a replacement.\n\nA like-for-like claim requires evidence. A hose with a different rating, a new chemical formulation or a relocated gate can alter hazards and interfaces despite a familiar name. Ask what is different and which earlier assumptions may no longer hold.\n\nWorkers should report scope creep and unexpected conditions. The change process should provide a practical route to hold the affected activity and obtain review, not encourage people to hide small changes until they accumulate.\n\n## Worked field example\n\nA replacement chemical has a new formulation but is treated as like-for-like because the trade name is familiar.\n\nThe safe decision is to screen the actual formulation and affected controls before use. A familiar label does not prove unchanged hazards or assessment assumptions.\n\nA useful field record is specific: A documented change screen linked to the actual formulation and task. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nScreen change by effect rather than its administrative label. A purchasing system may call a new product a replacement, while the formulation, rating or operating instructions differ. A staffing change may alter monitoring or supervision even though no equipment moves. Temporary workarounds also deserve screening.\n\nThe worker or supervisor should describe the proposed difference and identify which existing assumptions might change. The responsible process then determines the level of technical and operational review. Do not demand that a worker independently solve every consequence before they are allowed to report the change.\n\nKeep an accessible hold route. A change system that can be used only by office staff may fail during night work. The crew needs to know how to make the affected task safe, whom to contact and what cannot proceed without review. A verbal request to keep production moving does not resolve the missing decision.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R06_lesson2",
+        "title": "Lesson 2 - Review technical and worker interfaces",
+        "body": "Identify affected hazards, controls, competence, documents, emergency arrangements and other employers. Involve appropriate technical specialists and the people who perform the work. A change can improve one task while creating exposure elsewhere.\n\nClarify the approval boundary. A manager may authorize expenditure without being qualified to approve a technical method. A vendor's recommendation may support review but does not automatically establish site suitability.\n\nRecord assumptions and unresolved questions. If a required technical condition is unknown, the affected startup is not ready. Do not fill a form with guessed values to make the workflow proceed.\n\n## Worked field example\n\nA new storage rack clears an exit but changes the forklift turning route.\n\nThe safe decision is to review the whole layout with affected workers and the appropriate traffic and facility authorities. A local improvement can transfer risk into another operation.\n\nA useful field record is specific: An interface review covering emergency access, handling and vehicle movement. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nMap the affected interfaces before approval. A relocated pump can alter hose routing, electrical supply, pedestrian access, noise and rescue access. A software change can alter alarms or safety-critical behavior. Review the whole affected system rather than a single favorable feature.\n\nInvolve the relevant workers because they know how the task is performed, including variations and workarounds. Their input complements technical expertise; it does not replace specialist design authority. Record both the practical issue and who makes the technical determination.\n\nWhere responsibilities cross employers, agree the decision and communication path. A contractor’s equipment approval may not establish suitability for the client’s process. Likewise, a client request does not supply the vendor’s missing operator competence. Keep each prerequisite identifiable so one signature is not used to imply every interface has been cleared.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R06_lesson3",
+        "title": "Lesson 3 - Approve before implementation within defined authority",
+        "body": "The review should produce a clear decision: approved scope and conditions, required actions, restrictions, responsible roles and the period or triggers that limit reliance. Approval must precede the affected implementation unless an applicable controlled process explicitly governs an emergency change.\n\nDo not confuse submission with approval. Uploading a renewal or sending a proposed procedure is evidence that review was requested. It does not restore expired permission or authorize changed work.\n\nPreserve the basis and version of the decision. A later signature should not be backdated to imply an unreviewed period was authorized. Where work proceeded outside the process, report the actual state and control the exposure.\n\n## Worked field example\n\nA temporary authorization expires while a renewal file waits in a review queue.\n\nThe safe decision is to stop reliance on the expired authorization and obtain the required current decision and verified controls. A pending submission is not an approval or an extension.\n\nA useful field record is specific: A current authorized decision with its scope, conditions and verified prerequisites. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nApproval should identify the actual scope and version. Include conditions, required actions, restrictions and the person or role authorized to decide. A general signature without the reviewed configuration may be difficult to distinguish from permission for another arrangement.\n\nKeep proposed, submitted and approved states separate. A renewal request can be complete as a submission while the operating authorization has expired. The system should display that distinction and prevent people from treating an upload as automatic extension.\n\nIf work has already proceeded outside the process, record the actual sequence and apply the required safe response. Do not backdate a signature to create the appearance of prior approval. The responsible authority evaluates the current condition and corrective action. Honest history supports learning and future control; rewritten history hides the failure mechanism.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R06_lesson4",
+        "title": "Lesson 4 - Communicate and verify pre-start readiness",
+        "body": "Before startup, confirm required actions are complete, people understand the changed method and affected documents match the approved version. Include contractors and relief shifts, not just the people who attended the design meeting.\n\nPractical instruction may be needed where equipment or actions changed. A document acknowledgment does not demonstrate operation of unfamiliar controls. Use the appropriate safe equipment-specific assessment and authorization.\n\nVerify the field arrangement against the approved change: equipment identity, layout, protective functions, emergency access and any relevant technical checks. The exact verification follows the change scope; do not invent a generic technical test from this awareness lesson.\n\n## Worked field example\n\nA new control system is commissioned before night operators receive instruction or practical assessment.\n\nThe safe decision is to hold affected startup until the approved readiness actions and operator requirements are verified. Design approval does not establish that the operating shift can safely use the changed system.\n\nA useful field record is specific: A pre-start verification linking approved actions, current instructions and assessed operators. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nPre-start verification connects the approved decision to the field. Confirm equipment identity, configuration, protective functions, documents, competence and emergency arrangements relevant to the change. The verifier should not tick actions they expect will be completed later.\n\nInstruction must reach the shifts and contractors who operate the changed arrangement. Explain the difference, limits and failed-control response. Where practical actions changed, use safe equipment-specific evaluation. A signed document acknowledgment is not proof that an operator can use an unfamiliar control.\n\nA failed readiness item stays visible. The responsible authority may sequence unaffected work where safely justified, but cannot label the changed operation ready while required controls remain missing. Record the actual hold and next step. Startup occurs only through the defined authority after the applicable prerequisites are verified.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R06_lesson5",
+        "title": "Lesson 5 - Control temporary changes and expiry",
+        "body": "Temporary changes need ownership, conditions and a defined path to restoration, extension through review or formal permanent adoption. Track the actual installed state, not only the planned end date. A temporary label does not reduce technical consequences.\n\nBefore expiry, the responsible role decides through the required review whether to restore the original arrangement, approve a revised temporary period or complete permanent change. An extension is a new controlled decision, not an automatic spreadsheet update.\n\nIf the authorization expires without a valid decision, stop relying on it and apply the appropriate safe operating restriction. Do not normalize a bypass merely because it has been in place for several shifts.\n\n## Worked field example\n\nA temporary protective-system bypass remains after expiry because production is stable.\n\nThe safe decision is to apply the required safe restriction and obtain competent technical/site resolution before further reliance. Stable production does not extend an expired authorization or restore the missing protective function.\n\nA useful field record is specific: A tracked temporary-change status and verified restoration or valid reviewed authorization. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nA temporary change register should reflect the real installed state. Identify the owner, approved conditions, expiry or review trigger, restoration method and required verification. The temporary label does not make a protective-system change low risk.\n\nMonitor expiry early enough to obtain a real decision. Options may include restoration, a reviewed extension or permanent adoption through the appropriate process. Simply editing a date is not an extension. A submission pending at expiry does not preserve permission unless the governing authorization explicitly provides such an arrangement.\n\nAt expiry without a valid decision, use the required safe restriction and notify the responsible technical and operating roles. Do not treat stable output as proof that the missing safeguard is unnecessary. Preserve the original approval and each later decision so the authorization history remains understandable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R06_lesson6",
+        "title": "Lesson 6 - Validate operation and preserve history",
+        "body": "After startup, check whether the change performs as intended and whether new hazards or workarounds appear. Include worker feedback and the relevant technical measures. Successful installation is not the same as validated operation.\n\nClose the change only after required actions and verification are complete. Preserve original assessment, decision, implementation and validation records, including restrictions and failed checks. Later reviewers need to understand what actually changed and why.\n\nRenewal review should confirm current scope, evidence and governing requirements. It is not merely replacing an expired date. The applicable authority sets any validity period; this course imposes no universal renewal interval.\n\n## Worked field example\n\nA change is closed after installation even though operators report a new unsafe workaround.\n\nThe safe decision is to keep or reopen the change and verify the operating result and unresolved exposure. Installation completion does not establish that the changed work is safe and usable.\n\nA useful field record is specific: A post-start validation record including worker feedback and resolved control issues. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Detailed application and verification\n\nPost-start validation asks whether the changed system works as intended under relevant conditions. Include worker feedback, technical results and new interfaces. A successful installation check can coexist with an operating problem that appears only during a delivery surge or shift handover.\n\nClose required actions only on evidence. If a new control creates a workaround, investigate why and adjust the method through the appropriate review. Keep the change open or reopen it until the protective result is verified within the defined scope.\n\nRenewal review should confirm current duties, equipment, evidence and applicable requirements rather than only replace a date. Preserve superseded records and clearly identify the current instruction. The course establishes no common validity period for all evidence. Technical, employer and site authorities retain their respective decisions, while online learning remains evidence of understanding the process.\n\n## Further application\n\nA software or scheduling change can be safety relevant even when no physical component is replaced. Changing an alarm priority, automatic action, monitoring contact or shift coverage can affect how a hazard is detected and managed. Screen the actual effect and involve the appropriate technical and worker roles before implementation.\n\nFor a controlled temporary arrangement, make restoration practical. Identify what must be removed or reinstated, who performs the work, how the safe state is verified and what documents or training return to the original version. An expiry date without a restoration path can leave the operation dependent on an unsupported workaround.\n\nThe handover must describe the installed state, not just the approved plan. If implementation differs, hold affected startup and return the difference for review. A project completion percentage cannot resolve a missing protective function or an operator who has not been assessed.\n\nDuring validation, compare intended behavior with actual operation and worker experience. An alarm that functions technically but is routinely misunderstood may still leave a control gap. Preserve the finding and obtain the necessary correction and verification. Closing the change requires the defined actions and evidence; it does not erase the need to monitor future defects and reassess later changes.\n\nCommunicate every remaining operating restriction to the receiving shift.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R06_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nA fictional site relocates its gate booth and installs a new access device. The layout reduces waiting time but sends pedestrians across a delivery lane. The device is technically installed, while night staff have not used it. The project owner wants immediate release.\n\n### Worked solution\n\nThe change review addresses the complete interface rather than only queue performance. The traffic authority and affected workers review the pedestrian route, vehicle sweep, safe checking position and emergency access. Appropriate technical roles verify the device and protective functions. Night staff receive the current instruction and demonstrate assigned actions safely. Required actions are checked in the actual layout before startup. The owner records the approved configuration and limits. Post-start observation confirms whether pedestrians and vehicles use the intended arrangement without unsafe workarounds. Installation alone is not the release decision.\n\n## Scenario 2\n\nA fictional temporary equipment bypass reaches expiry. A renewal request is uploaded but has not been reviewed. The supervisor changes the spreadsheet date and continues because no fault has occurred.\n\n### Worked solution\n\nReliance on the expired authorization stops through the required safe process. The appropriate technical and site authorities assess restoration or any revised authorization and verify controls. The upload is recorded as pending, not approved. The spreadsheet is corrected to preserve actual dates and the unauthorized gap rather than backdating a decision. The review examines why expiry monitoring failed and whether interim restrictions were maintained. Any approved continuation has explicit scope and conditions. A stable operating history does not establish that the missing protection is unnecessary.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R06_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R06_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate qualified technical review, applicable practical equipment assessment and employer/site startup authorization remain required. This course does not authorize protective-system bypasses, engineering design or expired work. No universal change or renewal period is established.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "R06_check1",
+        "prompt": "A replacement chemical has a new formulation but is treated as like-for-like because the trade name is familiar. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Screen the actual formulation and affected controls before use"
+          },
+          {
+            "id": "b",
+            "label": "Accept like-for-like status from the trade name alone"
+          },
+          {
+            "id": "c",
+            "label": "Use the product until a worker reports symptoms"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R06_check2",
+        "prompt": "A new storage rack clears an exit but changes the forklift turning route. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approve solely because the original exit issue is fixed"
+          },
+          {
+            "id": "b",
+            "label": "Review the whole layout with affected workers and the appropriate traffic and facility authorities"
+          },
+          {
+            "id": "c",
+            "label": "Ask purchasing to certify the traffic layout"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R06_check3",
+        "prompt": "A temporary authorization expires while a renewal file waits in a review queue. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the upload timestamp as automatic renewal"
+          },
+          {
+            "id": "b",
+            "label": "Backdate a later approval to cover the gap"
+          },
+          {
+            "id": "c",
+            "label": "Stop reliance on the expired authorization and obtain the required current decision and verified controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R06_check4",
+        "prompt": "A new control system is commissioned before night operators receive instruction or practical assessment. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold affected startup until the approved readiness actions and operator requirements are verified"
+          },
+          {
+            "id": "b",
+            "label": "Start and let night staff learn from the live process"
+          },
+          {
+            "id": "c",
+            "label": "Use the design meeting attendance as operator qualification"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R06_check5",
+        "prompt": "A temporary protective-system bypass remains after expiry because production is stable. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Extend the date without review because no incident occurred"
+          },
+          {
+            "id": "b",
+            "label": "Apply the required safe restriction and obtain competent technical/site resolution before further reliance"
+          },
+          {
+            "id": "c",
+            "label": "Delete the bypass from the register once it becomes familiar"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R06_check6",
+        "prompt": "A change is closed after installation even though operators report a new unsafe workaround. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ignore feedback because installation matched the purchase order"
+          },
+          {
+            "id": "b",
+            "label": "Delete the original assessment to avoid version confusion"
+          },
+          {
+            "id": "c",
+            "label": "Keep or reopen the change and verify the operating result and unresolved exposure"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R06_final1",
+        "prompt": "For recognize a safety-relevant change, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A familiar label does not prove unchanged hazards or assessment assumptions."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R06_final2",
+        "prompt": "Which evidence would most directly verify recognize a safety-relevant change in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A documented change screen linked to the actual formulation and task"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R06_final3",
+        "prompt": "A relief worker proposes the following shortcut during recognize a safety-relevant change: \"Accept like-for-like status from the trade name alone.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Accept like-for-like status from the trade name alone"
+          },
+          {
+            "id": "b",
+            "label": "Use the product until a worker reports symptoms"
+          },
+          {
+            "id": "c",
+            "label": "Screen the actual formulation and affected controls before use"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R06_final4",
+        "prompt": "For review technical and worker interfaces, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A local improvement can transfer risk into another operation."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R06_final5",
+        "prompt": "Which evidence would most directly verify review technical and worker interfaces in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An interface review covering emergency access, handling and vehicle movement"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R06_final6",
+        "prompt": "A relief worker proposes the following shortcut during review technical and worker interfaces: \"Approve solely because the original exit issue is fixed.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Approve solely because the original exit issue is fixed"
+          },
+          {
+            "id": "b",
+            "label": "Ask purchasing to certify the traffic layout"
+          },
+          {
+            "id": "c",
+            "label": "Review the whole layout with affected workers and the appropriate traffic and facility authorities"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R06_final7",
+        "prompt": "For approve before implementation within defined authority, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A pending submission is not an approval or an extension."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R06_final8",
+        "prompt": "Which evidence would most directly verify approve before implementation within defined authority in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A current authorized decision with its scope, conditions and verified prerequisites"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R06_final9",
+        "prompt": "A relief worker proposes the following shortcut during approve before implementation within defined authority: \"Treat the upload timestamp as automatic renewal.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Treat the upload timestamp as automatic renewal"
+          },
+          {
+            "id": "b",
+            "label": "Backdate a later approval to cover the gap"
+          },
+          {
+            "id": "c",
+            "label": "Stop reliance on the expired authorization and obtain the required current decision and verified controls"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R06_final10",
+        "prompt": "For communicate and verify pre-start readiness, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Design approval does not establish that the operating shift can safely use the changed system."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R06_final11",
+        "prompt": "Which evidence would most directly verify communicate and verify pre-start readiness in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A pre-start verification linking approved actions, current instructions and assessed operators"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R06_final12",
+        "prompt": "A relief worker proposes the following shortcut during communicate and verify pre-start readiness: \"Start and let night staff learn from the live process.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Start and let night staff learn from the live process"
+          },
+          {
+            "id": "b",
+            "label": "Use the design meeting attendance as operator qualification"
+          },
+          {
+            "id": "c",
+            "label": "Hold affected startup until the approved readiness actions and operator requirements are verified"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R06_final13",
+        "prompt": "For control temporary changes and expiry, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stable production does not extend an expired authorization or restore the missing protective function."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R06_final14",
+        "prompt": "Which evidence would most directly verify control temporary changes and expiry in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A tracked temporary-change status and verified restoration or valid reviewed authorization"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R06_final15",
+        "prompt": "A relief worker proposes the following shortcut during control temporary changes and expiry: \"Extend the date without review because no incident occurred.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Extend the date without review because no incident occurred"
+          },
+          {
+            "id": "b",
+            "label": "Delete the bypass from the register once it becomes familiar"
+          },
+          {
+            "id": "c",
+            "label": "Apply the required safe restriction and obtain competent technical/site resolution before further reliance"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R06_final16",
+        "prompt": "For validate operation and preserve history, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Installation completion does not establish that the changed work is safe and usable."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R06_final17",
+        "prompt": "Which evidence would most directly verify validate operation and preserve history in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A post-start validation record including worker feedback and resolved control issues"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R06_final18",
+        "prompt": "A relief worker proposes the following shortcut during validate operation and preserve history: \"Ignore feedback because installation matched the purchase order.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Ignore feedback because installation matched the purchase order"
+          },
+          {
+            "id": "b",
+            "label": "Delete the original assessment to avoid version confusion"
+          },
+          {
+            "id": "c",
+            "label": "Keep or reopen the change and verify the operating result and unresolved exposure"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R06_final19",
+        "prompt": "In Scenario 1, what does completed installation establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The installation activity is complete, but readiness and operating validation still need verification"
+          },
+          {
+            "id": "b",
+            "label": "All traffic interfaces are automatically acceptable"
+          },
+          {
+            "id": "c",
+            "label": "Every shift is practically competent"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R06_final20",
+        "prompt": "In Scenario 2, what status does the uploaded request have?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatically approved at upload"
+          },
+          {
+            "id": "b",
+            "label": "Pending review; it does not itself extend the expired authorization"
+          },
+          {
+            "id": "c",
+            "label": "Permanent authorization once production continues"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "R06_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R06_lesson1",
+          "questionIds": [
+            "R06_check1"
+          ]
+        },
+        {
+          "lessonId": "R06_lesson2",
+          "questionIds": [
+            "R06_check2"
+          ]
+        },
+        {
+          "lessonId": "R06_lesson3",
+          "questionIds": [
+            "R06_check3"
+          ]
+        },
+        {
+          "lessonId": "R06_lesson4",
+          "questionIds": [
+            "R06_check4"
+          ]
+        },
+        {
+          "lessonId": "R06_lesson5",
+          "questionIds": [
+            "R06_check5"
+          ]
+        },
+        {
+          "lessonId": "R06_lesson6",
+          "questionIds": [
+            "R06_check6"
+          ]
+        },
+        {
+          "lessonId": "R06_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R06_final",
+          "questionIds": [
+            "R06_final1",
+            "R06_final2",
+            "R06_final3",
+            "R06_final4",
+            "R06_final5",
+            "R06_final6",
+            "R06_final7",
+            "R06_final8",
+            "R06_final9",
+            "R06_final10",
+            "R06_final11",
+            "R06_final12",
+            "R06_final13",
+            "R06_final14",
+            "R06_final15",
+            "R06_final16",
+            "R06_final17",
+            "R06_final18",
+            "R06_final19",
+            "R06_final20"
+          ]
+        },
+        {
+          "lessonId": "R06_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "R06_check1": "Screen the actual formulation and affected controls before use. A familiar label does not prove unchanged hazards or assessment assumptions.",
+        "R06_check2": "Review the whole layout with affected workers and the appropriate traffic and facility authorities. A local improvement can transfer risk into another operation.",
+        "R06_check3": "Stop reliance on the expired authorization and obtain the required current decision and verified controls. A pending submission is not an approval or an extension.",
+        "R06_check4": "Hold affected startup until the approved readiness actions and operator requirements are verified. Design approval does not establish that the operating shift can safely use the changed system.",
+        "R06_check5": "Apply the required safe restriction and obtain competent technical/site resolution before further reliance. Stable production does not extend an expired authorization or restore the missing protective function.",
+        "R06_check6": "Keep or reopen the change and verify the operating result and unresolved exposure. Installation completion does not establish that the changed work is safe and usable.",
+        "R06_final1": "A familiar label does not prove unchanged hazards or assessment assumptions. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R06_final2": "A documented change screen linked to the actual formulation and task. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R06_final3": "Screen the actual formulation and affected controls before use. A familiar label does not prove unchanged hazards or assessment assumptions. A staffing change does not remove this requirement.",
+        "R06_final4": "A local improvement can transfer risk into another operation. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R06_final5": "An interface review covering emergency access, handling and vehicle movement. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R06_final6": "Review the whole layout with affected workers and the appropriate traffic and facility authorities. A local improvement can transfer risk into another operation. A staffing change does not remove this requirement.",
+        "R06_final7": "A pending submission is not an approval or an extension. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R06_final8": "A current authorized decision with its scope, conditions and verified prerequisites. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R06_final9": "Stop reliance on the expired authorization and obtain the required current decision and verified controls. A pending submission is not an approval or an extension. A staffing change does not remove this requirement.",
+        "R06_final10": "Design approval does not establish that the operating shift can safely use the changed system. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R06_final11": "A pre-start verification linking approved actions, current instructions and assessed operators. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R06_final12": "Hold affected startup until the approved readiness actions and operator requirements are verified. Design approval does not establish that the operating shift can safely use the changed system. A staffing change does not remove this requirement.",
+        "R06_final13": "Stable production does not extend an expired authorization or restore the missing protective function. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R06_final14": "A tracked temporary-change status and verified restoration or valid reviewed authorization. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R06_final15": "Apply the required safe restriction and obtain competent technical/site resolution before further reliance. Stable production does not extend an expired authorization or restore the missing protective function. A staffing change does not remove this requirement.",
+        "R06_final16": "Installation completion does not establish that the changed work is safe and usable. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R06_final17": "A post-start validation record including worker feedback and resolved control issues. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R06_final18": "Keep or reopen the change and verify the operating result and unresolved exposure. Installation completion does not establish that the changed work is safe and usable. A staffing change does not remove this requirement.",
+        "R06_final19": "Installation is one stage. Site controls, affected people and actual performance require their own checks.",
+        "R06_final20": "Submission and approval are different states. A valid current decision and verified controls are needed before renewed reliance."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

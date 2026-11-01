@@ -1,0 +1,789 @@
+{
+  "familyId": "H09",
+  "title": "Excavation and underground services",
+  "description": "Complete guided H09 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Prevent utility strikes, collapse and hazardous access.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "A designated competent person must separately demonstrate excavation inspection and hazard recognition within the applicable requirements. Soil classification, protective-system selection or design, utility locating and exposure, plant operation and rescue require their own qualified practical capabilities. This awareness course authorizes none of those specialist functions.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Excavation and underground services",
+      "url": "https://www.chevronwithtechron.com/content/dam/external/chevron-with-techron/safe-work-practices/Simplified%20PTW%20and%20JSA%20template.pdf"
+    },
+    {
+      "title": "Inventory source 2: Excavation and underground services",
+      "url": "https://www.y12.doe.gov/suppliers/procurement/subcontracting/subcontracting-forecasts/upf-forecast/upf-safety-procedures"
+    },
+    {
+      "title": "OSHA: Excavation requirements",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651"
+    },
+    {
+      "title": "OSHA: Excavation protective systems",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.652"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "H09_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# H09: Excavation and underground services\n\nThis original VNDRLY course teaches decisions for service-specific: civil works, trenching, grading and digging. Its purpose is to prevent utility strikes, collapse and hazardous access. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H09_lesson1",
+        "title": "Lesson 1: Define the ground disturbance and locate services",
+        "body": "Ground disturbance can damage buried electrical, gas, liquid, communications or other services and can destabilize soil and nearby structures. Define the actual area, depth, method and work limits before excavation. Obtain the required utility information and notifications, then have services located and verified through the approved competent method. A drawing or surface mark is information, not proof of exact depth or complete absence.\n\nPrivate services, undocumented changes and abandoned-looking lines need assessment. Do not assume a line is dead from appearance or because it is not on a plan. The site procedure determines safe exposure and verification methods near services.\n\nWorked example: a marked route differs from an old drawing. Excavation near the discrepancy remains held until the responsible utility and site authorities resolve it; the excavator does not select whichever source is easier to follow.\n\n### Applying the mechanism\n\nUtility information has several layers: records, locating, marks and the approved method of verifying or exposing the actual service. Each has limitations. A mark can be disturbed, a record may omit a private connection and a service may change depth or route. The competent procedure establishes how uncertainty is resolved before mechanical disturbance approaches it. The crew should preserve marks and report discrepancies instead of moving them to fit the excavation plan. If the work area expands, check that the locating and authorization cover the new ground. A permit for one boundary does not clear adjacent ground merely because the same excavator will perform the work.\n\n### Decision principles\n\nPlans can be incomplete or outdated. Required locating and verification connect the recorded information to actual site conditions.\n\nAppearance does not establish contents, energy or ownership. An unidentified line remains a hazard until competent verification resolves its status.\n\nA defined scope allows locating, protection and authorization to match the actual work. Vague boundaries can leave unassessed ground disturbed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H09_lesson2",
+        "title": "Lesson 2: Assess soil, water, structures and loads",
+        "body": "A competent person assesses the excavation conditions and required protective system. Soil type and condition, depth, water, vibration, nearby structures, traffic, spoil and equipment loads can affect stability. A face that stood yesterday can fail after rain or disturbance. Do not enter to inspect an unprotected excavation from below.\n\nThe competent design or selection process determines sloping, shoring, shielding or other suitable protection under applicable requirements. These methods have different functions and limitations. A trench shield protects within its designed use; it is not permission to work beyond its protected area or ignore nearby service hazards.\n\nWorked example: a truck is parked near the edge of a trench. The competent person reviews the added load and movement effects before workers enter, rather than treating vehicle location as unrelated to soil stability.\n\n### Applying the mechanism\n\nSoil stability is affected by the excavation geometry and surrounding conditions, not just a material label. Water, vibration, nearby foundations and added loads can change the assessment. The competent person and any required designer select protection using the applicable information and criteria. Workers must remain within the protected arrangement and not extend a task into an unprotected area to make a connection. A shield’s presence does not support adjacent structures or control a buried electrical service automatically. The plan must address each hazard pathway. If the proposed protection does not fit the actual work, change the method through competent review rather than treating the remaining exposure as a worker’s choice.\n\n### Decision principles\n\nProtective selection depends on technical conditions and applicable requirements. Workers must not improvise the system while exposed.\n\nExcavation conditions are dynamic. Waiting for visible collapse is not an inspection strategy; required competent checks must address current conditions.\n\nA protective system has defined coverage and limitations. Access to an unprotected section can expose workers to cave-in despite a shield being present elsewhere.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H09_lesson3",
+        "title": "Lesson 3: Provide access, separation and atmosphere controls",
+        "body": "The plan establishes suitable entry and exit, protection from moving plant, falling material and edge exposure, and atmosphere controls where hazards are credible. Access must remain usable; stored materials or equipment must not block the intended route. An excavator bucket is not a worker access platform.\n\nSome excavations can collect hazardous gases or suffer oxygen deficiency, especially near affected services or contaminated ground. A confined-space or atmospheric assessment may also be required; the excavation label does not eliminate those duties. Qualified testing and response arrangements follow the actual hazards.\n\nWorked example: workers enter a trench beside a leaking process line. The competent assessment addresses the potential atmosphere and release, not only the soil. A ladder and trench shield do not protect breathing.\n\n### Applying the mechanism\n\nAccess and movement controls should be planned together. A ladder placed where plant can strike it or spoil can block it is not a reliable exit. Workers must not use buckets as transport or stand under loads and material being placed. The plant operator and ground crew need clear separation and signals appropriate to visibility and noise. Assess falling material and edge exposure for people outside the trench as well as those inside. Where atmosphere hazards are credible, the testing and response arrangement must be established by qualified personnel. Open air above an excavation does not prove acceptable breathing conditions at every working position.\n\n### Decision principles\n\nAccess is an active safeguard. It must fit the excavation and remain available rather than being treated as a formality at the start.\n\nMovement introduces several interacting hazards. The plan needs controlled routes and positioning appropriate to the actual equipment and excavation.\n\nLabels do not determine physical hazards. The employer must assess all applicable requirements and coordinate overlapping control systems.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H09_lesson4",
+        "title": "Lesson 4: Inspect before entry and after change",
+        "body": "Required competent inspections assess the excavation, adjacent area and protective system before exposure and after specified changes, including relevant weather or events. Record actual findings and hold entry when evidence of instability, failed protection, water or another serious hazard is present. A daily form completed before visiting the trench is not an inspection.\n\nWorkers should report cracking, sloughing, water, damaged components or changed loads from a safe position. They do not remain inside while waiting for an inspector to arrive. The competent person determines the necessary correction and verifies the safe arrangement before re-entry.\n\nWorked example: rain occurs during a break and water accumulates. The crew waits outside while the required reassessment is made; pumping water alone does not automatically restore the soil or protective system.\n\n### Applying the mechanism\n\nA competent inspection looks for the conditions that could defeat the protective arrangement now. It includes relevant adjacent areas and the system itself, not only a glance at the floor. Workers contribute observations such as water, cracking, material movement, damaged components or changed vehicle positions from safety. The inspector records findings and the resulting restriction or correction. If conditions change during work, the required reassessment occurs before continued reliance. Do not use the daily frequency of a form as a reason to ignore a later event. The purpose is current protection, so the evidence and decision must follow the actual condition rather than the paperwork schedule.\n\n### Decision principles\n\nPotential instability is a serious warning. Assessment must not be performed by leaving unprotected workers in the suspected collapse zone.\n\nThe record must describe the condition examined and any restrictions. Predicted or copied results cannot establish current readiness.\n\nDamage can impair the system’s capacity and geometry. The competent process must establish whether repair, replacement or another arrangement is required.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H09_lesson5",
+        "title": "Lesson 5: Respond to service strikes and emergencies",
+        "body": "A service strike or suspected release requires the site emergency response, immediate separation from the affected hazard and notification from safety. Different utilities create different hazards, including electrical contact, fire, pressure and toxic atmosphere. Do not approach to inspect a damaged energized service or enter a gas cloud to shut a valve. Follow the trained equipment-operator and site emergency instructions for the specific situation.\n\nCave-in rescue is a specialist activity. Coworkers must not rush into an unstable excavation, even when a casualty is visible. Summon the designated response and prevent additional exposure where safe. Emergency preparation must identify access and responder coordination before excavation begins.\n\nWorked example: a trench wall partially collapses. The crew calls the response system and stays outside the unstable area; a second unprotected entry would risk more casualties.\n\n### Applying the mechanism\n\nService-strike response depends on the hazard, and the crew must know the site’s trained instructions before excavation. Electrical contact, gas release and liquid discharge can require different safe actions, including specific equipment-operator duties. General learners should not improvise those details at the scene. Raise the response from safety, identify the location and suspected service, and prevent additional exposure where safe. For collapse, unstable ground remains a hazard after the first failure. Unplanned entry or uncontrolled digging can worsen the casualty situation and create more victims. Specialist rescue capability and access need planning before workers enter the excavation, not after a collapse proves that the route is difficult.\n\n### Decision principles\n\nDamage can create concealed electrical, pressure or gas hazards. The emergency process and responsible utility authority must assess the condition.\n\nA familiar valve location does not remove atmospheric danger. Unprotected intervention can incapacitate the worker and obstruct the response.\n\nRemote locations and constrained access can delay rescue. Planning must establish a workable response arrangement before people are exposed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H09_lesson6",
+        "title": "Lesson 6: Hand back the ground and preserve technical limits",
+        "body": "Closeout addresses exposed services, protection, backfill or open-excavation restrictions, barriers, traffic and the accepted site condition. The responsible technical and operating roles confirm required checks and any records before access or operation changes. Covering a damaged service with soil does not resolve it.\n\nKeep inspection, locating, design and change records linked to the actual area and task. Review discrepancies and interventions so future work does not repeat them. Awareness learners can recognize holds and communicate; they do not classify soil, design shoring or declare a buried utility safe solely from this course.\n\nWorked example: excavation ends but the trench remains open overnight. The site handback establishes and verifies barriers, access restrictions and monitoring responsibilities rather than assuming the departure of the excavator removes the hazard.\n\n### Applying the mechanism\n\nHandback should state whether the excavation is open, protected, backfilled or awaiting another technical stage. Exposed services may need inspection or owner acceptance before covering. Temporary barriers and traffic arrangements need an accountable owner for the period they remain. If work pauses overnight, weather and public access can create new conditions for the next shift. The next competent inspection must consider those changes rather than copying the prior pass. Retain locating discrepancies and as-built information through the controlled process so future ground disturbance benefits from what was found. A completed digging task is not permission to leave an unowned opening or conceal an unresolved service defect.\n\n### Decision principles\n\nBackfill can conceal an unresolved defect. The service owner and applicable technical process must establish the accepted condition first.\n\nTechnical assessment and design require separately demonstrated competence and designation. A written awareness score cannot establish field judgment of soil or structures.\n\nNear misses and mismatched information can identify serious system gaps. Retaining them supports better locating, planning and assurance on later tasks.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H09_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: The unmarked pipe\n\nAn excavator exposes an unmarked pipe. The operator believes it is abandoned because it is corroded and absent from the drawing.\n\n**Worked decision and reasoning.** Affected disturbance stops and people remain clear of potential release or energy paths. The site and responsible utility authorities establish the line’s identity, status and required controls using the approved process. The crew does not cut, move or test it by impact. The plan and locating record are corrected before authorized work continues.\n\n### Scenario 2: A changed edge load\n\nA trench was inspected before entry. Later, spoil and a loaded truck are moved to the edge while workers remain below.\n\n**Worked decision and reasoning.** Workers leave the affected exposure through the approved response. The competent person reassesses the changed loads, soil and protective arrangement, and the site controls vehicle and spoil placement. Required corrections and verification occur before re-entry. The morning inspection remains a record of the earlier condition, not clearance for the changed setup.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H09_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "H09_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nA designated competent person must separately demonstrate excavation inspection and hazard recognition within the applicable requirements. Soil classification, protective-system selection or design, utility locating and exposure, plant operation and rescue require their own qualified practical capabilities. This awareness course authorizes none of those specialist functions.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "H09_check1",
+        "prompt": "A utility drawing and field marks disagree. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold affected disturbance and resolve the discrepancy through the responsible authorities."
+          },
+          {
+            "id": "b",
+            "label": "Use the drawing because it looks official."
+          },
+          {
+            "id": "c",
+            "label": "Use the deeper estimate without verification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H09_final_1_1",
+        "prompt": "What does a utility plan establish by itself?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Exact depth and position of every service."
+          },
+          {
+            "id": "b",
+            "label": "Proof that unmarked ground contains no services."
+          },
+          {
+            "id": "c",
+            "label": "Recorded information that still needs the required field verification."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H09_final_1_2",
+        "prompt": "Can an abandoned-looking line be treated as safe to damage?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if no owner is immediately present."
+          },
+          {
+            "id": "b",
+            "label": "No; status and hazards must be established by the responsible process."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if it is rusty."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H09_final_1_3",
+        "prompt": "What should the disturbance scope identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Location, limits, depth, method and affected services or structures."
+          },
+          {
+            "id": "b",
+            "label": "Only the excavator’s model."
+          },
+          {
+            "id": "c",
+            "label": "Only the estimated finish time."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H09_check2",
+        "prompt": "A truck is moved close to the excavation edge. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing because the trench depth is unchanged."
+          },
+          {
+            "id": "b",
+            "label": "A warning to workers to watch the wall."
+          },
+          {
+            "id": "c",
+            "label": "Competent review of the changed loading and stability conditions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H09_final_2_1",
+        "prompt": "Who determines suitable cave-in protection?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The equipment operator by preference alone."
+          },
+          {
+            "id": "b",
+            "label": "The competent or qualified roles required by the applicable design and excavation system."
+          },
+          {
+            "id": "c",
+            "label": "Any entrant judging the soil by color."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H09_final_2_2",
+        "prompt": "Does yesterday’s stable wall prove today’s stability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "No; water, vibration, disturbance and other changes can alter conditions."
+          },
+          {
+            "id": "b",
+            "label": "Yes, until the job ends."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if no soil has fallen yet."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H09_final_2_3",
+        "prompt": "Can workers operate outside a shield’s intended protected area?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, for a quick connection."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if a ladder is nearby."
+          },
+          {
+            "id": "c",
+            "label": "No; protection must cover the actual exposure within the approved arrangement."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H09_check3",
+        "prompt": "A trench is near a leaking process service. What additional issue needs assessment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only whether the shield is new."
+          },
+          {
+            "id": "b",
+            "label": "Hazardous atmosphere and release exposure as well as excavation stability."
+          },
+          {
+            "id": "c",
+            "label": "Only ladder color."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H09_final_3_1",
+        "prompt": "What should access arrangements provide?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The applicable safe, usable entry and exit for the actual excavation."
+          },
+          {
+            "id": "b",
+            "label": "A bucket ride when the ladder is distant."
+          },
+          {
+            "id": "c",
+            "label": "A route blocked by stored pipe."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H09_final_3_2",
+        "prompt": "Why separate workers from plant movement?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A spotter eliminates every vehicle hazard."
+          },
+          {
+            "id": "b",
+            "label": "Only reversing vehicles can harm workers."
+          },
+          {
+            "id": "c",
+            "label": "Equipment can strike people, collapse edges or drop material."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H09_final_3_3",
+        "prompt": "Does the word excavation exclude confined-space assessment?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, any ladder makes it unrestricted."
+          },
+          {
+            "id": "b",
+            "label": "No; overlapping hazards and applicable definitions must be considered."
+          },
+          {
+            "id": "c",
+            "label": "Yes, outdoor work cannot have atmosphere hazards."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H09_check4",
+        "prompt": "Rain changes the trench and water accumulates. What is required before re-entry?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Required competent reassessment and correction of affected conditions."
+          },
+          {
+            "id": "b",
+            "label": "Only pumping until the floor looks dry."
+          },
+          {
+            "id": "c",
+            "label": "Reliance on the morning form."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H09_final_4_1",
+        "prompt": "What should workers do on signs of instability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stay inside to measure the crack."
+          },
+          {
+            "id": "b",
+            "label": "Wait for a partial collapse to confirm it."
+          },
+          {
+            "id": "c",
+            "label": "Leave or keep out through the approved response and notify the competent responsible person."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H09_final_4_2",
+        "prompt": "What makes an inspection record credible?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only a copied date."
+          },
+          {
+            "id": "b",
+            "label": "Actual observation, conditions, findings, inspector and resulting action."
+          },
+          {
+            "id": "c",
+            "label": "A pass entered before arrival."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H09_final_4_3",
+        "prompt": "What if a protective component is damaged?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Hold affected exposure and obtain the required competent disposition."
+          },
+          {
+            "id": "b",
+            "label": "Use the undamaged side only without review."
+          },
+          {
+            "id": "c",
+            "label": "Straighten it informally while workers remain inside."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H09_check5",
+        "prompt": "A person is trapped after a wall collapse. What is the awareness-level response?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Jump in and dig immediately."
+          },
+          {
+            "id": "b",
+            "label": "Use any excavator bucket beside the casualty."
+          },
+          {
+            "id": "c",
+            "label": "Summon the specialist response and avoid unprotected entry into unstable ground."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H09_final_5_1",
+        "prompt": "What should happen after a suspected service strike?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Touch the line to check for heat."
+          },
+          {
+            "id": "b",
+            "label": "Stop affected work and follow the utility-specific emergency plan from safety."
+          },
+          {
+            "id": "c",
+            "label": "Continue if the line still appears intact."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H09_final_5_2",
+        "prompt": "Can a worker enter a suspected gas release to close a valve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Not without the separately qualified and authorized response arrangement."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the valve is nearby."
+          },
+          {
+            "id": "c",
+            "label": "Yes, while holding a breath."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H09_final_5_3",
+        "prompt": "When should emergency access and contacts be planned?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only after an injury."
+          },
+          {
+            "id": "b",
+            "label": "Only when public responders arrive."
+          },
+          {
+            "id": "c",
+            "label": "Before excavation and updated for relevant changes."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H09_check6",
+        "prompt": "An excavation remains open overnight. What must handback establish?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Automatic public access because work stopped."
+          },
+          {
+            "id": "b",
+            "label": "The actual condition, barriers, access restrictions and responsible ongoing controls."
+          },
+          {
+            "id": "c",
+            "label": "Only that the machine has left."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H09_final_6_1",
+        "prompt": "What should happen to a damaged service before backfill?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Obtain responsible technical disposition and required verification."
+          },
+          {
+            "id": "b",
+            "label": "Hide it beneath soil to protect it."
+          },
+          {
+            "id": "c",
+            "label": "Record only that excavation is complete."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H09_final_6_2",
+        "prompt": "Which role is not established by this written course?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Awareness of changing-condition holds."
+          },
+          {
+            "id": "b",
+            "label": "Knowledge of whom to notify."
+          },
+          {
+            "id": "c",
+            "label": "Competent excavation inspector or protective-system designer."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "H09_final_6_3",
+        "prompt": "Why preserve locating discrepancies and interventions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only injury records matter."
+          },
+          {
+            "id": "b",
+            "label": "They inform future work and reveal weaknesses in information or controls."
+          },
+          {
+            "id": "c",
+            "label": "They should be deleted after success."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "H09_final_scenario1",
+        "prompt": "What is the correct basis for treating the unmarked pipe?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Unknown identity and status requiring competent resolution."
+          },
+          {
+            "id": "b",
+            "label": "Proof of abandonment from corrosion."
+          },
+          {
+            "id": "c",
+            "label": "Permission to cut because no drawing shows it."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "H09_final_scenario2",
+        "prompt": "Why is the morning inspection not enough?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Inspections are never useful."
+          },
+          {
+            "id": "b",
+            "label": "Only the truck driver can decide trench stability."
+          },
+          {
+            "id": "c",
+            "label": "The adjacent loading conditions have materially changed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "H09_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H09_lesson1",
+          "questionIds": [
+            "H09_check1"
+          ]
+        },
+        {
+          "lessonId": "H09_lesson2",
+          "questionIds": [
+            "H09_check2"
+          ]
+        },
+        {
+          "lessonId": "H09_lesson3",
+          "questionIds": [
+            "H09_check3"
+          ]
+        },
+        {
+          "lessonId": "H09_lesson4",
+          "questionIds": [
+            "H09_check4"
+          ]
+        },
+        {
+          "lessonId": "H09_lesson5",
+          "questionIds": [
+            "H09_check5"
+          ]
+        },
+        {
+          "lessonId": "H09_lesson6",
+          "questionIds": [
+            "H09_check6"
+          ]
+        },
+        {
+          "lessonId": "H09_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "H09_assessment",
+          "questionIds": [
+            "H09_final_1_1",
+            "H09_final_1_2",
+            "H09_final_1_3",
+            "H09_final_2_1",
+            "H09_final_2_2",
+            "H09_final_2_3",
+            "H09_final_3_1",
+            "H09_final_3_2",
+            "H09_final_3_3",
+            "H09_final_4_1",
+            "H09_final_4_2",
+            "H09_final_4_3",
+            "H09_final_5_1",
+            "H09_final_5_2",
+            "H09_final_5_3",
+            "H09_final_6_1",
+            "H09_final_6_2",
+            "H09_final_6_3",
+            "H09_final_scenario1",
+            "H09_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "H09_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "H09_check1": "Conflicting information leaves the service location uncertain. The safe method must be established before equipment or people disturb the affected ground.",
+        "H09_final_1_1": "Plans can be incomplete or outdated. Required locating and verification connect the recorded information to actual site conditions.",
+        "H09_final_1_2": "Appearance does not establish contents, energy or ownership. An unidentified line remains a hazard until competent verification resolves its status.",
+        "H09_final_1_3": "A defined scope allows locating, protection and authorization to match the actual work. Vague boundaries can leave unassessed ground disturbed.",
+        "H09_check2": "Adjacent loads and vibration can change stability even without a depth change. The protective assessment must reflect the actual conditions.",
+        "H09_final_2_1": "Protective selection depends on technical conditions and applicable requirements. Workers must not improvise the system while exposed.",
+        "H09_final_2_2": "Excavation conditions are dynamic. Waiting for visible collapse is not an inspection strategy; required competent checks must address current conditions.",
+        "H09_final_2_3": "A protective system has defined coverage and limitations. Access to an unprotected section can expose workers to cave-in despite a shield being present elsewhere.",
+        "H09_check3": "Excavation controls address different harm pathways. Soil protection and access cannot establish acceptable air or isolate a leaking service.",
+        "H09_final_3_1": "Access is an active safeguard. It must fit the excavation and remain available rather than being treated as a formality at the start.",
+        "H09_final_3_2": "Movement introduces several interacting hazards. The plan needs controlled routes and positioning appropriate to the actual equipment and excavation.",
+        "H09_final_3_3": "Labels do not determine physical hazards. The employer must assess all applicable requirements and coordinate overlapping control systems.",
+        "H09_check4": "Water and weather can change soil and protection performance. A prior inspection does not establish the post-event condition.",
+        "H09_final_4_1": "Potential instability is a serious warning. Assessment must not be performed by leaving unprotected workers in the suspected collapse zone.",
+        "H09_final_4_2": "The record must describe the condition examined and any restrictions. Predicted or copied results cannot establish current readiness.",
+        "H09_final_4_3": "Damage can impair the system’s capacity and geometry. The competent process must establish whether repair, replacement or another arrangement is required.",
+        "H09_check5": "Unstable ground can collapse again. Rescue needs specialist control of the excavation and casualty; impulsive entry can multiply the emergency.",
+        "H09_final_5_1": "Damage can create concealed electrical, pressure or gas hazards. The emergency process and responsible utility authority must assess the condition.",
+        "H09_final_5_2": "A familiar valve location does not remove atmospheric danger. Unprotected intervention can incapacitate the worker and obstruct the response.",
+        "H09_final_5_3": "Remote locations and constrained access can delay rescue. Planning must establish a workable response arrangement before people are exposed.",
+        "H09_check6": "The excavation hazard can remain after the task ends. Handback must transfer clear responsibility for protecting people and services.",
+        "H09_final_6_1": "Backfill can conceal an unresolved defect. The service owner and applicable technical process must establish the accepted condition first.",
+        "H09_final_6_2": "Technical assessment and design require separately demonstrated competence and designation. A written awareness score cannot establish field judgment of soil or structures.",
+        "H09_final_6_3": "Near misses and mismatched information can identify serious system gaps. Retaining them supports better locating, planning and assurance on later tasks.",
+        "H09_final_scenario1": "Corrosion and missing records do not establish isolation, contents or ownership. An unknown service remains a hazard until the responsible process resolves it.",
+        "H09_final_scenario2": "Inspection evidence is bounded by conditions. Changed edge loads can alter stability and must be assessed through the competent excavation process."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

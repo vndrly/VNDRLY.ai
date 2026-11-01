@@ -1,0 +1,785 @@
+{
+  "familyId": "C03",
+  "title": "Short-service workers and supervision",
+  "description": "Complete original VNDRLY C03 guided training with six taught lessons, two worked cases and 26 individually answered questions.",
+  "purpose": "Control unfamiliarity with high-energy tasks and local conditions.",
+  "audience": [
+    "Workers",
+    "Supervisors",
+    "Company leaders",
+    "Safety program owners"
+  ],
+  "practicalBoundary": "Mentors demonstrate coaching and task observation; worker practical assessment. Written learning does not confer practical competence, a provider credential, employer authorization or Partner/site readiness.",
+  "sources": [
+    {
+      "title": "Inventory research reference 1",
+      "url": "https://www.chevronwithtechron.com/en_us/home/safe-work-practices.html"
+    },
+    {
+      "title": "Inventory research reference 2",
+      "url": "https://www.y12.doe.gov/sites/default/files/2026-08/UPF-CP-102-training.pdf"
+    },
+    {
+      "title": "OSHA education and training guidance",
+      "url": "https://www.osha.gov/safety-management/education-training"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "C03_intro",
+        "title": "Start here — Short-service workers and supervision",
+        "body": "# C03: Short-service workers and supervision\n\nControl unfamiliarity with high-energy tasks and local conditions. This course teaches the decisions needed to implement that purpose in field operations. It covers identify support needs, assign mentor, restrict tasks and assess release from supervision. The examples involve fictional oilfield crews and companies; none is a real incident record or evidence of a company's implementation.\n\nRead six substantive lessons, answer each attached knowledge check, then study two applied cases and answer the twenty final questions. Every question has three choices and one correct answer. The course records the first answer separately from any correction. Completion requires all 26 answered correctly or acknowledged remediation, including reading the specific explanation for each correction. A remediated result must never replace the original score. There is no speed requirement: take the time needed to explain the decision in your own words.\n\nThe audience includes workers who recognize gaps, supervisors who coordinate work and program owners who maintain the system. Each has a different decision boundary. An observer may report an uncertain safeguard without personally being qualified to repair it. A supervisor may coordinate a hold without being the person authorized to clear a technical prerequisite. Learn both the action and the limit on that action.\n\nCompany evidence review, practical competence and job/site authorization are separate judgments. A favorable company maturity score does not release an unsafe assignment. These lessons supply original instruction and fictional worked examples; actual technical methods, operating limits, legal applicability and authorizations must come from the competent employer/site sources. Unknown required conditions remain unverified. Do not invent a value, signature, expiry date or successful observation to fill a blank.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C03_lesson1",
+        "title": "Lesson 1 — Recognize unfamiliarity rather than tenure alone",
+        "body": "## Recognize unfamiliarity rather than tenure alone\n\nShort-service support addresses unfamiliar work and conditions, not simply a worker's age or calendar time. An experienced employee may be new to a role, attachment, site or team. Identify relevant prior experience and gaps before assignment. Avoid presenting any company's particular duration or marking system as universal. The support decision must correspond to the tasks and risks encountered now.\n\n### Deeper application\n\nDiscuss relevant experience with the worker rather than relying solely on a hire date. Someone familiar with equipment may still be unfamiliar with a site's traffic, signals or emergency arrangements. Someone new to the company may have useful prior competence that can be verified. The support plan should explain the actual gaps and safeguards, avoiding a label that suggests every short-service worker has identical capabilities.\n\n### Worked oilfield example\n\nA long-serving mechanic transfers into an unfamiliar gate traffic-control role and is rostered alone. The decision is to assess the unfamiliar role and provide suitable supervision and restrictions before assignment.\n\nCompany tenure does not establish competence in a changed task or local conditions. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A role-specific experience review identifying unfamiliar tasks and the required support plan. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the review considers years employed but not the worker's new duties. The appropriate correction is to reassess relevant task familiarity and document the support actually needed. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C03_lesson2",
+        "title": "Lesson 2 — Assign a capable available mentor",
+        "body": "## Assign a capable available mentor\n\nA mentor needs relevant competence, time, communication ability and authority to intervene. Naming the most experienced person is insufficient if that person is simultaneously supervising incompatible work elsewhere. Define how supervision will occur and what the worker may do while the mentor is unavailable. The mentor coaches within their own assessed scope and escalates specialist decisions beyond it.\n\n### Deeper application\n\nMentor workload is part of the plan. If one mentor covers several separated tasks, establish whether they can provide the supervision each needs. A worker should know what to do during a mentor's break or reassignment. Do not count availability by telephone as direct observation where direct supervision is required. Provide an explicit handover when another suitably competent person takes over.\n\n### Worked oilfield example\n\nA new equipment worker's named mentor is sent to a different crew during the planned supervised operation. The decision is to hold the dependent operation or provide another competent available supervisor.\n\nSupervision is an active safeguard; a name on a roster cannot provide unavailable observation or intervention. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A mentor assignment showing competence, availability, supervision arrangement and handover coverage. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the replacement mentor has experience but no competence in the assigned equipment task. The appropriate correction is to provide a suitably competent mentor or restrict the assignment to supported work. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C03_lesson3",
+        "title": "Lesson 3 — Make restrictions visible at allocation",
+        "body": "## Make restrictions visible at allocation\n\nState task limits in terms dispatch and site supervision can use: permitted supervised activities, prohibited independent tasks and conditions requiring a stop. Share the necessary operational restriction without unnecessary personal labels. The worker should be able to explain these limits. A colored sticker or new-worker label may alert people, but it cannot replace explicit scope and supervision arrangements.\n\n### Deeper application\n\nWrite restrictions in allocation terms: which tasks may be practiced with supervision, which remain prohibited and who must be present. The same information should reach the worker, dispatcher and site supervisor. A visible short-service identifier can support awareness, but it cannot tell a receiver whether the worker may operate a particular machine. Task-specific limits need an accessible authoritative record.\n\n### Worked oilfield example\n\nDispatch allocates lone equipment operation even though the worker's plan permits supervised practice only. The decision is to stop the allocation and arrange the specified supervision or reassign to authorized work.\n\nRestrictions protect only when the people allocating and performing work understand and apply them. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A current restriction record acknowledged by dispatch, site supervision and the worker. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the plan is correct but the night dispatcher has not received it. The appropriate correction is to communicate the restriction and confirm allocation controls cover the night shift. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C03_lesson4",
+        "title": "Lesson 4 — Coach through demonstration and feedback",
+        "body": "## Coach through demonstration and feedback\n\nExplain the task purpose and critical controls, demonstrate safely, let the worker practice under appropriate supervision and give specific feedback. Describe the observed action rather than labeling the person careless. Break complex work into manageable tasks and verify understanding before increasing independence. Never defeat a safeguard or create live exposure to test whether a novice reacts correctly. Use suitable simulation for abnormal decisions.\n\n### Deeper application\n\nCoaching is most useful when feedback describes an observed action and its consequence. Replace be more careful with the missed check, why it matters and how to perform it correctly. Let the worker explain the stop decision before further practice. Demonstration should use controlled conditions and a suitable mentor; never introduce a real uncontrolled hazard just to see whether the worker notices.\n\n### Worked oilfield example\n\nA trainee repeatedly misses the pre-use defect escalation step during supervised practice. The decision is to give specific feedback, practice the escalation and reassess before reducing supervision.\n\nMissing a critical abnormal decision remains a competence gap even when routine performance is otherwise smooth. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: Observations identifying the missed escalation step, coaching provided and later demonstrated response. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the mentor records good attitude but no observed task performance. The appropriate correction is to record objective observations against task criteria and complete the missing assessment. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C03_lesson5",
+        "title": "Lesson 5 — Release supervision on evidence",
+        "body": "## Release supervision on evidence\n\nRelease is an authorized decision based on observed competence for defined work, not an automatic reward for time served. The assessor should review task performance, abnormal decisions and any unresolved restrictions. A mentor's recommendation may inform the decision but does not replace the employer's assigned authority. State what supervision remains and when changed work needs reassessment. Preserve the development history.\n\n### Deeper application\n\nA release recommendation should identify evidence and limits, not simply confidence in the person. The authorized employer role decides independence for the assessed scope. Record tasks not yet assessed and supervision still required. A customary support period can trigger a review, but cannot substitute for the result. If capability is not demonstrated, explain the next practice and assessment steps without pretending the calendar proves competence.\n\n### Worked oilfield example\n\nA worker reaches the company's usual support period but has not demonstrated the task's stop decision. The decision is to continue the relevant restriction and complete assessment before authorizing independent work.\n\nElapsed time is not evidence that the required performance standard has been met. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A documented release decision referencing observed performance, remaining limits and authorizer. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the release covers all site work although assessment covered one bounded task. The appropriate correction is to limit authorization to the demonstrated scope and assess additional tasks before expansion. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C03_lesson6",
+        "title": "Lesson 6 — Monitor transfer and changing conditions",
+        "body": "## Monitor transfer and changing conditions\n\nIndependence for a defined task does not remove the need for reassessment when equipment, conditions or duties change. Watch for repeated errors, worker uncertainty or a support arrangement that no longer fits. Encourage early questions instead of treating a request for help as failure. Sample whether mentors have realistic workloads and whether restrictions survive shift handover. The support system should develop capability while controlling exposure.\n\n### Deeper application\n\nA worker requesting renewed help after a change is giving useful readiness information. Review the new condition instead of treating the earlier release as a permanent all-task pass. A return to supervised practice can be a proportionate protection for one changed task. Check that restrictions reach the next shift and are not overridden by an older roster or informal expectations based on tenure.\n\n### Worked oilfield example\n\nA newly released worker moves to unfamiliar equipment and says the earlier assessment does not cover its controls. The decision is to review the changed task and restore appropriate support pending relevant assessment.\n\nAn earlier release remains bounded by its assessed scope; changed work can require new support. This is a decision about the described conditions, rather than a conclusion that every related activity is unsafe. Identify which people and assignments depend on the unresolved point. Maintain the relevant restriction while the responsible person checks the facts; avoid spreading an unsupported approval to another crew or task.\n\n### What the record must show\n\nUseful evidence would be: A changed-task review linking prior competence, new gaps and revised supervision conditions. Record what was actually checked and the scope of that check. Distinguish the observation from an opinion about it. A record of the decision should allow the next responsible person to tell what is accepted, what remains unresolved and whose authority is needed. If a check has not occurred, state that it is pending. Do not convert a planned check into a completed result.\n\n### A later challenge to the decision\n\nDuring follow-up, the reviewer finds that the revised plan is recorded but the previous unrestricted roster remains active. The appropriate correction is to update operational allocation status and confirm affected supervisors use the revised limits. This additional fact changes what can be relied on. Preserve the earlier record and add the correction with its reason; quietly rewriting history would hide how the gap arose. Confirm that anyone relying on the earlier status receives the changed restriction before the next affected assignment.\n\n### Applying the distinction\n\nAn implementation record and a later effectiveness check answer different questions. The first shows whether the required action occurred within the stated scope. The second examines whether its intended protection works during relevant later work. Neither an unrelated credential nor a completed form answers both questions. In this example, the follow-up should return to the actual gap described above, rather than simply asking whether the file now looks complete. A genuine unknown must remain visible until resolved by appropriate evidence.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C03_scenarios",
+        "title": "Two applied scenarios and fully worked solutions",
+        "body": "## Applied scenario 1: an incomplete decision chain\n\nA long-serving mechanic transfers into an unfamiliar gate traffic-control role and is rostered alone. At the handover, a second issue is identified: The replacement mentor has experience but no competence in the assigned equipment task. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Remove the restriction to fill the shift. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Assess the unfamiliar role and provide suitable supervision and restrictions before assignment. The reason is specific: Company tenure does not establish competence in a changed task or local conditions. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Provide a suitably competent mentor or restrict the assignment to supported work. The supporting record should show: A mentor assignment showing competence, availability, supervision arrangement and handover coverage. This is important because supervision is an active safeguard; a name on a roster cannot provide unavailable observation or intervention. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because restrictions protect only when the people allocating and performing work understand and apply them. The suitable decision is: Stop the allocation and arrange the specified supervision or reassign to authorized work. Evidence for review would include: A current restriction record acknowledged by dispatch, site supervision and the worker. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n## Applied scenario 2: an incomplete decision chain\n\nA trainee repeatedly misses the pre-use defect escalation step during supervised practice. At the handover, a second issue is identified: The release covers all site work although assessment covered one bounded task. The receiving supervisor has the earlier record but does not yet have evidence that the new issue was resolved. A colleague proposes the following shortcut: Dismiss the concern because release was already signed. Work is due to begin on the next shift, so the supervisor needs a defensible decision that protects people and preserves a clear history.\n\n### Worked solution — immediate decision\n\nThe first response is: Give specific feedback, practice the escalation and reassess before reducing supervision. The reason is specific: Missing a critical abnormal decision remains a competence gap even when routine performance is otherwise smooth. Determine which assignment depends on that unresolved condition. Tell the affected people the restriction and who is coordinating resolution. If there is an immediate exposure, move to a safe position and use the established warning or emergency route rather than completing records first. The supervisor must not use a favorable overall company score as a substitute for this missing decision.\n\n### Worked solution — resolve the additional issue\n\nFor the handover finding, the next action is: Limit authorization to the demonstrated scope and assess additional tasks before expansion. The supporting record should show: A documented release decision referencing observed performance, remaining limits and authorizer. This is important because elapsed time is not evidence that the required performance standard has been met. The receiving shift needs the actual status, not an assurance that someone intends to finish the check later. Identify the responsible role and obtain acknowledgment of the restriction. If the required authority or expertise is unavailable, the affected assignment remains unready; unrelated authorized work may be considered only after its interfaces are checked.\n\n### Worked solution — reject the shortcut and verify the result\n\nThe proposed shortcut fails because an earlier release remains bounded by its assessed scope; changed work can require new support. The suitable decision is: Review the changed task and restore appropriate support pending relevant assessment. Evidence for review would include: A changed-task review linking prior competence, new gaps and revised supervision conditions. Separate correction of the immediate problem from confirmation that the change works in later comparable conditions. A reviewer should check the actual control used and the scope represented by the evidence. If the same weakness recurs, reopen the issue and retain both the original decision and the new observation.\n\n### What can be concluded\n\nThis solution establishes a bounded route from an identified gap to evidence and responsible acceptance. It does not establish that an assessment, clinical decision, technical test or employer authorization actually happened in a real company. The fictional case teaches how to decide and what to verify. Actual release remains with the designated employer/site authority after the applicable prerequisites are met.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C03_assessment",
+        "title": "Final assessment — twenty questions",
+        "body": "Answer each question individually. Apply the taught decisions to the facts given. Your first choices are retained. If an answer is wrong, read the specific explanation and explicitly acknowledge the corrected answer. A corrected score records learning after feedback; it does not overwrite the first-answer result. All twenty final questions and all six lesson checks must be completed.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "C03_finish",
+        "title": "Finish — separate practical qualification",
+        "body": "## Written completion and what it proves\n\nCompletion requires all 26 answered correctly or acknowledged remediation. Both first-answer and remediated scores remain separate. Completing the guided course is evidence that you worked through its knowledge and decision questions; it is not an observed practical performance result, a legal license, a provider certification or an employer authorization. Training evidence contributes to review within its scope and validity, rather than automatically establishing the whole company program.\n\n## What needs separate assessment\n\nMentors demonstrate coaching and task observation; worker practical assessment. An appropriate assessor must have the knowledge and practical experience relevant to the role being judged. The employer must identify the applicable task standard, arrange safe supervised practice and evaluate performance against that standard. Use simulation for judgment and communication where appropriate; never create hazardous exposure to make a demonstration realistic. Record whether each item was observed, met the standard, needed practice or was not assessed. A gap needs feedback, additional practice and reassessment before authorization is expanded.\n\nThe assessment should test recognition of an abnormal condition as well as routine performance. A person who can repeat a procedure but cannot identify when to stop has not demonstrated the whole task. Employer authorization should state the person, tasks, equipment or site limits, required supervision and the basis for the decision. Applicable legal, issuer, client and change-trigger requirements govern validity; this course invents no universal renewal period.\n\n## Before actual work\n\nConfirm current local instructions, reporting routes, emergency arrangements and the person who can resolve an operating hold. If assigned work exceeds your assessed scope, say so before accepting it. The Partner's job/site readiness decision remains separate from the company's evidence review. Preserve real records through the authorized process and protect personal information. The fictional examples in this course must never be submitted as evidence that your company performed the actions described.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "C03_check1",
+        "prompt": "A long-serving mechanic transfers into an unfamiliar gate traffic-control role and is rostered alone. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Assess the unfamiliar role and provide suitable supervision and restrictions before assignment."
+          },
+          {
+            "id": "b",
+            "label": "Exempt the worker because of ten years with the company."
+          },
+          {
+            "id": "c",
+            "label": "Use age as the sole measure of readiness."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C03_final1",
+        "prompt": "For recognize unfamiliarity rather than tenure alone, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A role-specific experience review identifying unfamiliar tasks and the required support plan."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C03_final2",
+        "prompt": "A later review finds: The review considers years employed but not the worker's new duties. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Reassess relevant task familiarity and document the support actually needed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C03_final3",
+        "prompt": "Consider this proposed response: Exempt the worker because of ten years with the company. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Company tenure does not establish competence in a changed task or local conditions."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C03_check2",
+        "prompt": "A new equipment worker's named mentor is sent to a different crew during the planned supervised operation. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Count a mentor's telephone number as equivalent to required direct supervision."
+          },
+          {
+            "id": "b",
+            "label": "Hold the dependent operation or provide another competent available supervisor."
+          },
+          {
+            "id": "c",
+            "label": "Let the new worker gain experience alone."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C03_final4",
+        "prompt": "For assign a capable available mentor, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A mentor assignment showing competence, availability, supervision arrangement and handover coverage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C03_final5",
+        "prompt": "A later review finds: The replacement mentor has experience but no competence in the assigned equipment task. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Provide a suitably competent mentor or restrict the assignment to supported work."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C03_final6",
+        "prompt": "Consider this proposed response: Count a mentor's telephone number as equivalent to required direct supervision. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Supervision is an active safeguard; a name on a roster cannot provide unavailable observation or intervention."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C03_check3",
+        "prompt": "Dispatch allocates lone equipment operation even though the worker's plan permits supervised practice only. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Remove the restriction to fill the shift."
+          },
+          {
+            "id": "b",
+            "label": "Rely on a helmet sticker to explain all task limits."
+          },
+          {
+            "id": "c",
+            "label": "Stop the allocation and arrange the specified supervision or reassign to authorized work."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C03_final7",
+        "prompt": "For make restrictions visible at allocation, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A current restriction record acknowledged by dispatch, site supervision and the worker."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C03_final8",
+        "prompt": "A later review finds: The plan is correct but the night dispatcher has not received it. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Communicate the restriction and confirm allocation controls cover the night shift."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C03_final9",
+        "prompt": "Consider this proposed response: Remove the restriction to fill the shift. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "Restrictions protect only when the people allocating and performing work understand and apply them."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C03_check4",
+        "prompt": "A trainee repeatedly misses the pre-use defect escalation step during supervised practice. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Give specific feedback, practice the escalation and reassess before reducing supervision."
+          },
+          {
+            "id": "b",
+            "label": "Pass the trainee because most routine actions were correct."
+          },
+          {
+            "id": "c",
+            "label": "Introduce a dangerous live defect to test courage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C03_final10",
+        "prompt": "For coach through demonstration and feedback, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "Observations identifying the missed escalation step, coaching provided and later demonstrated response."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C03_final11",
+        "prompt": "A later review finds: The mentor records good attitude but no observed task performance. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Delete the earlier record so no inconsistency remains."
+          },
+          {
+            "id": "c",
+            "label": "Record objective observations against task criteria and complete the missing assessment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C03_final12",
+        "prompt": "Consider this proposed response: Pass the trainee because most routine actions were correct. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Missing a critical abnormal decision remains a competence gap even when routine performance is otherwise smooth."
+          },
+          {
+            "id": "b",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C03_check5",
+        "prompt": "A worker reaches the company's usual support period but has not demonstrated the task's stop decision. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Release automatically because the calendar period ended."
+          },
+          {
+            "id": "b",
+            "label": "Continue the relevant restriction and complete assessment before authorizing independent work."
+          },
+          {
+            "id": "c",
+            "label": "Ask the worker to self-certify independent competence."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C03_final13",
+        "prompt": "For release supervision on evidence, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "b",
+            "label": "A copied fictional example represented as an observed result."
+          },
+          {
+            "id": "c",
+            "label": "A documented release decision referencing observed performance, remaining limits and authorizer."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C03_final14",
+        "prompt": "A later review finds: The release covers all site work although assessment covered one bounded task. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Limit authorization to the demonstrated scope and assess additional tasks before expansion."
+          },
+          {
+            "id": "b",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C03_final15",
+        "prompt": "Consider this proposed response: Release automatically because the calendar period ended. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Elapsed time is not evidence that the required performance standard has been met."
+          },
+          {
+            "id": "c",
+            "label": "Company course completion automatically supplies any missing authority."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C03_check6",
+        "prompt": "A newly released worker moves to unfamiliar equipment and says the earlier assessment does not cover its controls. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Dismiss the concern because release was already signed."
+          },
+          {
+            "id": "b",
+            "label": "Delete the previous release to hide the scope gap."
+          },
+          {
+            "id": "c",
+            "label": "Review the changed task and restore appropriate support pending relevant assessment."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C03_final16",
+        "prompt": "For monitor transfer and changing conditions, which record best supports an implemented decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A changed-task review linking prior competence, new gaps and revised supervision conditions."
+          },
+          {
+            "id": "b",
+            "label": "A signed attendance page with no task or decision details."
+          },
+          {
+            "id": "c",
+            "label": "A copied fictional example represented as an observed result."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C03_final17",
+        "prompt": "A later review finds: The revised plan is recorded but the previous unrestricted roster remains active. Which response addresses that specific gap?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep the earlier status because the original form was approved."
+          },
+          {
+            "id": "b",
+            "label": "Update operational allocation status and confirm affected supervisors use the revised limits."
+          },
+          {
+            "id": "c",
+            "label": "Delete the earlier record so no inconsistency remains."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "C03_final18",
+        "prompt": "Consider this proposed response: Dismiss the concern because release was already signed. Why is the taught response preferable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The original response is acceptable whenever the schedule is tight."
+          },
+          {
+            "id": "b",
+            "label": "Company course completion automatically supplies any missing authority."
+          },
+          {
+            "id": "c",
+            "label": "An earlier release remains bounded by its assessed scope; changed work can require new support."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "C03_final19",
+        "prompt": "Applied scenario 1: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Provide a suitably competent mentor or restrict the assignment to supported work."
+          },
+          {
+            "id": "b",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "C03_final20",
+        "prompt": "Applied scenario 2: which response resolves the additional handover issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Proceed on the earlier status and correct the record afterward."
+          },
+          {
+            "id": "b",
+            "label": "Limit authorization to the demonstrated scope and assess additional tasks before expansion."
+          },
+          {
+            "id": "c",
+            "label": "Ask the receiving shift to sign away the unresolved concern."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "C03_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C03_lesson1",
+          "questionIds": [
+            "C03_check1"
+          ]
+        },
+        {
+          "lessonId": "C03_lesson2",
+          "questionIds": [
+            "C03_check2"
+          ]
+        },
+        {
+          "lessonId": "C03_lesson3",
+          "questionIds": [
+            "C03_check3"
+          ]
+        },
+        {
+          "lessonId": "C03_lesson4",
+          "questionIds": [
+            "C03_check4"
+          ]
+        },
+        {
+          "lessonId": "C03_lesson5",
+          "questionIds": [
+            "C03_check5"
+          ]
+        },
+        {
+          "lessonId": "C03_lesson6",
+          "questionIds": [
+            "C03_check6"
+          ]
+        },
+        {
+          "lessonId": "C03_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "C03_assessment",
+          "questionIds": [
+            "C03_final1",
+            "C03_final2",
+            "C03_final3",
+            "C03_final4",
+            "C03_final5",
+            "C03_final6",
+            "C03_final7",
+            "C03_final8",
+            "C03_final9",
+            "C03_final10",
+            "C03_final11",
+            "C03_final12",
+            "C03_final13",
+            "C03_final14",
+            "C03_final15",
+            "C03_final16",
+            "C03_final17",
+            "C03_final18",
+            "C03_final19",
+            "C03_final20"
+          ]
+        },
+        {
+          "lessonId": "C03_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "C03_check1": "Company tenure does not establish competence in a changed task or local conditions.",
+        "C03_final1": "Company tenure does not establish competence in a changed task or local conditions. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C03_final2": "Company tenure does not establish competence in a changed task or local conditions. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C03_final3": "Company tenure does not establish competence in a changed task or local conditions. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C03_check2": "Supervision is an active safeguard; a name on a roster cannot provide unavailable observation or intervention.",
+        "C03_final4": "Supervision is an active safeguard; a name on a roster cannot provide unavailable observation or intervention. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C03_final5": "Supervision is an active safeguard; a name on a roster cannot provide unavailable observation or intervention. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C03_final6": "Supervision is an active safeguard; a name on a roster cannot provide unavailable observation or intervention. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C03_check3": "Restrictions protect only when the people allocating and performing work understand and apply them.",
+        "C03_final7": "Restrictions protect only when the people allocating and performing work understand and apply them. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C03_final8": "Restrictions protect only when the people allocating and performing work understand and apply them. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C03_final9": "Restrictions protect only when the people allocating and performing work understand and apply them. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C03_check4": "Missing a critical abnormal decision remains a competence gap even when routine performance is otherwise smooth.",
+        "C03_final10": "Missing a critical abnormal decision remains a competence gap even when routine performance is otherwise smooth. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C03_final11": "Missing a critical abnormal decision remains a competence gap even when routine performance is otherwise smooth. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C03_final12": "Missing a critical abnormal decision remains a competence gap even when routine performance is otherwise smooth. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C03_check5": "Elapsed time is not evidence that the required performance standard has been met.",
+        "C03_final13": "Elapsed time is not evidence that the required performance standard has been met. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C03_final14": "Elapsed time is not evidence that the required performance standard has been met. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C03_final15": "Elapsed time is not evidence that the required performance standard has been met. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C03_check6": "An earlier release remains bounded by its assessed scope; changed work can require new support.",
+        "C03_final16": "An earlier release remains bounded by its assessed scope; changed work can require new support. The selected record identifies the relevant action and its scope. Attendance and fictional material do not establish implementation.",
+        "C03_final17": "An earlier release remains bounded by its assessed scope; changed work can require new support. The new finding must be addressed and the original decision preserved. Approval cannot make a later contradictory fact disappear.",
+        "C03_final18": "An earlier release remains bounded by its assessed scope; changed work can require new support. Scheduling pressure and a written course result cannot supply the missing safeguard or decision authority.",
+        "C03_final19": "Supervision is an active safeguard; a name on a roster cannot provide unavailable observation or intervention. A handover must convey the unresolved condition, and release depends on its appropriate resolution.",
+        "C03_final20": "Elapsed time is not evidence that the required performance standard has been met. A handover must convey the unresolved condition, and release depends on its appropriate resolution."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

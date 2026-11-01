@@ -1,0 +1,3362 @@
+{
+  "version": 1,
+  "reviewDate": "2026-11-01",
+  "catalogSha256": "1f2dbb3abc8a7fcebe6ff5eb4e593774a271a21b1cc99da31ac9358784eeb524",
+  "sourceGroupFile": "consolidated-training-gaps.json",
+  "authorityBoundary": "Supplemental knowledge foundations only. Source service records establish provenance and candidate scope, not legal mandates or demonstrated exposure. No practical, credential, medical, employer-method or site authorization gap is closed.",
+  "runtimeContract": {
+    "matchBy": "Exact master service ID plus exact reviewed role label; do not union all mappings for every employee.",
+    "requiresExposureConfirmation": "Evaluate per person/service/role actual task. Absent, unresolved or rejected confirmation must not be treated as an applicable completed course or trusted perfect-coverage evidence.",
+    "legalScope": "Confirm the actual material/process/jurisdiction. Do not infer hazmat, HAZWOPER, BBP, PSM, laboratory-standard or agricultural-WPS coverage from a catalog label.",
+    "deduplication": "One current member/course requirement across overlapping services and roles, preserving source links and separate practical requirements."
+  },
+  "sources": {
+    "bloodborne": {
+      "id": "bloodborne",
+      "title": "OSHA bloodborne pathogens",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030",
+      "evidenceStatus": "primary_standard_checked",
+      "scopeLimit": "Actual occupational blood/OPIM exposure; not a clinical licensing source."
+    },
+    "food": {
+      "id": "food",
+      "title": "FDA Food Code model and adoption context",
+      "url": "https://www.fda.gov/food/retail-food-protection/fda-food-code",
+      "evidenceStatus": "primary_guidance_checked",
+      "scopeLimit": "Model provisions require applicable local adoption/context; not universal food-credential law."
+    },
+    "hazwoper": {
+      "id": "hazwoper",
+      "title": "OSHA hazardous waste operations and emergency response",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120",
+      "evidenceStatus": "primary_standard_checked",
+      "scopeLimit": "Coverage and actual response role must be determined; not every waste service is covered."
+    },
+    "lab": {
+      "id": "lab",
+      "title": "OSHA laboratory chemical exposure",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450",
+      "evidenceStatus": "primary_standard_checked",
+      "scopeLimit": "Defined laboratory-use scope; not universal certification of analytical methods."
+    },
+    "pesticide": {
+      "id": "pesticide",
+      "title": "EPA pesticide applicator certification",
+      "url": "https://www.epa.gov/pesticide-worker-safety/how-get-certified-pesticide-applicator",
+      "evidenceStatus": "retained_authored_course_primary_reference",
+      "scopeLimit": "Product, category, jurisdiction and agricultural/nonagricultural scope determine requirements."
+    },
+    "phmsa": {
+      "id": "phmsa",
+      "title": "PHMSA hazardous-material training requirements",
+      "url": "https://www.phmsa.dot.gov/about-phmsa/hazardous-materials-training-requirements",
+      "evidenceStatus": "primary_guidance_checked",
+      "scopeLimit": "Applies to actual regulated transport functions; FAQ guidance does not itself create obligations."
+    },
+    "psm": {
+      "id": "psm",
+      "title": "OSHA process safety management",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119",
+      "evidenceStatus": "primary_standard_checked",
+      "scopeLimit": "Specific coverage/exceptions; not all oilfield or process work is automatically covered."
+    }
+  },
+  "courses": [
+    {
+      "courseId": "G01",
+      "groupId": "G01",
+      "title": "Hazardous-material transportation: recognition and safe handoff",
+      "courseFile": "gap-courses/G01.json",
+      "courseSha256": "766b1ed31a829d28887016b3352c6c61251b5a5e6e558204be9f5cf0b6fb23e3",
+      "masterServiceIds": [
+        "VMS-0531A97C26",
+        "VMS-102E2B5235",
+        "VMS-1178905251",
+        "VMS-16F6CFADB0",
+        "VMS-1F8999CBB1",
+        "VMS-25BE7C4EF8",
+        "VMS-2CDA92718D",
+        "VMS-34EC59F731",
+        "VMS-41C5BF0198",
+        "VMS-42E779E437",
+        "VMS-52A0FB8D41",
+        "VMS-5D5F58D480",
+        "VMS-735EB86FF3",
+        "VMS-781FB29C70",
+        "VMS-7DCB1C3726",
+        "VMS-8179249A69",
+        "VMS-8D08E15F56",
+        "VMS-8D4BF7CD8F",
+        "VMS-8D7A6E1F5E",
+        "VMS-9045E4619F",
+        "VMS-90698BBAAB",
+        "VMS-9BE605AE4E",
+        "VMS-A11F22391C",
+        "VMS-A3D5E24BE6",
+        "VMS-A42630EEF3",
+        "VMS-AA9141E7A4",
+        "VMS-B0F1378580",
+        "VMS-C0B5C2CA3C",
+        "VMS-C0FCAD24D3",
+        "VMS-C1C6A8852A",
+        "VMS-C75315103D",
+        "VMS-CCE9BD82FF",
+        "VMS-CF3033B418",
+        "VMS-CF5489B45F",
+        "VMS-D46E24F22A",
+        "VMS-DB0F663B75",
+        "VMS-DD459906A3",
+        "VMS-E355A1AF57",
+        "VMS-E7103935F7",
+        "VMS-E77F809F4E",
+        "VMS-EB882ACB9C",
+        "VMS-EE18A5C176",
+        "VMS-EF5BBED5B6",
+        "VMS-EFCE8C3A29",
+        "VMS-F012A812BA",
+        "VMS-F7FAA8F0F0"
+      ],
+      "primarySourceIds": [
+        "phmsa"
+      ],
+      "originalGapRecordIds": [
+        "gap_c959e9150f7452ac",
+        "gap_43a9ded8b407915b"
+      ],
+      "roleMappings": [
+        {
+          "id": "additional_g01_01",
+          "role": "Hazmat shipper, loader or driver",
+          "familyIds": [
+            "G01"
+          ],
+          "masterServiceIds": [
+            "VMS-0531A97C26",
+            "VMS-102E2B5235",
+            "VMS-1178905251",
+            "VMS-16F6CFADB0",
+            "VMS-1F8999CBB1",
+            "VMS-25BE7C4EF8",
+            "VMS-2CDA92718D",
+            "VMS-34EC59F731",
+            "VMS-41C5BF0198",
+            "VMS-42E779E437",
+            "VMS-52A0FB8D41",
+            "VMS-5D5F58D480",
+            "VMS-735EB86FF3",
+            "VMS-781FB29C70",
+            "VMS-7DCB1C3726",
+            "VMS-8179249A69",
+            "VMS-8D08E15F56",
+            "VMS-8D4BF7CD8F",
+            "VMS-8D7A6E1F5E",
+            "VMS-9045E4619F",
+            "VMS-90698BBAAB",
+            "VMS-9BE605AE4E",
+            "VMS-A11F22391C",
+            "VMS-A3D5E24BE6",
+            "VMS-A42630EEF3",
+            "VMS-AA9141E7A4",
+            "VMS-B0F1378580",
+            "VMS-C0B5C2CA3C",
+            "VMS-C0FCAD24D3",
+            "VMS-C1C6A8852A",
+            "VMS-C75315103D",
+            "VMS-CCE9BD82FF",
+            "VMS-CF3033B418",
+            "VMS-CF5489B45F",
+            "VMS-D46E24F22A",
+            "VMS-DB0F663B75",
+            "VMS-DD459906A3",
+            "VMS-E355A1AF57",
+            "VMS-E7103935F7",
+            "VMS-E77F809F4E",
+            "VMS-EB882ACB9C",
+            "VMS-EE18A5C176",
+            "VMS-EF5BBED5B6",
+            "VMS-EFCE8C3A29",
+            "VMS-F012A812BA",
+            "VMS-F7FAA8F0F0"
+          ],
+          "trigger": "Only after the actual material/load classification and the person’s shipping, packaging, marking, loading, unloading or transport function are confirmed. A truck, waste, chemical or fuel-service label alone is insufficient.",
+          "rationale": "Teach recognition, containment, inconsistent shipment information and safe handoff for the person’s actual regulated transport function. General driving or working near a shipment does not establish that function.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "phmsa"
+          ],
+          "sourceRecordIds": [
+            "SRC-0E397094CF10",
+            "SRC-10287D6191DB",
+            "SRC-104F047B6162",
+            "SRC-111B7B62937C",
+            "SRC-1573572F5F55",
+            "SRC-15BBF6AB87F5",
+            "SRC-1F53DE3A744D",
+            "SRC-21AB59DD3BCB",
+            "SRC-31A8C53DA0B7",
+            "SRC-3200D12C204D",
+            "SRC-355AAA0EACF4",
+            "SRC-40922A6E27C4",
+            "SRC-4557382F5277",
+            "SRC-45C48B312DC1",
+            "SRC-4AB78E96BD67",
+            "SRC-4BA625576ACB",
+            "SRC-538509AF2B7A",
+            "SRC-58CD9C011229",
+            "SRC-58FA0BC708FB",
+            "SRC-59742BAFD25A",
+            "SRC-5A33FC7282EA",
+            "SRC-5D240B3C390F",
+            "SRC-6398991D59B8",
+            "SRC-6F4593949F07",
+            "SRC-6FACE0C7C502",
+            "SRC-775F50946E87",
+            "SRC-7B9D14963AF3",
+            "SRC-91EA183AD2F9",
+            "SRC-92A1A4E7D49D",
+            "SRC-93E9242FF23D",
+            "SRC-98B37B48480D",
+            "SRC-9F70DB5AD86B",
+            "SRC-BA21A323AC18",
+            "SRC-BEFD1C756330",
+            "SRC-CA1D321AA145",
+            "SRC-D26B272B7312",
+            "SRC-E4BA5F0E4945",
+            "SRC-E71B9E4A3C80",
+            "SRC-E7CDCB1AA358",
+            "SRC-E97B148214C1",
+            "SRC-ECC1462584FE",
+            "SRC-F47710402E75",
+            "SRC-F7100124B8FB",
+            "SRC-FB9BBD381292",
+            "SRC-FC11B52099FF",
+            "SRC-FE0D5A220987",
+            "SRC-FE196D0853B7",
+            "SRC-FFD2531B3D09"
+          ],
+          "sourceUrls": [
+            "https://anadarkodozer.com/oilfield-trucking-services/",
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.mongoose-trucking.com/services/other-services/",
+            "https://www.rbcenergyservices.com/price-list",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g01_02",
+          "role": "Assigned hazardous-material shipping/dispatch function",
+          "familyIds": [
+            "G01"
+          ],
+          "masterServiceIds": [
+            "VMS-0531A97C26",
+            "VMS-102E2B5235",
+            "VMS-1178905251",
+            "VMS-16F6CFADB0",
+            "VMS-1F8999CBB1",
+            "VMS-25BE7C4EF8",
+            "VMS-2CDA92718D",
+            "VMS-34EC59F731",
+            "VMS-41C5BF0198",
+            "VMS-42E779E437",
+            "VMS-52A0FB8D41",
+            "VMS-5D5F58D480",
+            "VMS-735EB86FF3",
+            "VMS-781FB29C70",
+            "VMS-7DCB1C3726",
+            "VMS-8179249A69",
+            "VMS-8D08E15F56",
+            "VMS-8D4BF7CD8F",
+            "VMS-8D7A6E1F5E",
+            "VMS-9045E4619F",
+            "VMS-90698BBAAB",
+            "VMS-9BE605AE4E",
+            "VMS-A11F22391C",
+            "VMS-A3D5E24BE6",
+            "VMS-A42630EEF3",
+            "VMS-AA9141E7A4",
+            "VMS-B0F1378580",
+            "VMS-C0B5C2CA3C",
+            "VMS-C0FCAD24D3",
+            "VMS-C1C6A8852A",
+            "VMS-C75315103D",
+            "VMS-CCE9BD82FF",
+            "VMS-CF3033B418",
+            "VMS-CF5489B45F",
+            "VMS-D46E24F22A",
+            "VMS-DB0F663B75",
+            "VMS-DD459906A3",
+            "VMS-E355A1AF57",
+            "VMS-E7103935F7",
+            "VMS-E77F809F4E",
+            "VMS-EB882ACB9C",
+            "VMS-EE18A5C176",
+            "VMS-EF5BBED5B6",
+            "VMS-EFCE8C3A29",
+            "VMS-F012A812BA",
+            "VMS-F7FAA8F0F0"
+          ],
+          "trigger": "Only personnel actually preparing/checking hazardous-material shipment information or coordinating a function affecting its transport safety; confirm material, function and transport mode. Ordinary dispatch, passenger booking, payroll and desk brokerage alone do not trigger this rule.",
+          "rationale": "A shipping clerk or dispatcher can affect hazardous-material safety without driving. Bind the knowledge to that assigned function rather than every office role or everyone employed by a transport company.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "phmsa"
+          ],
+          "sourceRecordIds": [
+            "SRC-0E397094CF10",
+            "SRC-10287D6191DB",
+            "SRC-104F047B6162",
+            "SRC-111B7B62937C",
+            "SRC-1573572F5F55",
+            "SRC-15BBF6AB87F5",
+            "SRC-1F53DE3A744D",
+            "SRC-21AB59DD3BCB",
+            "SRC-31A8C53DA0B7",
+            "SRC-3200D12C204D",
+            "SRC-355AAA0EACF4",
+            "SRC-40922A6E27C4",
+            "SRC-4557382F5277",
+            "SRC-45C48B312DC1",
+            "SRC-4AB78E96BD67",
+            "SRC-4BA625576ACB",
+            "SRC-538509AF2B7A",
+            "SRC-58CD9C011229",
+            "SRC-58FA0BC708FB",
+            "SRC-59742BAFD25A",
+            "SRC-5A33FC7282EA",
+            "SRC-5D240B3C390F",
+            "SRC-6398991D59B8",
+            "SRC-6F4593949F07",
+            "SRC-6FACE0C7C502",
+            "SRC-775F50946E87",
+            "SRC-7B9D14963AF3",
+            "SRC-91EA183AD2F9",
+            "SRC-92A1A4E7D49D",
+            "SRC-93E9242FF23D",
+            "SRC-98B37B48480D",
+            "SRC-9F70DB5AD86B",
+            "SRC-BA21A323AC18",
+            "SRC-BEFD1C756330",
+            "SRC-CA1D321AA145",
+            "SRC-D26B272B7312",
+            "SRC-E4BA5F0E4945",
+            "SRC-E71B9E4A3C80",
+            "SRC-E7CDCB1AA358",
+            "SRC-E97B148214C1",
+            "SRC-ECC1462584FE",
+            "SRC-F47710402E75",
+            "SRC-F7100124B8FB",
+            "SRC-FB9BBD381292",
+            "SRC-FC11B52099FF",
+            "SRC-FE0D5A220987",
+            "SRC-FE196D0853B7",
+            "SRC-FFD2531B3D09"
+          ],
+          "sourceUrls": [
+            "https://anadarkodozer.com/oilfield-trucking-services/",
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.mongoose-trucking.com/services/other-services/",
+            "https://www.rbcenergyservices.com/price-list",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g01_03",
+          "role": "Driver or load-handling transport worker",
+          "familyIds": [
+            "G01"
+          ],
+          "masterServiceIds": [
+            "VMS-0531A97C26",
+            "VMS-102E2B5235",
+            "VMS-1178905251",
+            "VMS-16F6CFADB0",
+            "VMS-1F8999CBB1",
+            "VMS-25BE7C4EF8",
+            "VMS-2CDA92718D",
+            "VMS-34EC59F731",
+            "VMS-41C5BF0198",
+            "VMS-42E779E437",
+            "VMS-52A0FB8D41",
+            "VMS-5D5F58D480",
+            "VMS-735EB86FF3",
+            "VMS-781FB29C70",
+            "VMS-7DCB1C3726",
+            "VMS-8179249A69",
+            "VMS-8D08E15F56",
+            "VMS-8D4BF7CD8F",
+            "VMS-8D7A6E1F5E",
+            "VMS-9045E4619F",
+            "VMS-90698BBAAB",
+            "VMS-9BE605AE4E",
+            "VMS-A11F22391C",
+            "VMS-A3D5E24BE6",
+            "VMS-A42630EEF3",
+            "VMS-AA9141E7A4",
+            "VMS-B0F1378580",
+            "VMS-C0B5C2CA3C",
+            "VMS-C0FCAD24D3",
+            "VMS-C1C6A8852A",
+            "VMS-C75315103D",
+            "VMS-CCE9BD82FF",
+            "VMS-CF3033B418",
+            "VMS-CF5489B45F",
+            "VMS-D46E24F22A",
+            "VMS-DB0F663B75",
+            "VMS-DD459906A3",
+            "VMS-E355A1AF57",
+            "VMS-E7103935F7",
+            "VMS-E77F809F4E",
+            "VMS-EB882ACB9C",
+            "VMS-EE18A5C176",
+            "VMS-EF5BBED5B6",
+            "VMS-EFCE8C3A29",
+            "VMS-F012A812BA",
+            "VMS-F7FAA8F0F0"
+          ],
+          "trigger": "Only the actual driver/loader assigned to a confirmed hazardous-material movement, including waste when classified accordingly; not every driver or apparently chemical load.",
+          "rationale": "Add the recognition foundation when driving/loading really involves the relevant material. This does not create a hazmat endorsement or replace vehicle/cargo/mode-specific instruction.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "phmsa"
+          ],
+          "sourceRecordIds": [
+            "SRC-0E397094CF10",
+            "SRC-10287D6191DB",
+            "SRC-104F047B6162",
+            "SRC-111B7B62937C",
+            "SRC-1573572F5F55",
+            "SRC-15BBF6AB87F5",
+            "SRC-1F53DE3A744D",
+            "SRC-21AB59DD3BCB",
+            "SRC-31A8C53DA0B7",
+            "SRC-3200D12C204D",
+            "SRC-355AAA0EACF4",
+            "SRC-40922A6E27C4",
+            "SRC-4557382F5277",
+            "SRC-45C48B312DC1",
+            "SRC-4AB78E96BD67",
+            "SRC-4BA625576ACB",
+            "SRC-538509AF2B7A",
+            "SRC-58CD9C011229",
+            "SRC-58FA0BC708FB",
+            "SRC-59742BAFD25A",
+            "SRC-5A33FC7282EA",
+            "SRC-5D240B3C390F",
+            "SRC-6398991D59B8",
+            "SRC-6F4593949F07",
+            "SRC-6FACE0C7C502",
+            "SRC-775F50946E87",
+            "SRC-7B9D14963AF3",
+            "SRC-91EA183AD2F9",
+            "SRC-92A1A4E7D49D",
+            "SRC-93E9242FF23D",
+            "SRC-98B37B48480D",
+            "SRC-9F70DB5AD86B",
+            "SRC-BA21A323AC18",
+            "SRC-BEFD1C756330",
+            "SRC-CA1D321AA145",
+            "SRC-D26B272B7312",
+            "SRC-E4BA5F0E4945",
+            "SRC-E71B9E4A3C80",
+            "SRC-E7CDCB1AA358",
+            "SRC-E97B148214C1",
+            "SRC-ECC1462584FE",
+            "SRC-F47710402E75",
+            "SRC-F7100124B8FB",
+            "SRC-FB9BBD381292",
+            "SRC-FC11B52099FF",
+            "SRC-FE0D5A220987",
+            "SRC-FE196D0853B7",
+            "SRC-FFD2531B3D09"
+          ],
+          "sourceUrls": [
+            "https://anadarkodozer.com/oilfield-trucking-services/",
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.mongoose-trucking.com/services/other-services/",
+            "https://www.rbcenergyservices.com/price-list",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        }
+      ],
+      "serviceEvidence": [
+        {
+          "masterServiceId": "VMS-0531A97C26",
+          "serviceName": "Mud Hauling",
+          "sourceRecordIds": [
+            "SRC-58CD9C011229"
+          ],
+          "sourceUrls": [
+            "https://anadarkodozer.com/oilfield-trucking-services/"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-102E2B5235",
+          "serviceName": "Refuelling Services",
+          "sourceRecordIds": [
+            "SRC-91EA183AD2F9"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_43a9ded8b407915b"
+          ],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-1178905251",
+          "serviceName": "Tanker operation at jetty",
+          "sourceRecordIds": [
+            "SRC-45C48B312DC1",
+            "SRC-0E397094CF10"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_43a9ded8b407915b"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-16F6CFADB0",
+          "serviceName": "Drilling Fluids / Mud Services",
+          "sourceRecordIds": [
+            "SRC-775F50946E87"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-1F8999CBB1",
+          "serviceName": "Freight Transport Services",
+          "sourceRecordIds": [
+            "SRC-21AB59DD3BCB"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-25BE7C4EF8",
+          "serviceName": "Non Hazardous Waste Disposal",
+          "sourceRecordIds": [
+            "SRC-58FA0BC708FB"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-2CDA92718D",
+          "serviceName": "Fabrication and erection of LPG Pipeline",
+          "sourceRecordIds": [
+            "SRC-111B7B62937C"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-34EC59F731",
+          "serviceName": "Gel/water mixture disposal",
+          "sourceRecordIds": [
+            "SRC-93E9242FF23D"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-41C5BF0198",
+          "serviceName": "Cutting Injections / Cutting Disposal Services",
+          "sourceRecordIds": [
+            "SRC-31A8C53DA0B7"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-42E779E437",
+          "serviceName": "Fluid / Bottom Hole Sampling Services",
+          "sourceRecordIds": [
+            "SRC-98B37B48480D"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-52A0FB8D41",
+          "serviceName": "LPG Cylinder Handling services",
+          "sourceRecordIds": [
+            "SRC-1F53DE3A744D"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-5D5F58D480",
+          "serviceName": "Dirty water/flowback disposal",
+          "sourceRecordIds": [
+            "SRC-6F4593949F07"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-735EB86FF3",
+          "serviceName": "Containerized fluid waste disposal",
+          "sourceRecordIds": [
+            "SRC-6398991D59B8"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-781FB29C70",
+          "serviceName": "Clean flowback/freshwater disposal",
+          "sourceRecordIds": [
+            "SRC-E71B9E4A3C80"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-7DCB1C3726",
+          "serviceName": "Truck and tank wagon loading automation",
+          "sourceRecordIds": [
+            "SRC-104F047B6162"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-8179249A69",
+          "serviceName": "Catalyst handling services (for Refinery)",
+          "sourceRecordIds": [
+            "SRC-59742BAFD25A"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-8D08E15F56",
+          "serviceName": "Air freight services",
+          "sourceRecordIds": [
+            "SRC-4AB78E96BD67",
+            "SRC-E7CDCB1AA358"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-8D4BF7CD8F",
+          "serviceName": "CO2 sequestration",
+          "sourceRecordIds": [
+            "SRC-FB9BBD381292"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-8D7A6E1F5E",
+          "serviceName": "Catalyst Loading or Removal Service",
+          "sourceRecordIds": [
+            "SRC-FC11B52099FF"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-9045E4619F",
+          "serviceName": "Freight Forwarders Services",
+          "sourceRecordIds": [
+            "SRC-5A33FC7282EA"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-90698BBAAB",
+          "serviceName": "Downhole Fluid Services",
+          "sourceRecordIds": [
+            "SRC-40922A6E27C4"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-9BE605AE4E",
+          "serviceName": "Potassium chloride transportation",
+          "sourceRecordIds": [
+            "SRC-F47710402E75"
+          ],
+          "sourceUrls": [
+            "https://anadarkodozer.com/oilfield-trucking-services/"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-A11F22391C",
+          "serviceName": "Fabrication / Maintenance / repair of Dispensers",
+          "sourceRecordIds": [
+            "SRC-538509AF2B7A"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-A3D5E24BE6",
+          "serviceName": "Waste to Fuel Blending Services",
+          "sourceRecordIds": [
+            "SRC-F7100124B8FB"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_43a9ded8b407915b"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-A42630EEF3",
+          "serviceName": "Frac/hotshot standby",
+          "sourceRecordIds": [
+            "SRC-BA21A323AC18"
+          ],
+          "sourceUrls": [
+            "https://www.mongoose-trucking.com/services/other-services/"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-AA9141E7A4",
+          "serviceName": "Fabrication and erection of IBR (Indian Boiler Regulation) piping",
+          "sourceRecordIds": [
+            "SRC-D26B272B7312"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-B0F1378580",
+          "serviceName": "Hazardous Waste Disposal",
+          "sourceRecordIds": [
+            "SRC-9F70DB5AD86B"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C0B5C2CA3C",
+          "serviceName": "TRANSPORTATION and HANDLING OF LPG CYLINDERS",
+          "sourceRecordIds": [
+            "SRC-FE196D0853B7"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_43a9ded8b407915b"
+          ],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C0FCAD24D3",
+          "serviceName": "Fabrication / Maintenance / repair of Tank Lorries",
+          "sourceRecordIds": [
+            "SRC-3200D12C204D"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-C1C6A8852A",
+          "serviceName": "Saltwater and flowback hauling",
+          "sourceRecordIds": [
+            "SRC-ECC1462584FE"
+          ],
+          "sourceUrls": [
+            "https://anadarkodozer.com/oilfield-trucking-services/"
+          ],
+          "originalGapRecordIds": [
+            "gap_43a9ded8b407915b"
+          ],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C75315103D",
+          "serviceName": "Freight Forwarding / Logistics Management Services",
+          "sourceRecordIds": [
+            "SRC-FFD2531B3D09"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-CCE9BD82FF",
+          "serviceName": "Crude oil truck service",
+          "sourceRecordIds": [
+            "SRC-10287D6191DB"
+          ],
+          "sourceUrls": [
+            "https://www.mongoose-trucking.com/services/other-services/"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-CF3033B418",
+          "serviceName": "Bulk Truck Transportation Services",
+          "sourceRecordIds": [
+            "SRC-E4BA5F0E4945"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-CF5489B45F",
+          "serviceName": "CO2 transportation",
+          "sourceRecordIds": [
+            "SRC-355AAA0EACF4"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-D46E24F22A",
+          "serviceName": "Fabrication and erection of POL / Fire Fighting Pipeline",
+          "sourceRecordIds": [
+            "SRC-6FACE0C7C502"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-DB0F663B75",
+          "serviceName": "Air Transport Services of Passengers and Freight",
+          "sourceRecordIds": [
+            "SRC-FE0D5A220987"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-DD459906A3",
+          "serviceName": "Fabrication / Maintenance / repair of Refuellers",
+          "sourceRecordIds": [
+            "SRC-92A1A4E7D49D"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-E355A1AF57",
+          "serviceName": "Truck and tank wagon loading automation maintenance and repair",
+          "sourceRecordIds": [
+            "SRC-4557382F5277"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E7103935F7",
+          "serviceName": "Aviation fuel management system services",
+          "sourceRecordIds": [
+            "SRC-5D240B3C390F"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E77F809F4E",
+          "serviceName": "Catalyst Handling / Regeneration Services",
+          "sourceRecordIds": [
+            "SRC-E97B148214C1"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-EB882ACB9C",
+          "serviceName": "Decommissioning Waste Management Services",
+          "sourceRecordIds": [
+            "SRC-1573572F5F55"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-EE18A5C176",
+          "serviceName": "Flowback standby",
+          "sourceRecordIds": [
+            "SRC-4BA625576ACB"
+          ],
+          "sourceUrls": [
+            "https://www.mongoose-trucking.com/services/other-services/"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-EF5BBED5B6",
+          "serviceName": "Oil/synthetic-based drilling fluid disposal",
+          "sourceRecordIds": [
+            "SRC-BEFD1C756330"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-EFCE8C3A29",
+          "serviceName": "Oilfield Waste Management Services",
+          "sourceRecordIds": [
+            "SRC-15BBF6AB87F5"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G01"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-F012A812BA",
+          "serviceName": "Catalyst loading / unloading services in inert atmosphere",
+          "sourceRecordIds": [
+            "SRC-CA1D321AA145"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-F7FAA8F0F0",
+          "serviceName": "Disposal / Distribution and Waste Transport Services etc",
+          "sourceRecordIds": [
+            "SRC-7B9D14963AF3"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_c959e9150f7452ac"
+          ],
+          "initialGapIds": []
+        }
+      ],
+      "qualificationBoundary": "This foundation is not a complete PHMSA, dangerous-goods, HAZWOPER or all-mode qualification. Employer function/material/mode instruction, testing, certification and any practical evaluation remain separate requirements.",
+      "remainingRequirements": "Knowledge foundation only. Keep actual employer/method instruction, applicable approved training/credentials, medical arrangements, qualified practical evaluation and employer/site authorization separately outstanding."
+    },
+    {
+      "courseId": "G02",
+      "groupId": "G02",
+      "title": "Hazardous waste and spill response: role limits and safe handoffs",
+      "courseFile": "gap-courses/G02.json",
+      "courseSha256": "ea66e07e9618012b7bd5be32814a8aef04f8ecb386087ca57376137040c09378",
+      "masterServiceIds": [
+        "VMS-25BE7C4EF8",
+        "VMS-34EC59F731",
+        "VMS-3DF09376B3",
+        "VMS-413F2E3AFB",
+        "VMS-41C5BF0198",
+        "VMS-4A002366AC",
+        "VMS-5D5F58D480",
+        "VMS-5DB5984723",
+        "VMS-63837BF30C",
+        "VMS-6C5FC61826",
+        "VMS-735EB86FF3",
+        "VMS-781FB29C70",
+        "VMS-7883F8B214",
+        "VMS-7B25278454",
+        "VMS-8C7DB9B83C",
+        "VMS-AA94016007",
+        "VMS-B0F1378580",
+        "VMS-B257E478DB",
+        "VMS-C1BB623F22",
+        "VMS-C1F1590221",
+        "VMS-EB882ACB9C",
+        "VMS-EFCE8C3A29",
+        "VMS-F2106C01A2",
+        "VMS-F42DEA6F49",
+        "VMS-F7FAA8F0F0"
+      ],
+      "primarySourceIds": [
+        "hazwoper"
+      ],
+      "originalGapRecordIds": [
+        "gap_bbd24b854cdc099d",
+        "gap_b7b10ce2bfb227d8"
+      ],
+      "roleMappings": [
+        {
+          "id": "additional_g02_01",
+          "role": "Waste handlers, environmental field personnel and operating supervisors",
+          "familyIds": [
+            "G02"
+          ],
+          "masterServiceIds": [
+            "VMS-25BE7C4EF8",
+            "VMS-34EC59F731",
+            "VMS-3DF09376B3",
+            "VMS-413F2E3AFB",
+            "VMS-41C5BF0198",
+            "VMS-4A002366AC",
+            "VMS-5D5F58D480",
+            "VMS-5DB5984723",
+            "VMS-63837BF30C",
+            "VMS-6C5FC61826",
+            "VMS-735EB86FF3",
+            "VMS-781FB29C70",
+            "VMS-7883F8B214",
+            "VMS-7B25278454",
+            "VMS-8C7DB9B83C",
+            "VMS-AA94016007",
+            "VMS-B0F1378580",
+            "VMS-B257E478DB",
+            "VMS-C1BB623F22",
+            "VMS-C1F1590221",
+            "VMS-EB882ACB9C",
+            "VMS-EFCE8C3A29",
+            "VMS-F2106C01A2",
+            "VMS-F42DEA6F49",
+            "VMS-F7FAA8F0F0"
+          ],
+          "trigger": "Confirm actual waste/site conditions and assigned task within a covered hazardous-waste operation or hazardous-substance emergency/cleanup interface. Routine nonhazardous disposal and a waste company label are not sufficient.",
+          "rationale": "Teach role limits, changing conditions, zones, contamination interfaces and safe handoff at the assessed operation; the foundation does not assign a HAZWOPER response level.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "hazwoper"
+          ],
+          "sourceRecordIds": [
+            "SRC-06D77A8A8ECC",
+            "SRC-1573572F5F55",
+            "SRC-15BBF6AB87F5",
+            "SRC-224B3F3D39E5",
+            "SRC-2977133E01D5",
+            "SRC-31A8C53DA0B7",
+            "SRC-3712AC96D96B",
+            "SRC-3CA11CACE1E7",
+            "SRC-454873C1C046",
+            "SRC-58FA0BC708FB",
+            "SRC-5BD334473D8D",
+            "SRC-61B5248BB398",
+            "SRC-6398991D59B8",
+            "SRC-6A4E284E50FB",
+            "SRC-6F4593949F07",
+            "SRC-7B9D14963AF3",
+            "SRC-7F5810BD127D",
+            "SRC-89A37E14F386",
+            "SRC-92498246627E",
+            "SRC-93E9242FF23D",
+            "SRC-95046D1811C7",
+            "SRC-9F70DB5AD86B",
+            "SRC-A155074B283B",
+            "SRC-D4832D2AC7AD",
+            "SRC-E2CA5C8ED270",
+            "SRC-E71B9E4A3C80"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.rbcenergyservices.com/price-list",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g02_02",
+          "role": "Assigned oil-spill responders and response supervisors",
+          "familyIds": [
+            "G02"
+          ],
+          "masterServiceIds": [
+            "VMS-7883F8B214",
+            "VMS-C1BB623F22",
+            "VMS-AA94016007"
+          ],
+          "trigger": "Only an actually assigned hazardous-substance/oil-spill response role, with the relevant response phase, conditions and program applicability confirmed.",
+          "rationale": "Response recognition and handoff knowledge supports the designated team without granting technician, specialist, incident-command or rescue qualification.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "hazwoper"
+          ],
+          "sourceRecordIds": [
+            "SRC-5BD334473D8D",
+            "SRC-7F5810BD127D",
+            "SRC-95046D1811C7"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g02_03",
+          "role": "Assigned responders, fire-service personnel and response coordinators",
+          "familyIds": [
+            "G02"
+          ],
+          "masterServiceIds": [
+            "VMS-AA94016007",
+            "VMS-C1BB623F22",
+            "VMS-7883F8B214"
+          ],
+          "trigger": "Only confirmed hazardous-substance emergency duties under the actual response plan; ordinary first-aid or unrelated fire-service work is not automatically covered.",
+          "rationale": "Keep incident recognition and safe boundaries distinct from full responder-level training and practical capability.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "hazwoper"
+          ],
+          "sourceRecordIds": [
+            "SRC-5BD334473D8D",
+            "SRC-7F5810BD127D",
+            "SRC-95046D1811C7"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g02_04",
+          "role": "Company leader and program owner",
+          "familyIds": [
+            "G02"
+          ],
+          "masterServiceIds": [
+            "VMS-25BE7C4EF8",
+            "VMS-34EC59F731",
+            "VMS-3DF09376B3",
+            "VMS-413F2E3AFB",
+            "VMS-41C5BF0198",
+            "VMS-4A002366AC",
+            "VMS-5D5F58D480",
+            "VMS-5DB5984723",
+            "VMS-63837BF30C",
+            "VMS-6C5FC61826",
+            "VMS-735EB86FF3",
+            "VMS-781FB29C70",
+            "VMS-7883F8B214",
+            "VMS-7B25278454",
+            "VMS-8C7DB9B83C",
+            "VMS-AA94016007",
+            "VMS-B0F1378580",
+            "VMS-B257E478DB",
+            "VMS-C1BB623F22",
+            "VMS-C1F1590221",
+            "VMS-EB882ACB9C",
+            "VMS-EFCE8C3A29",
+            "VMS-F2106C01A2",
+            "VMS-F42DEA6F49",
+            "VMS-F7FAA8F0F0"
+          ],
+          "trigger": "Only the person actually responsible for the confirmed covered waste/response program and its role/phase handoffs.",
+          "rationale": "Program owners need to recognize what the foundation does not establish and retain employer/method, medical and practical requirements rather than close the entire gap from an online pass.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "hazwoper"
+          ],
+          "sourceRecordIds": [
+            "SRC-06D77A8A8ECC",
+            "SRC-1573572F5F55",
+            "SRC-15BBF6AB87F5",
+            "SRC-224B3F3D39E5",
+            "SRC-2977133E01D5",
+            "SRC-31A8C53DA0B7",
+            "SRC-3712AC96D96B",
+            "SRC-3CA11CACE1E7",
+            "SRC-454873C1C046",
+            "SRC-58FA0BC708FB",
+            "SRC-5BD334473D8D",
+            "SRC-61B5248BB398",
+            "SRC-6398991D59B8",
+            "SRC-6A4E284E50FB",
+            "SRC-6F4593949F07",
+            "SRC-7B9D14963AF3",
+            "SRC-7F5810BD127D",
+            "SRC-89A37E14F386",
+            "SRC-92498246627E",
+            "SRC-93E9242FF23D",
+            "SRC-95046D1811C7",
+            "SRC-9F70DB5AD86B",
+            "SRC-A155074B283B",
+            "SRC-D4832D2AC7AD",
+            "SRC-E2CA5C8ED270",
+            "SRC-E71B9E4A3C80"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.rbcenergyservices.com/price-list",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        }
+      ],
+      "serviceEvidence": [
+        {
+          "masterServiceId": "VMS-25BE7C4EF8",
+          "serviceName": "Non Hazardous Waste Disposal",
+          "sourceRecordIds": [
+            "SRC-58FA0BC708FB"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-34EC59F731",
+          "serviceName": "Gel/water mixture disposal",
+          "sourceRecordIds": [
+            "SRC-93E9242FF23D"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-3DF09376B3",
+          "serviceName": "Tank Bottom Sludge Treatment Services",
+          "sourceRecordIds": [
+            "SRC-6A4E284E50FB"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-413F2E3AFB",
+          "serviceName": "Nuclear Waste Treatment",
+          "sourceRecordIds": [
+            "SRC-06D77A8A8ECC"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-41C5BF0198",
+          "serviceName": "Cutting Injections / Cutting Disposal Services",
+          "sourceRecordIds": [
+            "SRC-31A8C53DA0B7"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-4A002366AC",
+          "serviceName": "Radioactive Decontamination Services",
+          "sourceRecordIds": [
+            "SRC-A155074B283B"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-5D5F58D480",
+          "serviceName": "Dirty water/flowback disposal",
+          "sourceRecordIds": [
+            "SRC-6F4593949F07"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-5DB5984723",
+          "serviceName": "Environmental Safety Services",
+          "sourceRecordIds": [
+            "SRC-92498246627E"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-63837BF30C",
+          "serviceName": "Dredging Services",
+          "sourceRecordIds": [
+            "SRC-3712AC96D96B"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-6C5FC61826",
+          "serviceName": "Biological Sludge Treatment Services",
+          "sourceRecordIds": [
+            "SRC-2977133E01D5"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-735EB86FF3",
+          "serviceName": "Containerized fluid waste disposal",
+          "sourceRecordIds": [
+            "SRC-6398991D59B8"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-781FB29C70",
+          "serviceName": "Clean flowback/freshwater disposal",
+          "sourceRecordIds": [
+            "SRC-E71B9E4A3C80"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-7883F8B214",
+          "serviceName": "Oil Spill Cleanup",
+          "sourceRecordIds": [
+            "SRC-7F5810BD127D"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_b7b10ce2bfb227d8"
+          ],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-7B25278454",
+          "serviceName": "Garbage disposal",
+          "sourceRecordIds": [
+            "SRC-224B3F3D39E5"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-8C7DB9B83C",
+          "serviceName": "Asbestos Removal or Encapsulation",
+          "sourceRecordIds": [
+            "SRC-454873C1C046"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-AA94016007",
+          "serviceName": "Emergency Response Services",
+          "sourceRecordIds": [
+            "SRC-95046D1811C7"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-B0F1378580",
+          "serviceName": "Hazardous Waste Disposal",
+          "sourceRecordIds": [
+            "SRC-9F70DB5AD86B"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-B257E478DB",
+          "serviceName": "Pollution Investigation Services",
+          "sourceRecordIds": [
+            "SRC-3CA11CACE1E7"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C1BB623F22",
+          "serviceName": "Toxic Spill Cleanup",
+          "sourceRecordIds": [
+            "SRC-5BD334473D8D"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-C1F1590221",
+          "serviceName": "Frac tank rinse-out",
+          "sourceRecordIds": [
+            "SRC-E2CA5C8ED270"
+          ],
+          "sourceUrls": [
+            "https://www.rbcenergyservices.com/price-list"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-EB882ACB9C",
+          "serviceName": "Decommissioning Waste Management Services",
+          "sourceRecordIds": [
+            "SRC-1573572F5F55"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-EFCE8C3A29",
+          "serviceName": "Oilfield Waste Management Services",
+          "sourceRecordIds": [
+            "SRC-15BBF6AB87F5"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G02"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-F2106C01A2",
+          "serviceName": "Filter cleaning",
+          "sourceRecordIds": [
+            "SRC-89A37E14F386"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-F42DEA6F49",
+          "serviceName": "Desilting services",
+          "sourceRecordIds": [
+            "SRC-D4832D2AC7AD",
+            "SRC-61B5248BB398"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-F7FAA8F0F0",
+          "serviceName": "Disposal / Distribution and Waste Transport Services etc",
+          "sourceRecordIds": [
+            "SRC-7B9D14963AF3"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_bbd24b854cdc099d"
+          ],
+          "initialGapIds": []
+        }
+      ],
+      "qualificationBoundary": "This foundation is not a HAZWOPER initial, refresher, responder-level or supervised-field-experience program. Appropriate employer-specific instruction, time-based requirements, medical arrangements and qualified practical evaluations remain separate.",
+      "remainingRequirements": "Knowledge foundation only. Keep actual employer/method instruction, applicable approved training/credentials, medical arrangements, qualified practical evaluation and employer/site authorization separately outstanding."
+    },
+    {
+      "courseId": "G03",
+      "groupId": "G03",
+      "title": "Process safety and operating-procedure competence",
+      "courseFile": "gap-courses/G03.json",
+      "courseSha256": "2b1c1cc5dcae28d93d05bdb3677b87da1f0eb1a82596dbf3e646abc00b346895",
+      "masterServiceIds": [
+        "VMS-0895C2EDF1",
+        "VMS-15018226DF",
+        "VMS-22CA23574F",
+        "VMS-4E686AF7BD",
+        "VMS-52A0FB8D41",
+        "VMS-7BA2A15149",
+        "VMS-8179249A69",
+        "VMS-8D4BF7CD8F",
+        "VMS-91E7CE5AF7",
+        "VMS-9212396CCD",
+        "VMS-A37E100381",
+        "VMS-B0CEDFF859",
+        "VMS-BB3B00AA0F",
+        "VMS-DD93B13DC4",
+        "VMS-E73E887280",
+        "VMS-E92B0F24E8",
+        "VMS-ECD646496C",
+        "VMS-F13ED4CD6F",
+        "VMS-F717524A6F"
+      ],
+      "primarySourceIds": [
+        "psm"
+      ],
+      "originalGapRecordIds": [
+        "gap_7e7d63342024067c",
+        "gap_25c315b80adfee66"
+      ],
+      "roleMappings": [
+        {
+          "id": "additional_g03_01",
+          "role": "Assigned process operators, maintenance roles and site management",
+          "familyIds": [
+            "G03"
+          ],
+          "masterServiceIds": [
+            "VMS-0895C2EDF1",
+            "VMS-15018226DF",
+            "VMS-22CA23574F",
+            "VMS-4E686AF7BD",
+            "VMS-52A0FB8D41",
+            "VMS-7BA2A15149",
+            "VMS-8179249A69",
+            "VMS-8D4BF7CD8F",
+            "VMS-91E7CE5AF7",
+            "VMS-9212396CCD",
+            "VMS-A37E100381",
+            "VMS-B0CEDFF859",
+            "VMS-BB3B00AA0F",
+            "VMS-DD93B13DC4",
+            "VMS-E73E887280",
+            "VMS-E92B0F24E8",
+            "VMS-ECD646496C",
+            "VMS-F13ED4CD6F",
+            "VMS-F717524A6F"
+          ],
+          "trigger": "Only actual operation, maintenance, process control or assigned process-safety responsibilities after the process/material/safeguard scope is confirmed. Determine applicable PSM regime and exclusions; a plant, refinery or terminal label is not proof of legal coverage.",
+          "rationale": "Teach process-state, procedure, safeguard, mechanical-integrity, change and handback judgment for actual process duties. Do not assign merely because an engineer works at a desk for a process client.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "psm"
+          ],
+          "sourceRecordIds": [
+            "SRC-1F53DE3A744D",
+            "SRC-243E2420CD70",
+            "SRC-27CB171A9523",
+            "SRC-3EAE3CC64E78",
+            "SRC-45BFFBB8ED80",
+            "SRC-4D4F92DC6FEA",
+            "SRC-5671E302B297",
+            "SRC-59742BAFD25A",
+            "SRC-5E7237A1843B",
+            "SRC-5F74298BD5AF",
+            "SRC-661DD0D6ADFD",
+            "SRC-779C74709D31",
+            "SRC-85F4FFAAEEA2",
+            "SRC-980949DC482D",
+            "SRC-A404B299BE55",
+            "SRC-B899EF879096",
+            "SRC-C21FB1F31E0F",
+            "SRC-FB600EA936AD",
+            "SRC-FB9BBD381292"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g03_02",
+          "role": "Fuel, gas and process operating or maintenance roles",
+          "familyIds": [
+            "G03"
+          ],
+          "masterServiceIds": [
+            "VMS-0895C2EDF1",
+            "VMS-15018226DF",
+            "VMS-22CA23574F",
+            "VMS-4E686AF7BD",
+            "VMS-52A0FB8D41",
+            "VMS-7BA2A15149",
+            "VMS-8179249A69",
+            "VMS-8D4BF7CD8F",
+            "VMS-91E7CE5AF7",
+            "VMS-9212396CCD",
+            "VMS-A37E100381",
+            "VMS-B0CEDFF859",
+            "VMS-BB3B00AA0F",
+            "VMS-DD93B13DC4",
+            "VMS-E73E887280",
+            "VMS-E92B0F24E8",
+            "VMS-ECD646496C",
+            "VMS-F13ED4CD6F",
+            "VMS-F717524A6F"
+          ],
+          "trigger": "Confirm the person’s actual process/containment intervention and operating-procedure responsibility, not merely product sales, transport scheduling or office advice.",
+          "rationale": "A process worker needs knowledge of the specific loss-of-control pathways and limits of their authority; this course grants no operating, bypass, test or restart permission.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "psm"
+          ],
+          "sourceRecordIds": [
+            "SRC-1F53DE3A744D",
+            "SRC-243E2420CD70",
+            "SRC-27CB171A9523",
+            "SRC-3EAE3CC64E78",
+            "SRC-45BFFBB8ED80",
+            "SRC-4D4F92DC6FEA",
+            "SRC-5671E302B297",
+            "SRC-59742BAFD25A",
+            "SRC-5E7237A1843B",
+            "SRC-5F74298BD5AF",
+            "SRC-661DD0D6ADFD",
+            "SRC-779C74709D31",
+            "SRC-85F4FFAAEEA2",
+            "SRC-980949DC482D",
+            "SRC-A404B299BE55",
+            "SRC-B899EF879096",
+            "SRC-C21FB1F31E0F",
+            "SRC-FB600EA936AD",
+            "SRC-FB9BBD381292"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g03_03",
+          "role": "Electrical/instrument technicians, commissioning personnel and supervisors",
+          "familyIds": [
+            "G03"
+          ],
+          "masterServiceIds": [
+            "VMS-ECD646496C",
+            "VMS-BB3B00AA0F",
+            "VMS-F717524A6F"
+          ],
+          "trigger": "Only actual work affecting process controls or protective functions, after site/process scope and assigned commissioning/maintenance responsibility are confirmed. IT desk configuration unrelated to safety/process behavior is excluded.",
+          "rationale": "Teach preservation of process safeguards and controlled change/handback when the actual electrical/instrument task affects the process. Technical electrical and functional-safety competence remain separate.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "psm"
+          ],
+          "sourceRecordIds": [
+            "SRC-27CB171A9523",
+            "SRC-5E7237A1843B",
+            "SRC-5F74298BD5AF"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g03_04",
+          "role": "Company leader and program owner",
+          "familyIds": [
+            "G03"
+          ],
+          "masterServiceIds": [
+            "VMS-0895C2EDF1",
+            "VMS-15018226DF",
+            "VMS-22CA23574F",
+            "VMS-4E686AF7BD",
+            "VMS-52A0FB8D41",
+            "VMS-7BA2A15149",
+            "VMS-8179249A69",
+            "VMS-8D4BF7CD8F",
+            "VMS-91E7CE5AF7",
+            "VMS-9212396CCD",
+            "VMS-A37E100381",
+            "VMS-B0CEDFF859",
+            "VMS-BB3B00AA0F",
+            "VMS-DD93B13DC4",
+            "VMS-E73E887280",
+            "VMS-E92B0F24E8",
+            "VMS-ECD646496C",
+            "VMS-F13ED4CD6F",
+            "VMS-F717524A6F"
+          ],
+          "trigger": "Only assigned ownership of the confirmed process-safety/operating-procedure program or its change/readiness decisions, not general membership-admin access.",
+          "rationale": "Recognize the evidence and responsibilities needed to maintain the process system; foundation completion cannot substitute for actual process information, safe procedures or technical approval.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "psm"
+          ],
+          "sourceRecordIds": [
+            "SRC-1F53DE3A744D",
+            "SRC-243E2420CD70",
+            "SRC-27CB171A9523",
+            "SRC-3EAE3CC64E78",
+            "SRC-45BFFBB8ED80",
+            "SRC-4D4F92DC6FEA",
+            "SRC-5671E302B297",
+            "SRC-59742BAFD25A",
+            "SRC-5E7237A1843B",
+            "SRC-5F74298BD5AF",
+            "SRC-661DD0D6ADFD",
+            "SRC-779C74709D31",
+            "SRC-85F4FFAAEEA2",
+            "SRC-980949DC482D",
+            "SRC-A404B299BE55",
+            "SRC-B899EF879096",
+            "SRC-C21FB1F31E0F",
+            "SRC-FB600EA936AD",
+            "SRC-FB9BBD381292"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        }
+      ],
+      "serviceEvidence": [
+        {
+          "masterServiceId": "VMS-0895C2EDF1",
+          "serviceName": "Refinery pipeline / tank insulation services",
+          "sourceRecordIds": [
+            "SRC-4D4F92DC6FEA"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-15018226DF",
+          "serviceName": "Refinery / Downstream Technology (R & D) Services",
+          "sourceRecordIds": [
+            "SRC-243E2420CD70"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-22CA23574F",
+          "serviceName": "Hiring of assistant operators (for refinery)",
+          "sourceRecordIds": [
+            "SRC-5671E302B297"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-4E686AF7BD",
+          "serviceName": "Terminal Services",
+          "sourceRecordIds": [
+            "SRC-980949DC482D"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-52A0FB8D41",
+          "serviceName": "LPG Cylinder Handling services",
+          "sourceRecordIds": [
+            "SRC-1F53DE3A744D"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_7e7d63342024067c"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-7BA2A15149",
+          "serviceName": "Operation of water treatment plant",
+          "sourceRecordIds": [
+            "SRC-661DD0D6ADFD"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_25c315b80adfee66"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-8179249A69",
+          "serviceName": "Catalyst handling services (for Refinery)",
+          "sourceRecordIds": [
+            "SRC-59742BAFD25A"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-8D4BF7CD8F",
+          "serviceName": "CO2 sequestration",
+          "sourceRecordIds": [
+            "SRC-FB9BBD381292"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-91E7CE5AF7",
+          "serviceName": "Oilfield Production Operations Management",
+          "sourceRecordIds": [
+            "SRC-B899EF879096"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_25c315b80adfee66"
+          ],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-9212396CCD",
+          "serviceName": "Gas Treatment and Compression",
+          "sourceRecordIds": [
+            "SRC-779C74709D31"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-A37E100381",
+          "serviceName": "LPG Contract service for production lines",
+          "sourceRecordIds": [
+            "SRC-85F4FFAAEEA2"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_7e7d63342024067c"
+          ],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-B0CEDFF859",
+          "serviceName": "Oil Refinery Construction Service",
+          "sourceRecordIds": [
+            "SRC-FB600EA936AD"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-BB3B00AA0F",
+          "serviceName": "Management and Operation of all Facilities, Engineering, Modification and Maintenance Services for a Site or Platform",
+          "sourceRecordIds": [
+            "SRC-5F74298BD5AF"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_25c315b80adfee66"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-DD93B13DC4",
+          "serviceName": "OPERATION and maintenance OF BITUMEN FILLING PLANT",
+          "sourceRecordIds": [
+            "SRC-3EAE3CC64E78"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_25c315b80adfee66"
+          ],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E73E887280",
+          "serviceName": "Oil and Gas Utilities",
+          "sourceRecordIds": [
+            "SRC-C21FB1F31E0F"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_25c315b80adfee66"
+          ],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E92B0F24E8",
+          "serviceName": "Hydrocarbon Reservoir Development and Production Services",
+          "sourceRecordIds": [
+            "SRC-45BFFBB8ED80"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-ECD646496C",
+          "serviceName": "Terminal and tank farm automation maintenance and repair",
+          "sourceRecordIds": [
+            "SRC-27CB171A9523"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G03"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-F13ED4CD6F",
+          "serviceName": "LPG Hot Repair services",
+          "sourceRecordIds": [
+            "SRC-A404B299BE55"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_7e7d63342024067c"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-F717524A6F",
+          "serviceName": "Management and Provision of all Facilities, Engineering, Modification and Maintenance Services for a Site or Platform",
+          "sourceRecordIds": [
+            "SRC-5E7237A1843B"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_25c315b80adfee66"
+          ],
+          "initialGapIds": []
+        }
+      ],
+      "qualificationBoundary": "Foundation knowledge does not qualify plant operation, safeguard testing, bypasses, process changes or restart. Actual process information, procedures, assessment and employer/site authority remain separate.",
+      "remainingRequirements": "Knowledge foundation only. Keep actual employer/method instruction, applicable approved training/credentials, medical arrangements, qualified practical evaluation and employer/site authorization separately outstanding."
+    },
+    {
+      "courseId": "G04",
+      "groupId": "G04",
+      "title": "Bloodborne pathogens and occupational exposure controls",
+      "courseFile": "gap-courses/G04.json",
+      "courseSha256": "b118391364efbf2fcaeb3e6b3a770eeab891b24da854ded6416d24ff7e269c58",
+      "masterServiceIds": [
+        "VMS-22C5C9B899",
+        "VMS-5D1DE6CC08",
+        "VMS-7D3AD2E225",
+        "VMS-948DBDE67A",
+        "VMS-999272BFC2",
+        "VMS-A95329DF09",
+        "VMS-E4CD580F10"
+      ],
+      "primarySourceIds": [
+        "bloodborne"
+      ],
+      "originalGapRecordIds": [
+        "gap_6594e62834be52f7"
+      ],
+      "roleMappings": [
+        {
+          "id": "additional_g04_01",
+          "role": "Licensed clinical personnel and medical interface coordinator",
+          "familyIds": [
+            "G04"
+          ],
+          "masterServiceIds": [
+            "VMS-22C5C9B899",
+            "VMS-948DBDE67A",
+            "VMS-999272BFC2"
+          ],
+          "trigger": "Only actual clinical/first-aid tasks with reasonably anticipated occupational contact with human blood or OPIM. Desk referral/medical-record coordination alone is excluded.",
+          "rationale": "Provide exposure-control and prompt confidential-response knowledge to the exposed clinical worker; neither this course nor the service label establishes a clinical licence.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "bloodborne"
+          ],
+          "sourceRecordIds": [
+            "SRC-0FE7255CB435",
+            "SRC-57CE6B4E2739",
+            "SRC-945AD9C314B2",
+            "SRC-AFA623F11017"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g04_02",
+          "role": "Hospitality, housekeeping, laundry and personal-service personnel",
+          "familyIds": [
+            "G04"
+          ],
+          "masterServiceIds": [
+            "VMS-5D1DE6CC08",
+            "VMS-A95329DF09",
+            "VMS-E4CD580F10"
+          ],
+          "trigger": "Only confirmed blood/OPIM-contaminated laundry, personal-care or cleanup duties with reasonably anticipated occupational contact; ordinary clean linen, accommodation or housekeeping alone is excluded.",
+          "rationale": "Support contamination-pathway recognition, sharps/laundry handoff and exposure response for the actual exposed function, not every cleaner or laundry employee.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "bloodborne"
+          ],
+          "sourceRecordIds": [
+            "SRC-0B1B7B8DB715",
+            "SRC-3D350CBC9F46",
+            "SRC-4D4837BF8099",
+            "SRC-C48264DD0DF3"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g04_03",
+          "role": "Human-remains handling personnel",
+          "familyIds": [
+            "G04"
+          ],
+          "masterServiceIds": [
+            "VMS-7D3AD2E225"
+          ],
+          "trigger": "Only actual human-remains handling or related contaminated-material duties with reasonably anticipated blood/OPIM contact; funeral office administration and transport booking alone are excluded.",
+          "rationale": "The funeral service label supports a potential exposed handling function, not a clinical qualification. Bind the foundation to the actual handling duty and keep employer controls and practical training open.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "bloodborne"
+          ],
+          "sourceRecordIds": [
+            "SRC-7BB818A20864"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g04_04",
+          "role": "Assigned first aider or responder",
+          "familyIds": [
+            "G04"
+          ],
+          "masterServiceIds": [
+            "VMS-22C5C9B899",
+            "VMS-5D1DE6CC08",
+            "VMS-7D3AD2E225",
+            "VMS-948DBDE67A",
+            "VMS-999272BFC2",
+            "VMS-A95329DF09",
+            "VMS-E4CD580F10"
+          ],
+          "trigger": "Only an actual assigned first-aid/response duty in which occupational blood/OPIM contact is reasonably anticipated, as established by the employer exposure determination; witnessing an injury is insufficient.",
+          "rationale": "Teach the exposure-control and post-exposure interface for the assigned role without treating every employee as a bloodborne-exposed responder.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "bloodborne"
+          ],
+          "sourceRecordIds": [
+            "SRC-0B1B7B8DB715",
+            "SRC-0FE7255CB435",
+            "SRC-3D350CBC9F46",
+            "SRC-4D4837BF8099",
+            "SRC-57CE6B4E2739",
+            "SRC-7BB818A20864",
+            "SRC-945AD9C314B2",
+            "SRC-AFA623F11017",
+            "SRC-C48264DD0DF3"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        }
+      ],
+      "serviceEvidence": [
+        {
+          "masterServiceId": "VMS-22C5C9B899",
+          "serviceName": "Offshore or Site-Based Medic Services",
+          "sourceRecordIds": [
+            "SRC-AFA623F11017"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G04"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-5D1DE6CC08",
+          "serviceName": "Personal Care Services",
+          "sourceRecordIds": [
+            "SRC-0B1B7B8DB715"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G04"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-7D3AD2E225",
+          "serviceName": "Funeral and Associated Services",
+          "sourceRecordIds": [
+            "SRC-7BB818A20864"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_6594e62834be52f7"
+          ],
+          "initialGapIds": [
+            "G04"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-948DBDE67A",
+          "serviceName": "Medical services",
+          "sourceRecordIds": [
+            "SRC-0FE7255CB435",
+            "SRC-945AD9C314B2"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G04"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-999272BFC2",
+          "serviceName": "Private Specialised Clinic Services",
+          "sourceRecordIds": [
+            "SRC-57CE6B4E2739"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G04"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-A95329DF09",
+          "serviceName": "Laundering services",
+          "sourceRecordIds": [
+            "SRC-3D350CBC9F46",
+            "SRC-C48264DD0DF3"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G04"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E4CD580F10",
+          "serviceName": "Household Assistance and Care",
+          "sourceRecordIds": [
+            "SRC-4D4837BF8099"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G04"
+          ]
+        }
+      ],
+      "qualificationBoundary": "Written completion does not establish clinical qualification, cleanup or sharps-handling competence, employer-specific exposure-control implementation, interactive Q&A, vaccination or confidential medical follow-up. Those require the appropriate employer, assessor and clinical processes.",
+      "remainingRequirements": "Knowledge foundation only. Keep actual employer/method instruction, applicable approved training/credentials, medical arrangements, qualified practical evaluation and employer/site authorization separately outstanding."
+    },
+    {
+      "courseId": "G05",
+      "groupId": "G05",
+      "title": "Food hygiene, allergens and catering controls",
+      "courseFile": "gap-courses/G05.json",
+      "courseSha256": "758a072c3093681703ae1cbd52f4a9758a5d2bc270e2d5eaaacb9913664d06e3",
+      "masterServiceIds": [
+        "VMS-3478121D51",
+        "VMS-41D6F409E1",
+        "VMS-4974BD577E",
+        "VMS-5D8EB0A808",
+        "VMS-8C57205167",
+        "VMS-99166BA610",
+        "VMS-E455DF93D8"
+      ],
+      "primarySourceIds": [
+        "food"
+      ],
+      "originalGapRecordIds": [
+        "gap_5cd169fed6062003"
+      ],
+      "roleMappings": [
+        {
+          "id": "additional_g05_01",
+          "role": "Food handlers, kitchen staff and camp supervisors",
+          "familyIds": [
+            "G05"
+          ],
+          "masterServiceIds": [
+            "VMS-3478121D51",
+            "VMS-41D6F409E1",
+            "VMS-4974BD577E",
+            "VMS-5D8EB0A808",
+            "VMS-8C57205167",
+            "VMS-99166BA610",
+            "VMS-E455DF93D8"
+          ],
+          "trigger": "Only actual food receiving, preparation, storage, service, allergen-control or food-supervision duties. Accommodation-only, security, office and ordinary facilities roles are excluded.",
+          "rationale": "Teach food-chain hygiene, allergen and measured process controls for the person’s real catering function. The FDA model is not automatically local law or a food-handler credential.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "food"
+          ],
+          "sourceRecordIds": [
+            "SRC-19C7E1270217",
+            "SRC-417B361031A3",
+            "SRC-4899CDDE1E1E",
+            "SRC-5A8877050D76",
+            "SRC-765B96E2DA69",
+            "SRC-7E7B65A70360",
+            "SRC-DA876AF818FC",
+            "SRC-DE28664BCF27",
+            "SRC-F4F8B55D7243"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g05_02",
+          "role": "Driver or load-handling transport worker",
+          "familyIds": [
+            "G05"
+          ],
+          "masterServiceIds": [
+            "VMS-8C57205167",
+            "VMS-5D8EB0A808",
+            "VMS-E455DF93D8",
+            "VMS-41D6F409E1"
+          ],
+          "trigger": "Only actual prepared-food/ingredient transport or receiving handoff with food identity, allergen, temperature or contamination-control responsibility; ordinary camp freight transport is excluded.",
+          "rationale": "Meal delivery can affect food safety without making the driver a cook. Add food-handoff knowledge while preserving separate transport and practical qualification.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "food"
+          ],
+          "sourceRecordIds": [
+            "SRC-417B361031A3",
+            "SRC-4899CDDE1E1E",
+            "SRC-5A8877050D76",
+            "SRC-765B96E2DA69",
+            "SRC-DA876AF818FC",
+            "SRC-DE28664BCF27"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g05_03",
+          "role": "Mechanical maintenance or fabrication worker",
+          "familyIds": [
+            "G05"
+          ],
+          "masterServiceIds": [
+            "VMS-3478121D51"
+          ],
+          "trigger": "Only actual canteen food-contact-equipment maintenance and hygiene/contamination handback responsibilities; ordinary workshop repair with no food-chain interface is excluded.",
+          "rationale": "The source specifically concerns canteen equipment. Teach the food-contact contamination/handover interface, not a claim that the repairer is qualified to cook or supervise catering.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "food"
+          ],
+          "sourceRecordIds": [
+            "SRC-7E7B65A70360"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ]
+        }
+      ],
+      "serviceEvidence": [
+        {
+          "masterServiceId": "VMS-3478121D51",
+          "serviceName": "Repair of canteen equipments",
+          "sourceRecordIds": [
+            "SRC-7E7B65A70360"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G05"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-41D6F409E1",
+          "serviceName": "Cafeteria Services",
+          "sourceRecordIds": [
+            "SRC-DE28664BCF27"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_5cd169fed6062003"
+          ],
+          "initialGapIds": [
+            "G05"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-4974BD577E",
+          "serviceName": "Hotels and Motels and Inns",
+          "sourceRecordIds": [
+            "SRC-F4F8B55D7243"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G05"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-5D8EB0A808",
+          "serviceName": "Management and Provision of all Catering, Cleaning, Office and Security Services at Location or Platform",
+          "sourceRecordIds": [
+            "SRC-417B361031A3"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G05"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-8C57205167",
+          "serviceName": "Catering services",
+          "sourceRecordIds": [
+            "SRC-5A8877050D76",
+            "SRC-765B96E2DA69",
+            "SRC-DA876AF818FC"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_5cd169fed6062003"
+          ],
+          "initialGapIds": [
+            "G05"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-99166BA610",
+          "serviceName": "Camping and Wilderness Facilities",
+          "sourceRecordIds": [
+            "SRC-19C7E1270217"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_5cd169fed6062003"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-E455DF93D8",
+          "serviceName": "Temporary Accommodation / Camp Services",
+          "sourceRecordIds": [
+            "SRC-4899CDDE1E1E"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G05"
+          ]
+        }
+      ],
+      "qualificationBoundary": "Knowledge completion does not supply a food-handler/manager credential, health permit, clinical clearance, approved process, allergen-free guarantee or observed practical competence. Local adoption, product/process SOPs and employer-specific assessment remain separate.",
+      "remainingRequirements": "Knowledge foundation only. Keep actual employer/method instruction, applicable approved training/credentials, medical arrangements, qualified practical evaluation and employer/site authorization separately outstanding."
+    },
+    {
+      "courseId": "G06",
+      "groupId": "G06",
+      "title": "Laboratory chemical hygiene and analytical task safety",
+      "courseFile": "gap-courses/G06.json",
+      "courseSha256": "c56e180ef09ec49c62832cb00245dd5164c57a58abf566947b643192f742f4f0",
+      "masterServiceIds": [
+        "VMS-0D00C2D687",
+        "VMS-15018226DF",
+        "VMS-2A194D2778",
+        "VMS-2B5A8BF58F",
+        "VMS-2B8555FFC8",
+        "VMS-34557C5494",
+        "VMS-438271B71B",
+        "VMS-43BC60DC9B",
+        "VMS-52630E4131",
+        "VMS-81BE11B456",
+        "VMS-8BB61169BD",
+        "VMS-8CEDFFE3AA",
+        "VMS-8D7E992A18",
+        "VMS-B939F7D9E4",
+        "VMS-C6ADF2901A",
+        "VMS-FD0E30AC9F"
+      ],
+      "primarySourceIds": [
+        "lab"
+      ],
+      "originalGapRecordIds": [
+        "gap_fc11e0b2fa059f98",
+        "gap_74e3f4007bce8add"
+      ],
+      "roleMappings": [
+        {
+          "id": "additional_g06_01",
+          "role": "Laboratory analysts and sample handlers",
+          "familyIds": [
+            "G06"
+          ],
+          "masterServiceIds": [
+            "VMS-0D00C2D687",
+            "VMS-15018226DF",
+            "VMS-2A194D2778",
+            "VMS-2B5A8BF58F",
+            "VMS-2B8555FFC8",
+            "VMS-34557C5494",
+            "VMS-438271B71B",
+            "VMS-43BC60DC9B",
+            "VMS-52630E4131",
+            "VMS-81BE11B456",
+            "VMS-8BB61169BD",
+            "VMS-8CEDFFE3AA",
+            "VMS-8D7E992A18",
+            "VMS-B939F7D9E4",
+            "VMS-C6ADF2901A",
+            "VMS-FD0E30AC9F"
+          ],
+          "trigger": "Only actual laboratory sample preparation, chemical/reagent use or hazardous analytical work; confirm the method, material and laboratory-use scope. Desk interpretation, sealed-sample courier work and field-only readings are excluded.",
+          "rationale": "Teach sample identity, chemical hygiene, ventilation, equipment and waste decisions in the actual analytical task. The foundation does not validate a method or establish specialized biological/radiation competence.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "lab"
+          ],
+          "sourceRecordIds": [
+            "SRC-11ABAE234C8D",
+            "SRC-201C399B50C9",
+            "SRC-243E2420CD70",
+            "SRC-28FF3271957D",
+            "SRC-3595E41708C8",
+            "SRC-367B06950EC0",
+            "SRC-6A9C10B16E40",
+            "SRC-79741032BB79",
+            "SRC-A0D30C8ECB96",
+            "SRC-A69A93F2EF1E",
+            "SRC-B1C627C1BA79",
+            "SRC-BD1974A79664",
+            "SRC-D29FBA4C2D1E",
+            "SRC-D344AAE6B865",
+            "SRC-EAF5EFBF7292",
+            "SRC-FAC51BCC0835"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g06_02",
+          "role": "Laboratory instrument service technicians",
+          "familyIds": [
+            "G06"
+          ],
+          "masterServiceIds": [
+            "VMS-2B5A8BF58F",
+            "VMS-438271B71B"
+          ],
+          "trigger": "Only confirmed laboratory instrument service with chemical/residual, contaminated-equipment or chemical-hygiene handoff responsibilities. A field instrument technician does not acquire laboratory scope from the title alone.",
+          "rationale": "Provide chemical-hygiene interface knowledge for instrument service; actual model-specific electrical, pressure, analytical and repair competence stays separately assessed.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "lab"
+          ],
+          "sourceRecordIds": [
+            "SRC-D29FBA4C2D1E",
+            "SRC-FAC51BCC0835"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ]
+        },
+        {
+          "id": "additional_g06_03",
+          "role": "Research scientists, analysts and research program owner",
+          "familyIds": [
+            "G06"
+          ],
+          "masterServiceIds": [
+            "VMS-15018226DF",
+            "VMS-81BE11B456",
+            "VMS-8BB61169BD",
+            "VMS-C6ADF2901A",
+            "VMS-8D7E992A18"
+          ],
+          "trigger": "Only actual laboratory chemical or sample-method work or assigned chemical-hygiene oversight, not desk R&D, modeling, literature review or grant administration.",
+          "rationale": "R&D can include laboratories but does not prove bench exposure. Attach the foundation only to confirmed chemical-hygiene duties and retain method-specific requirements.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "lab"
+          ],
+          "sourceRecordIds": [
+            "SRC-11ABAE234C8D",
+            "SRC-243E2420CD70",
+            "SRC-79741032BB79",
+            "SRC-A0D30C8ECB96",
+            "SRC-B1C627C1BA79"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ]
+        }
+      ],
+      "serviceEvidence": [
+        {
+          "masterServiceId": "VMS-0D00C2D687",
+          "serviceName": "TRANSFORMER OIL TESTING and DGA ANALYSIS",
+          "sourceRecordIds": [
+            "SRC-BD1974A79664"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-15018226DF",
+          "serviceName": "Refinery / Downstream Technology (R & D) Services",
+          "sourceRecordIds": [
+            "SRC-243E2420CD70"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-2A194D2778",
+          "serviceName": "Chemical Analysis services",
+          "sourceRecordIds": [
+            "SRC-6A9C10B16E40"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G06"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-2B5A8BF58F",
+          "serviceName": "LAB instruments services",
+          "sourceRecordIds": [
+            "SRC-FAC51BCC0835"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G06"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-2B8555FFC8",
+          "serviceName": "Laboratory Testing Services",
+          "sourceRecordIds": [
+            "SRC-D344AAE6B865"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_fc11e0b2fa059f98"
+          ],
+          "initialGapIds": [
+            "G06"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-34557C5494",
+          "serviceName": "Sample analysis of effluent/emission",
+          "sourceRecordIds": [
+            "SRC-201C399B50C9"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": [
+            "G06"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-438271B71B",
+          "serviceName": "Laboratory instrument maintenance and repair",
+          "sourceRecordIds": [
+            "SRC-D29FBA4C2D1E"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G06"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-43BC60DC9B",
+          "serviceName": "TEST and CHEMICAL ANALYSIS OF MATERIALS",
+          "sourceRecordIds": [
+            "SRC-3595E41708C8"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": [
+            "G06"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-52630E4131",
+          "serviceName": "Sampling Services",
+          "sourceRecordIds": [
+            "SRC-367B06950EC0"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-81BE11B456",
+          "serviceName": "Subsea (R & D) Services",
+          "sourceRecordIds": [
+            "SRC-A0D30C8ECB96"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-8BB61169BD",
+          "serviceName": "Reservoir (R&D) Services",
+          "sourceRecordIds": [
+            "SRC-79741032BB79"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-8CEDFFE3AA",
+          "serviceName": "Testing of water samples",
+          "sourceRecordIds": [
+            "SRC-28FF3271957D"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": [
+            "G06"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-8D7E992A18",
+          "serviceName": "Geological Evaluation Services (Organic Geochemistry, Petrology, Diagenesis, Biostratigraphy, Fluid Characterisation, PVT, Core Analysis, Flooding)",
+          "sourceRecordIds": [
+            "SRC-11ABAE234C8D"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_fc11e0b2fa059f98"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-B939F7D9E4",
+          "serviceName": "Oil Condition Monitoring Services",
+          "sourceRecordIds": [
+            "SRC-EAF5EFBF7292"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_fc11e0b2fa059f98"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-C6ADF2901A",
+          "serviceName": "Safety and Environmental (R & D) Services",
+          "sourceRecordIds": [
+            "SRC-B1C627C1BA79"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": []
+        },
+        {
+          "masterServiceId": "VMS-FD0E30AC9F",
+          "serviceName": "Soil or Sludge or Solid Waste Testing",
+          "sourceRecordIds": [
+            "SRC-A69A93F2EF1E"
+          ],
+          "sourceUrls": [
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_74e3f4007bce8add"
+          ],
+          "initialGapIds": [
+            "G06"
+          ]
+        }
+      ],
+      "qualificationBoundary": "Knowledge completion does not validate a method, implement a chemical hygiene plan or qualify specialized analytical, biological, radiation, medical or instrument-repair work. Method-specific instruction, assessment and authorization remain separate.",
+      "remainingRequirements": "Knowledge foundation only. Keep actual employer/method instruction, applicable approved training/credentials, medical arrangements, qualified practical evaluation and employer/site authorization separately outstanding."
+    },
+    {
+      "courseId": "G15",
+      "groupId": "G15",
+      "title": "Pesticide handling and application task safety",
+      "courseFile": "gap-courses/G15.json",
+      "courseSha256": "6aad406ccdcf0a8d8ce34c3237247305df2a81794eaf2e8b9bde43d57d9f2223",
+      "masterServiceIds": [
+        "VMS-0F9CEB34E7",
+        "VMS-48A0F7E206",
+        "VMS-97ACF2AC82",
+        "VMS-E0111F0A9C",
+        "VMS-EA8445E1EF"
+      ],
+      "primarySourceIds": [
+        "pesticide"
+      ],
+      "originalGapRecordIds": [
+        "gap_6026a18cd90cd049",
+        "gap_d574915f5fff4625"
+      ],
+      "roleMappings": [
+        {
+          "id": "additional_g15_01",
+          "role": "Pest-control applicators and responsible supervisor",
+          "familyIds": [
+            "G15"
+          ],
+          "masterServiceIds": [
+            "VMS-0F9CEB34E7",
+            "VMS-48A0F7E206",
+            "VMS-97ACF2AC82",
+            "VMS-E0111F0A9C",
+            "VMS-EA8445E1EF"
+          ],
+          "trigger": "Only actual pesticide mixing, loading, application, contaminated application-equipment handling or assigned exposure-control supervision. Confirm product, method, jurisdiction and applicability; nonchemical pest control and mowing alone are excluded.",
+          "rationale": "Teach label-specific boundaries, exposure controls, bystander/environment protection and handoff for the real pesticide function. Agricultural WPS, structural pest control and other uses have different scopes; this is not approved WPS training or an applicator licence.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "pesticide"
+          ],
+          "sourceRecordIds": [
+            "SRC-1425F9FF496C",
+            "SRC-195670986024",
+            "SRC-1F37CB02B94D",
+            "SRC-2FA5F688796A",
+            "SRC-523A40ED7D6B",
+            "SRC-654F80555C8B",
+            "SRC-8635A9B153C5",
+            "SRC-8F2DA88FBDF8",
+            "SRC-F3800A5A94F2"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ]
+        },
+        {
+          "id": "additional_g15_02",
+          "role": "Grounds workers and assigned mower operators",
+          "familyIds": [
+            "G15"
+          ],
+          "masterServiceIds": [
+            "VMS-0F9CEB34E7",
+            "VMS-48A0F7E206"
+          ],
+          "trigger": "Only when this individual is additionally assigned a confirmed pesticide function or relevant application-to-entry exposure-control duty. Grounds work, mowing and working for a landscaper do not independently trigger G15 or WPS.",
+          "rationale": "Preserve the source’s possible grounds/pesticide interface without turning all grounds staff into pesticide handlers. Actual product/task and agricultural-WPS coverage must be separately resolved.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "pesticide"
+          ],
+          "sourceRecordIds": [
+            "SRC-1425F9FF496C",
+            "SRC-1F37CB02B94D",
+            "SRC-F3800A5A94F2"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ]
+        },
+        {
+          "id": "additional_g15_03",
+          "role": "Design engineer or technical consultant",
+          "familyIds": [
+            "G15"
+          ],
+          "masterServiceIds": [
+            "VMS-EA8445E1EF"
+          ],
+          "trigger": "Only actual pesticide product/method, bystander, entry or exposure-control planning responsibilities confirmed for this individual; general landscape design or desk advice is excluded.",
+          "rationale": "A landscape consultant may affect a pesticide plan, but a generic consultancy label does not prove that responsibility. Knowledge of task boundaries is separate from authority to apply or certify compliance.",
+          "requiresExposureConfirmation": true,
+          "confirmationScope": "person_service_role_actual_task_and_material_or_process; never service-wide inference",
+          "primarySourceIds": [
+            "pesticide"
+          ],
+          "sourceRecordIds": [
+            "SRC-654F80555C8B"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ]
+        }
+      ],
+      "serviceEvidence": [
+        {
+          "masterServiceId": "VMS-0F9CEB34E7",
+          "serviceName": "Horticultural / Grounds Maintenance Services",
+          "sourceRecordIds": [
+            "SRC-F3800A5A94F2"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G15"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-48A0F7E206",
+          "serviceName": "Horticulture services",
+          "sourceRecordIds": [
+            "SRC-1425F9FF496C",
+            "SRC-1F37CB02B94D"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G15"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-97ACF2AC82",
+          "serviceName": "Pest control services",
+          "sourceRecordIds": [
+            "SRC-195670986024",
+            "SRC-523A40ED7D6B",
+            "SRC-8635A9B153C5",
+            "SRC-8F2DA88FBDF8"
+          ],
+          "sourceUrls": [
+            "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf",
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
+            "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
+            "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
+          ],
+          "originalGapRecordIds": [
+            "gap_d574915f5fff4625"
+          ],
+          "initialGapIds": [
+            "G15"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-E0111F0A9C",
+          "serviceName": "Civil works maintenance and repair, site clearing and termite treatment",
+          "sourceRecordIds": [
+            "SRC-2FA5F688796A"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [
+            "gap_6026a18cd90cd049"
+          ],
+          "initialGapIds": [
+            "G15"
+          ]
+        },
+        {
+          "masterServiceId": "VMS-EA8445E1EF",
+          "serviceName": "Horticulture and Landscaping Consultancy services",
+          "sourceRecordIds": [
+            "SRC-654F80555C8B"
+          ],
+          "sourceUrls": [
+            "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
+          ],
+          "originalGapRecordIds": [],
+          "initialGapIds": [
+            "G15"
+          ]
+        }
+      ],
+      "qualificationBoundary": "Not EPA-approved WPS training, applicator certification, state-approved CE or a legal license. Product/method-specific approved training where required, jurisdiction/category qualification, practical assessment and employer authorization remain separate.",
+      "remainingRequirements": "Knowledge foundation only. Keep actual employer/method instruction, applicable approved training/credentials, medical arrangements, qualified practical evaluation and employer/site authorization separately outstanding."
+    }
+  ]
+}

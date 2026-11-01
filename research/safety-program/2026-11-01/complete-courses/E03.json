@@ -1,0 +1,781 @@
+{
+  "familyId": "E03",
+  "title": "Vehicles, trailers, load securement and recovery",
+  "description": "Complete guided E03 training: six taught lessons, two worked scenarios, six checks and a 20-question final. Separate first-answer and remediated scores; wrong answers require explicit correction acknowledgment.",
+  "purpose": "Control vehicle condition, shifting loads and unsafe recovery.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Company program owners",
+    "Designated technical personnel within their authorized roles"
+  ],
+  "practicalBoundary": "Drivers require the applicable license and observed competence for the actual vehicle and trailer. Loading and securement require task-specific practical instruction and verification; specialist loads need competent planning. Recovery operators need separate assessed capability and suitable equipment. This course does not authorize commercial driving or recovery.",
+  "sources": [
+    {
+      "title": "Inventory source 1: Vehicles, trailers, load securement and recovery",
+      "url": "https://www.slb.com/about/health-safety-and-environment/worker-safety-and-incident-prevention"
+    },
+    {
+      "title": "FMCSA: Cargo securement rules and scope",
+      "url": "https://www.fmcsa.dot.gov/regulations/cargo-securement/cargo-securement-rules"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "E03_intro",
+        "title": "Start here: learning, scores and role boundaries",
+        "body": "# E03: Vehicles, trailers, load securement and recovery\n\nThis original VNDRLY course teaches decisions for service-specific: transport, hauling and mobile services. Its purpose is to control vehicle condition, shifting loads and unsafe recovery. The six lessons explain the hazard, planning decisions, controls, checks, changing conditions and handback. Worked examples and two fictional scenarios show how those decisions fit together. Read the teaching before answering; no live hazardous activity is needed to complete this course.\n\nThere are six lesson knowledge checks and a 20-question final assessment. Submit each answer before viewing its feedback. Your first answer remains in the original score. If an answer is wrong, read the specific explanation and explicitly acknowledge the correction; acknowledged corrections contribute to a separate remediated score. Completion requires all sections and all 26 questions correct or explicitly acknowledged after remediation. A later corrected answer never erases the first-answer record.\n\nAwareness means recognizing the hazard and knowing when to stop and seek help. Task competence means demonstrating assigned skills to a suitable assessor. Work authorization means the employer and site have approved a specific person, activity and conditions. These are separate decisions. Completing this course supports training evidence; it does not grant either of the latter two. Site instructions and applicable law control actual work; this course does not invent universal technical limits or approval intervals.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E03_lesson1",
+        "title": "Lesson 1: Match vehicle, trailer, driver and journey",
+        "body": "A safe transport assignment matches the vehicle and trailer capacities, condition and configuration to the load, route and driver qualifications. Consider coupling, braking, tires, lighting, dimensions, ground and weather, and applicable licensing and commercial transport rules. A vehicle that can physically pull a trailer is not automatically approved or rated for the combination.\n\nJourney planning includes access restrictions, rest and fitness, communication and delivery conditions. Rental or contractor arrangements must identify who checks and accepts the actual combination.\n\nWorked example: a heavier trailer is substituted on the morning of departure. The driver holds dispatch until the combination, coupling, braking, capacities and authorization are confirmed; the original booking does not cover every substitute.\n\n### Applying the mechanism\n\nSeparate the capacity questions rather than treating them as one number. The tow vehicle, trailer, coupling and actual combination have their own limits, while weight distribution affects axles, steering and braking. Added tools, fuel, attachments and passengers can change the loaded condition. A trailer’s empty weight is not its loaded transport weight, and a vehicle’s ability to move it on level ground does not prove safe braking or legal operation. The responsible loading and transport roles obtain the actual rating and load information. If that information is unavailable, dispatch holds the combination or selects a verified alternative. A driver should not be asked to establish suitability by trial on the road, particularly on remote routes with poor stopping or recovery options.\n\n### Decision principles\n\nA powerful vehicle can still have inadequate combination or coupling capacity. All relevant ratings and configuration limits must be satisfied.\n\nDifferent combinations and duties require specific competence and legal authorization. Written awareness cannot replace those requirements.\n\nTransport includes arrival and unloading, not just highway travel. The chosen equipment must suit the full assignment.\n\nCoupling and uncoupling are tasks with movement and crush hazards. Follow the equipment-specific method on suitable support, with people clear of closing gaps and uncontrolled vehicle movement. Do not place a body between units merely because both drivers believe the brakes are applied. Practical assessment must include these transitions, not only driving once the combination is connected.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E03_lesson2",
+        "title": "Lesson 2: Inspect before dispatch and report changes",
+        "body": "Perform the applicable pre-trip checks and verify required documents and status. Examine safety-critical systems using the approved method: tires and wheels, brakes, steering, lights, coupling, safety connections and trailer equipment as applicable. Report defects with the actual vehicle or trailer identity. Do not crawl beneath unsupported equipment or perform tests beyond training.\n\nPost-trip and en-route checks capture damage or changes discovered during use. A prior pass does not clear a new vibration, loose component or brake concern. Safety-critical defects hold dispatch through the equipment process.\n\nWorked example: a driver notices a damaged tire after loading. The earlier pre-trip record remains history; the present condition must be assessed before travel.\n\n### Applying the mechanism\n\nA systematic walk-around follows the actual combination so coupling and trailer interfaces are not missed between two separate checklists. The approved method addresses mechanical engagement, required connections, braking and lighting arrangements, tires, wheels and load-related condition. Do not place yourself beneath an unsupported trailer or between vehicles that can move while checking it. Establish the safe state and communication with anyone controlling the vehicle. When a check cannot be completed, record the gap and its effect on dispatch instead of assuming that another person checked it. After a change in trailer or loading, revisit the affected checks. The earlier inspection remains valid history for the earlier arrangement, but it cannot verify a connection that was made later.\n\n### Decision principles\n\nSpecific traceable observations allow the owner to control the right equipment and arrange competent repair.\n\nBreakdown pressure does not establish repair skills or a safe work arrangement. The defect process must preserve task limits.\n\nLater users may not know what occurred during the trip. Accurate handback prevents damaged equipment being presented as ready.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E03_lesson3",
+        "title": "Lesson 3: Understand cargo forces and securement selection",
+        "body": "Cargo can move forward, sideways, rearward or vertically during braking, turning and road inputs. The securement arrangement must suit the load’s mass, shape, center of gravity and tendency to roll or tip. Use the applicable rules, rated devices, anchor points and commodity-specific requirements. This course does not invent a universal strap count or working-load ratio.\n\nInspect tie-downs, connectors and anchors; protect against edges where required. Packaging or a tarp is not automatically load securement. A device’s rating applies within its specified use and condition.\n\nWorked example: a round item is strapped but can still roll. The competent loading plan addresses rolling and movement in all required directions rather than counting straps alone.\n\n### Applying the mechanism\n\nCargo restraint must address how a load behaves, not just its total mass. A tall narrow item may tend to tip, a cylinder may roll, and bundled material can settle or separate. Blocking, bracing and tie-downs perform different functions within a suitable arrangement. A tie-down’s rated performance depends on its actual use, including attachments, condition and the direction of force. The loading plan must also protect the cargo and restraints from damage that could loosen the system. A driver who sees an inaccessible anchor or a strap crossing a cutting edge should report the specific concern rather than accept a reassuring strap count. The applicable securement rules and competent load plan determine the accepted arrangement for that actual commodity.\n\n### Decision principles\n\nThe system must resist the required forces and movement for that cargo. Convenience cannot establish adequacy.\n\nA cover may contain small material or protect weather exposure but does not necessarily restrain the cargo under transport forces.\n\nRated performance depends on condition and proper use. Edge contact can defeat a device even when its label is suitable.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E03_lesson4",
+        "title": "Lesson 4: Verify loading and recheck during the journey",
+        "body": "The designated competent person verifies weight distribution, vehicle and axle limits, stability, securement and required clearances before departure. The driver must know their responsibilities even when another crew loads the vehicle. Do not accept an inaccessible or undocumented load merely because someone else says it is fine.\n\nRechecks follow applicable regulations and the load plan, including relevant changes, stops or observed movement. Stop at a safe location if the load shifts or a device loosens. Do not climb onto unstable cargo or adjust securement from a traffic-exposed position.\n\nWorked example: after the first rough access road, a driver notices load movement. The journey pauses safely and the loading arrangement is reassessed, rather than simply pulling one strap tighter and assuming the original plan remains adequate.\n\n### Applying the mechanism\n\nA load can settle after departure as material compresses or road inputs change its position. Rechecks are intended to discover those changes before they progress, but the check itself must occur safely. Choose the approved stopping arrangement away from moving traffic and unstable ground, and do not climb on a shifted load to pull it back by hand. If the configuration has failed, the responsible loading or recovery roles establish a safe correction, which may require unloading or different equipment. Record the observed movement and action so the next stage is based on the corrected state. Tightening one device without assessing the whole load can leave another direction of movement or a damaged anchor uncontrolled.\n\n### Decision principles\n\nThe loading interface must be coordinated. A third party’s work does not automatically waive the driver or carrier’s applicable responsibilities.\n\nA load can meet total capacity yet overload an axle or remain unstable. The arrangement must satisfy all relevant requirements.\n\nLegal and task-specific triggers govern rechecks. A universal guess can miss required checks or changed load conditions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E03_lesson5",
+        "title": "Lesson 5: Plan recovery instead of improvising a pull",
+        "body": "Vehicle recovery can create tensioned-line recoil, component failure, rolling, crushing and traffic exposure. A competent recovery provider assesses the stuck vehicle, ground, slope, load, attachment points, equipment and exclusion area. A towing ball or convenient frame member is not automatically a recovery point.\n\nKeep bystanders and unnecessary people out of the assessed danger area. Do not stand near a tensioned line or use a vehicle’s power to test unknown attachments. Recovery ratings and methods must match the actual forces and equipment.\n\nWorked example: a loaded vehicle is bogged near a slope. The crew does not attach a random strap to the nearest hitch. They secure the situation and call the approved recovery capability.\n\n### Applying the mechanism\n\nRecovery is not ordinary towing performed with more enthusiasm. A bogged vehicle can resist movement through suction, grade, obstruction or a shifted load, and a moving recovery vehicle can introduce dynamic force. Failed hardware can become a projectile, and both vehicles may move unexpectedly when resistance changes. The competent plan considers whether to unload, stabilize, improve access or use specialist equipment before applying a pull. It also identifies people who must remain clear and who controls signals. Passengers and photographers do not stand near the line because they are not directly helping. A person must not step over or approach a tensioned assembly to inspect it. Stop and establish the approved safe state before any adjustment.\n\n### Decision principles\n\nRecovery requires assessment of forces, ground, vehicle stability and equipment. Owning a strap does not establish competence.\n\nTensioned systems and moving vehicles can fail violently. People must not be placed where recoil, hardware or vehicle movement can reach them.\n\nRecovery can impose different dynamic loads and directions. Suitability must follow technical information and the competent plan.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E03_lesson6",
+        "title": "Lesson 6: Hand back equipment and assess practical driving skills",
+        "body": "After the journey, report defects, load events, coupling issues and recovery exposure so the next dispatch sees the actual condition. Equipment involved in abnormal forces may require competent inspection before further use. Preserve the event history rather than treating arrival without injury as proof of no damage.\n\nPractical qualification includes the actual vehicle and trailer, inspections, coupling, maneuvering, securement responsibilities and emergency decisions. Defensive driving, licensing and commercial requirements remain separate from this written course.\n\nWorked example: a vehicle arrives after an improvised pull. The owner controls it for the required inspection of affected points and systems before the next booking.\n\n### Applying the mechanism\n\nA useful transport handback distinguishes vehicle condition, cargo condition and the journey outcome. “Delivered” does not mean the trailer remains roadworthy, and “no collision” does not mean a loose wheel or damaged attachment can be ignored. The driver records unusual vibration, handling, braking, load movement and any recovery, even if the symptoms later disappear. The owner uses competent inspection to decide readiness and communicates restrictions to dispatch. Practical assessment should include decisions as well as steering skill: recognizing an unsuitable combination, refusing an unverified load and calling for qualified recovery are successful safety behaviors. The assessor should not reward a completed journey that depended on bypassing those safeguards.\n\n### Decision principles\n\nDelivery success and equipment readiness are separate facts. Event information supports safe maintenance and later dispatch.\n\nThe actual combination and duties require demonstrated skills. Experience supports but does not replace assessment and legal requirements.\n\nThe course teaches awareness and judgment. Execution roles require their own qualifications and practical authorization.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E03_scenarios",
+        "title": "Two applied scenarios and worked decisions",
+        "body": "## Applied scenarios: complete worked decisions\n\n### Scenario 1: A covered but unstable load\n\nA trailer carries a tall load under a tarp. The loader says the cover will keep it in place, but the driver cannot identify suitable restraint against tipping.\n\n**Worked decision and reasoning.** Departure is held. The competent loading arrangement establishes weight, center of gravity, distribution, rated securement and required stability controls. The driver verifies their assigned responsibilities and obtains the needed information before acceptance. A weather cover does not prove restraint against transport forces.\n\n### Scenario 2: The quick recovery\n\nA loaded truck is stuck. A coworker offers a strap and proposes a running pull from an unverified hitch while others watch nearby.\n\n**Worked decision and reasoning.** The improvised pull does not proceed. The area is secured through the site plan, people stay clear and a competent recovery provider assesses vehicle, load, ground, attachments, equipment and exclusion. The approved method is briefed before forces are applied. Any subsequent abnormal event is reported for equipment disposition.\n\n",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E03_assessment",
+        "title": "Final assessment: 20 individual decisions",
+        "body": "Answer the 20 questions individually using the taught principles. Each submission preserves your first answer. Review feedback after submitting. When an answer is incorrect, explicitly acknowledge the correct decision and explanation before moving on. The result must show both the first-answer score and the remediated score across all 26 questions. Do not attempt a live hazardous task to obtain an answer; the assessment is a knowledge and judgment exercise.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "E03_completion",
+        "title": "Completion and separately assessed practical competence",
+        "body": "## What this completion means\n\nThe course is complete only after every section and all 26 questions have been accomplished, through correct responses or explicit acknowledgment of the supplied correction. Preserve the original and remediated results separately. Acknowledgment is a learning action, not evidence that the learner has performed the task safely in the field.\n\n## Separate practical evaluation\n\nDrivers require the applicable license and observed competence for the actual vehicle and trailer. Loading and securement require task-specific practical instruction and verification; specialist loads need competent planning. Recovery operators need separate assessed capability and suitable equipment. This course does not authorize commercial driving or recovery.\n\nAn assessor must record the actual role, equipment or task, procedure used, conditions demonstrated, observed performance, limitations, corrective coaching and final decision. Use safe simulation where exposing a learner would create danger. A provider certificate, company evidence score and site permit answer different questions; none should be substituted for the others. The employer and operating/site authority retain the final task and site readiness decisions. A failed or unassessed critical practical step remains a restriction even after a perfect written score.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "E03_check1",
+        "prompt": "A heavier trailer is substituted before departure. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Verify the actual combination, ratings, condition and driver authorization."
+          },
+          {
+            "id": "b",
+            "label": "Use the original vehicle booking as approval."
+          },
+          {
+            "id": "c",
+            "label": "Tow slowly to compensate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E03_final_1_1",
+        "prompt": "What establishes towing suitability?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only engine power."
+          },
+          {
+            "id": "b",
+            "label": "Only whether the hitch fits."
+          },
+          {
+            "id": "c",
+            "label": "Applicable vehicle, trailer, coupling and load ratings and requirements."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E03_final_1_2",
+        "prompt": "What should driver qualification match?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the driver’s age."
+          },
+          {
+            "id": "b",
+            "label": "The actual vehicle, combination, task and applicable licensing rules."
+          },
+          {
+            "id": "c",
+            "label": "Only a general online course."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E03_final_1_3",
+        "prompt": "Why include delivery-site conditions?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Access, ground, traffic and unloading can change transport hazards."
+          },
+          {
+            "id": "b",
+            "label": "Only public-road distance matters."
+          },
+          {
+            "id": "c",
+            "label": "The destination has no effect on selection."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E03_check2",
+        "prompt": "A tire defect is found after a passed pre-trip. What controls the departure decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The earlier pass automatically."
+          },
+          {
+            "id": "b",
+            "label": "The customer’s delivery deadline."
+          },
+          {
+            "id": "c",
+            "label": "The actual new condition and required competent disposition."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E03_final_2_1",
+        "prompt": "What should a defect report identify?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the route name."
+          },
+          {
+            "id": "b",
+            "label": "The actual unit, observed condition, location and circumstances."
+          },
+          {
+            "id": "c",
+            "label": "Only “truck bad.”"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E03_final_2_2",
+        "prompt": "Can a driver perform any repair to keep moving?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only tasks within their competence and authorization; others need qualified help."
+          },
+          {
+            "id": "b",
+            "label": "Yes, roadside urgency grants authority."
+          },
+          {
+            "id": "c",
+            "label": "Yes, if spare parts are present."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E03_final_2_3",
+        "prompt": "Why perform post-trip reporting?",
+        "options": [
+          {
+            "id": "a",
+            "label": "It replaces all maintenance."
+          },
+          {
+            "id": "b",
+            "label": "It is useful only after a collision."
+          },
+          {
+            "id": "c",
+            "label": "It makes discovered defects and changes visible before the next dispatch."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E03_check3",
+        "prompt": "A round item is strapped but can still roll. What is missing?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Nothing if two straps are visible."
+          },
+          {
+            "id": "b",
+            "label": "A suitable complete securement arrangement addressing the load’s actual movement."
+          },
+          {
+            "id": "c",
+            "label": "Only a brighter tarp."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E03_final_3_1",
+        "prompt": "What determines securement selection?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Actual load characteristics, rated devices, anchors and applicable requirements."
+          },
+          {
+            "id": "b",
+            "label": "Only how many straps are available."
+          },
+          {
+            "id": "c",
+            "label": "Only the load’s purchase value."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E03_final_3_2",
+        "prompt": "Does a tarp automatically secure cargo?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if tied tightly."
+          },
+          {
+            "id": "b",
+            "label": "Yes, for all light-looking loads."
+          },
+          {
+            "id": "c",
+            "label": "No; weather covering and securement are different functions."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E03_final_3_3",
+        "prompt": "Why protect tie-downs from sharp edges?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A rated strap cannot be cut."
+          },
+          {
+            "id": "b",
+            "label": "Edges can damage devices and reduce their ability to restrain the load."
+          },
+          {
+            "id": "c",
+            "label": "Only to keep the cargo clean."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E03_check4",
+        "prompt": "Cargo shifts during travel. What happens?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Stop safely and obtain a suitable reassessment and correction before continuing."
+          },
+          {
+            "id": "b",
+            "label": "Drive slower without checking."
+          },
+          {
+            "id": "c",
+            "label": "Ignore it because loading was signed off."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E03_final_4_1",
+        "prompt": "Does another crew loading the vehicle remove the driver’s duties?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, the loader owns every transport decision."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the load is covered."
+          },
+          {
+            "id": "c",
+            "label": "No; responsibilities must be understood and required verification completed."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E03_final_4_2",
+        "prompt": "What should a pre-departure load check include?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only whether the doors close."
+          },
+          {
+            "id": "b",
+            "label": "Distribution, applicable limits, stability and complete securement."
+          },
+          {
+            "id": "c",
+            "label": "Only total weight."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E03_final_4_3",
+        "prompt": "How should recheck frequency be determined?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Applicable transport rules and the actual load and journey plan."
+          },
+          {
+            "id": "b",
+            "label": "One invented interval for every jurisdiction."
+          },
+          {
+            "id": "c",
+            "label": "Only when cargo falls off."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E03_check5",
+        "prompt": "A stuck vehicle has no verified recovery point. What is the decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Attach to the nearest towing ball."
+          },
+          {
+            "id": "b",
+            "label": "Use more speed to free it."
+          },
+          {
+            "id": "c",
+            "label": "Use a competent recovery assessment and suitable approved equipment before pulling."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E03_final_5_1",
+        "prompt": "Who plans a difficult recovery?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The nearest bystander."
+          },
+          {
+            "id": "b",
+            "label": "A competent authorized recovery provider for the actual conditions."
+          },
+          {
+            "id": "c",
+            "label": "Any driver with a strap."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E03_final_5_2",
+        "prompt": "Where should bystanders be during recovery?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Outside the assessed exclusion area and release paths."
+          },
+          {
+            "id": "b",
+            "label": "Beside the line to watch for damage."
+          },
+          {
+            "id": "c",
+            "label": "Between the vehicles."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E03_final_5_3",
+        "prompt": "Can a normal towing attachment be assumed suitable for every recovery?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Yes, if it looks thick."
+          },
+          {
+            "id": "b",
+            "label": "Yes, if the vehicle is small."
+          },
+          {
+            "id": "c",
+            "label": "No; the intended rating and recovery method must be verified."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E03_check6",
+        "prompt": "A vehicle arrives after abnormal recovery loads. What is required?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Delete the event to avoid downtime."
+          },
+          {
+            "id": "b",
+            "label": "Report and obtain the required competent inspection or disposition before further reliance."
+          },
+          {
+            "id": "c",
+            "label": "Assume arrival proves no damage."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E03_final_6_1",
+        "prompt": "What should transport handback preserve?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Defects, load movement, recovery events and equipment restrictions."
+          },
+          {
+            "id": "b",
+            "label": "Only arrival time."
+          },
+          {
+            "id": "c",
+            "label": "Only successful delivery confirmation."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E03_final_6_2",
+        "prompt": "What establishes practical driving competence?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only this written score."
+          },
+          {
+            "id": "b",
+            "label": "Only years since the first license."
+          },
+          {
+            "id": "c",
+            "label": "Observed task-specific performance and applicable licensing and employer authorization."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "E03_final_6_3",
+        "prompt": "What does this course not authorize?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reporting a damaged tie-down."
+          },
+          {
+            "id": "b",
+            "label": "Commercial driving, specialist load engineering or hazardous recovery execution."
+          },
+          {
+            "id": "c",
+            "label": "Recognizing a shifted load."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "E03_final_scenario1",
+        "prompt": "What is the key unresolved issue?",
+        "options": [
+          {
+            "id": "a",
+            "label": "The load’s actual stability and complete rated securement."
+          },
+          {
+            "id": "b",
+            "label": "The tarp’s color."
+          },
+          {
+            "id": "c",
+            "label": "Only the delivery time."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "E03_final_scenario2",
+        "prompt": "What makes the proposed pull unacceptable?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Only the strap’s age."
+          },
+          {
+            "id": "b",
+            "label": "The lack of a camera recording."
+          },
+          {
+            "id": "c",
+            "label": "Unknown attachment suitability, uncontrolled forces and people in release paths."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "E03_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E03_lesson1",
+          "questionIds": [
+            "E03_check1"
+          ]
+        },
+        {
+          "lessonId": "E03_lesson2",
+          "questionIds": [
+            "E03_check2"
+          ]
+        },
+        {
+          "lessonId": "E03_lesson3",
+          "questionIds": [
+            "E03_check3"
+          ]
+        },
+        {
+          "lessonId": "E03_lesson4",
+          "questionIds": [
+            "E03_check4"
+          ]
+        },
+        {
+          "lessonId": "E03_lesson5",
+          "questionIds": [
+            "E03_check5"
+          ]
+        },
+        {
+          "lessonId": "E03_lesson6",
+          "questionIds": [
+            "E03_check6"
+          ]
+        },
+        {
+          "lessonId": "E03_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "E03_assessment",
+          "questionIds": [
+            "E03_final_1_1",
+            "E03_final_1_2",
+            "E03_final_1_3",
+            "E03_final_2_1",
+            "E03_final_2_2",
+            "E03_final_2_3",
+            "E03_final_3_1",
+            "E03_final_3_2",
+            "E03_final_3_3",
+            "E03_final_4_1",
+            "E03_final_4_2",
+            "E03_final_4_3",
+            "E03_final_5_1",
+            "E03_final_5_2",
+            "E03_final_5_3",
+            "E03_final_6_1",
+            "E03_final_6_2",
+            "E03_final_6_3",
+            "E03_final_scenario1",
+            "E03_final_scenario2"
+          ]
+        },
+        {
+          "lessonId": "E03_completion",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "E03_check1": "A changed trailer can alter capacity, braking, coupling and licensing requirements. The actual combination must be accepted before dispatch.",
+        "E03_final_1_1": "A powerful vehicle can still have inadequate combination or coupling capacity. All relevant ratings and configuration limits must be satisfied.",
+        "E03_final_1_2": "Different combinations and duties require specific competence and legal authorization. Written awareness cannot replace those requirements.",
+        "E03_final_1_3": "Transport includes arrival and unloading, not just highway travel. The chosen equipment must suit the full assignment.",
+        "E03_check2": "Inspection evidence is bounded in time. A new safety-critical defect requires control and acceptance before continued use.",
+        "E03_final_2_1": "Specific traceable observations allow the owner to control the right equipment and arrange competent repair.",
+        "E03_final_2_2": "Breakdown pressure does not establish repair skills or a safe work arrangement. The defect process must preserve task limits.",
+        "E03_final_2_3": "Later users may not know what occurred during the trip. Accurate handback prevents damaged equipment being presented as ready.",
+        "E03_check3": "Securement must control the relevant motion and forces. Device count alone does not establish that a rolling or tipping load is restrained.",
+        "E03_final_3_1": "The system must resist the required forces and movement for that cargo. Convenience cannot establish adequacy.",
+        "E03_final_3_2": "A cover may contain small material or protect weather exposure but does not necessarily restrain the cargo under transport forces.",
+        "E03_final_3_3": "Rated performance depends on condition and proper use. Edge contact can defeat a device even when its label is suitable.",
+        "E03_check4": "Movement indicates the securement or load arrangement may not be effective. The driver must not continue relying on a failed assumption.",
+        "E03_final_4_1": "The loading interface must be coordinated. A third party’s work does not automatically waive the driver or carrier’s applicable responsibilities.",
+        "E03_final_4_2": "A load can meet total capacity yet overload an axle or remain unstable. The arrangement must satisfy all relevant requirements.",
+        "E03_final_4_3": "Legal and task-specific triggers govern rechecks. A universal guess can miss required checks or changed load conditions.",
+        "E03_check5": "Recovery forces can exceed ordinary towing assumptions and eject failed hardware. Attachment suitability and the full method must be established before tension is applied.",
+        "E03_final_5_1": "Recovery requires assessment of forces, ground, vehicle stability and equipment. Owning a strap does not establish competence.",
+        "E03_final_5_2": "Tensioned systems and moving vehicles can fail violently. People must not be placed where recoil, hardware or vehicle movement can reach them.",
+        "E03_final_5_3": "Recovery can impose different dynamic loads and directions. Suitability must follow technical information and the competent plan.",
+        "E03_check6": "Abnormal loading can damage attachments or structure without immediate failure. The next user needs the actual condition and restrictions.",
+        "E03_final_6_1": "Delivery success and equipment readiness are separate facts. Event information supports safe maintenance and later dispatch.",
+        "E03_final_6_2": "The actual combination and duties require demonstrated skills. Experience supports but does not replace assessment and legal requirements.",
+        "E03_final_6_3": "The course teaches awareness and judgment. Execution roles require their own qualifications and practical authorization.",
+        "E03_final_scenario1": "A covered load can still tip or shift. Securement must address the load’s movement and forces under applicable requirements.",
+        "E03_final_scenario2": "Recovery is a planned high-energy operation. Multiple unverified safeguards cannot be replaced by confidence or vehicle speed."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}

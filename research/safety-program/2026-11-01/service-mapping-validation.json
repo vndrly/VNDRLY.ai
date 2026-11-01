@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-01T06:23:53.954Z",
+  "catalogSha256": "1f2dbb3abc8a7fcebe6ff5eb4e593774a271a21b1cc99da31ac9358784eeb524",
+  "totalMasterServices": 963,
+  "reviewFilesPresent": [
+    "service-review-000-320.json",
+    "service-review-321-641.json",
+    "service-review-642-962.json"
+  ],
+  "servicesWithRoleMappings": 963,
+  "missingRows": 0,
+  "errors": [],
+  "complete": true
+}

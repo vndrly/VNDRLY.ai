@@ -14,7 +14,7 @@ export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Da
  useEffect(()=>{setSelected([]);setNotice('');},[question?.id,index]);
  const action=async(payload:unknown)=>{try{setNotice('');await send(payload);}catch(e){setNotice(e instanceof Error?e.message:t('workHubLibrary.unavailable'));}};
  const scores=progress?.scores,complete=data.assignment.status==='completed';
- return <section className="space-y-4" data-guided-training="H03">
+ return <section className="space-y-4" data-guided-training={data.metadata.safetyResource?.familyId??'course'}>
   <h2 className="text-xl font-bold">{data.title}</h2>
   <p>{t(complete?'h03Course.completed':'h03Course.section',{current:Math.min(index+1,guided.steps.length),total:guided.steps.length})}</p>
   {scores&&<div className="rounded-xl border p-4 space-y-2" data-testid="course-scores">
@@ -24,6 +24,7 @@ export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Da
   </div>}
   {complete?<p>{t('h03Course.credit')}</p>:lesson&&<article className="space-y-4 rounded-xl border-2 border-[var(--brand-primary)] p-5">
    <h3 className="font-bold text-lg">{lesson.title}</h3><LibraryBody text={lesson.body} color="currentColor" />
+   {!!lesson.links?.length&&<ul className="list-disc pl-5">{lesson.links.map((url,i)=><li key={url}><a className="underline" href={url} target="_blank" rel="noreferrer">{t('trainingPolicy.scopeSource',{number:i+1})}</a></li>)}</ul>}
    {question?<fieldset className="space-y-3 border-t pt-4"><legend className="font-semibold">{question.prompt}</legend>
     {question.options.map(option=><label key={option.id} className="flex gap-3 items-start"><input type={question.multiple?'checkbox':'radio'} name={question.id} disabled={busy||uncertain||!!responses[question.id]} checked={selected.includes(option.id)} onChange={()=>setSelected(question.multiple?(selected.includes(option.id)?selected.filter(x=>x!==option.id):[...selected,option.id]):[option.id])}/><span>{option.label}</span></label>)}
     <TogglePillButton tone="brand" disabled={busy||uncertain||!selected.length||!!responses[question.id]} onClick={()=>void action({action:'answer',questionId:question.id,optionIds:selected})}>{t('h03Course.submitAnswer')}</TogglePillButton>

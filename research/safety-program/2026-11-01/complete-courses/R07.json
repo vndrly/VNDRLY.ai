@@ -1,0 +1,789 @@
+{
+  "familyId": "R07",
+  "title": "Environmental release and spill emergency interface",
+  "description": "Original guided company-program course with six lessons, six checks, two worked scenarios and 20 final questions. First and remediated scores remain separate.",
+  "purpose": "Coordinate personnel safety, containment and external response.",
+  "audience": [
+    "Affected workers",
+    "Supervisors",
+    "Program owners",
+    "Site coordinators"
+  ],
+  "practicalBoundary": "Separate hazardous-material response training, atmospheric assessment, source isolation, medical care, environmental notification decisions, waste management and technical handback require the appropriate qualified roles. This course authorizes no entry into unknown atmospheres or specialist spill cleanup and defines no universal reporting threshold.",
+  "sources": [
+    {
+      "title": "Inventory reference 1",
+      "url": "https://kindermorgan.com/content/docs/KMContractorSafetyManual.pdf"
+    },
+    {
+      "title": "Inventory reference 2",
+      "url": "https://www.y12.doe.gov/suppliers/procurement/subcontracting/subcontracting-forecasts/upf-forecast/upf-safety-procedures"
+    },
+    {
+      "title": "Inventory reference 3",
+      "url": "https://www.marathonpetroleum.com/Sustainability/Safety/"
+    },
+    {
+      "title": "OSHA Hazardous waste operations and emergency response — check scope",
+      "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
+    }
+  ],
+  "training": {
+    "lessons": [
+      {
+        "id": "R07_intro",
+        "title": "Start here: Environmental release and spill emergency interface",
+        "body": "# Environmental release and spill emergency interface\n\nThis original VNDRLY course teaches decisions within the company safety program. Work through six lessons, their six checks, two worked scenarios and a 20-question final. All cases are fictional. No equipment operation is required to complete the online learning.\n\nEach of the 26 questions requires a recorded answer. Completion requires a correct answer or explicit acknowledgment of the explanation and corrected answer after an error. Preserve the first-attempt score separately from the remediated score; a correction never rewrites what was first understood. Read the explanation, return to the relevant lesson and resolve uncertainty with the responsible supervisor. The course does not substitute for a site assessment, permit or employer authorization.\n\nSeparate hazardous-material response training, atmospheric assessment, source isolation, medical care, environmental notification decisions, waste management and technical handback require the appropriate qualified roles. This course authorizes no entry into unknown atmospheres or specialist spill cleanup and defines no universal reporting threshold.\n\nThe linked references support the subject and identify source context. Client procedures are examples of client requirements, not universal law or endorsement of this course. Apply the governing jurisdiction and actual site procedure; no numerical technical limits or universal renewal interval are invented here.\n\n## Primary reference context\n\n[OSHA Hazardous waste operations and emergency response — check scope](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120). Read the reference within its stated scope. Company examples are not universal technical rules; regulatory applicability must be determined for the actual task and jurisdiction.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R07_lesson1",
+        "title": "Lesson 1 - Recognize a release and protect people",
+        "body": "A release may be a visible pool, spray, odor, sheen, damaged package or unexpected process condition. Identify what is known without entering the area to investigate. The material, energy, atmosphere and spread can all be uncertain.\n\nThe first concern is safe recognition, alarm and protection of people. A worker does not need to identify every chemical before reporting an emergency. Give the location, observations and known product information while clearly stating uncertainty.\n\nDo not assume a small visible footprint means a minor event. Vapor, pressure, underground migration or a continuing source can create hazards beyond the pool. The authorized response determines the assessment. Keep others clear through the safe site process rather than standing inside the hazard to warn them.\n\n## Worked field example\n\nA fuel release produces an unfamiliar atmosphere near a working gate.\n\nThe safe decision is to keep people clear and raise the alarm through the approved release plan. Visible liquid does not describe all vapor, energy and spread hazards.\n\nA useful field record is specific: An actionable alarm with location, observed conditions, known material and uncertainty stated. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Further application\n\nThe initial report should distinguish observations from identification. A sheen, odor, spray or unusual equipment condition can justify warning without proving the exact material. Describe what is seen from safety and provide reliable labels or process information already available. Do not approach the source simply to make the report more precise.\n\nA release can change quickly. Material may continue entering the area, vapors may move beyond the liquid and weather may alter the affected direction. The responsible response coordinator needs updates through the agreed route. General workers should know how to withdraw and keep other people clear without creating another traffic or access hazard.\n\nInclude people beyond the immediate crew. A gate attendant, adjacent contractor or cleaner may encounter the release without understanding its origin. The plan should provide usable warning and safe route information. A small incident footprint on a form does not establish that all exposed groups have been considered.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R07_lesson2",
+        "title": "Lesson 2 - Know the response boundary before work",
+        "body": "The plan defines who can take initial actions and under what conditions. A trained worker may have a limited assessed role, but a spill kit alone does not establish competence, suitable PPE or safe atmospheric conditions. Know the stop and withdrawal triggers.\n\nDistinguish an incidental condition within the trained role from an uncontrolled or uncertain emergency requiring specialist response. The competent employer/site process establishes the boundary; this course does not invent a universal spill-volume threshold.\n\nNever enter an unknown atmosphere or approach uncontrolled energy to protect property or a drain. If a safe remote action is assigned and the conditions are verified, follow the plan. Otherwise withdraw and provide information to the responsible response roles.\n\n## Worked field example\n\nAn untrained worker is told to enter an unknown vapor area because absorbent pads are available.\n\nThe safe decision is to withdraw and obtain the authorized specialist response instead of entering with the kit. Equipment availability does not establish a safe response capability.\n\nA useful field record is specific: A role-specific response plan and verified trained, equipped and authorized resources. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Further application\n\nResponse capability depends on the person, equipment, material and conditions together. A worker may be trained for a limited known spill on an open floor but not for an unknown atmosphere, pressurized release or reactive mixture. The role boundary must be explicit enough to guide stopping and escalation.\n\nThe spill kit should match the assessed scope and be accessible without entering the danger area. Check its status through the approved process. Missing absorbents or damaged protective equipment can invalidate the limited initial response, while a complete kit still does not authorize emergency entry.\n\nWhen the situation exceeds the planned capability, withdraw and activate qualified assistance. Do not use the absence of visible symptoms or a colleague’s confidence as proof that conditions are safe. The competent response authority makes the technical assessment. The worker's useful action is prompt recognition and reliable communication within a protected role.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R07_lesson3",
+        "title": "Lesson 3 - Coordinate alarm, access and command",
+        "body": "Environmental response interfaces with fire, medical, security, operations and external services. The plan must identify who coordinates the response and who controls technical actions. Avoid conflicting instructions from different employers.\n\nProvide usable directions, safe access and current hazards. Gate staff may need to stop ordinary arrivals, keep emergency routes clear and direct responders from a safe location. They must not guide responders through an unassessed release area.\n\nKeep communication factual and current. Report changes in wind, spread, blocked access or people affected through command. A rumor about the material should not be passed as a confirmed identity. Do not delay urgent warning while waiting for a polished report.\n\n## Worked field example\n\nResponders are directed to an entrance now downwind of the release and blocked by a delivery.\n\nThe safe decision is to notify command and coordinate a verified safe access and traffic arrangement. An entrance listed in the plan may become unsuitable during the actual event.\n\nA useful field record is specific: A current responder-access decision and communicated gate/traffic controls. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Further application\n\nCommand should coordinate technical control, worker protection, environmental action and external assistance. Different employers may need to make internal notifications, but those calls must not delay the site alarm. Agree who passes updates and who confirms the current access arrangement.\n\nGate and traffic roles can be important during a release. Ordinary arrivals may need to pause, emergency routes remain clear and drivers need a safe holding instruction. The attendant must not stand in the affected atmosphere to enforce access. Use the reviewed safe position and emergency traffic method.\n\nA responder guide should know the current entrance, route restrictions and contact with command. If wind or spread changes the route, update the direction promptly. An old map can be useful background but cannot override current hazards. Preserve uncertainty and report changes rather than sending responders toward the nearest familiar gate by habit.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R07_lesson4",
+        "title": "Lesson 4 - Prevent spread only within an authorized safe role",
+        "body": "The desire to protect soil or water does not justify exposure. Source isolation, drain protection and containment require the appropriate competence, equipment and safe access. A visible valve may be within a hazardous atmosphere or connected to stored energy.\n\nWhere the plan permits a limited initial action, confirm the prerequisites and withdrawal conditions. Do not improvise berms, pumps or chemicals without review; they can redirect the release, create incompatibility or expose another area.\n\nThe specialist response considers source control, atmosphere, ignition, spread and recovery together. General workers provide reliable information and preserve the boundary. They should not start cleanup merely because the release has stopped visibly.\n\n## Worked field example\n\nA worker is asked to reach a valve through a liquid pool to protect a nearby drain.\n\nThe safe decision is to keep clear unless the assigned authorized response has verified safe access and conditions. Protecting the environment does not remove the worker’s exposure to material and energy hazards.\n\nA useful field record is specific: A specialist decision on source/drain controls with verified access and assigned roles. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Further application\n\nContainment should not transfer the hazard. An improvised barrier can redirect liquid toward another occupied area, and an unsuitable absorbent or chemical can create incompatibility. Technical responders determine the appropriate method for the material and conditions.\n\nSource control may involve pressure, electrical equipment or process isolation. The fact that a valve is reachable does not establish that operating it is safe or within the worker's authority. If a safe remote action is assigned in the plan, follow its conditions; otherwise provide information and remain clear.\n\nDrain protection and environmental urgency are part of the response, but not a waiver of worker safety. A person must not enter an unknown atmosphere or cross a hazardous pool to protect a receptor. Qualified roles balance source, atmosphere, ignition, spread and recovery through the approved response. Ordinary awareness training does not authorize those technical decisions.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R07_lesson5",
+        "title": "Lesson 5 - Route reporting through responsible owners",
+        "body": "Environmental notification requirements depend on material, quantity, location, receiving environment and jurisdiction. The responsible environmental/legal authority determines the applicable reporting route and timing. This course supplies no universal reportable quantity or deadline.\n\nWorkers should promptly report observations and preserve reliable information: time, location, known material, source, estimated extent with uncertainty, actions and affected receptors. Do not fabricate precision or delay escalation until every figure is confirmed.\n\nCompany, site, regulator and emergency-service notifications may serve different purposes. Confirm who owns each obligation and keep a record of actual contacts and instructions. A message to a supervisor is not automatically proof that every required external notification occurred.\n\n## Worked field example\n\nA supervisor assumes an internal incident form satisfies every environmental reporting duty.\n\nThe safe decision is to refer notification decisions to the responsible environmental authority and record actual required contacts. Internal reporting and external obligations are distinct processes with scope-specific requirements.\n\nA useful field record is specific: A notification decision and contact record showing responsible owner, basis and actual actions. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Further application\n\nReporting information often develops over time. Begin with reliable observations and clearly marked estimates, then update the responsible owner as better information becomes available. Do not postpone urgent notification merely because the exact quantity or full material identity is uncertain.\n\nThe environmental authority determines applicable obligations from jurisdiction, material, location, quantity and impact. This course gives no universal reportable volume, deadline or regulator list. Internal notification, emergency calls and external environmental reporting can have different owners and purposes; the plan should make each responsibility visible.\n\nKeep a factual contact record. Identify who was contacted, when, what information was supplied and any instructions received. A completed internal form does not show that a required external call occurred. Where confidentiality or legal review affects documentation, use the authorized process without fabricating certainty or deleting the operational history.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R07_lesson6",
+        "title": "Lesson 6 - Control cleanup, waste and return to use",
+        "body": "Cleanup can create new exposure through contaminated soil, absorbents, equipment and recovered material. Use qualified personnel and the approved waste route. Do not place hazardous residues in general waste or return contaminated tools to ordinary use without review.\n\nReturn to use requires the responsible authority to verify the area, equipment, remaining restrictions and any environmental follow-up. A clean-looking surface does not establish that the atmosphere, ground or drainage is acceptable.\n\nReview the cause and response interfaces after the event. Check whether alarms, access, response resources and reporting worked. Preserve the original record, corrective actions and verification. Online learning and a completed spill form remain separate from specialist cleanup and technical handback.\n\n## Worked field example\n\nA cleaned yard is reopened while unsealed contaminated absorbents remain beside an occupied walkway.\n\nThe safe decision is to maintain suitable control until cleanup, waste handling and return-to-use conditions are verified. Visible surface cleaning does not resolve remaining contaminated material or exposure.\n\nA useful field record is specific: A scope-specific cleanup/waste record and authorized handback with remaining restrictions clear. It records observed conditions and the decision, rather than treating a signature as proof that the safeguard existed.\n\n## Further application\n\nCleanup and disposal need their own controlled work scope. Contaminated absorbents, soil, clothing and equipment can continue to expose workers after the visible liquid is removed. Identify who handles them, what information they need and the approved packaging, storage, transport and receiving route.\n\nReturn to use should state the actual area and conditions verified, the responsible authority and any remaining restrictions or follow-up. A clean photograph does not establish atmosphere, subsurface condition or waste acceptability. Technical verification and environmental decisions remain with the appropriate competent roles.\n\nThe post-event review asks how the release occurred and how the response functioned. Examine alarms, access, materials, equipment, staffing and reporting interfaces. Correct the actual failed mechanism and verify the result in relevant work. Preserve the original event, estimates, decisions and later updates. A revised training record alone does not establish that a defective transfer system or incompatible waste arrangement has been corrected.\n\nA release review should include people who encountered the event outside the main response team. A driver may have received conflicting gate instructions, or a cleaner may have handled contaminated material after the technical crew left. Their information can reveal a handover gap that the incident timeline otherwise misses.\n\nThe owner then defines a correction that addresses that interface and verifies it safely. A revised contact list, waste label or access instruction must reach the actual users. Check the receiving role and field arrangement rather than counting distributed messages. Preserve any limitation and unresolved specialist decision so the next operation does not mistake an administrative update for verified response capability.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R07_scenarios",
+        "title": "Two applied scenarios and worked solutions",
+        "body": "## Scenario 1\n\nAt a fictional fuel delivery area, a hose fails and liquid spreads toward a drain. The air has an unfamiliar odor, and trucks are still arriving. A manager hands an untrained gate worker a spill kit and asks them to cross the pool to close a valve.\n\n### Worked solution\n\nThe worker stays clear, raises the alarm and uses the approved gate/traffic response from a safe location. They do not cross the pool or enter the uncertain atmosphere. Command receives the known fuel, location, continuing source, drain concern and traffic conditions, with uncertainty explicit. Qualified response roles determine source isolation, atmosphere, ignition and containment. Environmental urgency does not authorize unprotected entry. Responders receive a safe verified access route rather than the nearest entrance by habit. After control, the responsible environmental owner determines reporting and waste arrangements. Return to use follows the authorized verification, not the disappearance of visible liquid.\n\n## Scenario 2\n\nA fictional cleaning release is absorbed from the floor. Workers put used pads into an open general-waste bin. The material identity is uncertain, and the internal form estimates a precise quantity without a basis. Management proposes closing the event because the floor is dry.\n\n### Worked solution\n\nThe area and waste remain controlled while the competent authority establishes the material information, contamination and suitable handling/disposal route. The estimate is corrected to show its basis and uncertainty rather than preserving invented precision. The environmental owner determines applicable notification and follow-up. Authorized people verify return-to-use conditions, including waste and adjacent areas. The review examines product identification, response limits and why cleanup was treated as complete before waste was controlled. A dry floor is one observation, not a comprehensive handback.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R07_final",
+        "title": "Final assessment - 20 questions",
+        "body": "Answer each question without consulting an answer key. There are 20 final questions in addition to six lesson checks. Incorrect responses require reading and explicitly acknowledging the explanation. Both the first-attempt and remediated results must remain visible. A written result establishes course learning only; the separate practical boundary still applies.",
+        "fileIds": [],
+        "links": []
+      },
+      {
+        "id": "R07_finish",
+        "title": "Finish - Practical evaluation and work authorization",
+        "body": "## What completion means\n\nThe company may record this course as learning evidence after all sections and 26 questions are completed correctly or through explicitly acknowledged remediation. Keep the original result, corrected result and acknowledgments separate. This is not an independent determination that company controls are implemented or effective.\n\n## What must be assessed separately\n\nSeparate hazardous-material response training, atmospheric assessment, source isolation, medical care, environmental notification decisions, waste management and technical handback require the appropriate qualified roles. This course authorizes no entry into unknown atmospheres or specialist spill cleanup and defines no universal reporting threshold.\n\nA competent assessor must observe the applicable assigned actions in a controlled, representative exercise or permitted work setting. Record the actual task, conditions, equipment, limitations and observed performance, including any element not assessed. Resolve unsuccessful demonstrations before assignment. Do not create live danger to test recognition. The responsible employer and site retain their own authorization decisions.\n\nReview learning and practical readiness when duties, methods, equipment or conditions change, after a relevant failure, and when governing requirements require it. This course establishes no universal renewal period. Preserve personal and clinical information through the appropriate restricted process.",
+        "fileIds": [],
+        "links": []
+      }
+    ],
+    "questions": [
+      {
+        "id": "R07_check1",
+        "prompt": "A fuel release produces an unfamiliar atmosphere near a working gate. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep people clear and raise the alarm through the approved release plan"
+          },
+          {
+            "id": "b",
+            "label": "Walk into the vapor to identify the source by smell"
+          },
+          {
+            "id": "c",
+            "label": "Wait until the whole quantity is measured before reporting"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R07_check2",
+        "prompt": "An untrained worker is told to enter an unknown vapor area because absorbent pads are available. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the pads while holding breath"
+          },
+          {
+            "id": "b",
+            "label": "Withdraw and obtain the authorized specialist response instead of entering with the kit"
+          },
+          {
+            "id": "c",
+            "label": "Enter if another worker remains outside watching"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R07_check3",
+        "prompt": "Responders are directed to an entrance now downwind of the release and blocked by a delivery. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep using the listed entrance regardless of conditions"
+          },
+          {
+            "id": "b",
+            "label": "Send an untrained gate worker into the release to escort vehicles"
+          },
+          {
+            "id": "c",
+            "label": "Notify command and coordinate a verified safe access and traffic arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R07_check4",
+        "prompt": "A worker is asked to reach a valve through a liquid pool to protect a nearby drain. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep clear unless the assigned authorized response has verified safe access and conditions"
+          },
+          {
+            "id": "b",
+            "label": "Cross the pool quickly wearing ordinary boots"
+          },
+          {
+            "id": "c",
+            "label": "Assume a stopped leak makes the pooled material safe"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R07_check5",
+        "prompt": "A supervisor assumes an internal incident form satisfies every environmental reporting duty. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use a single invented spill threshold for every material"
+          },
+          {
+            "id": "b",
+            "label": "Refer notification decisions to the responsible environmental authority and record actual required contacts"
+          },
+          {
+            "id": "c",
+            "label": "Delay all notification until cleanup provides an exact quantity"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R07_check6",
+        "prompt": "A cleaned yard is reopened while unsealed contaminated absorbents remain beside an occupied walkway. What should happen next?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reopen because no liquid is visible on the pavement"
+          },
+          {
+            "id": "b",
+            "label": "Put the absorbents in general waste to finish quickly"
+          },
+          {
+            "id": "c",
+            "label": "Maintain suitable control until cleanup, waste handling and return-to-use conditions are verified"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R07_final1",
+        "prompt": "For recognize a release and protect people, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Visible liquid does not describe all vapor, energy and spread hazards."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R07_final2",
+        "prompt": "Which evidence would most directly verify recognize a release and protect people in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "An actionable alarm with location, observed conditions, known material and uncertainty stated"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R07_final3",
+        "prompt": "A relief worker proposes the following shortcut during recognize a release and protect people: \"Walk into the vapor to identify the source by smell.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Walk into the vapor to identify the source by smell"
+          },
+          {
+            "id": "b",
+            "label": "Wait until the whole quantity is measured before reporting"
+          },
+          {
+            "id": "c",
+            "label": "Keep people clear and raise the alarm through the approved release plan"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R07_final4",
+        "prompt": "For know the response boundary before work, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Equipment availability does not establish a safe response capability."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R07_final5",
+        "prompt": "Which evidence would most directly verify know the response boundary before work in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A role-specific response plan and verified trained, equipped and authorized resources"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R07_final6",
+        "prompt": "A relief worker proposes the following shortcut during know the response boundary before work: \"Use the pads while holding breath.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use the pads while holding breath"
+          },
+          {
+            "id": "b",
+            "label": "Enter if another worker remains outside watching"
+          },
+          {
+            "id": "c",
+            "label": "Withdraw and obtain the authorized specialist response instead of entering with the kit"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R07_final7",
+        "prompt": "For coordinate alarm, access and command, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "An entrance listed in the plan may become unsuitable during the actual event."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R07_final8",
+        "prompt": "Which evidence would most directly verify coordinate alarm, access and command in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A current responder-access decision and communicated gate/traffic controls"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R07_final9",
+        "prompt": "A relief worker proposes the following shortcut during coordinate alarm, access and command: \"Keep using the listed entrance regardless of conditions.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Keep using the listed entrance regardless of conditions"
+          },
+          {
+            "id": "b",
+            "label": "Send an untrained gate worker into the release to escort vehicles"
+          },
+          {
+            "id": "c",
+            "label": "Notify command and coordinate a verified safe access and traffic arrangement"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R07_final10",
+        "prompt": "For prevent spread only within an authorized safe role, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Protecting the environment does not remove the worker’s exposure to material and energy hazards."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R07_final11",
+        "prompt": "Which evidence would most directly verify prevent spread only within an authorized safe role in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A specialist decision on source/drain controls with verified access and assigned roles"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R07_final12",
+        "prompt": "A relief worker proposes the following shortcut during prevent spread only within an authorized safe role: \"Cross the pool quickly wearing ordinary boots.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Cross the pool quickly wearing ordinary boots"
+          },
+          {
+            "id": "b",
+            "label": "Assume a stopped leak makes the pooled material safe"
+          },
+          {
+            "id": "c",
+            "label": "Keep clear unless the assigned authorized response has verified safe access and conditions"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R07_final13",
+        "prompt": "For route reporting through responsible owners, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Internal reporting and external obligations are distinct processes with scope-specific requirements."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R07_final14",
+        "prompt": "Which evidence would most directly verify route reporting through responsible owners in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A notification decision and contact record showing responsible owner, basis and actual actions"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R07_final15",
+        "prompt": "A relief worker proposes the following shortcut during route reporting through responsible owners: \"Use a single invented spill threshold for every material.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Use a single invented spill threshold for every material"
+          },
+          {
+            "id": "b",
+            "label": "Delay all notification until cleanup provides an exact quantity"
+          },
+          {
+            "id": "c",
+            "label": "Refer notification decisions to the responsible environmental authority and record actual required contacts"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R07_final16",
+        "prompt": "For control cleanup, waste and return to use, which explanation best supports the taught decision?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Visible surface cleaning does not resolve remaining contaminated material or exposure."
+          },
+          {
+            "id": "b",
+            "label": "A completed training record makes the task acceptable regardless of conditions."
+          },
+          {
+            "id": "c",
+            "label": "The absence of a previous incident proves the current arrangement is adequate."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R07_final17",
+        "prompt": "Which evidence would most directly verify control cleanup, waste and return to use in the worked example?",
+        "options": [
+          {
+            "id": "a",
+            "label": "A generic policy attachment with no connection to this task or shift."
+          },
+          {
+            "id": "b",
+            "label": "A scope-specific cleanup/waste record and authorized handback with remaining restrictions clear"
+          },
+          {
+            "id": "c",
+            "label": "A verbal claim that the same arrangement has always been used."
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      },
+      {
+        "id": "R07_final18",
+        "prompt": "A relief worker proposes the following shortcut during control cleanup, waste and return to use: \"Reopen because no liquid is visible on the pavement.\" Which response preserves the taught control?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Reopen because no liquid is visible on the pavement"
+          },
+          {
+            "id": "b",
+            "label": "Put the absorbents in general waste to finish quickly"
+          },
+          {
+            "id": "c",
+            "label": "Maintain suitable control until cleanup, waste handling and return-to-use conditions are verified"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "c"
+        ]
+      },
+      {
+        "id": "R07_final19",
+        "prompt": "In Scenario 1, what takes priority over retrieving the spill kit into the pool?",
+        "options": [
+          {
+            "id": "a",
+            "label": "Protecting people, raising the alarm and obtaining the authorized response"
+          },
+          {
+            "id": "b",
+            "label": "Finishing the delivery paperwork"
+          },
+          {
+            "id": "c",
+            "label": "Estimating an exact reportable quantity before warning anyone"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "a"
+        ]
+      },
+      {
+        "id": "R07_final20",
+        "prompt": "In Scenario 2, how should the unsupported quantity be recorded?",
+        "options": [
+          {
+            "id": "a",
+            "label": "As an exact number to make the report look complete"
+          },
+          {
+            "id": "b",
+            "label": "As an estimate with its basis and uncertainty, revised when reliable information is available"
+          },
+          {
+            "id": "c",
+            "label": "Removed along with the entire event record"
+          }
+        ],
+        "multiple": false,
+        "correctOptionIds": [
+          "b"
+        ]
+      }
+    ],
+    "guided": {
+      "steps": [
+        {
+          "lessonId": "R07_intro",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R07_lesson1",
+          "questionIds": [
+            "R07_check1"
+          ]
+        },
+        {
+          "lessonId": "R07_lesson2",
+          "questionIds": [
+            "R07_check2"
+          ]
+        },
+        {
+          "lessonId": "R07_lesson3",
+          "questionIds": [
+            "R07_check3"
+          ]
+        },
+        {
+          "lessonId": "R07_lesson4",
+          "questionIds": [
+            "R07_check4"
+          ]
+        },
+        {
+          "lessonId": "R07_lesson5",
+          "questionIds": [
+            "R07_check5"
+          ]
+        },
+        {
+          "lessonId": "R07_lesson6",
+          "questionIds": [
+            "R07_check6"
+          ]
+        },
+        {
+          "lessonId": "R07_scenarios",
+          "questionIds": []
+        },
+        {
+          "lessonId": "R07_final",
+          "questionIds": [
+            "R07_final1",
+            "R07_final2",
+            "R07_final3",
+            "R07_final4",
+            "R07_final5",
+            "R07_final6",
+            "R07_final7",
+            "R07_final8",
+            "R07_final9",
+            "R07_final10",
+            "R07_final11",
+            "R07_final12",
+            "R07_final13",
+            "R07_final14",
+            "R07_final15",
+            "R07_final16",
+            "R07_final17",
+            "R07_final18",
+            "R07_final19",
+            "R07_final20"
+          ]
+        },
+        {
+          "lessonId": "R07_finish",
+          "questionIds": []
+        }
+      ],
+      "explanations": {
+        "R07_check1": "Keep people clear and raise the alarm through the approved release plan. Visible liquid does not describe all vapor, energy and spread hazards.",
+        "R07_check2": "Withdraw and obtain the authorized specialist response instead of entering with the kit. Equipment availability does not establish a safe response capability.",
+        "R07_check3": "Notify command and coordinate a verified safe access and traffic arrangement. An entrance listed in the plan may become unsuitable during the actual event.",
+        "R07_check4": "Keep clear unless the assigned authorized response has verified safe access and conditions. Protecting the environment does not remove the worker’s exposure to material and energy hazards.",
+        "R07_check5": "Refer notification decisions to the responsible environmental authority and record actual required contacts. Internal reporting and external obligations are distinct processes with scope-specific requirements.",
+        "R07_check6": "Maintain suitable control until cleanup, waste handling and return-to-use conditions are verified. Visible surface cleaning does not resolve remaining contaminated material or exposure.",
+        "R07_final1": "Visible liquid does not describe all vapor, energy and spread hazards. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R07_final2": "An actionable alarm with location, observed conditions, known material and uncertainty stated. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R07_final3": "Keep people clear and raise the alarm through the approved release plan. Visible liquid does not describe all vapor, energy and spread hazards. A staffing change does not remove this requirement.",
+        "R07_final4": "Equipment availability does not establish a safe response capability. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R07_final5": "A role-specific response plan and verified trained, equipped and authorized resources. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R07_final6": "Withdraw and obtain the authorized specialist response instead of entering with the kit. Equipment availability does not establish a safe response capability. A staffing change does not remove this requirement.",
+        "R07_final7": "An entrance listed in the plan may become unsuitable during the actual event. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R07_final8": "A current responder-access decision and communicated gate/traffic controls. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R07_final9": "Notify command and coordinate a verified safe access and traffic arrangement. An entrance listed in the plan may become unsuitable during the actual event. A staffing change does not remove this requirement.",
+        "R07_final10": "Protecting the environment does not remove the worker’s exposure to material and energy hazards. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R07_final11": "A specialist decision on source/drain controls with verified access and assigned roles. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R07_final12": "Keep clear unless the assigned authorized response has verified safe access and conditions. Protecting the environment does not remove the worker’s exposure to material and energy hazards. A staffing change does not remove this requirement.",
+        "R07_final13": "Internal reporting and external obligations are distinct processes with scope-specific requirements. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R07_final14": "A notification decision and contact record showing responsible owner, basis and actual actions. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R07_final15": "Refer notification decisions to the responsible environmental authority and record actual required contacts. Internal reporting and external obligations are distinct processes with scope-specific requirements. A staffing change does not remove this requirement.",
+        "R07_final16": "Visible surface cleaning does not resolve remaining contaminated material or exposure. The field example demonstrates this causal link; a favorable outcome alone does not establish that the control worked.",
+        "R07_final17": "A scope-specific cleanup/waste record and authorized handback with remaining restrictions clear. This connects a defined control to the actual work. The alternatives establish neither its availability nor its operation.",
+        "R07_final18": "Maintain suitable control until cleanup, waste handling and return-to-use conditions are verified. Visible surface cleaning does not resolve remaining contaminated material or exposure. A staffing change does not remove this requirement.",
+        "R07_final19": "Initial recognition and alarm must not expose another worker or wait for a complete administrative account. Specialist roles assess the technical response.",
+        "R07_final20": "Reliable reporting distinguishes fact from estimate. Uncertainty must be communicated, not hidden through fabricated precision or deletion."
+      }
+    },
+    "completionMode": "both",
+    "passingPercent": 100,
+    "allowRetries": true,
+    "maximumAttempts": 10,
+    "refresherDays": null
+  }
+}
