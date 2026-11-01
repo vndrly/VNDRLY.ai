@@ -6484,6 +6484,6 @@
     "taskCourse": "Open task-specific course {{courseId}}",
     "vendorEvidence": "Vendor evidence still required",
     "practicalEvidence": "Qualified practical evaluation or applicable credentials still required",
-    "preservedExtensions": "Preserved services outside this master snapshot"
+    "preservedExtensions": "Other source-backed services"
   }
 }

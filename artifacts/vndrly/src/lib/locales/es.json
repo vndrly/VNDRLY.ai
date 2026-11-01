@@ -6484,6 +6484,6 @@
     "taskCourse": "Abrir curso específico de tarea {{courseId}}",
     "vendorEvidence": "Evidencia del proveedor aún requerida",
     "practicalEvidence": "Evaluación práctica calificada o credenciales aplicables aún requeridas",
-    "preservedExtensions": "Servicios conservados fuera de esta versión del catálogo maestro"
+    "preservedExtensions": "Otros servicios respaldados por fuentes"
   }
 }

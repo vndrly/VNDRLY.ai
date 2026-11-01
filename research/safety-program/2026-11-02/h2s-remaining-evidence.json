@@ -7,8 +7,8 @@
     "https://www.totalsafety.uk.com/gas-detection-services"
   ],
   "scopeNotes": [
-    "The 963-service research snapshot has no exact H2S monitoring/safety-trailer label. Preserve this existing application service and its ID; do not manufacture an equivalent VMS ID or silently merge it into a broad inspection category.",
-    "Preserved existing service 111; this display does not create a VMS catalog entry or change any marketplace mapping."
+    "H2S monitoring and safety-trailer work can involve separate detector-use, monitoring, gas-testing, respiratory-equipment, rescue and calibration duties.",
+    "Apply only the roles and tasks actually included in your service and assigned to each person."
   ],
   "roleMappings": [
     {
