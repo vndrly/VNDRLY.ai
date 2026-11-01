@@ -26,7 +26,7 @@ function nativeOriginal(owner,family){
 }
 try{
  await client.connect();
- const owners=(await client.query(`SELECT DISTINCT owner_org_type,owner_org_id FROM work_hub_form_templates WHERE library_metadata->'safetyResource'->>'resourceType'='policy' AND library_metadata->'safetyResource'->>'familyId'=ANY($1::text[]) ORDER BY owner_org_type,owner_org_id`,[[...sources.keys()]])).rows;
+ const owners=(await client.query(`SELECT DISTINCT org_type AS owner_org_type,COALESCE(vendor_id,partner_id) AS owner_org_id FROM user_org_memberships WHERE role='admin' AND org_type IN ('vendor','partner') ORDER BY owner_org_type,owner_org_id`)).rows;
  ensure(owners.length===155,'Expected155 existing company Libraries');report.companies=owners.length;
  for(const owner of owners){
   if(apply){await client.query('BEGIN');await client.query("SET LOCAL lock_timeout='3s'");await client.query("SET LOCAL statement_timeout='30s'");}
@@ -34,7 +34,7 @@ try{
    const ids=[...sources.keys()].map(id=>stableId(`safety-library-v2:${owner.owner_org_type}:${owner.owner_org_id}:${id}:policy`));
    const rows=(await client.query(`SELECT id,name,current_version,library_metadata FROM work_hub_form_templates WHERE owner_org_type=$1 AND owner_org_id=$2 AND id=ANY($3::uuid[]) ORDER BY id${apply?' FOR UPDATE':''}`,[owner.owner_org_type,owner.owner_org_id,ids])).rows;
    ensure(rows.length===59,'Incomplete original policy set for company '+owner.owner_org_id);
-   let changed=0;const audits=[];
+   let changed=0;const audits=[],updates=[];
    for(const row of rows){
     const old=LibraryMetadataSchema.parse(row.library_metadata),p=sources.get(old.safetyResource?.familyId);
     ensure(p&&old.kind==='policy'&&old.safetyResource.resourceType==='policy'&&old.state==='published','Unexpected policy identity');
@@ -45,14 +45,18 @@ try{
     const metadata=LibraryMetadataSchema.parse({...old,version:old.version+1,contentVersion:old.contentVersion+1,publishedAt:new Date().toISOString(),content,safetyResource:{...old.safetyResource,sourceVersion:'2.0',sourceSha256:p.sourceSha256}});
     ensure(JSON.stringify(metadata.trainingPolicy)===JSON.stringify(old.trainingPolicy),'Company policy settings changed');
     if(apply){
-     const result=await client.query(`UPDATE work_hub_form_templates SET library_metadata=$1::jsonb,current_version=$2,name=$3 WHERE id=$4 AND owner_org_type=$5 AND owner_org_id=$6 AND library_metadata=$7::jsonb`,[JSON.stringify(metadata),metadata.contentVersion,old.trainingPolicy?.title??content.title,row.id,owner.owner_org_type,owner.owner_org_id,JSON.stringify(row.library_metadata)]);
-     ensure(result.rowCount===1,'Policy changed during publication');
+     updates.push({id:row.id,metadata,current_version:metadata.contentVersion,name:old.trainingPolicy?.title??content.title,previous:row.library_metadata});
      audits.push({id:row.id,oldVersion:old.contentVersion,newVersion:metadata.contentVersion,family:p.id,oldHash:hash(old.content.policyText),newHash:p.sourceSha256});
     }
     changed++;
    }
    if(apply){
-    for(const a of audits)await client.query(`INSERT INTO work_hub_audit_log(owner_org_type,owner_org_id,action,subject_type,subject_id,prior_version,new_version,source,operation_id,metadata) VALUES($1,$2,$3,'library',$4,$5,$6,'system',$7,$8::jsonb)`,[owner.owner_org_type,owner.owner_org_id,action,a.id,a.oldVersion,a.newVersion,randomUUID(),JSON.stringify({familyId:a.family,previousPolicySha256:a.oldHash,sourceSha256:a.newHash,authorization:'Rewrite all policies without unasked-for requirements and clutter; deploy and verify live',assignmentsChanged:0,companySettingsChanged:0})]);
+    if(updates.length){
+     const result=await client.query(`UPDATE work_hub_form_templates t SET library_metadata=x.metadata,current_version=x.current_version,name=x.name FROM jsonb_to_recordset($1::jsonb) AS x(id uuid,metadata jsonb,current_version integer,name text,previous jsonb) WHERE t.id=x.id AND t.owner_org_type=$2 AND t.owner_org_id=$3 AND t.library_metadata=x.previous`,[JSON.stringify(updates),owner.owner_org_type,owner.owner_org_id]);
+     ensure(result.rowCount===updates.length,'Policy changed during publication');
+     const auditRows=audits.map(a=>({id:a.id,old_version:a.oldVersion,new_version:a.newVersion,operation_id:randomUUID(),metadata:{familyId:a.family,previousPolicySha256:a.oldHash,sourceSha256:a.newHash,authorization:'Rewrite all policies without unasked-for requirements and clutter; deploy and verify live',assignmentsChanged:0,companySettingsChanged:0}}));
+     await client.query(`INSERT INTO work_hub_audit_log(owner_org_type,owner_org_id,action,subject_type,subject_id,prior_version,new_version,source,operation_id,metadata) SELECT $2,$3,$4,'library',id,old_version,new_version,'system',operation_id,metadata FROM jsonb_to_recordset($1::jsonb) AS x(id text,old_version integer,new_version integer,operation_id uuid,metadata jsonb)`,[JSON.stringify(auditRows),owner.owner_org_type,owner.owner_org_id,action]);
+    }
     const check=(await client.query(`SELECT library_metadata FROM work_hub_form_templates WHERE id=ANY($1::uuid[])`,[ids])).rows;
     ensure(check.length===59&&check.every(r=>{const m=r.library_metadata,p=sources.get(m.safetyResource.familyId);return m.content.policyText===p.policyText&&m.content.description===p.description&&m.safetyResource.sourceSha256===p.sourceSha256;}),'Policy readback mismatch');
     await client.query('COMMIT');
@@ -63,3 +67,4 @@ try{
  }
  report.verifiedAt=new Date().toISOString();fs.writeFileSync(`${root}/${apply?'live-publication':'dry-run'}.json`,JSON.stringify(report,null,2));console.log(JSON.stringify({...report,results:undefined}));
 }finally{await client.end();}
+
