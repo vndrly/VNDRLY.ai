@@ -17,6 +17,8 @@ vi.mock("@/lib/work-hub-queue-runtime", () => ({ flushNativeWorkHubQueue: async 
 vi.mock("@/components/MeetingCompanionProvider", () => ({ useMeetingCompanion: () => null }));
 vi.mock("@/components/ScreenSafeArea", () => ({ default: ({ children }: any) => <>{children}</> }));
 vi.mock("@/components/WorkHubPageTitle", () => ({ default: () => null }));
+// Equipment has separate scope tests; this suite exercises FilesInventory isolation.
+vi.mock("@/components/EquipmentWorkbench", () => ({ default: () => null }));
 vi.mock("@/components/WorkHubCalls", () => ({ default: () => null }));
 vi.mock("@/components/WorkHubConversation", () => ({ default: () => null }));
 vi.mock("@/components/WorkHubShiftCalendar", () => ({ default: () => null }));

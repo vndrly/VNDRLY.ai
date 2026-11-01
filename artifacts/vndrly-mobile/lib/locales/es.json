@@ -18,7 +18,9 @@
     "level4": "100% — eficacia demostrada",
     "library": "Biblioteca"
   },
-  "equipment": { "title": "Inventario de equipo" },
+  "equipment": {
+    "title": "Inventario de equipo"
+  },
   "mobileMarketplace": {
     "quoteRequired": "Cotización requerida",
     "requestQuote": "Solicitar cotización",
@@ -2596,7 +2598,6 @@
   },
   "safety": {
     "dashboardTitle": "Programa de seguridad",
-    "score": "Puntaje de seguridad",
     "daysClean": "Días sin incidente registrable",
     "openEvents": "Eventos abiertos",
     "openHipo": "HiPo abiertos",
@@ -2625,40 +2626,15 @@
     "trainingCompleteFailed": "No se pudo marcar la capacitación como completada.",
     "trainingAllComplete": "Toda la capacitación requerida está completa.",
     "scoreDetails": {
-      "title": "Puntuación de seguridad",
-      "company": "Puntuación de seguridad de la empresa",
       "unavailable": "No se pudo cargar. Inténtalo de nuevo en breve.",
-      "explanation": "El desempeño de incidentes contribuye hasta 40 puntos al total. La preparación preventiva aporta hasta 60 puntos.",
       "events": "Eventos abiertos: {{count}} · Alto potencial: {{hipo}}",
-      "improve": "Mejora la puntuación dando seguimiento a incidentes y acciones correctivas, atendiendo eventos de alto potencial pendientes y reportando casi accidentes a tiempo.",
       "reviewEvents": "Revisar eventos de seguridad",
       "myActions": "Mis acciones requeridas",
       "loading": "Cargando…",
       "openIncidents": "Incidentes de seguridad abiertos"
     },
     "readiness": {
-      "title": "Mejorar la seguridad de la empresa",
-      "weights": "60% preparación preventiva · 40% desempeño de incidentes",
-      "companyRequirement": "Requisito de seguridad para toda la empresa",
-      "contributions": "Preparación: {{readiness}} / 60 puntos · Incidentes: {{incident}} / 40 puntos",
-      "provisional": "Puntuación provisional: {{minimum}}. La evidencia faltante podría elevarla hasta {{maximum}}. Establece la cobertura antes de confiar en el resultado.",
-      "training": "Capacitación de seguridad requerida",
-      "acknowledgements": "Formularios y acuses de políticas de seguridad",
-      "credentials": "Registros de credenciales verificados",
-      "drivers": "Calificaciones de conductores de Flota",
-      "inspections": "Inspecciones de recorridos activos de Flota",
-      "correctiveActions": "Acciones correctivas verificadas",
-      "counts": "{{completed}} / {{required}} completos o vigentes · {{outstanding}} pendientes · {{unknown}} desconocidos",
-      "noEvidence": "Cobertura no establecida. No se otorgan puntos de cumplimiento.",
-      "points": "{{points}} / 10 puntos de preparación",
-      "action_training": "Administrar y asignar capacitación",
-      "action_acknowledgements": "Administrar formularios y políticas",
-      "action_credentials": "Revisar credenciales de la empresa",
-      "action_drivers": "Revisar calificaciones de Flota",
-      "action_inspections": "Revisar inspecciones de Flota",
-      "action_correctiveActions": "Revisar acciones correctivas",
-      "coverageNote": "Los recuentos abarcan toda la empresa. Marca elementos publicados de la Biblioteca como requisitos de seguridad para incluirlos. La vigencia de credenciales no establece todas las calificaciones laborales. Las inspecciones de Flota cubren recorridos activos; otros requisitos de sitios, equipos y simulacros necesitan cobertura registrada. La cobertura desconocida no indica cumplimiento.",
-      "unavailable": "La preparación de seguridad de la empresa no está disponible. Inténtalo de nuevo."
+      "companyRequirement": "Requisito de seguridad para toda la empresa"
     }
   },
   "meetingWorkspace": {

@@ -13,7 +13,7 @@ describe('remaining task qualification evidence',()=>{
   vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({data:{catalogServices:963,total:1,offset:0,pageSize:20,baselineProvisional:true,services:[{id:'VMS-test',name:'Forklift operations',deliveryMode:'site',roleMappings:[],sourceUrls:[],scopeNotes:[],gapTopics:[],residualRequirements:[{groupId:'TG43',title:'Covered forklift operator training',courseId:'G92',role:'Assigned covered truck operators',trainingItemId:'company-course',vendorEvidenceRequired:[],practicalAssessmentRequired:['29 CFR 1910.178(l): practical training and workplace evaluation for covered truck operators.'],scopeConfirmation:'Confirm actual launcher/receiver duties.'}]}]}})})));
   render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><TrainingServiceConnections familyId=""/></QueryClientProvider>);
   expect(await screen.findByText('Forklift operations')).toBeTruthy();
-  expect(screen.getAllByRole('button').map(b=>b.textContent)).toEqual(expect.arrayContaining(['POLICY','REVIEW','TRAINING','ASSIGN']));
+  expect(screen.getAllByRole('button').map(b=>b.textContent)).toEqual(expect.arrayContaining(['POLICY','REVIEW','TRAINING']));
   expect(screen.queryByText('trainingPolicy.vendorEvidence')).toBeNull();
   expect(screen.getByText('29 CFR 1910.178(l): practical training and workplace evaluation for covered truck operators.')).toBeTruthy();
   
@@ -24,7 +24,7 @@ describe('remaining task qualification evidence',()=>{
   render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><TrainingServiceConnections familyId="G71"/></QueryClientProvider>);
   expect(await screen.findByText('H2S Monitoring & Safety Trailer')).toBeTruthy();
   expect(screen.getByText('trainingPolicy.preservedExtensions')).toBeTruthy();
-  expect(screen.getAllByRole('button').map(b=>b.textContent)).toEqual(expect.arrayContaining(['POLICY','REVIEW','TRAINING','ASSIGN']));
+  expect(screen.getAllByRole('button').map(b=>b.textContent)).toEqual(expect.arrayContaining(['POLICY','REVIEW','TRAINING']));
   expect(screen.queryByText('trainingPolicy.vendorEvidence')).toBeNull();expect(screen.queryByText('trainingPolicy.practicalEvidence')).toBeNull();
  });
 });

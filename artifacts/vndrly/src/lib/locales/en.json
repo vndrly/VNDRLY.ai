@@ -505,7 +505,6 @@
     "saveFailedToast": "Couldn't save your language preference. Please try again."
   },
   "nav": {
-    "toggleMenu": "Toggle navigation",
     "dashboard": "Dashboard",
     "partners": "Partners",
     "partner": "Partner",
@@ -5291,7 +5290,6 @@
     "openCount": "{{count}} open",
     "stopWork": "Stop work",
     "dashboardTitle": "Safety program",
-    "score": "Safety score",
     "daysClean": "Days without recordable",
     "openEvents": "Open events",
     "openHipo": "Open HiPo",
@@ -6449,7 +6447,6 @@
     "saved": "Training policy saved.",
     "failed": "Training policy could not be saved.",
     "invalid": "Check the required title, complete links, and the basis for each service-scope decision.",
-    "baseline": "VNDRLY service and role requirements form the scoring baseline. Company-added training can be assigned in addition and is tracked separately.",
     "unavailableFile": "Previously selected document {{number}} is unavailable. Clear to remove.",
     "unavailableGroup": "Previously selected group {{number}} is unavailable. Clear to remove.",
     "unavailablePosition": "Previously selected position {{number}} is unavailable. Clear to remove.",
@@ -6482,7 +6479,6 @@
     "unavailableCourses": "{{count}} requirements are waiting for current required course material.",
     "scopeDecisions": "Scope decisions needed",
     "reviewScope": "Review course Policy",
-    "conditionalGaps": "{{count}} additional role/service requirements need an actual-scope decision in the relevant course Policy.",
     "unmappedServices": "{{count}} service selections still need a verified training mapping.",
     "baselineUnavailable": "Company training compliance is unavailable.",
     "accountTypes": "Account types",
