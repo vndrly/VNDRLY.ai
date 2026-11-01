@@ -11,9 +11,24 @@ CREATE TABLE IF NOT EXISTS "capability_flags" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS "capability_flags_owner_lookup_idx" ON "capability_flags" ("owner_org_type", "owner_org_id", "flag_name");
-CREATE UNIQUE INDEX IF NOT EXISTS "capability_flags_org_unique" ON "capability_flags" ("owner_org_type", "owner_org_id", "flag_name") WHERE "site_id" IS NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS "capability_flags_site_unique" ON "capability_flags" ("owner_org_type", "owner_org_id", "site_id", "flag_name") WHERE "site_id" IS NOT NULL;
+DO $replay$
+BEGIN
+  IF to_regclass('public.capability_flags_owner_lookup_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "capability_flags_owner_lookup_idx" ON "capability_flags" ("owner_org_type", "owner_org_id", "flag_name");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.capability_flags_org_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "capability_flags_org_unique" ON "capability_flags" ("owner_org_type", "owner_org_id", "flag_name") WHERE "site_id" IS NULL;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.capability_flags_site_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "capability_flags_site_unique" ON "capability_flags" ("owner_org_type", "owner_org_id", "site_id", "flag_name") WHERE "site_id" IS NOT NULL;
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "managed_subcontractor_organizations" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -28,7 +43,12 @@ CREATE TABLE IF NOT EXISTS "managed_subcontractor_organizations" (
   "updated_at" timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT "managed_subcontractor_org_status_check" CHECK ("status" IN ('managed','claimed','archived'))
 );
-CREATE INDEX IF NOT EXISTS "managed_subcontractor_org_sponsor_name_idx" ON "managed_subcontractor_organizations" ("created_by_vendor_id", "canonical_name");
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_org_sponsor_name_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "managed_subcontractor_org_sponsor_name_idx" ON "managed_subcontractor_organizations" ("created_by_vendor_id", "canonical_name");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "managed_subcontractor_sponsors" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -43,18 +63,38 @@ CREATE TABLE IF NOT EXISTS "managed_subcontractor_sponsors" (
   CONSTRAINT "managed_subcontractor_sponsor_status_check" CHECK ("status" IN ('active','inactive')),
   CONSTRAINT "managed_subcontractor_hours_approval_policy_check" CHECK ("hours_approval_policy" IN ('contractor', 'subcontractor', 'either', 'dual'))
 );
-ALTER TABLE "managed_subcontractor_sponsors"
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.managed_subcontractor_sponsors'::regclass AND attname = 'hours_approval_policy' AND NOT attisdropped) THEN
+    ALTER TABLE "managed_subcontractor_sponsors"
   ADD COLUMN IF NOT EXISTS "hours_approval_policy" text NOT NULL DEFAULT 'either';
-ALTER TABLE "managed_subcontractor_sponsors"
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.managed_subcontractor_sponsors'::regclass AND attname = 'hours_recipient_emails' AND NOT attisdropped) THEN
+    ALTER TABLE "managed_subcontractor_sponsors"
   ADD COLUMN IF NOT EXISTS "hours_recipient_emails" text[] NOT NULL DEFAULT '{}';
+  END IF;
+END $replay$;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'managed_subcontractor_hours_approval_policy_check') THEN
     ALTER TABLE "managed_subcontractor_sponsors" ADD CONSTRAINT "managed_subcontractor_hours_approval_policy_check" CHECK ("hours_approval_policy" IN ('contractor', 'subcontractor', 'either', 'dual'));
   END IF;
 END $$;
-CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_active_sponsor_unique" ON "managed_subcontractor_sponsors" ("managed_organization_id", "sponsor_vendor_id") WHERE "status" = 'active';
-CREATE INDEX IF NOT EXISTS "managed_subcontractor_sponsor_vendor_idx" ON "managed_subcontractor_sponsors" ("sponsor_vendor_id", "status");
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_active_sponsor_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_active_sponsor_unique" ON "managed_subcontractor_sponsors" ("managed_organization_id", "sponsor_vendor_id") WHERE "status" = 'active';
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_sponsor_vendor_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "managed_subcontractor_sponsor_vendor_idx" ON "managed_subcontractor_sponsors" ("sponsor_vendor_id", "status");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "managed_subcontractor_worker_sponsorships" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -68,8 +108,18 @@ CREATE TABLE IF NOT EXISTS "managed_subcontractor_worker_sponsorships" (
   "ended_at" timestamptz,
   CONSTRAINT "managed_subcontractor_worker_status_check" CHECK ("status" IN ('active','paused','terminated'))
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_active_worker_sponsorship_unique" ON "managed_subcontractor_worker_sponsorships" ("worker_user_id", "sponsor_vendor_id", "managed_organization_id") WHERE "status" = 'active';
-CREATE INDEX IF NOT EXISTS "managed_subcontractor_worker_lookup_idx" ON "managed_subcontractor_worker_sponsorships" ("worker_user_id", "sponsor_vendor_id", "status");
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_active_worker_sponsorship_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_active_worker_sponsorship_unique" ON "managed_subcontractor_worker_sponsorships" ("worker_user_id", "sponsor_vendor_id", "managed_organization_id") WHERE "status" = 'active';
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_worker_lookup_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "managed_subcontractor_worker_lookup_idx" ON "managed_subcontractor_worker_sponsorships" ("worker_user_id", "sponsor_vendor_id", "status");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "managed_subcontractor_role_grants" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -85,9 +135,24 @@ CREATE TABLE IF NOT EXISTS "managed_subcontractor_role_grants" (
   CONSTRAINT "managed_subcontractor_role_grant_role_check" CHECK ("role" IN ('managed_company_manager','gatekeeper','gate_supervisor','foreman','asset_manager','safety_manager')),
   CONSTRAINT "managed_subcontractor_role_grant_status_check" CHECK ("status" IN ('active','inactive'))
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_active_site_role_grant_unique" ON "managed_subcontractor_role_grants" ("sponsorship_id", "role", "site_id") WHERE "status" = 'active' AND "site_id" IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_active_crew_role_grant_unique" ON "managed_subcontractor_role_grants" ("sponsorship_id", "role", "crew_id") WHERE "status" = 'active' AND "crew_id" IS NOT NULL;
-CREATE INDEX IF NOT EXISTS "managed_subcontractor_role_grant_sponsorship_idx" ON "managed_subcontractor_role_grants" ("sponsorship_id", "status");
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_active_site_role_grant_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_active_site_role_grant_unique" ON "managed_subcontractor_role_grants" ("sponsorship_id", "role", "site_id") WHERE "status" = 'active' AND "site_id" IS NOT NULL;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_active_crew_role_grant_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_active_crew_role_grant_unique" ON "managed_subcontractor_role_grants" ("sponsorship_id", "role", "crew_id") WHERE "status" = 'active' AND "crew_id" IS NOT NULL;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_role_grant_sponsorship_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "managed_subcontractor_role_grant_sponsorship_idx" ON "managed_subcontractor_role_grants" ("sponsorship_id", "status");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "managed_subcontractor_claims" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -98,8 +163,18 @@ CREATE TABLE IF NOT EXISTS "managed_subcontractor_claims" (
   "worker_identity_snapshot" jsonb NOT NULL DEFAULT '[]'::jsonb,
   "claimed_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_claim_org_unique" ON "managed_subcontractor_claims" ("managed_organization_id");
-CREATE INDEX IF NOT EXISTS "managed_subcontractor_claim_vendor_idx" ON "managed_subcontractor_claims" ("claimed_vendor_id");
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_claim_org_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_claim_org_unique" ON "managed_subcontractor_claims" ("managed_organization_id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.managed_subcontractor_claim_vendor_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "managed_subcontractor_claim_vendor_idx" ON "managed_subcontractor_claims" ("claimed_vendor_id");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "account_invitations" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -122,9 +197,24 @@ CREATE TABLE IF NOT EXISTS "account_invitations" (
   "updated_at" timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT "account_invitations_state_check" CHECK ("state" IN ('pending','delivered','claimed','expired','revoked','delivery_failed'))
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "account_invitations_token_hash_unique" ON "account_invitations" ("token_hash");
-CREATE INDEX IF NOT EXISTS "account_invitations_sponsor_idx" ON "account_invitations" ("sponsor_vendor_id", "state");
-CREATE INDEX IF NOT EXISTS "account_invitations_user_idx" ON "account_invitations" ("user_id", "state");
+DO $replay$
+BEGIN
+  IF to_regclass('public.account_invitations_token_hash_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "account_invitations_token_hash_unique" ON "account_invitations" ("token_hash");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.account_invitations_sponsor_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "account_invitations_sponsor_idx" ON "account_invitations" ("sponsor_vendor_id", "state");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.account_invitations_user_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "account_invitations_user_idx" ON "account_invitations" ("user_id", "state");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "work_participation_authorizations" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -136,8 +226,18 @@ CREATE TABLE IF NOT EXISTS "work_participation_authorizations" (
   "accepted_at" timestamptz NOT NULL DEFAULT now(),
   "evidence" jsonb NOT NULL DEFAULT '{}'::jsonb
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "work_participation_authorization_unique" ON "work_participation_authorizations" ("user_id", "sponsor_vendor_id", "managed_organization_id", "authorization_version");
-CREATE INDEX IF NOT EXISTS "work_participation_authorization_scope_idx" ON "work_participation_authorizations" ("sponsor_vendor_id", "managed_organization_id", "user_id");
+DO $replay$
+BEGIN
+  IF to_regclass('public.work_participation_authorization_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "work_participation_authorization_unique" ON "work_participation_authorizations" ("user_id", "sponsor_vendor_id", "managed_organization_id", "authorization_version");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.work_participation_authorization_scope_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "work_participation_authorization_scope_idx" ON "work_participation_authorizations" ("sponsor_vendor_id", "managed_organization_id", "user_id");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "workforce_staffing_requirements" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -153,7 +253,12 @@ CREATE TABLE IF NOT EXISTS "workforce_staffing_requirements" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "retired_at" timestamptz
 );
-CREATE INDEX IF NOT EXISTS "workforce_staffing_requirement_owner_site_idx" ON "workforce_staffing_requirements" ("owner_org_type", "owner_org_id", "site_id");
+DO $replay$
+BEGIN
+  IF to_regclass('public.workforce_staffing_requirement_owner_site_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "workforce_staffing_requirement_owner_site_idx" ON "workforce_staffing_requirements" ("owner_org_type", "owner_org_id", "site_id");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "workforce_coverage_records" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -172,8 +277,18 @@ CREATE TABLE IF NOT EXISTS "workforce_coverage_records" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "workforce_coverage_shift_unique" ON "workforce_coverage_records" ("shift_id");
-CREATE INDEX IF NOT EXISTS "workforce_coverage_state_due_idx" ON "workforce_coverage_records" ("state", "escalation_due_at");
+DO $replay$
+BEGIN
+  IF to_regclass('public.workforce_coverage_shift_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "workforce_coverage_shift_unique" ON "workforce_coverage_records" ("shift_id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.workforce_coverage_state_due_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "workforce_coverage_state_due_idx" ON "workforce_coverage_records" ("state", "escalation_due_at");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "workforce_assignment_states" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -193,25 +308,115 @@ CREATE TABLE IF NOT EXISTS "workforce_assignment_states" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "workforce_assignment_state_shift_worker_unique" ON "workforce_assignment_states" ("shift_id", "worker_user_id");
-CREATE UNIQUE INDEX IF NOT EXISTS "workforce_assignment_state_operation_unique" ON "workforce_assignment_states" ("operation_id");
-CREATE INDEX IF NOT EXISTS "workforce_assignment_state_pending_due_idx" ON "workforce_assignment_states" ("state", "acknowledgement_due_at");
+DO $replay$
+BEGIN
+  IF to_regclass('public.workforce_assignment_state_shift_worker_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "workforce_assignment_state_shift_worker_unique" ON "workforce_assignment_states" ("shift_id", "worker_user_id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.workforce_assignment_state_operation_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "workforce_assignment_state_operation_unique" ON "workforce_assignment_states" ("operation_id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.workforce_assignment_state_pending_due_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "workforce_assignment_state_pending_due_idx" ON "workforce_assignment_states" ("state", "acknowledgement_due_at");
+  END IF;
+END $replay$;
 
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "delivery_status" text NOT NULL DEFAULT 'pending';
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "delivery_attempts" integer NOT NULL DEFAULT 0;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "next_delivery_attempt_at" timestamptz;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "delivered_at" timestamptz;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "acknowledgement_required" boolean NOT NULL DEFAULT false;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "acknowledgement_due_at" timestamptz;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "acknowledged_at" timestamptz;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "acknowledged_by_user_id" integer REFERENCES "users"("id") ON DELETE SET NULL;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "escalation_policy" text;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "escalation_id" text;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "escalated_at" timestamptz;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "final_delivery_failure_at" timestamptz;
-ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "final_delivery_failure_reason" text;
-CREATE INDEX IF NOT EXISTS "notifications_delivery_retry_idx" ON "notifications" ("delivery_status", "next_delivery_attempt_at");
-CREATE INDEX IF NOT EXISTS "notifications_acknowledgement_due_idx" ON "notifications" ("acknowledgement_required", "acknowledgement_due_at");
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'delivery_status' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "delivery_status" text NOT NULL DEFAULT 'pending';
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'delivery_attempts' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "delivery_attempts" integer NOT NULL DEFAULT 0;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'next_delivery_attempt_at' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "next_delivery_attempt_at" timestamptz;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'delivered_at' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "delivered_at" timestamptz;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'acknowledgement_required' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "acknowledgement_required" boolean NOT NULL DEFAULT false;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'acknowledgement_due_at' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "acknowledgement_due_at" timestamptz;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'acknowledged_at' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "acknowledged_at" timestamptz;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'acknowledged_by_user_id' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "acknowledged_by_user_id" integer REFERENCES "users"("id") ON DELETE SET NULL;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'escalation_policy' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "escalation_policy" text;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'escalation_id' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "escalation_id" text;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'escalated_at' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "escalated_at" timestamptz;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'final_delivery_failure_at' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "final_delivery_failure_at" timestamptz;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.notifications'::regclass AND attname = 'final_delivery_failure_reason' AND NOT attisdropped) THEN
+    ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "final_delivery_failure_reason" text;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.notifications_delivery_retry_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "notifications_delivery_retry_idx" ON "notifications" ("delivery_status", "next_delivery_attempt_at");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.notifications_acknowledgement_due_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "notifications_acknowledgement_due_idx" ON "notifications" ("acknowledgement_required", "acknowledgement_due_at");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "assets" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -235,7 +440,12 @@ CREATE TABLE IF NOT EXISTS "assets" (
   "updated_at" timestamptz NOT NULL DEFAULT now(),
   "retired_at" timestamptz
 );
-CREATE INDEX IF NOT EXISTS "assets_responsible_owner_idx" ON "assets" ("responsible_org_type", "responsible_org_id", "status");
+DO $replay$
+BEGIN
+  IF to_regclass('public.assets_responsible_owner_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "assets_responsible_owner_idx" ON "assets" ("responsible_org_type", "responsible_org_id", "status");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "asset_aliases" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -248,8 +458,18 @@ CREATE TABLE IF NOT EXISTS "asset_aliases" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "retired_at" timestamptz
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "asset_alias_lookup_unique" ON "asset_aliases" ("kind", "jurisdiction", "normalized_value");
-CREATE INDEX IF NOT EXISTS "asset_alias_asset_idx" ON "asset_aliases" ("asset_id");
+DO $replay$
+BEGIN
+  IF to_regclass('public.asset_alias_lookup_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "asset_alias_lookup_unique" ON "asset_aliases" ("kind", "jurisdiction", "normalized_value");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.asset_alias_asset_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "asset_alias_asset_idx" ON "asset_aliases" ("asset_id");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "asset_category_policies" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -263,7 +483,12 @@ CREATE TABLE IF NOT EXISTS "asset_category_policies" (
   "expected_return_required" boolean NOT NULL DEFAULT false,
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "asset_category_policy_owner_unique" ON "asset_category_policies" ("owner_org_type", "owner_org_id", "category");
+DO $replay$
+BEGIN
+  IF to_regclass('public.asset_category_policy_owner_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "asset_category_policy_owner_unique" ON "asset_category_policies" ("owner_org_type", "owner_org_id", "category");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "asset_custody_events" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -278,8 +503,18 @@ CREATE TABLE IF NOT EXISTS "asset_custody_events" (
   "asset_version" integer NOT NULL,
   "occurred_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "asset_custody_operation_unique" ON "asset_custody_events" ("operation_id");
-CREATE INDEX IF NOT EXISTS "asset_custody_history_idx" ON "asset_custody_events" ("asset_id", "occurred_at");
+DO $replay$
+BEGIN
+  IF to_regclass('public.asset_custody_operation_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "asset_custody_operation_unique" ON "asset_custody_events" ("operation_id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.asset_custody_history_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "asset_custody_history_idx" ON "asset_custody_events" ("asset_id", "occurred_at");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "asset_condition_evidence" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -301,7 +536,12 @@ CREATE TABLE IF NOT EXISTS "asset_holds" (
   "released_by_user_id" integer REFERENCES "users"("id"),
   "released_at" timestamptz
 );
-CREATE INDEX IF NOT EXISTS "asset_hold_asset_idx" ON "asset_holds" ("asset_id", "released_at");
+DO $replay$
+BEGIN
+  IF to_regclass('public.asset_hold_asset_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "asset_hold_asset_idx" ON "asset_holds" ("asset_id", "released_at");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "asset_merges" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -311,7 +551,12 @@ CREATE TABLE IF NOT EXISTS "asset_merges" (
   "merged_by_user_id" integer REFERENCES "users"("id"),
   "merged_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "asset_merge_source_unique" ON "asset_merges" ("merged_asset_id");
+DO $replay$
+BEGIN
+  IF to_regclass('public.asset_merge_source_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "asset_merge_source_unique" ON "asset_merges" ("merged_asset_id");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "asset_attachment_links" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -321,18 +566,73 @@ CREATE TABLE IF NOT EXISTS "asset_attachment_links" (
   "linked_by_user_id" integer REFERENCES "users"("id"),
   "linked_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "asset_attachment_unique" ON "asset_attachment_links" ("asset_id", "attachment_type", "attachment_id");
+DO $replay$
+BEGIN
+  IF to_regclass('public.asset_attachment_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "asset_attachment_unique" ON "asset_attachment_links" ("asset_id", "attachment_type", "attachment_id");
+  END IF;
+END $replay$;
 
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "observed_arrival_at" timestamptz;
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "observed_departure_at" timestamptz;
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "observed_direction" text;
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "observation_source" text;
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "provisional_vehicle_asset_id" uuid REFERENCES "assets"("id");
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "reconciliation_state" text NOT NULL DEFAULT 'not_required';
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "reconciliation_facts" jsonb NOT NULL DEFAULT '{}'::jsonb;
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "conflict_reason" text;
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "reconciled_by_user_id" integer REFERENCES "users"("id");
-ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "reconciled_at" timestamptz;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'observed_arrival_at' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "observed_arrival_at" timestamptz;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'observed_departure_at' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "observed_departure_at" timestamptz;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'observed_direction' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "observed_direction" text;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'observation_source' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "observation_source" text;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'provisional_vehicle_asset_id' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "provisional_vehicle_asset_id" uuid REFERENCES "assets"("id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'reconciliation_state' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "reconciliation_state" text NOT NULL DEFAULT 'not_required';
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'reconciliation_facts' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "reconciliation_facts" jsonb NOT NULL DEFAULT '{}'::jsonb;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'conflict_reason' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "conflict_reason" text;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'reconciled_by_user_id' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "reconciled_by_user_id" integer REFERENCES "users"("id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.site_visits'::regclass AND attname = 'reconciled_at' AND NOT attisdropped) THEN
+    ALTER TABLE "site_visits" ADD COLUMN IF NOT EXISTS "reconciled_at" timestamptz;
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "field_trips" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -362,9 +662,24 @@ CREATE TABLE IF NOT EXISTS "field_trips" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "field_trip_operation_unique" ON "field_trips" ("operation_id");
-CREATE INDEX IF NOT EXISTS "field_trip_active_driver_idx" ON "field_trips" ("driver_user_id", "tracking_state");
-CREATE INDEX IF NOT EXISTS "field_trip_owner_site_idx" ON "field_trips" ("owner_org_type", "owner_org_id", "site_location_id");
+DO $replay$
+BEGIN
+  IF to_regclass('public.field_trip_operation_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "field_trip_operation_unique" ON "field_trips" ("operation_id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.field_trip_active_driver_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "field_trip_active_driver_idx" ON "field_trips" ("driver_user_id", "tracking_state");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.field_trip_owner_site_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "field_trip_owner_site_idx" ON "field_trips" ("owner_org_type", "owner_org_id", "site_location_id");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "field_trip_location_points" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -378,7 +693,12 @@ CREATE TABLE IF NOT EXISTS "field_trip_location_points" (
   "recorded_at" timestamptz NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS "field_trip_point_trip_time_idx" ON "field_trip_location_points" ("trip_id", "recorded_at");
+DO $replay$
+BEGIN
+  IF to_regclass('public.field_trip_point_trip_time_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "field_trip_point_trip_time_idx" ON "field_trip_location_points" ("trip_id", "recorded_at");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "field_trip_crossings" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -391,7 +711,12 @@ CREATE TABLE IF NOT EXISTS "field_trip_crossings" (
   "visit_id" integer REFERENCES "site_visits"("id"),
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "field_trip_crossing_dedupe_unique" ON "field_trip_crossings" ("dedupe_key");
+DO $replay$
+BEGIN
+  IF to_regclass('public.field_trip_crossing_dedupe_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "field_trip_crossing_dedupe_unique" ON "field_trip_crossings" ("dedupe_key");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "safety_escalation_chains" (
   "id" serial PRIMARY KEY,
@@ -403,7 +728,12 @@ CREATE TABLE IF NOT EXISTS "safety_escalation_chains" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS "safety_escalation_chains_owner_active_idx" ON "safety_escalation_chains" ("owner_type", "owner_id", "is_active");
+DO $replay$
+BEGIN
+  IF to_regclass('public.safety_escalation_chains_owner_active_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "safety_escalation_chains_owner_active_idx" ON "safety_escalation_chains" ("owner_type", "owner_id", "is_active");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "safety_incident_responses" (
   "id" serial PRIMARY KEY,
@@ -424,8 +754,18 @@ CREATE TABLE IF NOT EXISTS "safety_incident_responses" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "safety_incident_responses_event_unique" ON "safety_incident_responses" ("event_id");
-CREATE INDEX IF NOT EXISTS "safety_incident_responses_status_idx" ON "safety_incident_responses" ("response_status", "response_deadline_at");
+DO $replay$
+BEGIN
+  IF to_regclass('public.safety_incident_responses_event_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "safety_incident_responses_event_unique" ON "safety_incident_responses" ("event_id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.safety_incident_responses_status_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "safety_incident_responses_status_idx" ON "safety_incident_responses" ("response_status", "response_deadline_at");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "safety_incident_deliveries" (
   "id" serial PRIMARY KEY,
@@ -437,7 +777,12 @@ CREATE TABLE IF NOT EXISTS "safety_incident_deliveries" (
   "acknowledged_at" timestamptz,
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS "safety_incident_deliveries_response_recipient_idx" ON "safety_incident_deliveries" ("response_id", "recipient_user_id");
+DO $replay$
+BEGIN
+  IF to_regclass('public.safety_incident_deliveries_response_recipient_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "safety_incident_deliveries_response_recipient_idx" ON "safety_incident_deliveries" ("response_id", "recipient_user_id");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "safety_incident_evidence" (
   "id" serial PRIMARY KEY,
@@ -458,7 +803,12 @@ CREATE TABLE IF NOT EXISTS "safety_evidence_holds" (
   "released_by_user_id" integer REFERENCES "users"("id"),
   "released_at" timestamptz
 );
-CREATE INDEX IF NOT EXISTS "safety_evidence_holds_active_idx" ON "safety_evidence_holds" ("response_id", "released_at");
+DO $replay$
+BEGIN
+  IF to_regclass('public.safety_evidence_holds_active_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "safety_evidence_holds_active_idx" ON "safety_evidence_holds" ("response_id", "released_at");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "work_hub_meeting_participation_authorizations" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -468,7 +818,12 @@ CREATE TABLE IF NOT EXISTS "work_hub_meeting_participation_authorizations" (
   "accepted_at" timestamptz NOT NULL DEFAULT now(),
   "revoked_at" timestamptz
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "work_hub_meeting_participation_authorization_unique" ON "work_hub_meeting_participation_authorizations" ("user_id", "policy_version");
+DO $replay$
+BEGIN
+  IF to_regclass('public.work_hub_meeting_participation_authorization_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "work_hub_meeting_participation_authorization_unique" ON "work_hub_meeting_participation_authorizations" ("user_id", "policy_version");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "work_hub_meeting_recording_retention" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -480,8 +835,18 @@ CREATE TABLE IF NOT EXISTS "work_hub_meeting_recording_retention" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "work_hub_meeting_recording_retention_manifest_unique" ON "work_hub_meeting_recording_retention" ("manifest_id");
-CREATE INDEX IF NOT EXISTS "work_hub_meeting_recording_retention_expiry_idx" ON "work_hub_meeting_recording_retention" ("raw_media_expires_at", "raw_media_deleted_at");
+DO $replay$
+BEGIN
+  IF to_regclass('public.work_hub_meeting_recording_retention_manifest_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "work_hub_meeting_recording_retention_manifest_unique" ON "work_hub_meeting_recording_retention" ("manifest_id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.work_hub_meeting_recording_retention_expiry_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "work_hub_meeting_recording_retention_expiry_idx" ON "work_hub_meeting_recording_retention" ("raw_media_expires_at", "raw_media_deleted_at");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "work_hub_meeting_recording_holds" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -493,7 +858,12 @@ CREATE TABLE IF NOT EXISTS "work_hub_meeting_recording_holds" (
   "released_by_user_id" integer REFERENCES "users"("id"),
   "released_at" timestamptz
 );
-CREATE INDEX IF NOT EXISTS "work_hub_meeting_recording_hold_active_idx" ON "work_hub_meeting_recording_holds" ("retention_id", "released_at");
+DO $replay$
+BEGIN
+  IF to_regclass('public.work_hub_meeting_recording_hold_active_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "work_hub_meeting_recording_hold_active_idx" ON "work_hub_meeting_recording_holds" ("retention_id", "released_at");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "worker_subscriptions" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -521,10 +891,30 @@ CREATE TABLE IF NOT EXISTS "worker_subscriptions" (
   CONSTRAINT "worker_subscriptions_currency_check" CHECK ("currency"='USD'),
   CONSTRAINT "worker_subscriptions_price_check" CHECK ("monthly_price_cents">=0)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "worker_subscriptions_active_vendor_worker_unique" ON "worker_subscriptions" ("payor_vendor_id", "worker_user_id") WHERE "payor_vendor_id" IS NOT NULL AND "state" <> 'terminated';
-CREATE UNIQUE INDEX IF NOT EXISTS "worker_subscriptions_active_partner_worker_unique" ON "worker_subscriptions" ("payor_partner_id", "worker_user_id") WHERE "payor_partner_id" IS NOT NULL AND "state" <> 'terminated';
-CREATE INDEX IF NOT EXISTS "worker_subscriptions_payor_idx" ON "worker_subscriptions" ("payor_org_type", "payor_vendor_id", "payor_partner_id", "state");
-CREATE INDEX IF NOT EXISTS "worker_subscriptions_worker_idx" ON "worker_subscriptions" ("worker_user_id", "state");
+DO $replay$
+BEGIN
+  IF to_regclass('public.worker_subscriptions_active_vendor_worker_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "worker_subscriptions_active_vendor_worker_unique" ON "worker_subscriptions" ("payor_vendor_id", "worker_user_id") WHERE "payor_vendor_id" IS NOT NULL AND "state" <> 'terminated';
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.worker_subscriptions_active_partner_worker_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "worker_subscriptions_active_partner_worker_unique" ON "worker_subscriptions" ("payor_partner_id", "worker_user_id") WHERE "payor_partner_id" IS NOT NULL AND "state" <> 'terminated';
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.worker_subscriptions_payor_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "worker_subscriptions_payor_idx" ON "worker_subscriptions" ("payor_org_type", "payor_vendor_id", "payor_partner_id", "state");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF to_regclass('public.worker_subscriptions_worker_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "worker_subscriptions_worker_idx" ON "worker_subscriptions" ("worker_user_id", "state");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "operations_displays" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -544,7 +934,12 @@ CREATE TABLE IF NOT EXISTS "operations_displays" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS "operations_displays_owner_idx" ON "operations_displays" ("owner_org_type", "owner_org_id");
+DO $replay$
+BEGIN
+  IF to_regclass('public.operations_displays_owner_idx') IS NULL THEN
+    CREATE INDEX IF NOT EXISTS "operations_displays_owner_idx" ON "operations_displays" ("owner_org_type", "owner_org_id");
+  END IF;
+END $replay$;
 
 CREATE TABLE IF NOT EXISTS "operations_display_outputs" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -557,9 +952,34 @@ CREATE TABLE IF NOT EXISTS "operations_display_outputs" (
   "microphone_enabled" boolean NOT NULL DEFAULT false,
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "operations_display_outputs_display_name_unique" ON "operations_display_outputs" ("display_id", "name");
+DO $replay$
+BEGIN
+  IF to_regclass('public.operations_display_outputs_display_name_unique') IS NULL THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS "operations_display_outputs_display_name_unique" ON "operations_display_outputs" ("display_id", "name");
+  END IF;
+END $replay$;
 
-ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "completion_operation_id" uuid;
-ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "completion_reason" text;
-ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "completed_by_user_id" integer REFERENCES "users"("id");
-ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "needs_supervisor_confirmation" boolean NOT NULL DEFAULT false;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.field_trips'::regclass AND attname = 'completion_operation_id' AND NOT attisdropped) THEN
+    ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "completion_operation_id" uuid;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.field_trips'::regclass AND attname = 'completion_reason' AND NOT attisdropped) THEN
+    ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "completion_reason" text;
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.field_trips'::regclass AND attname = 'completed_by_user_id' AND NOT attisdropped) THEN
+    ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "completed_by_user_id" integer REFERENCES "users"("id");
+  END IF;
+END $replay$;
+DO $replay$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'public.field_trips'::regclass AND attname = 'needs_supervisor_confirmation' AND NOT attisdropped) THEN
+    ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "needs_supervisor_confirmation" boolean NOT NULL DEFAULT false;
+  END IF;
+END $replay$;
