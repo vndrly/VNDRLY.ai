@@ -228,12 +228,12 @@ function AuthenticatedRouter() {
   const [location, navigate] = useLocation();
   const search = useSearch();
   const standardHome = new URLSearchParams(search).get("workspace") === "standard";
-  const fleetHome = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.overview, enabled: Boolean(user?.vendorId && location === "/" && !standardHome && ["vendor", "field_employee"].includes(user?.role ?? "")), retry: false, staleTime: 30_000 });
+  const fleetHome = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.homeOverview, enabled: Boolean(user?.vendorId && location === "/" && !standardHome && ["vendor", "field_employee"].includes(user?.role ?? "")), retry: false, staleTime: 30_000 });
   const homeTarget = fleetHomePath(fleetHome.data, search);
   useEffect(() => { if (location === "/" && homeTarget) navigate(homeTarget, { replace: true }); }, [location, homeTarget, navigate]);
   const gateWorker = Boolean(user && ((user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user)));
 
-  if (isLoading || (user?.vendorId && location === "/" && !standardHome && !fleetHome.isError && (fleetHome.isFetching || homeTarget))) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />

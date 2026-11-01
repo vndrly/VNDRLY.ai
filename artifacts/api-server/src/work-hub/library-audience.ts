@@ -3,10 +3,10 @@ import {
   db,
   usersTable as users,
   userOrgMembershipsTable as memberships,
-  workHubChannelsTable as channels,
-  workHubChannelMembersTable as channelMembers,
-  vendorCrewPresetsTable as crews,
+  workHubCrewsTable as groupsTable,
+  workHubCrewMembersTable as groupMembers,
   workHubFilesTable as files,
+  vendorPeopleTable as staffTable,
 } from "@workspace/db";
 import { LibraryAudienceSchema, type WorkHubOwner } from "@workspace/api-zod";
 import {
@@ -15,7 +15,20 @@ import {
   type LibraryActor,
   type LibraryTx,
 } from "./library-core";
-import { resolveChannelAccess } from "./queries";
+import {automaticLibraryAudiences,automaticAudienceMembers} from './automatic-library-audiences';
+export async function libraryGroupMembers(reader:Pick<typeof db,'select'>,owner:WorkHubOwner,groupIds:string[],people:Awaited<ReturnType<typeof companyLibraryPeople>>){
+ const ids=new Set<number>();
+ const staff=owner.type==='vendor'&&groupIds.some(id=>id.startsWith('audience:'))?await reader.select().from(staffTable).where(and(eq(staffTable.vendorId,owner.id),eq(staffTable.isActive,true),isNull(staffTable.deletedAt))):[];
+ for(const id of groupIds){
+  if(id.startsWith('audience:')){automaticAudienceMembers(id,people,staff).forEach(userId=>ids.add(userId));continue;}
+  if(id.startsWith('crew:'))throw new LibraryError('Choose a defined company group',400);
+  const [group]=await reader.select().from(groupsTable).where(and(eq(groupsTable.id,id),eq(groupsTable.ownerOrgType,owner.type),eq(groupsTable.ownerOrgId,owner.id),eq(groupsTable.status,'active'))).limit(1);
+  if(!group)throw new LibraryError('Company group not found',404);
+  const members=await reader.select({userId:groupMembers.userId}).from(groupMembers).where(eq(groupMembers.crewId,id));
+  members.forEach(member=>ids.add(member.userId));
+ }
+ return ids;
+}
 export async function companyLibraryPeople(
   reader: Pick<typeof db, "select">,
   owner: WorkHubOwner,
@@ -54,34 +67,19 @@ export async function companyLibraryPeople(
 export async function libraryOptions(actor: LibraryActor) {
   const { owner } = await libraryAuthority(db, actor, true);
   const groupRows = await db
-    .select({ id: channels.id, name: channels.name })
-    .from(channels)
+    .select({ id: groupsTable.id, name: groupsTable.name })
+    .from(groupsTable)
     .where(
       and(
-        eq(channels.ownerOrgType, owner.type),
-        eq(channels.ownerOrgId, owner.id),
-        eq(channels.status, "active"),
+        eq(groupsTable.ownerOrgType, owner.type),
+        eq(groupsTable.ownerOrgId, owner.id),
+        eq(groupsTable.status, "active"),
       ),
     )
     .limit(100);
-  const groups = [];
-  for (const group of groupRows) {
-    try {
-      await resolveChannelAccess(actor, group.id, "channel.read");
-      groups.push(group);
-    } catch {}
-  }
-  if (owner.type === "vendor") {
-    const preset = await db
-      .select({ id: crews.id, name: crews.name })
-      .from(crews)
-      .where(eq(crews.vendorId, owner.id))
-      .limit(100);
-    groups.push(...preset.map((c) => ({ id: `crew:${c.id}`, name: c.name })));
-  }
   return {
     people: await companyLibraryPeople(db, owner),
-    groups,
+    groups: [...automaticLibraryAudiences,...groupRows],
     files: await db
       .select({ id: files.id, fileName: files.fileName })
       .from(files)
@@ -105,52 +103,7 @@ export async function expandLibraryAudience(
     { owner } = await libraryAuthority(tx, actor, true, true),
     people = await companyLibraryPeople(tx, owner, true);
   const ids = new Set(audience.userIds);
-  for (const id of audience.groupIds) {
-    if (id.startsWith("crew:")) {
-      if (owner.type !== "vendor")
-        throw new LibraryError("Crew is outside this company", 403);
-      const [crew] = await tx
-        .select()
-        .from(crews)
-        .where(
-          and(eq(crews.id, Number(id.slice(5))), eq(crews.vendorId, owner.id)),
-        )
-        .limit(1)
-        .for("share");
-      if (!crew) throw new LibraryError("Company crew not found", 404);
-      const memberIds = Array.isArray(crew.memberEmployeeIds)
-        ? crew.memberEmployeeIds
-        : [];
-      people
-        .filter(
-          (p) =>
-            p.vendorPeopleId !== null && memberIds.includes(p.vendorPeopleId),
-        )
-        .forEach((p) => ids.add(p.userId));
-    } else {
-      const [channel] = await tx
-        .select()
-        .from(channels)
-        .where(
-          and(
-            eq(channels.id, id),
-            eq(channels.ownerOrgType, owner.type),
-            eq(channels.ownerOrgId, owner.id),
-            eq(channels.status, "active"),
-          ),
-        )
-        .limit(1)
-        .for("share");
-      if (!channel) throw new LibraryError("Company group not found", 404);
-      await resolveChannelAccess(actor, id, "channel.read");
-      const members = await tx
-        .select({ userId: channelMembers.userId })
-        .from(channelMembers)
-        .where(eq(channelMembers.channelId, id))
-        .for("share");
-      members.forEach((m) => ids.add(m.userId));
-    }
-  }
+  (await libraryGroupMembers(tx,owner,audience.groupIds,people)).forEach(id=>ids.add(id));
   const eligible =
     audience.mode === "all_active"
       ? people

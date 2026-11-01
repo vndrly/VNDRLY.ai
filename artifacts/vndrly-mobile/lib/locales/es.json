@@ -1,4 +1,24 @@
 {
+  "safetyMaturity": {
+    "title": "Madurez del programa de seguridad",
+    "separate": "La preparación del trabajo/sitio y el historial de incidentes se evalúan por separado y no suman puntos de madurez.",
+    "demo": "DEMOSTRACIÓN — puntuaciones y ejemplos de CompanyGo ficticios. No representan una verificación real de seguridad.",
+    "demoShort": "DEMOSTRACIÓN — puntuación ficticia",
+    "incomplete": "Evaluación incompleta — sin crédito por requisitos no verificados.",
+    "leadership": "Liderazgo y participación de trabajadores",
+    "hazards": "Identificación de peligros y controles",
+    "competence": "Competencia y autorización",
+    "equipment": "Equipos y preparación operativa",
+    "learning": "Respuesta a incidentes y aprendizaje",
+    "emergency": "Preparación para emergencias y mejora",
+    "level0": "Sin evidencia verificada",
+    "level1": "25% — práctica documentada y responsable asignado",
+    "level2": "50% — implementada con registros vigentes",
+    "level3": "75% — implementación comprobada",
+    "level4": "100% — eficacia demostrada",
+    "library": "Biblioteca"
+  },
+  "equipment": { "title": "Inventario de equipo" },
   "mobileMarketplace": {
     "quoteRequired": "Cotización requerida",
     "requestQuote": "Solicitar cotización",

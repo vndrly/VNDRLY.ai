@@ -41,6 +41,8 @@ function Test-PortListening {
 function Test-DevHealthy {
   if (-not (Test-PortListening -Port 8080)) { return $false }
   if (-not (Test-PortListening -Port 5173)) { return $false }
+  if (-not (Test-PortListening -Port 8081)) { return $false }
+  if (-not (Test-PortListening -Port 8099)) { return $false }
   try {
     $api = Invoke-WebRequest -Uri "http://localhost:8080/api/health" -UseBasicParsing -TimeoutSec 5
     if ($api.StatusCode -ne 200) { return $false }
@@ -59,6 +61,12 @@ function Test-DevHealthy {
   } catch {
     return $false
   }
+  try {
+    $mobile = Invoke-WebRequest -Uri 'http://localhost:8081/status' -UseBasicParsing -TimeoutSec 5
+    if ($mobile.StatusCode -ne 200) { return $false }
+    $mobileProxy = Invoke-WebRequest -Uri 'http://localhost:8099/api/healthz' -UseBasicParsing -TimeoutSec 5
+    if ($mobileProxy.StatusCode -ne 200) { return $false }
+  } catch { return $false }
   return $true
 }
 

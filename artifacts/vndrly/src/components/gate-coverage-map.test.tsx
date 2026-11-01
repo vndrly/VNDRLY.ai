@@ -1,7 +1,10 @@
+import { equipmentFixture } from "./equipment/fixture.test-data";
 import { act, cleanup, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-const mocks = vi.hoisted(() => ({ read: vi.fn(), points: [] as any[], mapProps: {} as any, mapRenders: 0 }));
+const mocks = vi.hoisted(() => ({ read: vi.fn(), points: [] as any[], mapProps: {} as any, mapRenders: 0, constrained: false, equipment: [] as any[] }));
+vi.mock("./equipment/client",()=>({equipmentRequest:async()=>({equipment:mocks.equipment,capabilities:{canManage:true}})}));
+vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => mocks.constrained }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 1, vendorId: 2, activeMembershipId: 3 } }) }));
 vi.mock("@/lib/change-over-api", () => ({ changeOverRequest: mocks.read }));
 vi.mock("@/components/mapbox-map", () => ({ MapboxMap: (props: any) => { mocks.mapRenders++; mocks.points = props.points; mocks.mapProps = props; return <div>Map{props.topControls}{props.bottomControls}</div>; } }));
@@ -18,6 +21,7 @@ it("reveals a group of current staff, fits their locations and closes the picker
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
  const toggle=await screen.findByRole("button",{name:"Reveal Staff"});
  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+ expect(mocks.points.filter(point=>point.id.startsWith("staff:"))).toHaveLength(0);
  fireEvent.click(toggle);await waitFor(()=>expect(screen.getByText("All (3)")).toBeTruthy());fireEvent.click(screen.getByRole("button",{name:"Reveal All"}));
  expect(screen.getByRole("button",{name:"Reveal Staff"}).getAttribute("aria-expanded")).toBe("false");
  expect(mocks.mapProps.fitPoints.map((point:any)=>point.id)).toEqual(["staff:1","staff:2"]);expect(mocks.mapProps.fitToData).toBe(true);
@@ -61,7 +65,7 @@ it("keeps on-call contact links usable without GPS and reflects a started shift 
  expect(screen.getByRole("button",{name:"On-call worker"}).hasAttribute("disabled")).toBe(true);
  expect(screen.getByText(/No active assignment recorded/)).toBeTruthy();
 });
-afterEach(() => { cleanup(); vi.clearAllMocks(); vi.useRealTimers(); window.history.replaceState(null,"","/"); vi.unstubAllGlobals(); });
+afterEach(() => { mocks.equipment=[];mocks.constrained=false; cleanup(); vi.clearAllMocks(); vi.useRealTimers(); window.history.replaceState(null,"","/"); vi.unstubAllGlobals(); });
 it("closes the expanded header back action without navigating away",async()=>{
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
  const back=vi.spyOn(window.history,"back");
@@ -148,6 +152,9 @@ it("keeps stale staff off the map and exposes missing observations without an ac
   ] });
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateCoverageMap /></QueryClientProvider>);
   await screen.findByText("Fresh");
+  expect(mocks.points).toEqual([]);
+  fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));
+  fireEvent.click(screen.getByRole("button",{name:"Show staff locations"}));
   expect(mocks.points.map(point => point.id)).toEqual(["staff:4"]);
   expect(screen.getByText(/stale or inaccurate/)).toBeTruthy();
   expect(screen.getByText(/no report/)).toBeTruthy();
@@ -162,6 +169,7 @@ it("ticks beneath the Live controls without rerendering the map or fetching each
   mocks.read.mockResolvedValue({ at: new Date().toISOString(), gates: [], staff: [], duties: [] });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity, staleTime: Infinity } } });
   await client.prefetchQuery({ queryKey: ["gate-coverage-map", 1, 3, null], queryFn: () => mocks.read("/coverage-map") });
+  await client.prefetchQuery({queryKey:["equipment",1,2,3],queryFn:async()=>({equipment:[],capabilities:{canManage:true}})});
   await act(async () => {
     render(<QueryClientProvider client={client}><GateCoverageMap /></QueryClientProvider>);
     await vi.advanceTimersByTimeAsync(5);
@@ -244,4 +252,70 @@ it("uses plain on-map icons without coverage filters and preserves refresh and e
   expect(screen.getByRole("button", { name: "Expand map" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
   await waitFor(() => expect(mocks.read.mock.calls.length).toBeGreaterThan(1));
+});
+
+it("hides staff by default and toggles all staff without hiding gates or closing Reveal Staff",async()=>{
+ mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[{id:"g",siteId:1,name:"Gate",siteName:"Site",latitude:30,longitude:-100}],duties:[],staff:[{userId:1,name:"Worker",fresh:true,location:{latitude:32,longitude:-102,capturedAt:new Date().toISOString()},assignment:"Office",locationReason:"current"}]});
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ await waitFor(()=>expect(mocks.points.map(point=>point.id)).toEqual(["gate:g"]));
+ fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));
+ fireEvent.click(screen.getByRole("button",{name:"Show staff locations"}));
+ expect(mocks.points.map(point=>point.id)).toEqual(["gate:g","staff:1"]);
+ expect(screen.getByRole("button",{name:"Reveal Staff"}).getAttribute("aria-expanded")).toBe("true");
+ fireEvent.click(screen.getByRole("button",{name:"Hide staff locations"}));
+ expect(mocks.points.map(point=>point.id)).toEqual(["gate:g"]);
+ fireEvent.click(screen.getByText("Individuals (1)"));
+ fireEvent.click(screen.getAllByRole("button",{name:"Worker"}).at(-1)!);
+ expect(mocks.mapProps.selectedPointId).toBe("staff:1");
+ fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));
+ fireEvent.click(screen.getByRole("button",{name:"Hide staff locations"}));
+ expect(mocks.points.map(point=>point.id)).toEqual(["gate:g"]);expect(mocks.mapProps.selectedPointId).toBeNull();
+});
+
+it("uses enter/exit full screen in constrained views and restores the map on exit",async()=>{
+ mocks.constrained=true;
+ mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap expandedHeader={close=><button onClick={close}>Leave full screen</button>}/></QueryClientProvider>);
+ fireEvent.click(await screen.findByRole("button",{name:"Enter full screen"}));
+ expect(screen.getByRole("button",{name:"Exit full screen"}).closest(".gate-map-fullscreen")).toBeTruthy();
+ expect(mocks.mapProps.height).toBe("100%");
+ fireEvent.click(screen.getByRole("button",{name:"Leave full screen"}));
+ expect(screen.getByRole("button",{name:"Enter full screen"})).toBeTruthy();
+ expect(mocks.mapProps.height).toBe("var(--gate-map-height, 420px)");
+});
+it("uses full screen on iPad even with a wide viewport",async()=>{
+ const platform=vi.spyOn(navigator,"platform","get").mockReturnValue("MacIntel");
+ const previousTouch=Object.getOwnPropertyDescriptor(navigator,"maxTouchPoints");
+ Object.defineProperty(navigator,"maxTouchPoints",{configurable:true,value:5});
+ try {
+  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
+  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+  fireEvent.click(await screen.findByRole("button",{name:"Enter full screen"}));
+  expect(screen.getByRole("button",{name:"Exit full screen"})).toBeTruthy();
+  expect(mocks.mapProps.className).toContain("is-ios-map");
+ } finally {platform.mockRestore();if(previousTouch)Object.defineProperty(navigator,"maxTouchPoints",previousTouch);else Reflect.deleteProperty(navigator,"maxTouchPoints");}
+});
+
+it("reveals equipment separately, fits its known location, then returns center to selected gates",async()=>{
+ mocks.equipment=[equipmentFixture];mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[{id:"east",siteId:1,name:"East",siteName:"Site",latitude:31,longitude:-101}],duties:[],staff:[]});
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ await waitFor(()=>expect(mocks.points.map(p=>p.id)).toEqual(["gate:east"]));
+ fireEvent.click(screen.getByRole("button",{name:"Reveal Equipment"}));await screen.findByText("Trailers (1)");
+ fireEvent.click(screen.getByRole("button",{name:"Show equipment locations"}));expect(mocks.points.map(p=>p.id)).toEqual(["gate:east",`equipment:${equipmentFixture.id}`]);
+ fireEvent.click(screen.getByRole("button",{name:"Reveal In Yard"}));expect(mocks.mapProps.fitPoints.map((p:any)=>p.id)).toEqual([`equipment:${equipmentFixture.id}`]);
+ act(()=>mocks.points.find(p=>p.id.startsWith("equipment:")).onClick());expect(mocks.mapProps.selectedPointId).toBe(`equipment:${equipmentFixture.id}`);
+ fireEvent.click(screen.getByRole("button",{name:"Center on Selection"}));expect(mocks.mapProps.selectedPointId).toBeNull();expect(mocks.mapProps.fitPoints.map((p:any)=>p.id)).toEqual(["gate:east"]);
+ fireEvent.click(screen.getByRole("button",{name:"Reveal Equipment"}));fireEvent.click(screen.getByRole("button",{name:"Hide equipment locations"}));expect(mocks.points.map(p=>p.id)).toEqual(["gate:east"]);
+});
+it("does not show an empty map while gate coverage is pending after equipment loads",async()=>{
+ mocks.read.mockReturnValue(new Promise(()=>{}));
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ await waitFor(()=>expect(screen.getByText("Loading authorized coverage…")).toBeTruthy());
+ expect(screen.queryByText("No mapped locations for this filter")).toBeNull();
+});
+it("shows a gate coverage failure even when equipment loads successfully",async()=>{
+ mocks.read.mockRejectedValue(new Error("Timed out"));
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ expect((await screen.findByRole("alert")).textContent).toContain("Gate coverage could not be loaded");
+ expect(screen.queryByText("No mapped locations for this filter")).toBeNull();
 });

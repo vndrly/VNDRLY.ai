@@ -18,19 +18,19 @@ export function SafetyMaturitySummary() {
     {result.data && <>
       {result.data.incomplete && <p>{t("safetyMaturity.incomplete")}</p>}
       <div className="safety-score-cards">
-        <Card><CardHeader><CardTitle>{result.data.score} / 100</CardTitle></CardHeader><CardContent>{t("safetyMaturity.title")}</CardContent></Card>
-        {result.data.categories.map(category => <Card key={category.id}>
+        <Card className="safety-program-card"><CardHeader><CardTitle>{result.data.score} / 100</CardTitle></CardHeader><CardContent>{t("safetyMaturity.title")}</CardContent></Card>
+        {result.data.categories.map(category => <Card key={category.id} className="safety-program-card">
           <CardHeader><CardTitle><ShieldCheck aria-hidden="true" />{t(`safetyMaturity.${category.id}`)}</CardTitle></CardHeader>
           <CardContent className="safety-score-body">
             <p>{category.points} / {category.weight}</p>
             <p>{t(`safetyMaturity.level${category.level}`)}</p>
-            {category.resources.map(resource => <Link key={resource.id} href={`/work-hub/library/${resource.id}`} className="block underline underline-offset-4">{resource.title}</Link>)}
+            {category.resources.map(resource => <Link key={resource.id} href={`/work-hub/library/${resource.id}`} className="safety-program-link">{resource.title}</Link>)}
             {(category.requirements ?? []).map(requirement => <section key={requirement.id} className="mt-4 space-y-2 border-t pt-3">
               <h3 className="font-semibold">{requirement.id} — {requirement.title}</h3>
               <p className="text-sm">{requirement.applicability}</p>
               {requirement.trainingRequirement&&<p>{t('trainingPolicy.coverage',{...requirement.trainingRequirement,familyId:requirement.id})}</p>}
               <div className="flex flex-wrap gap-x-4 gap-y-2">
-                {requirement.resources.map(resource => resource.type==='training'?<div key={resource.id} className="space-y-2"><p>{resource.title}</p><TrainingActions itemId={resource.id} canManage={isWorkHubAdmin(user)}/></div>:<Link key={resource.id} href={`/work-hub/library/${resource.id}`} className="underline underline-offset-4">{resource.title}</Link>)}
+                {requirement.resources.filter(resource => resource.type==='training').map(resource => <TrainingActions key={resource.id} itemId={resource.id} canManage={isWorkHubAdmin(user)} appearance="links"/>)}
               </div>
             </section>)}
           </CardContent>

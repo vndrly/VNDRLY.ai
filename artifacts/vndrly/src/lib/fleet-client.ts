@@ -129,9 +129,11 @@ async function request<T>(
   path: string,
   body?: unknown,
   method = "POST",
+  signal?: AbortSignal,
 ): Promise<T> {
   const response = await fetch(`/api/fleet${path}`, {
     credentials: "include",
+    signal,
     ...(body
       ? {
           method,
@@ -150,6 +152,12 @@ async function request<T>(
   return response.json();
 }
 export const fleetClient = {
+  homeOverview: async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(new Error("Fleet home lookup timed out")), 8000);
+    try { return await request<FleetOverview>("/overview", undefined, "POST", controller.signal); }
+    finally { clearTimeout(timer); }
+  },
   serviceTemplates:()=>request<unknown>("/service-templates").then(value=>FleetServiceTemplatePageSchema.parse(value)),
   serviceTemplate:(id:number,revision:number)=>request<unknown>(`/service-templates/${id}?revision=${revision}`).then(value=>FleetServiceTemplateSchema.parse(value)),
   runOrders:(after?:number)=>request<unknown>(`/run-orders${after?`?after=${after}`:""}`).then(value=>FleetRunOrderPageSchema.parse(value)),

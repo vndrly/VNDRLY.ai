@@ -302,6 +302,7 @@ router.get("/work-hub/file-library", async (req, res) => {
       );
     const documents = [];
     for (const doc of candidates) {
+      if(req.query.purpose==="training"&&(doc.orgType!==owner.type||doc.orgId!==owner.id||doc.data.purpose!=="training"||doc.data.scope!=="company"))continue;
       try {
         await documentAccess(actor, doc);
         documents.push({
@@ -449,6 +450,7 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
           const p = z
             .object({
               documentId: z.string().uuid().optional(),
+              purpose: z.literal("training").optional(),
               scope: z.enum(["personal", "company", "channel"]),
               channelId: z.string().uuid().optional(),
               fileName: z.string().trim().min(1).max(255),
@@ -462,6 +464,7 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
             })
             .strict()
             .parse(envelope.payload);
+          if(p.purpose==="training"&&p.scope!=="company")throw new FileError(400,"Training materials must belong to the company training library");
           let doc: Document;
           if (p.documentId) {
             doc = await loadDocument(p.documentId);
@@ -498,6 +501,7 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
                 createdBy: actor.userId,
                 data: {
                   scope: p.scope,
+                  ...(p.purpose?{purpose:p.purpose}:{}),
                   channelId: p.scope === "channel" ? p.channelId : null,
                   name: p.fileName,
                   state: "active",

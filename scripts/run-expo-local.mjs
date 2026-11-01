@@ -1,3 +1,4 @@
+import "./local-preview-checkout.mjs";
 process.env.VNDRLY_LOAD_ENV_LOCAL = "1";
 import "./load-env-local.mjs";
 import "./dev-local-defaults.mjs";

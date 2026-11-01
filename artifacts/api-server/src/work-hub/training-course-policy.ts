@@ -1,13 +1,14 @@
 import {and,eq,isNull,sql} from 'drizzle-orm';
-import {db,vendorsTable,vendorPeopleTable,workHubFormTemplatesTable as templates,vendorCrewPresetsTable as crews,workHubChannelsTable as channels,workHubChannelMembersTable as channelMembers} from '@workspace/db';
+import {db,vendorsTable,vendorPeopleTable,workHubFormTemplatesTable as templates} from '@workspace/db';
 import {LibraryMetadataSchema,TrainingPolicyDetailsSchema,type WorkHubCommandEnvelope,type WorkHubOwner} from '@workspace/api-zod';
 import {libraryAuthority,libraryRecord,libraryCommand,checkLibraryVersion,LibraryError,type LibraryActor,type LibraryTx} from './library-core';
-import {companyLibraryPeople,libraryOptions} from './library-audience';
+import {companyLibraryPeople,libraryOptions,libraryGroupMembers} from './library-audience';
 import {allocateLibraryItems} from './library-assignments';
 import {trainingCatalog,selectedTrainingServices,additionalTrainingApplies}from'../lib/company-required-training';
 import {trainingPositionIds,type TrainingPosition as Position} from '../lib/safety-training-position';
 import {trainingReadContent} from './library-policy';
 import {cleanTrainingText} from '../../../../scripts/lib/streamlined-training.mjs';
+import {buildTrainingCourseGuide} from '../lib/training-course-guide';
 export {trainingPositionIds} from '../lib/safety-training-position';
 
 const normalized=(value:string)=>value.trim().replace(/\s+/g,' ').toLowerCase();
@@ -20,6 +21,7 @@ async function companyPositions(reader:Pick<typeof db,'select'>,owner:WorkHubOwn
  const positions=vendor?.catalog?.entries??[];
  const rows=await reader.select().from(vendorPeopleTable).where(and(eq(vendorPeopleTable.vendorId,owner.id),eq(vendorPeopleTable.isActive,true),isNull(vendorPeopleTable.deletedAt)));
  const options=new Map(positions.map(p=>[`staff:${p.id}`,{id:`staff:${p.id}`,label:p.label}]));
+ for(const [id,label] of Object.entries({admin:"Admin",office_staff:"Office Staff",gate_supervisor:"Gate Supervisor",gatekeeper:"Gatekeeper"}))options.set(`account:${id}`,{id:`account:${id}`,label});
  for(const person of rows){
   if(person.jobTitle)options.set(`title:${normalized(person.jobTitle)}`,{id:`title:${normalized(person.jobTitle)}`,label:person.jobTitle});
   for(const role of [person.vendorRole,...person.roles])options.set(`operation:${normalized(role)}`,{id:`operation:${normalized(role)}`,label:`${role} (operational role)`});
@@ -41,16 +43,23 @@ export async function readTrainingPolicy(actor:LibraryActor,id:string){
  const course=await linkedTraining(db,owner,own.metadata.safetyResource!.familyId);
  const options=await libraryOptions(actor),staff=await companyPositions(db,owner);
  const reference=trainingCatalog.curriculum.find(item=>item.id===own.metadata.safetyResource!.familyId);
- const courseContent=course?.libraryMetadata?trainingReadContent(LibraryMetadataSchema.parse(course.libraryMetadata)):trainingReadContent(own.metadata);
- const policy=TrainingPolicyDetailsSchema.parse(own.metadata.trainingPolicy??{title:course?.name??own.record.name,description:courseContent?.description??'',purpose:cleanTrainingText(reference?.purpose??courseContent?.description??'')});
- const requiredPeopleIds=options.people.filter(person=>{const worker=staff.rows.find(row=>row.id===person.vendorPeopleId||row.userId===person.userId);return policy.requiredUserIds.includes(person.userId)||(worker&&policy.requiredStaffRoleIds.some(role=>trainingPositionIds(worker,staff.positions).includes(role)));}).map(person=>person.userId);
+ const courseMetadata=course?.libraryMetadata?LibraryMetadataSchema.parse(course.libraryMetadata):undefined;
+ const courseContent=courseMetadata?trainingReadContent(courseMetadata):trainingReadContent(own.metadata);
+ const guide=courseContent?.training?buildTrainingCourseGuide(courseContent,own.metadata.safetyResource!.familyId,cleanTrainingText(reference?.purpose??'')):null;
+ const saved=own.metadata.trainingPolicy;
+ const policy=TrainingPolicyDetailsSchema.parse(saved?{...saved,
+  description:guide&&[courseContent?.description,courseMetadata?.content?.description,own.metadata.content?.description].includes(saved.description)?guide.description:saved.description,
+  purpose:guide&&[reference?.purpose,cleanTrainingText(reference?.purpose??''),courseContent?.description].includes(saved.purpose)?guide.purpose:saved.purpose,
+ }:{title:course?.name??own.record.name,description:guide?.description??courseContent?.description??'',purpose:guide?.purpose??cleanTrainingText(reference?.purpose??courseContent?.description??'')});
+ const requiredPeopleIds=options.people.filter(person=>{const worker=staff.rows.find(row=>row.id===person.vendorPeopleId||row.userId===person.userId);return policy.requiredUserIds.includes(person.userId)||(worker&&policy.requiredStaffRoleIds.some(role=>trainingPositionIds({...worker,membershipRole:person.role},staff.positions).includes(role)));}).map(person=>person.userId);
  const selected=await selectedTrainingServices(db,owner),additional=trainingCatalog.additional.courses.find(item=>item.courseId===own.metadata.safetyResource!.familyId);
  const applicabilityOptions=additional?selected.services.filter(service=>additionalTrainingApplies(additional,service)).map(service=>({serviceId:service.code,label:service.name,roleDescriptions:additional.roleMappings.filter(rule=>additionalTrainingApplies(rule,service)).map(rule=>rule.trigger??rule.rationale)})):[];
- const positions=staff.options.map(position=>({...position,userIds:options.people.filter(person=>{const worker=staff.rows.find(row=>row.id===person.vendorPeopleId||row.userId===person.userId);return worker&&trainingPositionIds(worker,staff.positions).includes(position.id);}).map(person=>person.userId)}));
+ const positions=staff.options.map(position=>({...position,userIds:options.people.filter(person=>{const worker=staff.rows.find(row=>row.id===person.vendorPeopleId||row.userId===person.userId);return worker&&trainingPositionIds({...worker,membershipRole:person.role},staff.positions).includes(position.id);}).map(person=>person.userId)}));
  return {itemId:id,version:own.metadata.version,familyId:own.metadata.safetyResource!.familyId,trainingItemId:course?.id??null,policy,requiredPeopleIds,applicabilityOptions,people:options.people,groups:options.groups,positions,files:options.files};
 }
 export async function saveTrainingPolicy(actor:LibraryActor,id:string,envelope:WorkHubCommandEnvelope){
  const input=TrainingPolicyDetailsSchema.parse(envelope.payload);
+ if(actor.role!=='admin'){const current=await readTrainingPolicy(actor,id);if((["title","description","purpose"] as const).some(key=>input[key]!==current.policy[key]))throw new LibraryError('VNDRLY administrator required to edit course title, description or purpose',403);}
  const options=await libraryOptions(actor),{owner}=await libraryAuthority(db,actor,true),staff=await companyPositions(db,owner);
  const selected=await selectedTrainingServices(db,owner);
  return libraryCommand(actor,envelope,'library.training-policy',id,async tx=>{
@@ -79,26 +88,13 @@ export async function assignPolicyTraining(tx:LibraryTx,record:typeof templates.
  const people=await companyLibraryPeople(tx,owner),staff=await companyPositions(tx,owner);
  const administrator=people.find(p=>p.userId===record.createdById&&p.role==='admin')??people.find(p=>p.role==='admin');
  if(!administrator)return 0;
- const groupUserIds=new Set<number>();
- for(const groupId of policy.requiredGroupIds){
-  if(groupId.startsWith('crew:')){
-   if(owner.type!=='vendor')continue;
-   const [crew]=await tx.select().from(crews).where(and(eq(crews.id,Number(groupId.slice(5))),eq(crews.vendorId,owner.id))).limit(1);
-   const ids=Array.isArray(crew?.memberEmployeeIds)?crew.memberEmployeeIds:[];
-   for(const person of people)if(person.vendorPeopleId!==null&&ids.includes(person.vendorPeopleId))groupUserIds.add(person.userId);
-  }else{
-   const [group]=await tx.select({id:channels.id}).from(channels).where(and(eq(channels.id,groupId),eq(channels.ownerOrgType,owner.type),eq(channels.ownerOrgId,owner.id),eq(channels.status,'active'))).limit(1);
-   if(!group)continue;
-   const members=await tx.select({userId:channelMembers.userId}).from(channelMembers).where(eq(channelMembers.channelId,group.id));
-   for(const member of members)groupUserIds.add(member.userId);
-  }
- }
+ const groupUserIds=await libraryGroupMembers(tx,owner,policy.requiredGroupIds,people);
  const selected=people.filter(person=>{
   if(onlyUserId&&person.userId!==onlyUserId)return false;
   const worker=staff.rows.find(p=>p.id===person.vendorPeopleId||p.userId===person.userId);
   if(person.vendorPeopleId!==null&&!worker)return false;
   if(worker&&!worker.isActive)return false;
-  const roles=worker?trainingPositionIds(worker,staff.positions):[];
+  const roles=worker?trainingPositionIds({...worker,membershipRole:person.role},staff.positions):[];
   const inScope=policy.requiredUserIds.includes(person.userId)||groupUserIds.has(person.userId)||policy.requiredStaffRoleIds.some(role=>roles.includes(role));
   if(!inScope)return false;
   return policy.roleChangeRequired||(policy.newHireRequired&&!!policy.activatedAt&&person.joinedAt.getTime()>=Date.parse(policy.activatedAt));

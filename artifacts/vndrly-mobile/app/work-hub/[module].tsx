@@ -27,6 +27,7 @@ import WorkHubCalls from "@/components/WorkHubCalls";
 import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
 import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCoverage";
 import { FilesInventory } from "@/components/work-hub/FilesInventory";
+import EquipmentWorkbench from "@/components/EquipmentWorkbench";
 import { WorkHubSearch, type WorkHubSearchDestination } from "@/components/work-hub/WorkHubSearch";
 import { SitePresence } from "@/components/implementation-a/SitePresence";
 import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
@@ -379,6 +380,7 @@ function WorkHubModuleContent() {
         contentContainerStyle={{ padding: 20, gap: 14 }}
       >
         <WorkHubPageTitle title={title} />
+        {module === "files-notes" && <EquipmentWorkbench initialAssetId={selectedAssetId} onSaved={() => load()} />}
         {module === "files-notes" && owner && data?.capabilities && <FilesInventory owner={owner} capabilities={data.capabilities} files={data.files ?? []} notes={data.notes ?? []} assets={data.assets ?? []} channels={data.channels ?? []} selectedAssetId={selectedAssetId} onRefresh={() => load()} />}
         {module === "files-notes" && !loading && data && !data.capabilities && <Text style={{ color: colors.mutedForeground }}>{t("filesInventory.noAccess")}</Text>}
         {module === "calendar" ? <WorkHubShiftCalendar items={rows} /> : null}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Text, View, Linking } from "react-native";
 import { router } from "expo-router";
 import { z } from "zod/v4";
 import {
@@ -14,6 +14,13 @@ import { useFormCampaigns } from "@/lib/use-form-campaigns";
 import TogglePillButton from "../../TogglePillButton";
 import LibraryEditor from "./LibraryEditor";
 import AssignmentReview from "./AssignmentReview";
+function LibraryBody({ text, color }: { text: string; color: string }) {
+  return <Text style={{ color }}>{text.split(/(https?:\/\/[^\s]+)/g).map((part,index) => /^https?:\/\//.test(part)
+    ? <Text key={index} style={{textDecorationLine:"underline"}} onPress={() => {
+      const match=part.match(/^https:\/\/vndrly\.ai(\/work-hub\/library\/[a-f0-9-]{36})$/);
+      if(match) router.push(match[1] as never); else void Linking.openURL(part);
+    }}>{part}</Text> : <Text key={index}>{part}</Text>)}</Text>;
+}
 const schema = z.object({
   itemId: z.uuid(),
   title: z.string(),
@@ -231,8 +238,8 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
       )}
       {!edit && m.content && (
         <View style={card}>
-          {m.kind === "policy" && (
-            <Text style={label}>{m.content.policyText}</Text>
+            {(m.kind === "policy" || m.kind === "form") && (
+              <LibraryBody text={m.content.policyText} color={colors.text} />
           )}
           {m.content.fields.map((field) => (
             <Text key={field.id} style={label}>
@@ -246,7 +253,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
               <Text style={{ ...label, fontWeight: "700" }}>
                 {lesson.title}
               </Text>
-              <Text style={label}>{lesson.body}</Text>
+                <LibraryBody text={lesson.body} color={colors.text} />
             </View>
           ))}
           {m.content.training?.questions.map((q) => (

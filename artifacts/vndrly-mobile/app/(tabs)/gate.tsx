@@ -18,6 +18,7 @@ import {
 } from "react-native";
 
 import AmberButton from "@/components/AmberButton";
+import TogglePillButton from "@/components/TogglePillButton";
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import BrandTitleRow from "@/components/BrandTitleRow";
 import PlateStatePicker from "@/components/PlateStatePicker";
@@ -899,6 +900,7 @@ export default function GatekeeperScreen() {
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             {t("gatekeeper.subtitle")}
           </Text>
+          <TogglePillButton color="blue" onPress={() => router.push("/equipment" as never)}>{t("equipment.title", { defaultValue: "Equipment Inventory" })}</TogglePillButton>
 
           <View
             style={[

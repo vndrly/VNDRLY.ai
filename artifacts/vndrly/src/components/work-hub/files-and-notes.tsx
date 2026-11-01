@@ -1,3 +1,4 @@
+import { EquipmentWorkspace } from "../equipment/equipment-workspace";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -240,7 +241,7 @@ export function FilesAndNotes() {
     <section data-work-hub-card className={`mx-auto max-w-7xl p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}>
       <WorkHubPageHeading module="files" title="Files & Notes" />
       <div className="my-5 flex flex-wrap gap-2" role="tablist">
-        {["files", "notes", "existing"].map((key) => (
+        {["files", "notes", "equipment", "existing"].map((key) => (
           <PngPillButton
             key={key}
             role="tab"
@@ -254,11 +255,11 @@ export function FilesAndNotes() {
               ? "File library"
               : key === "notes"
                 ? "Native notes"
-                : "Existing uploads"}
+                : key === "equipment" ? "Equipment" : "Existing uploads"}
           </PngPillButton>
         ))}
       </div>
-      {tab === "files" ? (
+      {tab === "equipment" ? <EquipmentWorkspace /> : tab === "files" ? (
         <WorkHubFiles />
       ) : tab === "notes" ? (
         <NativeNotes />

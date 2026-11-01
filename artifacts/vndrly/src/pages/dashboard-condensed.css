@@ -1,0 +1,60 @@
+/* Condensed Dashboard uses the established Gate Ops steel/charcoal palette only. */
+@media (max-width: 767px) {
+  main:has([data-testid="dashboard-page"]) {
+    background: #3a3d42 !important;
+    color: #ececec;
+  }
+  [data-testid="dashboard-page"] {
+    color: #ececec;
+    --background: 220 7% 24%;
+    --foreground: 0 0% 93%;
+    --card: 240 3% 15%;
+    --card-foreground: 0 0% 93%;
+    --muted: 240 4% 20%;
+    --muted-foreground: 0 0% 70%;
+    --border: 240 3% 25%;
+  }
+  [data-testid="dashboard-page"] :is([data-slot="card"], .bg-white) {
+    background-color: #242426 !important;
+    color: #ececec;
+    border-color: var(--brand-primary);
+    border-radius: 14px;
+    box-shadow: none !important;
+  }
+  [data-testid="dashboard-page"]
+    :is(h1, h2, h3, [data-slot="card-title"], .text-black, .text-gray-900) {
+    color: #ececec;
+  }
+  [data-testid="dashboard-page"]
+    :is(.text-muted-foreground, .text-gray-500, .text-gray-600) {
+    color: #b3b3b3;
+  }
+  [data-testid="dashboard-page"] :is(.text-gray-700, .text-gray-800) {
+    color: #d1d5db;
+  }
+  [data-testid="dashboard-page"]
+    [data-slot="card"]
+    > div:has(> [data-slot="card-title"]) {
+    padding: 16px;
+    align-items: flex-start;
+  }
+  [data-testid="dashboard-page"] [data-slot="card-title"] {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-weight: 700;
+  }
+  [data-testid="dashboard-page"]
+    :is([data-slot="card-title"], .app-card-stat-heading)
+    > svg,
+  [data-testid="dashboard-page"] .card-icon-drop-shadow {
+    color: var(--brand-primary);
+    filter: none;
+  }
+  [data-testid="dashboard-page"] .recharts-cartesian-axis-tick-value {
+    fill: #b3b3b3;
+  }
+  [data-testid="dashboard-page"] .recharts-cartesian-grid line {
+    stroke: #414145;
+  }
+}

@@ -1,0 +1,29 @@
+.equipment-workspace { min-width:0;color:#ececec;background:#242426;border:2px solid var(--brand-primary);border-radius:10px;padding:12px; }
+.equipment-heading { display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px; }
+.equipment-mini { display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:32px;padding:5px 8px;border:1px solid var(--brand-primary);border-radius:6px;background:transparent;color:inherit;font:inherit;font-size:12px;cursor:pointer; }
+.equipment-mini:hover { background:color-mix(in srgb,var(--brand-primary) 12%,transparent); }
+.equipment-mini:disabled { opacity:.5;cursor:default; }
+.equipment-record { padding:9px 0;border-top:1px solid #ffffff18; }
+.equipment-record > summary { display:flex;gap:8px;justify-content:space-between;cursor:pointer;list-style:none;font-size:13px; }
+.equipment-record small { display:block;font-size:11px;color:#bbb; }
+.equipment-record img,.equipment-photos img { width:60px;height:48px;object-fit:cover;border-radius:5px; }
+.equipment-record-body { display:grid;gap:7px;margin-top:8px;font-size:12px; }
+.equipment-actions,.equipment-photos { display:flex;gap:6px;flex-wrap:wrap; }
+.equipment-form { display:grid;gap:10px;font-size:13px; }
+.equipment-form label { display:grid;gap:4px;min-width:0; }
+.equipment-form .equipment-check { display:flex;align-items:center;gap:7px; }
+.equipment-form input:not([type=checkbox]):not([type=file]),.equipment-form select,.equipment-form textarea { width:100%;min-width:0;outline:none;box-shadow:none;border:1px solid var(--brand-primary);border-radius:15px;background:#303236;color:#ececec;padding:6px 10px; }
+.equipment-form input:focus,.equipment-form select:focus,.equipment-form textarea:focus { outline:none;box-shadow:none; }
+.equipment-fields { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px; }
+.equipment-form footer { display:flex;justify-content:flex-end;gap:7px; }
+.equipment-form fieldset { display:contents; }
+.equipment-history { padding-left:18px;font-size:12px; }
+.equipment-history li { margin-bottom:6px; }
+.equipment-map-detail { width:min(320px,calc(100vw - 96px));padding:10px;background:#242426;color:#ececec;font-size:12px; }
+.equipment-map-detail p { margin:5px 0; }
+.equipment-map-detail a { color:var(--brand-primary);text-decoration:none; }
+.equipment-map-error { color:#fbbf24;font-size:12px; }
+@media(max-width:480px) { .equipment-fields {grid-template-columns:minmax(0,1fr);} }
+
+.equipment-map-inventory-link { display:flex;align-items:center;gap:5px;padding-top:8px;color:var(--brand-primary);text-decoration:none;font-size:12px; }
+.gate-map-reveal-heading h3 { overflow:hidden;text-overflow:ellipsis; }

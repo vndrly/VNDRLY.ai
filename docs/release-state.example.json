@@ -9,7 +9,8 @@
       "supabase",
       "ota",
       "testflight",
-      "plugin"
+      "plugin",
+      "local_sync"
     ],
     "restrictions": [
       "REPLACE with actual restrictions"
@@ -71,6 +72,13 @@
       "canProceed": true,
       "nextAction": "Inspect existing work and record the next authorized action",
       "evidence": []
+    },
+    "local_sync": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Synchronize canonical checkout and restart/verify web, API, and iOS preview at the final shipped commit",
+      "evidence": [],
+      "verification": null
     }
   }
 }

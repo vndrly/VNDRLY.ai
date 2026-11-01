@@ -1,10 +1,14 @@
 import React, { useState } from "react";
+import {RefreshCw} from "lucide-react";
+import {WorkHubFiles} from "../files";
+import {Switch} from "@/components/ui/switch";
 import {
   Paragraph as Text,
   Field as TextInput,
   Frame as View,
   Pill as TogglePillButton,
   usePalette as useColors,
+  Heading,
 } from "./editor-controls";
 import { useLocation } from "wouter";
 import { z } from "zod/v4";
@@ -19,6 +23,7 @@ const itemsSchema = z.object({
       itemId: z.uuid(),
       title: z.string(),
       kind: z.string(),
+      platformManaged: z.boolean().default(false),
       state: z.string(),
       version: z.number(),
       contentVersion: z.number(),
@@ -31,6 +36,7 @@ const checklistSchema = z.object({
       instanceId: z.uuid(),
       title: z.string(),
       kind: z.string(),
+      platformManaged: z.boolean().default(false),
       assignment: AssignmentMetadataSchema,
       href: z.string(),
     }),
@@ -73,12 +79,13 @@ export default function LibraryWorkspace({
   const { t } = useTranslation(),
     colors = useColors(),
     [tab, setTab] = useState(canManage ? "library" : "toComplete"),
+    [myServices,setMyServices]=useState(false),
     [search, setSearch] = useState(""),
     [archived, setArchived] = useState(false),
     [create, setCreate] = useState(false),
     [notice, setNotice] = useState("");
   const list = useFormCampaigns(
-    `/api/work-hub/library${archived ? "?archived=true" : ""}`,
+    `/api/work-hub/library?archived=${archived}&myServices=${tab==="training"&&myServices}`,
     (v) => itemsSchema.parse(v),
   );
   const checklist = useFormCampaigns("/api/work-hub/library/to-complete", (v) =>
@@ -121,10 +128,11 @@ export default function LibraryWorkspace({
         : list;
   return (
     <View style={{ gap: 12 }}>
-      <View style={card}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+      <View style={{...card,position:"relative"}}>
+        <button type="button" aria-label={t("workHubLibrary.refresh")} title={t("workHubLibrary.refresh")} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-md text-inherit hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-current" onClick={()=>void relevant.reload()}><RefreshCw aria-hidden="true" className="h-4 w-4"/></button>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8,paddingRight:36 }}>
           {(canManage
-            ? ["library", "bundles", "assignments"]
+            ? ["library", "training", "bundles", "assignments"]
             : ["toComplete"]
           ).map((value) => (
             <TogglePillButton
@@ -141,7 +149,7 @@ export default function LibraryWorkspace({
             </TogglePillButton>
           ))}
         </View>
-        <TextInput
+        {tab!=="library"&&<TextInput
           accessibilityLabel={t("workHubLibrary.searchContent")}
           placeholder={t("workHubLibrary.searchContent")}
           value={search}
@@ -153,8 +161,11 @@ export default function LibraryWorkspace({
             borderRadius: 10,
             padding: 12,
           }}
-        />
-        {canManage && ["library", "bundles"].includes(tab) && (
+        />}
+        {tab==="training"&&<Text style={label}>{t("workHubLibrary.managedTraining")}</Text>}
+        {tab==="training"&&<label className="flex items-center gap-3"><span>{t("workHubLibrary.allTraining")}</span><Switch aria-label={t("workHubLibrary.myServices")} checked={myServices} onCheckedChange={setMyServices}/><span>{t("workHubLibrary.myServices")}</span></label>}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        {canManage && ["training", "bundles"].includes(tab) && (
           <>
             <TogglePillButton
               color="brand"
@@ -163,7 +174,7 @@ export default function LibraryWorkspace({
             >
               {t("workHubLibrary.archived")}
             </TogglePillButton>
-            <TogglePillButton
+            {tab==="bundles"&&<TogglePillButton
               color="brand"
               onPress={() =>
                 tab === "bundles"
@@ -176,15 +187,14 @@ export default function LibraryWorkspace({
                   ? "workHubLibrary.newBundle"
                   : "workHubLibrary.createContent",
               )}
-            </TogglePillButton>
+            </TogglePillButton>}
           </>
         )}
+        
+        </View>
         {!!(notice || relevant.error) && (
           <Text style={label}>{notice || relevant.error}</Text>
         )}
-        <TogglePillButton color="brand" onPress={() => void relevant.reload()}>
-          {t("workHubLibrary.refresh")}
-        </TogglePillButton>
       </View>
       {create && (
         <View style={card}>
@@ -223,7 +233,7 @@ export default function LibraryWorkspace({
           .filter((i) => i.title.toLowerCase().includes(search.toLowerCase()))
           .map((item) => (
             <View key={item.instanceId} style={card}>
-              <Text style={{ ...label, fontWeight: "700" }}>{item.title}</Text>
+              <Heading>{item.title}</Heading>
               <Text style={label}>
                 {t(`workHubLibrary.status_${item.assignment.status}`)} ·{" "}
                 {new Date(item.assignment.dueAt).toLocaleString()}
@@ -240,16 +250,17 @@ export default function LibraryWorkspace({
               </TogglePillButton>
             </View>
           ))}
-      {["library", "bundles"].includes(tab) &&
+      {tab==="library"&&<WorkHubFiles defaultScope="company" trainingMaterials/>}
+      {["training", "bundles"].includes(tab) &&
         list.data?.items
           .filter(
             (i) =>
-              (tab === "bundles" ? i.kind === "bundle" : i.kind !== "bundle") &&
+              (tab === "bundles" ? i.kind === "bundle" : tab === "training" ? i.kind === "training" && i.platformManaged : !["bundle", "training"].includes(i.kind)) &&
               i.title.toLowerCase().includes(search.toLowerCase()),
           )
           .map((item) => (
             <View key={item.itemId} style={card}>
-              <Text style={{ ...label, fontWeight: "700" }}>{item.title}</Text>
+              <Heading>{item.title}</Heading>
               <Text style={label}>
                 {t(`workHubLibrary.kind_${item.kind}`)} ·{" "}
                 {t(`workHubLibrary.state_${item.state}`)} ·{" "}
@@ -274,9 +285,9 @@ export default function LibraryWorkspace({
           )
           .map((item) => (
             <View key={item.instanceId} style={card}>
-              <Text style={{ ...label, fontWeight: "700" }}>
+              <Heading>
                 {item.title} · {item.name}
-              </Text>
+              </Heading>
               <Text style={label}>
                 {t(`workHubLibrary.status_${item.status}`)} ·{" "}
                 {new Date(item.dueAt).toLocaleString()}
@@ -296,7 +307,7 @@ export default function LibraryWorkspace({
       {tab === "assignments" &&
         assignments.data?.anonymous.map((item) => (
           <View key={item.itemId} style={card}>
-            <Text style={{ ...label, fontWeight: "700" }}>{item.title}</Text>
+            <Heading>{item.title}</Heading>
             <Text style={label}>
               {t("workHubLibrary.anonymous")} · {item.responded}/{item.assigned}
             </Text>

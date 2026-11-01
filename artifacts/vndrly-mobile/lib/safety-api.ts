@@ -64,3 +64,9 @@ export async function fetchCompanySafetyReadiness() {
   const json = await apiFetch<ApiEnvelope<unknown>>("/api/safety/readiness");
   return CompanySafetyReadinessSchema.parse(json.data);
 }
+
+export async function fetchSafetyMaturity() {
+ const { SafetyMaturitySummarySchema } = await import("@workspace/api-zod");
+ const json = await apiFetch<ApiEnvelope<unknown>>("/api/safety/maturity");
+ return SafetyMaturitySummarySchema.parse(json.data);
+}

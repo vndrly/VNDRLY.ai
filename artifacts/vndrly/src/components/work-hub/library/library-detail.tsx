@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import {useAuth} from "@/hooks/use-auth";
 import {
   Paragraph as Text,
   Frame as View,
@@ -40,6 +41,7 @@ const schema = z.object({
   ),
 });
 export default function LibraryDetail({ itemId }: { itemId: string }) {
+  const {user}=useAuth();
   const [, navigate] = useLocation();
   const search=useSearch(),requested=new URLSearchParams(search).get('view');
   const trainingView:TrainingView=['policy','review','assign'].includes(requested??'')?requested as TrainingView:'training';
@@ -261,19 +263,21 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
             </Text>
           ))}
           {m.content.training?.lessons.map((lesson) => (
-            <View key={lesson.id} style={{ gap: 8 }}>
+            <View key={lesson.id} style={{ gap: 8, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, padding: 12, minWidth: 0, maxWidth: "100%" }}>
               <Text style={{ ...label, fontWeight: "700" }}>
                 {lesson.title}
               </Text>
               <LibraryBody text={lesson.body} color={colors.text} />
             </View>
           ))}
-          {m.content.training?.questions.map((q) => (
+          {user?.role==="admin"&&!!m.content.training?.questions.length&&<section aria-label="Question bank" data-library-card="" className="space-y-3 rounded-xl border-2 border-[var(--brand-primary)] p-3">
+          <h3 className="font-bold">Question bank</h3>
+          {m.content.training?.questions.map((q, questionIndex) => (
             <View key={q.id} style={{ gap: 8 }}>
-              <Text style={{ ...label, fontWeight: "700" }}>{q.prompt}</Text>
-              {q.options.map((o) => (
-                <Text key={o.id} style={label}>
-                  {o.label}
+              <Text style={{ ...label, fontWeight: "700" }}>{questionIndex + 1}. {q.prompt}</Text>
+              {q.options.map((o, answerIndex) => (
+                <Text key={o.id} style={{ ...label, ...(data.canManage && "correctOptionIds" in q ? (q.correctOptionIds.includes(o.id) ? { color: colors.primary, fontWeight: "700" } : { color: "#a3a3a3" }) : {}) }}>
+                  {String.fromCharCode(97 + answerIndex)}. {o.label}
                   {data.canManage && "correctOptionIds" in q && q.correctOptionIds.includes(o.id)
                     ? ` · ${t("workHubLibrary.correctAnswer")}`
                     : ""}
@@ -282,6 +286,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
               {data.canManage&&explanations[q.id]&&<LibraryBody text={explanations[q.id]} color={colors.text}/>}
             </View>
           ))}
+          </section>}
           {m.content.poll?.choices.map((o) => (
             <Text key={o.id} style={label}>
               {o.label}

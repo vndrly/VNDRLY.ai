@@ -19,7 +19,7 @@ afterEach(cleanup);
 describe('Policy-preselected assignment recipients',()=>{
  it('expands the selected staff position to its people without changing the course or requiring a policy change',async()=>{
   render(<AssignmentReview kind="training" initialItemId={itemId} positions={[{id:'staff:driver',label:'Driver',userIds:[17,23]}]} onSaved={vi.fn()}/>);
-  fireEvent.click(screen.getByRole('button',{name:'Driver (2)'}));
+  fireEvent.click(screen.getByLabelText('Driver (2)'));
   fireEvent.click(screen.getByRole('button',{name:'workHubLibrary.review'}));
   await waitFor(()=>expect(mock.request).toHaveBeenCalled());
   expect(JSON.parse(mock.request.mock.calls[0][1].body).audience).toEqual({mode:'selected',userIds:[17,23],groupIds:[]});
@@ -29,8 +29,8 @@ describe('Policy-preselected assignment recipients',()=>{
   const onSaved=vi.fn().mockResolvedValue(undefined);
   render(<AssignmentReview kind="training" initialItemId={itemId} initialUserIds={[17]} initialGroupIds={['crew:1']} onSaved={onSaved}/>);
   expect(screen.getByRole('button',{name:'Assigned safety course'}).getAttribute('aria-pressed')).toBe('true');
-  expect(screen.getByRole('button',{name:'Alex Worker'}).getAttribute('aria-pressed')).toBe('true');
-  expect(screen.getByRole('button',{name:'Night Crew'}).getAttribute('aria-pressed')).toBe('true');
+  expect((screen.getByLabelText('Alex Worker') as HTMLInputElement).checked).toBe(true);
+  expect((screen.getByLabelText('Night Crew') as HTMLInputElement).checked).toBe(true);
   fireEvent.click(screen.getByRole('button',{name:'workHubLibrary.review'}));
   await waitFor(()=>expect(screen.getByRole('button',{name:'workHubLibrary.confirmAssign'})).toBeTruthy());
   const [path,init]=mock.request.mock.calls[0];expect(path).toBe('/library/assignment-preview');
@@ -44,11 +44,11 @@ describe('Policy-preselected assignment recipients',()=>{
  it('preserves deliberate audience edits when a parent rerenders with new preselection array references',async()=>{
   const onSaved=vi.fn().mockResolvedValue(undefined);
   const {rerender}=render(<AssignmentReview kind="training" initialItemId={itemId} initialUserIds={[17]} initialGroupIds={['crew:1']} onSaved={onSaved}/>);
-  fireEvent.click(screen.getByRole('button',{name:'Alex Worker'}));fireEvent.click(screen.getByRole('button',{name:'Sam Worker'}));
-  fireEvent.click(screen.getByRole('button',{name:'Night Crew'}));fireEvent.click(screen.getByRole('button',{name:'Day Crew'}));
+  fireEvent.click(screen.getByLabelText('Alex Worker'));fireEvent.click(screen.getByLabelText('Sam Worker'));
+  fireEvent.click(screen.getByLabelText('Night Crew'));fireEvent.click(screen.getByLabelText('Day Crew'));
   rerender(<AssignmentReview kind="training" initialItemId={itemId} initialUserIds={[17]} initialGroupIds={['crew:1']} onSaved={onSaved}/>);
-  expect(screen.getByRole('button',{name:'Alex Worker'}).getAttribute('aria-pressed')).toBe('false');expect(screen.getByRole('button',{name:'Sam Worker'}).getAttribute('aria-pressed')).toBe('true');
-  expect(screen.getByRole('button',{name:'Night Crew'}).getAttribute('aria-pressed')).toBe('false');expect(screen.getByRole('button',{name:'Day Crew'}).getAttribute('aria-pressed')).toBe('true');
+  expect((screen.getByLabelText('Alex Worker') as HTMLInputElement).checked).toBe(false);expect((screen.getByLabelText('Sam Worker') as HTMLInputElement).checked).toBe(true);
+  expect((screen.getByLabelText('Night Crew') as HTMLInputElement).checked).toBe(false);expect((screen.getByLabelText('Day Crew') as HTMLInputElement).checked).toBe(true);
   fireEvent.click(screen.getByRole('button',{name:'workHubLibrary.review'}));
   await waitFor(()=>expect(mock.request).toHaveBeenCalledOnce());
   expect(JSON.parse(mock.request.mock.calls[0][1].body).audience).toEqual({mode:'selected',userIds:[23],groupIds:['crew:2']});
@@ -56,8 +56,8 @@ describe('Policy-preselected assignment recipients',()=>{
 
  it('resets the edited selection to the provided recipients when the company/auth context changes',()=>{
   const onSaved=vi.fn().mockResolvedValue(undefined);const {rerender}=render(<AssignmentReview kind="training" initialItemId={itemId} initialUserIds={[17]} initialGroupIds={['crew:1']} onSaved={onSaved}/>);
-  fireEvent.click(screen.getByRole('button',{name:'Alex Worker'}));fireEvent.click(screen.getByRole('button',{name:'Sam Worker'}));
+  fireEvent.click(screen.getByLabelText('Alex Worker'));fireEvent.click(screen.getByLabelText('Sam Worker'));
   mock.context='other-company:user:1';rerender(<AssignmentReview kind="training" initialItemId={itemId} initialUserIds={[17]} initialGroupIds={['crew:1']} onSaved={onSaved}/>);
-  expect(screen.getByRole('button',{name:'Alex Worker'}).getAttribute('aria-pressed')).toBe('true');expect(screen.getByRole('button',{name:'Sam Worker'}).getAttribute('aria-pressed')).toBe('false');
+  expect((screen.getByLabelText('Alex Worker') as HTMLInputElement).checked).toBe(true);expect((screen.getByLabelText('Sam Worker') as HTMLInputElement).checked).toBe(false);
  });
 });

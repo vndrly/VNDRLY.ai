@@ -15,6 +15,9 @@ $NodeDir = Join-Path $Repo ".local\tools"
 $env:Path = "$NodeDir;C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
 Remove-Item Env:NODE_OPTIONS -ErrorAction SilentlyContinue
 $env:VNDRLY_LOAD_ENV_LOCAL = "1"
+$selection = & node (Join-Path $Repo 'scripts/local-preview-checkout.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Local checkout is older than the shipped release.' }
+$Repo = ($selection | ConvertFrom-Json).root
 
 function Test-PortListening {
   param([int]$Port)
@@ -63,6 +66,37 @@ function Stop-DuplicateViteWatchers {
     }
 }
 
+function Stop-LocalRunners {
+  param([string]$ServicePattern = 'api|vite|expo')
+  $processes = @(Get-CimInstance Win32_Process)
+  $ids = @($processes | Where-Object {
+    $_.Name -eq 'node.exe' -and $_.CommandLine -match "run-($ServicePattern)-local\.mjs"
+  } | Select-Object -ExpandProperty ProcessId)
+  do {
+    $children = @($processes | Where-Object { $_.ParentProcessId -in $ids -and $_.ProcessId -notin $ids } | Select-Object -ExpandProperty ProcessId)
+    $ids += $children
+  } while ($children.Count -gt 0)
+  foreach ($serviceId in $ids) { Stop-Process -Id $serviceId -Force -ErrorAction SilentlyContinue }
+}
+
+function Assert-ServiceCheckout {
+  param([int]$Port)
+  $processes = @(Get-CimInstance Win32_Process)
+  foreach ($listener in @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)) {
+    $currentId = $listener.OwningProcess
+    $matched = $false
+    $visited = @()
+    while ($currentId -and $currentId -notin $visited) {
+      $visited += $currentId
+      $process = $processes | Where-Object ProcessId -eq $currentId | Select-Object -First 1
+      if (-not $process) { break }
+      if ($process.CommandLine -like "*$Repo*" -and $process.CommandLine -match 'run-(api|vite|expo)-local\.mjs') { $matched = $true; break }
+      $currentId = $process.ParentProcessId
+    }
+    if (-not $matched) { throw "Port $Port is served by another checkout. Run pnpm wake with recovery before treating it as current." }
+  }
+}
+
 function Test-ViteApiProxy {
   try {
     $resp = Invoke-WebRequest -Uri "http://localhost:5173/api/healthz" -UseBasicParsing -TimeoutSec 5
@@ -95,9 +129,11 @@ $viteScript = Join-Path $Repo "scripts/start-vite-dev.ps1"
 
 if ($Recover) {
   Write-Host "Recovering local dev - stopping listeners on :8080 and :5173..."
-  Stop-DuplicateViteWatchers
+  Stop-LocalRunners
   Stop-PortListener -Port 8080
   Stop-PortListener -Port 5173
+  Stop-PortListener -Port 8081
+  Stop-PortListener -Port 8099
   Stop-OrphanVitePorts
   Start-Sleep -Seconds 2
 }
@@ -114,6 +150,7 @@ $viteStarted = $false
 
 if ($RefreshApi -and $apiUp) {
   Write-Host "Restarting local API on :8080..."
+  Stop-LocalRunners -ServicePattern 'api'
   Stop-PortListener -Port 8080
   Start-Sleep -Seconds 2
   $apiUp = $false
@@ -121,7 +158,7 @@ if ($RefreshApi -and $apiUp) {
 
 if (-not $apiUp) {
   Write-Host "Starting local API on :8080..."
-  Start-Process powershell -ArgumentList @(
+  Start-Process powershell -WindowStyle Hidden -ArgumentList @(
     "-NoExit", "-ExecutionPolicy", "Bypass", "-Command",
     "`$Host.UI.RawUI.WindowTitle = 'VNDRLY API (8080)'; & '$apiScript'"
   )
@@ -142,7 +179,7 @@ if ($viteUp -and -not (Test-ViteApiProxy)) {
 
 if (-not $viteUp) {
   Write-Host "Starting local web on :5173..."
-  Start-Process powershell -ArgumentList @(
+  Start-Process powershell -WindowStyle Hidden -ArgumentList @(
     "-NoExit", "-ExecutionPolicy", "Bypass", "-Command",
     "`$Host.UI.RawUI.WindowTitle = 'VNDRLY Web (5173)'; & '$viteScript'"
   )
@@ -161,8 +198,22 @@ if (-not $viteUp) {
 
 Stop-OrphanVitePorts
 
+if (-not (Test-PortListening -Port 8081)) {
+  Write-Host 'Starting iOS web preview on :8081...'
+  $logDir = Join-Path $Repo '.local'
+  New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+  Start-Process node -WindowStyle Hidden -ArgumentList @((Join-Path $Repo 'scripts/run-expo-local.mjs')) -WorkingDirectory $Repo `
+    -RedirectStandardOutput (Join-Path $logDir 'expo-startup.out.log') -RedirectStandardError (Join-Path $logDir 'expo-startup.err.log')
+  if (-not (Wait-ForPort -Port 8081 -Label 'iOS preview' -TimeoutSeconds 60)) { throw 'iOS preview failed to start.' }
+}
+foreach ($port in @(5173, 8080, 8081)) { Assert-ServiceCheckout -Port $port }
+foreach ($url in @('http://localhost:5173/', 'http://localhost:5173/api/healthz', 'http://localhost:8080/api/healthz', 'http://localhost:8081/', 'http://localhost:8099/api/healthz')) {
+  $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 45
+  if ($response.StatusCode -ne 200) { throw "Unhealthy local preview: $url" }
+}
+
 Write-Host ""
-Write-Host "Local dev ready: http://localhost:5173/ (API http://localhost:8080/)"
+Write-Host "Local dev ready: web :5173, API :8080, iOS preview :8081, proxy :8099. Checkout: $Repo"
 
 if ($OpenBrowser -or $viteStarted) {
   Start-Process 'http://localhost:5173/'

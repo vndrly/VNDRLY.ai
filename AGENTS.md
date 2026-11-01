@@ -41,13 +41,13 @@ These compliance guardrails do not replace or amend any existing hard directive 
 
 ### HARD GUARDRAIL — EXECUTE THE MANIFEST, DO NOT SUBSTITUTE (John, 2026-10-25)
 
-- A full ship executes ALL eight tracks below. Do not replace execution with an audit, a plan, a status report, or a subset chosen by the agent. Reusing passing checks does not waive publishing a required track.
+- A full ship executes ALL nine tracks below. Do not replace execution with an audit, a plan, a status report, or a subset chosen by the agent. Reusing passing checks does not waive publishing a required track.
 - Before each release action, identify its manifest track and the specific required outcome it advances. If it serves neither that outcome nor a demonstrated failure of that track, do not do it. No unrelated refactors, account setup, product changes, or investigation side quests.
 - Use the established release entry points. Read the manifest and existing release scripts before choosing a route. Do not invent a publishing route and then promote that route's requirements into requirements of full ship. A failed route proves only that route failed.
 - Preserve John's exact command and subsequent corrections in the ledger. Agent interpretations must be labeled separately; never overwrite the command, reset its deadline, or narrow its completion criteria. Corrections govern the very next action.
 - Plugin scope, as explicitly corrected by John: rebuild the matching plugin and submit the updated plugin to ChatGPT. Updating John's personal installed instance, reconnecting that instance, creating another catalogue entry, and waiting for public approval are NOT full-ship requirements. Do not introduce them as blockers.
 - Do not add approvals to already authorized work. Any unavoidable higher-priority permission restriction must be identified by its exact action and source; it is not permission to abandon other tracks or invent work for John.
-- Maintain all eight tracks through completion. Never silently skip a step, label an attempt complete, or use success on one track as proof for another. If no commit or migration is needed, record the concrete state and reason; do not invent empty commits or database changes.
+- Maintain all nine tracks through completion. Never silently skip a step, label an attempt complete, or use success on one track as proof for another. If no commit or migration is needed, record the concrete state and reason; do not invent empty commits or database changes.
 - Batch necessary checks logically, reuse valid results for unchanged code, and monitor independent release jobs concurrently. Do not restart checks or jobs merely because a turn or context ended.
 - An interruption preserves the task and its authorization. Inspect saved jobs before further execution. Never describe a partial ship as a full ship or claim continued agent work after ending a turn.
 - Do not edit these rules, the manifest, or the handoff gate to make a failing release appear complete. Only an explicit user instruction can change scope. A genuine tool restriction remains a restriction, not an invented exception or a success.
@@ -64,7 +64,7 @@ authorization and does not justify stopping independent work.
   restrictions, requested deadline, and completion criteria in
   `.local/release-state.json`. Preserve them across retries and interruptions;
   only a subsequent user instruction changes them. Store no credentials.
-- Track all eight full-ship tracks separately using the ledger and gate described
+- Track all nine full-ship tracks separately using the ledger and gate described
   in `docs/release-fast-path.md`. A blocked track must not stop runnable tracks
   or monitoring of active jobs. Investigate supported alternatives without
   bypassing security restrictions or expanding the authorized scope.
@@ -99,9 +99,9 @@ VNDRLY is a full-stack web application designed to streamline oil & gas field op
 ## User Preferences
 I prefer clear, concise explanations and an iterative development approach. Please ask before making any major architectural changes or introducing new external dependencies. I value well-documented code and a focus on maintainability.
 
-### STANDING RULE — FULL SHIP UPDATES EVERYTHING ONLINE
+### STANDING RULE — FULL SHIP UPDATES EVERYTHING ONLINE AND LOCALLY
 **"full ship"** (also **"commit, push, deploy, and ship"**) means
-**update everything online**. Do not ask whether a track is included.
+**update everything online and locally to the same shipped commit**. Do not ask whether a track is included.
 Do not treat any of these as optional, later, or "separate":
 
 1. **Commit** the changes.
@@ -129,7 +129,26 @@ Do not treat any of these as optional, later, or "separate":
    approved and publicly available status.
    Never report public availability while OpenAI review is pending.
 
-Stay on it through troubleshooting until all eight tracks are verified. Do not
+9. **Local synchronization** — synchronize the canonical local project, local
+   `main`, and web/API/iOS web preview with the exact final shipped commit.
+   Shipping from a worktree does not waive updating the main local project.
+   Reconcile release changes and remove stale copies from the startup path;
+   do not leave an older checkout or leftover source changes serving localhost.
+   Preserve unrelated work separately and report it; do not silently discard it
+   or claim a dirty checkout is synchronized. Restart/rebuild all local services:
+   web `:5173`, API `:8080`, and iOS web preview `:8081` (including its proxy).
+   Verify process source paths, commit, built/served artifact hashes, health,
+   and actual rendered web/mobile pages. HTTP 200 alone is not verification.
+   Record `local_sync` evidence and structured `verification` as specified in
+   `docs/release-fast-path.md`. A mixed version, stale process, uncommitted source
+   change, or missing local preview forbids full-ship completion.
+
+**Full means operationally synchronized, not partially updated.** All nine tracks
+must refer to the same final shipped commit. If a later fix changes that commit,
+invalidate and refresh affected publication and local evidence. A partial update
+must be called partial; it must never be called a full ship.
+
+Stay on it through troubleshooting until all nine tracks are verified. Do not
 pause to re-ask permission between stages.
 
 This standing authorization never permits a force push/history rewrite,
@@ -166,12 +185,13 @@ Follow this path without adding approval or duplicate-validation delays:
    release-only commits unless they fix a demonstrated failure.
 4. Start monitoring web Publish, API Deploy (including guarded
    Supabase migrations), Expo OTA, TestFlight build/submit, and the
-   ChatGPT plugin update
+   ChatGPT plugin update and canonical local synchronization
    concurrently. Verify `https://vndrly.ai` / `/gate`,
    `https://vndrly.ai/api/healthz`, the Expo update group, and the
    TestFlight build, and the matching ChatGPT plugin submission result.
 5. Full ship is not complete until TestFlight is submitted and the matching
-   ChatGPT plugin update is submitted and verified. Web
+   ChatGPT plugin update is submitted and verified, and the canonical local
+   checkout and all local services match that same shipped commit. Web
    or API going live first does not finish the ship. Fix native
    blockers under the same release command.
 6. On failure, retrieve the exact job logs, fix the root cause, and retry under
@@ -179,7 +199,9 @@ Follow this path without adding approval or duplicate-validation delays:
    for a safe retry already covered by the release command.
 7. The release handoff must include the commit, workflow results, public
    verification, TestFlight status, ChatGPT plugin version and submission
-   evidence, public plugin review status, and elapsed commit-to-live time.
+   evidence, public plugin review status, local synchronization evidence for all
+   three local services, and elapsed commit-to-live time. The completion gate
+   must reject local/remote commit mismatches and leftover source changes.
 
 The detailed checklist and measured baseline are in
 `docs/release-fast-path.md`.

@@ -1,4 +1,5 @@
 import WorkdayControls from "@/components/WorkdayControls";
+import TogglePillButton from "@/components/TogglePillButton";
 import { Feather } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import { router, useFocusEffect } from "expo-router";
@@ -719,6 +720,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={{ paddingTop: Math.max(0, topPadding - 20) }}>
         <PortalPageHeader afterTitle={<WorkdayControls />} title={t(homeTabTitleKey(me))} testIdPrefix="field-portal" notificationHref="/notifications" fallbackHref="/work-hub" backBehavior="history" />
+        <View style={{ paddingHorizontal: 20, marginBottom: 12 }}><TogglePillButton color="blue" onPress={() => router.push("/equipment" as never)}>{t("equipment.title", { defaultValue: "Equipment Inventory" })}</TogglePillButton></View>
         {orgName && (!isForemanEmployee || canSwitchOrg) ? (
           <View style={{ paddingHorizontal: 20, marginBottom: 12, flexDirection: "row", alignItems: "center", gap: 8 }}>
             {canSwitchOrg ? (

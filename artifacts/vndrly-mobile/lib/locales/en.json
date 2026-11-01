@@ -1,4 +1,24 @@
 {
+  "safetyMaturity": {
+    "title": "Safety program maturity",
+    "separate": "Job/site readiness and incident history are assessed separately and do not add maturity points.",
+    "demo": "DEMO — synthetic CompanyGo scores and evidence examples. No real safety verification is represented.",
+    "demoShort": "DEMO — synthetic score",
+    "incomplete": "Assessment incomplete — no credit for unverified requirements.",
+    "leadership": "Leadership and worker participation",
+    "hazards": "Hazard identification and controls",
+    "competence": "Competence and authorization",
+    "equipment": "Equipment and operational readiness",
+    "learning": "Incident response and learning",
+    "emergency": "Emergency preparedness and improvement",
+    "level0": "No verified evidence",
+    "level1": "25% — documented practice and accountable owner",
+    "level2": "50% — implemented with current records",
+    "level3": "75% — implementation checked",
+    "level4": "100% — effectiveness demonstrated",
+    "library": "Library"
+  },
+  "equipment": { "title": "Equipment Inventory" },
   "mobileMarketplace": {
     "quoteRequired": "Quote required",
     "requestQuote": "Request quote",

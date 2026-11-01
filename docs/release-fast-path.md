@@ -65,9 +65,13 @@ or unfinished implementation is development time, not web deployment time.
    client assets.
 7. After API deployment, rebuild and submit the updated VNDRLY ChatGPT plugin
    using its existing identity, as explicitly directed by John.
-8. Report the commit, all workflow results, public checks, Expo update group,
+8. Synchronize the canonical local project and local `main` to the final shipped
+   commit. Reconcile leftover changes, then rebuild/restart web, API and iOS web
+   preview from that checkout. Inspect process provenance and artifacts, and
+   verify the rendered web and mobile pages. Do not reuse a healthy stale process.
+9. Report the commit, all workflow results, public checks, Expo update group,
    TestFlight submission, plugin version and submission evidence, public plugin
-   review status, and commit-to-live elapsed time. A web-live update may be
+   review status, local synchronization results, and commit-to-live elapsed time. A web-live update may be
    reported immediately, but is not full-ship completion.
 
 ## Validation reuse
@@ -107,6 +111,40 @@ test database described in `AGENTS.md`.
 - Full ship requires TestFlight submission and the matching plugin submission,
   together with all other mandatory tracks in AGENTS.md.
 
+## Local synchronization — mandatory full-ship track (2026-10-31)
+
+Full means every required update path is operationally synchronized to the same
+final shipped commit. Publication from a worktree must also update the canonical
+local project. Never leave local `main` behind remote `main`, preserve stale source
+over the release, or call a partially updated installation a full ship.
+
+After reconciling the local checkout, restart web `http://localhost:5173/`, API
+`http://localhost:8080/api/healthz`, and iOS web preview `http://localhost:8081/`
+with its API proxy. Preserve unrelated work outside the release checkout, without
+discarding it or presenting it as shipped. Concurrent new development means this
+checkout is no longer an exact release snapshot and cannot pass completion.
+
+Record `tracks.local_sync.verification` with:
+
+- `checkout`: canonical absolute project path; `commit` and `remoteMain`: exact
+  final release SHA; `trackedChanges` and `untrackedFiles`: inspected empty arrays.
+- `syncedAt` and `checkedAt`: ISO timestamps in execution order.
+- `services.web`, `services.api`, `services.ios`, and `services.proxy` (port 8099): each contains `checkout`,
+  `commit`, inspected `pid`, `startedAt` after synchronization, `checkedAt`, `url`,
+  `httpStatus: 200`, `sourceProof` (process/source and build report), and
+  `artifactSha256` (the inspected served bundle or rebuilt API artifact).
+- Web and iOS also require `browserProof`: a report/screenshot of the actual
+  rendered page checked against the release. A login screen proves only login
+  rendering, not an authenticated changed page such as Gate Map.
+
+Inspect these facts before recording them. The gate validates the evidence
+structure and commit equality, and its completion command re-reads local HEAD,
+origin/main and working-tree status to reject a stale clean receipt. It cannot
+independently certify remote deployment or rendered-browser claims.
+Changing the final release SHA invalidates old evidence for every track. Refresh
+affected deployments and local services before claiming completion. Never edit
+an earlier authorization or historical ledger to pretend it included new evidence.
+
 ## Failure handling
 
 At the first failed or stalled boundary, retrieve its logs and identify the
@@ -126,8 +164,8 @@ deadline (if supplied), release commit, actual verification evidence, each
 track's next action, and active workflow/session IDs. Do not store secrets or
 raw credential-bearing logs. An unknown deadline must remain null, not invented.
 
-The eight track IDs are `commit`, `push`, `web`, `api`, `supabase`, `ota`,
-`testflight`, and `plugin`. Each is `pending`, `running`, `blocked`, or `verified`.
+The nine track IDs are `commit`, `push`, `web`, `api`, `supabase`, `ota`,
+`testflight`, `plugin`, and `local_sync`. Each is `pending`, `running`, `blocked`, or `verified`.
 Evidence entries contain `source` (workflow URL, report path, or live check),
 `observedAt` (ISO timestamp), `commit`, and `result` (what was actually confirmed).
 For verified tracks, the evidence must prove that track's completion criteria
@@ -149,7 +187,7 @@ node scripts/release-handoff-gate.mjs .local/release-state.json blocked
 
 Both commands fail closed on missing records/evidence, wrong release commits,
 active jobs, pending/running tracks, or runnable next steps. `complete` requires
-8/8 verified. `blocked` requires at least one documented blocker and every other
+9/9 verified. `blocked` requires at least one documented blocker and every other
 track verified or independently blocked. A passed blocked gate is NOT success.
 Do not change status merely to pass the gate. Verify external facts first.
 

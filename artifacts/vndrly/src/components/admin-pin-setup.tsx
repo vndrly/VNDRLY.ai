@@ -8,7 +8,9 @@ import { PngPillButton } from "@/components/png-pill-rollover";
 const endpoint = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/auth/admin-pin`;
 export async function saveOrVerifyPin(body: { action: "create" | "verify"; pin: string; confirmPin?: string }) {
   const response = await fetch(endpoint, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const data = await response.json();
+  let data: { message?: string };
+  try { data = await response.json(); }
+  catch { throw new Error("The server is temporarily unavailable. Please try again."); }
   if (!response.ok) throw new Error(data.message || "Unable to verify PIN.");
 }
 

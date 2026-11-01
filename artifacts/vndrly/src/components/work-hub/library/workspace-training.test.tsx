@@ -1,0 +1,20 @@
+import React from 'react';
+import {it,expect,vi,afterEach} from 'vitest';
+import {render,screen,fireEvent,cleanup} from '@testing-library/react';
+import Workspace from './index';
+vi.mock('wouter',()=>({useLocation:()=>['',vi.fn()]}));
+vi.mock('react-i18next',()=>({useTranslation:()=>({t:(key:string)=>key})}));
+vi.mock('../files',()=>({WorkHubFiles:()=> <div>Vendor uploaded files</div>}));
+vi.mock('./library-editor',()=>({default:()=>null}));
+vi.mock('./training-actions',()=>({TrainingActions:()=>null}));
+vi.mock('./editor-controls',()=>({Frame:({children}:any)=><div>{children}</div>,Paragraph:({children}:any)=><p>{children}</p>,Heading:({children}:any)=><h2>{children}</h2>,Field:({accessibilityLabel,value,onChangeText}:any)=><input aria-label={accessibilityLabel} value={value} onChange={e=>onChangeText(e.target.value)}/>,Pill:({children,onPress}:any)=><button onClick={onPress}>{children}</button>,usePalette:()=>({})}));
+const paths:string[]=[];
+vi.mock('./use-library',()=>({useLibrary:(path:string)=>{paths.push(path);return {reload:vi.fn(),data:{items:path.includes('/options')||path.includes('/assignments')||path.includes('/to-complete')?[]:[{itemId:'a',title:'Managed course',kind:'training',platformManaged:true,contentVersion:1},{itemId:'b',title:'Vendor course',kind:'training',platformManaged:false,contentVersion:1}],files:[]}};}}));
+afterEach(cleanup);
+it('shows vendor files in Library and managed courses with a service scope switch in Training',()=>{
+ render(<Workspace canManage/>);expect(screen.getByText('Vendor uploaded files')).toBeTruthy();expect(screen.queryByText('Managed course')).toBeNull();
+ fireEvent.click(screen.getByText('workHubLibrary.training'));
+ expect(screen.getByText('Managed course')).toBeTruthy();expect(screen.queryByText('Vendor course')).toBeNull();
+ fireEvent.click(screen.getByRole('switch',{name:'workHubLibrary.myServices'}));
+ expect(paths.some(p=>p.includes('myServices=true'))).toBe(true);
+});

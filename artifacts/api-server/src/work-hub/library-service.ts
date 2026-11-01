@@ -1,3 +1,4 @@
+import {selectedTrainingServices,trainingCatalog,additionalTrainingApplies} from "../lib/company-required-training";
 import { randomUUID, createHash } from "node:crypto";
 import { and, eq, isNull, desc, sql } from "drizzle-orm";
 import {
@@ -29,6 +30,7 @@ export async function listLibrary(
   actor: LibraryActor,
   archived = false,
   publishedOnly = false,
+  myServices = false,
 ) {
   const { owner, member } = await libraryAuthority(db, actor);
   const rows = await db
@@ -43,6 +45,8 @@ export async function listLibrary(
     )
     .orderBy(desc(templates.createdAt))
     .limit(1000);
+  let applicable:Set<string>|null=null;
+  if(myServices){const selected=await selectedTrainingServices(db,owner);applicable=new Set([...trainingCatalog.common.rules.flatMap(r=>r.familyIds),...selected.services.flatMap(s=>s.roleMappings.flatMap(r=>r.familyIds)),...trainingCatalog.additional.courses.filter(c=>selected.services.some(s=>additionalTrainingApplies(c,s))).map(c=>c.courseId)]);}
   const seen = new Set<string>();
   const result = [];
   for (const row of rows) {
@@ -63,6 +67,7 @@ export async function listLibrary(
     const m = LibraryMetadataSchema.parse(row.libraryMetadata);
     if ((member.role !== "admin" || publishedOnly) && m.state !== "published")
       continue;
+    if(myServices&&m.kind==="training"&&(!m.safetyResource||!applicable?.has(m.safetyResource.familyId)))continue;
     if (seen.has(m.seriesId)) continue;
     seen.add(m.seriesId);
     if (
@@ -80,6 +85,7 @@ export async function listLibrary(
       seriesId: m.seriesId,
       canManage: member.role === "admin",
       legacy: false,
+      platformManaged: !!m.safetyResource,
     });
   }
   return { items: result };
@@ -93,7 +99,7 @@ export async function getLibrary(actor: LibraryActor, id: string) {
   return {
     itemId: id,
     title: record.name,
-    metadata: safeLibraryContent(metadata, manage),
+    metadata: safeLibraryContent(metadata, actor.role === "admin"),
     bundle: record.bundleDefinition
       ? BundleDefinitionSchema.parse(record.bundleDefinition)
       : null,
@@ -168,6 +174,8 @@ export async function saveLibrary(
       let m: LibraryMetadata;
       if (id) {
         const current = await libraryRecord(tx, actor, id, true, true);
+        if(bundle && actor.role!=="admin" && current.record.bundleDefinition){for(const previous of BundleDefinitionSchema.parse(current.record.bundleDefinition).entries){if(bundleData!.entries.some(e=>e.templateId===previous.templateId&&e.contentVersion===previous.contentVersion))continue;const source=await libraryRecord(tx,actor,previous.templateId);if(source.metadata.safetyResource)throw new LibraryError("VNDRLY-managed bundle courses must be retained; add supplemental training instead",403);}}
+        if(current.metadata.safetyResource && actor.role!=="admin")throw new LibraryError("VNDRLY administrator required to edit catalog course content",403);
         await checkLibraryVersion(current.metadata, e);
         if (current.metadata.state !== "draft")
           throw new LibraryError("Create a revision to edit published content");

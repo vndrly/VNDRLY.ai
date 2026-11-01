@@ -9,6 +9,8 @@ import {
   db,
 } from "@workspace/db";
 import { AssetServiceError } from "./assets";
+import { equipmentLocationForCustody, type EquipmentQueryClient } from "./equipment";
+import { synchronizeInventoryEquipmentCustody } from "./equipment-model";
 import type {
   AssetAlias,
   AssetCondition,
@@ -143,6 +145,26 @@ export const databaseAssetRepository: AssetRepository = {
 
   async save(asset, expectedVersion) {
     const applied = await db.transaction(async (tx) => {
+      const current = (await tx.execute(sql`SELECT * FROM assets WHERE id=${asset.id}::uuid FOR UPDATE`)).rows[0];
+      if (!current || current.version !== expectedVersion) return false;
+      const changedHolder = current.current_holder_user_id !== asset.holderUserId;
+      const custodyEvent = [...asset.history].reverse().find(event => ["checkout", "return", "transfer"].includes(event.type));
+      let synchronizedProfile: Record<string, unknown> | null | undefined;
+      if (changedHolder && custodyEvent && current.equipment_profile) {
+        // Parameterized bridge lets the same location projection run inside this Drizzle transaction.
+        const client: EquipmentQueryClient = { query: (async (statement: string, values: unknown[] = []) => {
+          const query = sql.empty(); let offset = 0;
+          for (const match of statement.matchAll(/\$(\d+)\b/g)) {
+            query.append(sql.raw(statement.slice(offset, match.index)));
+            query.append(sql`${values[Number(match[1]) - 1]}`);
+            offset = match.index! + match[0].length;
+          }
+          query.append(sql.raw(statement.slice(offset)));
+          return tx.execute(query);
+        }) as EquipmentQueryClient["query"] };
+        const priorLocation = await equipmentLocationForCustody(client, asset.responsibleOwner, asset.id, custodyEvent.actorUserId ?? custodyEvent.fromHolderUserId ?? custodyEvent.toHolderUserId ?? 0);
+        synchronizedProfile = synchronizeInventoryEquipmentCustody(current.equipment_profile as Record<string, unknown>, asset.category, asset.holderUserId, custodyEvent, priorLocation);
+      }
       const [updated] = await tx.update(assetsTable).set({
         name: asset.name,
         category: asset.category,
@@ -157,6 +179,7 @@ export const databaseAssetRepository: AssetRepository = {
         mergedIntoId: asset.mergedIntoId ?? null,
         version: expectedVersion + 1,
         updatedAt: new Date(),
+        ...(synchronizedProfile !== undefined ? { equipmentProfile: synchronizedProfile } : {}),
       }).where(and(eq(assetsTable.id, asset.id), eq(assetsTable.version, expectedVersion)))
         .returning({ id: assetsTable.id });
       if (!updated) return false;

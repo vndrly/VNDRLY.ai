@@ -1,6 +1,6 @@
 import React from "react";
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { AuthProvider, useAuth } from "./use-auth";
 import { workHubRequest } from "@/lib/work-hub-client";
 
@@ -104,4 +104,17 @@ it("does not sign out a valid user when a Conversations request is forbidden rat
   await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
   expect(sessionReads).toBe(1);
   expect(screen.getByText("Gate operator")).toBeTruthy();
+});
+
+it("leaves the loading screen when the initial session request stalls", async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal("fetch", vi.fn((_url, options: RequestInit) => new Promise((_resolve, reject) => {
+    options.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+  })));
+  try {
+    render(<AuthProvider><View /></AuthProvider>);
+    expect(screen.getByText("Checking session")).toBeTruthy();
+    await act(async () => { await vi.advanceTimersByTimeAsync(8000); });
+    expect(screen.getByText("Sign in required")).toBeTruthy();
+  } finally { vi.useRealTimers(); }
 });

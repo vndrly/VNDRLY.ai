@@ -176,3 +176,12 @@ it("native Gate authority used by identity capture honors vendor and site owner 
     ).rejects.toThrow("native.company_opted_out");
   }
 });
+it("keeps authorization checks but avoids write locks for map reads",async()=>{
+ const query=vi.fn(async(sql:string)=>({rows:sql.includes('session_version')?[{session_version:1}]:sql.includes('native_operations_policy')?[{native_operations_policy:{}}]:sql.includes('SELECT a.id')?[{id:1}]:sql.includes('SELECT role FROM user_org_memberships')?[{role:'admin'}]:[]}));
+ const session={userId:1,vendorId:2,sv:1} as any;
+ await authorizeOfflineGateObservation({query} as any,session,3,{lockRows:false});
+ expect(query.mock.calls.every(([sql])=>!sql.includes('FOR SHARE'))).toBe(true);
+ query.mockClear();
+ await authorizeOfflineGateObservation({query} as any,session,3);
+ expect(query.mock.calls.some(([sql])=>sql.includes('FOR SHARE OF a,sl,p'))).toBe(true);
+});

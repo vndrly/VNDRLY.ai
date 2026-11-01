@@ -1,3 +1,4 @@
+import "./local-preview-checkout.mjs";
 process.env.VNDRLY_LOAD_ENV_LOCAL = "1";
 import "./load-env-local.mjs";
 import "./dev-local-defaults.mjs";
@@ -34,7 +35,7 @@ async function runOnce() {
   return new Promise((resolve) => {
     const child = spawn(
       "pnpm",
-      ["exec", "vite", "--config", "vite.config.ts", "--host", "0.0.0.0", "--strictPort"],
+      ["exec", "vite", "--config", "vite.config.ts", "--host", "::", "--strictPort"],
       { cwd: webDir, stdio: "inherit", shell: true },
     );
     child.on("exit", (code) => resolve(code ?? 1));

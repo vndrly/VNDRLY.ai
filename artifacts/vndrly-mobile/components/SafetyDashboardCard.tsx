@@ -8,14 +8,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchCompanySafetyReadiness, fetchSafetyMetrics } from "@/lib/safety-api";
+import { fetchSafetyMaturity, fetchSafetyMetrics } from "@/lib/safety-api";
 
 export default function SafetyDashboardCard() {
   const { t } = useTranslation();
   const colors = useColors();
   const brand = useBrand();
   const { user, activeMembershipId } = useAuth();
-  const readiness = useQuery({queryKey:["company-safety-readiness",user?.id,activeMembershipId],queryFn:fetchCompanySafetyReadiness,refetchInterval:60000});
+  const readiness = useQuery({queryKey:["safety-maturity",user?.id,activeMembershipId],queryFn:fetchSafetyMaturity,refetchInterval:60000});
   const { data, isLoading } = useQuery({
     queryKey: ["safety-metrics"],
     queryFn: fetchSafetyMetrics,
@@ -34,9 +34,10 @@ export default function SafetyDashboardCard() {
         <Text style={[styles.title, { color: colors.foreground }]}>{t("safety.dashboardTitle")}</Text>
       </View>
       <View style={styles.grid}>
-        <Pressable accessibilityRole="button" accessibilityLabel={t("safety.score")} onPress={() => router.push("/safety-score")} style={styles.metric}>
-          <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{t("safety.score")}</Text>
-          <Text style={[styles.metricValue, { color: colors.foreground }]}>{readiness.data ? `${readiness.data.score}${readiness.data.provisional ? "*" : ""}` : "—"}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={t("safetyMaturity.title")} onPress={() => router.push("/safety-score")} style={styles.metric}>
+          <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{t("safetyMaturity.title")}</Text>
+          <Text style={[styles.metricValue, { color: colors.foreground }]}>{readiness.data ? `${readiness.data.score}` : "—"}</Text>
+          <Text style={{ color: colors.foreground }}>{readiness.data?.incomplete ? t("safetyMaturity.incomplete") : ""}</Text>
         </Pressable>
         <View style={styles.metric}>
           <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{t("safety.daysClean")}</Text>

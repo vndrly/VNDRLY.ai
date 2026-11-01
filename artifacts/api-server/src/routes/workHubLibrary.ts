@@ -13,6 +13,7 @@ import {
 import { libraryOptions } from "../work-hub/library-audience";
 import {readTrainingPolicy,saveTrainingPolicy} from '../work-hub/training-course-policy';
 import {trainingCourseReview} from '../work-hub/training-review';
+import {trainingStudyGuide,renderTrainingStudyPdf} from '../work-hub/training-study-guide';
 import {
   previewLibraryAssignment,
   assignLibrary,
@@ -73,7 +74,7 @@ router.get('/work-hub/library/personal-energy-safety-credentials',handle((_r,a)=
 router.get(
   "/work-hub/library",
   handle((r, a) =>
-    listLibrary(a, r.query.archived === "true", r.query.published === "true"),
+    listLibrary(a, r.query.archived === "true", r.query.published === "true", r.query.myServices === "true"),
   ),
 );
 router.get(
@@ -82,6 +83,17 @@ router.get(
 );
 router.get('/work-hub/library/:itemId/training-policy',handle((r,a)=>readTrainingPolicy(a,item(r))));
 router.get('/work-hub/library/:itemId/training-review',handle((r,a)=>trainingCourseReview(a,item(r))));
+router.get('/work-hub/library/:itemId/course-guide',handle(async(r,a)=>(await trainingStudyGuide(a,item(r))).guide));
+router.get('/work-hub/library/:itemId/study-guide.pdf',async(r,s)=>{
+ s.setHeader('Cache-Control','private, no-store');
+ try{
+  const {content,guide}=await trainingStudyGuide(actor(r),item(r));
+  const pdf=await renderTrainingStudyPdf(content,guide,guide.contentVersion);
+  s.setHeader('Content-Type','application/pdf');
+  s.setHeader('Content-Disposition',`attachment; filename="VNDRLY-${guide.familyId||'course'}-study-guide.pdf"`);
+  s.send(pdf);
+ }catch(e){const error=e as Error&{status?:number};s.status(error.status??500).json({error:error.status?error.message:'Study guide unavailable'});}
+});
 router.post('/work-hub/library/:itemId/training-policy',handle((r,a)=>saveTrainingPolicy(a,item(r),body(r))));
 router.get(
   "/work-hub/library/to-complete",

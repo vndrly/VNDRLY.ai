@@ -16,6 +16,7 @@ import {getLibrary,saveLibrary,changeLibraryState} from './library-service';
 import {previewLibraryAssignment,assignLibrary,employeeChecklist,ownerAssignmentDetail} from './library-assignments';
 import {getAssignedLibrary,submitAssignedLibrary,submitGuidedTraining,personalEnergySafetyCredentials} from './training-service';
 import {companySafetyReadiness} from '../lib/company-safety-readiness';
+import {trainingStudyGuide} from './training-study-guide';
 import {trainingCourseReview} from './training-review';
 it('separates certification, guards ownership and prerequisite, locks attempts, and preserves learning history',async()=>{
  const familyId='G99' as const;
@@ -35,6 +36,12 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  expect(complianceBefore.people.find(p=>p.userId===foreign.userId)).toMatchObject({status:'not_assigned',instanceId:null});
  await expect(trainingCourseReview(learner,itemId)).rejects.toBeTruthy();
  const ownerCourse=await getLibrary(admin,itemId);
+ const study=await trainingStudyGuide(admin,itemId);
+ expect(study.guide.scoring.exam?.questionCount).toBe(1);
+ expect(JSON.stringify(study.guide)).not.toContain('Exam-only hidden rationale');
+ expect(study.guide.studyUrl).toBe(`/api/work-hub/library/${itemId}/study-guide.pdf`);
+ expect((await trainingStudyGuide(foreign,itemId)).guide.itemId).toBe(itemId);
+ await expect(trainingStudyGuide({...foreign,vendorId:v.id+1},itemId)).rejects.toBeTruthy();
  expect(ownerCourse.metadata.content?.training).not.toHaveProperty('certificationExam');
  expect(JSON.stringify(ownerCourse)).not.toContain('Exam-only hidden rationale');
  const ownerBefore=await ownerAssignmentDetail(admin,id);expect(ownerBefore.content.training).not.toHaveProperty('certificationExam');

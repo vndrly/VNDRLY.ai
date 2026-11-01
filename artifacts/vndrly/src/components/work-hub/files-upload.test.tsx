@@ -169,3 +169,13 @@ describe("Work Hub explicit file upload", () => {
     expect((screen.getByRole("button", { name: "Upload" }) as HTMLButtonElement).disabled).toBe(true);
   });
 });
+
+it("keeps the training library separate from personal and channel storage",async()=>{
+ mocks.request.mockImplementation(async(path:string)=>path.startsWith('/file-library?')?[]:[]);
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><WorkHubFiles trainingMaterials defaultScope="company"/></QueryClientProvider>);
+ expect(screen.getByText('Upload training material')).toBeTruthy();
+ expect(screen.queryByLabelText('File audience')).toBeNull();
+ expect(screen.queryByText('Channel members')).toBeNull();
+ expect(screen.queryByText('Personal')).toBeNull();
+ await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/file-library?orgType=vendor&orgId=1&purpose=training'));
+});

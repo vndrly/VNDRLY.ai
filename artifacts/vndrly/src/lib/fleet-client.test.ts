@@ -6,6 +6,17 @@ import {
 } from "./fleet-client";
 afterEach(() => vi.unstubAllGlobals());
 describe("Fleet request errors", () => {
+  it("releases home routing when the optional Fleet lookup stalls", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn((_url, options) => new Promise((_resolve, reject) => {
+      options.signal.addEventListener("abort", () => reject(options.signal.reason));
+    })));
+    try {
+      const outcome = expect(fleetClient.homeOverview()).rejects.toThrow();
+      await vi.advanceTimersByTimeAsync(8000);
+      await outcome;
+    } finally { vi.useRealTimers(); }
+  });
   it("reads the saved Run directory through its own transport-order endpoint",async()=>{
     const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({orders:[],nextCursor:null,canManage:true}),{status:200}));vi.stubGlobal("fetch",fetcher);
     await expect((fleetClient as any).runOrders(42)).resolves.toEqual({orders:[],nextCursor:null,canManage:true});

@@ -534,13 +534,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           />
         </div>
         )}
-        <MobilePageHeader contentRef={contentRef} fallbackTitle={navItems.find(item=>item.href===location)?.label??"VNDRLY"} sidebarOpen={sidebarOpen} onToggleMenu={()=>setSidebarOpen(open=>!open)}/>
-        <header className="portal-legacy-phone-header flex shrink-0 items-center gap-3 border-b bg-card px-4 py-3 md:hidden">
-          <PillButton color="image" className="min-w-[28px] px-0" onClick={() => setSidebarOpen(true)} data-testid="button-menu">
-            <Menu className="w-5 h-5" />
-          </PillButton>
-          <span className="font-bold">VNDRLY</span>
-        </header>
         <main
           ref={contentRef}
           className={cn(
@@ -548,6 +541,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
           )}
         >
+          <MobilePageHeader contentRef={contentRef} fallbackTitle={navItems.find(item=>item.href===location)?.label??"VNDRLY"} sidebarOpen={sidebarOpen} onToggleMenu={()=>setSidebarOpen(open=>!open)}/>
           <OnboardingProgressBanner />
           {children}
         </main>

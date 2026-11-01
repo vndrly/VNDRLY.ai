@@ -208,7 +208,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (checking) return;
       checking = true;
       const generation=authGeneration.current;
-      void fetch(`${BASE}/api/auth/me`, { credentials: "include", cache: "no-store" })
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      void fetch(`${BASE}/api/auth/me`, { credentials: "include", cache: "no-store", signal: controller.signal })
       .then(async (r) => {
         if (r.ok) return r.json();
         const body = await readAuthErrorBody(r);
@@ -228,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(current => retained ? {...fromResponse(retained),offlineOnly:true} : current);
       })
       .finally(() => {
+        clearTimeout(timeout);
         checking = false;
         if(active && authGeneration.current===generation)setIsLoading(false);
       });

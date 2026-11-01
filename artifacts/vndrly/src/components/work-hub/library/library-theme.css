@@ -23,5 +23,80 @@
 .library-page input:not([type=checkbox]):not([type=radio]) { border-radius:999px !important; }
 .library-page :is(input,textarea,select):focus { outline:none; box-shadow:none; }
 .library-page :is(input,textarea)::placeholder { color:#b3b3b3; opacity:1; }
+.library-page [role=switch][data-state=unchecked] { background:#60646b; }
 .library-page [role=switch][data-state=checked] { background:var(--brand-primary); }
 .library-page p { overflow-wrap:anywhere; }
+
+.library-page textarea.training-policy-card-field { border:2px solid var(--brand-primary) !important; border-radius:12px !important; }
+.library-page .training-course-guide-card { border:2px solid var(--brand-primary); border-radius:12px; }
+
+.library-page .training-service-card { border:2px solid var(--brand-primary); border-radius:12px; background:#242426; min-width:0; }
+
+/* Consistent hierarchy across policy fields, course guide and service cards. */
+.library-page .training-policy-typography {
+  font-size:14px; font-weight:400; line-height:1.5;
+}
+.library-page .training-policy-typography :is(p,li,label,input,textarea,select,a) {
+  font-size:14px; line-height:1.5;
+}
+.library-page .training-policy-typography :is(p,li,input,textarea,select,a) {
+  font-weight:400;
+}
+.library-page .training-policy-typography h2 {
+  font-size:20px; font-weight:600; line-height:1.4;
+}
+.library-page .training-policy-typography :is(h3,h4,h5,summary,legend) {
+  font-size:14px; font-weight:600; line-height:1.5;
+}
+.library-page .training-policy-typography label > span:first-child {
+  font-size:14px; font-weight:400; line-height:1.5;
+}
+.library-page .training-policy-typography .library-action {
+  font-size:12px; font-weight:600; line-height:1.4;
+}
+/* Compact flow; cards grow with their contents at every viewport width. */
+.library-page .training-policy-typography {
+  width:100%; max-width:100%; min-width:0; padding:16px;
+}
+.library-page .training-policy-typography :is(section,article,fieldset,details,form,label,div) {
+  min-width:0; max-width:100%; box-sizing:border-box;
+}
+.library-page .training-policy-typography :is(h2,h3,h4,h5,summary,legend,label,a) {
+  overflow-wrap:anywhere;
+}
+.library-page .training-policy-typography :is(.space-y-4,.space-y-5) > :not([hidden]) ~ :not([hidden]) {
+  margin-top:12px;
+}
+.library-page .training-policy-typography .training-service-card,
+.library-page .training-policy-typography .training-course-guide-card {
+  padding:12px; height:auto;
+}
+.library-page .training-policy-typography textarea {
+  width:100%; resize:vertical; min-height:72px;
+}
+@media (max-width:480px) {
+  .library-page .training-policy-typography { padding:10px; }
+  .library-page .training-policy-typography .training-service-card,
+  .library-page .training-policy-typography .training-course-guide-card { padding:10px; }
+  .library-page .training-policy-typography :is(input,textarea,select) { font-size:16px; }
+  .library-page .training-policy-typography .library-action { min-height:44px !important; }
+  .library-page .training-policy-typography summary { min-height:44px; align-content:center; }
+  .library-page .training-policy-typography label.flex { min-height:32px; }
+}
+/* Use logical margins to override Tailwind's vertical spacing at narrow widths too. */
+.library-page .training-policy-typography :is(.space-y-4,.space-y-5) > :not([hidden]) ~ :not([hidden]),
+.library-page .training-policy-typography > :not([hidden]) ~ :not([hidden]) {
+  margin-block-start:8px; margin-block-end:0;
+}
+.library-page .training-policy-typography details:not([open]) { margin-block:4px; }
+.library-page .training-policy-typography summary { min-height:32px; padding-block:4px; }
+.library-page .training-policy-typography textarea.training-policy-auto-field {
+  min-height:38px; max-height:none; overflow-y:hidden; resize:none;
+  white-space:pre-wrap; overflow-wrap:anywhere; border-radius:12px !important;
+}
+.library-page .training-policy-typography label > span.training-policy-field-label:first-child { font-weight:700; }
+
+.company-file-library { --hub-option-background:#242426; --hub-option-text:#ececec; }
+.company-file-library .hub-branded-select { background:#242426 !important; color:#ececec !important; border-radius:999px !important; color-scheme:dark; }
+.company-file-library .hub-branded-select option:is(:hover,:focus-visible) { background:#3b3d40; color:#ececec; }
+.training-policy-typography { --hub-option-background:#303236; --hub-option-text:#ececec; }

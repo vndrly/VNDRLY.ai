@@ -14,3 +14,11 @@ test("full ship replaces both local servers with the deployed checkout", () => {
     "full ship must force-restart both Vite and the API after deployment",
   );
 });
+
+test("ship success cannot precede the nine-track completion gate", () => {
+  const gate = shipScript.indexOf('"scripts/release-handoff-gate.mjs"');
+  const success = shipScript.indexOf('Write-ShipSuccess -Summary');
+  assert.ok(gate >= 0 && gate < success);
+  assert.match(shipScript.slice(gate, success), /\$LASTEXITCODE -ne 0/);
+  assert.match(shipScript.slice(gate, success), /Fail-Ship/);
+});

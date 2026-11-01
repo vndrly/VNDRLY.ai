@@ -21,11 +21,12 @@ import {
   type VendorCapability,
   type VendorPartnerServiceOffer,
 } from "@workspace/db/schema";
-import { FleetComplianceConfigurationSchema } from "@workspace/api-zod";
+import { FleetComplianceConfigurationSchema, projectSafetyMaturity } from "@workspace/api-zod";
 import { mapWithBoundedConcurrency, projectCanonicalFleetComplianceConfigurationScore } from "../fleet-compliance-score";
 import type { SessionPayload } from "../../lib/session";
 import { missingVendorApprovalFields } from "../../lib/vendor-approval-readiness";
 import { calculateSafetyEventScore } from "../../lib/safety-score";
+import { safetyMaturityAssessmentsTable } from "@workspace/db/schema";
 import {
   activeServiceMatch,
   evaluateMarketplaceEligibility,
@@ -329,14 +330,15 @@ export function createPostgresPartnerMarketplaceStore(
         ),
       );
       const uniqueVendors = [...new Map(validatedMatches.map((match) => [match.vendor.id, match.vendor])).values()];
-      const complianceSummary = options.complianceSummary ?? marketplaceComplianceSummary;
+      const maturityRows = uniqueVendors.length ? await db.select().from(safetyMaturityAssessmentsTable).where(and(eq(safetyMaturityAssessmentsTable.orgType, "vendor"), inArray(safetyMaturityAssessmentsTable.orgId, uniqueVendors.map(v => v.id)))) : [];
+      const maturityByVendor = new Map(maturityRows.map(row => [row.orgId, row.assessment]));
       const safetyPairs = await mapWithBoundedConcurrency<
         (typeof uniqueVendors)[number],
         readonly [number, { safety: RankingCandidate["safety"]; unavailable: boolean }]
       >(uniqueVendors, 4, async (vendor) => {
         try {
           return [vendor.id, {
-            safety: await complianceSummary(vendor.fleetComplianceConfiguration, vendor.id, now),
+            safety: marketplaceMaturitySummary(maturityByVendor.get(vendor.id), now),
             unavailable: false,
           }] as const;
         } catch {
@@ -522,6 +524,16 @@ export async function marketplaceComplianceSummary(
     source: "VNDRLY compliance score",
     refreshedAt: preview.evaluatedAt,
     reasons: preview.reasons.map((item) => item.reasonCode),
+  };
+}
+
+export function marketplaceMaturitySummary(raw: unknown, now: Date): NonNullable<RankingCandidate["safety"]> {
+  const assessment = projectSafetyMaturity(raw);
+  return {
+    score: assessment.score,
+    source: assessment.demo ? "Safety program maturity" : "Verified safety program maturity — assessment incomplete",
+    refreshedAt: assessment.assessedAt ?? now.toISOString(),
+    reasons: assessment.demo ? [] : ["Assessment incomplete; no verified maturity credit"],
   };
 }
 

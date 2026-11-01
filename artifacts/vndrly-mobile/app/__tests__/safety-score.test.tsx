@@ -10,16 +10,16 @@ vi.mock("@/hooks/useColors", () => ({ useColors: () => ({}) }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "teal" }) }));
 vi.mock("@/components/InPageHeader", () => ({ default: () => null }));
 vi.mock("@/components/LayeredPillButton", () => ({ default: ({ onPress, children }: any) => <button onClick={onPress}>{children}</button> }));
-vi.mock("@/lib/safety-api", () => ({ fetchSafetyMetrics: vi.fn(), fetchCompanySafetyReadiness: vi.fn() }));
-vi.mock("@tanstack/react-query", () => ({ useQuery: ({ queryKey }: any) => queryKey[0] === "safety-metrics" ? { data: { safetyScore: 82, openEventCount: 2, openHipoCount: 1 } } : m.error ? { isError: true } : { data: {score:62,readinessPoints:30,incidentPoints:32,provisional:true,maximumScore:82,canManage:true,categories:[{id:"training",required:10,completed:5,outstanding:3,unknown:2,points:5}]} } }));
+vi.mock("@/lib/safety-api", () => ({ fetchSafetyMetrics: vi.fn(), fetchSafetyMaturity: vi.fn() }));
+vi.mock("@tanstack/react-query", () => ({ useQuery: ({ queryKey }: any) => queryKey[0] === "safety-metrics" ? { data: { safetyScore: 82, openEventCount: 2, openHipoCount: 1 } } : m.error ? { isError: true } : { data: {score:62,demo:true,incomplete:false,categories:[{id:"competence",level:2,weight:20,points:10,evidence:"Synthetic example",resources:[{id:"resource-id",title:"Program template"}]}]} } }));
 import SafetyScore from "../safety-score";
 afterEach(() => { cleanup(); vi.clearAllMocks(); m.error = false; });
 it("shows company score separately from real training requirements and links to actions", () => {
  render(<SafetyScore />);
  expect(screen.getByText("62 / 100")).toBeTruthy();
- expect(screen.getByText("safety.readiness.counts")).toBeTruthy();
+ expect(screen.queryByText("safetyMaturity.demo")).toBeNull();
  expect(screen.queryByText("safety.scoreDetails.myActions")).toBeNull();
- fireEvent.click(screen.getByText("safety.readiness.action_training")); expect(m.push).toHaveBeenLastCalledWith("/work-hub/library");
+ fireEvent.click(screen.getByText("Program template")); expect(m.push).toHaveBeenLastCalledWith("/work-hub/library/resource-id");
 
 });
 it("does not claim requirements are complete when training fails to load", () => {

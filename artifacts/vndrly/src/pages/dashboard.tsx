@@ -1,3 +1,4 @@
+import "./dashboard-condensed.css";
 import { CardHeading } from "@/components/ui/card-heading";
 import {
   useGetDashboardSummary,

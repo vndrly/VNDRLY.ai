@@ -31,6 +31,8 @@ import {
 } from "../lib/ticket-attachment-access";
 import { canReadWorkHubFile } from "../work-hub/file-access";
 import {canReadGateIdentityObject} from "../services/gate-identity";
+import { createEquipmentService } from "../services/equipment";
+import { pool } from "@workspace/db";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -391,6 +393,11 @@ router.delete("/storage/uploads", async (req: Request, res: Response) => {
       res.status(409).json({ error: "Object is attached to a certification" });
       return;
     }
+    const equipmentReference = await pool.query("SELECT id FROM assets WHERE equipment_profile->'photoUrls' ? $1 UNION ALL SELECT asset_id AS id FROM asset_condition_evidence WHERE photo_urls ? $1 LIMIT 1", [`/api/storage${objectPath}`]);
+    if (equipmentReference.rows.length) {
+      res.status(409).json({ error: "Object is attached to inventory equipment" });
+      return;
+    }
     await objectStorageService.deleteStoredObject(objectPath);
     res.status(204).end();
   } catch (error) {
@@ -468,7 +475,8 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
       (await canReadVisitEvidence(session, objectPath)) ||
       (await canReadTicketAttachment(session, objectPath, obj.acl?.owner)) ||
       (await canReadCertificationPhoto(session, objectPath)) ||
-      (await canReadWorkHubFile(session, objectPath));
+      (await canReadWorkHubFile(session, objectPath)) ||
+      (!!session?.userId && await createEquipmentService().canReadPhoto(session, objectPath).catch(() => false));
     if (!canAccess) {
       res.status(403).json({ error: "Forbidden" });
       return;

@@ -22,6 +22,7 @@ export * from "./operations-display-view";
 export * from "./work-hub-away";
 export * from "./work-hub-calendar-response";
 export * from "./asset-transfer";
+export * from "./equipment";
 
 export * from "./ticket-labor-finalization";
 export * from "./gate-shift-assignment";
@@ -107,6 +108,5 @@ export * from "./gate-daily-billing-copy";
 export * from "./workforce-roster";
 export * from "./gate-arrivals";
 export * from "./site-shift-plan";
-
 export * from "./safety-maturity";
 export * from "./safety-library-catalog";

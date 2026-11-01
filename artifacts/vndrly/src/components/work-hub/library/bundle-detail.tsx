@@ -4,6 +4,7 @@ import {
   Frame as View,
   Pill as TogglePillButton,
   usePalette as useColors,
+  Heading,
 } from "./editor-controls";
 import { useLocation } from "wouter";
 import { z } from "zod/v4";
@@ -109,9 +110,9 @@ export default function BundleDetail({ itemId }: { itemId: string }) {
     <View style={{ gap: 12 }}>
       {data && (
         <View style={card}>
-          <Text style={{ ...label, fontWeight: "700", fontSize: 20 }}>
+          <Heading>
             {data.title}
-          </Text>
+          </Heading>
           <Text style={label}>
             {t(`workHubLibrary.state_${data.metadata.state}`)} ·{" "}
             {t("workHubLibrary.version")} {data.metadata.contentVersion}

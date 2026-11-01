@@ -19,6 +19,7 @@ export const assetsTable = pgTable("assets", {
   mergedIntoId: uuid("merged_into_id"),
   version: integer("version").notNull().default(1),
   fleetComplianceRecordIds: jsonb("fleet_compliance_record_ids").$type<string[]>(),
+  equipmentProfile: jsonb("equipment_profile").$type<Record<string, unknown>>(),
   createdByUserId: integer("created_by_user_id").references(() => usersTable.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

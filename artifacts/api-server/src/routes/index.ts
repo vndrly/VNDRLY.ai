@@ -1,3 +1,4 @@
+import equipmentRouter from "./equipment";
 import staffRolesRouter from "./staffRoles";
 import gateDailyBillingRouter from "./gateDailyBilling";
 import staffEnrollmentRouter from "./staffEnrollment";
@@ -234,5 +235,7 @@ router.use(implementationADisplaysRouter);
 router.use(operationsDisplayViewRouter);
 router.use(implementationAHealthRouter);
 router.use(camerasRouter);
+
+router.use(equipmentRouter);
 
 export default router;

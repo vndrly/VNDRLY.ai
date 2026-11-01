@@ -1,6 +1,6 @@
-import { CompanySafetyReadinessSchema } from "@workspace/api-zod";
-import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
+import { useSafetyMaturity } from "@/hooks/use-safety-maturity";
+
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ShieldAlert } from "lucide-react";
@@ -19,8 +19,7 @@ type Metrics = {
 export function SafetyDashboardCard() {
   const { t } = useTranslation();
   const [,navigate] = useLocation();
-  const {user}=useAuth();
-  const readiness=useQuery({queryKey:["company-safety-readiness",user?.userId,user?.vendorId,user?.partnerId],queryFn:async()=>{const response=await fetch(`${API_BASE}/api/safety/readiness`,{credentials:"include"});if(!response.ok)throw Error("readiness unavailable");return CompanySafetyReadinessSchema.parse((await response.json()).data);},refetchInterval:60000});
+  const maturity = useSafetyMaturity();
   const notificationsModal = useNotificationsModal();
   const { data, isLoading } = useQuery({
     queryKey: ["safety-metrics"],
@@ -42,6 +41,12 @@ export function SafetyDashboardCard() {
           <ShieldAlert className="h-4 w-4 text-red-600" />
           {t("safety.dashboardTitle")}
         </CardTitle>
+        <Link
+          href="/work-hub/library"
+          className="text-sm underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+        >
+          {t("workHubLibrary.library")}
+        </Link>
       </CardHeader>
       <CardContent>
         <div
@@ -50,8 +55,9 @@ export function SafetyDashboardCard() {
         >
           <div className="grid grid-cols-2 gap-3">
             <button type="button" className="text-left" onClick={()=>navigate("/safety-score")}>
-              <div className="text-xs text-muted-foreground">{t("safety.score")}</div>
-              <div className="text-2xl font-bold">{readiness.data ? `${readiness.data.score}${readiness.data.provisional ? "*" : ""}` : "—"}</div>
+              <div className="text-xs text-muted-foreground">{t("safetyMaturity.title")}</div>
+              <div className="text-2xl font-bold">{maturity.data ? maturity.data.score : "—"}</div>
+            <span className="block text-xs">{maturity.data?.incomplete ? t("safetyMaturity.incomplete") : ""}</span>
             </button>
             <div>
               <div className="text-xs text-muted-foreground">{t("safety.daysClean")}</div>

@@ -78,11 +78,14 @@ export async function authorizeOfflineGateObservation(
   c: PoolClient,
   session: SessionPayload,
   siteId: number,
+  options: { lockRows?: boolean } = {},
 ) {
+  const lock = options.lockRows === false ? "" : " FOR SHARE";
+  const assignmentLock = options.lockRows === false ? "" : " FOR SHARE OF a,sl,p";
   if (!session.userId || !session.vendorId || !session.sv)
     throw new OfflineGateError("gate.current_session_required", 403);
   const user = await c.query(
-    "SELECT session_version,suspended_at,must_change_password FROM users WHERE id=$1 FOR SHARE",
+    `SELECT session_version,suspended_at,must_change_password FROM users WHERE id=$1${lock}`,
     [session.userId],
   );
   if (
@@ -93,25 +96,25 @@ export async function authorizeOfflineGateObservation(
   )
     throw new OfflineGateError("gate.current_session_required", 403);
   const nativeCompany = await c.query(
-    "SELECT native_operations_policy FROM vendors WHERE id=$1 FOR SHARE",
+    `SELECT native_operations_policy FROM vendors WHERE id=$1${lock}`,
     [session.vendorId],
   );
   if (nativeCompany.rows[0]?.native_operations_policy?.enabled === false)
     throw new OfflineGateError("native.company_opted_out", 403);
   const nativeSiteOwner = await c.query(
-    "SELECT native_operations_policy FROM partners WHERE id=(SELECT partner_id FROM site_locations WHERE id=$1) FOR SHARE",
+    `SELECT native_operations_policy FROM partners WHERE id=(SELECT partner_id FROM site_locations WHERE id=$1)${lock}`,
     [siteId],
   );
   if (nativeSiteOwner.rows[0]?.native_operations_policy?.enabled === false)
     throw new OfflineGateError("native.company_opted_out", 403);
   const assignment = await c.query(
-    "SELECT a.id FROM site_work_assignments a JOIN site_locations sl ON sl.id=a.site_location_id JOIN partner_vendor_relationships p ON p.partner_id=sl.partner_id AND p.vendor_id=a.vendor_id WHERE a.site_location_id=$1 AND a.vendor_id=$2 AND a.is_gate_contractor=true AND sl.is_active=true AND sl.hidden=false AND p.status='approved' FOR SHARE OF a,sl,p",
+    `SELECT a.id FROM site_work_assignments a JOIN site_locations sl ON sl.id=a.site_location_id JOIN partner_vendor_relationships p ON p.partner_id=sl.partner_id AND p.vendor_id=a.vendor_id WHERE a.site_location_id=$1 AND a.vendor_id=$2 AND a.is_gate_contractor=true AND sl.is_active=true AND sl.hidden=false AND p.status='approved'${assignmentLock}`,
     [siteId, session.vendorId],
   );
   if (!assignment.rows.length)
     throw new OfflineGateError("gate.site_no_access", 403);
   const membership = await c.query(
-    "SELECT role FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 FOR SHARE",
+    `SELECT role FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2${lock}`,
     [session.userId, session.vendorId],
   );
   if (membership.rows.some((r) => r.role === "admin")) return;
@@ -127,13 +130,13 @@ export async function authorizeOfflineGateObservation(
   if (!membership.rows.length)
     throw new OfflineGateError("gate.membership_required", 403);
   const person = await c.query(
-    "SELECT id,vendor_role FROM vendor_people WHERE user_id=$1 AND vendor_id=$2 AND is_active=true AND deleted_at IS NULL FOR SHARE",
+    `SELECT id,vendor_role FROM vendor_people WHERE user_id=$1 AND vendor_id=$2 AND is_active=true AND deleted_at IS NULL${lock}`,
     [session.userId, session.vendorId],
   );
   if (!person.rows.length)
     throw new OfflineGateError("gate.person_no_access", 403);
   const roleRows = await c.query(
-    "SELECT role FROM vendor_person_operational_roles WHERE vendor_people_id=$1 AND is_active=true FOR SHARE",
+    `SELECT role FROM vendor_person_operational_roles WHERE vendor_people_id=$1 AND is_active=true${lock}`,
     [person.rows[0].id],
   );
   const roles = roleRows.rows.length
@@ -142,7 +145,7 @@ export async function authorizeOfflineGateObservation(
   if (!roles.some((r) => r === "gatekeeper" || r === "gate_supervisor"))
     throw new OfflineGateError("gate.role_required", 403);
   const selected = await c.query(
-    "SELECT id FROM vendor_person_site_access WHERE vendor_people_id=$1 AND site_location_id=$2 AND is_active=true FOR SHARE",
+    `SELECT id FROM vendor_person_site_access WHERE vendor_people_id=$1 AND site_location_id=$2 AND is_active=true${lock}`,
     [person.rows[0].id, siteId],
   );
   if (!selected.rows.length)

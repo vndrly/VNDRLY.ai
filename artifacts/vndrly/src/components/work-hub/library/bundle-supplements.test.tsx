@@ -1,0 +1,23 @@
+import React from 'react';
+import {it,expect,vi,afterEach} from 'vitest';
+import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
+import {LibraryDraftSchema,BundleDefinitionSchema} from '@workspace/api-zod';
+import Editor from './bundle-editor';
+const mock=vi.hoisted(()=>({send:vi.fn()}));
+vi.mock('@/hooks/use-auth',()=>({useAuth:()=>({user:{role:'vendor'}})}));
+vi.mock('@/lib/work-hub-client',()=>({ownerForUser:()=>({type:'vendor',id:1115}),workHubRequest:vi.fn()}));
+vi.mock('@tanstack/react-query',()=>({useQuery:()=>({data:[{id:'doc',data:{name:'Safety video.mp4',purpose:'training',scope:'company',state:'active',currentFileId:'33333333-3333-4333-8333-333333333333'}}]})}));
+vi.mock('./delivery-editor',()=>({default:()=>null}));
+vi.mock('react-i18next',()=>({useTranslation:()=>({t:(k:string)=>k})}));
+vi.mock('./use-library',()=>({useLibrary:()=>({data:{items:[]},send:mock.send})}));
+vi.mock('./editor-controls',()=>({Frame:({children}:any)=><div>{children}</div>,Paragraph:({children}:any)=><p>{children}</p>,Field:({accessibilityLabel,value,onChangeText}:any)=><input aria-label={accessibilityLabel} value={value} onChange={e=>onChangeText(e.target.value)}/>,Pill:({children,onPress,disabled}:any)=><button disabled={disabled} onClick={onPress}>{children}</button>,usePalette:()=>({})}));
+afterEach(cleanup);
+it('publishes a company file as checkoff training and pins it into the saved bundle',async()=>{
+ const id='22222222-2222-4222-8222-222222222222';
+ mock.send.mockImplementation(async(path,payload)=>{if(path==='/api/work-hub/library'){expect(LibraryDraftSchema.parse(payload).training?.completionMode).toBe('checkoff');return {resource:{itemId:id,version:0}};}return {resource:{itemId:id,version:1}};});
+ const save=vi.fn().mockResolvedValue(undefined);render(<Editor title="Gate training" onSave={save}/>);
+ fireEvent.click(screen.getByRole('switch',{name:'Safety video.mp4'}));fireEvent.click(screen.getByText('workHubLibrary.saveDraft'));
+ await waitFor(()=>expect(save).toHaveBeenCalledTimes(1));
+ expect(mock.send).toHaveBeenCalledWith(`/api/work-hub/library/${id}/publish`,{},0);
+ expect(BundleDefinitionSchema.parse(save.mock.calls[0][0].bundle).entries[0].templateId).toBe(id);
+});

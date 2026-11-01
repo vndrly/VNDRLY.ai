@@ -200,41 +200,9 @@ export default function LibraryAssignmentReview({
         onChangeText={setSearch}
         style={field}
       />
-      {!!positions.length&&<><Text style={{color:colors.text}}>Staff positions</Text><View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{positions.map(p=><TogglePillButton key={p.id} color="brand" solid={positionIds.includes(p.id)} disabled={frozen} onPress={()=>toggle(p.id,positionIds,setPositionIds)}>{p.label} ({p.userIds.length})</TogglePillButton>)}</View></>}
-      <Text style={{ color: colors.text }}>{t("workHubLibrary.groups")}</Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {options.data?.groups
-          .filter((g) => g.name.toLowerCase().includes(search.toLowerCase()))
-          .map((g) => (
-            <TogglePillButton
-              key={g.id}
-              color="brand"
-              solid={groupIds.includes(g.id)}
-              disabled={frozen}
-              onPress={() => toggle(g.id, groupIds, setGroups)}
-            >
-              {g.name}
-            </TogglePillButton>
-          ))}
-      </View>
-      <Text style={{ color: colors.text }}>{t("workHubLibrary.people")}</Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {options.data?.people
-          .filter((p) =>
-            (p.name ?? "").toLowerCase().includes(search.toLowerCase()),
-          )
-          .map((p) => (
-            <TogglePillButton
-              key={p.userId}
-              color="brand"
-              solid={userIds.includes(p.userId)}
-              disabled={frozen}
-              onPress={() => toggle(p.userId, userIds, setUsers)}
-            >
-              {p.name ?? String(p.userId)}
-            </TogglePillButton>
-          ))}
-      </View>
+      <details className="space-y-2"><summary className="cursor-pointer font-semibold">{t("trainingPolicy.positions")}</summary><div className="grid grid-cols-1 gap-2">{positions.filter(p=>p.label.toLowerCase().includes(search.toLowerCase())).map(p=><OptionSwitch key={p.id} label={`${p.label} (${p.userIds.length})`} value={positionIds.includes(p.id)} disabled={frozen} onChange={()=>toggle(p.id,positionIds,setPositionIds)}/>)}</div></details>
+      <details className="space-y-2"><summary className="cursor-pointer font-semibold">{t("trainingPolicy.people")}</summary><div className="grid grid-cols-1 gap-2">{options.data?.people.filter(p=>(p.name??'').toLowerCase().includes(search.toLowerCase())).map(p=><OptionSwitch key={p.userId} label={p.name??String(p.userId)} value={userIds.includes(p.userId)} disabled={frozen} onChange={()=>toggle(p.userId,userIds,setUsers)}/>)}</div></details>
+      <details className="space-y-2"><summary className="cursor-pointer font-semibold">{t("trainingPolicy.groups")}</summary>{[true,false].map(automatic=><div key={String(automatic)} className="space-y-2"><p className="font-semibold">{t(automatic?'trainingPolicy.automaticAudiences':'trainingPolicy.definedGroups')}</p><div className="grid grid-cols-1 gap-2">{options.data?.groups.filter(g=>g.id.startsWith('audience:')===automatic&&g.name.toLowerCase().includes(search.toLowerCase())).map(g=><OptionSwitch key={g.id} label={g.name} value={groupIds.includes(g.id)} disabled={frozen} onChange={()=>toggle(g.id,groupIds,setGroups)}/>)}</div></div>)}</details>
       <OptionSwitch
         label={t("workHubLibrary.renew")}
         value={renew}

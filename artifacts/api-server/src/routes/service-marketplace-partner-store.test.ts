@@ -309,7 +309,7 @@ describe("partner marketplace persistence boundary", () => {
     await expect(store.listCandidates(context, now)).resolves.toEqual([]);
     expect(complianceSummary).not.toHaveBeenCalled();
   });
-  it("isolates one vendor compliance outage without hiding valid candidates", async () => {
+  it("does not reuse fleet compliance scores or outages as maturity evidence", async () => {
     const secondCapability = { ...capability, id: 8, vendorId: 4, name: "Gate crews two" };
     state.data.vendor_capabilities.push({
       capability: secondCapability,
@@ -358,13 +358,14 @@ describe("partner marketplace persistence boundary", () => {
       now,
     );
     expect(rows).toHaveLength(2);
+    expect(complianceSummary).not.toHaveBeenCalled();
     expect(rows.find((row) => row.vendorId === 3)).toMatchObject({
-      safety: null,
-      safetyStatus: "unavailable",
+      safety: { score: 0, reasons: ["Assessment incomplete; no verified maturity credit"] },
+      safetyStatus: "rated",
       offerable: true,
     });
     expect(rows.find((row) => row.vendorId === 4)).toMatchObject({
-      safety: { score: 82 },
+      safety: { score: 0 },
       safetyStatus: "rated",
     });
   });
@@ -414,7 +415,7 @@ describe("partner marketplace persistence boundary", () => {
       relationshipStatus: null,
       rating: 4,
       reviewCount: 1,
-      safety: { score: 85 },
+      safety: { score: 0 },
       completedJobs: 1,
       onTimeRate: 1,
       priorPartnerJobs: 1,
@@ -464,11 +465,11 @@ describe("partner marketplace persistence boundary", () => {
     );
     expect(row).toMatchObject({
       rating: null,
-      safety: null,
+      safety: { score: 0, reasons: ["Assessment incomplete; no verified maturity credit"] },
       onTimeRate: null,
       reviewCount: 0,
       ratingStatus: "not_yet_rated",
-      safetyStatus: "not_yet_rated",
+      safetyStatus: "rated",
     });
   });
   it("uses the full canonical evaluator for Partner scores without a vendor page visit", async () => {

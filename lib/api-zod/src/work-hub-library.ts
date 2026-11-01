@@ -177,7 +177,7 @@ export const TrainingPolicyDetailsSchema = z.object({
   purpose: z.string().max(20000).default(''),
   requiredUserIds: z.array(z.number().int().positive()).max(5000).default([]),
   requiredStaffRoleIds: z.array(z.string().min(1).max(200)).max(500).default([]),
-  requiredGroupIds: z.array(z.string().regex(/^(?:[0-9a-f-]{36}|crew:[1-9][0-9]*)$/i)).max(100).default([]),
+  requiredGroupIds: z.array(z.string().regex(/^(?:[0-9a-f-]{36}|crew:[1-9][0-9]*|audience:(?:admin|all-hands|office-staff|gate-supervisors|gatekeepers))$/i)).max(100).default([]),
   serviceApplicability:z.array(z.object({serviceId:z.string().min(1).max(120),applies:z.boolean(),reason:z.string().trim().min(1).max(2000),userIds:z.array(z.number().int().positive()).default([]),staffRoleIds:z.array(z.string().min(1).max(200)).default([])})).max(1000).default([]),
   newHireRequired: z.boolean().default(false),
   roleChangeRequired: z.boolean().default(false),
@@ -249,7 +249,7 @@ export const BundleDefinitionSchema = z
           .array(z.enum(["admin", "member", "ap", "field_employee"]))
           .default([]),
         groupIds: z
-          .array(z.string().regex(/^(?:[0-9a-f-]{36}|crew:[1-9][0-9]*)$/i))
+          .array(z.string().regex(/^(?:[0-9a-f-]{36}|crew:[1-9][0-9]*|audience:(?:admin|all-hands|office-staff|gate-supervisors|gatekeepers))$/i))
           .default([]),
       })
       .default({
@@ -269,7 +269,7 @@ export const LibraryAudienceSchema = z.object({
   mode: z.enum(["selected", "all_active"]).default("selected"),
   userIds: z.array(z.number().int().positive()).max(5000).default([]),
   groupIds: z
-    .array(z.string().regex(/^(?:[0-9a-f-]{36}|crew:[1-9][0-9]*)$/i))
+    .array(z.string().regex(/^(?:[0-9a-f-]{36}|crew:[1-9][0-9]*|audience:(?:admin|all-hands|office-staff|gate-supervisors|gatekeepers))$/i))
     .max(100)
     .default([]),
 });

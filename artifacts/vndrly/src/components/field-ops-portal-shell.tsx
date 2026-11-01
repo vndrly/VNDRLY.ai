@@ -332,18 +332,6 @@ export function FieldOpsPortalShell({
           />
         </div>
 
-        <MobilePageHeader contentRef={contentRef} fallbackTitle={t(tabs.find(tab=>tab.match(location))?.labelKey??portalLabelKey)} sidebarOpen={sidebarOpen} onToggleMenu={()=>setSidebarOpen(open=>!open)}/>
-        <header className="portal-legacy-phone-header flex shrink-0 items-center gap-3 border-b bg-card px-4 py-3 md:hidden">
-          <PillButton
-            color="image"
-            className="min-w-[28px] px-0"
-            onClick={() => setSidebarOpen(true)}
-            data-testid="button-menu"
-          >
-            <Menu className="w-5 h-5" />
-          </PillButton>
-          <span className="font-bold truncate">{orgName ?? "VNDRLY"}</span>
-        </header>
 
         <main
           ref={contentRef}
@@ -352,6 +340,7 @@ export function FieldOpsPortalShell({
             FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
           )}
         >
+          <MobilePageHeader contentRef={contentRef} fallbackTitle={t(tabs.find(tab=>tab.match(location))?.labelKey??portalLabelKey)} sidebarOpen={sidebarOpen} onToggleMenu={()=>setSidebarOpen(open=>!open)}/>
           {children}
         </main>
 

@@ -104,6 +104,13 @@ if (-not (Test-LocalDevHealthy)) {
 }
 $Summary["Local web"] = "http://localhost:5173/ (verified)"
 $Summary["Local API"] = "http://localhost:8080/ (verified)"
+$Summary["Local iOS preview"] = "http://localhost:8081/ (health checked; rendered evidence required by gate)"
+
+Write-ShipStep "Checking complete release synchronization"
+node (Join-Path $Root "scripts/release-handoff-gate.mjs") (Join-Path $Root ".local/release-state.json") complete
+if ($LASTEXITCODE -ne 0) {
+  Fail-Ship "Full ship completion" "All nine tracks, including exact local source and rendered previews, must pass the release handoff gate. This release is incomplete."
+}
 
 Write-ShipSuccess -Summary $Summary
 exit 0

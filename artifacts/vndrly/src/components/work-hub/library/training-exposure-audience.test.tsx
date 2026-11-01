@@ -23,23 +23,24 @@ function mount(initial:Decision={userIds:[],staffRoleIds:[]},disabled=false){
    onChange={next=>{changed(next);setDecision(next);}}/>;
  }
  render(<ControlledAudience/>);
+ for(const summary of document.querySelectorAll("summary"))fireEvent.click(summary);
  return changed;
 }
-const checked=(label:string)=>(screen.getByRole('checkbox',{name:label}) as HTMLInputElement).checked;
+const checked=(label:string)=>screen.getByRole('switch',{name:label}).getAttribute('aria-checked')==='true';
 
 describe('TrainingExposureAudience',()=>{
  it('starts without any exposure recipients and never implies company-wide selection',()=>{
   const changed=mount();
   expect(screen.getByRole('group',{name:'trainingPolicy.exposureAudience'})).toBeTruthy();
   expect(screen.getByText('trainingPolicy.exposureAudienceHelp')).toBeTruthy();
-  expect(screen.getAllByRole('checkbox')).toHaveLength(people.length+positions.length);
-  expect(screen.getAllByRole('checkbox').every(input=>!(input as HTMLInputElement).checked)).toBe(true);
+  expect(screen.getAllByRole('switch')).toHaveLength(people.length+positions.length+4);
+  expect(screen.getAllByRole('switch').every(input=>input.getAttribute('aria-checked')!=='true')).toBe(true);
   expect(changed).not.toHaveBeenCalled();
  });
 
  it('selects only the named person, without adding positions or other company members',()=>{
   const changed=mount();
-  fireEvent.click(screen.getByRole('checkbox',{name:'Alex Operator'}));
+  fireEvent.click(screen.getByRole('switch',{name:'Alex Operator'}));
   expect(changed).toHaveBeenCalledExactlyOnceWith({userIds:[17],staffRoleIds:[]});
   expect(checked('Alex Operator')).toBe(true);
   for(const label of ['sam@example.test','Rig Operator','Office Accountant'])expect(checked(label)).toBe(false);
@@ -47,7 +48,7 @@ describe('TrainingExposureAudience',()=>{
 
  it('selects only the specified position and does not expand it into every listed person',()=>{
   const changed=mount();
-  fireEvent.click(screen.getByRole('checkbox',{name:'Rig Operator'}));
+  fireEvent.click(screen.getByRole('switch',{name:'Rig Operator'}));
   expect(changed).toHaveBeenCalledExactlyOnceWith({userIds:[],staffRoleIds:['staff:rig_operator']});
   expect(checked('Rig Operator')).toBe(true);
   for(const label of ['Office Accountant','Alex Operator','sam@example.test'])expect(checked(label)).toBe(false);
@@ -55,11 +56,11 @@ describe('TrainingExposureAudience',()=>{
 
  it('targets the email-labelled person by their user ID and removes only the toggled person or position',()=>{
   const changed=mount({userIds:[17],staffRoleIds:['staff:rig_operator','staff:office_accountant']});
-  fireEvent.click(screen.getByRole('checkbox',{name:'sam@example.test'}));
+  fireEvent.click(screen.getByRole('switch',{name:'sam@example.test'}));
   expect(changed).toHaveBeenLastCalledWith({userIds:[17,23],staffRoleIds:['staff:rig_operator','staff:office_accountant']});
-  fireEvent.click(screen.getByRole('checkbox',{name:'Alex Operator'}));
+  fireEvent.click(screen.getByRole('switch',{name:'Alex Operator'}));
   expect(changed).toHaveBeenLastCalledWith({userIds:[23],staffRoleIds:['staff:rig_operator','staff:office_accountant']});
-  fireEvent.click(screen.getByRole('checkbox',{name:'Rig Operator'}));
+  fireEvent.click(screen.getByRole('switch',{name:'Rig Operator'}));
   expect(changed).toHaveBeenLastCalledWith({userIds:[23],staffRoleIds:['staff:office_accountant']});
   expect(checked('Alex Operator')).toBe(false);expect(checked('Rig Operator')).toBe(false);
   expect(checked('sam@example.test')).toBe(true);expect(checked('Office Accountant')).toBe(true);
@@ -67,7 +68,7 @@ describe('TrainingExposureAudience',()=>{
 
  it('prevents person and position changes while the audience is disabled',()=>{
   const changed=mount({userIds:[17],staffRoleIds:['staff:rig_operator']},true);
-  for(const element of screen.getAllByRole('checkbox')){
+  for(const element of screen.getAllByRole('switch')){
    const input=element as HTMLInputElement;
    expect(input.disabled).toBe(true);
    input.click();

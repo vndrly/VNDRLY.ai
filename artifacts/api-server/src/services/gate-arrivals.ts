@@ -64,7 +64,8 @@ export function projectGateRun(candidate: Candidate, site: Site): GateArrival {
 
 export function createGateArrivalsService(
   database: Pick<Pool,"connect"> = pool,
-  authorize = authorizeOfflineGateObservation,
+  authorize = (client: Parameters<typeof authorizeOfflineGateObservation>[0], session: SessionPayload, siteId: number) =>
+    authorizeOfflineGateObservation(client, session, siteId, { lockRows: false }),
   estimate: Estimate = estimateMapboxDrivingRoute,
   clock: () => Date = () => new Date(),
 ) {

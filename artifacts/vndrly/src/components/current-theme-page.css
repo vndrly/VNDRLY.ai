@@ -58,3 +58,44 @@ main:has(.current-theme-page) { background:#3a3d42 !important; color:#ececec; }
   .inventory-page .equipment-heading { flex-wrap:wrap; }
   .inventory-page .equipment-heading > .equipment-actions { margin-left:auto; }
 }
+
+.safety-score-page > section,
+.safety-score-page .safety-program-card {
+  min-width:0; max-width:100%; background:#242426 !important; color:#ececec !important;
+  border:2px solid var(--brand-primary) !important; border-radius:12px; box-shadow:none;
+}
+.safety-score-page .training-service-card { background:#242426; color:#ececec; border:2px solid var(--brand-primary); border-radius:12px; }
+.safety-score-page :is(h2,h3) { color:#ececec; }
+.safety-score-page p { overflow-wrap:anywhere; }
+.safety-score-page nav[aria-label="Training controls"] a {
+  border-radius:6px !important;
+}
+/* Outrank the global dark card overrides without changing other pages. */
+html.dark main .safety-score-page .safety-program-card,
+html:not(.dark) main .safety-score-page .safety-program-card {
+  background-color:#242426 !important; color:#ececec !important;
+  border:2px solid var(--brand-primary) !important; border-radius:12px !important;
+  box-shadow:none !important;
+}
+.safety-score-page nav[aria-label="Training controls"] a {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:32px; padding:6px 10px; border:1px solid var(--brand-primary);
+  border-radius:6px !important; background:transparent; color:#ececec;
+  font-size:12px; font-weight:600; line-height:1.4; text-decoration:none;
+}
+.safety-score-page nav[aria-label="Training controls"] a:hover {
+  background:color-mix(in srgb,var(--brand-primary) 14%,transparent);
+}
+/* One typography hierarchy for the complete Safety Program page. */
+.safety-score-page { font-size:14px; font-weight:400; line-height:1.5; }
+.safety-score-page :is(p,li,label,a,summary) { font-size:14px; line-height:1.5; }
+.safety-score-page :is(p,li,label) { font-weight:400; }
+.safety-score-page h1 { font-size:20px; font-weight:700; line-height:1.4; }
+.safety-score-page :is(h2,h3,h4,h5,summary) { font-size:14px; font-weight:700; line-height:1.5; }
+.safety-score-page :is(h1,h2,h3,h4,h5,summary,a) { overflow-wrap:anywhere; }
+.safety-score-page a { text-decoration:none !important; }
+.safety-score-page .safety-program-link { display:block; width:fit-content; max-width:100%; color:#ececec; font-weight:600; }
+.safety-score-page .safety-program-link:hover { color:var(--brand-primary); }
+.safety-score-page a:focus-visible { outline:2px solid var(--brand-primary); outline-offset:3px; border-radius:4px; }
+.safety-score-page nav[aria-label="Training controls"] a,
+.safety-score-page .current-theme-mini { font-size:12px; font-weight:600; line-height:1.4; }

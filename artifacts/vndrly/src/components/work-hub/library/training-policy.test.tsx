@@ -2,6 +2,8 @@ import React from 'react';
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import TrainingPolicy from './training-policy';
+vi.mock('@/hooks/use-auth',()=>({useAuth:()=>({user:{role:'vendor'}})}));
+vi.mock('./training-course-guide',()=>({default:()=>null}));
 
 const mock=vi.hoisted(()=>({api:{data:null as any,busy:false,uncertain:false,error:'',send:vi.fn(),reload:vi.fn(),retryOriginal:vi.fn()},assignment:vi.fn()}));
 vi.mock('react-i18next',()=>({useTranslation:()=>({t:(key:string,options?:{number?:number})=>options?.number?`${key} ${options.number}`:key})}));
@@ -37,7 +39,7 @@ describe('TrainingPolicy',()=>{
  it('keeps saved selections checked and lets unavailable people, positions, groups and files be removed',async()=>{
   mock.api.data.policy={...mock.api.data.policy,requiredUserIds:[17,99],requiredStaffRoleIds:['field_operator','retired_role'],requiredGroupIds:['crew:1','crew:99'],attachmentFileIds:[fileId,missingFileId]};
   render(<TrainingPolicy itemId={policyId} onSaved={vi.fn().mockResolvedValue(undefined)}/>);
-  for(const label of ['Alex Worker','Field Operator','Night Crew','Approved permit procedure.pdf','trainingPolicy.unavailablePerson 1','trainingPolicy.unavailablePosition 1','trainingPolicy.unavailableGroup 1','trainingPolicy.unavailableFile 1'])expect((screen.getByLabelText(label) as HTMLInputElement).checked).toBe(true);
+  for(const label of ['Alex Worker','Field Operator','Night Crew','Approved permit procedure.pdf','trainingPolicy.unavailablePerson 1','trainingPolicy.unavailablePosition 1','trainingPolicy.unavailableGroup 1','trainingPolicy.unavailableFile 1']){const control=screen.getByLabelText(label);expect(control.getAttribute('role')==='switch'?control.getAttribute('aria-checked')==='true':(control as HTMLInputElement).checked).toBe(true);}
   for(const type of ['Person','Position','Group','File']){const label=`trainingPolicy.unavailable${type} 1`;fireEvent.click(screen.getByLabelText(label));expect(screen.queryByLabelText(label)).toBeNull();}
   fireEvent.click(screen.getByRole('button',{name:'trainingPolicy.save'}));
   await waitFor(()=>expect(mock.api.send).toHaveBeenCalledWith(expect.any(String),expect.objectContaining({requiredUserIds:[17],requiredStaffRoleIds:['field_operator'],requiredGroupIds:['crew:1'],attachmentFileIds:[fileId]}),7));
@@ -66,4 +68,9 @@ describe('TrainingPolicy',()=>{
   await waitFor(()=>expect(screen.getByRole('status').textContent).toBe('Policy changed; reload required'));
   expect(mock.assignment).not.toHaveBeenCalled();expect(mock.api.reload).not.toHaveBeenCalled();expect(onSaved).not.toHaveBeenCalled();
  });
+});
+
+it('keeps course identity fields read-only for a company manager',()=>{
+ mock.api.data=fixture();render(<TrainingPolicy itemId={policyId} onSaved={vi.fn()}/>);
+ for(const key of ['title','description','purpose'])expect((screen.getByLabelText(`trainingPolicy.${key}`) as HTMLTextAreaElement).readOnly).toBe(true);
 });
