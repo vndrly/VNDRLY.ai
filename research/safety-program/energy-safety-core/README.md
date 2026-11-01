@@ -1,6 +1,6 @@
 # VNDRLY Energy Safety Core
 
-Finished original English onshore safety knowledge course: ten substantive chapters, 22 worked scenarios, 48 explained learning checks and a separate 40-question domain-balanced examination from a 74-item bank. Four additional sections contain learner instructions, the actual 42-objective Basic Orientation 7.0 crosswalk, the 68-row OSHA/applicability evidence register and nine open independent-review/acceptance items.
+Finished original English onshore safety knowledge course: ten substantive chapters, 22 worked scenarios, 48 explained learning checks and a separate 40-question domain-balanced examination from a 75-item server-only bank. Four additional sections contain learner instructions, the actual 42-objective Basic Orientation 7.0 crosswalk, the 68-row OSHA/applicability evidence register and nine open independent-review/acceptance items.
 
 This is VNDRLY internal knowledge evidence. No PEC, SafeLandUSA, SafeGulf, IADC, OSHA Outreach, H2S Clear, independent accreditation or operator acceptance is claimed. Self-paced study duration and the provisional 80-percent exam threshold require independent validation. Actual employer procedures, practical demonstrations, medical/fit requirements and jurisdiction-specific duties remain open as identified in the course. Passing an online exam does not establish those qualifications.
 
@@ -10,11 +10,11 @@ Learning records preserve original answers and acknowledged remediation. The sep
 
 - `lessons-a.json`, `lessons-b.json`: full original lessons, cases and initial checks, including primary sources.
 - `additional-checks.mjs`: eight additional explained checks for coverage gaps identified during internal author review.
-- `exam-bank.mjs`: original separate assessment bank with server-only keys and explanations.
+- `assessment-contract.json`, `assessment-index.json`: counts, release hashes and objective-linked item identifiers only. Active exam questions and answer keys are not in public source. Earlier draft questions published during development are retired and are not the active bank.
 - `benchmark-crosswalk.json`: real lesson headings and paragraph hashes, formative items and separate exam items for each of 42 published benchmark objectives. Author mapping; independent review remains open.
 - `osha-crosswalk.json`: applicability, knowledge level and exact remaining employer/practical evidence, not blanket compliance checkmarks.
 - `independent-review-register.json`: nine explicit external/qualified-review/acceptance work items.
 
-Run `node scripts/build-task-training-release.mjs` to reproduce the unchanged 116-course baseline plus the flagship, or `node scripts/build-energy-safety-core.mjs` when the baseline manifest exists. `course.json`, `publication.json` and `validation.json` are deterministic generated outputs and are committed for review/publication verification.
+Run `node scripts/build-task-training-release.mjs` to reproduce the unchanged 116-course baseline plus the flagship public teaching/registry, or `node scripts/build-energy-safety-core.mjs` when the baseline manifest exists. `course.json` and `publication.json` contain teaching content, never the active exam bank. An authorized private bank and objective map under `.local/private-training/` are required to change the assessment or create the complete server publication payload. A public checkout can reproduce unchanged teaching and registry hashes from the recorded release contract without access to questions or keys.
 
 `node scripts/publish-energy-safety-core.mjs --validate-only` does no database access. Default mode is a read-only production preflight. `--apply` adds one deterministic G99 course and audit to each existing company Library in a guarded transaction. It neither changes prior templates nor creates assignments, policies or scoring rules. Readback and prior-template fingerprints are recorded in a local checkpoint. This source document does not assert deployment; live verification is recorded separately.

@@ -1,0 +1,13 @@
+{
+  "courseId": "G99",
+  "bankSize": 75,
+  "questionCount": 40,
+  "questionsPerDomain": 4,
+  "domains": 10,
+  "passingPercent": 80,
+  "maximumAttempts": 100,
+  "sourceSha256": "486ce0a67a6521c62c8e5db505f558ece8ebf66c2cee8250acf7736d012d1707",
+  "contentSha256": "8c26b1046f6eb660d8e24e834ea1a6944e0c9f72d658b159b5c45f09aca4ffcb",
+  "teachingSha256": "1faf493722cbf6f8524ffcac2c4cbf9173ba85bd9285fe78bea1d20af37f6e12",
+  "bankLocation": "Authorized server publication payload only; not in public source"
+}

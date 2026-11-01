@@ -1,0 +1,450 @@
+{
+  "items": [
+    {
+      "id": "ECORE_PRIVATE_01_1",
+      "domainId": "ESC01"
+    },
+    {
+      "id": "ECORE_PRIVATE_01_2",
+      "domainId": "ESC01"
+    },
+    {
+      "id": "ECORE_PRIVATE_01_3",
+      "domainId": "ESC01"
+    },
+    {
+      "id": "ECORE_PRIVATE_01_4",
+      "domainId": "ESC01"
+    },
+    {
+      "id": "ECORE_PRIVATE_01_5",
+      "domainId": "ESC01"
+    },
+    {
+      "id": "ECORE_PRIVATE_01_6",
+      "domainId": "ESC01"
+    },
+    {
+      "id": "ECORE_PRIVATE_01_7",
+      "domainId": "ESC01"
+    },
+    {
+      "id": "ECORE_PRIVATE_01_8",
+      "domainId": "ESC01"
+    },
+    {
+      "id": "ECORE_PRIVATE_02_1",
+      "domainId": "ESC02"
+    },
+    {
+      "id": "ECORE_PRIVATE_02_2",
+      "domainId": "ESC02"
+    },
+    {
+      "id": "ECORE_PRIVATE_02_3",
+      "domainId": "ESC02"
+    },
+    {
+      "id": "ECORE_PRIVATE_02_4",
+      "domainId": "ESC02"
+    },
+    {
+      "id": "ECORE_PRIVATE_02_5",
+      "domainId": "ESC02"
+    },
+    {
+      "id": "ECORE_PRIVATE_02_6",
+      "domainId": "ESC02"
+    },
+    {
+      "id": "ECORE_PRIVATE_02_7",
+      "domainId": "ESC02"
+    },
+    {
+      "id": "ECORE_PRIVATE_02_8",
+      "domainId": "ESC02"
+    },
+    {
+      "id": "ECORE_PRIVATE_03_1",
+      "domainId": "ESC03"
+    },
+    {
+      "id": "ECORE_PRIVATE_03_2",
+      "domainId": "ESC03"
+    },
+    {
+      "id": "ECORE_PRIVATE_03_3",
+      "domainId": "ESC03"
+    },
+    {
+      "id": "ECORE_PRIVATE_03_4",
+      "domainId": "ESC03"
+    },
+    {
+      "id": "ECORE_PRIVATE_03_5",
+      "domainId": "ESC03"
+    },
+    {
+      "id": "ECORE_PRIVATE_03_6",
+      "domainId": "ESC03"
+    },
+    {
+      "id": "ECORE_PRIVATE_03_7",
+      "domainId": "ESC03"
+    },
+    {
+      "id": "ECORE_PRIVATE_03_8",
+      "domainId": "ESC03"
+    },
+    {
+      "id": "ECORE_PRIVATE_04_1",
+      "domainId": "ESC04"
+    },
+    {
+      "id": "ECORE_PRIVATE_04_2",
+      "domainId": "ESC04"
+    },
+    {
+      "id": "ECORE_PRIVATE_04_3",
+      "domainId": "ESC04"
+    },
+    {
+      "id": "ECORE_PRIVATE_04_4",
+      "domainId": "ESC04"
+    },
+    {
+      "id": "ECORE_PRIVATE_04_5",
+      "domainId": "ESC04"
+    },
+    {
+      "id": "ECORE_PRIVATE_04_6",
+      "domainId": "ESC04"
+    },
+    {
+      "id": "ECORE_PRIVATE_04_7",
+      "domainId": "ESC04"
+    },
+    {
+      "id": "ECORE_PRIVATE_04_8",
+      "domainId": "ESC04"
+    },
+    {
+      "id": "ECORE_PRIVATE_05_1",
+      "domainId": "ESC05"
+    },
+    {
+      "id": "ECORE_PRIVATE_05_2",
+      "domainId": "ESC05"
+    },
+    {
+      "id": "ECORE_PRIVATE_05_3",
+      "domainId": "ESC05"
+    },
+    {
+      "id": "ECORE_PRIVATE_05_4",
+      "domainId": "ESC05"
+    },
+    {
+      "id": "ECORE_PRIVATE_05_5",
+      "domainId": "ESC05"
+    },
+    {
+      "id": "ECORE_PRIVATE_05_6",
+      "domainId": "ESC05"
+    },
+    {
+      "id": "ECORE_PRIVATE_05_7",
+      "domainId": "ESC05"
+    },
+    {
+      "id": "ECORE_PRIVATE_05_8",
+      "domainId": "ESC05"
+    },
+    {
+      "id": "ECORE_PRIVATE_06_1",
+      "domainId": "ESC06"
+    },
+    {
+      "id": "ECORE_PRIVATE_06_2",
+      "domainId": "ESC06"
+    },
+    {
+      "id": "ECORE_PRIVATE_06_3",
+      "domainId": "ESC06"
+    },
+    {
+      "id": "ECORE_PRIVATE_06_4",
+      "domainId": "ESC06"
+    },
+    {
+      "id": "ECORE_PRIVATE_06_5",
+      "domainId": "ESC06"
+    },
+    {
+      "id": "ECORE_PRIVATE_06_6",
+      "domainId": "ESC06"
+    },
+    {
+      "id": "ECORE_PRIVATE_06_7",
+      "domainId": "ESC06"
+    },
+    {
+      "id": "ECORE_PRIVATE_07_1",
+      "domainId": "ESC07"
+    },
+    {
+      "id": "ECORE_PRIVATE_07_2",
+      "domainId": "ESC07"
+    },
+    {
+      "id": "ECORE_PRIVATE_07_3",
+      "domainId": "ESC07"
+    },
+    {
+      "id": "ECORE_PRIVATE_07_4",
+      "domainId": "ESC07"
+    },
+    {
+      "id": "ECORE_PRIVATE_07_5",
+      "domainId": "ESC07"
+    },
+    {
+      "id": "ECORE_PRIVATE_07_6",
+      "domainId": "ESC07"
+    },
+    {
+      "id": "ECORE_PRIVATE_07_7",
+      "domainId": "ESC07"
+    },
+    {
+      "id": "ECORE_PRIVATE_08_1",
+      "domainId": "ESC08"
+    },
+    {
+      "id": "ECORE_PRIVATE_08_2",
+      "domainId": "ESC08"
+    },
+    {
+      "id": "ECORE_PRIVATE_08_3",
+      "domainId": "ESC08"
+    },
+    {
+      "id": "ECORE_PRIVATE_08_4",
+      "domainId": "ESC08"
+    },
+    {
+      "id": "ECORE_PRIVATE_08_5",
+      "domainId": "ESC08"
+    },
+    {
+      "id": "ECORE_PRIVATE_08_6",
+      "domainId": "ESC08"
+    },
+    {
+      "id": "ECORE_PRIVATE_08_7",
+      "domainId": "ESC08"
+    },
+    {
+      "id": "ECORE_PRIVATE_09_1",
+      "domainId": "ESC09"
+    },
+    {
+      "id": "ECORE_PRIVATE_09_2",
+      "domainId": "ESC09"
+    },
+    {
+      "id": "ECORE_PRIVATE_09_3",
+      "domainId": "ESC09"
+    },
+    {
+      "id": "ECORE_PRIVATE_09_4",
+      "domainId": "ESC09"
+    },
+    {
+      "id": "ECORE_PRIVATE_09_5",
+      "domainId": "ESC09"
+    },
+    {
+      "id": "ECORE_PRIVATE_09_6",
+      "domainId": "ESC09"
+    },
+    {
+      "id": "ECORE_PRIVATE_09_7",
+      "domainId": "ESC09"
+    },
+    {
+      "id": "ECORE_PRIVATE_10_1",
+      "domainId": "ESC10"
+    },
+    {
+      "id": "ECORE_PRIVATE_10_2",
+      "domainId": "ESC10"
+    },
+    {
+      "id": "ECORE_PRIVATE_10_3",
+      "domainId": "ESC10"
+    },
+    {
+      "id": "ECORE_PRIVATE_10_4",
+      "domainId": "ESC10"
+    },
+    {
+      "id": "ECORE_PRIVATE_10_5",
+      "domainId": "ESC10"
+    },
+    {
+      "id": "ECORE_PRIVATE_10_6",
+      "domainId": "ESC10"
+    },
+    {
+      "id": "ECORE_PRIVATE_10_7",
+      "domainId": "ESC10"
+    }
+  ],
+  "benchmarkMappings": {
+    "1.1": [
+      "ECORE_PRIVATE_01_1",
+      "ECORE_PRIVATE_01_5"
+    ],
+    "1.2": [
+      "ECORE_PRIVATE_01_2",
+      "ECORE_PRIVATE_01_7"
+    ],
+    "1.3": [
+      "ECORE_PRIVATE_01_3"
+    ],
+    "2.1": [
+      "ECORE_PRIVATE_02_1"
+    ],
+    "2.2": [
+      "ECORE_PRIVATE_02_2"
+    ],
+    "2.3": [
+      "ECORE_PRIVATE_02_4",
+      "ECORE_PRIVATE_02_5",
+      "ECORE_PRIVATE_02_8"
+    ],
+    "3.1": [
+      "ECORE_PRIVATE_02_3",
+      "ECORE_PRIVATE_02_6",
+      "ECORE_PRIVATE_02_7"
+    ],
+    "3.2": [
+      "ECORE_PRIVATE_02_6"
+    ],
+    "3.3": [
+      "ECORE_PRIVATE_08_2"
+    ],
+    "3.4": [
+      "ECORE_PRIVATE_08_1"
+    ],
+    "3.5": [
+      "ECORE_PRIVATE_08_2"
+    ],
+    "3.6": [
+      "ECORE_PRIVATE_03_2"
+    ],
+    "4.1": [
+      "ECORE_PRIVATE_05_1"
+    ],
+    "4.2": [
+      "ECORE_PRIVATE_05_2"
+    ],
+    "5.1": [
+      "ECORE_PRIVATE_05_4"
+    ],
+    "5.2": [
+      "ECORE_PRIVATE_05_6"
+    ],
+    "5.3": [
+      "ECORE_PRIVATE_06_2"
+    ],
+    "5.4": [
+      "ECORE_PRIVATE_05_7"
+    ],
+    "6.1": [
+      "ECORE_PRIVATE_09_4"
+    ],
+    "6.2": [
+      "ECORE_PRIVATE_06_7"
+    ],
+    "6.3": [
+      "ECORE_PRIVATE_06_7",
+      "ECORE_PRIVATE_09_4"
+    ],
+    "7.1": [
+      "ECORE_PRIVATE_03_3",
+      "ECORE_PRIVATE_04_5"
+    ],
+    "7.2": [
+      "ECORE_PRIVATE_06_6"
+    ],
+    "7.3": [
+      "ECORE_PRIVATE_06_3"
+    ],
+    "7.4": [
+      "ECORE_PRIVATE_06_4",
+      "ECORE_PRIVATE_06_5"
+    ],
+    "8.1": [
+      "ECORE_PRIVATE_08_5"
+    ],
+    "8.2": [
+      "ECORE_PRIVATE_08_4"
+    ],
+    "9.1": [
+      "ECORE_PRIVATE_10_1"
+    ],
+    "9.2": [
+      "ECORE_PRIVATE_10_2"
+    ],
+    "9.3": [
+      "ECORE_PRIVATE_10_4"
+    ],
+    "9.4": [
+      "ECORE_PRIVATE_10_4"
+    ],
+    "9.5": [
+      "ECORE_PRIVATE_10_5"
+    ],
+    "9.6": [
+      "ECORE_PRIVATE_10_6"
+    ],
+    "10.1": [
+      "ECORE_PRIVATE_09_1"
+    ],
+    "10.2": [
+      "ECORE_PRIVATE_09_3"
+    ],
+    "10.3": [
+      "ECORE_PRIVATE_09_2"
+    ],
+    "11.1": [
+      "ECORE_PRIVATE_08_6"
+    ],
+    "11.2": [
+      "ECORE_PRIVATE_09_7"
+    ],
+    "11.3": [
+      "ECORE_PRIVATE_08_6",
+      "ECORE_PRIVATE_08_7"
+    ],
+    "11.4": [
+      "ECORE_PRIVATE_07_1",
+      "ECORE_PRIVATE_07_2",
+      "ECORE_PRIVATE_07_7"
+    ],
+    "11.5": [
+      "ECORE_PRIVATE_04_1",
+      "ECORE_PRIVATE_04_2",
+      "ECORE_PRIVATE_04_3",
+      "ECORE_PRIVATE_04_4",
+      "ECORE_PRIVATE_04_7",
+      "ECORE_PRIVATE_04_8"
+    ],
+    "11.6": [
+      "ECORE_PRIVATE_04_6",
+      "ECORE_PRIVATE_07_5"
+    ]
+  }
+}

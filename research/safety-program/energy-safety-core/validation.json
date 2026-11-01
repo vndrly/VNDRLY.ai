@@ -5,13 +5,13 @@
   "sections": 14,
   "workedScenarios": 22,
   "learningChecks": 48,
-  "examBank": 74,
+  "examBank": 75,
   "examQuestions": 40,
   "examDomains": 10,
   "benchmarkObjectives": 42,
   "oshaRows": 68,
   "openReviewItems": 9,
   "preservedCourses": 116,
-  "sourceSha256": "92dbe93c3eea0410c4cf3a432cfc7812f5d47dd29e139d03d3adb6a67b8eba14",
-  "contentSha256": "331592924da191bd603d0a3083468e9e430ff3dce3d709d39dd32959ff597bf2"
+  "sourceSha256": "486ce0a67a6521c62c8e5db505f558ece8ebf66c2cee8250acf7736d012d1707",
+  "contentSha256": "8c26b1046f6eb660d8e24e834ea1a6944e0c9f72d658b159b5c45f09aca4ffcb"
 }

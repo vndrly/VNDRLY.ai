@@ -34,6 +34,7 @@ import {
 } from "./library-audience";
 import {
   assignmentDeadline,
+  safeLibraryContent,
   publicTraining,
   shouldReuseLibraryAssignment,
 } from "./library-policy";
@@ -587,7 +588,7 @@ export async function ownerAssignmentDetail(actor: LibraryActor, id: string) {
     title: row.template.name,
     kind: m?.kind ?? "form",
     content:
-      m?.content ??
+      (m ? safeLibraryContent(m,true).content : null) ??
       LibraryDraftSchema.parse({
         kind: "form",
         title: row.template.name,

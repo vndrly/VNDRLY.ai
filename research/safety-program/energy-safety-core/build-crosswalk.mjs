@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import {createHash}from'node:crypto';
 import {additionalChecks}from'./additional-checks.mjs';
-import {examBank}from'./exam-bank.mjs';
+const assessmentIndex=JSON.parse(fs.readFileSync('research/safety-program/energy-safety-core/assessment-index.json'));
+const examBank=assessmentIndex.items;
 const root='research/safety-program/energy-safety-core';
 const benchmarkUrl='https://veriforce.com/wp-content/uploads/2025/01/Basic-Version-7.0-Syllabus-01.08.2025.pdf';
 const b=(section,labels,lesson,examDomain)=>labels.map((label,i)=>({objective:`${section}.${i+1}`,topic:label,lessonIds:lesson,learningChecks:lesson.flatMap(id=>[1,2,3,4].map(n=>`${id}_KC${n}`)),examDomain,coverage:'Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence'}));
@@ -121,7 +122,7 @@ for(const [objective,lessonId,needle,checks,items]of details){
  const paragraph=lesson.body.split(/\n\n/).map(p=>p.trim()).find(p=>p.replace(/^#+\s*/,'').startsWith(needle));
  if(!row||!paragraph)throw Error(`Missing actual instruction:${objective}:${needle}`);
  row.lessonIds=[lessonId];row.instruction={lessonId,heading:paragraph.split('\n')[0].replace(/^#+\s*/,''),paragraphSha256:createHash('sha256').update(paragraph).digest('hex')};
- row.learningChecks=checks.split(',');row.examQuestionIds=items.split(',').map(id=>'ESC_EX_'+id);
+ row.learningChecks=checks.split(',');row.examQuestionIds=assessmentIndex.benchmarkMappings[objective];
  if(row.learningChecks.some(id=>!allChecks.has(id))||row.examQuestionIds.some(id=>!examBank.some(q=>q.id===id)))throw Error(`Broken assessment crosswalk:${objective}`);
  row.examDomain=examBank.find(q=>q.id===row.examQuestionIds[0]).domainId;
  row.assessmentNote='Linked items sample related knowledge; the randomized exam does not ask every bank item on every attempt. Independent objective/item validation remains open.';

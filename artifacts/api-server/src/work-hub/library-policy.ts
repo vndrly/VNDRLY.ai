@@ -57,6 +57,14 @@ export function validateLibraryValues(
   return result;
 }
 
+// A company administrator is an exam candidate too. G99 issuer-owned banks
+// must never be returned through owner/editor reads; ordinary authored courses
+// retain their existing author contract.
+export function protectedOwnerTraining<T extends {certificationExam?:unknown}>(training:T,familyId?:string){
+ if(familyId!=='G99')return training;
+ const {certificationExam:_,...teaching}=training;
+ return teaching;
+}
 export function safeLibraryContent(metadata: LibraryMetadata, manage: boolean) {
   const { fileSnapshots: _, ...safe } = metadata;
   return {
@@ -65,7 +73,7 @@ export function safeLibraryContent(metadata: LibraryMetadata, manage: boolean) {
       ...safe.content,
       training: safe.content.training
         ? manage
-          ? safe.content.training
+          ? protectedOwnerTraining(safe.content.training, metadata.safetyResource?.familyId)
           : publicTraining(safe.content.training)
         : null,
     },
