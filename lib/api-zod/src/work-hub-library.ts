@@ -153,7 +153,7 @@ export const TrainingPolicyDetailsSchema = z.object({
   requiredUserIds: z.array(z.number().int().positive()).max(5000).default([]),
   requiredStaffRoleIds: z.array(z.string().min(1).max(200)).max(500).default([]),
   requiredGroupIds: z.array(z.string().regex(/^(?:[0-9a-f-]{36}|crew:[1-9][0-9]*)$/i)).max(100).default([]),
-  serviceApplicability:z.array(z.object({serviceId:z.string().min(1).max(120),applies:z.boolean(),reason:z.string().trim().min(1).max(2000)})).max(1000).default([]),
+  serviceApplicability:z.array(z.object({serviceId:z.string().min(1).max(120),applies:z.boolean(),reason:z.string().trim().min(1).max(2000),userIds:z.array(z.number().int().positive()).default([]),staffRoleIds:z.array(z.string().min(1).max(200)).default([])})).max(1000).default([]),
   newHireRequired: z.boolean().default(false),
   roleChangeRequired: z.boolean().default(false),
   activatedAt: z.iso.datetime().nullable().default(null),
@@ -301,6 +301,7 @@ export const AssignmentMetadataSchema = z.object({
     .default({ lessonIds: [], answers: {} }),
   attemptResetAt: z.iso.datetime().nullable().default(null),
   refresherDueAt: z.iso.datetime().nullable().default(null),
+  refresherScheduledAt: z.iso.datetime().nullable().default(null),
 });
 export type LibraryField = z.infer<typeof LibraryFieldSchema>;
 export type LibraryDraft = z.infer<typeof LibraryDraftSchema>;

@@ -1,0 +1,6 @@
+import React from 'react';
+import {useTranslation} from 'react-i18next';
+export default function TrainingExposureAudience({decision,people,positions,disabled,onChange}:{decision:{userIds:number[];staffRoleIds:string[]};people:{userId:number;name:string|null;email:string|null}[];positions:{id:string;label:string}[];disabled:boolean;onChange:(value:{userIds:number[];staffRoleIds:string[]})=>void}){
+ const {t}=useTranslation();
+ return <fieldset className="space-y-2"><legend className="font-semibold">{t('trainingPolicy.exposureAudience')}</legend><p>{t('trainingPolicy.exposureAudienceHelp')}</p><div className="grid max-h-64 gap-2 overflow-y-auto md:grid-cols-2">{positions.map(p=><label key={p.id} className="flex gap-2"><input type="checkbox" disabled={disabled} checked={decision.staffRoleIds.includes(p.id)} onChange={()=>onChange({...decision,staffRoleIds:decision.staffRoleIds.includes(p.id)?decision.staffRoleIds.filter(id=>id!==p.id):[...decision.staffRoleIds,p.id]})}/>{p.label}</label>)}{people.map(p=><label key={p.userId} className="flex gap-2"><input type="checkbox" disabled={disabled} checked={decision.userIds.includes(p.userId)} onChange={()=>onChange({...decision,userIds:decision.userIds.includes(p.userId)?decision.userIds.filter(id=>id!==p.userId):[...decision.userIds,p.userId]})}/>{p.name||p.email}</label>)}</div></fieldset>;
+}

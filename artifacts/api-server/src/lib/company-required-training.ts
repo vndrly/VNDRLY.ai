@@ -1,18 +1,20 @@
 import {safetyTrainingContentHash}from'./safety-training-content-hash';
 import {and,eq,inArray,isNull,or,sql}from'drizzle-orm';
-import {db,canonicalServicesTable as canonical,vendorCapabilitiesTable as capabilities,vendorWorkTypesTable as vendorWork,workTypesTable as workTypes,serviceMappingsTable as mappings,vendorPartnerServiceOffersTable as offers,vendorPeopleTable as workers,workHubFormTemplatesTable as templates,workHubFormInstancesTable as instances}from'@workspace/db';
+import {db,vendorsTable as vendors,canonicalServicesTable as canonical,vendorCapabilitiesTable as capabilities,vendorWorkTypesTable as vendorWork,workTypesTable as workTypes,serviceMappingsTable as mappings,vendorPartnerServiceOffersTable as offers,vendorPeopleTable as workers,workHubFormTemplatesTable as templates,workHubFormInstancesTable as instances}from'@workspace/db';
 import {LibraryMetadataSchema,LibraryDraftSchema,AssignmentMetadataSchema,type WorkHubOwner}from'@workspace/api-zod';
 import {companyLibraryPeople}from'../work-hub/library-audience';
 import {subjectFingerprint}from'../services/service-matching/candidates';
 import {safetyTrainingCatalog}from'../data/safety-training-catalog';
 import {matchSafetyTrainingRoles,type ReviewedTrainingRoleRule,type CommonTrainingRoleRule}from'./safety-training-role-match';
 import {requiredTrainingCoverage,type RequiredTrainingRule}from'./safety-training-requirements';
+import {trainingPositionIds}from'./safety-training-position';
 type Reader=Pick<typeof db,'select'>;
 type Course={id:string;title:string;purpose:string;practicalBoundary:string;sourceSha256:string;contentSha256:string;sourceVersion:string;categoryId:string};
 type LegacyService={existingCanonicalId:number;code:string;name:string;canonicalDefinition:string;relation:string;rationale:string;roleMappings:ReviewedTrainingRoleRule[];masterServiceIds:string[];resolutionMode?:string};
-type MasterService={id:string;name:string;deliveryMode:string;roleRuleIds:string[];gapTopicIds:string[];sourceUrls:string[];scopeNotes:string[]};
+type MasterService={id:string;name:string;deliveryMode:string;roleRuleIds:string[];conditionalRuleIds:string[];gapTopicIds:string[];sourceUrls:string[];scopeNotes:string[]};
+type ConditionalRoleRule={trigger:string;familyIds:string[];roles:string[];rationale:string};
 type AdditionalRule=ReviewedTrainingRoleRule&{masterServiceIds:string[];requiresExposureConfirmation:boolean;sourceUrls:string[]};
-export const trainingCatalog=safetyTrainingCatalog as {curriculum:Course[];legacy:{entries:LegacyService[]};common:{rules:CommonTrainingRoleRule[]};additional:{courses:{courseId:string;title:string;masterServiceIds:string[];roleMappings:AdditionalRule[]}[]};catalog:{catalogSha256:string;services:MasterService[];roleRules:Record<string,ReviewedTrainingRoleRule>;gapTopics:Record<string,unknown>}};
+export const trainingCatalog=safetyTrainingCatalog as {curriculum:Course[];legacy:{entries:LegacyService[]};common:{rules:CommonTrainingRoleRule[]};additional:{courses:{courseId:string;title:string;masterServiceIds:string[];roleMappings:AdditionalRule[]}[]};catalog:{catalogSha256:string;services:MasterService[];roleRules:Record<string,ReviewedTrainingRoleRule>;conditionalRules:Record<string,ConditionalRoleRule>;gapTopics:Record<string,unknown>}};
 const normalize=(value:string|null)=>String(value??'').trim().toLowerCase().replace(/\s+/g,' ');
 export async function selectedTrainingServices(reader:Reader,owner:WorkHubOwner){
  if(owner.type!=='vendor')return {services:[] as LegacyService[],unmapped:[] as string[]};
@@ -52,12 +54,13 @@ export async function selectedTrainingServices(reader:Reader,owner:WorkHubOwner)
  return {services,unmapped:[...new Set(unmapped)]};
 }
 export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner){
- const [members,staff,selected,published,assigned]=await Promise.all([
+  const [members,staff,selected,published,assigned,vendorRows]=await Promise.all([
   companyLibraryPeople(reader,owner),
   owner.type==='vendor'?reader.select().from(workers).where(and(eq(workers.vendorId,owner.id),eq(workers.isActive,true),isNull(workers.deletedAt))):Promise.resolve([] as (typeof workers.$inferSelect)[]),
   selectedTrainingServices(reader,owner),
   reader.select().from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),sql`${templates.libraryMetadata}->>'state'='published' AND ${templates.libraryMetadata}->>'kind' IN ('training','policy')`)),
   reader.select({templateId:instances.templateId,assigneeUserId:instances.assigneeUserId,assignment:sql<unknown>`jsonb_build_object('status',${instances.assignmentMetadata}->'status','membershipId',${instances.assignmentMetadata}->'membershipId','contentVersion',${instances.assignmentMetadata}->'contentVersion','refresherDueAt',${instances.assignmentMetadata}->'refresherDueAt')`,sourceSha256:sql<string|null>`${templates.libraryMetadata}->'safetyResource'->>'sourceSha256'`}).from(instances).innerJoin(templates,eq(templates.id,instances.templateId)).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id))),
+   owner.type==='vendor'?reader.select({catalog:vendors.staffRoleCatalog}).from(vendors).where(eq(vendors.id,owner.id)).limit(1):Promise.resolve([]),
  ]);
  const people=members.filter(p=>p.vendorPeopleId===null||staff.some(w=>w.id===p.vendorPeopleId));
  const trusted=new Map<string,{record:typeof templates.$inferSelect;metadata:ReturnType<typeof LibraryMetadataSchema.parse>}>();
@@ -68,15 +71,17 @@ export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner){
   const hash=safetyTrainingContentHash(LibraryDraftSchema.parse(metadata.content));if(hash!==course.contentSha256)continue;
   if(!trusted.has(course.id)||trusted.get(course.id)!.metadata.contentVersion<metadata.contentVersion)trusted.set(course.id,{record,metadata});
  }
- const scopeDecisions=new Map<string,boolean>();
+  const positions=vendorRows[0]?.catalog?.entries??[];
+  const scopeDecisions=new Map<string,{applies:boolean;userIds:number[];staffRoleIds:string[]}>();
  for(const row of [...published].sort((a,b)=>a.currentVersion-b.currentVersion)){
   const parsed=LibraryMetadataSchema.safeParse(row.libraryMetadata);if(!parsed.success||parsed.data.state!=='published'||!parsed.data.safetyResource)continue;
-  for(const decision of parsed.data.trainingPolicy?.serviceApplicability??[])scopeDecisions.set(`${parsed.data.safetyResource.familyId}:${decision.serviceId}`,decision.applies);
+   for(const decision of parsed.data.trainingPolicy?.serviceApplicability??[])scopeDecisions.set(`${parsed.data.safetyResource.familyId}:${decision.serviceId}`,decision);
  }
  const rules:RequiredTrainingRule[]=[],unresolved:Array<{userId:number;serviceId:string;role:string;reason:string}>=[],conditionalCourseGaps:Array<{userId:number;serviceId:string;familyId:string;role:string;reason:string}>=[];
  const coveragePeople=people.map(person=>{
   const worker=staff.find(w=>w.id===person.vendorPeopleId||w.userId===person.userId);
   const input={roles:worker?.roles??[],vendorRole:worker?.vendorRole??(person.role==='field_employee'?'field':'office'),jobTitle:worker?.jobTitle??null,membershipRole:person.role};
+   const positionIds=trainingPositionIds(input,positions);
   const personalRole=`member:${person.membershipId}`;
   const common=matchSafetyTrainingRoles(input,[],trainingCatalog.common.rules);
   rules.push({serviceId:'*',roleIds:[personalRole],familyIds:common.familyIds});
@@ -91,8 +96,9 @@ export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner){
     const matched=matchSafetyTrainingRoles(input,candidates,[]);
     if(!matched.matchedRoleRules.length)continue;
     const decision=scopeDecisions.get(`${additional.courseId}:${service.code}`);
-    if(decision===true)rules.push({serviceId:service.code,roleIds:[personalRole],familyIds:matched.familyIds});
-    else if(decision===undefined)for(const match of matched.matchedRoleRules)conditionalCourseGaps.push({userId:person.userId,serviceId:service.code,familyId:additional.courseId,role:match.role,reason:match.trigger??'Confirm the actual material, task and jurisdiction in this course Policy before treating this conditional foundation as applicable or complete.'});
+    const targeted=!!decision&&(decision.userIds.includes(person.userId)||decision.staffRoleIds.some(id=>positionIds.includes(id)));
+    if(targeted&&decision!.applies)rules.push({serviceId:service.code,roleIds:[personalRole],familyIds:matched.familyIds});
+    else if(!targeted)for(const match of matched.matchedRoleRules)conditionalCourseGaps.push({userId:person.userId,serviceId:service.code,familyId:additional.courseId,role:match.role,reason:match.trigger??'Confirm the actual material, task and jurisdiction for this person or position in this course Policy before treating this conditional foundation as applicable or complete.'});
    }
   }
   return {userId:person.userId,membershipId:person.membershipId,active:true,roleIds:[personalRole]};
@@ -101,7 +107,7 @@ export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner){
  const completionSchema=AssignmentMetadataSchema.pick({status:true,membershipId:true,contentVersion:true,refresherDueAt:true});
  const completions=assigned.flatMap(row=>{const a=completionSchema.safeParse(row.assignment),userId=row.assigneeUserId;if(!userId||!a.success||!row.sourceSha256)return[];return [{userId,membershipId:a.data.membershipId,itemId:row.templateId,contentVersion:a.data.contentVersion,sourceSha256:row.sourceSha256,status:a.data.status,refresherDueAt:a.data.refresherDueAt}];});
  const coverage=requiredTrainingCoverage({selectedServiceIds:selected.services.map(s=>s.code),rules,people:coveragePeople,curriculum,completions});
- const scopeIssues=selected.services.filter(s=>['scope_unresolved','material_not_service'].includes(s.relation)&&s.resolutionMode!=='dedicated_extension_roles').map(s=>({serviceId:s.code,reason:s.rationale}));
+  const scopeIssues=selected.services.filter(s=>s.roleMappings.some(rule=>rule.scopeMustBeConfirmed)||(['scope_unresolved','material_not_service'].includes(s.relation)&&s.resolutionMode!=='dedicated_extension_roles')).map(s=>({serviceId:s.code,reason:s.roleMappings.some(rule=>rule.scopeMustBeConfirmed)?`${s.rationale} Actual legacy component scope remains unconfirmed; reviewed role rules explicitly require scope confirmation.`:s.rationale}));
  const scopeMissing=owner.type==='vendor'&&selected.services.length===0;
  return {...coverage,serviceScopeMissing:scopeMissing,provisional:coverage.unavailable>0||scopeMissing||!!(selected.unmapped.length||unresolved.length||scopeIssues.length||conditionalCourseGaps.length),services:selected.services.map(({existingCanonicalId,code,name,masterServiceIds,relation,rationale})=>({id:existingCanonicalId,code,name,masterServiceIds,relation,rationale})),unmappedServiceIds:selected.unmapped,unresolvedRoles:unresolved,scopeIssues,conditionalCourseGaps,people:coveragePeople,audience:people,curriculum,items:trusted,rules};
 }

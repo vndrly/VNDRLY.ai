@@ -81,7 +81,7 @@ export async function runOnboardingWork(now = new Date()) {
         .select()
         .from(instances)
         .where(
-          sql`${instances.assignmentMetadata}->>'status'='completed' AND (${instances.assignmentMetadata}->>'refresherDueAt')::timestamptz<=${now}`,
+          sql`${instances.assignmentMetadata}->>'status'='completed' AND (${instances.assignmentMetadata}->>'refresherDueAt')::timestamptz<=${now} AND ${instances.assignmentMetadata}->>'refresherScheduledAt' IS NULL`,
         )
         .limit(25);
       for (const candidate of refreshers) {
@@ -132,9 +132,10 @@ export async function runOnboardingWork(now = new Date()) {
               now,
             );
             assigned += result.assigned.length;
+            a.refresherScheduledAt = now.toISOString();
           }
         }
-        a.refresherDueAt = null;
+        // Scheduling renewal never extends the old completion's validity.
         await tx
           .update(instances)
           .set({ assignmentMetadata: a })

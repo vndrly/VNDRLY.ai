@@ -5,15 +5,12 @@ import {libraryAuthority,libraryRecord,libraryCommand,checkLibraryVersion,Librar
 import {companyLibraryPeople,libraryOptions} from './library-audience';
 import {allocateLibraryItems} from './library-assignments';
 import {trainingCatalog,selectedTrainingServices}from'../lib/company-required-training';
+import {trainingPositionIds,type TrainingPosition as Position} from '../lib/safety-training-position';
+export {trainingPositionIds} from '../lib/safety-training-position';
 
 const normalized=(value:string)=>value.trim().replace(/\s+/g,' ').toLowerCase();
 export async function lockCompanyTraining(tx:LibraryTx,owner:WorkHubOwner){
  await tx.select({id:templates.id}).from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),sql`${templates.libraryMetadata}->>'kind'='training'`)).orderBy(templates.id).for('update');
-}
-type Position={id:string;label:string;aliases?:string[]};
-export function trainingPositionIds(person:{jobTitle:string|null;roles:string[];vendorRole:string},positions:Position[]){
- const labels=[person.jobTitle??'',...person.roles].map(normalized).filter(Boolean);
- return [...new Set([`operation:${normalized(person.vendorRole)}`,...person.roles.map(r=>`operation:${normalized(r)}`),...(person.jobTitle?[`title:${normalized(person.jobTitle)}`]:[]),...positions.filter(p=>[p.label,...(p.aliases??[])].some(label=>labels.includes(normalized(label)))).map(p=>`staff:${p.id}`)])];
 }
 async function companyPositions(reader:Pick<typeof db,'select'>,owner:WorkHubOwner){
  if(owner.type!=='vendor')return {positions:[] as Position[],rows:[] as Array<typeof vendorPeopleTable.$inferSelect>,options:[] as {id:string;label:string}[]};
@@ -55,6 +52,10 @@ export async function saveTrainingPolicy(actor:LibraryActor,id:string,envelope:W
  return libraryCommand(actor,envelope,'library.training-policy',id,async tx=>{
   const own=await libraryRecord(tx,actor,id,true,true);checkPolicy(own.metadata);await checkLibraryVersion(own.metadata,envelope);
   const prior=own.metadata.trainingPolicy;
+  for(const decision of input.serviceApplicability){
+   const old=prior?.serviceApplicability.find(value=>value.serviceId===decision.serviceId);
+   if(decision.userIds.some(id=>!options.people.some(p=>p.userId===id)&&!old?.userIds.includes(id))||decision.staffRoleIds.some(id=>!staff.options.some(p=>p.id===id)&&!old?.staffRoleIds.includes(id)))throw new LibraryError('Choose exposure decisions for people and positions in this company',400);
+  }
   const additional=trainingCatalog.additional.courses.find(item=>item.courseId===own.metadata.safetyResource!.familyId);
   if(input.serviceApplicability.some(decision=>!prior?.serviceApplicability.some(old=>old.serviceId===decision.serviceId)&&!selected.services.some(service=>service.code===decision.serviceId&&additional?.masterServiceIds.some(id=>service.masterServiceIds.includes(id)))))throw new LibraryError('Confirm only a reviewed service in this company catalog',400);
   // Retain historical selections visibly when a person/group/file becomes

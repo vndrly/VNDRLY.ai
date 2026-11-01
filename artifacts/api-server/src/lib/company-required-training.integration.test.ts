@@ -7,6 +7,7 @@ import {companyRequiredTraining,trainingCatalog} from './company-required-traini
 import {safetyTrainingContentHash} from './safety-training-content-hash';
 import {subjectFingerprint} from '../services/service-matching/candidates';
 import {ensureRequiredTraining} from '../work-hub/required-training';
+import {runOnboardingWork} from '../work-hub/onboarding-worker';
 import {getAssignedLibrary,submitGuidedTraining} from '../work-hub/training-service';
 
 // Only fresh, explicitly marked loopback test storage is permitted. No schema
@@ -59,7 +60,7 @@ async function complete(c:Company,p:Person,id:string,wrong=false){
 
 describe('platform-owned required training against isolated persistence',()=>{
  it('requires a supplemental exposure decision, adds only the matched role when true, and excludes false despite retained completion history',async()=>{
-  const c=await company(),gate=await c.person('Gate attendant'),office=await c.person('Office Staff');
+  const c=await company(),gate=await c.person('Gate attendant'),untargeted=await c.person('Gate supervisor'),office=await c.person('Office Staff');
   const selected=await selectService(c),masterServiceId=`TEST-MASTER-${randomUUID()}`;
   const legacy=trainingCatalog.legacy.entries.find(e=>e.existingCanonicalId===selected.service.id)!;
   // G99 is exclusively supplemental in this test, not already required through
@@ -69,17 +70,21 @@ describe('platform-owned required training against isolated persistence',()=>{
   const course=await publish(c);
   const missing=await companyRequiredTraining(db,c.owner);
   expect(missing.provisional).toBe(true);
-  expect(missing.conditionalCourseGaps).toEqual([expect.objectContaining({userId:gate.user.id,serviceId:selected.service.code,familyId,role:'Gate attendant / staffed admission worker'})]);
+  expect(missing.conditionalCourseGaps).toHaveLength(2);
+  expect(missing.conditionalCourseGaps).toEqual(expect.arrayContaining([gate,untargeted].map(person=>expect.objectContaining({userId:person.user.id,serviceId:selected.service.code,familyId,role:'Gate attendant / staffed admission worker'}))));
   expect(synthetic(missing)).toHaveLength(0);expect(missing.completed).toBe(0);
   expect(await db.transaction(tx=>ensureRequiredTraining(tx,c.owner))).toBe(0);expect(await assigned(course.row.id)).toHaveLength(0);
 
-  const decide=async(applies:boolean)=>{
-   const metadata=LibraryMetadataSchema.parse({...course.metadata,trainingPolicy:{title:'Synthetic applicability decision',serviceApplicability:[{serviceId:selected.service.code,applies,reason:applies?'Actual synthetic gate exposure confirmed':'Actual synthetic gate exposure reviewed and absent'}]}});
+  const decide=async(applies:boolean,userIds:number[]=[gate.user.id],staffRoleIds:string[]=[])=>{
+   const metadata=LibraryMetadataSchema.parse({...course.metadata,trainingPolicy:{title:'Synthetic applicability decision',serviceApplicability:[{serviceId:selected.service.code,applies,userIds,staffRoleIds,reason:applies?'Actual synthetic gate exposure confirmed':'Actual synthetic gate exposure reviewed and absent'}]}});
    await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,course.row.id));
   };
+  await decide(true,[]);
+  const noTargets=await companyRequiredTraining(db,c.owner);
+  expect(noTargets.conditionalCourseGaps).toHaveLength(2);expect(synthetic(noTargets)).toHaveLength(0);
   await decide(true);
   const applicable=await companyRequiredTraining(db,c.owner);
-  expect(applicable.conditionalCourseGaps).toHaveLength(0);
+  expect(applicable.conditionalCourseGaps).toEqual([expect.objectContaining({userId:untargeted.user.id,serviceId:selected.service.code,familyId})]);
   expect(synthetic(applicable)).toEqual([expect.objectContaining({userId:gate.user.id,membershipId:gate.member.id,serviceIds:[selected.service.code],itemId:course.row.id,completed:false,unavailable:false})]);
   expect(synthetic(applicable).some(r=>r.userId===office.user.id)).toBe(false);
   expect(await db.transaction(tx=>ensureRequiredTraining(tx,c.owner))).toBe(1);
@@ -89,9 +94,25 @@ describe('platform-owned required training against isolated persistence',()=>{
 
   await decide(false);
   const excluded=await companyRequiredTraining(db,c.owner);
-  expect(excluded.conditionalCourseGaps).toHaveLength(0);expect(synthetic(excluded)).toHaveLength(0);expect(excluded.completed).toBe(0);
+  expect(excluded.conditionalCourseGaps).toEqual([expect.objectContaining({userId:untargeted.user.id,serviceId:selected.service.code,familyId})]);expect(synthetic(excluded)).toHaveLength(0);expect(excluded.completed).toBe(0);
   expect(await db.transaction(tx=>ensureRequiredTraining(tx,c.owner))).toBe(0);
   const retained=await assigned(course.row.id);expect(retained).toHaveLength(1);expect(retained[0].id).toBe(assignment.id);expect(AssignmentMetadataSchema.parse(retained[0].assignmentMetadata).status).toBe('completed');
+  await decide(true,[],['title:gate supervisor']);
+  const positionScoped=await companyRequiredTraining(db,c.owner);
+  expect(synthetic(positionScoped)).toEqual([expect.objectContaining({userId:untargeted.user.id,membershipId:untargeted.member.id,completed:false})]);
+  expect(positionScoped.conditionalCourseGaps).toEqual([expect.objectContaining({userId:gate.user.id,serviceId:selected.service.code,familyId})]);
+  expect(await db.transaction(tx=>ensureRequiredTraining(tx,c.owner))).toBe(1);
+  expect((await assigned(course.row.id)).map(row=>row.assigneeUserId).sort()).toEqual([gate.user.id,untargeted.user.id].sort());
+ });
+
+ it('exposes a required service-scope confirmation explicitly rather than hiding it behind common-course unavailability',async()=>{
+  const c=await company();await c.person('Gate attendant');const selected=await selectService(c);await publish(c);
+  const legacy=trainingCatalog.legacy.entries.find(entry=>entry.existingCanonicalId===selected.service.id)!;
+  legacy.relation='related_scope';legacy.rationale='Synthetic related component requires confirmation of the actual accepted job scope';
+  legacy.roleMappings=legacy.roleMappings.map(rule=>({...rule,scopeMustBeConfirmed:true}));
+  const plan=await companyRequiredTraining(db,c.owner);
+  expect(plan.scopeIssues).toEqual(expect.arrayContaining([expect.objectContaining({serviceId:selected.service.code})]));
+  expect(plan.provisional).toBe(true);
  });
 
  it('uses current service fingerprints and actual roles, excludes vendor extras and unavailable people, and scopes publication to the company',async()=>{
@@ -150,6 +171,31 @@ describe('platform-owned required training against isolated persistence',()=>{
   const foreign=await company();await db.update(instances).set({assignmentMetadata:{...corrected.assignment,membershipId:foreign.admin.member.id}}).where(eq(instances.id,b.id));expect(synthetic(await companyRequiredTraining(db,c.owner)).filter(r=>r.completed)).toHaveLength(1);
   await db.update(instances).set({assignmentMetadata:{...corrected.assignment,refresherDueAt:'2020-01-01T00:00:00Z'}}).where(eq(instances.id,b.id));expect(synthetic(await companyRequiredTraining(db,c.owner)).filter(r=>r.completed)).toHaveLength(1);
   await db.update(instances).set({assignmentMetadata:corrected.assignment}).where(eq(instances.id,b.id));await publish(c,2);expect(synthetic(await companyRequiredTraining(db,c.owner)).filter(r=>r.completed)).toHaveLength(0);
+ });
+
+ it('schedules an expired refresher once without reviving historical completion credit or removing its due date',async()=>{
+  const c=await company(),learner=await c.person('Gate attendant');await selectService(c);const course=await publish(c);
+  expect(await db.transaction(tx=>ensureRequiredTraining(tx,c.owner))).toBe(1);
+  const[original]=await assigned(course.row.id);const completed=await complete(c,learner,original.id);
+  expect(synthetic(await companyRequiredTraining(db,c.owner))[0].completed).toBe(true);
+  const expiredDueAt='2020-01-01T00:00:00Z';
+  await db.update(instances).set({assignmentMetadata:{...completed.assignment,refresherDueAt:expiredDueAt,refresherScheduledAt:null}}).where(eq(instances.id,original.id));
+  expect(synthetic(await companyRequiredTraining(db,c.owner))[0].completed).toBe(false);
+
+  const scanAt=new Date();await runOnboardingWork(scanAt);
+  let rows=await assigned(course.row.id);expect(rows).toHaveLength(2);
+  const history=AssignmentMetadataSchema.parse(rows.find(r=>r.id===original.id)!.assignmentMetadata);
+  expect(history.status).toBe('completed');expect(history.refresherDueAt).toBe(expiredDueAt);
+  expect(history.refresherScheduledAt).toBe(scanAt.toISOString());
+  const renewal=rows.find(r=>r.id!==original.id)!;
+  expect(AssignmentMetadataSchema.parse(renewal.assignmentMetadata)).toMatchObject({status:'assigned',membershipId:learner.member.id});
+  const waiting=await companyRequiredTraining(db,c.owner);expect(synthetic(waiting)[0].completed).toBe(false);expect(waiting.completed).toBe(0);
+
+  await runOnboardingWork(new Date(scanAt.getTime()+60000));
+  await db.transaction(tx=>ensureRequiredTraining(tx,c.owner));
+  rows=await assigned(course.row.id);expect(rows).toHaveLength(2);expect(rows.some(r=>r.id===renewal.id)).toBe(true);
+  expect(AssignmentMetadataSchema.parse(rows.find(r=>r.id===original.id)!.assignmentMetadata).refresherDueAt).toBe(expiredDueAt);
+  expect(synthetic(await companyRequiredTraining(db,c.owner))[0].completed).toBe(false);
  });
 
  it('recomputes new hires and changed roles, deduplicates overlapping services/rules and safely reuses assignments on repeated scans',async()=>{

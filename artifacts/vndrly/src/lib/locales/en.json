@@ -6496,6 +6496,9 @@
     "unavailableCourses": "{{count}} requirements are waiting for current required course material.",
     "conditionalGaps": "{{count}} additional role/service requirements need an actual-scope decision in the relevant course Policy.",
     "unmappedServices": "{{count}} service selections still need a verified training mapping.",
-    "baselineUnavailable": "Company training compliance is unavailable."
+    "baselineUnavailable": "Company training compliance is unavailable.",
+    "exposureAudience": "People and positions covered by this decision",
+    "exposureAudienceHelp": "Select the people or positions whose actual duties you reviewed. This decision applies only to them. Everyone else remains unreviewed; an ordinary assignment never establishes exposure.",
+    "conditionalRule": "Conditional on the actual duties and service scope"
   }
 }
