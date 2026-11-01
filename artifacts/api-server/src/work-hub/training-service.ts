@@ -31,6 +31,7 @@ import { validateCampaignResponse } from "./form-campaign-policy";
 import { getObjectStore } from "../lib/objectStore";
 import { guidedResult } from './guided-training';
 import {certificationExamRead,certificationExamResult} from './certification-exam';
+import {isCanonicalEnergySafetyCourse} from './certification-issuer';
 const response = z.object({
   acknowledged: z.boolean().default(false),
   lessonIds: z.array(z.string()).max(50).default([]),
@@ -290,6 +291,7 @@ export async function submitGuidedTraining(actor:LibraryActor,id:string,e:WorkHu
     if(a.version!==e.expectedVersion)throw new LibraryError('Assignment changed; refresh',409);
     const examAction=typeof e.payload==='object'&&e.payload!==null&&'action' in e.payload&&String(e.payload.action).startsWith('exam_');
     if(examAction){
+      if(own.metadata.safetyResource?.familyId==='G99'&&!isCanonicalEnergySafetyCourse(own.metadata))throw new LibraryError('The Energy Safety Core course does not match the trusted VNDRLY issuer version',400);
       if(a.status!=='completed')throw new LibraryError('Complete all learning before starting the certification exam',400);
       let progress;try{progress=certificationExamResult(training,a.progress.certificationExam,e.payload,true,new Date().toISOString());}catch(error){throw new LibraryError(error instanceof Error?error.message:'Invalid exam action',400);}
       const latest=progress.attempts.at(-1)!;
@@ -397,7 +399,7 @@ export async function personalEnergySafetyCredentials(actor:LibraryActor){
  const rows=await db.select({assignment:instances.assignmentMetadata,metadata:templates.libraryMetadata}).from(instances).innerJoin(templates,eq(instances.templateId,templates.id)).where(eq(instances.assigneeUserId,actor.userId));
  const credentials=rows.flatMap(row=>{
   const a=AssignmentMetadataSchema.safeParse(row.assignment),m=LibraryMetadataSchema.safeParse(row.metadata);
-  if(!a.success||!m.success||m.data.safetyResource?.familyId!=='G99'||!m.data.content?.training?.certificationExam)return [];
+  if(!a.success||!m.success||m.data.safetyResource?.familyId!=='G99'||!isCanonicalEnergySafetyCourse(m.data))return [];
   return (a.data.progress.certificationExam?.attempts??[]).filter(attempt=>attempt.passed&&attempt.submittedAt&&attempt.credential?.familyId==='G99'&&attempt.credential.contentVersion===a.data.contentVersion&&attempt.credential.contentVersion===m.data.contentVersion&&attempt.credential.courseSha256===m.data.safetyResource!.sourceSha256).map(attempt=>({course:'VNDRLY Energy Safety Core',familyId:'G99',courseSha256:attempt.credential!.courseSha256,contentVersion:attempt.credential!.contentVersion,passedAt:attempt.submittedAt,score:attempt.score,credentialType:'VNDRLY internal knowledge credential',proctored:false,accredited:false}));
  });
  return {credentials};

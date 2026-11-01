@@ -16,7 +16,7 @@ function guard(){
  const url=new URL(process.env.DATABASE_URL??'postgres://invalid/invalid');
  if(process.env.VNDRLY_TEST_DB_MODE!=='fresh-local'||process.env.VNDRLY_ISOLATED_TEST_DB!=='1'||url.hostname!=='127.0.0.1'||!/^vndrly_[a-f0-9]{32}_test$/.test(process.env.VNDRLY_FRESH_TEST_DB_NAME??'')||url.pathname!==`/${process.env.VNDRLY_FRESH_TEST_DB_NAME}`||process.env.TEST_DATABASE_URL!==process.env.DATABASE_URL||process.env.LISTEN_NOTIFY_DATABASE_URL!==process.env.DATABASE_URL||process.env.VNDRLY_LOAD_ENV_LOCAL!=='0')throw Error('Requires the exact fresh-local loopback test database and provenance markers');
 }
-const familyId='G99';
+const familyId='G00';
 const content=LibraryDraftSchema.parse({kind:'training',title:'Synthetic required-course control check',description:'Test teaching, not a real curriculum publication',safetyRelated:true,training:{completionMode:'both',passingPercent:100,lessons:[{id:'intro',title:'Start',body:'A task is not ready while a required safeguard is uncertain.'},{id:'check',title:'Recognize the decision',body:'Hold the affected task and ask the responsible authority to verify the missing control. A signature does not create physical protection.'},{id:'finish',title:'Boundary',body:'A written result does not authorize technical work or restart.'}],questions:[{id:'q',prompt:'A required safeguard is uncertain. What should happen?',options:[{id:'a',label:'Hold the affected task and obtain appropriate verification.'},{id:'b',label:'Continue because a form is signed.'}],correctOptionIds:['a']}],guided:{steps:[{lessonId:'intro',questionIds:[]},{lessonId:'check',questionIds:['q']},{lessonId:'finish',questionIds:[]}],explanations:{scope_note:'An authored explanatory scope note remains part of course identity even though only q is assessed.',q:'A required uncertain control needs appropriate verification before exposure; a signature does not establish the actual safeguard.'}}}});
 const sourceHash=createHash('sha256').update(JSON.stringify(content)).digest('hex');
 const curriculumLength=trainingCatalog.curriculum.length,legacyLength=trainingCatalog.legacy.entries.length,additionalLength=trainingCatalog.additional.courses.length;
@@ -63,7 +63,7 @@ describe('platform-owned required training against isolated persistence',()=>{
   const c=await company(),gate=await c.person('Gate attendant'),untargeted=await c.person('Gate supervisor'),office=await c.person('Office Staff');
   const selected=await selectService(c),masterServiceId=`TEST-MASTER-${randomUUID()}`;
   const legacy=trainingCatalog.legacy.entries.find(e=>e.existingCanonicalId===selected.service.id&&e.code===selected.service.code)!;
-  // G99 is exclusively supplemental in this test, not already required through
+  // G00 is exclusively supplemental in this test, not already required through
   // the ordinary service-role baseline. All altered entries are synthetic.
   legacy.roleMappings=[];legacy.masterServiceIds=[masterServiceId];
   trainingCatalog.additional.courses.push({courseId:familyId,title:content.title,masterServiceIds:[masterServiceId],roleMappings:[{role:'Gate attendant / staffed admission worker',familyIds:[familyId],rationale:'Synthetic exposure-dependent gate knowledge',trigger:'Confirm the synthetic actual exposure before requiring the course',masterServiceIds:[masterServiceId],requiresExposureConfirmation:true,sourceUrls:['https://example.invalid/synthetic-test-scope']}]});

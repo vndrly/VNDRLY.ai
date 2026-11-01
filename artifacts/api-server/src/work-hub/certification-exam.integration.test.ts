@@ -1,4 +1,13 @@
-import {it,expect} from 'vitest';
+import {it,expect,vi} from 'vitest';
+vi.mock('../data/safety-training-catalog',async(importOriginal)=>{
+ const original=await importOriginal<typeof import('../data/safety-training-catalog')>();
+ const catalog=structuredClone(original.safetyTrainingCatalog) as {curriculum:{id:string;sourceSha256:string;contentSha256:string}[]};
+ catalog.curriculum=catalog.curriculum.filter(c=>c.id!=='G99');catalog.curriculum.push({id:'G99',sourceSha256:'a'.repeat(64),contentSha256:'fixture-not-yet-set'});
+ return {safetyTrainingCatalog:catalog};
+});
+import {safetyTrainingCatalog} from '../data/safety-training-catalog';
+import {safetyTrainingContentHash} from '../lib/safety-training-content-hash';
+import {LibraryDraftSchema} from '@workspace/api-zod';
 import {randomUUID} from 'node:crypto';
 import {eq} from 'drizzle-orm';
 import {db,usersTable as users,vendorsTable as vendors,userOrgMembershipsTable as members,workHubFormTemplatesTable as templates} from '@workspace/db';
@@ -17,6 +26,7 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  const created=await saveLibrary(admin,command({kind:'training',title:'H03 synthetic course',safetyRelated:true,training:{certificationExam:{questions:[{id:'exam',domainId:'core',prompt:'Choose safe',options:[{id:'a',label:'Verify safeguard'},{id:'b',label:'Assume safe'}],correctOptionIds:['a'],explanation:'Exam-only hidden rationale.'}],questionCount:1,questionsPerDomain:1,passingPercent:80,maximumAttempts:3},lessons:[{id:'intro',title:'Intro',body:'Read the introduction.'},{id:'lesson',title:'Lesson',body:'Verify the safeguard.'},{id:'finish',title:'Finish',body:'Practical evaluation is separate.'}],questions:[{id:'q',prompt:'Choose safe',options:[{id:'a',label:'Safe'},{id:'b',label:'Unsafe'}],correctOptionIds:['a']}],guided:{steps:[{lessonId:'intro',questionIds:[]},{lessonId:'lesson',questionIds:['q']},{lessonId:'finish',questionIds:[]}],explanations:{q:'Verify the actual safeguard, not just the signature.'}}}}));
  const itemId=String(created.resource.itemId);await changeLibraryState(admin,itemId,command({},0),'publish');
  const[row]=await db.select().from(templates).where(eq(templates.id,itemId));const metadata=LibraryMetadataSchema.parse(row.libraryMetadata);metadata.safetyResource={familyId,categoryId:familyId.startsWith('C')?'competence':'hazards',resourceType:'training',sourceVersion:'3.0',sourceSha256:'a'.repeat(64)};await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,itemId));
+ (safetyTrainingCatalog as {curriculum:{id:string;contentSha256:string}[]}).curriculum.find(c=>c.id==='G99')!.contentSha256=safetyTrainingContentHash(LibraryDraftSchema.parse(metadata.content));
  const request={itemId,audience:{mode:'selected',userIds:[learner.userId],groupIds:[]}};const preview=await previewLibraryAssignment(admin,request);await assignLibrary(admin,command({...request,previewFingerprint:preview.previewFingerprint},preview.version));
  const id=(await employeeChecklist(learner)).items[0].instanceId;
  const before=(await companySafetyReadiness(admin)).categories.find(c=>c.id==='training')!;
@@ -37,6 +47,10 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  expect(read.history.some(h=>(h.values as any).progress?.responses?.q?.originalOptionIds?.[0]==='b')).toBe(true);
  const learning=structuredClone(read.assignment.progress.guided);
  await expect(submitGuidedTraining(foreign,id,command({action:'exam_start'},read.version))).rejects.toBeTruthy();
+ const originalPrompt=metadata.content!.training!.certificationExam!.questions[0].prompt;
+ metadata.content!.training!.certificationExam!.questions[0].prompt='Tampered exam';await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,itemId));
+ await expect(submitGuidedTraining(learner,id,command({action:'exam_start'},read.version))).rejects.toThrow('trusted VNDRLY issuer');
+ metadata.content!.training!.certificationExam!.questions[0].prompt=originalPrompt;await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,itemId));
  const start=command({action:'exam_start'},read.version);
  await submitGuidedTraining(learner,id,start);expect((await submitGuidedTraining(learner,id,start)).replayed).toBe(true);
  read=await getAssignedLibrary(learner,id);const attempt1=read.certificationExam!.attempt!;
@@ -60,6 +74,9 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  expect(read.assignment.progress.certificationExam?.attempts.map(a=>[a.score,a.passed])).toEqual([[0,false],[100,true]]);
  expect(read.history.filter(h=>(h.values as any).type==='certification_exam')).toHaveLength(6);
  await expect(submitGuidedTraining(learner,id,command({action:'exam_start'},read.version))).rejects.toThrow('already passed');
+ metadata.content!.training!.certificationExam!.questions[0].correctOptionIds=['b'];await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,itemId));
+ expect((await personalEnergySafetyCredentials(learner)).credentials).toEqual([]);
+ metadata.content!.training!.certificationExam!.questions[0].correctOptionIds=['a'];
  metadata.safetyResource!.sourceSha256='b'.repeat(64);await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,itemId));
  expect((await personalEnergySafetyCredentials(learner)).credentials).toEqual([]);
  metadata.safetyResource!.sourceSha256='a'.repeat(64);metadata.contentVersion++;await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,itemId));
