@@ -6,7 +6,7 @@ The 49 domain groups come from the consolidated source-backed gap register. Two 
 
 ## Review in VNDRLY
 
-Open `/safety-score`, expand **Task-specific courses and remaining evidence**, and search the service. Each entry names the affected roles, links the company's published course and lists vendor records and qualified practical evaluations still required. The same requirements appear at the beginning and end of each new course.
+Open `/safety-score`, expand **Task-specific courses and applicable legal requirements**, and search the service. Each entry names the affected roles and links the company's published course. Version 2 removes automatic vendor-evidence and practical-assessment lists. Any retained task duty names its regulation, the actual covered role and its source; it is not an added online-course completion requirement.
 
 The existing H2S service remains a separate, source-backed extension. No master-catalog identifier was invented. Its six roles retain distinct evidence requirements. G71 calibration knowledge connects to actual detector calibration/repair duties, with person/position exposure confirmation; it is not required of every H2S worker. Online completion does not close model-specific service instruction, medical/fit arrangements, rescue capability or gas-testing authorization.
 
@@ -23,4 +23,4 @@ The existing H2S service remains a separate, source-backed extension. No master-
 
 From the repository root with its existing dependencies, run `node scripts/build-task-training-release.mjs`. It validates teaching structure, rejects bulk repeated prose, verifies the preserved course identities, prepares the publication manifest and generates the API catalog. The prepared manifest is generated output.
 
-`node scripts/publish-task-training.mjs --validate-only` performs no database queries. The default command performs a read-only production preflight. `--apply` adds deterministic course versions and audit records in guarded per-company transactions; it never updates/deletes existing templates, policies, assignments or completions. Publication requires the matching API registry and exact manifest. Live publication and learner verification evidence are recorded separately; this source file does not assert an individual worker's qualification.
+For the current streamlined revision, use `node scripts/publish-streamlined-training.mjs --validate-only`; this performs no database queries. Default mode is a read-only production preflight. `--apply` adds current course versions and audits in guarded company transactions, retains approved earlier completion credit, and carries policies without creating repeat assignments. The original task-course publisher is historical. Publication requires matching canonical hashes; live verification is recorded separately.

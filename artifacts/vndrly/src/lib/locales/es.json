@@ -6404,7 +6404,7 @@
     "originalScore": "Puntuación original (antes de la corrección)",
     "remediatedScore": "Puntuación después de la corrección",
     "corrections": "Correcciones reconocidas",
-    "credit": "Se registran la finalización y ambas puntuaciones. La capacitación que VNDRLY exige para su servicio y puesto contribuye al cumplimiento de la empresa; los cursos adicionales se registran por separado. La competencia práctica y la autorización de trabajo son independientes.",
+    "credit": "Se registran la finalización y ambas puntuaciones. La capacitación que VNDRLY exige para su servicio y puesto contribuye al cumplimiento de la empresa; los cursos adicionales se registran por separado.",
     "submitAnswer": "Enviar respuesta",
     "continue": "Continuar a la siguiente sección",
     "finish": "Completar el curso",
@@ -6453,7 +6453,7 @@
     "searchServices": "Buscar en el catálogo maestro de servicios",
     "search": "Buscar servicios",
     "mappingCount": "{{matched}} servicios coincidentes en el catálogo maestro de {{total}} servicios",
-    "mappingBoundary": "Los cursos corresponden a los puestos y tareas indicados. Un servicio relacionado no exige todos los cursos para todo el personal. Las cualificaciones especializadas son independientes.",
+    "mappingBoundary": "Los cursos corresponden a los puestos y tareas indicados. Un servicio relacionado no exige todos los cursos para todo el personal. Cualquier obligación legal adicional indica la normativa y la función a la que se aplica.",
     "openQualifications": "Capacitación y cualificaciones especializadas adicionales",
     "scopeSource": "Fuente del alcance {{number}}",
     "previous": "Servicios anteriores",
@@ -6479,11 +6479,11 @@
     "exposureAudience": "Personas y puestos incluidos en esta decisión",
     "exposureAudienceHelp": "Seleccione las personas o puestos cuyas tareas reales revisó. Esta decisión solo les corresponde a ellos. Los demás permanecen sin revisar; una asignación ordinaria no establece exposición.",
     "conditionalRule": "Condicionado a las tareas reales y al alcance del servicio",
-    "taskGapsHeading": "Cursos específicos de tareas y evidencia pendiente",
-    "taskGapsHelp": "Busque un servicio para ver los conocimientos enseñados, los roles afectados, los registros requeridos del proveedor y las evaluaciones prácticas calificadas. Completar el curso no cierra esos requisitos separados.",
+    "taskGapsHeading": "Cursos específicos y requisitos legales aplicables",
+    "taskGapsHelp": "Busque un servicio para encontrar sus cursos y funciones. Las obligaciones adicionales indican la normativa y la función aplicable; no se exige una carga general de evidencias ni una evaluación práctica para completar el curso.",
     "taskCourse": "Abrir curso específico de tarea {{courseId}}",
-    "vendorEvidence": "Evidencia del proveedor aún requerida",
-    "practicalEvidence": "Evaluación práctica calificada o credenciales aplicables aún requeridas",
+    "vendorEvidence": "Registros exigidos por la normativa citada",
+    "practicalEvidence": "Requisitos legales para la función indicada",
     "preservedExtensions": "Otros servicios respaldados por fuentes"
   }
 }

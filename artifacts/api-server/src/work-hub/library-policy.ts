@@ -1,4 +1,7 @@
 import { LibraryFieldSchema, type LibraryMetadata } from "@workspace/api-zod";
+import {streamlineCourseContent} from '../../../../scripts/lib/streamlined-training.mjs';
+import {safetyTrainingCatalog} from '../data/safety-training-catalog';
+import {safetyTrainingContentHash} from '../lib/safety-training-content-hash';
 export function assignmentDeadline(
   kind: string,
   hours: number,
@@ -65,16 +68,24 @@ export function protectedOwnerTraining<T extends {certificationExam?:unknown}>(t
  const {certificationExam:_,...teaching}=training;
  return teaching;
 }
+export function trainingReadContent(metadata: LibraryMetadata) {
+ const content=metadata.content;
+ if(content?.kind!=='training'||!content.training||metadata.safetyResource?.sourceVersion!=='1.0')return content;
+ const registry=(safetyTrainingCatalog as {curriculum:{id:string;sourceSha256:string;contentSha256:string;compatibleVersions?:{sourceSha256:string;contentSha256:string}[]}[]}).curriculum;
+ const course=registry.find(c=>c.id===metadata.safetyResource!.familyId),version=course&&[course,...(course.compatibleVersions??[])].find(v=>v.sourceSha256===metadata.safetyResource!.sourceSha256);
+ return version&&safetyTrainingContentHash(content)===version.contentSha256?streamlineCourseContent(content,metadata.safetyResource.familyId):content;
+}
 export function safeLibraryContent(metadata: LibraryMetadata, manage: boolean) {
   const { fileSnapshots: _, ...safe } = metadata;
+  const content=trainingReadContent(metadata);
   return {
     ...safe,
-    content: safe.content && {
-      ...safe.content,
-      training: safe.content.training
+    content: content && {
+      ...content,
+      training: content.training
         ? manage
-          ? protectedOwnerTraining(safe.content.training, metadata.safetyResource?.familyId)
-          : publicTraining(safe.content.training)
+          ? protectedOwnerTraining(content.training, metadata.safetyResource?.familyId)
+          : publicTraining(content.training)
         : null,
     },
   };

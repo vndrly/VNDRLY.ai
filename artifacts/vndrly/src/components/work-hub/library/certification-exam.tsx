@@ -10,8 +10,8 @@ export default function CertificationExam({data,busy,uncertain,send}:{data:Data;
  const act=async(payload:unknown)=>{try{setNotice('');await send(payload);}catch(e){setNotice(e instanceof Error?e.message:'Exam unavailable');}};
  return <section className="space-y-4 rounded-xl border-2 p-5" aria-label="Certification exam">
  <h3 className="text-lg font-bold">Separate certification exam</h3>
- <p>{exam.questionCount} questions · Pass threshold {exam.passingPercent}%. The threshold is provisional pending independent assessment review.</p>
- <p>This unproctored assessment records a VNDRLY internal course credential only. It is not an accredited or externally recognized certification; independent review, employer acceptance and practical evaluation remain separate.</p>
+ <p>{exam.questionCount} questions · Passing score {exam.passingPercent}%.</p>
+ <p>Passing records a VNDRLY internal knowledge credential. This exam is unproctored and does not claim external accreditation or universal operator acceptance.</p>
  {!complete?<p>Complete every learning section before starting the exam.</p>:!attempt||attempt.submittedAt?<>
  {attempt&&<div role="status"><p>Attempt {data.assignment.progress.certificationExam?.attempts.length}: {attempt.correctCount}/{attempt.questionIds.length} ({attempt.score?.toFixed(1)}%) — {attempt.passed?'Passed: VNDRLY internal course credential':'Not passed'}</p></div>}
  {!attempt?.passed&&(data.assignment.progress.certificationExam?.attempts.length??0)<exam.maximumAttempts&&<TogglePillButton tone="brand" disabled={locked} onClick={()=>void act({action:'exam_start'})}>{attempt?'Retake certification exam':'Start certification exam'}</TogglePillButton>}

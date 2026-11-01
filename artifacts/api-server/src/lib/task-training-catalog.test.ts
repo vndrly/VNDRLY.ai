@@ -6,14 +6,14 @@ describe('task instruction and residual qualification contract',()=>{
  it('preserves every previously published course identity and keeps knowledge separate from qualifications',()=>{
   const prior=JSON.parse(readFileSync(new URL('../../../../research/safety-program/2026-11-02/preserved-course-identities.json',import.meta.url),'utf8')) as {id:string;sourceSha256:string;contentSha256:string}[];
   expect(prior).toHaveLength(69);
-  for(const course of prior)expect(trainingCatalog.curriculum.find(c=>c.id===course.id)).toMatchObject(course);
+  for(const course of prior)expect(trainingCatalog.curriculum.find(c=>c.id===course.id)?.compatibleVersions).toContainEqual({sourceSha256:course.sourceSha256,contentSha256:course.contentSha256});
   expect(trainingCatalog.curriculum).toHaveLength(117);
   expect(trainingCatalog.residuals?.groups).toHaveLength(49);
   const taskIds=new Set(trainingCatalog.curriculum.filter(c=>c.id.startsWith('G')&&Number(c.id.slice(1))>=50&&Number(c.id.slice(1))<=98).map(c=>c.id));
   expect(taskIds.size).toBe(47);
   for(const group of trainingCatalog.residuals!.groups){
-   expect(group.vendorEvidenceRequired.length).toBeGreaterThan(0);
-   expect(group.practicalAssessmentRequired.length).toBeGreaterThan(0);
+   expect(group.vendorEvidenceRequired).toEqual([]);
+   expect(group.practicalAssessmentRequired.every(text=>/^(29|49|10) CFR /.test(text)&&text.includes('Source: https://'))).toBe(true);
    expect(group.serviceIds.every(id=>trainingCatalog.catalog.services.some(s=>s.id===id))).toBe(true);
    if(!group.courseId){expect(['TG17','TG45']).toContain(group.groupId);continue;}
    expect(taskIds.has(group.courseId)).toBe(true);

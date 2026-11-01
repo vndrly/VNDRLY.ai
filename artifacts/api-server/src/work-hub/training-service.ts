@@ -26,7 +26,7 @@ import {
   trainingCompletionReady,
   validateTrainingProgress,
 } from "./training-policy";
-import { validateLibraryValues } from "./library-policy";
+import { validateLibraryValues,trainingReadContent } from "./library-policy";
 import { validateCampaignResponse } from "./form-campaign-policy";
 import { getObjectStore } from "../lib/objectStore";
 import { guidedResult } from './guided-training';
@@ -61,7 +61,7 @@ export async function getAssignedLibrary(actor: LibraryActor, id: string) {
     version: own.assignment.version,
     history,
     guidedFeedback: (()=>{
-      const training=own.metadata.content?.training, progress=own.assignment.progress.guided;
+      const training=trainingReadContent(own.metadata)?.training, progress=own.assignment.progress.guided;
       if(!training?.guided||!progress)return null;
       const pending=Object.entries(progress.responses).find(([,r])=>!r.correct&&!r.remediatedAt);
       if(!pending)return null;
@@ -304,7 +304,7 @@ export async function submitGuidedTraining(actor:LibraryActor,id:string,e:WorkHu
     }
     if(['completed','cancelled','exempted'].includes(a.status))throw new LibraryError('Assignment is not accepting responses',409);
     const now=new Date();let result:ReturnType<typeof guidedResult>;
-    try{result=guidedResult(training,a.progress.guided,e.payload,now.toISOString());}catch(error){throw new LibraryError(error instanceof Error?error.message:'Invalid course step',400);}
+    try{result=guidedResult(trainingReadContent(own.metadata)?.training??training,a.progress.guided,e.payload,now.toISOString());}catch(error){throw new LibraryError(error instanceof Error?error.message:'Invalid course step',400);}
     const history=await tx.select({id:submissions.id,version:submissions.version}).from(submissions).where(eq(submissions.instanceId,id)).orderBy(desc(submissions.version)).limit(1);
     await tx.insert(submissions).values({instanceId:id,version:(history[0]?.version??0)+1,priorSubmissionId:history[0]?.id??null,submittedById:actor.userId,submittedAt:now,values:{type:'guided_training',action:e.payload,progress:result.progress,completed:result.complete}});
     a.progress.guided=result.progress;

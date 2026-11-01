@@ -1,8 +1,8 @@
 {
   "courseId": "G99",
-  "instructionWords": 16411,
+  "instructionWords": 16332,
   "chapters": 10,
-  "sections": 14,
+  "sections": 13,
   "workedScenarios": 22,
   "learningChecks": 48,
   "examBank": 75,
@@ -12,6 +12,6 @@
   "oshaRows": 68,
   "openReviewItems": 9,
   "preservedCourses": 116,
-  "sourceSha256": "486ce0a67a6521c62c8e5db505f558ece8ebf66c2cee8250acf7736d012d1707",
-  "contentSha256": "8c26b1046f6eb660d8e24e834ea1a6944e0c9f72d658b159b5c45f09aca4ffcb"
+  "sourceSha256": "64b7216a9d20e8b738da1bb081486f413a0a4f4d1a2aebf4f36d10c0cdce4e7a",
+  "contentSha256": "7c8bed01fded694cf1ed38880d7bfe056af3916274f134ab6da9bfef2c6be9ee"
 }

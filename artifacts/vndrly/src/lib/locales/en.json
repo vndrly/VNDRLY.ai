@@ -6404,7 +6404,7 @@
     "originalScore": "Original score (before remediation)",
     "remediatedScore": "Score after remediation",
     "corrections": "Acknowledged corrections",
-    "credit": "Your completion and both scores are recorded. VNDRLY-required training for your service and role contributes to company training compliance; company extras are tracked separately. Practical competence and work authorization remain separate.",
+    "credit": "Your completion and both scores are recorded. VNDRLY-required training for your service and role contributes to company training compliance; company extras are tracked separately.",
     "submitAnswer": "Submit answer",
     "continue": "Continue to next section",
     "finish": "Complete course",
@@ -6453,7 +6453,7 @@
     "searchServices": "Search the master service catalog",
     "search": "Search services",
     "mappingCount": "{{matched}} matching services in the {{total}}-service master",
-    "mappingBoundary": "Courses apply to the stated roles and actual duties. A related service does not require every course for every worker. Specialist qualifications remain separate.",
+    "mappingBoundary": "Courses apply to the stated roles and actual duties. A related service does not require every course for every worker. Any additional legal duty below names its regulation and covered work role.",
     "openQualifications": "Additional specialist training and qualifications",
     "scopeSource": "Scope source {{number}}",
     "previous": "Previous services",
@@ -6479,11 +6479,11 @@
     "exposureAudience": "People and positions covered by this decision",
     "exposureAudienceHelp": "Select the people or positions whose actual duties you reviewed. This decision applies only to them. Everyone else remains unreviewed; an ordinary assignment never establishes exposure.",
     "conditionalRule": "Conditional on the actual duties and service scope",
-    "taskGapsHeading": "Task-specific courses and remaining evidence",
-    "taskGapsHelp": "Search a service to see its taught knowledge, affected roles, required vendor records and qualified practical evaluations. Course completion does not close those separate requirements.",
+    "taskGapsHeading": "Task-specific courses and applicable legal requirements",
+    "taskGapsHelp": "Search a service to find its courses and affected roles. Additional task duties appear only with a cited regulation and its applicable role; there is no blanket evidence upload or practical evaluation for course completion.",
     "taskCourse": "Open task-specific course {{courseId}}",
-    "vendorEvidence": "Vendor evidence still required",
-    "practicalEvidence": "Qualified practical evaluation or applicable credentials still required",
+    "vendorEvidence": "Records required by the cited regulation",
+    "practicalEvidence": "Legal requirements for the named work role",
     "preservedExtensions": "Other source-backed services"
   }
 }

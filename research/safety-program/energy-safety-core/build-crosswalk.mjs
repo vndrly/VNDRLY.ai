@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import {createHash}from'node:crypto';
+import {streamlineBody,legalTaskRequirements}from'../../../scripts/lib/streamlined-training.mjs';
 import {additionalChecks}from'./additional-checks.mjs';
 const assessmentIndex=JSON.parse(fs.readFileSync('research/safety-program/energy-safety-core/assessment-index.json'));
 const examBank=assessmentIndex.items;
@@ -21,7 +22,7 @@ const benchmark=[
 ];
 // Each row explicitly distinguishes general education from the actual workplace obligation.
 const rows=[];
-function r(citation,topic,lessons,appliesTo,remaining,url){rows.push({id:`OSHA_${String(rows.length+1).padStart(2,'0')}`,citation,topic,lessonIds:lessons.split(','),appliesTo,coreCoverage:'Knowledge and scenario decisions only',remainingEmployerEvidence:remaining,practicalStatus:'Not satisfied by online completion; observe/demonstrate actual skills where the cited requirement or task requires them',status:'Employer applicability and independent review remain open',sourceUrls:[url??`https://www.osha.gov/laws-regs/regulations/standardnumber/${citation.startsWith('1926')?'1926':citation.startsWith('1904')?'1904':'1910'}/${citation.split(/[ (]/)[0]}`]});}
+function r(citation,topic,lessons,appliesTo,remaining,url){rows.push({id:`OSHA_${String(rows.length+1).padStart(2,'0')}`,citation,topic,lessonIds:lessons.split(','),appliesTo,coreCoverage:'Knowledge and scenario decisions only',remainingEmployerEvidence:remaining,legalTaskRequirements:legalTaskRequirements.filter(r=>(citation.match(/(?:1910|1926)\.\d+/g)??[]).includes(r.citation.match(/(?:1910|1926)\.\d+/)?.[0])),status:'Applies only to the actual covered work; no additional VNDRLY course-completion condition',sourceUrls:[url??`https://www.osha.gov/laws-regs/regulations/standardnumber/${citation.startsWith('1926')?'1926':citation.startsWith('1904')?'1904':'1910'}/${citation.split(/[ (]/)[0]}`]});}
 r('1904.35(b)(1)','Injury reporting and non-deterrence','ESC01,ESC10','Covered employer reporting procedures','Reasonable actual reporting procedure, worker information and non-retaliation practice.');
 r('OSH Act sections 5 and 11(c)','Duties, protected reporting and worker rights','ESC01','Workers and covered employers; refusal rights have specific conditions','Actual complaint/reporting access and employer training; no unconditional legal right to refuse every disputed task is asserted.','https://www.osha.gov/workers');
 r('1926.21(b)(2)-(5)','Construction hazard recognition and education','ESC02,ESC05,ESC06','Employees doing covered construction work','Instruction on actual site conditions, harmful substances, plants/animals and flammable/toxic materials; task applicability.');
@@ -77,8 +78,8 @@ r('1926.1060','Construction stairway/ladder training','ESC08','Construction empl
 r('1910.38(e),(f)','Emergency action plan review','ESC09','Workplaces requiring an emergency action plan under applicable standards','Actual alarm/reporting/evacuation/accountability procedures, designated evacuation assistants and review at assignment/change.');
 r('1910.39(d)','Fire-prevention plan information','ESC09','Workplaces requiring a fire-prevention plan','Actual fire hazards and the assigned duties in the workplace plan.');
 r('1910.36-.37','Exit routes','ESC08,ESC09','Applicable workplaces','Actual clear, suitable exit routes, maintenance, signs and emergency safeguards.','https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.37');
-r('1910.157(g)','Extinguisher education and designated-user training','ESC09','Depending on employer extinguisher-use/evacuation policy','Actual policy determines education/training and annual duties; designated-user instruction and safe demonstration as required by task.');
-r('1910.151','Medical services and first aid','ESC09','Actual workplace medical/first-aid arrangements','Suitable availability and trained first aiders when required; corrosive exposure flushing facilities; recognized practical first-aid/CPR training separately.');
+r('1910.157(g)','Extinguisher education and designated-user training','ESC09','Depending on employer extinguisher-use/evacuation policy','Actual policy determines education/training and annual duties; designated-user training under (g)(3)-(4). This provision does not impose a universal hands-on extinguisher examination.');
+r('1910.151','Medical services and first aid','ESC09','Actual workplace medical/first-aid arrangements','Suitable availability and trained first aiders when required; corrosive exposure flushing facilities; first-aid training where (b) applies. This is not a first-aid requirement for every core-course learner.');
 r('1926.50','Construction medical/first aid','ESC09','Construction workplace arrangements','Actual response arrangements, first-aid personnel/certificates where required, supplies and emergency communication.');
 r('1910.120(e),(q)(6)','Hazardous waste and emergency-response roles','ESC09','Only applicable operations and assigned response levels','Correct role/operation classification, specified training/hours/field experience, annual competencies and employer certification; this core is not HAZWOPER qualification.');
 r('1926.65','Construction hazardous waste/emergency response','ESC09','Covered construction hazardous-waste/response activities','Actual applicable HAZWOPER arrangements, role-specific instruction, field experience and certification.');
@@ -102,7 +103,7 @@ const review=[
  {id:'IR09',owner:'Qualified language/accessibility reviewers',status:'OPEN',required:'This release is English. Validate translations and alternative accessible instruction/assessment for learners needing them; do not treat English completion as proof of understanding in another language.'},
 ];
 // Bind every author mapping to real authored paragraphs and real question IDs.
-const lessons=['a','b'].flatMap(part=>JSON.parse(fs.readFileSync(`${root}/lessons-${part}.json`))).map(l=>({...l,questions:[...l.questions,...(additionalChecks[l.id]??[])]}));
+const lessons=['a','b'].flatMap(part=>JSON.parse(fs.readFileSync(`${root}/lessons-${part}.json`))).map(l=>({...l,body:streamlineBody(l.body),questions:[...l.questions,...(additionalChecks[l.id]??[])]}));
 const details=[
  ['1.1','ESC01','Employers and workers','ESC01-K1','01_1'],['1.2','ESC01','Behavior-based safety','ESC01-K3','01_2'],['1.3','ESC01','IOGP Life-Saving','ESC01-K5','01_7'],
  ['2.1','ESC02','Start with how harm','ESC02-K1','02_1'],['2.2','ESC02','Industrial hygiene','ESC02-K5','02_7'],['2.3','ESC02','Build a usable','ESC02-K1,ESC02-K4','02_1,02_4'],

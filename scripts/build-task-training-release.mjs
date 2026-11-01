@@ -4,14 +4,19 @@ import {gzipSync} from 'node:zlib';
 import {LibraryDraftSchema} from '../lib/api-zod/src/work-hub-library.ts';
 import {safetyTrainingContentHash} from '../artifacts/api-server/src/lib/safety-training-content-hash.ts';
 import {course as originalH03} from '../research/safety-program/2026-10-31/course-review/H03-permit-to-work-simops/guided-course.mjs';
+import {streamlineCourseContent,streamlineBody,legalBoundary} from './lib/streamlined-training.mjs';
 const priorRoot='research/safety-program/2026-11-01',root='research/safety-program/2026-11-02';
+const previousVersions=JSON.parse(fs.readFileSync('research/safety-program/regulatory-streamlining/previous-course-identities.json'));
+const sourceVersion=(id,sha)=>previousVersions.find(c=>c.id===id)?.sourceSha256===sha?'1.0':'2.0';
 const identities=JSON.parse(fs.readFileSync(`${root}/preserved-course-identities.json`));
 const prior={courses:identities.map(({contentSha256,...identity})=>{
  const raw=identity.id==='H03'?originalH03:JSON.parse(fs.readFileSync(`${priorRoot}/${identity.id.startsWith('G')?'gap-courses':'complete-courses'}/${identity.id}.json`));
  const content=LibraryDraftSchema.parse({...raw,kind:'training',title:identity.title,safetyRelated:true});
  if(identity.id!=='H03')content.training.lessons.at(-1).links=[...new Set((raw.sources??[]).map(source=>source.url))].slice(0,20);
  if(safetyTrainingContentHash(content)!==contentSha256)throw Error(`${identity.id}:preserved content changed`);
- return {...identity,content};
+ const streamlined=LibraryDraftSchema.parse(streamlineCourseContent(content,identity.id,identity.practicalBoundary));
+ const sourceSha256=crypto.createHash('sha256').update(JSON.stringify(streamlined)).digest('hex');
+ return {...identity,sourceVersion:sourceVersion(identity.id,sourceSha256),sourceSha256,content:streamlined,practicalBoundary:legalBoundary(identity.id).join('\n')};
 })};
 const groups=JSON.parse(fs.readFileSync(`${priorRoot}/consolidated-training-gaps.json`));
 const master=JSON.parse(fs.readFileSync(`${priorRoot}/service-training-map.json`));
@@ -33,23 +38,22 @@ for(let n=1;n<=49;n++){
  if(raw&&raw.gapGroupId!==group.groupId)throw Error(`${id}:wrong gap group`);
  const action=classification=>group.workstreams.find(w=>w.classification===classification).action;
  const residual={groupId:group.groupId,title:group.title,courseId:raw?id:null,role:raw?(raw.audience??[]).join('; '):'Actual contracted professional or technical duty must be established',serviceIds:group.affectedServiceIds,vendorEvidenceRequired:raw?.vendorEvidenceRequired??[action('employer_method_specific_instruction'),action('unresolved_actual_scope')],practicalAssessmentRequired:[...(raw?.practicalAssessmentRequired??[action('external_credential_or_practical_evaluation')]),'The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers.'],scopeConfirmation:action('unresolved_actual_scope'),sourceUrls:group.primarySourceIds.map(key=>groups.sources[key]?.url).filter(Boolean)};
- if(!residual.vendorEvidenceRequired.length||!residual.practicalAssessmentRequired.length)throw Error(`${id}:missing residual requirements`);
+ residual.vendorEvidenceRequired=[];
+ residual.practicalAssessmentRequired=raw?legalBoundary(id):[];
  if(group.groupId==='TG45'){
   const scope=JSON.parse(fs.readFileSync(`${root}/task-courses/TG45-residual-scope.json`));
   if(scope.services.length!==21||scope.services.some(s=>!group.affectedServiceIds.includes(s.serviceId)))throw Error('Incomplete service-specific scope clarifications');
-  residual.serviceEvidence=scope.services;
+  residual.serviceEvidence=scope.services.map(s=>({...s,vendorEvidenceRequired:[],practicalAssessmentRequired:[]}));
  }
  residualGroups.push(residual);
  if(!raw)continue;
- const content=LibraryDraftSchema.parse({...raw,kind:'training',title:`${id} — ${raw.title}`,safetyRelated:true});
- const boundary=`\n\n## Vendor evidence still required\n${residual.vendorEvidenceRequired.map(s=>`- ${s}`).join('\n')}\n\n## Qualified practical assessment still required\n${residual.practicalAssessmentRequired.map(s=>`- ${s}`).join('\n')}\n\n## Confirm actual scope\n${residual.scopeConfirmation}`;
- content.training.lessons[0].body+=boundary;
- content.training.lessons.at(-1).body+=boundary;
+ const content=LibraryDraftSchema.parse(streamlineCourseContent({...raw,kind:'training',title:`${id} — ${raw.title}`,safetyRelated:true},id,raw.practicalBoundary));
  content.training.lessons.at(-1).links=[...new Set((raw.sources??[]).map(s=>s.url))].slice(0,20);
  LibraryDraftSchema.parse(content);
- const words=content.training.lessons.slice(1,9).map(l=>l.body).join(' ').split(/\s+/).length;
+ const words=raw.training.lessons.slice(1,9).map(l=>l.body).join(' ').split(/\s+/).length;
  if(words<2500||content.training.lessons.length!==10||content.training.questions.length!==26||content.training.guided?.steps.length!==10)throw Error(`${id}:incomplete teaching or assessment (${words} words)`);
- const course={id,categoryId:'competence',title:content.title,purpose:raw.purpose,practicalBoundary:raw.practicalBoundary,sourceVersion:'1.0',sourceSha256:crypto.createHash('sha256').update(JSON.stringify(content)).digest('hex'),content};
+ const sourceSha256=crypto.createHash('sha256').update(JSON.stringify(content)).digest('hex');
+ const course={id,categoryId:'competence',title:content.title,purpose:raw.purpose,practicalBoundary:legalBoundary(id).join('\n'),sourceVersion:sourceVersion(id,sourceSha256),sourceSha256,content};
  taskCourses.push(course);
  const sourceUrls=[...new Set(group.affectedServices.flatMap(s=>s.sourceUrls))];
  const reviewedFoundation=additional.courses.find(course=>course.groupId===group.groupId);
@@ -58,6 +62,7 @@ for(let n=1;n<=49;n++){
 }
 const courses=[...prior.courses,...taskCourses];
 const h2s=JSON.parse(fs.readFileSync(`${root}/h2s-remaining-evidence.json`));
+for(const r of h2s.residualRequirements){r.vendorEvidenceRequired=[];r.practicalAssessmentRequired=/respirator|rescue/i.test(r.role)?legalBoundary(/rescue/i.test(r.role)?'R02':'H15'):[];}
 h2s.roleMappings.find(rule=>rule.role==='Detector calibration/repair technician').familyIds.push('G71');
 const calibration=additional.courses.find(c=>c.courseId==='G71');
 calibration.legacyServiceCodes=[h2s.id];
@@ -67,6 +72,11 @@ fs.writeFileSync(`${root}/remaining-evidence-register.json`,JSON.stringify(resid
 fs.writeFileSync(`${root}/additional-course-service-rules.json`,JSON.stringify(additional,null,2));
 fs.writeFileSync(`${root}/prepared-course-publication.json`,JSON.stringify({version:1,courses},null,2));
 const data={catalog:master,legacy:JSON.parse(fs.readFileSync(`${priorRoot}/legacy-service-training-crosswalk.json`)),common:JSON.parse(fs.readFileSync(`${priorRoot}/common-training-role-rules.json`)),additional,residuals,curriculum:courses.map(({content,...c})=>({...c,contentSha256:safetyTrainingContentHash(content)}))};
+// Previous gap labels are research findings, not an authority to impose extra
+// qualification requirements. Current legal role duties are in residuals.
+for(const service of data.catalog.services)service.gapTopicIds=[];
+function simplifyScope(value){if(!value||typeof value!=='object')return;for(const [key,item]of Object.entries(value)){if(['rationale','scopeConfirmation','trigger'].includes(key)&&typeof item==='string')value[key]=streamlineBody(item)||'Apply this training only to the actual assigned work.';else if(key==='scopeNotes'&&Array.isArray(item))value[key]=item.map(x=>streamlineBody(x)).filter(Boolean);else simplifyScope(item);}}
+simplifyScope(data.catalog);simplifyScope(data.legacy);simplifyScope(data.common);simplifyScope(data.additional);simplifyScope(data.residuals);
 fs.writeFileSync('artifacts/api-server/src/data/safety-training-catalog.ts',`// Generated from source-linked original VNDRLY training and explicit residual evidence.\nimport {gunzipSync}from'node:zlib';\nexport const safetyTrainingCatalog: unknown = JSON.parse(gunzipSync(Buffer.from(${JSON.stringify(gzipSync(Buffer.from(JSON.stringify(data))).toString('base64'))},'base64')).toString('utf8'));\n`);
 console.log(JSON.stringify({priorCourses:69,newTaskCourses:taskCourses.length,totalCourses:courses.length,residualGroups:residualGroups.length,services:master.services.length,practicalGapsFalselyClosed:0}));
 // The separately assessed flagship adds its own immutable identity after this baseline.

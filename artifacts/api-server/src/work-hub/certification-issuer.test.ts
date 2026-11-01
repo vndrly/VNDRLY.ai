@@ -6,6 +6,12 @@ const content=LibraryDraftSchema.parse({kind:'training',title:'Canonical Core',t
 const metadata={content,safetyResource:{familyId:'G99',sourceSha256:'a'.repeat(64)}} as LibraryMetadata;
 const registry=[{id:'G99',sourceSha256:'a'.repeat(64),contentSha256:safetyTrainingContentHash(content)}];
 describe('trusted Energy Safety Core issuer',()=>{
+ it('retains a specifically approved historical credential without trusting copied labels',()=>{
+ const current={...registry[0],sourceSha256:'b'.repeat(64),contentSha256:'c'.repeat(64),compatibleVersions:[registry[0]]};
+ expect(isCanonicalEnergySafetyCourse(metadata,[current])).toBe(true);
+ const changed=structuredClone(metadata);changed.content!.training!.certificationExam!.questions[0].correctOptionIds=['b'];
+ expect(isCanonicalEnergySafetyCourse(changed,[current])).toBe(false);
+ });
  it('accepts canonical normalized content and tolerates JSON object key ordering',()=>{
  expect(isCanonicalEnergySafetyCourse(metadata,registry)).toBe(true);
  const reordered={...metadata,content:Object.fromEntries(Object.entries(content).reverse())} as LibraryMetadata;

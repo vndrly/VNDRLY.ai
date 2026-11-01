@@ -59,6 +59,22 @@ async function complete(c:Company,p:Person,id:string,wrong=false){
 }
 
 describe('platform-owned required training against isolated persistence',()=>{
+ it('retains earned credit for an explicitly compatible simplified version, rejects mismatched versions and edited old content, and creates no repeat assignment',async()=>{
+  const c=await company(),gate=await c.person('Gate attendant');await selectService(c);const old=await publish(c);
+  await db.transaction(tx=>ensureRequiredTraining(tx,c.owner));const[assignment]=await assigned(old.row.id);await complete(c,gate,assignment.id);
+  const revised=structuredClone(content);revised.training!.lessons[0].body+=' No extra assessor sign-off is required for online completion.';
+  const sha=createHash('sha256').update(JSON.stringify(revised)).digest('hex'),course=trainingCatalog.curriculum.find(x=>x.id===familyId)!;
+  course.compatibleVersions=[{sourceSha256:sourceHash,contentSha256:safetyTrainingContentHash(content)}];course.sourceSha256=sha;course.contentSha256=safetyTrainingContentHash(revised);
+  const current=await publish(c,2,{content:revised,safetyResource:{familyId,categoryId:'hazards',resourceType:'training',sourceVersion:'test-2',sourceSha256:sha}});
+  const plan=await companyRequiredTraining(db,c.owner);expect(synthetic(plan)).toEqual([expect.objectContaining({itemId:current.row.id,completed:true})]);
+  expect(await db.transaction(tx=>ensureRequiredTraining(tx,c.owner))).toBe(0);expect(await assigned(current.row.id)).toHaveLength(0);
+  const[retained]=await assigned(old.row.id);expect(AssignmentMetadataSchema.parse(retained.assignmentMetadata).status).toBe('completed');
+  const wrongVersion=AssignmentMetadataSchema.parse(retained.assignmentMetadata);wrongVersion.contentVersion=999;await db.update(instances).set({assignmentMetadata:wrongVersion}).where(eq(instances.id,retained.id));
+  expect(synthetic(await companyRequiredTraining(db,c.owner))[0].completed).toBe(false);
+  await db.update(instances).set({assignmentMetadata:retained.assignmentMetadata}).where(eq(instances.id,retained.id));
+  const edited=structuredClone(old.metadata);edited.content!.training!.lessons[0].body+=' Unregistered edit';await db.update(templates).set({libraryMetadata:edited}).where(eq(templates.id,old.row.id));
+  expect(synthetic(await companyRequiredTraining(db,c.owner))[0].completed).toBe(false);
+ });
  it('requires a supplemental exposure decision, adds only the matched role when true, and excludes false despite retained completion history',async()=>{
   const c=await company(),gate=await c.person('Gate attendant'),untargeted=await c.person('Gate supervisor'),office=await c.person('Office Staff');
   const selected=await selectService(c),masterServiceId=`TEST-MASTER-${randomUUID()}`;

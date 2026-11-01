@@ -6,8 +6,8 @@
   "domains": 10,
   "passingPercent": 80,
   "maximumAttempts": 100,
-  "sourceSha256": "486ce0a67a6521c62c8e5db505f558ece8ebf66c2cee8250acf7736d012d1707",
-  "contentSha256": "8c26b1046f6eb660d8e24e834ea1a6944e0c9f72d658b159b5c45f09aca4ffcb",
-  "teachingSha256": "1faf493722cbf6f8524ffcac2c4cbf9173ba85bd9285fe78bea1d20af37f6e12",
+  "sourceSha256": "64b7216a9d20e8b738da1bb081486f413a0a4f4d1a2aebf4f36d10c0cdce4e7a",
+  "contentSha256": "7c8bed01fded694cf1ed38880d7bfe056af3916274f134ab6da9bfef2c6be9ee",
+  "teachingSha256": "92435b773dc040a38046455342588a373ffb985fb120c91f82b961ccaf478118",
   "bankLocation": "Authorized server publication payload only; not in public source"
 }

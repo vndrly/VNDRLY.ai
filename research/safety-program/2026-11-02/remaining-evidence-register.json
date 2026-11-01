@@ -57,18 +57,9 @@
         "VMS-F012A812BA",
         "VMS-F7FAA8F0F0"
       ],
-      "vendorEvidenceRequired": [
-        "Actual material identity and authorized transport classification decision, including applicable mode/jurisdiction",
-        "Approved current package/closure/loading instructions for the actual cargo",
-        "Employee-specific function/mode training, test and employer certification record",
-        "Current shipping/emergency information and discrepancy-resolution authority",
-        "Applicable driver endorsement or modal authority only where the actual duty requires it"
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Competent employer hazmat assessor observes the assigned document preparation and actual package identification against the approved shipment requirements",
-        "Qualified loading/transfer assessor observes equipment-specific containment checks, communication and safe handoff in a controlled exercise",
-        "Assessor records scope, material/mode, observed criteria, limitations and authorized corrective action",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "49 CFR 172.702(d), 172.704(a), (d) — Hazmat employees performing functions covered by the Hazardous Materials Regulations: Provide the applicable function-specific training and testing and retain the employer training record specified in (d). No universal separate practical examination or VNDRLY evidence upload is prescribed by these provisions. Source: https://www.phmsa.dot.gov/training/hazmat/training-requirements-industry"
       ],
       "scopeConfirmation": "Actual cargo classification, function and jurisdiction determine applicability; ordinary transport is not automatically regulated hazmat work.",
       "sourceUrls": [
@@ -107,18 +98,11 @@
         "VMS-F42DEA6F49",
         "VMS-F7FAA8F0F0"
       ],
-      "vendorEvidenceRequired": [
-        "Written employer determination of actual covered operation and assigned response/cleanup role",
-        "Current site-specific safety/health and emergency arrangements applicable to that operation",
-        "Role-specific training and supervised-experience records where required by the actual program",
-        "Medical/respiratory clearance status verified through the confidential authorized route where applicable",
-        "Equipment, zone, communication, decontamination and recovery procedures for the actual method"
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Qualified hazardous-waste or emergency-response program assessor reviews scope decisions against the actual site program",
-        "Competent role assessor observes assigned communication, accountability, protective-equipment and decontamination skills in a safe controlled exercise",
-        "Authorized incident/site leadership verifies recovery and cleanup handover responsibilities without using a live uncontrolled release as an assessment",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "29 CFR 1910.132(f)(2), (g) — Employees using the eye/face, head, foot, hand or personal fall protection covered by paragraph (g): Before that work, demonstrate understanding of the PPE training and ability to use the PPE properly. This is not a separate independent certification requirement. Respirators and electrical protective equipment follow their own standards rather than paragraph (f). Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.132",
+        "29 CFR 1910.134(e), (f), (k)(1) — Required respirator users; tight-fitting facepieces require the applicable fit test: Complete the required medical evaluation before fit testing or use, the applicable fit test, and training that enables demonstration of the listed knowledge and respirator-use skills. These duties apply to the actual respirator assignment, not everyone taking awareness training. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134",
+        "29 CFR 1910.120(e)(3), (e)(4), (q)(6) — Workers whose actual hazardous-waste or emergency-response duties fall within the cited provisions: Apply the training and supervised field-experience or response-role competence requirements specified for that actual assignment. Do not assign the hazardous-waste field-experience requirement to ordinary waste handling or awareness-only roles. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
       ],
       "scopeConfirmation": "Routine waste handling, incidental cleanup and hazardous-substance emergency response are different scopes; do not apply one qualification to all.",
       "sourceUrls": [
@@ -151,20 +135,8 @@
         "VMS-F13ED4CD6F",
         "VMS-F717524A6F"
       ],
-      "vendorEvidenceRequired": [
-        "Employer determination of actual process and applicable safety regime",
-        "Current plant process information, approved phase-specific procedures and operating limits",
-        "Actual alarm/protective-function meanings and authorized abnormal-response instructions",
-        "Equipment integrity, isolation/handback and temporary-change records for the assigned work",
-        "Employee-specific plant instruction and observed task-competence record",
-        "Named operating, technical-change and restart decision authorities"
-      ],
-      "practicalAssessmentRequired": [
-        "Competent plant assessor observes correct procedure selection and actual routine/abnormal decisions using the approved simulator or controlled training arrangement",
-        "Authorized maintenance/operations assessor observes the equipment-specific handback and communication duties",
-        "Responsible operating/technical authority evaluates restart readiness against the actual plant requirements; live uncontrolled conditions are never created for testing",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Determine whether the actual process is covered by a process-safety regime; LPG, bitumen, water and utility tasks retain their distinct methods.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119"
@@ -184,18 +156,10 @@
         "VMS-A95329DF09",
         "VMS-E4CD580F10"
       ],
-      "vendorEvidenceRequired": [
-        "Employer exposure determination identifying actual occupational blood/OPIM tasks",
-        "Accessible current exposure-control plan, assigned task instructions and interactive question route",
-        "Task-specific engineering controls, supplies, PPE, sharps and contaminated-laundry arrangements",
-        "Confidential immediate evaluation/follow-up and hepatitis-B vaccination arrangements where applicable",
-        "Observed skill record for the actual task and any separately required clinical authorization"
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Competent exposure-control instructor observes clean/dirty separation, hygiene and assigned PPE use with harmless simulation materials",
-        "Qualified task assessor observes safe handling of the actual laundry/waste/sharps interface using safe props and the approved method",
-        "Supervisor exercises immediate reporting and confidential medical handoff; qualified clinicians handle risk assessment and treatment",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "29 CFR 1910.132(f)(2), (g) — Employees using the eye/face, head, foot, hand or personal fall protection covered by paragraph (g): Before that work, demonstrate understanding of the PPE training and ability to use the PPE properly. This is not a separate independent certification requirement. Respirators and electrical protective equipment follow their own standards rather than paragraph (f). Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.132",
+        "29 CFR 1910.134(e), (f), (k)(1) — Required respirator users; tight-fitting facepieces require the applicable fit test: Complete the required medical evaluation before fit testing or use, the applicable fit test, and training that enables demonstration of the listed knowledge and respirator-use skills. These duties apply to the actual respirator assignment, not everyone taking awareness training. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
       ],
       "scopeConfirmation": "Anticipated occupational blood/OPIM exposure determines applicability; funeral, medical, laundry and care job labels do not establish identical exposure.",
       "sourceUrls": [
@@ -216,21 +180,8 @@
         "VMS-99166BA610",
         "VMS-E455DF93D8"
       ],
-      "vendorEvidenceRequired": [
-        "Applicable locally adopted food rules and any required worker/manager authorization",
-        "Actual menu, ingredient labels and product-substitution/allergen control process",
-        "Approved product-specific cooking, cooling, reheating, holding and transport limits/actions",
-        "Equipment, thermometer verification, cleaning and sanitizing instructions",
-        "Actual illness-reporting/exclusion/return policy and responsible person in charge",
-        "Observed demonstration of assigned preparation, measurement, cleaning and receiving duties"
-      ],
-      "practicalAssessmentRequired": [
-        "Competent catering assessor observes raw-to-ready-to-eat separation and hand hygiene in the actual workspace",
-        "Qualified food-service assessor observes task-specific temperature measurement, instrument care and the approved corrective action",
-        "Assessor observes allergen-request handling, ingredient verification, controlled preparation and identifiable service handoff",
-        "Transport/receiving assessor exercises a delayed delivery using the actual approved limits and disposition authority",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Accommodation, office support and property leasing do not automatically include food preparation or food-manager duties.",
       "sourceUrls": [
         "https://www.fda.gov/food/retail-food-protection/fda-food-code"
@@ -259,20 +210,8 @@
         "VMS-C6ADF2901A",
         "VMS-FD0E30AC9F"
       ],
-      "vendorEvidenceRequired": [
-        "Actual laboratory-use applicability and current chemical hygiene plan",
-        "Sample-specific hazard information, acceptance and chain-of-identity arrangements",
-        "Approved validated analytical method with reagents, compatibility, ventilation and waste controls",
-        "Current instrument operating, maintenance and acceptance instructions",
-        "Method-specific quality-control interpretation and authorized result-release criteria",
-        "Observed proficiency for actual preparation, instrument, waste and emergency duties"
-      ],
-      "practicalAssessmentRequired": [
-        "Competent laboratory method assessor observes sample identification and approved preparation with appropriate safe training materials",
-        "Qualified chemical-hygiene/task assessor observes actual ventilation/PPE selection, compatible storage and waste handling",
-        "Instrument/method specialist observes authorized instrument use and interpretation of actual control failures without creating hazardous conditions",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Confirm laboratory-use coverage and actual method; desk interpretation is not bench work, and a laboratory qualification is not clinical licensing.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450"
@@ -294,20 +233,8 @@
         "VMS-EDFFB5F456",
         "VMS-F1968384F8"
       ],
-      "vendorEvidenceRequired": [
-        "Confirmed human-diving versus ROV-only scope and applicable jurisdiction",
-        "Mode-specific employer safe-practices manual and actual project/dive plan",
-        "Team role, experience/training, fitness and first-aid/CPR evidence applicable to the actual program",
-        "Site-specific differential-pressure/energy assessment and authorized verified control arrangements",
-        "Actual equipment, breathing-gas/reserve, communications and inspection evidence",
-        "Operational emergency support, competent medical/chamber/transport arrangements and practiced response plan"
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified commercial-diving program assessor observes the actual assigned mode/team role and equipment skills under controlled supervised conditions",
-        "Competent diving supervisor and client energy authority review the actual site hazards, verified controls and simultaneous-operation interfaces",
-        "Qualified program conducts role-appropriate communication and emergency exercises using safe simulation; diving medical professionals determine fitness/treatment",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Combined Diving/ROV labels retain unresolved method. Confirm actual human diving versus ROV/submersible work before assigning diver requirements.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.410"
@@ -321,20 +248,8 @@
       "serviceIds": [
         "VMS-702CE54B7E"
       ],
-      "vendorEvidenceRequired": [
-        "Confirmed operating regime, jurisdiction and remote-pilot-in-command designation",
-        "Actual pilot authority/recency and applicable waiver/authorization conditions",
-        "Current mission airspace/restrictions and site-access permissions",
-        "Aircraft identity, registration and Remote ID applicability/compliance",
-        "Manufacturer limits, maintenance/preflight evidence and actual emergency/lost-link procedures",
-        "Ground/people/vehicle plan, weather assessment, crew briefing and observed role competence"
-      ],
-      "practicalAssessmentRequired": [
-        "Competent UAS assessor observes actual aircraft-specific preparation, normal control and emergency decisions in an authorized controlled setting",
-        "Qualified remote pilot assesses observer/support communication and hazard reporting",
-        "Responsible operation lead verifies actual permission conditions and aircraft/payload capability",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Photogrammetry or media work can be ground-based. Activate flight requirements only for actual UAS duties.",
       "sourceUrls": [
         "https://www.faa.gov/uas/commercial_operators"
@@ -354,20 +269,8 @@
         "VMS-C18F4F0F4D",
         "VMS-C81018F453"
       ],
-      "vendorEvidenceRequired": [
-        "Actual railroad/jurisdiction and roadway-work scope",
-        "Host railroad on-track safety rules and current job-specific protection/briefing",
-        "Employer role-specific initial/recurrent training and qualification evidence",
-        "Actual track/location references, adjacent-track assessment and machinery arrangements",
-        "Communication, stop/change and emergency procedures",
-        "Machine-specific instruction/qualification where that duty applies"
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified railroad/employer assessor observes actual rule understanding and assigned role performance",
-        "Qualified on-track safety instructor assesses location/protection communication using safe controlled scenarios",
-        "Competent machine assessor observes actual assigned roadway-machine skills under the host program",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Track workers, passenger train crew, freight brokers and passengers are distinct roles; jurisdiction and contract determine coverage.",
       "sourceUrls": [
         "https://railroads.dot.gov/railroad-safety/divisions/roadway-worker-protection"
@@ -391,19 +294,9 @@
         "VMS-CF0D69DE7B",
         "VMS-F192BB6C39"
       ],
-      "vendorEvidenceRequired": [
-        "Actual radiation method/source or generator and jurisdiction/licensed program",
-        "Role-specific authorization, training, examinations/experience and practical proficiency",
-        "Current method/equipment operating, monitoring and emergency procedures",
-        "Actual source accountability, security, maintenance and survey evidence",
-        "Site boundary/adjacent-work arrangements and qualified release authority",
-        "Confidential exposure evaluation and specialist recovery/decontamination resources"
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Qualified licensed-program assessor observes the actual radiography/logging/other assigned method skills",
-        "Competent radiation-protection assessor evaluates instrument use and interpretation only for the actual authorized role",
-        "Qualified program exercises access control, reporting and emergency interfaces safely; specialist recovery remains separately assessed",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "10 CFR 34.43(b)(4), (c)(3), (f) — Radiographers and radiographer assistants using licensed material in covered NRC industrial-radiography operations: The licensee must provide the applicable hardware practical examination and maintain the required training/examination records. These are radiography-role duties, not requirements for every NDT method or an awareness-course learner. Source: https://www.govinfo.gov/content/pkg/CFR-2025-title10-vol1/pdf/CFR-2025-title10-vol1-sec34-43.pdf"
       ],
       "scopeConfirmation": "Keep industrial radiography, well logging, decontamination and nuclear waste as separate qualification subscopes; nonradioactive NDT/logging does not activate source-handling requirements.",
       "sourceUrls": [
@@ -425,19 +318,9 @@
         "VMS-D0C421AC5F",
         "VMS-D782CA2532"
       ],
-      "vendorEvidenceRequired": [
-        "Actual installation/activity and applicable power versus general electrical regime",
-        "Current system information and equipment identifiers",
-        "Task-specific qualification, designation and any applicable license",
-        "Actual clearance/energy-control/grounding and operating authority procedures",
-        "Work-specific hazard assessment, approach/protective arrangements and briefing",
-        "Emergency/rescue resources and restoration/accountability process"
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Competent power-program assessor observes actual task/equipment identification, work methods and abnormal decisions",
-        "Qualified operating authority assesses actual switching/clearance communication only for the assigned role",
-        "Specialist assessor observes applicable protective equipment, grounding/testing or rescue skills in an authorized controlled program",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "29 CFR 1910.269(a)(2)(viii) — Employees doing covered electric-power generation, transmission or distribution work: Demonstrate proficiency in the applicable work practices before the training required by this paragraph is treated as complete. This does not impose the power-industry rule on every employee taking electrical awareness. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.269"
       ],
       "scopeConfirmation": "Preserve this initial topic separately from TG18 general electrical work. Determine the applicable electrical regime rather than treating all electrical services as electric-power work.",
       "sourceUrls": [
@@ -496,20 +379,8 @@
         "VMS-F1968384F8",
         "VMS-F89E9ABCC6"
       ],
-      "vendorEvidenceRequired": [
-        "Actual vessel/flag/jurisdiction and assigned passenger/visitor/crew duty",
-        "Vessel-specific familiarization, alarms, muster and responsible contacts",
-        "Actual access/personnel-transfer equipment and procedures",
-        "Deck/mooring/machinery task instruction and competence where assigned",
-        "Ship-shore transfer procedure, communication and emergency arrangements where assigned",
-        "Applicable maritime credentials/medical status and role-specific practical evidence"
-      ],
-      "practicalAssessmentRequired": [
-        "Competent vessel/task assessor observes actual access and assigned deck/transfer skills safely",
-        "Qualified maritime instructor assesses relevant survival/emergency duties through the applicable program",
-        "Master/designated competent roles verify actual vessel familiarization, work interfaces and release authority",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Marine consultants, surveyors, passengers, deck crew and masters have different duties. Diving and engineered floatover/lifting remain additional specialist subscopes.",
       "sourceUrls": [
         "https://www.dco.uscg.mil/national_maritime_center/licenses_credentials/"
@@ -526,20 +397,8 @@
         "VMS-AC54B3E129",
         "VMS-C224CC422D"
       ],
-      "vendorEvidenceRequired": [
-        "Actual explosive versus nonexplosive method and applicable jurisdiction",
-        "Product/system-specific manufacturer procedures and qualified operation lead",
-        "Relevant licenses/permissions and role-specific training/experience evidence",
-        "Actual site/well interfaces, exclusion/warning and personnel-accountability plan",
-        "Transport/storage/custody arrangements for the assigned functions",
-        "Specialist abnormal/misfire/emergency/recovery resources and procedures"
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified method-specific program assesses actual assigned handling/execution duties under authorized controlled conditions",
-        "Competent specialist/site authorities assess actual interfaces, warnings and accountability",
-        "Separately qualified recovery program assesses abnormal intervention; support communication can be tested safely with harmless scenarios",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Seismic acquisition may be nonexplosive. Construction blasting rules are bounded examples, not universal well-perforating law.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.901"
@@ -627,20 +486,8 @@
         "VMS-EFE6DE437B",
         "VMS-F192BB6C39"
       ],
-      "vendorEvidenceRequired": [
-        "Actual well, operational phase, service method and jurisdiction",
-        "Role-specific well-control training/certification and employer authorization as applicable",
-        "Current approved barrier information, procedures and operating limits",
-        "Actual installed pressure-control equipment, manufacturer instructions and assurance evidence",
-        "Monitoring, change management, communication and shift-handover arrangements",
-        "Qualified emergency/intervention capability and actual continuation/restart authority"
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified well-control program assesses actual role-specific monitoring and routine/abnormal decisions in appropriate simulation",
-        "Competent equipment/task assessor observes actual service-specific physical skills under authorized controlled conditions",
-        "Qualified well/operator technical authorities evaluate actual barrier/assurance and change/restart responsibilities",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Drilling, fishing, plugging, mud engineering, logging and stimulation roles remain distinct. Nitrogen, radiation and explosives activate only for actual tools and duties.",
       "sourceUrls": [
         "https://www.iogp.org/pubs/476.pdf"
@@ -658,20 +505,8 @@
         "VMS-E0111F0A9C",
         "VMS-EA8445E1EF"
       ],
-      "vendorEvidenceRequired": [
-        "Actual product/formulation labeling and intended site/method applicability",
-        "Jurisdiction/category applicator authorization and approved WPS training where actually required",
-        "Product/task PPE, hygiene and respiratory program readiness as applicable",
-        "Actual equipment, bystander/environmental and application/entry procedures",
-        "Storage/container/waste disposition and contaminated-item handover",
-        "Usable product first-aid, emergency and confidential medical routes"
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified applicator/task assessor observes actual label interpretation and approved equipment/application skills safely",
-        "Competent PPE/respiratory program personnel assess the actual required protection and use",
-        "Qualified site/applicator assessor observes bystander, treated-area entry and contaminated-item handoff using controlled scenarios",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Agricultural WPS, structural pest control, industrial use and nonchemical grounds work have different applicability; SDS training alone is insufficient.",
       "sourceUrls": [
         "https://www.epa.gov/pesticide-worker-safety/how-get-certified-pesticide-applicator"
@@ -772,17 +607,8 @@
         "VMS-EF7AA7D8EC",
         "VMS-F1104CD265"
       ],
-      "vendorEvidenceRequired": [
-        "Actual jurisdiction and professional-duty applicability decision, with current authorization evidence where required.",
-        "Project requirements and design basis, applicable technical codes/specifications, actual interfaces and accepted assumptions.",
-        "Assigned discipline preparation, independent checking and approval responsibilities with competence evidence.",
-        "Controlled calculation/drawing/software baselines, verification/validation records, resolved technical findings and change/handover decisions."
-      ],
-      "practicalAssessmentRequired": [
-        "Competent discipline assessor evaluates the person’s actual engineering review/design task, including method selection, assumptions, calculations, interfaces and technical judgments within the declared scope.",
-        "Any field inspection, commissioning, hazardous testing or operational function requires its own safe observed evaluation and employer/site authorization.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Desk design is distinct from field execution. Marine/ice or pipeline engineering parent labels can include varied subscopes; resolve actual duties.",
       "sourceUrls": [
         "https://pels.texas.gov/lic_basic.htm"
@@ -825,14 +651,8 @@
         "VMS-EC0BFD717C",
         "VMS-F0AC44BE48"
       ],
-      "vendorEvidenceRequired": [
-        "Identify the actual legal, financial, insurance, procurement or advisory duty and organization-specific controls.",
-        "A broad consultancy or office service does not establish a regulated professional act; determine actual scope before declaring a credential gap."
-      ],
-      "practicalAssessmentRequired": [
-        "Any applicable profession-specific license or independent competence review is outside a general safety-course completion.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "A broad consultancy or office service does not establish a regulated professional act; determine actual scope before declaring a credential gap.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training"
@@ -908,19 +728,8 @@
         "VMS-F918021511",
         "VMS-FEC2C99D3B"
       ],
-      "vendorEvidenceRequired": [
-        "Actual equipment/circuit and voltage/task scope",
-        "Approved drawing and change baseline",
-        "Approved test procedure and acceptance source",
-        "Assigned electrical/instrument qualifications and applicable trade credentials",
-        "Isolation, process-interface and restoration responsibilities"
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified observation of the actual electrical/instrument duty using a safe approved assessment arrangement",
-        "Demonstrated equipment identification, approved method use and result interpretation",
-        "Observed controlled restoration and handover within the assessed role",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "General electrical/instrument work is not automatically electric-power work under G11. IT installation and generator service must identify actual electrical exposure.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.332"
@@ -936,19 +745,8 @@
         "VMS-3647023FB0",
         "VMS-41094DE379"
       ],
-      "vendorEvidenceRequired": [
-        "Actual appliance/model, refrigerant and jurisdiction",
-        "Applicable technician credential category and issuing evidence",
-        "Manufacturer-approved method and configuration",
-        "Service equipment/material traceability and acceptance basis",
-        "Named operating owner and service conditions"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed appliance/refrigerant method skills under qualified safe assessment",
-        "Demonstrated material/equipment identification and documentation use",
-        "Observed result interpretation and service handover",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Certification applies to defined refrigerant-service activities and equipment; do not assign it to desk HVAC designers or all facility workers.",
       "sourceUrls": [
         "https://www.epa.gov/section608/section-608-technician-certification-requirements"
@@ -967,19 +765,8 @@
         "VMS-CBDE83173A",
         "VMS-DB0F663B75"
       ],
-      "vendorEvidenceRequired": [
-        "Actual aircraft and operating regime",
-        "Named operator, aircrew, maintenance and ground duties",
-        "Applicable role credentials and aircraft/task authorization",
-        "Current site/access and passenger/cargo procedures",
-        "Technical and operational release responsibilities"
-      ],
-      "practicalAssessmentRequired": [
-        "Aircraft/program-specific observation of assigned ground communication and access duties",
-        "Applicable flight or maintenance practical qualification through the responsible aviation program",
-        "Observed passenger/cargo coordination and abnormal-information handover within the actual role",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Aircraft rental does not imply a supplied pilot; passengers, auditors, ground crew and aircrew retain different requirements.",
       "sourceUrls": [
         "https://www.faa.gov/pilots/become"
@@ -1048,18 +835,9 @@
         "VMS-F89E9ABCC6",
         "VMS-FB2DBDD300"
       ],
-      "vendorEvidenceRequired": [
-        "Actual component, material, method and governing acceptance basis",
-        "Adopted employer written practice or applicable certification program",
-        "Personnel method/level and assigned evaluation/procedure authority",
-        "Approved procedure, equipment assurance and coverage plan",
-        "Actual regulatory/product certification and release scope where applicable"
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Observed actual method skills under the adopted qualified assessment program",
-        "Method-specific component identification, arrangement verification, systematic coverage and recording",
-        "Qualified interpretation and acceptance evaluation within the actual assigned role",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "10 CFR 34.43(b)(4), (c)(3), (f) — Radiographers and radiographer assistants using licensed material in covered NRC industrial-radiography operations: The licensee must provide the applicable hardware practical examination and maintain the required training/examination records. These are radiography-role duties, not requirements for every NDT method or an awareness-course learner. Source: https://www.govinfo.gov/content/pkg/CFR-2025-title10-vol1/pdf/CFR-2025-title10-vol1-sec34-43.pdf"
       ],
       "scopeConfirmation": "Visual/ultrasonic/penetrant/magnetic/radiographic methods differ. Load testing and notified-body labels need exact equipment/method review.",
       "sourceUrls": [
@@ -1080,19 +858,8 @@
         "VMS-B37A995F7D",
         "VMS-E292CCFE3B"
       ],
-      "vendorEvidenceRequired": [
-        "Actual instrument/function/range and measurand",
-        "Approved method, reference chain and uncertainty model",
-        "Specified acceptance source and decision rule",
-        "As-found/as-left and instrument-history requirements",
-        "Safe contamination preparation and electrical/process interfaces"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed actual instrument/method preparation, reference use and faithful recording",
-        "Competent evaluation of method-specific uncertainty and results within role",
-        "Observed safe handling, anomaly recognition and technical handover",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Calibration is not automatically atmosphere testing; electrical and process-connection duties activate only when actually performed.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training"
@@ -1153,19 +920,8 @@
         "VMS-F611D84C20",
         "VMS-F9FA9523B4"
       ],
-      "vendorEvidenceRequired": [
-        "Actual product, material, process and governing code/contract",
-        "Approved WPS/fusion/machining method and supporting qualification basis",
-        "Applicable personnel scope and employer authorization",
-        "Material/consumable and joint traceability controls",
-        "Inspection, repair and product-certification/release requirements"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed actual craft performance under the adopted qualified program",
-        "Method-specific material identification, preparation, process control and recording",
-        "Applicable qualified inspection/evaluation and controlled handover",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Not all piping uses welding and not all fabrication is pressure-code work. Preserve those actual-method distinctions.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.252",
@@ -1203,18 +959,11 @@
         "VMS-EDF3A300C4",
         "VMS-F32055C4E4"
       ],
-      "vendorEvidenceRequired": [
-        "Actual material/substance and survey scope/exclusions",
-        "Actual disturbance method, location and applicable regime",
-        "Competent exposure/control assessment and supporting data",
-        "Applicable role/work-class instruction, credentials and assessor scope",
-        "Waste, hygiene and completion/reoccupation basis where applicable"
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Observed actual substance/method duties under qualified safe assessment",
-        "Demonstrated procedure use and contamination-boundary/hygiene handling",
-        "Applicable specialist assessment of exposure methods, records and abnormal conditions",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "29 CFR 1910.132(f)(2), (g) — Employees using the eye/face, head, foot, hand or personal fall protection covered by paragraph (g): Before that work, demonstrate understanding of the PPE training and ability to use the PPE properly. This is not a separate independent certification requirement. Respirators and electrical protective equipment follow their own standards rather than paragraph (f). Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.132",
+        "29 CFR 1910.134(e), (f), (k)(1) — Required respirator users; tight-fitting facepieces require the applicable fit test: Complete the required medical evaluation before fit testing or use, the applicable fit test, and training that enables demonstration of the listed knowledge and respirator-use skills. These duties apply to the actual respirator assignment, not everyone taking awareness training. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134",
+        "29 CFR 1926.1101(k)(9)(iii)-(v) — Workers performing the particular construction asbestos work classes covered by these provisions: Use the training specified for the actual work class, including its applicable hands-on component and required course duration. General asbestos awareness does not impose these abatement-training requirements on a worker who does not perform that work. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1101"
       ],
       "scopeConfirmation": "Silica dust, asbestos, lead, refractory and coatings are separate substances/tasks. Source mentions of them are not proof each is present.",
       "sourceUrls": [
@@ -1233,19 +982,8 @@
         "VMS-E77F809F4E",
         "VMS-F012A812BA"
       ],
-      "vendorEvidenceRequired": [
-        "Actual gas/product state, equipment and engineered method",
-        "Discharge destinations and affected-area assessment",
-        "Actual catalyst product/process-conditioned history and supplier method",
-        "Qualified monitoring strategy and role-specific emergency capability",
-        "Applicable personnel instruction, medical/respiratory and credential scope"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed actual specialist equipment/method skills under a qualified safe program",
-        "Role-specific monitoring and abnormal-condition recognition where assigned",
-        "Separate qualified entry/rescue practical capability where actually required",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Resolve desk nitrogen engineering versus field nitrogen service; catalyst and inert-entry work need their own actual substance and rescue assessment.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
@@ -1308,18 +1046,11 @@
         "VMS-EB06FE1B5D",
         "VMS-F9FA9523B4"
       ],
-      "vendorEvidenceRequired": [
-        "Actual machine/configuration/attachment and applicable framework",
-        "Verified actual load, contents, distribution and lifting-point basis",
-        "Applicable manufacturer capacity information and full load path",
-        "Named qualified operator/rigger/signal/planning roles",
-        "Actual support, route, exclusion and communication plan"
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Observed machine/task-specific operation under the applicable qualified program",
-        "Separate rigging and signal practical skills where assigned",
-        "Qualified plan/inspection capability and actual workplace evaluation within role",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "29 CFR 1910.178(l)(2), (4), (6) — Operators of powered industrial trucks covered by this standard: Formal instruction, practical training and workplace performance evaluation are required before independent operation, with employer certification and applicable refresher/evaluation duties. A trainer/evaluator needs the knowledge, training and experience specified in (l)(2)(iii); an outside assessor is not universally required. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178",
+        "29 CFR 1926.1427(a), (f) — Operators of construction cranes/equipment covered by Subpart CC, subject to the stated exceptions: Meet the applicable operator training/certification or licensing provisions and employer evaluation requirements for the equipment and assigned work. Do not apply this crane rule to every lifting worker or every piece of mobile equipment. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427",
+        "29 CFR 1926.1428(a), (c)(5) — Construction crane signal persons covered by Subpart CC: Demonstrate the specified knowledge through an oral or written test and a practical test. The standard permits a qualified third-party evaluator or the employer's qualified evaluator, with the stated documentation and portability limits. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1428"
       ],
       "scopeConfirmation": "Rental without operator does not include operation. Grader/roller operation is not a crane qualification, and a rigger is not automatically a lift engineer.",
       "sourceUrls": [
@@ -1418,19 +1149,8 @@
         "VMS-FAAC95DD3D",
         "VMS-FB4A7DC965"
       ],
-      "vendorEvidenceRequired": [
-        "Actual machine/product/process and reported symptom",
-        "Manufacturer-approved method and technical acceptance source",
-        "Approved part/supersession and material identity",
-        "Actual guarding/energy-control applicability and test arrangement",
-        "Named trade/process personnel and technical/operating release roles"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed actual machine/trade method skills under qualified safe assessment",
-        "Method-specific preparation, configuration/parts control and faithful process records",
-        "Observed functional interpretation, safeguarding restoration and handover within role",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Mechanical repair, heat treatment, grounds machinery, printing and material treatment are retained as distinct method variants, not one universal operator qualification.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training",
@@ -1520,19 +1240,8 @@
         "VMS-FA767CF845",
         "VMS-FB4A7DC965"
       ],
-      "vendorEvidenceRequired": [
-        "Actual system/design envelope, medium and test purpose",
-        "Approved boundary and complete temporary/permanent component basis",
-        "Qualified engineered method and acceptance source",
-        "Actual personnel test/live-intervention scope and practical evidence",
-        "Safeguards, observation, abnormal response, restoration and operating release roles"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed actual pressure-test role skills through a qualified safe program",
-        "Qualified technical result evaluation within actual duty",
-        "Separate specialist live-intervention capability where supplied; no uncontrolled live-leak exercise",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Live-process leak sealing is not routine depressurized line opening. Preserve that specialist variant and actual system scope.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147",
@@ -1568,19 +1277,8 @@
         "VMS-F2A06C16B3",
         "VMS-F892FC5489"
       ],
-      "vendorEvidenceRequired": [
-        "Actual survey/geophysical method, source and deliverable scope",
-        "Project reference/frame, units, epoch where relevant and quality criteria",
-        "Instrument/control/receiver identity and actual acquisition geometry",
-        "Applicable professional/source/access qualifications",
-        "Approved processing/model, limitations and technical sign-off basis"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed actual instrument/source method skills under qualified safe assessment",
-        "Method-specific reference/control checks, data identity and quality recording",
-        "Separate drilling/explosive/aircraft/water-access practical capability where actually used",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Seismic source may be nonexplosive. Survey labels do not automatically imply diving, drilling or aerial operation.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training",
@@ -1597,19 +1295,8 @@
         "VMS-A9D4034DA0",
         "VMS-CA66519FA1"
       ],
-      "vendorEvidenceRequired": [
-        "Actual post orders, duties and jurisdiction",
-        "Applicable legal/credential basis verified for actual role",
-        "Approved access/exception and nonphysical response procedures",
-        "Effective assistance/emergency and location-identity arrangements",
-        "Privacy/evidence handling and shift-handover requirements"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed safe scripted communication and actual post-order application",
-        "Practical use of approved communication/location-reporting and record systems",
-        "Separate authorized program assessment for any additional armed/physical/traffic duty; none taught here",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Guarding differs from security-system installation. Actual jurisdiction and duties govern credentials.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training"
@@ -1654,19 +1341,8 @@
         "VMS-E4CD580F10",
         "VMS-EF8D71BA44"
       ],
-      "vendorEvidenceRequired": [
-        "Actual facility systems, duties and exposure determination",
-        "Approved water/hygiene/food program and locally applicable requirements",
-        "System/use description, monitoring and verification/validation basis",
-        "Clean/dirty, food/chemical and professional duty boundaries",
-        "Actual personnel instruction and required credentials where applicable"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed actual facility/hygiene method skills under qualified safe assessment",
-        "Task-specific procedure use, transfer-boundary handling, records and abnormal response",
-        "Separate professional/clinical or public-health capability only where actual duties require it",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Hotel, property lease, warehouse or personal support is not automatically catering, clinical care or contaminated laundry. Water hygiene is not identical to bloodborne-pathogen training.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030",
@@ -1706,19 +1382,8 @@
         "VMS-F43B11947D",
         "VMS-F9B99EF793"
       ],
-      "vendorEvidenceRequired": [
-        "Actual asset/function dependencies and approved baseline",
-        "Authorized change/access delta and vendor compatibility evidence",
-        "Representative safe validation matrix and acceptance authority",
-        "Trustworthy backup/configuration and tested recovery basis",
-        "Actual technical/security/functional-safety/operating role allocation"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed actual system-specific controlled technical duties in an approved safe environment",
-        "Role-specific validation, anomaly recognition and faithful evidence recording",
-        "Separate qualified cyber response, recovery or functional-safety capability where assigned",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Differentiate desk software/support, network installation and changes affecting operating safeguards.",
       "sourceUrls": [
         "https://www.nist.gov/cyberframework",
@@ -1734,19 +1399,8 @@
         "VMS-3ECF00A8DA",
         "VMS-504C3150A1"
       ],
-      "vendorEvidenceRequired": [
-        "Actual subject, learner roles, needs and prerequisites",
-        "Approved program/objectives and governing assessment requirements",
-        "Named subject expertise and instructor/assessor competence evidence",
-        "Safe delivery/practical assessment conditions and rubric",
-        "Applicable provider/credential approval and completion-claim scope"
-      ],
-      "practicalAssessmentRequired": [
-        "Observed actual subject-specific instruction with relevant expert review",
-        "Observed safe practical assessment and evidence-based scoring within assigned subject scope",
-        "Assessor calibration, feedback/remediation and honest record-handling demonstration",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Training-system consultancy is not automatically course delivery; no provider can create its own legal accreditation by naming a course.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training"
@@ -1761,24 +1415,8 @@
         "VMS-6B7BCDE27B",
         "VMS-9FF57F312C"
       ],
-      "vendorEvidenceRequired": [
-        "Actual investigation terms of reference naming event, period, criteria and scene-access authority, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual image register linking original filenames, collector, location and clock limitations, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual interview notes separating direct observation, recalled speech and investigator interpretation, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual timeline and causal map linking each material assertion to an evidence reference, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual audit finding with criterion revision, sampled asset list and evidence, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual action register linking finding, owner, implementation evidence and effectiveness review, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who defines a bounded investigation question and distinguishes audit criteria from preference; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who preserves original evidence and explains provenance and time limitations; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who conducts a neutral representative interview and distinguishes observation from inference; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who tests a causal explanation against contrary evidence; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who writes a criterion-based finding with an accurate sample boundary; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who distinguishes action implementation from effectiveness evidence; records the representative task, errors, correction, limits and assessment decision.",
-        "Actual hazardous, equipment, trade or regulated duties require their own approved method assessment and applicable credentials. This online result does not satisfy those practical requirements.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "An investigator is not automatically an emergency responder, electrical inspector or licensed professional.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training"
@@ -1820,23 +1458,9 @@
         "VMS-EFCE8C3A29",
         "VMS-F1968384F8"
       ],
-      "vendorEvidenceRequired": [
-        "Actual waste profile linking generator, process, history and receiving decision, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual approved sampling plan showing target material, analytical objectives and laboratory instructions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual chain-of-custody record matched to sample labels and laboratory receipt exceptions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual laboratory report with qualifiers, units and an approved decision criterion, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual receiving-facility approval linked to current waste profile and proposed treatment route, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual shipment reconciliation linking waste profile, actual load and authorized destination, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who links process knowledge and changed inputs to the actual characterization question; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who explains representativeness against an approved sampling objective without improvising collection; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who reconciles sample identity and custody discrepancies while retaining originals; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who interprets units, nondetects and qualifiers within assigned competence; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who matches a material profile to actual receiving conditions and flags changed mixtures; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who reconciles material, load, destination and assigned transport/response functions; records the representative task, errors, correction, limits and assessment decision.",
-        "Actual hazardous, equipment, trade or regulated duties require their own approved method assessment and applicable credentials. This online result does not satisfy those practical requirements.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "29 CFR 1910.120(e)(3), (e)(4), (q)(6) — Workers whose actual hazardous-waste or emergency-response duties fall within the cited provisions: Apply the training and supervised field-experience or response-role competence requirements specified for that actual assignment. Do not assign the hazardous-waste field-experience requirement to ordinary waste handling or awareness-only roles. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
       ],
       "scopeConfirmation": "Nonhazardous disposal, hazardous waste, emergency response and environmental desk advice must remain distinct. HAZWOPER is not inferred from the word waste.",
       "sourceUrls": [
@@ -1871,24 +1495,8 @@
         "VMS-F2440E8B76",
         "VMS-FA41FC6E60"
       ],
-      "vendorEvidenceRequired": [
-        "Actual work order separating jetting, vacuum transfer and excavation duties, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual equipment dossier identifying unit, hose assemblies, accessories and configuration approval, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual site plan showing cleaning zone, adjacent activities, utilities and access coordination, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual residue and effluent plan linked to material history and approved receiving route, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual task briefing with stop roles, communications and equipment-specific emergency information, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual completion report listing cleaned boundaries, exclusions, waste disposition and defects, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who distinguishes the actual jetting, vacuum, excavation and chemical-cleaning duties; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who recognizes equipment identity, substitution and compatibility limitations; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who identifies site, traffic and utility interfaces in a representative work plan; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who traces residues and recovered material to characterization and acceptance owners; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who demonstrates assigned equipment stop and emergency communication duties through an approved safe method; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who hands over bounded cleaning results, exclusions, recovered material and equipment restrictions; records the representative task, errors, correction, limits and assessment decision.",
-        "Actual hazardous, equipment, trade or regulated duties require their own approved method assessment and applicable credentials. This online result does not satisfy those practical requirements.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Travel/standby billing is not evidence of active hydrovac excavation; pressure-washer rental does not imply a supplied hydroblaster.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training",
@@ -1929,24 +1537,8 @@
         "VMS-E723D93183",
         "VMS-FE0D0FE707"
       ],
-      "vendorEvidenceRequired": [
-        "Actual construction responsibility matrix naming locating, inspection, plant and design roles, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual utility evidence register linking responses, revisions and planned work limits, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual excavation plan linking current ground review and applicable protective-system information, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual plant interface drawing with delivery route, work zone and assigned communications, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual inspection and change log linked to actual excavation conditions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual handover pack separating installed status, inspection evidence and commissioning exclusions, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who distinguishes construction, inspection, design and operating responsibilities; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who identifies utility-record conflicts and follows the approved verification route; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who reports actual ground, water and adjacent-load conditions to the designated competent role; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who coordinates actual plant, delivery and pedestrian interfaces within the approved plan; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who recognizes a changed condition and obtains the required inspection/reassessment; records the representative task, errors, correction, limits and assessment decision.",
-        "Qualified assessor observes the assigned person who hands over installed status, verification limitations and outstanding acceptance decisions; records the representative task, errors, correction, limits and assessment decision.",
-        "Actual hazardous, equipment, trade or regulated duties require their own approved method assessment and applicable credentials. This online result does not satisfy those practical requirements.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Pipeline/LNG construction does not automatically include commissioning or process operation; method-specific roles activate only when supplied.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651",
@@ -1961,23 +1553,9 @@
       "serviceIds": [
         "VMS-6F4E18B586"
       ],
-      "vendorEvidenceRequired": [
-        "Actual space-specific role assignment and task description, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual entry permit matched to space identifier and actual task revision, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual space isolation plan cross-referenced to current configuration and verification record, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual atmospheric record linked to instrument assurance and permit criteria, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual communication plan including attendant responsibilities and loss-of-contact response, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual rescue readiness evidence tied to representative space and available responders, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who maps entrant, attendant, entry-supervisor, rescue and underlying trade responsibilities without conflating them; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who reconciles space identity, task scope and linked permit evidence through the actual entry program; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who identifies a changed connection and communicates it to the designated isolation and entry authorities; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who interprets atmosphere-record time, location, instrument and method limitations without inventing limits; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who performs the assigned communication and attendant duties in an approved safe representative assessment; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who evaluates actual rescue availability, space representativeness and qualified capability evidence; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Actual entry, rescue, height-access, clinical, operator or trade performance requires its own approved safe practical evaluation by appropriately qualified assessors where assigned; online completion does not satisfy it.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "29 CFR 1910.146(k)(2)(iv) — Employer-designated employees performing covered permit-space rescue: Practice the assigned permit-space rescues at least every 12 months using the specified actual or representative spaces, subject to the real-rescue exception. This is a rescue-team duty, not a practical test required of every awareness-course learner. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
       ],
       "scopeConfirmation": "The underlying installation trade also needs its own competence; an entry qualification is not a repair qualification.",
       "sourceUrls": [
@@ -2006,24 +1584,8 @@
         "VMS-D7CD04690E",
         "VMS-F2440E8B76"
       ],
-      "vendorEvidenceRequired": [
-        "Actual access role matrix linked to the actual work method, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual fall-system schedule linking component identities and approved compatibility, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual approved anchorage and clearance review linked to the selected system, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual scaffold handover and inspection record tied to the identified structure, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual height-work interface plan identifying tools, lower work areas and access routes, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual access-specific rescue plan and safe representative exercise record, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who distinguishes scaffold use, alteration, inspection, rope-access and underlying trade duties; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who identifies actual system components and reports an unreviewed compatibility substitution; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who recognizes changed geometry and routes anchorage/clearance decisions to the competent technical role; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who recognizes scaffold configuration or use changes and follows the competent review route; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who coordinates dropped-object and adjacent-activity information within the approved task plan; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who demonstrates assigned emergency duties through a qualified safe assessment and verifies rescue feasibility; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Actual entry, rescue, height-access, clinical, operator or trade performance requires its own approved safe practical evaluation by appropriately qualified assessors where assigned; online completion does not satisfy it.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "A scaffold user, scaffold inspector, rope-access technician and fall-protection designer have different scopes.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.451",
@@ -2040,24 +1602,8 @@
         "VMS-948DBDE67A",
         "VMS-999272BFC2"
       ],
-      "vendorEvidenceRequired": [
-        "Actual deployment role description separating administration, first aid and clinical duties, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual credential verification record matched to person, jurisdiction and assigned clinical scope, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual clinical governance pack showing oversight and current approved protocol scope, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual deployment interface plan identifying clinical escalation and transfer coordination, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual task exposure assessment and authorized health-information handling route, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual readiness matrix separating credentials, orientation, assessed clinical capability and deployment limits, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who maps the actual administrative, first-aid, clinical and transport-coordination service roles; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who matches individual professional evidence to the assigned profession, jurisdiction and restrictions through the authoritative route; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who identifies the applicable controlled protocol and clinical oversight without making unauthorized treatment decisions; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who performs a safe fictional location, escalation and transfer-coordination exercise; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who handles exposure-program and confidential information interfaces through approved role-appropriate channels; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who distinguishes clinical assessment, credentials, orientation and coordination evidence in the readiness record; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Actual entry, rescue, height-access, clinical, operator or trade performance requires its own approved safe practical evaluation by appropriately qualified assessors where assigned; online completion does not satisfy it.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "C08 first-aid assurance is not medical licensing; office medical administration is not clinical care.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030"
@@ -2076,23 +1622,9 @@
         "VMS-BB56FF3F14",
         "VMS-F6D722F1BD"
       ],
-      "vendorEvidenceRequired": [
-        "Actual person-level assignment record linked to host task and contract scope, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual host-supplier instruction matrix with named owners and task-specific evidence, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual competence-to-task comparison showing scope and restrictions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual supervision map distinguishing task direction, commercial contact and change approval, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual logistics handoff linking delivery, site acceptance and interface owners, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual assignment closeout preserving restrictions, changed duties and worker feedback, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
+      "vendorEvidenceRequired": [],
       "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who translates a contract into a person-level task statement with explicit exclusions; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who allocates actual host/supplier instruction and verifies worker understanding through an appropriate method; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who matches demonstrated scope and restrictions to the actual assignment without demanding irrelevant qualifications; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who uses the established supervision and escalation route for a changed host task; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who reconciles booking, access, receiving capability and changed-destination confirmations; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who closes an assignment while preserving assessment limits, worker feedback and original history; records the representative conditions, errors, correction, restrictions and outcome.",
-        "Actual entry, rescue, height-access, clinical, operator or trade performance requires its own approved safe practical evaluation by appropriately qualified assessors where assigned; online completion does not satisfy it.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
+        "29 CFR 1910.178(l)(2), (4), (6) — Operators of powered industrial trucks covered by this standard: Formal instruction, practical training and workplace performance evaluation are required before independent operation, with employer certification and applicable refresher/evaluation duties. A trainer/evaluator needs the knowledge, training and experience specified in (l)(2)(iii); an outside assessor is not universally required. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178"
       ],
       "scopeConfirmation": "Recruitment and project/logistics management are not direct evidence of hands-on execution; confirm each person’s duties.",
       "sourceUrls": [
@@ -2115,24 +1647,8 @@
         "VMS-D1F717C716",
         "VMS-F1192D9BF8"
       ],
-      "vendorEvidenceRequired": [
-        "Actual research scope statement separating computational, laboratory and field activities, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual protocol approval record linking method version and actual equipment or dataset, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual protocol hazard review linked to actual materials and equipment, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual data lineage record linking raw inputs, transformations and reported result, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual protocol change log identifying changed assumption and review disposition, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual research handover distinguishing findings, limitations and proposed applications, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who defines the actual research question and distinguishes desk analysis from laboratory or field intervention; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who reconciles protocol, worksheet and analysis versions and explains a methodological deviation; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who identifies actual material/equipment substitutions for competent technical and hazard review; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who traces data origin, transformations and exclusions while distinguishing observations from estimates; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who uses the approved change route for unexpected results without unauthorized expansion; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who hands over demonstrated findings, uncertainty and limits on operational application; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Actual hazardous experiment, pipeline operation, equipment inspection/repair, driving, coupling, loading or recovery requires its own method-specific instruction and qualified safe practical assessment where assigned. This online result does not satisfy those requirements.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Geology, IT or petroleum R&D may be desk-only; do not infer a laboratory or field experiment from the research label.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450",
@@ -2149,24 +1665,8 @@
         "VMS-8806161C51",
         "VMS-A9D9DD63DE"
       ],
-      "vendorEvidenceRequired": [
-        "Actual pipeline responsibility schedule separating tool supply, operation and interpretation, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual tool-run planning dossier linking line identity, tool configuration and technical approval, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual approved containment and energy-control documents linked to the actual equipment, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual communication plan naming field and control-room authority and confirmation route, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual inspection handover linking run identity, data coverage and interpretation limitations, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual post-run status record separating inspection completion, anomalies and operational release, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who maps tool support, pipeline operation, interpretation and release responsibilities; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who reconciles actual tool/line configuration against competent compatibility approval; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who identifies containment/energy evidence gaps and routes them to the operating authority without live intervention; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who uses the approved field/control-room confirmation and handover method in a safe fictional rehearsal; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who preserves data coverage, identity and method limitations in technical handover; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who reports abnormal status accurately and distinguishes vendor completion from operational release; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Actual hazardous experiment, pipeline operation, equipment inspection/repair, driving, coupling, loading or recovery requires its own method-specific instruction and qualified safe practical assessment where assigned. This online result does not satisfy those requirements.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Pipeline transportation is distinct from pipeline construction. Inline inspection is not automatically radiography.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119",
@@ -2215,24 +1715,8 @@
         "VMS-FAAD8B4D60",
         "VMS-FE4C6875DA"
       ],
-      "vendorEvidenceRequired": [
-        "Actual rental responsibility schedule listing included setup, inspection, maintenance and operation, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual asset dossier linking serial number, model, configuration and intended use, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual condition report identifying criteria, examined features and exclusions, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual defect register linking item, restriction, corrective evidence and release authority, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual handover pack separating delivery receipt, instructions, restrictions and acceptance, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual return assessment linking reported use, configuration changes and next-use disposition, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who maps included and excluded preparation, delivery, setup, maintenance and operating duties; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who matches the actual asset and configuration with current instructions and records; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who explains the examined scope and limitations without broadening a visual check into technical certification; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who preserves defect history and links actual corrective work to competent acceptance evidence; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who hands over delivery, setup and operational status as separate responsibility decisions; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who assesses return information through the approved process and preserves next-use restrictions; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Actual hazardous experiment, pipeline operation, equipment inspection/repair, driving, coupling, loading or recovery requires its own method-specific instruction and qualified safe practical assessment where assigned. This online result does not satisfy those requirements.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Rental without an operator is supply. Preserve this boundary for tanks, compressors, aircraft, lighting, power swivels and spill booms rather than assigning every operator credential to every rental.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training"
@@ -2266,14 +1750,8 @@
         "VMS-E292CCFE3B",
         "VMS-E3F80578C2"
       ],
-      "vendorEvidenceRequired": [
-        "Resolve exact method, equipment, included roles, delivery mode and jurisdiction with the responsible service owner.",
-        "Retain explicit holds for generic inspection/testing, Lift work, nitrogen service, broad engineering parents and unspecified passenger mode."
-      ],
-      "practicalAssessmentRequired": [
-        "After scope is established, route the actual qualification to the appropriate group; no completion claim is possible from the label alone.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Retain explicit holds for generic inspection/testing, Lift work, nitrogen service, broad engineering parents and unspecified passenger mode.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training"
@@ -2289,14 +1767,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify instrument type, measurement function, model and intended use of the result.",
-            "State whether work is bench calibration, installed verification, adjustment, repair or safety-function testing.",
-            "Provide the approved method, traceability basis, acceptance criteria and authority for release; identify any electrical or process interfaces."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the actual measurement/calibration method and any separately assigned electrical or safety-function work after those duties are confirmed."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2309,14 +1781,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify the asset, intended test purpose and applicable technical standard or approved specification.",
-            "State whether the service includes test design, load application, instrumentation, examination or interpretation.",
-            "Provide the approved test plan, competent design/acceptance roles and interface restrictions without inferring crane operation from the label."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the actual test and interpretation duties using an approved safe evaluation; separately verify plant or lifting roles only if supplied."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2329,14 +1795,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "State whether acquisition is ground-based, UAS, crewed aircraft or data processing only.",
-            "Identify the deliverable, accuracy/verification basis, equipment and assigned acquisition and interpretation roles.",
-            "Provide site-access and data-authority arrangements; route any confirmed aviation duty to its actual operating regime."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the actual acquisition or processing method; require aerial operating qualification only for an actual supplied aviation role."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2349,14 +1809,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "State whether duties are design/advice, equipment supply, commissioning, inerting, pressure testing or operation.",
-            "Identify equipment, nitrogen state, process interface, work location and jurisdiction.",
-            "Provide actual technical authority and method review; identify oxygen-deficiency, pressure or cryogenic interfaces only where present."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the confirmed engineering or operating duty; do not treat gas awareness as authorization to execute nitrogen operations."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2369,14 +1823,8 @@
           "sourceUrls": [
             "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc"
           ],
-          "vendorEvidenceRequired": [
-            "Identify the actual hired asset, intended use and preparation/inspection criteria.",
-            "State whether delivery, installation, connection, cleaning, maintenance, testing or operation is included or excluded.",
-            "Name the party supplying each included role and provide its specific handover and competence evidence."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess asset preparation and inspection if supplied; qualify operation, entry, testing or other execution only when expressly included."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2389,14 +1837,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Confirm each actual transport mode, route, vehicle/vessel/aircraft and jurisdiction.",
-            "State whether the vendor is a booking agent, carrier, vehicle-only supplier or provider of operating personnel.",
-            "Identify driver/master/pilot and passenger-assistance duties and provide mode-specific carrier and personnel evidence only for those confirmed duties."
-          ],
-          "practicalAssessmentRequired": [
-            "After mode and roles are known, assess the actual transport function and verify applicable operator/carrier credentials; passenger status alone does not imply operator qualification."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2411,14 +1853,8 @@
             "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
             "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
           ],
-          "vendorEvidenceRequired": [
-            "Identify asset/material, inspection objective and method, including whether inspection is visual, dimensional or another defined technique.",
-            "State whether scope includes access, isolation, equipment operation, testing or technical interpretation.",
-            "Provide adopted acceptance criteria, method-specific qualification practice and release authority."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the confirmed inspection method and interpretation level; separately qualify access or hazardous techniques only when actually assigned."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2433,14 +1869,8 @@
             "https://www.bharatpetroleum.in/pdf/vendor/JobCategory_other_than_Refinery.doc",
             "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
           ],
-          "vendorEvidenceRequired": [
-            "Ask the service owner what Lift work denotes in this contract: asset, function and actual activity.",
-            "Confirm whether the work is installation, maintenance, repair, inspection, lifting operation or another task; do not choose one from the label.",
-            "Identify equipment, jurisdiction, included personnel and applicable technical authority before routing to crane, elevator/trade or another qualification pathway."
-          ],
-          "practicalAssessmentRequired": [
-            "No universal practical qualification can be assigned until the actual lift asset and duty are identified; assess only the confirmed method and roles."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2453,14 +1883,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify discipline, deliverable, jurisdiction and whether a professional approval is supplied.",
-            "Separate desk design/review from field survey, installation, commissioning, refrigerant service and process operation.",
-            "Provide actual authority, technical method and competence evidence for the selected discipline and included field work."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the confirmed engineering deliverable and any actual field technique; apply trade or refrigerant requirements only to duties that trigger them."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2477,14 +1901,8 @@
             "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
             "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify NDT method, technique, material, product and interpretation level.",
-            "Provide the applicable employer written practice or adopted certification system and actual personnel evidence.",
-            "State whether radioactive sources, electrical work, entry or other access duties are actually supplied and route those separately."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the actual NDT method and interpretation level under the applicable practice; radiography qualification is conditional on confirmed radiographic work."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2497,14 +1915,8 @@
           "sourceUrls": [
             "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify property type, location, intended occupancy/use and jurisdiction.",
-            "State whether the vendor provides only leasing or also maintenance, facilities operation, construction or emergency functions.",
-            "Provide responsibility allocation and evidence for actual included services; do not assign unrelated plant or trade credentials to a leasing-only role."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess only actual facilities or other execution duties when included; a leasing-only scope requires appropriate administrative and handover capability rather than invented trade performance."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2517,14 +1929,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify the actual service: product supply, condition sampling/analysis, replenishment, flushing or another method.",
-            "State equipment, materials, access and whether machinery isolation or operation is included.",
-            "Provide manufacturer/employer method, material information and role-specific acceptance authority."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the confirmed handling, sampling, analysis or machinery method; separately qualify energy-control or operating roles only where assigned."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2537,14 +1943,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify engineering discipline, deliverable, pipeline type and jurisdiction.",
-            "Separate desk engineering, survey, construction support, inspection, commissioning and operation.",
-            "Provide the actual technical approval authority and evidence for any included field method or regulated professional duty."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the actual engineering deliverable and confirmed field duties; pipeline operating qualification is conditional on an actual covered operating task."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2557,14 +1957,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify navigation/positioning mode, platform, equipment and intended deliverable.",
-            "State whether personnel operate a vessel/aircraft, provide technical positioning support or process data only.",
-            "Provide mode-specific authority and competence evidence for supplied roles; do not infer pilot or mariner duty from a positioning label."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the confirmed positioning method and platform interfaces; operator credentials apply only where the person actually supplies that operating role."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2579,14 +1973,8 @@
             "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc",
             "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify whether laundry is ordinary domestic/workwear, contaminated industrial material, clinical linen or another stream.",
-            "State materials/contamination expected, actual sorting/handling/process duties and equipment supplied.",
-            "Provide the applicable employer process and exposure assessment; require bloodborne or chemical programs only where actual exposure/duty makes them applicable."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the actual laundering and material-handling method; clinical exposure or hazardous decontamination competence is conditional on confirmed material and duties."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2599,14 +1987,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify whether the service designs systems, audits records, develops content, delivers training or assesses practical performance.",
-            "Name the subjects, audience, delivery method and any claimed qualification outcome.",
-            "Provide subject expertise, assessment authority and validity evidence for actual deliverables; do not treat consultancy as universal operator qualification."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the actual consultancy, instructional or assessment method; technical practical assessment requires appropriate subject capability only for subjects actually supplied."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2619,14 +2001,8 @@
           "sourceUrls": [
             "https://www.bharatpetroleum.in/pdf/vendor/Job_category_Registration_Refinery.doc"
           ],
-          "vendorEvidenceRequired": [
-            "Identify exchanger type, test objective, method, equipment and whether it is installed or removed.",
-            "State containment, energy, chemical, access and interpretation duties actually included.",
-            "Provide approved test plan, criteria and qualified technical acceptance authority."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the confirmed test method and interpretation duty with safe approved evaluation; separately qualify pressure, NDT, electrical or entry roles only where present."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2639,14 +2015,8 @@
           "sourceUrls": [
             "https://www.achilles.com/app/uploads/2023/06/Global-Energy-Product-Codes-Guide.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify the actual material, deliverable and engineering method.",
-            "Separate desk specification/review from laboratory work, inspection, coating application and field preparation.",
-            "Provide technical approval authority and actual field/material evidence; do not infer asbestos or another specific hazardous material without evidence."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the confirmed engineering or technical method; hazardous-material and application skills remain conditional on actual included materials and work."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2659,14 +2029,8 @@
           "sourceUrls": [
             "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify the permit type, jurisdiction, applicant and actual deliverable.",
-            "State whether duties are administrative coordination, technical study, professional certification or employer work-permit authority.",
-            "Provide the relevant authorization and subject competence; distinguish submission support from the regulator or site authority issuing approval."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the actual application, technical study or work-permit method; professional or operational qualification depends on the confirmed duty."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2679,14 +2043,8 @@
           "sourceUrls": [
             "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Identify whether the service is allocation consultancy, data review, measurement design, calibration, sampling or installed maintenance.",
-            "Name the deliverable, measurement method, equipment and any field/process duties actually included.",
-            "Provide technical authority and method-specific evidence for that scope; preserve a consultancy-only boundary where applicable."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the confirmed allocation/measurement analysis or field method; do not assign meter-maintenance or process-operation competence to consultancy-only personnel."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         },
         {
@@ -2699,14 +2057,8 @@
           "sourceUrls": [
             "https://www.sequal.co.uk/wp-content/uploads/2025/03/SEQual-Product-and-Service-Codes-V6-2022-11.pdf"
           ],
-          "vendorEvidenceRequired": [
-            "Confirm land, marine, aviation or other actual mode and the service platform.",
-            "Identify advisory, positioning, data-processing and direct operating responsibilities separately.",
-            "Provide jurisdiction and mode-specific evidence for confirmed duties and preserve passenger/consultant boundaries."
-          ],
-          "practicalAssessmentRequired": [
-            "Assess the actual navigation method and assigned platform role; pilot, mariner or other operator qualifications are conditional on confirmed operating duties."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "status": "open_until_actual_scope_confirmed"
         }
       ]
@@ -2762,24 +2114,8 @@
         "VMS-F7C57D3832",
         "VMS-FA9D219F72"
       ],
-      "vendorEvidenceRequired": [
-        "Actual transport role profile linking vehicle combination, cargo, route and supplied driver, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual driver readiness record separating credential verification and combination-specific assessment, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual vehicle-trailer defect and release record linked to current assigned units, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual load-specific securement plan linked to actual cargo and vehicle, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual journey plan linking approved route, receiving readiness and change contacts, with item/person/task identity, applicable revision, acceptance authority and limitations.",
-        "Actual breakdown and delivery handoff separating driver reporting, recovery and cargo acceptance, with item/person/task identity, applicable revision, acceptance authority and limitations."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who defines the actual driver, dispatch, loading and receiving duties for the vehicle/combination/load; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who matches verified credential scope and restrictions with separate employer practical evidence; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who reconciles each unit’s actual defect and authorized release status; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who recognizes changed cargo and obtains qualified load-specific securement review; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who coordinates changed route/destination and actual receiving readiness through the agreed process; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Qualified assessor observes the assigned person who uses the approved breakdown/reporting route and stays within the assigned recovery boundary; records actual representative conditions, errors, correction, restrictions and outcome.",
-        "Actual hazardous experiment, pipeline operation, equipment inspection/repair, driving, coupling, loading or recovery requires its own method-specific instruction and qualified safe practical assessment where assigned. This online result does not satisfy those requirements.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Rental self-drive, chauffeured service, carrier operation and office dispatch are different roles. Regulated hazardous cargo is separately classified under G01.",
       "sourceUrls": [
         "https://www.fmcsa.dot.gov/regulations/cargo-securement/cargo-securement-rules"
@@ -2796,24 +2132,8 @@
         "VMS-5704D8DC6E",
         "VMS-60CC274EB3"
       ],
-      "vendorEvidenceRequired": [
-        "Confirmed language, subject, audience and service scope, with technical approval retained by the responsible discipline.",
-        "Actual source/translation revisions, agreed critical terminology and subject-review arrangements.",
-        "Evidence of relevant language proficiency and a safe comprehension-confirmation exercise for the actual audience.",
-        "Actual media equipment, approved ground locations, site restrictions and separate UAS/aviation scope evidence only if aerial work is supplied.",
-        "Confirmed destination, host entry decision, transport/support responsibilities and change-contact route.",
-        "Authorized recording/translation use, information-handling route, material-edit history and technical-content acceptance."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who distinguishes faithful language work from technical approval and routes ambiguity to the responsible speaker; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who resolves a critical terminology/version discrepancy with the author and preserves the accepted meaning; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who conducts a safe fictional comprehension check without leading or removing restrictions; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who identifies actual ground-media equipment/access interfaces and separates proposed aerial work; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who reconciles booked travel with actual host permission and support-role boundaries; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who preserves technical context and authorized use in an edited recording or translated deliverable; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Actual language/equipment skill, hazardous response, protective-system servicing or other supplied execution requires the relevant method-specific practical evaluation and applicable credentials. This online knowledge result does not establish those qualifications.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Ground photography is not UAS operation; an interpreter does not acquire the technical trade authority of the people being interpreted.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training"
@@ -2830,24 +2150,8 @@
         "VMS-AA94016007",
         "VMS-BE432E86FE"
       ],
-      "vendorEvidenceRequired": [
-        "Employer response organization statement identifying actual duty levels, limitations and assigned personnel; maintenance and notification roles distinguished.",
-        "Actual command, accountability, external-response and confirmed transfer/communication arrangements.",
-        "Role-specific training and practical assessment with applicable health/respiratory prerequisites confirmed through authorized confidential processes.",
-        "Actual equipment identities, current assurance/availability and site hazard-information basis supporting the declared capability.",
-        "Safe exercise objectives, qualified evaluators, observed outcomes, limitations and corrective-action evidence; tabletop separated from physical assessment.",
-        "Post-response equipment/personnel status, residual site restrictions, authorized release and effectiveness evidence for actual corrective actions."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who classifies the actual response duty without treating maintenance or awareness as hazardous intervention qualification; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who uses the actual command/accountability and transfer-confirmation arrangement in a safe tabletop; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who matches duty-specific readiness evidence and authorized prerequisite status to the actual roster; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who reconciles declared capability with equipment availability and current site information; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who evaluates a safe exercise against observable objectives while separating discussion from physical performance; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who hands over residual readiness/site conditions and verifies action effectiveness before making broader capability claims; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Actual language/equipment skill, hazardous response, protective-system servicing or other supplied execution requires the relevant method-specific practical evaluation and applicable credentials. This online knowledge result does not establish those qualifications.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Fire-system maintenance does not make the technician a firefighter. Recognition/notification, defensive response and hazardous intervention have different roles.",
       "sourceUrls": [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.156",
@@ -2863,24 +2167,8 @@
         "VMS-3E9BC25BBC",
         "VMS-6E031C6818"
       ],
-      "vendorEvidenceRequired": [
-        "Actual system/function/asset scope and assigned service personnel’s system-specific competence, with response roles excluded unless separately supplied.",
-        "Current configuration, manufacturer instructions, approved service/test method and controlled revisions covering affected interfaces.",
-        "Actual impairment approval, affected functions, notification owners, temporary arrangements and change/reassessment conditions.",
-        "Asset-specific functional test results against approved criteria, including the required local and remote/interface verification and limitations.",
-        "Fault history, corrective activity, accepted replacement/configuration evidence and competent verification/disposition.",
-        "Restoration acceptance by the designated authority, remaining restrictions, status notifications and linked impairment/service history."
-      ],
-      "practicalAssessmentRequired": [
-        "Qualified assessor observes the assigned person who identifies the actual protective functions, assigned service scope and separate emergency-response boundary; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who reconciles controller/configuration and instruction versions through the technical authority; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who identifies the affected protection and obtains actual impairment coordination through the assigned process; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who records bounded test observations and required interface evidence against approved criteria; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who preserves fault recurrence and links corrective work to qualified verification without treating reset as repair; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Qualified assessor observes the assigned person who hands over completed work, verified functions and accepted restoration as distinct status decisions; records representative conditions, errors, correction, limitations and assessment outcome.",
-        "Actual language/equipment skill, hazardous response, protective-system servicing or other supplied execution requires the relevant method-specific practical evaluation and applicable credentials. This online knowledge result does not establish those qualifications.",
-        "The assessment record must identify the worker, assessor and assessor competence basis, actual task/equipment or method, observed criteria and results, date, limits and reassessment triggers."
-      ],
+      "vendorEvidenceRequired": [],
+      "practicalAssessmentRequired": [],
       "scopeConfirmation": "Maintain the distinction between servicing a protective system and performing fire brigade response.",
       "sourceUrls": [
         "https://www.osha.gov/safety-management/education-training",
@@ -2977,12 +2265,8 @@
           "serviceIds": [
             "h2s_monitoring_safety_trailer"
           ],
-          "vendorEvidenceRequired": [
-            "Assigned detector model, relevant hazards, alarm/escape instructions and site communication arrangements."
-          ],
-          "practicalAssessmentRequired": [
-            "Observe pre-use inspection, specified response check, correct wearing, alarm recognition and escape/reporting actions."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "scopeConfirmation": "Actual exposure and assigned detector use; teach only the relevant user functions.",
           "sourceUrls": [
             "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
@@ -2998,12 +2282,8 @@
           "serviceIds": [
             "h2s_monitoring_safety_trailer"
           ],
-          "vendorEvidenceRequired": [
-            "Approved monitoring plan with actual detector/sensor model, target gases, sampling arrangement, positioning basis, alarm authority and handover contacts."
-          ],
-          "practicalAssessmentRequired": [
-            "Observe model-specific setup, approved response checks, interpretation of measurement limitations, alarm communication and defect handling."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "scopeConfirmation": "Actual setup, operation, checking or monitoring duties.",
           "sourceUrls": [
             "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
@@ -3019,12 +2299,8 @@
           "serviceIds": [
             "h2s_monitoring_safety_trailer"
           ],
-          "vendorEvidenceRequired": [
-            "Named gas-testing designation, actual permit/space/task scope, approved sampling procedure and instrument assurance records."
-          ],
-          "practicalAssessmentRequired": [
-            "Qualified gas-testing assessor observes the assigned sampling method, timing/limitations, result interpretation, permit communication and response to invalid readings."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "scopeConfirmation": "Only a formally assigned gas-testing or permit-verification duty.",
           "sourceUrls": [
             "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
@@ -3040,11 +2316,9 @@
           "serviceIds": [
             "h2s_monitoring_safety_trailer"
           ],
-          "vendorEvidenceRequired": [
-            "Applicable respiratory program, assigned equipment, selection authority, required medical/fit evidence held through the appropriate confidential process, and breathing-air assurance."
-          ],
+          "vendorEvidenceRequired": [],
           "practicalAssessmentRequired": [
-            "Observe equipment-specific inspection, fitting/use and emergency actions; separately assess breathing-air servicing only if assigned."
+            "29 CFR 1910.134(e), (f), (k)(1) — Required respirator users; tight-fitting facepieces require the applicable fit test: Complete the required medical evaluation before fit testing or use, the applicable fit test, and training that enables demonstration of the listed knowledge and respirator-use skills. These duties apply to the actual respirator assignment, not everyone taking awareness training. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
           ],
           "scopeConfirmation": "Only actual respiratory-equipment duties or required respirator use; not every H2S worker.",
           "sourceUrls": [
@@ -3061,11 +2335,9 @@
           "serviceIds": [
             "h2s_monitoring_safety_trailer"
           ],
-          "vendorEvidenceRequired": [
-            "Approved rescue mode, team roster, equipment, response arrangements, relevant medical/first-aid prerequisites and exercise records."
-          ],
+          "vendorEvidenceRequired": [],
           "practicalAssessmentRequired": [
-            "Qualified rescue assessor observes team communications, equipment use and scenario performance using a safe representative exercise; online completion authorizes no entry."
+            "29 CFR 1910.146(k)(2)(iv) — Employer-designated employees performing covered permit-space rescue: Practice the assigned permit-space rescues at least every 12 months using the specified actual or representative spaces, subject to the real-rescue exception. This is a rescue-team duty, not a practical test required of every awareness-course learner. Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
           ],
           "scopeConfirmation": "Actual assigned emergency/rescue responsibilities.",
           "sourceUrls": [
@@ -3082,12 +2354,8 @@
           "serviceIds": [
             "h2s_monitoring_safety_trailer"
           ],
-          "vendorEvidenceRequired": [
-            "Manufacturer/model service instructions, authorized calibration/repair scope, suitable reference gas/standards with expiry and traceability, and release criteria."
-          ],
-          "practicalAssessmentRequired": [
-            "Model-competent assessor observes calibration/service, response to failed checks, records and bounded release-to-service decision."
-          ],
+          "vendorEvidenceRequired": [],
+          "practicalAssessmentRequired": [],
           "scopeConfirmation": "Only calibration, maintenance or repair functions actually supplied.",
           "sourceUrls": [
             "https://www.unitedsafety.net/industries/oil-and-gas/upstream/upstream-solutions/",
