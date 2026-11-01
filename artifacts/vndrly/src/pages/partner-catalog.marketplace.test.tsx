@@ -100,6 +100,8 @@ async function discover() {
   await screen.findByRole("region", { name: "MidCon" });
 }
 beforeEach(async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-29T12:00:00Z"));
   await i18n.changeLanguage("en");
   vi.stubEnv("VITE_SEMANTIC_SERVICE_MARKETPLACE_ENABLED", "true");
   requests = [];
@@ -207,6 +209,7 @@ afterEach(() => {
   client?.clear();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
+  vi.useRealTimers();
 });
 
 describe("partner marketplace", () => {

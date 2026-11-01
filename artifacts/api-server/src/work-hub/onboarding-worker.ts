@@ -81,7 +81,26 @@ export async function runOnboardingWork(now = new Date()) {
         .select()
         .from(instances)
         .where(
-          sql`${instances.assignmentMetadata}->>'status'='completed' AND (${instances.assignmentMetadata}->>'refresherDueAt')::timestamptz<=${now} AND ${instances.assignmentMetadata}->>'refresherScheduledAt' IS NULL`,
+          sql`${instances.assignmentMetadata}->>'status'='completed'
+          AND (${instances.assignmentMetadata}->>'refresherDueAt')::timestamptz<=${now}
+          AND ${instances.assignmentMetadata}->>'refresherScheduledAt' IS NULL
+          AND EXISTS (
+            SELECT 1 FROM ${memberships} INNER JOIN ${users} ON ${users.id}=${memberships.userId}
+            WHERE ${memberships.id}=(${instances.assignmentMetadata}->>'membershipId')::integer
+            AND ${memberships.userId}=${instances.assigneeUserId} AND ${users.suspendedAt} IS NULL
+          )
+          AND EXISTS (
+            SELECT 1 FROM work_hub_form_templates due_course
+            WHERE due_course.id=${instances.templateId}
+            AND due_course.library_metadata->>'state'='published'
+            AND due_course.library_metadata->>'kind'='training'
+            AND NOT EXISTS (
+              SELECT 1 FROM work_hub_form_templates newer
+              WHERE newer.owner_org_type=due_course.owner_org_type AND newer.owner_org_id=due_course.owner_org_id
+              AND newer.library_metadata->>'seriesId'=due_course.library_metadata->>'seriesId'
+              AND newer.current_version>due_course.current_version AND newer.library_metadata->>'state'<>'draft'
+            )
+          )`,
         )
         .limit(25);
       for (const candidate of refreshers) {

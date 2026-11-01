@@ -50,6 +50,8 @@ let requests: { path: string; body: any; headers: Headers; method: string }[];
 let stale: boolean;
 let client: QueryClient;
 beforeEach(async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-29T12:00:00Z"));
   await i18n.changeLanguage("en");
   requests = [];
   stale = false;
@@ -93,6 +95,7 @@ beforeEach(async () => {
 afterEach(() => {
   client.clear();
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 const mount = (component: React.ReactNode) =>
   render(

@@ -198,6 +198,32 @@ describe('platform-owned required training against isolated persistence',()=>{
   expect(synthetic(await companyRequiredTraining(db,c.owner))[0].completed).toBe(false);
  });
 
+ it('does not let 25 expired suspended-user or vanished-membership records consume the active renewal batch',async()=>{
+  const c=await company(),learner=await c.person('Gate attendant'),suspended=await c.person('Gate attendant');await selectService(c);const course=await publish(c);
+  const missingMembershipId=1000000000+c.admin.member.id;
+  expect(await db.select({id:memberships.id}).from(memberships).where(eq(memberships.id,missingMembershipId))).toHaveLength(0);
+  const expiredDueAt='2020-01-01T00:00:00Z';
+  // Insert the invalid histories before the valid candidate: these are the
+  // records which previously occupied LIMIT 25 indefinitely. The nonexistent
+  // membership is JSON history only; no actual membership is deleted.
+  const blocked=await db.insert(instances).values(Array.from({length:25},(_,index)=>({templateId:course.row.id,templateVersion:1,assigneeUserId:index<13?suspended.user.id:learner.user.id,definitionSnapshot:[],createdAt:new Date('2020-01-01T00:00:00Z'),assignmentMetadata:AssignmentMetadataSchema.parse({assignmentId:randomUUID(),sourceItemId:course.row.id,contentVersion:1,membershipId:index<13?suspended.member.id:missingMembershipId,status:'completed',assignedAt:'2019-01-01T00:00:00Z',dueAt:'2019-02-01T00:00:00Z',refresherDueAt:expiredDueAt,refresherScheduledAt:null})}))).returning();
+  await db.update(users).set({suspendedAt:new Date()}).where(eq(users.id,suspended.user.id));
+  expect(await db.transaction(tx=>ensureRequiredTraining(tx,c.owner,learner.user.id))).toBe(1);
+  const active=(await assigned(course.row.id)).find(row=>!blocked.some(old=>old.id===row.id))!;
+  const completed=await complete(c,learner,active.id);
+  await db.update(instances).set({assignmentMetadata:{...completed.assignment,refresherDueAt:expiredDueAt,refresherScheduledAt:null}}).where(eq(instances.id,active.id));
+
+  const scanAt=new Date();await runOnboardingWork(scanAt);
+  let rows=await assigned(course.row.id);expect(rows).toHaveLength(27);
+  const renewed=rows.find(row=>row.id!==active.id&&!blocked.some(old=>old.id===row.id))!;
+  expect(renewed.assigneeUserId).toBe(learner.user.id);
+  expect(AssignmentMetadataSchema.parse(renewed.assignmentMetadata)).toMatchObject({status:'assigned',membershipId:learner.member.id});
+  expect(AssignmentMetadataSchema.parse(rows.find(row=>row.id===active.id)!.assignmentMetadata)).toMatchObject({refresherDueAt:expiredDueAt,refresherScheduledAt:scanAt.toISOString()});
+  for(const invalid of blocked)expect(AssignmentMetadataSchema.parse(rows.find(row=>row.id===invalid.id)!.assignmentMetadata)).toMatchObject({refresherDueAt:expiredDueAt,refresherScheduledAt:null});
+  expect(synthetic(await companyRequiredTraining(db,c.owner))).toEqual([expect.objectContaining({userId:learner.user.id,completed:false})]);
+  await runOnboardingWork(new Date(scanAt.getTime()+60000));rows=await assigned(course.row.id);expect(rows).toHaveLength(27);
+ });
+
  it('recomputes new hires and changed roles, deduplicates overlapping services/rules and safely reuses assignments on repeated scans',async()=>{
   const c=await company(),gate=await c.person('Gate attendant'),office=await c.person('Office Staff');await selectService(c);await selectService(c);const course=await publish(c);
   expect(synthetic(await companyRequiredTraining(db,c.owner))).toHaveLength(1);expect(await db.transaction(tx=>ensureRequiredTraining(tx,c.owner))).toBe(1);expect(await db.transaction(tx=>ensureRequiredTraining(tx,c.owner))).toBe(0);
