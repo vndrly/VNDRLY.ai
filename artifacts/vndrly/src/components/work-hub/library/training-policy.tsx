@@ -20,7 +20,7 @@ export default function TrainingPolicy({itemId,onSaved}:{itemId:string;onSaved:(
  const data=api.data,disabled=api.busy||api.uncertain;
  const toggle=<K extends 'requiredUserIds'|'requiredStaffRoleIds'|'requiredGroupIds'|'attachmentFileIds'>(key:K,id:Policy[K][number])=>setDraft({...draft,[key]:(draft[key] as (number|string)[]).includes(id)?draft[key].filter(value=>value!==id):[...draft[key],id]});
  const save=async()=>{try{const payload=TrainingPolicyDetailsSchema.parse({...draft,links:linksText.split('\n').filter(line=>line.trim()).map(line=>{const [title,...url]=line.split('|');return {title:title.trim(),url:url.join('|').trim()};})});await api.send(`/api/work-hub/library/${itemId}/training-policy`,payload,data.version);await api.reload();await onSaved();setNotice(t('trainingPolicy.saved'));return true;}catch(error){setNotice(error instanceof z.ZodError?t('trainingPolicy.invalid'):error instanceof Error?error.message:t('trainingPolicy.failed'));return false;}};
- return <section className="space-y-4 rounded-xl border-2 border-[var(--brand-primary)] bg-card p-5 text-foreground" data-library-card="" data-testid="training-policy-details">
+ return <section className="space-y-4 rounded-xl border-2 border-[var(--brand-primary)] p-5 text-foreground" data-library-card="" data-testid="training-policy-details">
   <h2 className="text-xl font-bold">{t('trainingPolicy.heading')}</h2>
   <TogglePillButton tone="blue" onClick={()=>setShowServices(!showServices)}>{t('trainingPolicy.showServices')}</TogglePillButton>
   {showServices&&<TrainingServiceConnections familyId={data.familyId}/>}
@@ -47,3 +47,4 @@ export default function TrainingPolicy({itemId,onSaved}:{itemId:string;onSaved:(
   {assign&&data.trainingItemId&&<AssignmentReview kind="training" initialItemId={data.trainingItemId} initialUserIds={data.requiredPeopleIds} initialGroupIds={data.policy.requiredGroupIds} onSaved={async()=>{setAssign(false);await api.reload();}}/>}
  </section>;
 }
+
