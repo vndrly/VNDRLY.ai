@@ -1,3 +1,6 @@
+import {RepositoryFolders} from "./repository-folders";
+import {TravelDesk} from "./travel-desk";
+import "./repository-theme.css";
 import { EquipmentWorkspace } from "../equipment/equipment-workspace";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useAuth } from "@/hooks/use-auth";
@@ -235,32 +238,31 @@ function ExistingUploads() {
 }
 export function FilesAndNotes() {
   const [tab, setTab] = useState("files");
+  const [folderView,setFolderView]=useState<string|null>(null);
   const brand = useBrand();
   const brandPillSrc = brandImagePillSrc(brand.primary, brand.name);
   return (
-    <section data-work-hub-card className={`mx-auto max-w-7xl p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}>
-      <WorkHubPageHeading module="files" title="Files & Notes" />
+    <section data-work-hub-card className={`mx-auto max-w-7xl p-4 md:p-6 rounded-xl vendor-repository`}>
+      <WorkHubPageHeading module="files" title="File Library" />
       <div className="my-5 flex flex-wrap gap-2" role="tablist">
-        {["files", "notes", "equipment", "existing"].map((key) => (
-          <PngPillButton
+        {["files", "travel", "notes", "equipment", "existing"].map((key) => (
+          <button type="button" className="repo-action"
             key={key}
             role="tab"
             aria-selected={tab === key}
             aria-pressed={tab === key}
-            activeSrc={brandPillSrc}
-            idleSrc={tab === key ? brandPillSrc : undefined}
             onClick={() => setTab(key)}
           >
             {key === "files"
               ? "File library"
-              : key === "notes"
+              : key === "travel" ? "Travel" : key === "notes"
                 ? "Native notes"
                 : key === "equipment" ? "Equipment" : "Existing uploads"}
-          </PngPillButton>
+          </button>
         ))}
       </div>
-      {tab === "equipment" ? <EquipmentWorkspace /> : tab === "files" ? (
-        <WorkHubFiles />
+      {tab === "travel" ? <TravelDesk/> : tab === "equipment" ? <EquipmentWorkspace /> : tab === "files" ? (
+        <><RepositoryFolders onSelect={(id,category)=>category==="Travel"?setTab("travel"):setFolderView(id)}/>{folderView&&<button className="repo-action" onClick={()=>setFolderView(null)}>All folders</button>}<WorkHubFiles folderView={folderView}/></>
       ) : tab === "notes" ? (
         <NativeNotes />
       ) : (

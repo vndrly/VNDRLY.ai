@@ -1,3 +1,4 @@
+import {VendorAugmented} from "../repository-certifications";
 import React, { useState } from "react";
 import {RefreshCw} from "lucide-react";
 import {WorkHubFiles} from "../files";
@@ -128,11 +129,12 @@ export default function LibraryWorkspace({
         : list;
   return (
     <View style={{ gap: 12 }}>
+      {tab==="augmented"&&<VendorAugmented/>}
       <View style={{...card,position:"relative"}}>
         <button type="button" aria-label={t("workHubLibrary.refresh")} title={t("workHubLibrary.refresh")} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-md text-inherit hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-current" onClick={()=>void relevant.reload()}><RefreshCw aria-hidden="true" className="h-4 w-4"/></button>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8,paddingRight:36 }}>
           {(canManage
-            ? ["library", "training", "bundles", "assignments"]
+            ? ["library", "training", "bundles", "augmented", "assignments"]
             : ["toComplete"]
           ).map((value) => (
             <TogglePillButton
@@ -145,7 +147,7 @@ export default function LibraryWorkspace({
                 setNotice("");
               }}
             >
-              {t(`workHubLibrary.${value}`)}
+              {value==="library"?"From Library":value==="training"?"VNDRLY/U Courses":value==="bundles"?"VNDRLY/U Certifications":value==="augmented"?"Vendor Augmented":t(`workHubLibrary.${value}`)}
             </TogglePillButton>
           ))}
         </View>

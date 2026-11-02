@@ -1,5 +1,6 @@
+import { NativeRepository } from "../NativeRepository";
 import React, { useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, TextInput, View, Switch } from "react-native";
 import { router } from "expo-router";
 import { z } from "zod/v4";
 import { AssignmentMetadataSchema } from "@workspace/api-zod";
@@ -70,6 +71,7 @@ export default function LibraryWorkspace({
     [archived, setArchived] = useState(false),
     [create, setCreate] = useState(false),
     [notice, setNotice] = useState("");
+  const [myServices, setMyServices] = useState(false);
   const list = useFormCampaigns(
     `/api/work-hub/library${archived ? "?archived=true" : ""}`,
     (v) => itemsSchema.parse(v),
@@ -114,10 +116,19 @@ export default function LibraryWorkspace({
         : list;
   return (
     <View style={{ gap: 12 }}>
+      {tab === "augmented" && <NativeRepository augmentationsOnly />}
+      {tab === "library" && <NativeRepository filesOnly trainingOnly />}
+      {tab === "training" && (
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Text style={label}>All</Text>
+          <Switch value={myServices} onValueChange={setMyServices} />
+          <Text style={label}>My training, by service</Text>
+        </View>
+      )}
       <View style={card}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           {(canManage
-            ? ["library", "bundles", "assignments"]
+            ? ["library", "training", "bundles", "augmented", "assignments"]
             : ["toComplete"]
           ).map((value) => (
             <TogglePillButton
@@ -130,7 +141,11 @@ export default function LibraryWorkspace({
                 setNotice("");
               }}
             >
-              {t(`workHubLibrary.${value}`)}
+              {value === "training"
+                ? "VNDRLY/U Courses"
+                : value === "augmented"
+                  ? "Vendor Augmented"
+                  : t(`workHubLibrary.${value}`)}
             </TogglePillButton>
           ))}
         </View>
@@ -147,7 +162,7 @@ export default function LibraryWorkspace({
             padding: 12,
           }}
         />
-        {canManage && ["library", "bundles"].includes(tab) && (
+        {canManage && ["bundles"].includes(tab) && (
           <>
             <TogglePillButton
               color="brand"
@@ -233,11 +248,15 @@ export default function LibraryWorkspace({
               </TogglePillButton>
             </View>
           ))}
-      {["library", "bundles"].includes(tab) &&
+      {["training", "bundles"].includes(tab) &&
         list.data?.items
           .filter(
             (i) =>
-              (tab === "bundles" ? i.kind === "bundle" : i.kind !== "bundle") &&
+              (tab === "bundles"
+                ? i.kind === "bundle"
+                : tab === "training"
+                  ? i.kind === "training"
+                  : !["bundle", "training"].includes(i.kind)) &&
               i.title.toLowerCase().includes(search.toLowerCase()),
           )
           .map((item) => (

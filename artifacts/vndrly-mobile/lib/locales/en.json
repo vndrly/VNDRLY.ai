@@ -16,7 +16,7 @@
     "level2": "50% — implemented with current records",
     "level3": "75% — implementation checked",
     "level4": "100% — effectiveness demonstrated",
-    "library": "Library"
+    "library": "From Library"
   },
   "equipment": {
     "title": "Equipment Inventory"
@@ -280,7 +280,7 @@
     "releaseHoldReason": "Reason for releasing this hold",
     "releaseNamedHold": "Release hold: {{name}}",
     "title": "Files & Inventory",
-    "filesNotes": "Files & Notes",
+    "filesNotes": "File Library",
     "inventory": "Inventory",
     "uploadFile": "Upload File",
     "addNote": "Add Note",
@@ -3813,9 +3813,9 @@
     "status_exempted": "Exempted",
     "assignedWork": "Assigned work",
     "invalidLink": "Invalid assignment link.",
-    "manage": "Manage Forms, Policies, Polls & Training",
+    "manage": "VNDRLY/U",
     "library": "Library",
-    "bundles": "Bundles",
+    "bundles": "VNDRLY/U Certifications",
     "assignments": "Assignments",
     "toComplete": "To Complete",
     "kind_policy": "Policy Acknowledgment",

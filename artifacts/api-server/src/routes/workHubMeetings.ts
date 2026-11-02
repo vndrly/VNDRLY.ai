@@ -1,3 +1,4 @@
+import {indexMeetingRepositoryFile} from "../work-hub/repository-meeting-files";
 import { applyMeetingSpeakRequest, MeetingSpeakRequestError } from "../work-hub/meeting-speak-request";
 import { canManageLiveMeeting, requireRoomAdmission } from "../work-hub/live-meetings";
 import { queueLiveMeetingNotification } from "../work-hub/live-meeting-notifications";
@@ -1561,6 +1562,7 @@ router.put("/:occurrenceId/files/:fileId", express.raw({ type: () => true, limit
   await getObjectStore().putObject(storageKey, contentType, req.body, { owner: String(ctx.session.userId), visibility: "private" });
   afterRollback(req, () => getObjectStore().deleteObject(storageKey));
   const [message] = await tx.insert(chat).values({ id, occurrenceId: ctx.id, userId: ctx.session.userId, recipientUserId, body: fileName, messageType: "attachment", attachment: { fileName, contentType, byteSize: req.body.length, storageKey, sha256 } }).returning();
+  await indexMeetingRepositoryFile(tx,message,{type:ctx.meeting.ownerOrgType,id:ctx.meeting.ownerOrgId});
   await audit(tx, ctx, "meeting.file_added", { fileId: id, private: recipientUserId !== null });
   const activity = { ...ctx.runtime.activity }; delete activity[ctx.session.userId];
   await saveRuntime(tx, ctx, { ...ctx.runtime, activity });

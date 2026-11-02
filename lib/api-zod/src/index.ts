@@ -110,3 +110,4 @@ export * from "./gate-arrivals";
 export * from "./site-shift-plan";
 export * from "./safety-maturity";
 export * from "./safety-library-catalog";
+export * from './vendor-repository';

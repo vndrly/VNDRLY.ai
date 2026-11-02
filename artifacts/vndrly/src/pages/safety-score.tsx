@@ -1,3 +1,4 @@
+import {VendorBonusScore} from "@/components/work-hub/repository-certifications";
 import { SafetyMaturitySummary } from "@/components/safety-maturity-summary";
 import CompanyTrainingBaseline from '@/components/company-training-baseline';
 import EnergySafetyCore from '@/components/energy-safety-core';
@@ -16,5 +17,6 @@ export default function CompanySafetyScorePage() {
  <CompanyTrainingBaseline />
  <EnergySafetyCore />
  <SafetyMaturitySummary />
+ <VendorBonusScore/>
  </section>;
 }

@@ -1,3 +1,4 @@
+vi.mock("./NativeRepository",()=>({NativeRepository:()=>null}));
 import React from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -19,7 +20,7 @@ vi.mock("expo-sharing", () => ({ isAvailableAsync: vi.fn(), shareAsync: vi.fn() 
 vi.mock("expo-crypto", () => ({ CryptoDigestAlgorithm: { SHA256: "SHA-256" }, digest: network.digest }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, values?: Record<string, unknown>) => {
   const labels: Record<string, string> = {
-    "filesInventory.filesNotes": "Files & Notes", "filesInventory.inventory": "Inventory",
+    "filesInventory.filesNotes": "File Library", "filesInventory.inventory": "Inventory",
     "filesInventory.uploadFile": "Upload File", "filesInventory.addNote": "Add Note",
     "filesInventory.reservedNotice": "{{name}}: reserved. Uploading…",
     "filesInventory.finalizedNotice": "{{name}}: finalized and private.",
@@ -60,7 +61,7 @@ describe("Files & Inventory", () => {
   });
   it("shows both cards and permitted creation actions", () => {
     render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[channel]} onRefresh={vi.fn()} />);
-    expect(screen.getByText("Files & Notes")).toBeTruthy();
+    expect(screen.getByText("File Library")).toBeTruthy();
     expect(screen.getByText("Inventory")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Upload File" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Add Note" })).toBeTruthy();

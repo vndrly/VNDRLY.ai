@@ -1,3 +1,4 @@
+import {NativeRepository} from "@/components/work-hub/NativeRepository";
 import NativeOperations from "@/components/work-hub/NativeOperations";
 import { Feather } from "@expo/vector-icons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -230,7 +231,7 @@ export default function ProfileScreen() {
 
   return (
     <ScreenSafeArea style={styles.flex}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent}><NativeRepository progressOnly completedOnly/>
       <View style={styles.standardHeader}>
         <BrandTitleRow subtitle="iOS Portal" logoTestId="profile-company-logo" platformLogoTestId="profile-vndrly-logo" />
         <View style={styles.pageTitleRow}>

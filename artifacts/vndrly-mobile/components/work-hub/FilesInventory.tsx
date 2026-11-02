@@ -1,3 +1,4 @@
+import {NativeRepository} from "./NativeRepository";
 import { InventoryManagement } from "./InventoryManagement";
 import { FleetInventoryAddExisting } from "@/components/FleetInventory";
 import { InventoryRegistration } from "./InventoryRegistration";
@@ -265,6 +266,7 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
   });
 
   return <View style={{ gap: 14 }}>
+    {!selectedAssetId&&<NativeRepository/>}
     {error ? <Text nativeID={errorId} accessibilityRole="alert" style={{ color: colors.text, backgroundColor: colors.card, borderColor: colors.destructive, borderWidth: 1, borderRadius: 6, padding: 8 }}>{error}</Text> : null}
     {notice ? <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>{notice}</Text> : null}
     {!selectedAssetId && <View style={card}>

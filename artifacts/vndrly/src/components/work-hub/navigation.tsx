@@ -148,7 +148,7 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
       <Link href="/work-hub/library" onClick={onNavigate} className="block" data-testid="nav-library" aria-current={location.startsWith("/work-hub/library") ? "page" : undefined}>
         <SidebarButton isActive={location.startsWith("/work-hub/library")}>
           <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.6} />
-          <span>Library</span>
+          <span>VNDRLY/U</span>
         </SidebarButton>
       </Link>
       <Link href="/safety-score" onClick={onNavigate} className="block" data-testid="nav-safety-maturity" aria-current={location === "/safety-score" ? "page" : undefined}>

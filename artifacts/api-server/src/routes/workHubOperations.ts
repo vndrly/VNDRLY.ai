@@ -1,3 +1,4 @@
+import {indexChannelRepositoryFile} from "../work-hub/repository-file-reference";
 import {submitAssignedLibrary} from "../work-hub/training-service";
 import {calendarWorkerScope} from "../work-hub/calendar-worker-scope";
 import { assertCalendarEventAccess } from "../work-hub/calendar-event-policy";
@@ -3304,6 +3305,7 @@ router.post("/work-hub/files/:id/finalize", async (req, res) => {
     .set({ state: "finalized", finalizedAt: new Date(), expiresAt: null })
     .where(eq(workHubFilesTable.id, file.id))
     .returning();
+  await db.transaction(async tx => { await indexChannelRepositoryFile(tx, updated); });
   return res.json(updated);
 });
 

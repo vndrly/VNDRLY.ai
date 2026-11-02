@@ -1,3 +1,4 @@
+import {PartnerAugmentationSummary} from "@/components/work-hub/repository-certifications";
 import VendorOperatingArea from "@/components/vendor-operating-area";
 import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
 import "./vendor-profile.css";
@@ -738,6 +739,7 @@ export default function VendorDetail({ id }: { id: number }) {
         </CardContent>
       </Card>
 
+      {authUser?.role==="partner"&&<PartnerAugmentationSummary vendorId={id}/>}
       <VendorRatingsCard vendorId={id} />
 
       {canEditVendor && <VendorPartnerRelationshipsCard vendorId={id} />}

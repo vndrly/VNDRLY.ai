@@ -1,3 +1,4 @@
+import {CertificationProgress} from "@/components/work-hub/repository-certifications";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -89,12 +90,14 @@ export default function FieldProfile() {
         {me?.vendorName ? <p className="text-sm font-semibold text-[color:var(--brand-primary)] mt-1">{me.vendorName}</p> : null}
       </div>
 
+      <CertificationProgress profile/>
       {availableMemberships.length >= 2 ? (
         <section data-card-layout
           className="rounded-xl border border-border bg-card p-4 mb-4"
           data-testid="section-active-org"
         >
-          <CardHeading as="h2" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+
+      <CardHeading as="h2" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
             {t("auth.activeOrg")}
           </CardHeading>
           <ul className="space-y-2">

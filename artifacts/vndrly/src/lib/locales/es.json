@@ -16,7 +16,7 @@
     "level2": "50% — implementada con registros vigentes",
     "level3": "75% — implementación comprobada",
     "level4": "100% — eficacia demostrada",
-    "library": "Biblioteca"
+    "library": "De la biblioteca"
   },
   "partnerCatalogImport": {
     "alreadyImported": "Este archivo original ya se importó. Se muestra su registro conservado.",
@@ -6238,13 +6238,13 @@
     "status_exempted": "Exento",
     "assignedWork": "Trabajo asignado",
     "invalidLink": "Enlace de asignación no válido.",
-    "manage": "Administrar formularios, políticas, encuestas y capacitación",
+    "manage": "VNDRLY/U",
     "library": "Biblioteca",
-    "training": "Capacitación",
+    "training": "Cursos VNDRLY/U",
     "allTraining": "Todos",
     "myServices": "Mis servicios",
     "managedTraining": "Biblioteca de capacitación administrada por VNDRLY",
-    "bundles": "Paquetes de capacitación",
+    "bundles": "Certificaciones VNDRLY/U",
     "assignments": "Asignaciones",
     "toComplete": "Por completar",
     "kind_policy": "Reconocimiento de política",

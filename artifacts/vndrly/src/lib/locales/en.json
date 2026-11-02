@@ -16,7 +16,7 @@
     "level2": "50% — implemented with current records",
     "level3": "75% — implementation checked",
     "level4": "100% — effectiveness demonstrated",
-    "library": "Library"
+    "library": "From Library"
   },
   "partnerCatalogImport": {
     "alreadyImported": "This original file was already imported. Showing its preserved import record.",
@@ -6238,13 +6238,13 @@
     "status_exempted": "Exempted",
     "assignedWork": "Assigned work",
     "invalidLink": "Invalid assignment link.",
-    "manage": "Manage Forms, Policies, Polls & Training",
+    "manage": "VNDRLY/U",
     "library": "Library",
-    "training": "Training",
+    "training": "VNDRLY/U Courses",
     "allTraining": "All",
     "myServices": "My training, by service",
     "managedTraining": "VNDRLY Training Library",
-    "bundles": "Training Bundles",
+    "bundles": "VNDRLY/U Certifications",
     "assignments": "Assignments",
     "toComplete": "To Complete",
     "kind_policy": "Policy Acknowledgment",

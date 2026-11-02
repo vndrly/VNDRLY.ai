@@ -1,3 +1,4 @@
+import {NativeRepository} from "@/components/work-hub/NativeRepository";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -86,7 +87,7 @@ export default function WorkHubScreen() {
     ...modules.filter(({ key }) => key === "operations-health"),
   ].filter(({ key }) => key !== "implementation-exports" ||
     Boolean(home?.capabilities?.canViewExports && home.capabilities.allowedExportDatasets.length > 0));
-  return <ScreenSafeArea style={{ backgroundColor: colors.background }}><ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+  return <ScreenSafeArea style={{ backgroundColor: colors.background }}><ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}><NativeRepository progressOnly/>
     <WorkHubPageTitle title="Work Hub" />
     <NativeOperations compact />
     <NativeJournal />

@@ -1,12 +1,21 @@
+import {
+  indexMeetingRepositoryFile,
+  meetingRepositoryAccess,
+} from "../work-hub/repository-meeting-files";
+import { getObjectStore } from "../lib/objectStore";
+import { indexChannelRepositoryFile } from "../work-hub/repository-file-reference";
 import { Router, type IRouter, type Response } from "express";
 import { randomBytes, createHash } from "node:crypto";
-import { and, eq, desc, sql, or } from "drizzle-orm";
+import { and, eq, desc, sql, or, isNull } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   db,
   userOrgMembershipsTable as memberships,
   workHubFilesTable as files,
   workHubFileLibraryTable as library,
+  workHubMeetingChatTable as meetingChat,
+  workHubMeetingOccurrencesTable as meetingOccurrences,
+  workHubMeetingsTable as meetings,
 } from "@workspace/db";
 import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
@@ -18,6 +27,10 @@ import { ObjectStorageService } from "../lib/objectStorage";
 import { absoluteUploadUrl } from "../lib/uploadUrl";
 import { isWorkHubEnabled } from "../work-hub/feature-access";
 import { channelFileReference } from "../work-hub/channel-file-reference";
+import {
+  requireRepositoryDocumentAccess,
+  repositoryFolder,
+} from "../work-hub/vendor-repository";
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
 const ownerSchema = z.object({
@@ -61,7 +74,17 @@ async function membership(actor: Actor, owner: Owner) {
   return row;
 }
 async function documentAccess(actor: Actor, doc: Document, manage = false) {
+  await requireRepositoryDocumentAccess(
+    db,
+    actor,
+    doc,
+    manage ? "edit" : "read",
+  );
   if (doc.kind !== "document") throw new FileError(404, "File not found");
+  if (doc.data.scope === "meeting") {
+    await meetingRepositoryAccess(db, actor, doc, manage);
+    return;
+  }
   if (doc.data.scope === "personal") {
     if (
       doc.createdBy !== actor.userId ||
@@ -86,12 +109,22 @@ async function documentAccess(actor: Actor, doc: Document, manage = false) {
   if (
     manage &&
     doc.createdBy !== actor.userId &&
+    (doc.data.scope !== "company" ||
+      (!doc.data.folderId && !doc.data.tripId)) &&
     (await membership(actor, ownerOf(doc)))?.role !== "admin"
   )
     throw new FileError(
       403,
       "Only the file owner or company administrator may manage this file",
     );
+}
+async function canManageDocument(actor: Actor, doc: Document) {
+  try {
+    await documentAccess(actor, doc, true);
+    return true;
+  } catch {
+    return false;
+  }
 }
 async function loadDocument(id: string) {
   const [doc] = await db
@@ -120,18 +153,51 @@ async function serve(
   preview = false,
 ) {
   if (doc.data.state !== "active") throw new FileError(404, "File not found");
+  if (doc.data.scope === "meeting") {
+    if (versionId && versionId !== doc.data.currentFileId)
+      throw new FileError(404, "Version not found");
+    const object = await getObjectStore().getObject(
+      `/objects/meetings/${doc.data.occurrenceId}/${doc.data.sourceMeetingFileId}`,
+    );
+    if (!object) throw new FileError(404, "File not found");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename*=UTF-8''${encodeURIComponent(String(doc.data.name))}`,
+    );
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", "no-store");
+    return res.type("application/octet-stream").send(object.body);
+  }
   const versions = doc.data.versions as string[];
   const id = versionId ?? String(doc.data.currentFileId);
   if (!versions.includes(id)) throw new FileError(404, "Version not found");
   const [file] = await db
     .select()
     .from(files)
-    .where(and(eq(files.id, id), eq(files.state, "managed")))
+    .where(
+      and(
+        eq(files.id, id),
+        or(eq(files.state, "managed"), eq(files.state, "finalized")),
+      ),
+    )
     .limit(1);
   if (
     !file ||
     file.ownerOrgId !== doc.orgId ||
-    file.ownerOrgType !== doc.orgType
+    file.ownerOrgType !== doc.orgType ||
+    (file.state === "finalized" &&
+      !(
+        doc.data.scope === "personal" &&
+        doc.createdBy === file.uploadedById &&
+        doc.data.sourceFileId === file.id
+      ) &&
+      !(
+        (doc.data.sourceFileId === file.id &&
+          doc.data.channelId === file.channelId) ||
+        (doc.data.scope === "channel" &&
+          doc.recordKey === `channel-file:${doc.data.channelId}:${file.id}` &&
+          versions.length === 1)
+      ))
   )
     throw new FileError(404, "File not found");
   const object = await storage.getStoredObject(file.storageKey);
@@ -184,7 +250,10 @@ router.get("/work-hub/file-library/public/:token", async (req, res) => {
       )
       .limit(1);
     if (!link) throw new FileError(404, "Link not found");
-    if (link.data.revoked || !(new Date(String(link.data.expiresAt)).getTime() > Date.now()))
+    if (
+      link.data.revoked ||
+      !(new Date(String(link.data.expiresAt)).getTime() > Date.now())
+    )
       throw new FileError(403, "Link unavailable");
     const doc = await loadDocument(String(link.data.documentId));
     if (doc.orgId !== link.orgId || doc.orgType !== link.orgType)
@@ -276,6 +345,74 @@ router.get("/work-hub/file-library/legacy/:id/download", async (req, res) => {
     return failure(res, error);
   }
 });
+router.post("/work-hub/file-library/sync-references", async (req, res) => {
+  try {
+    const actor = getSessionFromRequest(req) as Actor | null;
+    if (!actor?.userId) return res.sendStatus(401);
+    const owner = ownerSchema.parse(req.body);
+    if (!(await membership(actor, owner)))
+      throw new FileError(403, "Company membership required");
+    const existing = await db
+      .select({ file: files })
+      .from(files)
+      .leftJoin(library, eq(library.id, files.id))
+      .where(
+        and(
+          eq(files.ownerOrgType, owner.type),
+          eq(files.ownerOrgId, owner.id),
+          eq(files.state, "finalized"),
+          isNull(library.id),
+        ),
+      )
+      .limit(5000);
+    let indexed = 0;
+    for (const { file } of existing) {
+      try {
+        await legacyFileAccess(actor, file);
+      } catch {
+        continue;
+      }
+      await db.transaction((tx) => indexChannelRepositoryFile(tx, file));
+      indexed++;
+    }
+    const meetingFiles = await db
+      .select({ message: meetingChat })
+      .from(meetingChat)
+      .innerJoin(
+        meetingOccurrences,
+        eq(meetingOccurrences.id, meetingChat.occurrenceId),
+      )
+      .innerJoin(meetings, eq(meetings.id, meetingOccurrences.meetingId))
+      .leftJoin(library, eq(library.id, meetingChat.id))
+      .where(
+        and(
+          eq(meetings.ownerOrgType, owner.type),
+          eq(meetings.ownerOrgId, owner.id),
+          isNull(library.id),
+          sql`${meetingChat.attachment} IS NOT NULL`,
+        ),
+      )
+      .limit(5000);
+    for (const { message } of meetingFiles) {
+      try {
+        await meetingRepositoryAccess(db, actor, {
+          orgType: owner.type,
+          orgId: owner.id,
+          data: { sourceMeetingFileId: message.id },
+        });
+      } catch {
+        continue;
+      }
+      await db.transaction((tx) =>
+        indexMeetingRepositoryFile(tx, message, owner),
+      );
+      indexed++;
+    }
+    return res.json({ indexed });
+  } catch (error) {
+    return failure(res, error);
+  }
+});
 router.get("/work-hub/file-library", async (req, res) => {
   try {
     const actor = getSessionFromRequest(req) as Actor | null;
@@ -287,12 +424,7 @@ router.get("/work-hub/file-library", async (req, res) => {
     const candidates = await db
       .select()
       .from(library)
-      .where(
-        and(
-          or(scope(owner), sql`${library.data}->>'scope' = 'channel'`),
-          eq(library.kind, "document"),
-        ),
-      )
+      .where(and(scope(owner), eq(library.kind, "document")))
       .orderBy(desc(library.updatedAt));
     const favorites = await db
       .select()
@@ -302,7 +434,13 @@ router.get("/work-hub/file-library", async (req, res) => {
       );
     const documents = [];
     for (const doc of candidates) {
-      if(req.query.purpose==="training"&&(doc.orgType!==owner.type||doc.orgId!==owner.id||doc.data.purpose!=="training"||doc.data.scope!=="company"))continue;
+      if (
+        req.query.purpose === "training" &&
+        (doc.orgType !== owner.type ||
+          doc.orgId !== owner.id ||
+          doc.data.purpose !== "training")
+      )
+        continue;
       try {
         await documentAccess(actor, doc);
         documents.push({
@@ -310,12 +448,11 @@ router.get("/work-hub/file-library", async (req, res) => {
           favorite: favorites.some(
             (f) => f.data.documentId === doc.id && f.data.active,
           ),
-          canManage:
-            doc.createdBy === actor.userId ||
-            (await membership(actor, ownerOf(doc)))?.role === "admin",
+          canManage: await canManageDocument(actor, doc),
           capabilities: {
-            canDownload: doc.data.state === "active" && !!doc.data.currentFileId,
-            canManage: doc.createdBy === actor.userId || (await membership(actor, ownerOf(doc)))?.role === "admin",
+            canDownload:
+              doc.data.state === "active" && !!doc.data.currentFileId,
+            canManage: await canManageDocument(actor, doc),
           },
         });
       } catch {}
@@ -333,15 +470,24 @@ router.get("/work-hub/file-library/:id", async (req, res) => {
     if (!actor?.userId) return res.sendStatus(401);
     const doc = await loadDocument(z.string().uuid().parse(req.params.id));
     await documentAccess(actor, doc);
-    const canManage = doc.createdBy === actor.userId || (await membership(actor, ownerOf(doc)))?.role === "admin";
+    const canManage = await canManageDocument(actor, doc);
     res.setHeader("Cache-Control", "no-store");
     return res.json({
-      id: doc.id, subjectType: "document", title: String(doc.data.name ?? "File"),
-      status: doc.data.state, updatedAt: doc.updatedAt,
-      contentType: doc.data.contentType, byteSize: doc.data.byteSize,
-      capabilities: { canDownload: doc.data.state === "active" && !!doc.data.currentFileId, canManage },
+      id: doc.id,
+      subjectType: "document",
+      title: String(doc.data.name ?? "File"),
+      status: doc.data.state,
+      updatedAt: doc.updatedAt,
+      contentType: doc.data.contentType,
+      byteSize: doc.data.byteSize,
+      capabilities: {
+        canDownload: doc.data.state === "active" && !!doc.data.currentFileId,
+        canManage,
+      },
     });
-  } catch (error) { return failure(res, error); }
+  } catch (error) {
+    return failure(res, error);
+  }
 });
 router.get("/work-hub/file-library/:id/download", async (req, res) => {
   try {
@@ -408,12 +554,39 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
       })
       .passthrough()
       .parse(envelope.payload);
+    if (action === "reserve") {
+      if (typeof replayPayload.folderId === "string")
+        await repositoryFolder(
+          db,
+          actor,
+          z.uuid().parse(replayPayload.folderId),
+          "write",
+        );
+      if (typeof replayPayload.tripId === "string")
+        await requireRepositoryDocumentAccess(
+          db,
+          actor,
+          {
+            orgType: owner.type,
+            orgId: owner.id,
+            data: {
+              scope: "company",
+              tripId: z.uuid().parse(replayPayload.tripId),
+            },
+          },
+          "write",
+        );
+    }
     const replayDocumentId = replayPayload.id ?? replayPayload.documentId;
     if (replayDocumentId) {
       const replayDocument = await loadDocument(replayDocumentId);
       await documentAccess(actor, replayDocument, action !== "favorite");
       if (action === "share-to-channel") {
-        const { channel } = await resolveChannelAccess(actor, z.string().uuid().parse(replayPayload.channelId), "file.upload");
+        const { channel } = await resolveChannelAccess(
+          actor,
+          z.string().uuid().parse(replayPayload.channelId),
+          "file.upload",
+        );
         channelFileReference(replayDocument, channel, actor.userId);
       }
       if (
@@ -451,6 +624,17 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
             .object({
               documentId: z.string().uuid().optional(),
               purpose: z.literal("training").optional(),
+              folderId: z.uuid().optional(),
+              tripId: z.uuid().optional(),
+              uploadSource: z
+                .enum([
+                  "repository",
+                  "training",
+                  "conversation",
+                  "meeting",
+                  "travel",
+                ])
+                .optional(),
               scope: z.enum(["personal", "company", "channel"]),
               channelId: z.string().uuid().optional(),
               fileName: z.string().trim().min(1).max(255),
@@ -464,7 +648,24 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
             })
             .strict()
             .parse(envelope.payload);
-          if(p.purpose==="training"&&p.scope!=="company")throw new FileError(400,"Training materials must belong to the company training library");
+          if (p.purpose === "training" && p.scope !== "company")
+            throw new FileError(
+              400,
+              "Training materials must belong to the company training library",
+            );
+          if (p.folderId)
+            await repositoryFolder(tx, actor, p.folderId, "write");
+          if (p.tripId)
+            await requireRepositoryDocumentAccess(
+              tx,
+              actor,
+              {
+                orgType: owner.type,
+                orgId: owner.id,
+                data: { scope: "company", tripId: p.tripId },
+              },
+              "write",
+            );
           let doc: Document;
           if (p.documentId) {
             doc = await loadDocument(p.documentId);
@@ -501,7 +702,16 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
                 createdBy: actor.userId,
                 data: {
                   scope: p.scope,
-                  ...(p.purpose?{purpose:p.purpose}:{}),
+                  ...(p.purpose ? { purpose: p.purpose } : {}),
+                  ...(p.folderId ? { folderId: p.folderId } : {}),
+                  ...(p.tripId ? { tripId: p.tripId } : {}),
+                  uploadSource:
+                    p.uploadSource ??
+                    (p.purpose === "training"
+                      ? "training"
+                      : p.scope === "channel"
+                        ? "conversation"
+                        : "repository"),
                   channelId: p.scope === "channel" ? p.channelId : null,
                   name: p.fileName,
                   state: "active",
@@ -553,16 +763,59 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
           throw new FileError(403, "File owner mismatch");
         let data = { ...doc.data };
         if (action === "share-to-channel") {
-          const { channel } = await resolveChannelAccess(actor, z.string().uuid().parse(p.channelId), "file.upload", tx);
+          if (doc.data.scope === "meeting")
+            throw new FileError(
+              400,
+              "Use the meeting's existing file sharing controls for this attachment",
+            );
+          const { channel } = await resolveChannelAccess(
+            actor,
+            z.string().uuid().parse(p.channelId),
+            "file.upload",
+            tx,
+          );
           const reference = channelFileReference(doc, channel, actor.userId);
-          const [saved] = await tx.insert(library).values(reference).onConflictDoNothing().returning();
+          const [saved] = await tx
+            .insert(library)
+            .values(reference)
+            .onConflictDoNothing()
+            .returning();
           if (!saved) {
-            const [existing] = await tx.select().from(library).where(and(scope(owner), eq(library.kind, "document"), eq(library.recordKey, reference.recordKey))).limit(1);
-            if (!existing || existing.data.state !== "active") throw new FileError(409, "This channel's shared file is recycled; restore it before sharing again");
+            const [existing] = await tx
+              .select()
+              .from(library)
+              .where(
+                and(
+                  scope(owner),
+                  eq(library.kind, "document"),
+                  eq(library.recordKey, reference.recordKey),
+                ),
+              )
+              .limit(1);
+            if (!existing || existing.data.state !== "active")
+              throw new FileError(
+                409,
+                "This channel's shared file is recycled; restore it before sharing again",
+              );
             return existing;
           }
-          await appendWorkHubAudit({ actorUserId: actor.userId, owner, action: "file.shared_to_channel", subjectType: "file", subjectId: saved.id,
-            source: "web", operationId: envelope.operationId, metadata: { documentId: doc.id, channelId: channel.id, fileId: doc.data.currentFileId } }, tx);
+          await appendWorkHubAudit(
+            {
+              actorUserId: actor.userId,
+              owner,
+              action: "file.shared_to_channel",
+              subjectType: "file",
+              subjectId: saved.id,
+              source: "web",
+              operationId: envelope.operationId,
+              metadata: {
+                documentId: doc.id,
+                channelId: channel.id,
+                fileId: doc.data.currentFileId,
+              },
+            },
+            tx,
+          );
           return saved;
         } else if (action === "finalize") {
           if (data.state !== "active" || !p.fileId)
@@ -700,8 +953,11 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
                 sql`${library.data}->>'documentId' = ${doc.id}`,
               ),
             );
-          const selected = p.shareId ? links.filter(link => link.id === p.shareId) : links;
-          if (p.shareId && !selected.length) throw new FileError(404, "Share not found");
+          const selected = p.shareId
+            ? links.filter((link) => link.id === p.shareId)
+            : links;
+          if (p.shareId && !selected.length)
+            throw new FileError(404, "Share not found");
           for (const link of selected)
             await tx
               .update(library)
@@ -713,7 +969,10 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
         } else throw new FileError(400, "Unknown file action");
         const [saved] = await tx
           .update(library)
-          .set({ data, updatedAt: new Date() })
+          .set({
+            data: { ...data, updatedBy: actor.userId },
+            updatedAt: new Date(),
+          })
           .where(eq(library.id, doc.id))
           .returning();
         await appendWorkHubAudit(

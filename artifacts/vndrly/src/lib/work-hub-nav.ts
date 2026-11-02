@@ -34,7 +34,7 @@ const ITEMS: WorkHubNavItem[] = [
   { key: "subscriptions", label: "Worker Subscriptions", href: "/work-hub/subscriptions" },
   { key: "operationsHealth", label: "Operations Health", href: "/work-hub/operations-health" },
   { key: "calls", label: "Calls", href: "/work-hub/calls" },
-  { key: "files", label: "Files & Notes", href: "/work-hub/files" },
+  { key: "files", label: "File Library", href: "/work-hub/files" },
   { key: "tasks", label: "Tasks & Forms", href: "/work-hub/tasks" },
   { key: "meetings", label: "Meetings", href: "/work-hub/meetings" },
   { key: "finance", label: "Billing & Payroll", href: "/work-hub/finance" },

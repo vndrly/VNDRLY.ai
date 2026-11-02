@@ -1,4 +1,12 @@
-import { ShareFileToChannel, type FileShareChannel } from "./share-file-to-channel";
+import { useRepository } from "./repository-client";
+import { FolderPicker } from "./repository-folders";
+import { RepositoryFileDetails } from "./repository-file-details";
+import OptionSwitch from "./library/option-switch";
+import "./repository-theme.css";
+import {
+  ShareFileToChannel,
+  type FileShareChannel,
+} from "./share-file-to-channel";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,12 +36,18 @@ import { withRequestDeadline } from "@/lib/request-deadline";
 type Document = {
   id: string;
   createdBy: number;
+  createdAt?: string;
+  updatedAt?: string;
   orgType: "vendor" | "partner";
   orgId: number;
   data: {
     name: string;
     scope: string;
     purpose?: string;
+    folderId?: string;
+    tripId?: string;
+    uploadSource?: string;
+    categoryIds?: string[];
     channelId: string | null;
     state: string;
     contentType?: string;
@@ -50,21 +64,59 @@ type UploadReservation = {
   finalizeOperationId: string;
   resource: { documentId: string; fileId: string; uploadURL: string };
 };
-export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsumed, defaultScope = "personal", trainingMaterials = false }: { trainingMaterials?: boolean; defaultScope?: "personal" | "company"; fixedChannelId?: string; initialFile?: File; onInitialFileConsumed?: () => void } = {}) {
+export function WorkHubFiles({
+  fixedChannelId,
+  initialFile,
+  onInitialFileConsumed,
+  defaultScope = "company",
+  trainingMaterials = false,
+  tripId,
+  folderView,
+}: {
+  folderView?: string | null;
+  tripId?: string;
+  trainingMaterials?: boolean;
+  defaultScope?: "personal" | "company";
+  fixedChannelId?: string;
+  initialFile?: File;
+  onInitialFileConsumed?: () => void;
+} = {}) {
   const { user } = useAuth();
+  const repository = useRepository();
+  const [folderId, setFolderId] = useState("");
+  const [isTraining, setIsTraining] = useState(trainingMaterials);
+  const [details, setDetails] = useState<Document | null>(null);
+  const [sort, setSort] = useState("updated");
   const owner = ownerForUser(user);
   const cache = useQueryClient();
   const meetingSession = useMeetingSession();
   const input = useRef<HTMLInputElement>(null);
-  const [scope, setScope] = useState(() => trainingMaterials ? "company" : fixedChannelId || new URLSearchParams(window.location.search).get("channel") ? "channel" : meetingSession?.occurrenceId ? "meeting" : defaultScope);
-  const [channelId, setChannelId] = useState(() => fixedChannelId ?? new URLSearchParams(window.location.search).get("channel") ?? "");
+  const [scope, setScope] = useState(() =>
+    trainingMaterials
+      ? "company"
+      : fixedChannelId ||
+          new URLSearchParams(window.location.search).get("channel")
+        ? "channel"
+        : meetingSession?.occurrenceId
+          ? "meeting"
+          : defaultScope,
+  );
+  const [channelId, setChannelId] = useState(
+    () =>
+      fixedChannelId ??
+      new URLSearchParams(window.location.search).get("channel") ??
+      "",
+  );
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [replace, setReplace] = useState<Document | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [pendingOperationId, setPendingOperationId] = useState<string | null>(null);
+  const [pendingOperationId, setPendingOperationId] = useState<string | null>(
+    null,
+  );
   const [reservationStarted, setReservationStarted] = useState(false);
-  const [reservedUpload, setReservedUpload] = useState<UploadReservation | null>(null);
+  const [reservedUpload, setReservedUpload] =
+    useState<UploadReservation | null>(null);
   const [versions, setVersions] = useState<string | null>(null);
   const [share, setShare] = useState<{
     token: string;
@@ -86,23 +138,42 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
     setPendingOperationId(createWorkHubOperationId());
     onInitialFileConsumed?.();
   }, [initialFile, fixedChannelId, onInitialFileConsumed]);
-  useEffect(() => { if (!trainingMaterials && !fixedChannelId && meetingSession?.occurrenceId && !pendingFile && !replace) setScope("meeting"); }, [fixedChannelId, meetingSession?.occurrenceId, pendingFile, replace]);
-  const queryKey = ["work-hub-file-library", user?.userId, user?.activeMembershipId, owner?.type, owner?.id, trainingMaterials];
+  useEffect(() => {
+    if (
+      !trainingMaterials &&
+      !fixedChannelId &&
+      meetingSession?.occurrenceId &&
+      !pendingFile &&
+      !replace
+    )
+      setScope("meeting");
+  }, [fixedChannelId, meetingSession?.occurrenceId, pendingFile, replace]);
+  const queryKey = [
+    "work-hub-file-library",
+    user?.userId,
+    user?.activeMembershipId,
+    owner?.type,
+    owner?.id,
+    trainingMaterials,
+    tripId,
+  ];
   const query = useQuery({
     queryKey,
     enabled: !!owner,
-    queryFn: () =>
-      workHubRequest<Document[]>(
-        `/file-library?orgType=${owner!.type}&orgId=${owner!.id}${trainingMaterials?"&purpose=training":""}`,
-      ),
+    queryFn: async () => {
+      await workHubRequest("/file-library/sync-references", {
+        method: "POST",
+        body: JSON.stringify(owner),
+      });
+      return workHubRequest<Document[]>(
+        `/file-library?orgType=${owner!.type}&orgId=${owner!.id}${trainingMaterials ? "&purpose=training" : ""}`,
+      );
+    },
   });
   const channels = useQuery({
     queryKey: ["work-hub-channels", user?.userId, user?.activeMembershipId],
     enabled: !!owner,
-    queryFn: () =>
-      workHubRequest<
-        FileShareChannel[]
-      >("/channels?limit=100"),
+    queryFn: () => workHubRequest<FileShareChannel[]>("/channels?limit=100"),
   });
   const change = useMutation({
     mutationFn: async ({
@@ -138,7 +209,17 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
         const operationId = pendingOperationId ?? createWorkHubOperationId();
         if (!pendingOperationId) setPendingOperationId(operationId);
         setReservationStarted(true);
-        await workHubRequest(`/meetings/${meetingSession.occurrenceId}/files/${operationId}`, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream", "x-file-name": encodeURIComponent(file.name) }, body: file });
+        await workHubRequest(
+          `/meetings/${meetingSession.occurrenceId}/files/${operationId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": file.type || "application/octet-stream",
+              "x-file-name": encodeURIComponent(file.name),
+            },
+            body: file,
+          },
+        );
         return;
       }
       const digest = await crypto.subtle.digest(
@@ -167,18 +248,33 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
         }>("/file-library/reserve", {
           method: "POST",
           body: JSON.stringify(
-            commandEnvelope(uploadOwner, {
-              ...(replace ? { documentId: replace.id } : {}),
-              scope: trainingMaterials ? "company" : replace?.data.scope ?? scope,
-              ...(trainingMaterials?{purpose:"training"}:{}),
-              ...((replace?.data.channelId ?? channelId)
-                ? { channelId: replace?.data.channelId ?? channelId }
-                : {}),
-              fileName: file.name,
-              byteSize: file.size,
-              contentType: file.type || "application/octet-stream",
-              checksumSha256,
-            }, operationId),
+            commandEnvelope(
+              uploadOwner,
+              {
+                ...(replace ? { documentId: replace.id } : {}),
+                scope: trainingMaterials
+                  ? "company"
+                  : (replace?.data.scope ?? scope),
+                ...(isTraining ? { purpose: "training" } : {}),
+                ...(!replace && folderId ? { folderId } : {}),
+                ...(!replace && tripId ? { tripId } : {}),
+                uploadSource: tripId
+                  ? "travel"
+                  : trainingMaterials
+                    ? "training"
+                    : fixedChannelId
+                      ? "conversation"
+                      : "repository",
+                ...((replace?.data.channelId ?? channelId)
+                  ? { channelId: replace?.data.channelId ?? channelId }
+                  : {}),
+                fileName: file.name,
+                byteSize: file.size,
+                contentType: file.type || "application/octet-stream",
+                checksumSha256,
+              },
+              operationId,
+            ),
           ),
         });
         reservation = {
@@ -189,12 +285,22 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
         };
         setReservedUpload(reservation);
       }
-      const response = await withRequestDeadline(signal => fetch(reservation.resource.uploadURL, {
-        method: "PUT",
-        headers: { "Content-Type": file.type || "application/octet-stream" },
-        body: file,
-        signal,
-      }), { timeoutMs: 120_000, timeoutMessage: "File transfer was not confirmed in time. No new version has been confirmed; check the library before retrying this staged upload." });
+      const response = await withRequestDeadline(
+        (signal) =>
+          fetch(reservation.resource.uploadURL, {
+            method: "PUT",
+            headers: {
+              "Content-Type": file.type || "application/octet-stream",
+            },
+            body: file,
+            signal,
+          }),
+        {
+          timeoutMs: 120_000,
+          timeoutMessage:
+            "File transfer was not confirmed in time. No new version has been confirmed; check the library before retrying this staged upload.",
+        },
+      );
       if (!response.ok)
         throw new Error(
           `File upload failed (${response.status}). No new version was published.`,
@@ -221,13 +327,27 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
       setReservedUpload(null);
       if (input.current) input.current.value = "";
       cache.invalidateQueries({ queryKey });
-      if (meetingSession?.occurrenceId) cache.invalidateQueries({ queryKey: ["work-hub", "meeting-workspace", meetingSession.occurrenceId] });
+      cache.invalidateQueries({ queryKey: ["travel-documents"] });
+      cache.invalidateQueries({ queryKey: ["vendor-repository"] });
+      if (meetingSession?.occurrenceId)
+        cache.invalidateQueries({
+          queryKey: [
+            "work-hub",
+            "meeting-workspace",
+            meetingSession.occurrenceId,
+          ],
+        });
     },
   });
   if (!owner) return <p>Select a company to open your files.</p>;
   const rows = (query.data ?? []).filter(
     (doc) =>
-      (!trainingMaterials||(doc.data.purpose==="training"&&doc.data.scope==="company")) &&
+      (!trainingMaterials ||
+        (doc.data.purpose === "training" && doc.data.scope === "company")) &&
+      (!tripId || doc.data.tripId === tripId) &&
+      (!folderView ||
+        doc.data.folderId === folderView ||
+        doc.data.categoryIds?.includes(folderView)) &&
       (!fixedChannelId || doc.data.channelId === fixedChannelId) &&
       (filter === "recycle"
         ? doc.data.state === "recycled"
@@ -237,20 +357,77 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
       (filter !== "shared" || doc.data.scope !== "personal") &&
       doc.data.name.toLowerCase().includes(search.toLowerCase()),
   );
+  rows.sort((a, b) => {
+    if (sort === "size") return (b.data.byteSize ?? 0) - (a.data.byteSize ?? 0);
+    const value = (row: Document) =>
+      sort === "name"
+        ? row.data.name
+        : sort === "creator"
+          ? (repository.data?.creators.find((p) => p.id === row.createdBy)
+              ?.name ?? "")
+          : sort === "type"
+            ? row.data.contentType
+            : sort === "source"
+              ? row.data.uploadSource
+              : sort === "folder"
+                ? (repository.data?.folders.find(
+                    (f) => f.id === row.data.folderId,
+                  )?.data.name ?? "")
+                : sort === "created"
+                  ? row.createdAt
+                  : row.updatedAt;
+    return (
+      String(value(a) ?? "").localeCompare(String(value(b) ?? "")) *
+      (sort === "updated" || sort === "created" ? -1 : 1)
+    );
+  });
   return (
-    <div className="company-file-library space-y-4">
+    <div className="vendor-repository company-file-library space-y-4">
+      <label>
+        Sort by{" "}
+        <BrandedSelect
+          aria-label="Sort files"
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+        >
+          <option value="updated">Last updated</option>
+          <option value="created">Created on</option>
+          <option value="name">Name</option>
+          <option value="creator">Created by</option>
+          <option value="size">Size</option>
+          <option value="type">File type</option>
+          <option value="source">Attribution/source</option>
+          <option value="folder">Folder</option>
+        </BrandedSelect>
+      </label>
+      {details && (
+        <RepositoryFileDetails
+          document={details}
+          onClose={() => setDetails(null)}
+        />
+      )}
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_125px] items-center gap-2">
         <label className="order-last min-w-0">
           <BrandedSelect
             aria-label="File filter"
-            style={{ backgroundColor: "#242426", color: "#ececec", colorScheme: "dark" }}
+            style={{
+              backgroundColor: "#242426",
+              color: "#ececec",
+              colorScheme: "dark",
+            }}
             className="w-full text-sm"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            <option value="all">{trainingMaterials?"All":"All files"}</option>
-            {!fixedChannelId && !trainingMaterials && <option value="personal">Personal</option>}
-            {!fixedChannelId && !trainingMaterials && <option value="shared">Company & channel</option>}
+            <option value="all">
+              {trainingMaterials ? "All" : "All files"}
+            </option>
+            {!fixedChannelId && !trainingMaterials && (
+              <option value="personal">Personal</option>
+            )}
+            {!fixedChannelId && !trainingMaterials && (
+              <option value="shared">Company & channel</option>
+            )}
             <option value="favorites">Favorites</option>
             <option value="recycle">Recycle bin</option>
           </BrandedSelect>
@@ -263,94 +440,162 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      <Card className={fixedChannelId ? "border-0 shadow-none !bg-transparent" : undefined}>
-        {!fixedChannelId && <CardHeader>
-          <CardTitle><WorkHubCardTitle icon={Upload}>{trainingMaterials?"Upload training material":"Upload a file"}</WorkHubCardTitle></CardTitle>
-        </CardHeader>}
-        <CardContent className={fixedChannelId ? "!p-0 space-y-2" : "space-y-3"}>
-          {!fixedChannelId && !trainingMaterials && <>
-          <p>
-            Files are visible to the chosen audience and authorized administrators. Replacement uploads
-            preserve earlier versions. Word and Excel files can be downloaded;
-            edit them in their own applications.
-          </p>
-          <label className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-            Audience{" "}
-            <BrandedSelect
-              aria-label="File audience"
-              className="w-full text-sm"
-              style={{backgroundColor:"#242426",color:"#ececec",colorScheme:"dark"}}
-              value={scope}
-              disabled={!!fixedChannelId || upload.isPending || reservationStarted}
-              onChange={(e) => setScope(e.target.value)}
-            >
-              <option value="personal">Only me</option>
-              <option value="company">Company members</option>
-              <option value="channel">Channel members</option>
-              {meetingSession?.occurrenceId && <option value="meeting">Active meeting</option>}
-            </BrandedSelect>
-          </label>
-          {scope === "meeting" && meetingSession?.occurrenceId && <p role="status"><strong>Sharing to: {meetingSession.snapshot?.meeting.title ?? "active meeting"}</strong> · Change the audience above to choose somewhere else.</p>}
-          {scope === "channel" && (
-            <label className="block">
-              Channel{" "}
-              <BrandedSelect
-                aria-label="File channel"
-                className="w-full text-sm"
-              style={{backgroundColor:"#242426",color:"#ececec",colorScheme:"dark"}}
-                value={channelId}
-                disabled={!!fixedChannelId || upload.isPending || reservationStarted}
-                onChange={(e) => setChannelId(e.target.value)}
-              >
-                <option value="">Choose channel</option>
-                {channels.data?.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-              </BrandedSelect>
-            </label>
+      <Card
+        className={
+          fixedChannelId ? "border-0 shadow-none !bg-transparent" : undefined
+        }
+      >
+        {!fixedChannelId && (
+          <CardHeader>
+            <CardTitle>
+              <WorkHubCardTitle icon={Upload}>
+                {trainingMaterials
+                  ? "Upload training material"
+                  : "Upload a file"}
+              </WorkHubCardTitle>
+            </CardTitle>
+          </CardHeader>
+        )}
+        <CardContent
+          className={fixedChannelId ? "!p-0 space-y-2" : "space-y-3"}
+        >
+          {!fixedChannelId && !trainingMaterials && (
+            <>
+              <p>
+                Files are visible to the chosen audience and authorized
+                administrators. Replacement uploads preserve earlier versions.
+                Word and Excel files can be downloaded; edit them in their own
+                applications.
+              </p>
+              <FolderPicker
+                data={repository.data}
+                value={folderId}
+                onChange={setFolderId}
+                disabled={upload.isPending || reservationStarted}
+              />
+              <OptionSwitch
+                label="Designate as training materials"
+                value={isTraining}
+                onChange={setIsTraining}
+                disabled={upload.isPending || reservationStarted}
+              />
+              {scope === "meeting" && meetingSession?.occurrenceId && (
+                <p role="status">
+                  <strong>
+                    Sharing to:{" "}
+                    {meetingSession.snapshot?.meeting.title ?? "active meeting"}
+                  </strong>{" "}
+                  · Change the audience above to choose somewhere else.
+                </p>
+              )}
+              {scope === "channel" && (
+                <label className="block">
+                  Channel{" "}
+                  <BrandedSelect
+                    aria-label="File channel"
+                    className="w-full text-sm"
+                    style={{
+                      backgroundColor: "#242426",
+                      color: "#ececec",
+                      colorScheme: "dark",
+                    }}
+                    value={channelId}
+                    disabled={
+                      !!fixedChannelId || upload.isPending || reservationStarted
+                    }
+                    onChange={(e) => setChannelId(e.target.value)}
+                  >
+                    <option value="">Choose channel</option>
+                    {channels.data?.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </BrandedSelect>
+                </label>
+              )}
+            </>
           )}
-          </>}
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-          {!fixedChannelId && <button type="button" className="library-action" disabled={upload.isPending || reservationStarted} onClick={() => input.current?.click()}><Upload className="mr-2 h-4 w-4"/>Choose file</button>}
-          {!fixedChannelId && <span className="min-w-0 break-all text-sm">{pendingFile?.name ?? "No file selected"}</span>}
-          {fixedChannelId && <BrandPillButton type="button" tone="brand" disabled={upload.isPending || reservationStarted} onClick={() => input.current?.click()}><Upload className="mr-1 h-4 w-4" />Choose file</BrandPillButton>}
-          <input
-            className="hidden"
-            ref={input}
-            type="file"
-            aria-label="Choose file to upload"
-            disabled={
-              upload.isPending || reservationStarted
-            }
-            onChange={(e) => {
-              const file = e.target.files?.[0] ?? null;
-              setPendingFile(file);
-              setPendingOperationId(file ? createWorkHubOperationId() : null);
-              setReservationStarted(false);
-              setReservedUpload(null);
-            }}
-          />
-          {(!fixedChannelId || pendingFile) && <BrandPillButton
-            type="button"
-            tone="brand"
-            className={fixedChannelId ? "w-fit" : "library-action w-fit"}
-            disabled={
-              !pendingFile ||
-              upload.isPending ||
-              (!replace && scope === "channel" && !channelId)
-            }
-            onClick={() => pendingFile && upload.mutate(pendingFile)}
-          >
-            Upload
-          </BrandPillButton>}
-          {fixedChannelId && pendingFile && <span className="min-w-0 truncate text-sm" title={pendingFile.name}>{pendingFile.name}</span>}
+            {!fixedChannelId && (
+              <button
+                type="button"
+                className="library-action"
+                disabled={upload.isPending || reservationStarted}
+                onClick={() => input.current?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Choose file
+              </button>
+            )}
+            {!fixedChannelId && (
+              <span className="min-w-0 break-all text-sm">
+                {pendingFile?.name ?? "No file selected"}
+              </span>
+            )}
+            {fixedChannelId && (
+              <BrandPillButton
+                type="button"
+                tone="brand"
+                disabled={upload.isPending || reservationStarted}
+                onClick={() => input.current?.click()}
+              >
+                <Upload className="mr-1 h-4 w-4" />
+                Choose file
+              </BrandPillButton>
+            )}
+            <input
+              className="hidden"
+              ref={input}
+              type="file"
+              aria-label="Choose file to upload"
+              disabled={upload.isPending || reservationStarted}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setPendingFile(file);
+                setPendingOperationId(file ? createWorkHubOperationId() : null);
+                setReservationStarted(false);
+                setReservedUpload(null);
+              }}
+            />
+            {(!fixedChannelId || pendingFile) && (
+              <BrandPillButton
+                type="button"
+                tone="brand"
+                className={fixedChannelId ? "w-fit" : "library-action w-fit"}
+                disabled={
+                  !pendingFile ||
+                  upload.isPending ||
+                  (!replace && scope === "channel" && !channelId)
+                }
+                onClick={() => pendingFile && upload.mutate(pendingFile)}
+              >
+                Upload
+              </BrandPillButton>
+            )}
+            {fixedChannelId && pendingFile && (
+              <span
+                className="min-w-0 truncate text-sm"
+                title={pendingFile.name}
+              >
+                {pendingFile.name}
+              </span>
+            )}
           </div>
           {replace && (
             <p>
               Replacing {replace.data.name}.{" "}
-              <Button variant="outline" disabled={upload.isPending || reservationStarted} onClick={() => { setReplace(null); setPendingFile(null); setPendingOperationId(null); setReservedUpload(null); if (input.current) input.current.value = ""; }}>
+              <Button
+                variant="outline"
+                disabled={upload.isPending || reservationStarted}
+                onClick={() => {
+                  setReplace(null);
+                  setPendingFile(null);
+                  setPendingOperationId(null);
+                  setReservedUpload(null);
+                  if (input.current) input.current.value = "";
+                }}
+              >
                 Cancel replacement
               </Button>
             </p>
@@ -386,7 +631,13 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
             <CardHeader>
               <CardTitle className="flex gap-2 items-center">
                 <FileText className="h-5 w-5" />
-                {doc.data.name}
+                <button
+                  type="button"
+                  className="text-left break-words"
+                  onClick={() => setDetails(doc)}
+                >
+                  {doc.data.name}
+                </button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -396,6 +647,15 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
                   ? `${Math.ceil(doc.data.byteSize / 1024)} KB`
                   : "Upload not completed"}{" "}
                 · {doc.data.versions.length} version(s)
+              </p>
+              <p>
+                Created by{" "}
+                {repository.data?.creators.find((p) => p.id === doc.createdBy)
+                  ?.name ?? `User ${doc.createdBy}`}{" "}
+                ·{" "}
+                {doc.createdAt ? new Date(doc.createdAt).toLocaleString() : "—"}{" "}
+                · Source: {doc.data.uploadSource ?? doc.data.scope}
+                {doc.data.purpose === "training" ? " · Training materials" : ""}
               </p>
               <div className="flex flex-wrap gap-2">
                 {doc.data.state === "active" ? (
@@ -444,7 +704,22 @@ export function WorkHubFiles({ fixedChannelId, initialFile, onInitialFileConsume
                       <History className="mr-1 h-4 w-4" />
                       Versions
                     </Button>
-                    {!trainingMaterials && doc.canManage && doc.data.currentFileId && <ShareFileToChannel key={doc.id} source={doc} channels={channels.data ?? []} onShare={channelId => change.mutateAsync({ action: "share-to-channel", payload: { id: doc.id, channelId } })} />}
+                    {!trainingMaterials &&
+                      doc.canManage &&
+                      doc.data.scope !== "meeting" &&
+                      doc.data.currentFileId && (
+                        <ShareFileToChannel
+                          key={doc.id}
+                          source={doc}
+                          channels={channels.data ?? []}
+                          onShare={(channelId) =>
+                            change.mutateAsync({
+                              action: "share-to-channel",
+                              payload: { id: doc.id, channelId },
+                            })
+                          }
+                        />
+                      )}
                     {doc.canManage && (
                       <>
                         <Button

@@ -48,6 +48,7 @@ export function projectSafetyMaturity(raw: unknown) {
 }
 export const SafetyMaturitySummarySchema = z.object({
   version: z.literal(1), demo: z.boolean(), incomplete: z.boolean(), score: z.number(),
+  baseScore:z.number().optional(),bonusScore:z.number().min(0).max(10).default(0),combinedScore:z.number().max(110).optional(),bonusCompleted:z.number().default(0),bonusRequired:z.number().default(0),
   assessedAt: z.string().nullable(),
   categories: z.array(z.object({
     id: z.string(), weight: z.number(), level: z.number(), points: z.number(), evidence: z.string().nullable(),

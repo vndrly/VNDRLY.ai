@@ -1,0 +1,17 @@
+import React from "react";
+import {render,screen,fireEvent,cleanup} from "@testing-library/react";
+import {afterEach,it,expect,vi} from "vitest";
+const mock=vi.hoisted(()=>({push:vi.fn(),data:{certifications:[{id:"cert",title:"Gate credential",complete:false,augmented:false,steps:[{id:"course",title:"Gate course",type:"course",href:"/work-hub/training/current-assignment",complete:false}]}],trips:[],expenses:[],folders:[],templates:[],options:{people:[],groups:[],positions:[],accountTypes:[]},creators:[],canAdmin:false,canAssignTravel:false}}));
+vi.mock("@/hooks/use-auth",()=>({useAuth:()=>({user:{id:2,vendorId:3},activeMembershipId:1})}));
+vi.mock("@/hooks/useColors",()=>({useColors:()=>({primary:"#d99a00",card:"#242426",text:"white"})}));
+vi.mock("@tanstack/react-query",()=>({useQueryClient:()=>({invalidateQueries:vi.fn()}),useQuery:({queryKey}:any)=>({data:queryKey.at(-1)==="receipts"?[]:mock.data})}));
+vi.mock("expo-router",()=>({router:{push:mock.push}}));
+vi.mock("./NativeRepositoryFiles",()=>({default:()=>null}));
+vi.mock("./NativeAugmented",()=>({NativeAugmented:()=>null}));
+vi.mock("@/lib/meeting-files",()=>({downloadAndShareProtectedFile:vi.fn()}));
+vi.mock("@/lib/api",()=>({apiFetch:vi.fn()}));
+vi.mock("@/lib/auth",()=>({captureAuthScope:()=>({generation:1}),isAuthScopeCurrent:()=>true}));
+import {NativeRepository} from "./NativeRepository";
+afterEach(cleanup);
+it("opens the assigned course from a certification step instead of the reference guide",()=>{render(<NativeRepository progressOnly/>);fireEvent.click(screen.getByText("○ 1. Gate course"));expect(mock.push).toHaveBeenCalledWith("/work-hub/training/current-assignment");});
+it("keeps travel authorization and folder administration unavailable to an ordinary traveler",()=>{render(<NativeRepository/>);expect(screen.queryByText("Authorize selected travelers")).toBeNull();expect(screen.queryByText("Grant Assign Travel")).toBeNull();});

@@ -16,7 +16,7 @@
     "level2": "50% — implementada con registros vigentes",
     "level3": "75% — implementación comprobada",
     "level4": "100% — eficacia demostrada",
-    "library": "Biblioteca"
+    "library": "De la biblioteca"
   },
   "equipment": {
     "title": "Inventario de equipo"
@@ -280,7 +280,7 @@
     "releaseHoldReason": "Motivo para liberar esta retención",
     "releaseNamedHold": "Liberar retención: {{name}}",
     "title": "Archivos e inventario",
-    "filesNotes": "Archivos y notas",
+    "filesNotes": "Biblioteca de archivos",
     "inventory": "Inventario",
     "uploadFile": "Subir archivo",
     "addNote": "Agregar nota",
@@ -3813,9 +3813,9 @@
     "status_exempted": "Exento",
     "assignedWork": "Trabajo asignado",
     "invalidLink": "Enlace de asignación no válido.",
-    "manage": "Administrar formularios, políticas, encuestas y capacitación",
+    "manage": "VNDRLY/U",
     "library": "Biblioteca",
-    "bundles": "Paquetes",
+    "bundles": "Certificaciones VNDRLY/U",
     "assignments": "Asignaciones",
     "toComplete": "Por completar",
     "kind_policy": "Reconocimiento de política",

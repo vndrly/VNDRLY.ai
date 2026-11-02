@@ -18,7 +18,7 @@ export function SafetyMaturitySummary() {
     {result.data && <>
       {result.data.incomplete && <p>{t("safetyMaturity.incomplete")}</p>}
       <div className="safety-score-cards">
-        <Card className="safety-program-card"><CardHeader><CardTitle>{result.data.score} / 100</CardTitle></CardHeader><CardContent>{t("safetyMaturity.title")}</CardContent></Card>
+        <Card className="safety-program-card"><CardHeader><CardTitle>{result.data.combinedScore??result.data.score} / 110</CardTitle></CardHeader><CardContent>{t("safetyMaturity.title")}<p>Base: {result.data.score} / 100 · Vendor bonus: {result.data.bonusScore} / 10</p></CardContent></Card>
         {result.data.categories.map(category => <Card key={category.id} className="safety-program-card">
           <CardHeader><CardTitle><ShieldCheck aria-hidden="true" />{t(`safetyMaturity.${category.id}`)}</CardTitle></CardHeader>
           <CardContent className="safety-score-body">

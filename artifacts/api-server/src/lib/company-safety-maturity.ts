@@ -1,3 +1,4 @@
+import {repositoryCertificationProgress} from '../work-hub/repository-certifications';
 import { and, eq, sql } from "drizzle-orm";
 import { db, workHubFormTemplatesTable as templates } from "@workspace/db";
 import { projectSafetyMaturity, maturityResourceTitle, MATURITY_RESOURCE_TYPES, LibraryMetadataSchema } from "@workspace/api-zod";
@@ -16,7 +17,8 @@ export async function companySafetyMaturity(actor: LibraryActor) {
   });
   const result = projectSafetyMaturity(row?.record);
   const training=await companyRequiredTraining(db,owner);
-  return { ...result, categories: result.categories.map(category => ({ ...category, resources: MATURITY_RESOURCE_TYPES.flatMap(type => {
+  const augmented=await repositoryCertificationProgress(db,owner);
+  return { ...result, baseScore:result.score, bonusScore:augmented.bonusScore, combinedScore:Math.min(110,result.score+augmented.bonusScore),bonusCompleted:augmented.bonusCompleted,bonusRequired:augmented.bonusRequired, categories: result.categories.map(category => ({ ...category, resources: MATURITY_RESOURCE_TYPES.flatMap(type => {
     const resource = published.find(item => item.title === maturityResourceTitle(category.id, type));
     return resource ? [{ id: resource.id, title: type }] : [];
   }), requirements: safetyRequirementLinks(category.id, resources).map(r=>{const required=training.requirements.filter(item=>item.familyId===r.id),course=training.items.get(r.id);return {...r,resources:r.resources.map(resource=>resource.type==='training'&&course?{...resource,id:course.record.id}:resource),trainingRequirement:{required:required.length,completed:required.filter(item=>item.completed).length}};}) })) };
