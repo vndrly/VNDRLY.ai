@@ -26,7 +26,7 @@ export default function SafetyScoreScreen() {
       <View style={card}>
         <Text style={{ ...text, fontSize: 18, fontWeight: "600" }}>{t("safetyMaturity.title")}</Text>
         <Text style={{ ...text, fontSize: 36, fontWeight: "700" }}>{readiness.data ? `${readiness.data.score} / 100` : readiness.isError ? t("safety.scoreDetails.unavailable") : t("safety.scoreDetails.loading")}</Text>
-        {readiness.data&&<View><Text style={text}>VNDRLY base: {readiness.data.score} / 100 · Vendor Augmented bonus: {readiness.data.bonusScore.toFixed(2)} / 10</Text><Text style={text}>Combined: {(readiness.data.combinedScore??readiness.data.score).toFixed(2)} / 110</Text></View>}
+        {readiness.data&&<View><Text style={text}>VNDRLY base: {readiness.data.score} / 100 · Vendor Augmented bonus: {(readiness.data.bonusScore ?? 0).toFixed(2)} / 10</Text><Text style={text}>Combined: {(readiness.data.combinedScore??readiness.data.score).toFixed(2)} / 110</Text></View>}
         <Text style={text}>{t("safetyMaturity.separate")}</Text>
         {metrics.data && <Text style={text}>{t("safety.scoreDetails.events", { count: metrics.data.openEventCount, hipo: metrics.data.openHipoCount })}</Text>}
         {readiness.data?.incomplete && <Text style={text}>{t("safetyMaturity.incomplete")}</Text>}

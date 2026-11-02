@@ -363,14 +363,14 @@ export function WorkHubFiles({
       sort === "name"
         ? row.data.name
         : sort === "creator"
-          ? (repository.data?.creators.find((p) => p.id === row.createdBy)
+          ? (repository.data?.creators?.find((p) => p.id === row.createdBy)
               ?.name ?? "")
           : sort === "type"
             ? row.data.contentType
             : sort === "source"
               ? row.data.uploadSource
               : sort === "folder"
-                ? (repository.data?.folders.find(
+                ? (repository.data?.folders?.find(
                     (f) => f.id === row.data.folderId,
                   )?.data.name ?? "")
                 : sort === "created"
@@ -467,6 +467,7 @@ export function WorkHubFiles({
                 Word and Excel files can be downloaded; edit them in their own
                 applications.
               </p>
+              {(meetingSession?.occurrenceId || new URLSearchParams(window.location.search).has("channel")) && <label>Destination <BrandedSelect aria-label="File audience" value={scope} onChange={e=>setScope(e.target.value)} disabled={upload.isPending || reservationStarted}><option value="personal">Personal</option><option value="company">Company</option><option value="channel">Channel</option>{meetingSession?.occurrenceId && <option value="meeting">Active meeting</option>}</BrandedSelect></label>}
               <FolderPicker
                 data={repository.data}
                 value={folderId}
@@ -650,7 +651,7 @@ export function WorkHubFiles({
               </p>
               <p>
                 Created by{" "}
-                {repository.data?.creators.find((p) => p.id === doc.createdBy)
+                {repository.data?.creators?.find((p) => p.id === doc.createdBy)
                   ?.name ?? `User ${doc.createdBy}`}{" "}
                 ·{" "}
                 {doc.createdAt ? new Date(doc.createdAt).toLocaleString() : "—"}{" "}

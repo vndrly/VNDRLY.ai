@@ -13,7 +13,7 @@ vi.mock('./use-library',()=>({useLibrary:(path:string)=>{paths.push(path);return
 afterEach(cleanup);
 it('shows vendor files in Library and managed courses with a service scope switch in Training',()=>{
  render(<Workspace canManage/>);expect(screen.getByText('Vendor uploaded files')).toBeTruthy();expect(screen.queryByText('Managed course')).toBeNull();
- fireEvent.click(screen.getByText('workHubLibrary.training'));
+ fireEvent.click(screen.getByText('VNDRLY/U Courses'));
  expect(screen.getByText('Managed course')).toBeTruthy();expect(screen.queryByText('Vendor course')).toBeNull();
  fireEvent.click(screen.getByRole('switch',{name:'workHubLibrary.myServices'}));
  expect(paths.some(p=>p.includes('myServices=true'))).toBe(true);

@@ -1,3 +1,4 @@
+vi.mock("@/components/work-hub/NativeRepository",()=>({NativeRepository:()=>null}));
 import React from "react";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";

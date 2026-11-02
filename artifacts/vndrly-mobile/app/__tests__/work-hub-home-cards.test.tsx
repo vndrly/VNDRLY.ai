@@ -1,3 +1,4 @@
+vi.mock("@/components/work-hub/NativeRepository",()=>({NativeRepository:()=>null}));
 import fs from "node:fs";
 import path from "node:path";
 import React from "react";

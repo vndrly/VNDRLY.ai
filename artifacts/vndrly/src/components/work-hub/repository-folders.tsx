@@ -298,7 +298,7 @@ export function FolderPicker({
         disabled={disabled}
       >
         <option value="">General repository</option>
-        {data?.folders.map((f) => (
+        {data?.folders?.map((f) => (
           <option key={f.id} value={f.id}>
             {f.data.name}
           </option>
