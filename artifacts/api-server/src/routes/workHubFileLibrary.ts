@@ -12,6 +12,7 @@ import {
   db,
   userOrgMembershipsTable as memberships,
   workHubFilesTable as files,
+  workHubChannelMembersTable as channelMembers,
   workHubFileLibraryTable as library,
   workHubMeetingChatTable as meetingChat,
   workHubMeetingOccurrencesTable as meetingOccurrences,
@@ -424,7 +425,7 @@ router.get("/work-hub/file-library", async (req, res) => {
     const candidates = await db
       .select()
       .from(library)
-      .where(and(scope(owner), eq(library.kind, "document")))
+      .where(and(eq(library.kind, "document"), or(scope(owner), and(sql`${library.data}->>'scope' = 'channel'`, sql`EXISTS (SELECT 1 FROM ${channelMembers} cm WHERE cm.channel_id::text = ${library.data}->>'channelId' AND cm.user_id = ${actor.userId})`))))
       .orderBy(desc(library.updatedAt));
     const favorites = await db
       .select()
