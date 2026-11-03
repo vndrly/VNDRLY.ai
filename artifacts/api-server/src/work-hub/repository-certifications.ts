@@ -125,7 +125,7 @@ export async function repositoryCertificationProgress(
   owner: WorkHubOwner,
   userId: number | null = null,
 ) {
-  const courseRows = await reader
+  const [courseRows, assigned, repository, currentPeople] = await Promise.all([reader
     .select()
     .from(templates)
     .where(
@@ -133,8 +133,8 @@ export async function repositoryCertificationProgress(
         eq(templates.ownerOrgType, owner.type),
         eq(templates.ownerOrgId, owner.id),
       ),
-    );
-  const assigned = await reader
+    ),
+  reader
     .select({ instance: instances, submission: submissions.submittedAt })
     .from(instances)
     .innerJoin(templates, eq(templates.id, instances.templateId))
@@ -146,15 +146,16 @@ export async function repositoryCertificationProgress(
         userId ? eq(instances.assigneeUserId, userId) : undefined,
       ),
     )
-    .orderBy(desc(submissions.submittedAt));
-  const repository = await reader
+    .orderBy(desc(submissions.submittedAt)),
+  reader
     .select()
     .from(records)
-    .where(repositoryScope(owner));
+    .where(repositoryScope(owner)),
+  companyLibraryPeople(reader, owner),
+  ]);
   const augmentations = repository.filter(
     (r) => r.kind === "vendor_augmentation",
   );
-  const currentPeople = await companyLibraryPeople(reader, owner);
   const membershipByUser = new Map(
     currentPeople.map((p) => [p.userId, p.membershipId]),
   );
