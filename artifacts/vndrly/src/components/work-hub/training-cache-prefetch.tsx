@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { isWorkHubAdmin, ownerForUser, workHubRequest } from "@/lib/work-hub-client";
 import { trainingProgressOptions, type TrainingProgressData } from "@/lib/training-progress-query";
-import { effectiveTrainingProgressMethod } from "@/lib/training-progress-experiment";
+import { effectiveTrainingProgressMethod, trainingProgressMethod } from "@/lib/training-progress-experiment";
 
 /** Start the existing authenticated reads during app startup.
  * No persistent storage or longer freshness window. Server authorization and
@@ -35,10 +35,12 @@ export default function TrainingCachePrefetch() {
       staleTime: 15_000,
       retry: false,
     });
-    // Only the render experiment overlaps this request for canonical admin
-    // identities. The endpoint independently authorizes it; the component still
-    // waits for canViewTeamTraining before mounting or displaying team results.
-    const parallelTeam = method === "render" && isWorkHubAdmin(user);
+    // Admin authority is already part of the authenticated company context.
+    // Start this read before other home requests can occupy browser connections.
+    // The endpoint independently authorizes it, and display still waits for the
+    // personal response's canViewTeamTraining. Explicit cache ghosts retain the
+    // earlier serial behavior so the queue improvement remains measurable.
+    const parallelTeam = (method === "render" || trainingProgressMethod() === null) && isWorkHubAdmin(user);
     if (parallelTeam) void prefetchTeam();
     // fetchQuery shares in-flight work with the mounted card and respects its
     // existing staleTime. The request still performs normal server authorization.

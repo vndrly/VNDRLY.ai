@@ -57,6 +57,19 @@ it("does not infer team access from the user's account role", async () => {
   await waitFor(() => expect(state.fetchQuery).toHaveBeenCalledOnce());
   expect(state.prefetchQuery.mock.calls.map(([options]) => options.queryKey[1])).toEqual(["safety-summary"]);
 });
+it("starts the normal administrator team read without waiting behind home requests", () => {
+  Object.assign(state.user, { availableMemberships: [{ id: 11, role: "admin" }] });
+  window.history.replaceState({}, "", "/work-hub");
+  state.fetchQuery.mockReturnValue(new Promise(() => {}));
+  render(<TrainingCachePrefetch />);
+  expect(state.prefetchQuery.mock.calls.map(([options]) => options.queryKey[1])).toEqual(["team", "safety-summary"]);
+});
+it("retains serial team loading in the isolated cache comparison", () => {
+  Object.assign(state.user, { availableMemberships: [{ id: 11, role: "admin" }] });
+  state.fetchQuery.mockReturnValue(new Promise(() => {}));
+  render(<TrainingCachePrefetch />);
+  expect(state.prefetchQuery.mock.calls.map(([options]) => options.queryKey[1])).toEqual(["safety-summary"]);
+});
 it("prefetches team data only after the server grants access with the same identity key", async () => {
   state.fetchQuery.mockResolvedValue({ certifications: [], canViewTeamTraining: true });
   render(<TrainingCachePrefetch />);

@@ -38,6 +38,11 @@ unrelated companies. The original company query took **11.066 seconds**, then
   their existing version, expiry, document-access and acknowledgment checks.
 - Keep request-local parse/index reuse and the selected early authenticated
   prefetch. Normal requests use optimized reads plus existing cache semantics.
+  For authenticated company administrators, start Team Training alongside
+  personal progress and safety, while retaining the server permission check and
+  permission-gated display. Live browser traces showed Team Training waiting
+  8.6–23.8 seconds before being sent, then returning in about 0.2–0.4 seconds.
+  Moving it ahead of other home requests removes that serial connection queue.
 - Add opt-in `Server-Timing` profiling: request wall time, cumulative and maximum
   pool wait/query execution, query count, queue count, and named read/projection
   stages. Diagnostics are returned only after current administrator authority is
