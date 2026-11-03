@@ -1,4 +1,6 @@
 import { CardHeading } from "@/components/ui/card-heading";
+import { CertificationProgress, TrainingCompletionTotal } from "./repository-certifications";
+import { GraduationCap } from "lucide-react";
 import LanguageToggle from "@/components/language-toggle";
 import WorkdayControls from "@/components/workday-controls";
 import WorkforcePanel from "./workforce-panel";
@@ -71,11 +73,11 @@ export function WorkHubHome() {
   ];
 
   return <section className="work-hub-home" aria-label="Work Hub workspace" data-testid="work-hub-activity">
-    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact actions={<LanguageToggle />} />
+    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact actions={<LanguageToggle presentation="line" alwaysOn />} />
     <WorkdayControls />
-    {home.isPending && <p role="status">{c("Loading Work Hub…", "Cargando Work Hub…")}</p>}
     {home.isError && <p role="alert">{c("Work Hub summaries are unavailable. Open a row to check its records.", "Los resúmenes no están disponibles. Abra una fila para consultar sus registros.")}</p>}
     <div className="hub-home-columns">
+
       <HomeCard title={c("Today", "Hoy")} subtitle={c("Your schedule, work, and priorities", "Su horario, trabajo y prioridades")} icon={Sun}>
         <HomeRow icon={CalendarDays} label={c("Calendar", "Calendario")} value={count(calendar?.length, c("upcoming", "próximos"))} href="/work-hub/calendar" />
         <HomeRow icon={Clock3} label={user?.managedSubcontractor ? c("My Hours", "Mis horas") : c("My Work", "Mi trabajo")} value={user?.managedSubcontractor ? c("Open", "Abrir") : count(workCount)} href={user?.managedSubcontractor ? "/work-hub/calendar" : undefined} onClick={() => toggle("work")} expanded={user?.managedSubcontractor ? undefined : panel === "work"} />
@@ -90,6 +92,11 @@ export function WorkHubHome() {
       </HomeCard>
       {gate && <WorkforcePanel />}
       <DashboardTasks />
+      <HomeCard className="hub-certificates" title="VNDRLY/U Certificates" subtitle="Your certificates and assigned courses" icon={GraduationCap} actions={<TrainingCompletionTotal />}>
+        <div className="hub-training-content">
+          <CertificationProgress embedded />
+        </div>
+      </HomeCard>
     </div>
     <section aria-label={c("More tools", "Más herramientas")}><h2 className="hub-tools-title">{c("More tools", "Más herramientas")}</h2><div className="hub-home-tools">{utilities.map(({ label, icon: Icon, href }) => <Link className="hub-tool" href={href} key={href}><Icon aria-hidden="true" />{label}</Link>)}</div></section>
     {panel === "work" && <section data-card-layout className="hub-home-card hub-detail" aria-label={c("My Work", "Mi trabajo")}><CardHeading as="h2">{c("My Work", "Mi trabajo")}</CardHeading>

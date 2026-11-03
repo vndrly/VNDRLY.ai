@@ -1,3 +1,4 @@
+import { formatTrainingTitle } from "@/lib/training-title";
 import React, { useEffect, useState } from "react";
 import {
   Paragraph as Text,
@@ -111,7 +112,7 @@ export default function BundleDetail({ itemId }: { itemId: string }) {
       {data && (
         <View style={card}>
           <Heading>
-            {data.title}
+            {formatTrainingTitle(data.title)}
           </Heading>
           <Text style={label}>
             {t(`workHubLibrary.state_${data.metadata.state}`)} ·{" "}

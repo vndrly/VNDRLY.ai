@@ -1,3 +1,4 @@
+import { formatTrainingTitle } from "@/lib/training-title";
 import { CardHeading } from "@/components/ui/card-heading";
 import React, { useEffect, useState } from "react";
 import { AssignedLibraryReadSchema } from "@workspace/api-zod";
@@ -99,7 +100,7 @@ export default function EmployeeResponse({
   return (
     <div className="space-y-4">
       <section className={card}>
-        <CardHeading as="h3" className="font-semibold text-lg">{data.title}</CardHeading>
+        <CardHeading as="h3" className="font-semibold text-lg">{["training", "bundle"].includes(data.metadata.kind) ? formatTrainingTitle(data.title) : data.title}</CardHeading>
         <p>
           {t(`workHubLibrary.status_${data.assignment.status}`)} ·{" "}
           {t("workHubLibrary.version")} {data.metadata.contentVersion}

@@ -1,4 +1,8 @@
 import { meetingRepositoryAccess } from "../work-hub/repository-meeting-files";
+import { cachedTrainingProgress, invalidateTrainingProgress } from "../work-hub/training-progress-cache";
+import { currentDatabaseRealm } from "@workspace/db";
+import { companyTrainingProgress, teamTrainingAuthority, hasTeamTrainingAccess } from "../work-hub/team-training-progress";
+import { companySafetyScoreSummary } from "../lib/company-safety-maturity";
 import { Router } from "express";
 import { createHash } from "node:crypto";
 import { and, eq, desc, sql, inArray } from "drizzle-orm";
@@ -84,8 +88,27 @@ function fail(res: any, error: unknown) {
 router.get("/work-hub/repository/progress", async (_req, res) => {
   try {
     const actor = res.locals.actor as LibraryActor;
-    const { owner } = await libraryAuthority(db, actor);
-    return res.json(await repositoryCertificationProgress(db, owner, actor.userId));
+    const { owner, member } = await libraryAuthority(db, actor);
+    const key = `${currentDatabaseRealm()}:${owner.type}:${owner.id}:${actor.userId}:${member.id}`;
+    const [progress, canViewTeamTraining] = await Promise.all([
+      cachedTrainingProgress(key, () => repositoryCertificationProgress(db, owner, actor.userId)),
+      hasTeamTrainingAccess(owner, member, actor.userId),
+    ]);
+    return res.json({ ...progress, canViewTeamTraining });
+  } catch (error) { return fail(res, error); }
+});
+router.get("/work-hub/repository/team-progress", async (_req, res) => {
+  try {
+    const { owner } = await teamTrainingAuthority(res.locals.actor as LibraryActor);
+    const key = `${currentDatabaseRealm()}:${owner.type}:${owner.id}:team:progress`;
+    return res.json(await cachedTrainingProgress(key, () => companyTrainingProgress(owner)));
+  } catch (error) { return fail(res, error); }
+});
+router.get("/work-hub/repository/safety-summary", async (_req, res) => {
+  try {
+    const { owner } = await libraryAuthority(db, res.locals.actor as LibraryActor);
+    const key = `${currentDatabaseRealm()}:${owner.type}:${owner.id}:safety:summary`;
+    return res.json(await cachedTrainingProgress(key, () => companySafetyScoreSummary(owner)));
   } catch (error) { return fail(res, error); }
 });
 router.get("/work-hub/repository", async (req, res) => {
@@ -1327,6 +1350,7 @@ router.post("/work-hub/repository/:action", async (req, res) => {
         "Operation does not match the original request",
         409,
       );
+    invalidateTrainingProgress(`${currentDatabaseRealm()}:${ctx.owner.type}:${ctx.owner.id}`);
     return res.json(result);
   } catch (e) {
     return fail(res, e);

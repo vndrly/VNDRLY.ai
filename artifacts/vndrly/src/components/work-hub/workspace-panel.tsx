@@ -8,6 +8,6 @@ export function WorkspaceRow({ icon: Icon, label, value, href, onClick, expanded
   return href ? <Link href={href} className="hub-home-row" data-testid={testId}>{contents}</Link> : <button type="button" className="hub-home-row" onClick={onClick} aria-expanded={expanded} data-testid={testId}>{contents}</button>;
 }
 
-export function WorkspacePanel({ title, subtitle, icon: Icon, children, actions }: { title: string; subtitle: string; icon: LucideIcon; children: ReactNode; actions?: ReactNode }) {
-  return <section className="hub-home-card" aria-label={title}><header data-card-header-row className="hub-card-heading"><span className="hub-card-icon"><Icon aria-hidden="true" /></span><div><h2>{title}</h2><p>{subtitle}</p></div>{actions && <div className="hub-panel-actions">{actions}</div>}</header>{children}</section>;
+export function WorkspacePanel({ title, subtitle, icon: Icon, children, actions, className = "" }: { title: string; subtitle: string; icon: LucideIcon; children: ReactNode; actions?: ReactNode; className?: string }) {
+  return <section className={`hub-home-card ${className}`} aria-label={title}><header data-card-header-row className="hub-card-heading"><span className="hub-card-icon"><Icon aria-hidden="true" /></span><div><h2>{title}</h2><p>{subtitle}</p></div>{actions && <div className="hub-panel-actions">{actions}</div>}</header>{children}</section>;
 }

@@ -1,3 +1,4 @@
+import { formatTrainingTitle } from "@/lib/training-title";
 import {useAuth} from "@/hooks/use-auth";
 import {useQuery} from "@tanstack/react-query";
 import {ownerForUser,workHubRequest} from "@/lib/work-hub-client";
@@ -164,7 +165,7 @@ export default function BundleEditor({
               })
             }
           >
-            {item.title} · {t("workHubLibrary.version")} {item.contentVersion}
+            {formatTrainingTitle(item.title)} · {t("workHubLibrary.version")} {item.contentVersion}
           </TogglePillButton>
         ))}
       <details className="space-y-2"><summary className="font-semibold">Add from company Library</summary><p>Select company-shared documents, PDFs or videos as supplemental training.</p>{documents.data?.filter(d=>d.data.purpose==="training"&&d.data.scope==="company"&&d.data.state==="active"&&d.data.currentFileId).map(d=><OptionSwitch key={d.id} label={d.data.name} disabled={disabled||saving} value={selectedFiles.includes(d.id)} onChange={checked=>setSelectedFiles(current=>checked?[...current,d.id]:current.filter(id=>id!==d.id))}/>)}{documents.error&&<p role="alert">Company Library unavailable</p>}</details>

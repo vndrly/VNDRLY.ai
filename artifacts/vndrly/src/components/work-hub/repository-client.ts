@@ -21,6 +21,7 @@ export type RepositoryData = {
     userId: number;
     augmented: boolean;
     standalone?: boolean;
+    groupingOnly?: boolean;
     complete: boolean;
     steps: {
       id: string;

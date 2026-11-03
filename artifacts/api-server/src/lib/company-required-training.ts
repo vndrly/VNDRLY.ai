@@ -1,5 +1,5 @@
 import {safetyTrainingContentHash}from'./safety-training-content-hash';
-import {and,eq,inArray,isNull,or,sql}from'drizzle-orm';
+import {and,eq,inArray,isNull,or,sql,getTableColumns}from'drizzle-orm';
 import {db,vendorsTable as vendors,canonicalServicesTable as canonical,vendorCapabilitiesTable as capabilities,vendorWorkTypesTable as vendorWork,workTypesTable as workTypes,serviceMappingsTable as mappings,vendorPartnerServiceOffersTable as offers,vendorPeopleTable as workers,workHubFormTemplatesTable as templates,workHubFormInstancesTable as instances}from'@workspace/db';
 import {LibraryMetadataSchema,LibraryDraftSchema,AssignmentMetadataSchema,type WorkHubOwner}from'@workspace/api-zod';
 import {companyLibraryPeople}from'../work-hub/library-audience';
@@ -55,16 +55,35 @@ export async function selectedTrainingServices(reader:Reader,owner:WorkHubOwner)
  for(const id of selectedIds){const concept=concepts.find(c=>c.id===id),review=trainingCatalog.legacy.entries.find(c=>c.existingCanonicalId===id&&c.code===concept?.code&&c.canonicalDefinition===concept.definition);if(review)services.push(review);else unmapped.push(`service:${id}`);}
  return {services,unmapped:[...new Set(unmapped)]};
 }
-export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner){
+export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner,onlyUserId?:number){
   const [members,staff,selected,published,assigned,vendorRows]=await Promise.all([
-  companyLibraryPeople(reader,owner),
+  companyLibraryPeople(reader,owner).then(people=>onlyUserId?people.filter(person=>person.userId===onlyUserId):people),
   owner.type==='vendor'?reader.select().from(workers).where(and(eq(workers.vendorId,owner.id),eq(workers.isActive,true),isNull(workers.deletedAt))):Promise.resolve([] as (typeof workers.$inferSelect)[]),
   selectedTrainingServices(reader,owner),
-  reader.select().from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),sql`${templates.libraryMetadata}->>'state'='published' AND ${templates.libraryMetadata}->>'kind' IN ('training','policy')`)),
-  reader.select({templateId:instances.templateId,assigneeUserId:instances.assigneeUserId,assignment:sql<unknown>`jsonb_build_object('status',${instances.assignmentMetadata}->'status','membershipId',${instances.assignmentMetadata}->'membershipId','contentVersion',${instances.assignmentMetadata}->'contentVersion','refresherDueAt',${instances.assignmentMetadata}->'refresherDueAt')`,sourceSha256:sql<string|null>`${templates.libraryMetadata}->'safetyResource'->>'sourceSha256'`}).from(instances).innerJoin(templates,eq(templates.id,instances.templateId)).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id))),
+  reader.select({...getTableColumns(templates),definition:sql<unknown[]>`'[]'::jsonb`,libraryMetadata:sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content'`}).from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),sql`${templates.libraryMetadata}->>'state'='published' AND ${templates.libraryMetadata}->>'kind' IN ('training','policy')`)),
+  reader.select({templateId:instances.templateId,assigneeUserId:instances.assigneeUserId,assignment:sql<unknown>`jsonb_build_object('status',${instances.assignmentMetadata}->'status','membershipId',${instances.assignmentMetadata}->'membershipId','contentVersion',${instances.assignmentMetadata}->'contentVersion','refresherDueAt',${instances.assignmentMetadata}->'refresherDueAt')`,sourceSha256:sql<string|null>`${templates.libraryMetadata}->'safetyResource'->>'sourceSha256'`}).from(instances).innerJoin(templates,eq(templates.id,instances.templateId)).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),onlyUserId?eq(instances.assigneeUserId,onlyUserId):undefined)),
    owner.type==='vendor'?reader.select({catalog:vendors.staffRoleCatalog}).from(vendors).where(eq(vendors.id,owner.id)).limit(1):Promise.resolve([]),
  ]);
  const people=members.filter(p=>p.vendorPeopleId===null||staff.some(w=>w.id===p.vendorPeopleId));
+ // Fetch lesson bodies only for potentially applicable families. Header-only
+ // policy rows still supply all service applicability decisions below.
+ const neededFamilies=new Set<string>();
+ for(const person of people){
+  const worker=staff.find(w=>w.id===person.vendorPeopleId||w.userId===person.userId);
+  const input={roles:worker?.roles??[],vendorRole:worker?.vendorRole??(person.role==='field_employee'?'field':'office'),jobTitle:worker?.jobTitle??null,membershipRole:person.role};
+  matchSafetyTrainingRoles(input,[],trainingCatalog.common.rules).familyIds.forEach(id=>neededFamilies.add(id));
+  for(const service of selected.services){
+   matchSafetyTrainingRoles(input,service.roleMappings,[]).familyIds.forEach(id=>neededFamilies.add(id));
+   for(const additional of trainingCatalog.additional.courses){
+    if(!additionalTrainingApplies(additional,service))continue;
+    matchSafetyTrainingRoles(input,additional.roleMappings.filter(rule=>additionalTrainingApplies(rule,service)),[]).familyIds.forEach(id=>neededFamilies.add(id));
+   }
+  }
+ }
+ const bodyIds=published.filter(row=>{const m=row.libraryMetadata as any;const course=trainingCatalog.curriculum.find(c=>c.id===m?.safetyResource?.familyId);return m?.kind==='training'&&neededFamilies.has(m?.safetyResource?.familyId)&&!!course&&[course,...(course.compatibleVersions??[])].some(v=>v.sourceSha256===m.safetyResource.sourceSha256);}).map(row=>row.id);
+ const bodies=bodyIds.length?await reader.select({id:templates.id,libraryMetadata:templates.libraryMetadata}).from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),inArray(templates.id,bodyIds))):[];
+ const bodyById=new Map(bodies.map(row=>[row.id,row.libraryMetadata]));
+ for(const row of published){const metadata=bodyById.get(row.id);if(metadata)row.libraryMetadata=metadata;}
  const trusted=new Map<string,{record:typeof templates.$inferSelect;metadata:ReturnType<typeof LibraryMetadataSchema.parse>}>();
  const trustedVersionFamilies=new Map<string,{familyId:string;contentVersion:number;compatible:boolean}>();
  for(const record of published){

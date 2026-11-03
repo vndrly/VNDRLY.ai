@@ -1,3 +1,4 @@
+import { formatTrainingTitle } from "@/lib/training-title";
 import {VendorAugmented} from "../repository-certifications";
 import React, { useState } from "react";
 import {RefreshCw} from "lucide-react";
@@ -235,7 +236,7 @@ export default function LibraryWorkspace({
           .filter((i) => i.title.toLowerCase().includes(search.toLowerCase()))
           .map((item) => (
             <View key={item.instanceId} style={card}>
-              <Heading>{item.title}</Heading>
+              <Heading>{["training", "bundle"].includes(item.kind) ? formatTrainingTitle(item.title) : item.title}</Heading>
               <Text style={label}>
                 {t(`workHubLibrary.status_${item.assignment.status}`)} ·{" "}
                 {new Date(item.assignment.dueAt).toLocaleString()}
@@ -262,7 +263,7 @@ export default function LibraryWorkspace({
           )
           .map((item) => (
             <View key={item.itemId} style={card}>
-              <Heading>{item.title}</Heading>
+              <Heading>{["training", "bundle"].includes(item.kind) ? formatTrainingTitle(item.title) : item.title}</Heading>
               <Text style={label}>
                 {t(`workHubLibrary.kind_${item.kind}`)} ·{" "}
                 {t(`workHubLibrary.state_${item.state}`)} ·{" "}
@@ -309,7 +310,7 @@ export default function LibraryWorkspace({
       {tab === "assignments" &&
         assignments.data?.anonymous.map((item) => (
           <View key={item.itemId} style={card}>
-            <Heading>{item.title}</Heading>
+            <Heading>{["training", "bundle"].includes(item.kind) ? formatTrainingTitle(item.title) : item.title}</Heading>
             <Text style={label}>
               {t("workHubLibrary.anonymous")} · {item.responded}/{item.assigned}
             </Text>

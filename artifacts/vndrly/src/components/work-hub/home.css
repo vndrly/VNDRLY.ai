@@ -12,7 +12,25 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-card-icon svg { width: 20px; height: 20px; filter: none; }
 .hub-card-heading > div:not(.hub-panel-actions) { flex: 1; min-width: 0; }
 .hub-panel-actions { margin-left: auto; align-self: flex-start; }
-.hub-home-row { width: 100%; min-height: 52px; border-top: 1px solid #3a3a3a; display: flex; align-items: center; gap: 11px; padding: 13px 0; text-align: left; color: #ececec; transition: background-color .15s; }
+.hub-certificates .hub-card-heading { display: grid !important; grid-template-columns: 20px minmax(0, 1fr) max-content; align-items: start; column-gap: 8px; row-gap: 2px; }
+.hub-certificates .hub-card-heading > div:not(.hub-panel-actions) { display: contents; }
+.hub-certificates .hub-card-heading h2 { grid-column: 2; grid-row: 1; white-space: nowrap; font-size: clamp(14px, 1.5vw, 19px); }
+.hub-certificates .hub-card-heading p { grid-column: 2 / -1; grid-row: 2; margin: 0; }
+.hub-certificates .hub-card-heading > .hub-panel-actions { grid-column: 3; grid-row: 1; justify-self: end; min-width: 0; width: auto; max-width: none; margin-left: 0; }
+.hub-certificates .hub-card-heading { padding-bottom: 6px; }
+.hub-certificates .vendor-repository h3 { margin-top: 0; margin-bottom: 6px; }
+.hub-training-summary { list-style: none; cursor: pointer; font-weight: 600; }
+.hub-training-summary::-webkit-details-marker { display: none; }
+.hub-training-certificate[open] > .hub-training-summary .hub-chevron { transform: rotate(90deg); }
+.hub-training-certificate > :not(summary) { margin-left: 30px; margin-right: 0; }
+.hub-certificates .hub-training-group + .hub-training-group { margin-top: 0; }
+.hub-home-row { width: 100%; min-height: 44px; border-top: 1px solid #3a3a3a; display: flex; align-items: center; gap: 11px; padding: 10px 0; text-align: left; color: #ececec; transition: background-color .15s; }
+.hub-training-summary .hub-row-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hub-certificates .vendor-repository .hub-training-summary { box-sizing: border-box; height: 44px; min-height: 44px; padding-block: 10px; line-height: 20px; }
+.hub-certificates .hub-training-certificate { margin-block: 0; }
+.hub-training-content { padding-bottom: 0; }
+.hub-training-content:has(details[open]) { padding-bottom: 16px; }
+.training-admin-message { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 28px; height: 22px; color: var(--brand-primary); border: 1px solid var(--brand-primary); border-radius: 7px; background: transparent; }
 .hub-home-row:hover, .hub-home-row[aria-expanded=true] { background: color-mix(in srgb, var(--brand-primary) 8%, transparent); }
 .hub-inline-panel { border-top: 1px solid #3a3a3a; padding: 4px 0 10px 30px; }
 .hub-inline-panel > p { padding: 10px 0; color: #a3a3a3; font-size: 12px; }

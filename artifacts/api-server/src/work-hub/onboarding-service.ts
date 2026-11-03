@@ -1,4 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { currentDatabaseRealm } from "@workspace/db";
+import { invalidateTrainingProgress } from "./training-progress-cache";
 import {
   db,
   workHubFormTemplatesTable as templates,
@@ -188,7 +190,8 @@ export async function onboardingPeople(
   );
 }
 export async function ensureOnboarding(actor: LibraryActor) {
-  await db.transaction(async (tx) => {
+  const allocation = await db.transaction(async (tx) => {
+    let assigned = 0;
     const { owner, member } = await libraryAuthority(tx, actor, false, true),
       bundles = await tx
         .select()
@@ -209,11 +212,16 @@ export async function ensureOnboarding(actor: LibraryActor) {
       );
       if (!targets.length) continue;
       const { root, items } = await savedBundleItems(tx, record);
-      await allocateLibraryItems(tx, root, items, targets, false, new Date());
+      assigned += (await allocateLibraryItems(tx, root, items, targets, false, new Date())).assigned.length;
     }
-    await ensurePolicyTraining(tx,owner,actor.userId);
-    await ensureRequiredTraining(tx,owner,actor.userId);
+    assigned += await ensurePolicyTraining(tx,owner,actor.userId);
+    assigned += await ensureRequiredTraining(tx,owner,actor.userId);
+    return { owner, assigned };
   });
+  if (allocation.assigned) invalidateTrainingProgress(`${currentDatabaseRealm()}:${allocation.owner.type}:${allocation.owner.id}`);
+  return readLibraryEntry(actor);
+}
+export async function readLibraryEntry(actor: LibraryActor) {
   const checklist = await employeeChecklist(actor);
   return {
     ...checklist,

@@ -1,4 +1,3 @@
-import {CertificationProgress} from "@/components/work-hub/repository-certifications";
 import { ContentCardHeader } from "@/components/ui/card";
 import { CardHeading } from "@/components/ui/card-heading";
 import AssignedCards from "@/components/work-hub/library/assigned-cards";
@@ -2287,7 +2286,7 @@ function WorkHubContent() {
     const channel = new URLSearchParams(window.location.search).get("channel");
     if (channel) navigate(`/work-hub/chat?channel=${encodeURIComponent(channel)}`, { replace: true });
   }, [moduleName, navigate]);
-  if (!module || moduleName === "activity") return <><CertificationProgress/><ActivityWorkspace /></>;
+  if (!module || moduleName === "activity") return <ActivityWorkspace />;
   if (moduleName === "native-work") return <NativeOperations />;
   if (moduleName === "implementation-exports") return <Shell module="settings"><ImportExportTools /></Shell>;
   if (moduleName === "managed-crews") return <ManagedCrews />;

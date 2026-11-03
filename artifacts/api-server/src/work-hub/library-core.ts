@@ -1,4 +1,6 @@
 import { and, eq, desc } from "drizzle-orm";
+import { currentDatabaseRealm } from "@workspace/db";
+import { invalidateTrainingProgress } from "./training-progress-cache";
 import {
   db,
   workHubFormTemplatesTable as templates,
@@ -121,6 +123,7 @@ export async function libraryCommand<T extends Record<string, unknown>>(
     },
   );
   verifyLiveMeetingReplay(result, fingerprint);
+  invalidateTrainingProgress(`${currentDatabaseRealm()}:${owner.type}:${owner.id}`);
   return result;
 }
 export async function checkLibraryVersion(

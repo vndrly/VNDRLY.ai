@@ -1,3 +1,4 @@
+import { formatTrainingTitle } from "@/lib/training-title";
 import React from 'react';
 import {BookOpen} from 'lucide-react';
 import {z} from 'zod/v4';
@@ -9,7 +10,7 @@ export default function TrainingCourseGuide({itemId}:{itemId:string}){
  if(!api.data)return <p role="status">{api.error||'Loading course information…'}</p>;
  const data=api.data;
  return <section aria-label="Course information" data-library-card="" className="training-course-guide-card space-y-5 p-4">
-  <div><h3 className="flex items-center gap-2 text-lg font-bold"><BookOpen aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--brand-primary)]"/>Study materials</h3><p>Download the complete lessons, worked scenarios, practice questions and answer explanations for {data.title}.</p><a className="font-semibold underline" href={data.studyUrl}>Download study guide (PDF)</a></div>
+  <div><h3 className="flex items-center gap-2 text-lg font-bold"><BookOpen aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--brand-primary)]"/>Study materials</h3><p>Download the complete lessons, worked scenarios, practice questions and answer explanations for {formatTrainingTitle(data.title)}.</p><a className="font-semibold underline" href={data.studyUrl}>Download study guide (PDF)</a></div>
   <details><summary className="cursor-pointer text-lg font-bold">Training outline ({data.outline.length} sections)</summary><ol className="mt-3 list-decimal space-y-3 pl-6">{data.outline.map(section=><li key={section.number}><p className="font-semibold">{section.title}</p><p>{section.summary}</p>{section.questionCount>0&&<p className="text-sm">{section.questionCount} {section.questionCount===1?'question':'questions'}</p>}</li>)}</ol></details>
   <details><summary className="cursor-pointer text-lg font-bold">Course scoring and completion</summary><div className="mt-3 space-y-2">
    <p>{data.scoring.questionCount} learning questions.</p>
@@ -17,6 +18,6 @@ export default function TrainingCourseGuide({itemId}:{itemId:string}){
    {data.scoring.exam&&<p>Separate certification exam: {data.scoring.exam.questionCount} questions; passing standard {data.scoring.exam.passingPercent}%. Its score is separate from the learning checks, and lesson remediation does not change an exam result.</p>}
   </div></details>
   <details><summary className="cursor-pointer text-lg font-bold">Contribution to the company training score</summary><div className="mt-3 space-y-2"><p>{data.companyScoring.explanation}</p><p className="font-semibold">{data.companyScoring.formula}</p><p>This training component provides up to {data.companyScoring.maximumTrainingPoints} points within the existing company scoring rubric.</p></div></details>
-  <div><h3 className="text-lg font-bold">Related training</h3><ul className="list-disc space-y-1 pl-5">{data.related.map(course=><li key={course.itemId}><Link className="underline" href={`/work-hub/library/${course.itemId}?view=training`}>{course.title}</Link></li>)}</ul></div>
+  <div><h3 className="text-lg font-bold">Related training</h3><ul className="list-disc space-y-1 pl-5">{data.related.map(course=><li key={course.itemId}><Link className="underline" href={`/work-hub/library/${course.itemId}?view=training`}>{formatTrainingTitle(course.title)}</Link></li>)}</ul></div>
  </section>;
 }

@@ -33,6 +33,7 @@ import {
 } from "../work-hub/training-service";
 import {
   ensureOnboarding,
+  readLibraryEntry,
   updateOnboardingRule,
   markLibraryPresented,
 } from "../work-hub/onboarding-service";
@@ -102,6 +103,10 @@ router.get(
 router.post(
   "/work-hub/library/entry",
   handle((_r, a) => ensureOnboarding(a)),
+);
+router.get(
+  "/work-hub/library/entry",
+  handle((_r, a) => readLibraryEntry(a)),
 );
 router.get(
   "/work-hub/library/assignments/:instanceId",

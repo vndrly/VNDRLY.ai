@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { workHubRequest } from "@/lib/work-hub-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
-import { GraduationCap, Layers, CheckCircle, Plus } from "lucide-react";
+import { GraduationCap, Layers, CheckCircle, Plus, ChevronRight } from "lucide-react";
 import { useRepository, type RepositoryData } from "./repository-client";
 import {
   RepositoryAudience,
@@ -11,34 +11,92 @@ import {
 } from "./repository-audience";
 import OptionSwitch from "./library/option-switch";
 import "./repository-theme.css";
-export function CertificationProgress({
-  profile = false,
-}: {
-  profile?: boolean;
-}) {
+import { formatTrainingTitle } from "@/lib/training-title";
+import TeamTrainingProgress from "./team-training-progress";
+export { formatTrainingTitle as certificateDisplayTitle } from "@/lib/training-title";
+function completionPercent(items: RepositoryData["certifications"]) {
+  const total = items.reduce((sum, item) => sum + Math.max(item.steps.length, 1), 0);
+  const completed = items.reduce((sum, item) => sum + (item.steps.length ? item.steps.filter((step) => step.complete).length : Number(item.complete)), 0);
+  return total ? Math.round(completed / total * 100) : 0;
+}
+function useTrainingProgress() {
   const repo = useRepository({ enabled: false });
   const progress = useQuery({
     queryKey: ["training-progress", repo.user?.userId, repo.user?.activeMembershipId, repo.owner?.type, repo.owner?.id],
     enabled: !!repo.owner,
-    queryFn: () => workHubRequest<Pick<RepositoryData, "certifications">>("/repository/progress"),
+    queryFn: () => workHubRequest<Pick<RepositoryData, "certifications"> & { canViewTeamTraining?: boolean }>("/repository/progress"),
+    staleTime: 30_000,
     refetchInterval: 30_000,
   });
+  return { repo, progress };
+}
+export function TrainingCompletionTotal() {
+  const { progress, repo } = useTrainingProgress();
+  const safety = useQuery({
+    queryKey: ["training-progress", "safety-summary", repo.user?.userId, repo.user?.activeMembershipId, repo.owner?.type, repo.owner?.id],
+    queryFn: () => workHubRequest<{ score: number; maximum: number; bonus: number; incomplete: boolean }>("/repository/safety-summary"),
+    enabled: !!repo.owner, staleTime: 15_000, refetchInterval: 30_000, retry: false,
+  });
+  if (!progress.data) return null;
+  const steps = new Map<string, boolean>();
+  for (const course of progress.data.certifications) {
+    for (const step of course.steps) {
+      const key = `${course.userId}:${step.type}:${step.id}`;
+      steps.set(key, step.complete && (steps.get(key) ?? true));
+    }
+  }
+  const percent = steps.size ? Math.round([...steps.values()].filter(Boolean).length / steps.size * 100) : 0;
+  return <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold">
+    <span aria-label="Overall training completion">{percent}%</span>
+    {safety.data && <><span aria-label="Company safety score" title={safety.data.incomplete ? "Safety assessment is incomplete" : "Combined company safety score"}>{safety.data.score}/{safety.data.maximum}</span><span aria-label="Safety bonus points">+{safety.data.bonus}</span></>}
+  </span>;
+}
+export function CertificationProgress({
+  profile = false,
+  embedded = false,
+}: {
+  profile?: boolean;
+  embedded?: boolean;
+}) {
+  const { repo, progress } = useTrainingProgress();
   const d = progress.data;
-  if (!d) return progress.isError ? <p role="alert">Training progress is unavailable. Refresh to try again.</p> : null;
-  const items = d.certifications.filter((c) => !profile || (c.complete && !c.standalone));
-  if (!items.length) return null;
+  if (!d) return progress.isError ? <p role="alert">Training progress is unavailable. Refresh to try again.</p> : embedded ? <p role="status">Loading training…</p> : null;
+  const items = d.certifications.filter((c) => !profile || (c.complete && !c.standalone && !c.groupingOnly));
+  const certifications = items.filter((c) => !c.standalone);
+  const standalone = items.filter((c) => c.standalone && !certifications.some((cert) =>
+    cert.userId === c.userId && cert.steps.some((step) => step.id === c.id),
+  ));
+  const groups = [
+    { title: "Certifications", items: certifications },
+    { title: "Standalone Courses", items: standalone.length ? [{
+      ...standalone[0],
+      id: "standalone-courses",
+      title: "Standalone Courses",
+      complete: standalone.every((course) => course.complete),
+      steps: standalone.flatMap((course) => course.steps),
+    }] : [] },
+  ].filter((group) => group.items.length > 0);
+  if (!items.length && !(embedded && d.canViewTeamTraining)) return null;
   return (
-    <section className="vendor-repository space-y-3">
-      <h2 className="flex gap-2 font-bold">
+    <section className={embedded ? "vendor-repository" : "vendor-repository space-y-3"}>
+      {!embedded && <h2 className="flex gap-2 font-bold">
         <GraduationCap size={19} />
         {profile ? "My certifications" : "My training and certifications"}
-      </h2>
-      {items.map((c) => (
-        <article className="repository-card space-y-2" key={c.id}>
-          <h3 className="flex gap-2 font-bold">
-            {c.complete && <CheckCircle size={17} />} {c.title}{" "}
+      </h2>}
+      {groups.map((group) => (
+        <section key={group.title} aria-label={group.title} className={embedded ? "hub-training-group" : "space-y-3"}>
+          {!profile && group.title !== "Standalone Courses" && <h3 className="font-bold">{group.title}</h3>}
+      {group.items.map((c) => (
+        <details className={embedded ? "hub-training-certificate" : "repository-card space-y-2"} key={c.id}>
+          <summary className={embedded ? "hub-home-row hub-training-summary" : "cursor-pointer font-bold"}>
+            {embedded && <GraduationCap aria-hidden="true" className="hub-row-icon" />}
+            <span title={formatTrainingTitle(c.title)} className={embedded ? "hub-row-label" : "inline-flex w-[calc(100%-1.5rem)] items-center gap-2"}>
+            {c.complete && <CheckCircle size={17} />} {formatTrainingTitle(c.title)}{" "}
             {c.augmented && <Layers size={16} aria-label="Vendor Augmented" />}
-          </h3>
+            {!embedded && <span className="ml-auto whitespace-nowrap text-sm">{completionPercent([c])}% complete</span>}
+            </span>
+            {embedded && <><span className="hub-row-value">{completionPercent([c])}%</span><ChevronRight aria-hidden="true" className="hub-chevron" /></>}
+          </summary>
           <p>
             {c.steps.filter((s) => s.complete).length} / {c.steps.length}{" "}
             complete
@@ -57,14 +115,17 @@ export function CertificationProgress({
               Prepare current course assignments
             </button>
           )}
-          <ol className="space-y-2">
+          <ol aria-label={`${c.title} progress`} className="space-y-2">
             {c.steps.map((step, i) => (
-              <li key={step.id} className="flex flex-wrap gap-2 items-center">
-                <span>
-                  {step.complete ? "✓" : "○"} {i + 1}.
+              <li key={step.id} className="flex flex-wrap items-center gap-3 border-t border-[var(--brand-primary)] py-3">
+                <span className="flex items-center gap-2" aria-current={!step.complete && i === c.steps.findIndex((s) => !s.complete) ? "step" : undefined}>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-[var(--brand-primary)] font-bold">
+                    {step.complete ? "✓" : i + 1}
+                  </span>
+                  <span>{step.complete ? "Completed" : i === c.steps.findIndex((s) => !s.complete) ? "Next step" : "Upcoming"}</span>
                 </span>
                 <a className="repo-action" href={step.href}>
-                  {step.title}
+                  {step.type === "course" ? formatTrainingTitle(step.title) : step.title}
                 </a>
                 {step.expiresAt && (
                   <span>
@@ -92,8 +153,11 @@ export function CertificationProgress({
               </li>
             ))}
           </ol>
-        </article>
+        </details>
       ))}
+        </section>
+      ))}
+      {embedded && d.canViewTeamTraining && <TeamTrainingProgress />}
       {repo.error && <p role="alert">{repo.error}</p>}
     </section>
   );

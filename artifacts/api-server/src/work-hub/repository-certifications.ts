@@ -1,4 +1,4 @@
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import {
   db,
@@ -126,7 +126,14 @@ export async function repositoryCertificationProgress(
   userId: number | null = null,
 ) {
   const [courseRows, assigned, repository, currentPeople] = await Promise.all([reader
-    .select()
+    .select({
+      id: templates.id,
+      name: templates.name,
+      currentVersion: templates.currentVersion,
+      bundleDefinition: templates.bundleDefinition,
+      libraryMetadata: sql<Record<string, unknown>>`${templates.libraryMetadata} - 'content'`,
+      hasCertificationExam: sql<boolean>`(${templates.libraryMetadata} #> '{content,training,certificationExam}') IS NOT NULL AND (${templates.libraryMetadata} #> '{content,training,certificationExam}') <> 'null'::jsonb`,
+    })
     .from(templates)
     .where(
       and(
@@ -135,7 +142,12 @@ export async function repositoryCertificationProgress(
       ),
     ),
   reader
-    .select({ instance: instances, submission: submissions.submittedAt })
+    .select({ instance: {
+      id: instances.id,
+      templateId: instances.templateId,
+      assigneeUserId: instances.assigneeUserId,
+      assignmentMetadata: instances.assignmentMetadata,
+    }, submission: submissions.submittedAt })
     .from(instances)
     .innerJoin(templates, eq(templates.id, instances.templateId))
     .leftJoin(submissions, eq(submissions.instanceId, instances.id))
@@ -211,7 +223,7 @@ export async function repositoryCertificationProgress(
       )
         continue;
       if (
-        m.data.content?.training?.certificationExam &&
+        current?.hasCertificationExam &&
         !a.data.progress.certificationExam?.attempts.some(
           (x) => x.passed && x.submittedAt,
         )
@@ -280,21 +292,24 @@ export async function repositoryCertificationProgress(
       const steps = b.data.entries.map((e) =>
         courseStep(e.templateId, e.contentVersion, person),
       );
-      if (
-        !assigned.some(
+      const explicitlyAssigned = assigned.some(
           (r) =>
             r.instance.assigneeUserId === person &&
             AssignmentMetadataSchema.safeParse(r.instance.assignmentMetadata)
               .success &&
             (r.instance.assignmentMetadata as any).bundleId === bundle.id,
-        )
-      )
+        );
+      // Required-training allocation can reuse individual assignments without
+      // stamping a bundle ID. Preserve the published bundle's course grouping.
+      const coveredByAssignments = steps.length > 0 && steps.every((step) => !!step.instanceId);
+      if (!explicitlyAssigned && !coveredByAssignments)
         continue;
       output.push({
         id: bundle.id,
         title: bundle.name,
         userId: person,
         augmented: false,
+        groupingOnly: !explicitlyAssigned,
         steps,
         complete: steps.length > 0 && steps.every((s) => s.complete),
       });

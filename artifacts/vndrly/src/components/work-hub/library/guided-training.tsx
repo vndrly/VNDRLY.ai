@@ -1,3 +1,4 @@
+import { formatTrainingTitle } from "@/lib/training-title";
 import React, {useEffect,useState} from 'react';
 import {z} from 'zod/v4';
 import {AssignedLibraryReadSchema} from '@workspace/api-zod';
@@ -16,7 +17,7 @@ export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Da
  const action=async(payload:unknown)=>{try{setNotice('');await send(payload);}catch(e){setNotice(e instanceof Error?e.message:t('workHubLibrary.unavailable'));}};
  const scores=progress?.scores,complete=data.assignment.status==='completed';
  return <section className="space-y-4" data-guided-training={data.metadata.safetyResource?.familyId??'course'}>
-  <h2 className="text-xl font-bold">{data.title}</h2>
+  <h2 className="text-xl font-bold">{formatTrainingTitle(data.title)}</h2>
   <p>{t(complete?'h03Course.completed':'h03Course.section',{current:Math.min(index+1,guided.steps.length),total:guided.steps.length})}</p>
   {scores&&<div className="rounded-xl border p-4 space-y-2" data-testid="course-scores">
    <p>{t('h03Course.originalScore')}: {scores.originalCorrect}/{scores.total} ({scores.originalPercent.toFixed(1)}%)</p>

@@ -1,4 +1,5 @@
 import unreadRoutes, { unreadFor } from "./workHubUnread";
+import { expectedWorkforceContext } from "../lib/workforce-context";
 import { changeChatParticipants } from "../work-hub/chat-participants";
 import { startChat } from "../work-hub/start-chat";
 import { addChannelMember, readChannelMemberAccess, readChannelMembers } from "../work-hub/channel-members";
@@ -449,7 +450,7 @@ router.get("/work-hub/channels/:channelId/messages/:messageId", async (req,res) 
   }catch(error){return fail(res,error);}
 });
 
-router.post("/work-hub/channels/:channelId/messages", async (req, res) => {
+router.post("/work-hub/channels/:channelId/messages", expectedWorkforceContext, async (req, res) => {
   const actor = session(req);
   if (!actor)
     return sendApiError(

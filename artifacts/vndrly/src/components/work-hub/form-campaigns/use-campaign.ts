@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod/v4";
 import { workHubCommandResultSchema } from "@workspace/api-zod";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,6 +9,7 @@ import {
   type WorkHubOwner,
 } from "@/lib/work-hub-client";
 export function useCampaign<T>(path: string, parse: (value: unknown) => T) {
+  const queryClient = useQueryClient();
   const { user } = useAuth(),
     owner: WorkHubOwner | null = user?.partnerId
       ? { type: "partner", id: user.partnerId }
@@ -97,6 +98,8 @@ export function useCampaign<T>(path: string, parse: (value: unknown) => T) {
           throw Error("Saved operation could not be verified");
         attempt.current = null;
         await query.refetch();
+        if (request.path.startsWith("/library/"))
+          await queryClient.invalidateQueries({ queryKey: ["training-progress"] });
         if (request.view !== currentView.current) throw Error("Page changed");
         return result;
       } catch (e) {

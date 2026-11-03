@@ -52,6 +52,7 @@ main:has(.hub-chat-page), .dark main:has(.hub-chat-page) {
 .hub-conversation-category > summary { display: flex; align-items: center; gap: 8px; list-style: none; padding: 14px 0; cursor: pointer; font-size: 14px; font-weight: 600; }
 .hub-conversation-category > summary::-webkit-details-marker { display: none; }
 .hub-conversation-category > summary span { margin-left: auto; color: #b3b3b3; font-size: 12px; font-weight: 400; }
+.hub-conversation-category > summary span[data-unread=true], .hub-chat-page .hub-notification-category > summary span[data-unread=true]:last-child { color: #f87171; font-weight: 700; }
 .hub-conversation-category > summary::after { content: '›'; color: var(--brand-primary); }
 .hub-conversation-category[open] > summary::after { transform: rotate(90deg); }
 .hub-chat-page [aria-label="Channel content"]:has(.hub-chat-message) { max-height: 60vh; overflow-y: auto; }
@@ -98,7 +99,7 @@ main:has(.hub-chat-page), .dark main:has(.hub-chat-page) {
   overflow: hidden;
   overscroll-behavior: contain;
 }
-.hub-chat-page .hub-conversations-panel { position: relative; display: flex; flex-direction: column; gap: 16px; }
+.hub-chat-page .hub-conversations-panel { position: relative; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; isolation: isolate; contain: paint; }
 .hub-chat-page .hub-conversation-header { flex: 0 0 auto; min-height: 40px; }
 .hub-chat-page .hub-conversation-drawer {
   flex-wrap: nowrap;
@@ -115,8 +116,11 @@ main:has(.hub-chat-page), .dark main:has(.hub-chat-page) {
 .hub-chat-page .hub-create-panel {
   position: absolute;
   z-index: 10;
-  inset: 56px 8px 8px;
+  inset: 56px 2px 2px;
   width: auto;
+  max-width: calc(100% - 4px);
+  box-sizing: border-box;
+  margin: 0;
   min-height: 0;
   overflow: hidden;
   border: 0;
@@ -124,6 +128,10 @@ main:has(.hub-chat-page), .dark main:has(.hub-chat-page) {
   background: #303034;
 }
 .hub-chat-page .hub-conversation-chooser-card { flex: 1 1 0%; }
+.hub-chat-page .hub-conversation-browser-frame { position: relative; height: 100%; min-height: 0; overflow: hidden; box-sizing: border-box; }
+.hub-chat-page .hub-conversation-browser-frame > .hub-conversation-chooser-card { inset: 2px; max-width: calc(100% - 4px); }
+.hub-new-message-total { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 14px; font-weight: 700; line-height: 20px; }
+.hub-new-message-total svg { width: 18px; height: 18px; flex-shrink: 0; }
 .hub-chat-page .hub-conversation-chooser-scroll {
   height: 100%;
   min-height: 0;

@@ -445,7 +445,7 @@ export async function readAssignedLibrary(
 export async function employeeChecklist(actor: LibraryActor) {
   const { owner, member } = await libraryAuthority(db, actor);
   const rows = await db
-    .select({ instance: instances, template: templates })
+    .select({ instance: { id: instances.id, assignmentMetadata: instances.assignmentMetadata }, template: { name: templates.name, libraryMetadata: sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content'` } })
     .from(instances)
     .innerJoin(templates, eq(templates.id, instances.templateId))
     .where(

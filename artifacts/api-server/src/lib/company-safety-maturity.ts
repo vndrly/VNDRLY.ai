@@ -1,10 +1,19 @@
 import {repositoryCertificationProgress} from '../work-hub/repository-certifications';
 import { and, eq, sql } from "drizzle-orm";
 import { db, workHubFormTemplatesTable as templates } from "@workspace/db";
-import { projectSafetyMaturity, maturityResourceTitle, MATURITY_RESOURCE_TYPES, LibraryMetadataSchema } from "@workspace/api-zod";
+import { projectSafetyMaturity, maturityResourceTitle, MATURITY_RESOURCE_TYPES, LibraryMetadataSchema, type WorkHubOwner } from "@workspace/api-zod";
 import { safetyRequirementLinks } from "./safety-library-links";
 import { libraryAuthority, type LibraryActor } from "../work-hub/library-core";
 import {companyRequiredTraining}from'./company-required-training';
+
+export async function companySafetyScoreSummary(owner: WorkHubOwner) {
+  const [assessment, training] = await Promise.all([
+    db.execute(sql`SELECT assessment AS record FROM safety_maturity_assessments WHERE org_type=${owner.type} AND org_id=${owner.id} LIMIT 1`),
+    repositoryCertificationProgress(db, owner),
+  ]);
+  const result = projectSafetyMaturity((assessment.rows[0] as { record?: unknown } | undefined)?.record);
+  return { score: Math.min(110, result.score + training.bonusScore), maximum: 110, bonus: training.bonusScore, incomplete: result.incomplete };
+}
 
 export async function companySafetyMaturity(actor: LibraryActor) {
   const { owner } = await libraryAuthority(db, actor);

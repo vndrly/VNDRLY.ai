@@ -1,3 +1,4 @@
+import { formatTrainingTitle } from "@/lib/training-title";
 import React, { useState } from "react";
 import {useAuth} from "@/hooks/use-auth";
 import {
@@ -109,7 +110,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
     <View style={{ gap: 12 }}>
       <View style={card}>
         <Heading>
-          {data.title}
+          {["training", "bundle"].includes(m.kind) ? formatTrainingTitle(data.title) : data.title}
         </Heading>
         <Text style={label}>
           {t(`workHubLibrary.state_${m.state}`)} · {t("workHubLibrary.version")}{" "}
@@ -179,7 +180,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
               )}
             </Text>
             <Text style={label}>
-              {data.title} · {t("workHubLibrary.version")} {m.contentVersion}
+              {["training", "bundle"].includes(m.kind) ? formatTrainingTitle(data.title) : data.title} · {t("workHubLibrary.version")} {m.contentVersion}
             </Text>
             <TogglePillButton
               color="brand"

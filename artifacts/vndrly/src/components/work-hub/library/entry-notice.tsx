@@ -1,3 +1,4 @@
+import { formatTrainingTitle } from "@/lib/training-title";
 import {LibraryEntryNoticeSchema} from "@workspace/api-zod";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -53,7 +54,8 @@ export default function LibraryEntryNotice({ enabled }: { enabled: boolean }) {
     setDismissed([]);
     if (!enabled || !owner) return;
     let active = true,
-      running = false;
+      running = false,
+      reconciled = false;
     const controller = new AbortController();
     const load = async () => {
       if (!active || running || document.visibilityState !== "visible") return;
@@ -61,11 +63,12 @@ export default function LibraryEntryNotice({ enabled }: { enabled: boolean }) {
       try {
         const result = schema.parse(
           await workHubRequest("/library/entry", {
-            method: "POST",
-            body: "{}",
+            method: reconciled ? "GET" : "POST",
+            ...(reconciled ? {} : { body: "{}" }),
             signal: controller.signal,
           }),
         );
+        reconciled = true;
         if (active && current.current === identity)
           setData({ identity, items: result.present });
       } catch {
@@ -116,7 +119,7 @@ export default function LibraryEntryNotice({ enabled }: { enabled: boolean }) {
               );
             }}
           >
-            {item.title}
+            {item.kind === "training" ? formatTrainingTitle(item.title) : item.title}
           </BrandPillButton>
         ))}
         <BrandPillButton

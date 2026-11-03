@@ -17,6 +17,7 @@ describe("Work Hub home", () => {
     mocks.user = { userId: 7, role: "field_employee", vendorId: 1, activeMembershipId: 3, vendorRole: "gatekeeper" };
     mocks.request.mockReset(); mocks.fetch.mockReset();
     mocks.request.mockImplementation(async (path: string) => {
+      if (path === "/repository/progress") return { certifications: [] };
       if (path.startsWith("/gate-task-hopper")) return { tasks: [], nextBefore: null };
       if (path.startsWith("/tasks?dashboard=1")) return { scope: "self", nextCursor: null, tasks: [
         { id: "t1", title: "Inspect gate camera", status: "open", assigneeUserId: 7, createdAt: new Date(Date.now() - 3600000).toISOString() },

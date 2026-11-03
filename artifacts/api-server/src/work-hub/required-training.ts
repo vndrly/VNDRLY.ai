@@ -7,7 +7,7 @@ import {allocateLibraryItems}from'./library-assignments';
 import {lockCompanyTraining}from'./training-course-policy';
 export async function ensureRequiredTraining(tx:LibraryTx,owner:WorkHubOwner,onlyUserId?:number){
  await lockCompanyTraining(tx,owner);
- const plan=await companyRequiredTraining(tx,owner);
+ const plan=await companyRequiredTraining(tx,owner,onlyUserId);
  // The company lock above also protects this shared snapshot. Reuse the same
  // active revision/membership that allocateLibraryItems would reuse, in one
  // read instead of one round trip per course on every Work Hub entry.

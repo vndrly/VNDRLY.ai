@@ -54,7 +54,7 @@ export function NotificationTree() {
       <summary>
         <BellRing className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
         {t("notifications.heading")}
-        <span>{unreadTotal}</span>
+        <span data-unread={unreadTotal > 0}>{unreadTotal}</span>
       </summary>
       <div className="hub-notification-tree space-y-1 pb-3 pl-3">
         {list.isPending && <p className="py-2 text-xs text-muted-foreground">{t("notifications.loading")}</p>}
@@ -74,7 +74,7 @@ export function NotificationTree() {
             >
               <summary>
                 <span className="font-medium">{category.label}</span>
-                <span aria-label={unreadLabel}>{unread}</span>
+                <span data-unread={unread > 0} aria-label={unreadLabel}>{unread}</span>
               </summary>
               <div className="space-y-1 pb-2">
                 {category.items.map((notification) => {

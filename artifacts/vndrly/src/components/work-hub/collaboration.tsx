@@ -6,6 +6,7 @@ import { ConversationTitle } from "./conversation-title";
 import { ConversationAttachments } from "./conversation-attachments";
 import { ConversationTranscript } from "./conversation-transcript";
 import { NotificationTree } from "./notification-tree";
+import { notificationsApi } from "@/lib/notifications-api";
 import { NewChat } from "./new-chat";
 import { NewChannel } from "./new-channel";
 import { NewPoll, PollWorkspace, usePollCampaigns } from "./polls";
@@ -47,6 +48,16 @@ type Row = Record<string, any>;
 export function conversationCategory(channel: Row): "Channels" | "Chats" {
   if (channel.contextKind === "crew" || String(channel.contextId ?? "").startsWith("group:")) return "Channels";
   return channel.contextKind === "chat" ? "Chats" : "Channels";
+}
+export function conversationUnreadTotals(channels: Row[], polls: Row[], notifications: Row[], now = Date.now()) {
+  const unique = [...new Map(channels.map(channel => [channel.id, channel])).values()];
+  const unread = (category: string) => unique.filter(channel => conversationCategory(channel) === category).reduce((sum, channel) => sum + Math.max(0, Number(channel.unreadCount) || 0), 0);
+  const counts = {
+    Channels: unread("Channels"), Chats: unread("Chats"),
+    Polls: polls.filter(poll => poll.instanceId && !poll.completed && poll.state.status === "published" && (!poll.state.deadline || Date.parse(poll.state.deadline) > now)).length,
+    Notifications: notifications.filter(notification => !notification.isRead).length,
+  };
+  return { ...counts, total: counts.Channels + counts.Chats + counts.Polls + counts.Notifications };
 }
 export function displayMentionText(body: string, people: Row[]) {
   return body.replace(
@@ -127,6 +138,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const linkedChannels = useRows("/channels?limit=100", chat && !!linkedChannelId);
   useEffect(() => {
     if (linkedChannelId) setSelected(linkedChannelId);
+    else { setSelected(""); setChooserOpen(true); }
   }, [linkedChannelId]);
   const [crew, setCrew] = useState("");
   const [crewEditor, setCrewEditor] = useState<Row | null>(null);
@@ -150,9 +162,10 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [chooserOpen, setChooserOpen] = useState(!linkedChannelId);
   const [controlsExpanded, setControlsExpanded] = useState(true);
-  const restoredPreference = useRef(false);
   const [selectedPollId, setSelectedPollId] = useState("");
   const pollCampaigns = usePollCampaigns();
+  const notifications = useQuery({ queryKey: ["notifications", "list", user?.userId], queryFn: () => notificationsApi.list(), enabled: chat && !!user, refetchInterval: 15_000, retry: false });
+  const unreadCounts = conversationUnreadTotals(channels.data ?? [], pollCampaigns.polls ?? [], notifications.data ?? []);
   useEffect(() => {
     if (linkedChannelId) setChooserOpen(false);
   }, [linkedChannelId]);
@@ -217,19 +230,6 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     setThread(null);
     setEditing(null);
   }, [active]);
-  useEffect(() => {
-    if (restoredPreference.current || linkedChannelId || !channels.data) return;
-    restoredPreference.current = true;
-    const remembered = channels.data.find(
-      (item) => item.id === preferences.lastConversationId,
-    );
-    if (remembered) {
-      setSelected(remembered.id);
-      setChooserOpen(false);
-      return;
-    }
-    setChooserOpen(true);
-  }, [channels.data, linkedChannelId, preferences.lastConversationId]);
   useEffect(() => {
     if (!active || !messages.data?.[0]?.id) return;
     void workHubRequest(`/channels/${active}/read-cursor`, {
@@ -478,7 +478,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   }
   return (
     <section className="hub-chat-page w-full space-y-4 p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
-      <WorkHubPageHeading module="chat" title="Conversations" compact />
+      <WorkHubPageHeading module="chat" title="Conversations" compact actions={<span className="hub-new-message-total" style={{ color: unreadCounts.total ? "#f87171" : "#b3b3b3" }} aria-live="polite"><MessageSquare aria-hidden="true" /><strong>{unreadCounts.total} New Messages</strong></span>} />
       <div className="hub-conversation-layout grid gap-4" data-controls-collapsed={!controlsExpanded}>
       <aside
         aria-label="Conversations panel"
@@ -614,137 +614,6 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             </div>
           )}
         </div>
-        {controlsExpanded && chooserOpen && (
-        <section role="region" aria-label="Conversation chooser" className="hub-conversation-chooser-card">
-        <div className="hub-conversation-chooser-scroll">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="rounded-lg border-2 border-[color:var(--brand-primary)] bg-white pl-9 shadow-none focus-visible:ring-[color:var(--brand-primary)]"
-            aria-label="Find conversations"
-            placeholder="Find a conversation"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        {!chat && (
-          <BrandedSelect
-            aria-label="Crew"
-            value={crew}
-            onChange={(e) => {
-              const crewId = e.target.value;
-              const selectedCrew = crews.data?.find((item) => item.id === crewId) ?? null;
-              setCrew(crewId);
-              setSelected("");
-              setCrewEditor(selectedCrew);
-              setCrewName(selectedCrew?.name ?? "");
-            }}
-          >
-            <option value="">All channels</option>
-            {crews.data?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </BrandedSelect>
-        )}
-        <HubError error={channels.error ?? crews.error} />
-        {channels.isLoading && <p role="status">Loading conversations…</p>}
-        <nav aria-label="Conversations" className="space-y-1">
-          <details open className="hub-conversation-category">
-            <summary>
-              <Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
-              Polls
-              <span>{visiblePolls.length}</span>
-            </summary>
-            {visiblePolls.length === 0 && (
-              <p className="pb-3 text-xs text-muted-foreground">No polls in this view.</p>
-            )}
-            {visiblePolls.map((poll) => (
-              <div
-                key={poll.campaignId}
-                data-selected={selectedPollId === poll.campaignId}
-                className="hub-chat-conversation flex items-center rounded-lg"
-              >
-                <button
-                  type="button"
-                  className="min-w-0 flex-1 p-3 text-left"
-                  onClick={() => selectPoll(poll.campaignId)}
-                >
-                  <span className="flex items-center gap-2 font-medium">
-                    <Vote className="h-4 w-4" aria-label="Poll" />
-                    {poll.title}
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {poll.completed
-                      ? "Response saved"
-                      : poll.state.status === "draft"
-                        ? "Draft"
-                        : poll.state.deadline
-                          ? `Closes ${new Date(poll.state.deadline).toLocaleString()}`
-                          : poll.state.status}
-                  </span>
-                </button>
-              </div>
-            ))}
-          </details>
-          {(["Channels", "Chats"] as const).map(category => {
-            const entries = visible?.filter(c => conversationCategory(c) === category) ?? [];
-            const Icon = category === "Chats" ? MessageSquare : Hash;
-            return <details key={category} open className="hub-conversation-category">
-              <summary><Icon className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />{category}<span>{entries.length}</span></summary>
-              {entries.length === 0 && <p className="pb-3 text-xs text-muted-foreground">No {category.toLowerCase()} in this view.</p>}
-              {entries.map((c) => (
-            <div
-              key={c.id}
-              data-selected={!selectedPollId && active === c.id}
-              className="hub-chat-conversation flex items-center rounded-lg"
-            >
-              <button
-                className="min-w-0 flex-1 p-3 text-left"
-                onClick={() => selectConversation(c.id)}
-              >
-                <span className="flex items-center gap-2 font-medium">
-                  <Icon className="h-4 w-4" aria-label={category === "Chats" ? "Chat" : "Channel"} />
-                  {c.name}
-                </span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {(drafts[c.id] ?? preferences.drafts[c.id])
-                    ? "Draft saved"
-                    : c.unreadCount
-                      ? `${c.unreadCount} unread messages`
-                      : (c.lastMessageBody ?? "Open conversation")}
-                </span>
-              </button>
-              <button
-                className="p-2"
-                aria-label={`${preferences.favorites.includes(c.id) ? "Unfavorite" : "Favorite"} ${c.name}`}
-                onClick={() =>
-                  save.mutate({
-                    favorites: preferences.favorites.includes(c.id)
-                      ? preferences.favorites.filter((id) => id !== c.id)
-                      : [...preferences.favorites, c.id],
-                  })
-                }
-              >
-                <Star
-                  className={`h-4 w-4 ${preferences.favorites.includes(c.id) ? "fill-amber-400 text-amber-500" : ""}`}
-                />
-              </button>
-            </div>
-              ))}
-            </details>;
-          })}
-          <NotificationTree />
-        </nav>
-        {!visible?.length && !visiblePolls.length && !channels.isLoading && (
-          <p className="text-sm text-muted-foreground">
-            No conversations match this view.
-          </p>
-        )}
-        </div>
-        </section>
-        )}
         {!chat && (
           <>
             <section data-card-layout
@@ -972,7 +841,134 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         className="grid min-w-0 content-start gap-4"
         style={{ paddingTop: "40px" }}
       >
-        {selectedPollId ? (
+        {controlsExpanded && chooserOpen ? (
+          <section aria-label="Channel content" data-work-hub-card className={`hub-conversation-browser-frame ${WORK_HUB_CARD_CLASS}`}>
+        <section role="region" aria-label="Conversation chooser" className="hub-conversation-chooser-card">
+          <div className="hub-conversation-chooser-scroll">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input className="rounded-lg border-2 border-[color:var(--brand-primary)] bg-white pl-9 shadow-none focus-visible:ring-[color:var(--brand-primary)]" aria-label="Find conversations" placeholder="Find a conversation" value={search} onChange={event => setSearch(event.target.value)} />
+            </div>
+        {!chat && (
+          <BrandedSelect
+            aria-label="Crew"
+            value={crew}
+            onChange={(e) => {
+              const crewId = e.target.value;
+              const selectedCrew = crews.data?.find((item) => item.id === crewId) ?? null;
+              setCrew(crewId);
+              setSelected("");
+              setCrewEditor(selectedCrew);
+              setCrewName(selectedCrew?.name ?? "");
+            }}
+          >
+            <option value="">All channels</option>
+            {crews.data?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </BrandedSelect>
+        )}
+        <HubError error={channels.error ?? crews.error} />
+        {channels.isLoading && <p role="status">Loading conversations…</p>}
+        <nav aria-label="Conversations" className="space-y-1">
+          <details className="hub-conversation-category">
+            <summary>
+              <Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
+              Polls
+              <span data-unread={unreadCounts.Polls > 0} aria-label={`${unreadCounts.Polls} new polls`}>{unreadCounts.Polls}</span>
+            </summary>
+            {visiblePolls.length === 0 && (
+              <p className="pb-3 text-xs text-muted-foreground">No polls in this view.</p>
+            )}
+            {visiblePolls.map((poll) => (
+              <div
+                key={poll.campaignId}
+                data-selected={selectedPollId === poll.campaignId}
+                className="hub-chat-conversation flex items-center rounded-lg"
+              >
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 p-3 text-left"
+                  onClick={() => selectPoll(poll.campaignId)}
+                >
+                  <span className="flex items-center gap-2 font-medium">
+                    <Vote className="h-4 w-4" aria-label="Poll" />
+                    {poll.title}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {poll.completed
+                      ? "Response saved"
+                      : poll.state.status === "draft"
+                        ? "Draft"
+                        : poll.state.deadline
+                          ? `Closes ${new Date(poll.state.deadline).toLocaleString()}`
+                          : poll.state.status}
+                  </span>
+                </button>
+              </div>
+            ))}
+          </details>
+          {(["Channels", "Chats"] as const).map(category => {
+            const entries = visible?.filter(c => conversationCategory(c) === category) ?? [];
+            const Icon = category === "Chats" ? MessageSquare : Hash;
+            return <details key={category} className="hub-conversation-category">
+              <summary><Icon className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />{category}<span data-unread={unreadCounts[category] > 0} aria-label={`${unreadCounts[category]} unread ${category.toLowerCase()} messages`}>{unreadCounts[category]}</span></summary>
+              {entries.length === 0 && <p className="pb-3 text-xs text-muted-foreground">No {category.toLowerCase()} in this view.</p>}
+              {entries.map((c) => (
+            <div
+              key={c.id}
+              data-selected={!selectedPollId && active === c.id}
+              className="hub-chat-conversation flex items-center rounded-lg"
+            >
+              <button
+                className="min-w-0 flex-1 p-3 text-left"
+                onClick={() => selectConversation(c.id)}
+              >
+                <span className="flex items-center gap-2 font-medium">
+                  <Icon className="h-4 w-4" aria-label={category === "Chats" ? "Chat" : "Channel"} />
+                  {c.name}
+                </span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {(drafts[c.id] ?? preferences.drafts[c.id])
+                    ? "Draft saved"
+                    : c.unreadCount
+                      ? `${c.unreadCount} unread messages`
+                      : (c.lastMessageBody ?? "Open conversation")}
+                </span>
+              </button>
+              <button
+                className="p-2"
+                aria-label={`${preferences.favorites.includes(c.id) ? "Unfavorite" : "Favorite"} ${c.name}`}
+                onClick={() =>
+                  save.mutate({
+                    favorites: preferences.favorites.includes(c.id)
+                      ? preferences.favorites.filter((id) => id !== c.id)
+                      : [...preferences.favorites, c.id],
+                  })
+                }
+              >
+                <Star
+                  className={`h-4 w-4 ${preferences.favorites.includes(c.id) ? "fill-amber-400 text-amber-500" : ""}`}
+                />
+              </button>
+            </div>
+              ))}
+            </details>;
+          })}
+          <NotificationTree />
+        </nav>
+        {!visible?.length && !visiblePolls.length && !channels.isLoading && (
+          <p className="text-sm text-muted-foreground">
+            No conversations match this view.
+          </p>
+        )}
+        </div>
+        </section>
+
+          </section>
+        ) : selectedPollId ? (
           selectedPoll ? (
             <PollWorkspace poll={selectedPoll} />
           ) : (

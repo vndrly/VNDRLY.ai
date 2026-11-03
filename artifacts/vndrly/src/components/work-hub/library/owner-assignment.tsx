@@ -1,3 +1,4 @@
+import { formatTrainingTitle } from "@/lib/training-title";
 import React, { useState } from "react";
 import {
   Paragraph as Text,
@@ -85,7 +86,7 @@ export default function OwnerAssignment({
     <View style={{ gap: 12 }}>
       <View style={card}>
         <Text style={{ ...label, fontSize: 20, fontWeight: "700" }}>
-          {data.title}
+          {["training", "bundle"].includes(data.kind) ? formatTrainingTitle(data.title) : data.title}
         </Text>
         <Text style={label}>
           {t(`workHubLibrary.status_${data.assignment.status}`)} ·{" "}
@@ -145,7 +146,7 @@ export default function OwnerAssignment({
         {review && (
           <View style={card}>
             <Text style={label}>
-              {t(`workHubLibrary.action_${review}`)}: {data.title}
+              {t(`workHubLibrary.action_${review}`)}: {["training", "bundle"].includes(data.kind) ? formatTrainingTitle(data.title) : data.title}
             </Text>
             <Text style={label}>{reason}</Text>
             <Text style={label}>

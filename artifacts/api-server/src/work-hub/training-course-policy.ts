@@ -1,4 +1,4 @@
-import {and,eq,isNull,sql} from 'drizzle-orm';
+import {and,eq,isNull,sql,getTableColumns} from 'drizzle-orm';
 import {db,vendorsTable,vendorPeopleTable,workHubFormTemplatesTable as templates} from '@workspace/db';
 import {LibraryMetadataSchema,TrainingPolicyDetailsSchema,type WorkHubCommandEnvelope,type WorkHubOwner} from '@workspace/api-zod';
 import {libraryAuthority,libraryRecord,libraryCommand,checkLibraryVersion,LibraryError,type LibraryActor,type LibraryTx} from './library-core';
@@ -108,7 +108,7 @@ export async function assignPolicyTraining(tx:LibraryTx,record:typeof templates.
  return result.assigned.length;
 }
 export async function ensurePolicyTraining(tx:LibraryTx,owner:WorkHubOwner,userId:number){
- const policies=await tx.select().from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),sql`${templates.libraryMetadata}->>'state'<>'draft' AND ${templates.libraryMetadata}->>'kind' IN ('policy','training')`));
+ const policies=await tx.select({...getTableColumns(templates),definition:sql<unknown[]>`'[]'::jsonb`,libraryMetadata:sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content'`}).from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),sql`${templates.libraryMetadata}->>'state'<>'draft' AND ${templates.libraryMetadata}->>'kind' IN ('policy','training')`));
  const seen=new Set<string>();let count=0;
  for(const policy of policies.sort((a,b)=>b.currentVersion-a.currentVersion||a.id.localeCompare(b.id))){
   const metadata=LibraryMetadataSchema.parse(policy.libraryMetadata);if(seen.has(metadata.seriesId))continue;seen.add(metadata.seriesId);
