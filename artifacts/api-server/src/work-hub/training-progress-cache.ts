@@ -24,7 +24,7 @@ export async function cachedTrainingProgress<T>(key: string, load: () => Promise
     }).finally(() => { current.pending = undefined; });
   }
   if (entry.value !== undefined && age < MAX_AGE_MS) {
-    void entry.pending.catch(() => {});
+    void entry.pending!.catch(() => {});
     return entry.value as T;
   }
   return entry.pending as Promise<T>;

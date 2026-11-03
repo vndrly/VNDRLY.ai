@@ -460,7 +460,7 @@ router.post("/work-hub/channels/:channelId/messages", expectedWorkforceContext, 
       "Authentication required",
     );
   try {
-    const { channel } = await resolveChannelAccess(actor, req.params.channelId, "channel.write");
+    const { channel } = await resolveChannelAccess(actor, z.string().parse(req.params.channelId), "channel.write");
     const envelope = workHubCommandEnvelopeSchema.parse(req.body); const payload = createMessagePayload.parse(envelope.payload);
     if (envelope.owner.type !== channel.ownerOrgType || envelope.owner.id !== channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
     let thread = { parentMessageId: null as string | null, rootMessageId: null as string | null };
