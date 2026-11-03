@@ -3,6 +3,17 @@ import { chatGptActionTools, chatGptReadableTools } from './chatgpt-tool-access'
 import { exposedOperationTools, resolveOperationTool, planOperationTools, operationToolAnnotations, canonicalOperationToolName, preparedToolDescription } from './chatgpt-operation-tools';
 import { prepareWorkPlan } from './chatgpt-coordinated-plan';
 import { specialistDirectory } from './chatgpt-specialists';
+
+it('describes pending notification, ticket, trip, incident and provisional asset requests without execution claims', () => {
+ const session={userId:17,role:'vendor',vendorId:4,membershipRole:'admin',activeMembershipId:8,sv:2};
+ const exposed=exposedOperationTools(chatGptActionTools(session,['operations:write','work_hub:write','tickets:write','assets:write','trips:write','safety:write']));
+ for(const [name,subject] of [['mark_notifications_read','notificationId'],['post_ticket_comment','Crew Comms'],['close_ticket_for_review','office review'],['confirm_field_trips_action','trip driver'],['confirm_incident_response_action','safetyEventId'],['confirm_asset_custody_action_provisional','provisional Inventory']]) {
+  const tool=exposed.find(t=>t.name===name)!; expect(tool).toBeDefined();
+  const description=preparedToolDescription(tool);
+  expect(description).toContain(subject); expect(description).toContain('pending request only');
+  expect(description).not.toContain('Pass confirmed:true');
+ }
+});
 describe('role-bound operation exposure', () => {
   const worker = { userId: 1073, role: 'field_employee' as const, vendorId: 1107, vendorPeopleId: 969 };
   const tools = chatGptActionTools(worker, ['tickets:write','gate:write']);

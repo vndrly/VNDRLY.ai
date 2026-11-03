@@ -89,6 +89,15 @@ export function resolveOperationTool(name: string, input: Record<string, unknown
 /** Public preparation must not inherit execution claims from in-app tools. */
 export function preparedToolDescription(tool: AskVToolDefinition): string {
   const canonical = canonicalOperationToolName(tool.name);
+  const reviewedEffects: Record<string, string> = {
+    mark_notifications_read: 'a request to mark the signed-in user\'s exact notificationId, or all unread notifications when markAll is selected, as read',
+    post_ticket_comment: 'a request to add the supplied exact content to the Crew Comms thread of ticketId',
+    close_ticket_for_review: 'a request to close the exact ticketId for office review, with supplied endingMileage when applicable; any required device location is collected only on the separate secure authorization page',
+    confirm_field_trips_action: 'a request for the supplied field-trip action: start a trip, pause or resume the exact resourceId at payload.expectedVersion, complete it, or submit one location update from the separate approval device; resume requires the current trip driver and does not start device tracking',
+    confirm_incident_response_action: 'a request for the supplied incident-response action: report an event from actual siteLocationId, title, eventType and description, create a response for an existing safetyEventId, or update the exact response acknowledgement, escalation, evidence or closure; use only supplied facts and explicit stop-work flags',
+    confirm_asset_custody_action_provisional: 'a request to register the supplied provisional Inventory asset details for later verification; this does not verify identity, ownership, custody or physical possession',
+  };
+  if (reviewedEffects[tool.name]) return `Prepare ${reviewedEffects[tool.name]} for authorization in the VNDRLY action panel. This call saves a pending request only. It does not change the target record, send messages or notifications, or collect location. The signed-in user must separately submit the request; current permissions and applicable record versions are rechecked. Report the returned pending status, not completion.`;
   const effect = canonical === 'schedule_ticket_crew'
     ? 'the exact ticket crew schedule, worker and start time; conflict overrides require explicit review'
     : canonical === 'set_ticket_flag'
