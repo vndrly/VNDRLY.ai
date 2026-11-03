@@ -64,6 +64,7 @@ export const db=createRealmDispatcher(productionDb,()=>{
  return demoDb;
 });
 export {currentDatabaseRealm,runInDatabaseRealm,assertExternalEffectsAllowed} from './database-realm';
+export { withDatabaseTimings, timeDatabaseStage, startDatabaseStage } from './query-timings';
 export type {DatabaseRealm} from './database-realm';
 
 export * from "./schema";

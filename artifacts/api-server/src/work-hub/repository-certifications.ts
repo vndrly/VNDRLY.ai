@@ -1,7 +1,9 @@
-import { and, eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, sql, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import {
   db,
+  timeDatabaseStage,
+  startDatabaseStage,
   workHubFileLibraryTable as records,
   workHubFormTemplatesTable as templates,
   workHubFormInstancesTable as instances,
@@ -124,8 +126,16 @@ export async function repositoryCertificationProgress(
   reader: Pick<typeof db, "select">,
   owner: WorkHubOwner,
   userId: number | null = null,
+  options: { optimized?: boolean; bonusOnly?: boolean } = {},
 ) {
-  const [courseRows, assigned, repository, currentPeople] = await Promise.all([reader
+  if (options.optimized && options.bonusOnly) {
+    const augmentation = await timeDatabaseStage("bonus_presence", async () => await reader.select({ id: records.id }).from(records)
+      .where(and(repositoryScope(owner), eq(records.kind, "vendor_augmentation"))).limit(1));
+    // A company without vendor augmentations has no bonus requirements. Avoid
+    // loading every employee's course assignments just to establish zero.
+    if (!augmentation.length) return { certifications: [], bonusScore: 0, bonusCompleted: 0, bonusRequired: 0 };
+  }
+  const catalog = timeDatabaseStage("catalog", async () => await reader
     .select({
       id: templates.id,
       name: templates.name,
@@ -140,31 +150,77 @@ export async function repositoryCertificationProgress(
         eq(templates.ownerOrgType, owner.type),
         eq(templates.ownerOrgId, owner.id),
       ),
-    ),
-  reader
+    ));
+  const assignmentSelection = reader
     .select({ instance: {
       id: instances.id,
       templateId: instances.templateId,
       assigneeUserId: instances.assigneeUserId,
       assignmentMetadata: instances.assignmentMetadata,
     }, submission: submissions.submittedAt })
-    .from(instances)
-    .innerJoin(templates, eq(templates.id, instances.templateId))
+    .from(instances);
+  const assignmentQuery = options.optimized ? assignmentSelection : assignmentSelection.innerJoin(templates, eq(templates.id, instances.templateId));
+  const assignments = timeDatabaseStage("assignments", async () => {
+    // The catalog already establishes company ownership. Avoid the demonstrated
+    // nested-loop plan that rechecks thousands of other companies' templates.
+    const ownedIds = options.optimized ? (await catalog).map(course => course.id) : null;
+    if (ownedIds && !ownedIds.length) return [];
+    return await assignmentQuery
     .leftJoin(submissions, eq(submissions.instanceId, instances.id))
     .where(
       and(
-        eq(templates.ownerOrgType, owner.type),
-        eq(templates.ownerOrgId, owner.id),
+        ownedIds ? inArray(instances.templateId, ownedIds) : and(eq(templates.ownerOrgType, owner.type), eq(templates.ownerOrgId, owner.id)),
         userId ? eq(instances.assigneeUserId, userId) : undefined,
       ),
     )
-    .orderBy(desc(submissions.submittedAt)),
-  reader
+    .orderBy(desc(submissions.submittedAt));
+  });
+  const [courseRows, assigned, repository, currentPeople] = await Promise.all([catalog, assignments,
+  timeDatabaseStage("repository", async () => await reader
     .select()
     .from(records)
-    .where(repositoryScope(owner)),
-  companyLibraryPeople(reader, owner),
+    .where(options.optimized
+      ? and(repositoryScope(owner), inArray(records.kind, ["vendor_augmentation", "document", "augmentation_ack"]))
+      : repositoryScope(owner))),
+  timeDatabaseStage("people", () => companyLibraryPeople(reader, owner)),
   ]);
+  const finishProjection = startDatabaseStage("projection");
+  // Request-local indexes retain database ordering and the baseline validators.
+  // No result or authorization decision is shared between users or requests.
+  const coursesById = new Map(courseRows.map((course) => [course.id, course]));
+  const assignmentsByCourse = new Map<string, typeof assigned>();
+  if (options.optimized) for (const row of assigned) {
+    const key = JSON.stringify([row.instance.assigneeUserId, row.instance.templateId]);
+    const rows = assignmentsByCourse.get(key) ?? [];
+    rows.push(row);
+    assignmentsByCourse.set(key, rows);
+  }
+  const metadataCache = new Map<unknown, ReturnType<typeof LibraryMetadataSchema.safeParse>>();
+  const assignmentCache = new Map<unknown, ReturnType<typeof AssignmentMetadataSchema.safeParse>>();
+  const bundleCache = new Map<unknown, ReturnType<typeof BundleDefinitionSchema.safeParse>>();
+  const parseMetadata = (value: unknown) => {
+    if (!options.optimized) return LibraryMetadataSchema.safeParse(value);
+    if (!metadataCache.has(value)) metadataCache.set(value, LibraryMetadataSchema.safeParse(value));
+    return metadataCache.get(value)!;
+  };
+  const parseAssignment = (value: unknown) => {
+    if (!options.optimized) return AssignmentMetadataSchema.safeParse(value);
+    if (!assignmentCache.has(value)) assignmentCache.set(value, AssignmentMetadataSchema.safeParse(value));
+    return assignmentCache.get(value)!;
+  };
+  const parseBundle = (value: unknown) => {
+    if (!options.optimized) return BundleDefinitionSchema.safeParse(value);
+    if (!bundleCache.has(value)) bundleCache.set(value, BundleDefinitionSchema.safeParse(value));
+    return bundleCache.get(value)!;
+  };
+  const findCourse = (id: string) => options.optimized ? coursesById.get(id) : courseRows.find((course) => course.id === id);
+  const permissionCache = new Map<string, Promise<boolean>>();
+  const canReadDocument = (doc: typeof repository[number], person: number) => {
+    if (!options.optimized) return repositoryRecipientCanRead(reader, owner, doc, person);
+    const key = JSON.stringify([doc.id, person]);
+    if (!permissionCache.has(key)) permissionCache.set(key, repositoryRecipientCanRead(reader, owner, doc, person));
+    return permissionCache.get(key)!;
+  };
   const augmentations = repository.filter(
     (r) => r.kind === "vendor_augmentation",
   );
@@ -174,7 +230,7 @@ export async function repositoryCertificationProgress(
   const people = [
     ...new Set(
       [
-        ...assigned.map((r) => r.instance.assigneeUserId),
+        ...(options.optimized && options.bonusOnly ? [] : assigned.map((r) => r.instance.assigneeUserId)),
         ...augmentations.flatMap((r) => (r.data.userIds as number[]) ?? []),
       ].filter(
         (id): id is number =>
@@ -188,14 +244,15 @@ export async function repositoryCertificationProgress(
     person: number,
     renewalMonths?: number | null,
   ) => {
-    const current = courseRows.find((c) => c.id === id),
-      m = LibraryMetadataSchema.safeParse(current?.libraryMetadata);
-    const matches = assigned.filter(
+    const current = findCourse(id),
+      m = parseMetadata(current?.libraryMetadata);
+    const candidates = options.optimized ? assignmentsByCourse.get(JSON.stringify([person, id])) ?? [] : assigned;
+    const matches = candidates.filter(
       (r) =>
         r.instance.assigneeUserId === person &&
         r.instance.templateId === id &&
         (() => {
-          const a = AssignmentMetadataSchema.safeParse(
+          const a = parseAssignment(
             r.instance.assignmentMetadata,
           );
           return (
@@ -209,7 +266,7 @@ export async function repositoryCertificationProgress(
     let completedAt: string | null = null,
       expiresAt: string | null = null;
     for (const row of matches) {
-      const a = AssignmentMetadataSchema.safeParse(
+      const a = parseAssignment(
         row.instance.assignmentMetadata,
       );
       if (
@@ -263,16 +320,17 @@ export async function repositoryCertificationProgress(
   };
   const output = [];
   for (const person of people) {
+    if (!(options.optimized && options.bonusOnly)) {
     // Direct course assignments are training progress, not certifications.
     const directCourses = new Set(assigned.filter((row) => {
-      const a = AssignmentMetadataSchema.safeParse(row.instance.assignmentMetadata);
+      const a = parseAssignment(row.instance.assignmentMetadata);
       return row.instance.assigneeUserId === person && a.success &&
         a.data.membershipId === membershipByUser.get(person) &&
         !a.data.bundleId && !["cancelled", "exempted"].includes(a.data.status);
     }).map((row) => row.instance.templateId));
     for (const id of directCourses) {
-      const course = courseRows.find((row) => row.id === id);
-      const m = LibraryMetadataSchema.safeParse(course?.libraryMetadata);
+      const course = findCourse(id);
+      const m = parseMetadata(course?.libraryMetadata);
       if (!m.success || m.data.kind !== "training" || m.data.state !== "published") continue;
       const step = courseStep(id, m.data.contentVersion, person);
       if (!step.instanceId) continue;
@@ -280,8 +338,8 @@ export async function repositoryCertificationProgress(
         standalone: true, steps: [step], complete: step.complete });
     }
     for (const bundle of courseRows) {
-      const m = LibraryMetadataSchema.safeParse(bundle.libraryMetadata),
-        b = BundleDefinitionSchema.safeParse(bundle.bundleDefinition);
+      const m = parseMetadata(bundle.libraryMetadata),
+        b = parseBundle(bundle.bundleDefinition);
       if (
         !m.success ||
         m.data.state !== "published" ||
@@ -295,7 +353,7 @@ export async function repositoryCertificationProgress(
       const explicitlyAssigned = assigned.some(
           (r) =>
             r.instance.assigneeUserId === person &&
-            AssignmentMetadataSchema.safeParse(r.instance.assignmentMetadata)
+            parseAssignment(r.instance.assignmentMetadata)
               .success &&
             (r.instance.assignmentMetadata as any).bundleId === bundle.id,
         );
@@ -314,11 +372,12 @@ export async function repositoryCertificationProgress(
         complete: steps.length > 0 && steps.every((s) => s.complete),
       });
     }
+    }
     for (const aug of augmentations.filter((r) =>
       ((r.data.userIds as number[]) ?? []).includes(person),
     )) {
-      const base = courseRows.find((c) => c.id === aug.data.baseItemId),
-        b = BundleDefinitionSchema.safeParse(base?.bundleDefinition);
+      const base = findCourse(String(aug.data.baseItemId)),
+        b = parseBundle(base?.bundleDefinition);
       const requirements = b.success
         ? b.data.entries.map((e) => ({
             id: e.templateId,
@@ -345,7 +404,7 @@ export async function repositoryCertificationProgress(
             id: c.courseId,
             version: Number(
               (
-                courseRows.find((row) => row.id === c.courseId)
+                findCourse(c.courseId)
                   ?.libraryMetadata as any
               )?.contentVersion ?? c.version,
             ),
@@ -372,7 +431,7 @@ export async function repositoryCertificationProgress(
               r.data.fileId === doc?.data.currentFileId,
           );
         const canRead = doc
-          ? await repositoryRecipientCanRead(reader, owner, doc, person)
+          ? await canReadDocument(doc, person)
           : false;
         const valid =
           canRead &&
@@ -425,6 +484,7 @@ export async function repositoryCertificationProgress(
     }
   }
   const required = [...uniqueRequirements.values()];
+  finishProjection();
   return {
     certifications: output,
     bonusScore: vendorBonus(

@@ -10,7 +10,7 @@ export function canViewTeamTraining(role: string, staffRoles: string[]) {
 export async function teamTrainingAuthority(actor: LibraryActor) {
   const { owner, member } = await libraryAuthority(db, actor);
   if (!await hasTeamTrainingAccess(owner, member, actor.userId)) throw new LibraryError("Training Coordinator or company administrator required", 403);
-  return { owner };
+  return { owner, member };
 }
 export async function hasTeamTrainingAccess(owner: WorkHubOwner, member: { role: string; vendorPeopleId: number | null }, userId: number) {
   if (member.role === "admin") return true;

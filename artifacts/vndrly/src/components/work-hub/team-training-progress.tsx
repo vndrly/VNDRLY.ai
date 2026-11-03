@@ -30,7 +30,9 @@ export default function TeamTrainingProgress() {
   const now = Math.max(Date.now(), query.dataUpdatedAt ?? 0);
   const people = [...(query.data?.people ?? [])].sort((a, b) => personTrainingStatus(a.courses, now).rank - personTrainingStatus(b.courses, now).rank || a.name.localeCompare(b.name));
   const courses = people.flatMap(person => person.courses);
-  return <details className="hub-training-certificate" aria-label="Team Training">
+  return <details className="hub-training-certificate" aria-label="Team Training"
+    data-progress-team-state={query.isError ? "error" : query.data && !query.isFetching ? "ready" : "loading"}
+    data-progress-team-updated-at={query.dataUpdatedAt}>
     <summary className="hub-home-row hub-training-summary"><Users aria-hidden="true" className="hub-row-icon" /><span className="hub-row-label">Team Training</span><span className="hub-row-value">{query.data ? percent(courses) : "…"}</span><ChevronRight aria-hidden="true" className="hub-chevron" /></summary>
     <div className="team-training-people">
       <p className="text-xs text-muted-foreground py-2">Unfinished assignments: green through 7 days · amber over 7–14 days · red over 14 days.</p>

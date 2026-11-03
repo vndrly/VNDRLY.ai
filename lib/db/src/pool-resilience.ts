@@ -1,4 +1,5 @@
 import pg, { type PoolConfig } from "pg";
+import { instrumentPoolTimings } from "./query-timings";
 
 const { Pool } = pg;
 
@@ -12,6 +13,7 @@ export function createResilientPostgresPool(
   report: (failure: PostgresConnectionFailure) => void,
 ): pg.Pool {
   const pool = new Pool(config);
+  instrumentPoolTimings(pool);
 
   pool.on("connect", (client) => {
     client.on("error", (error) => report({ scope: "client", error }));

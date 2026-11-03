@@ -6,10 +6,10 @@ import { safetyRequirementLinks } from "./safety-library-links";
 import { libraryAuthority, type LibraryActor } from "../work-hub/library-core";
 import {companyRequiredTraining}from'./company-required-training';
 
-export async function companySafetyScoreSummary(owner: WorkHubOwner) {
+export async function companySafetyScoreSummary(owner: WorkHubOwner, options: { optimized?: boolean } = {}) {
   const [assessment, training] = await Promise.all([
     db.execute(sql`SELECT assessment AS record FROM safety_maturity_assessments WHERE org_type=${owner.type} AND org_id=${owner.id} LIMIT 1`),
-    repositoryCertificationProgress(db, owner),
+    repositoryCertificationProgress(db, owner, null, options.optimized ? { ...options, bonusOnly: true } : options),
   ]);
   const result = projectSafetyMaturity((assessment.rows[0] as { record?: unknown } | undefined)?.record);
   return { score: Math.min(110, result.score + training.bonusScore), maximum: 110, bonus: training.bonusScore, incomplete: result.incomplete };

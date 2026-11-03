@@ -13,6 +13,8 @@ import OptionSwitch from "./library/option-switch";
 import "./repository-theme.css";
 import { formatTrainingTitle } from "@/lib/training-title";
 import TeamTrainingProgress from "./team-training-progress";
+import { trainingProgressOptions } from "@/lib/training-progress-query";
+import { trainingProgressExperimentsEnabled } from "@/lib/training-progress-experiment";
 export { formatTrainingTitle as certificateDisplayTitle } from "@/lib/training-title";
 function completionPercent(items: RepositoryData["certifications"]) {
   const total = items.reduce((sum, item) => sum + Math.max(item.steps.length, 1), 0);
@@ -21,13 +23,7 @@ function completionPercent(items: RepositoryData["certifications"]) {
 }
 function useTrainingProgress() {
   const repo = useRepository({ enabled: false });
-  const progress = useQuery({
-    queryKey: ["training-progress", repo.user?.userId, repo.user?.activeMembershipId, repo.owner?.type, repo.owner?.id],
-    enabled: !!repo.owner,
-    queryFn: () => workHubRequest<Pick<RepositoryData, "certifications"> & { canViewTeamTraining?: boolean }>("/repository/progress"),
-    staleTime: 30_000,
-    refetchInterval: 30_000,
-  });
+  const progress = useQuery(trainingProgressOptions(repo.user, repo.owner));
   return { repo, progress };
 }
 export function TrainingCompletionTotal() {
@@ -37,7 +33,7 @@ export function TrainingCompletionTotal() {
     queryFn: () => workHubRequest<{ score: number; maximum: number; bonus: number; incomplete: boolean }>("/repository/safety-summary"),
     enabled: !!repo.owner, staleTime: 15_000, refetchInterval: 30_000, retry: false,
   });
-  if (!progress.data) return null;
+  if (!progress.data) return trainingProgressExperimentsEnabled ? <span hidden data-progress-overall-state={progress.isError || safety.isError ? "error" : "loading"} /> : null;
   const steps = new Map<string, boolean>();
   for (const course of progress.data.certifications) {
     for (const step of course.steps) {
@@ -46,7 +42,10 @@ export function TrainingCompletionTotal() {
     }
   }
   const percent = steps.size ? Math.round([...steps.values()].filter(Boolean).length / steps.size * 100) : 0;
-  return <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold">
+  return <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold"
+    data-progress-overall-state={progress.isError || safety.isError ? "error" : safety.data && !progress.isFetching && !safety.isFetching ? "ready" : "loading"}
+    data-progress-personal-updated-at={progress.dataUpdatedAt}
+    data-progress-safety-updated-at={safety.dataUpdatedAt}>
     <span aria-label="Overall training completion">{percent}%</span>
     {safety.data && <><span aria-label="Company safety score" title={safety.data.incomplete ? "Safety assessment is incomplete" : "Combined company safety score"}>{safety.data.score}/{safety.data.maximum}</span><span aria-label="Safety bonus points">+{safety.data.bonus}</span></>}
   </span>;
@@ -60,7 +59,7 @@ export function CertificationProgress({
 }) {
   const { repo, progress } = useTrainingProgress();
   const d = progress.data;
-  if (!d) return progress.isError ? <p role="alert">Training progress is unavailable. Refresh to try again.</p> : embedded ? <p role="status">Loading training…</p> : null;
+  if (!d) return progress.isError ? <p role="alert" data-progress-personal-state="error">Training progress is unavailable. Refresh to try again.</p> : embedded ? <p role="status" data-progress-personal-state="loading">Loading training…</p> : null;
   const items = d.certifications.filter((c) => !profile || (c.complete && !c.standalone && !c.groupingOnly));
   const certifications = items.filter((c) => !c.standalone);
   const standalone = items.filter((c) => c.standalone && !certifications.some((cert) =>
@@ -76,9 +75,12 @@ export function CertificationProgress({
       steps: standalone.flatMap((course) => course.steps),
     }] : [] },
   ].filter((group) => group.items.length > 0);
-  if (!items.length && !(embedded && d.canViewTeamTraining)) return null;
+  if (!items.length && !(embedded && d.canViewTeamTraining)) return trainingProgressExperimentsEnabled ? <span hidden data-progress-personal-state={progress.isError ? "error" : progress.isFetching ? "loading" : "ready"} data-progress-team-required="false" /> : null;
   return (
-    <section className={embedded ? "vendor-repository" : "vendor-repository space-y-3"}>
+    <section className={embedded ? "vendor-repository" : "vendor-repository space-y-3"}
+      data-progress-personal-state={progress.isError ? "error" : progress.isFetching ? "loading" : "ready"}
+      data-progress-personal-updated-at={progress.dataUpdatedAt}
+      data-progress-team-required={embedded && d.canViewTeamTraining ? "true" : "false"}>
       {!embedded && <h2 className="flex gap-2 font-bold">
         <GraduationCap size={19} />
         {profile ? "My certifications" : "My training and certifications"}

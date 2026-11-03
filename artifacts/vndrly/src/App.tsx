@@ -1,5 +1,7 @@
 import { AdminPinSetup } from "@/components/admin-pin-setup";
 import LibraryEntryNotice from "@/components/work-hub/library/entry-notice";
+import TrainingCachePrefetch from "@/components/work-hub/training-cache-prefetch";
+import { trainingProgressMethod } from "@/lib/training-progress-experiment";
 import { Redirect, Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
 import { lazy, Suspense, useEffect } from "react";
 const WorkHubLibraryPage = lazy(() => import("@/pages/work-hub-library"));
@@ -119,6 +121,9 @@ const ForemanCrewMapPage = lazy(() => import("@/pages/foreman-crew-map"));
 const ForemanAnalytics = lazy(() => import("@/pages/foreman-analytics"));
 const Admin1099Transmitter = lazy(() => import("@/pages/admin-1099-transmitter"));
 const WorkHubPage = lazy(() => import("@/pages/work-hub"));
+// Local benchmark: load precisely the existing home UI without unrelated module imports.
+const loadWorkHubHome = () => import("@/components/work-hub/home").then(module => ({ default: module.WorkHubHome }));
+const WorkHubHomePage = lazy(loadWorkHubHome);
 const FleetPage = lazy(() => import("@/pages/fleet"));
 const MarketingHome = lazy(() => import("@/pages/marketing-home"));
 
@@ -227,6 +232,10 @@ function AuthenticatedRouter() {
   const { user, isLoading } = useAuth();
   const [location, navigate] = useLocation();
   const search = useSearch();
+  const renderProgressMethod = trainingProgressMethod(search) === "render";
+  useEffect(() => {
+    if (renderProgressMethod && /^\/work-hub\/?$/.test(location)) void loadWorkHubHome();
+  }, [renderProgressMethod, location]);
   const standardHome = new URLSearchParams(search).get("workspace") === "standard";
   const fleetHome = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.homeOverview, enabled: Boolean(user?.vendorId && location === "/" && !standardHome && ["vendor", "field_employee"].includes(user?.role ?? "")), retry: false, staleTime: 30_000 });
   const homeTarget = fleetHomePath(fleetHome.data, search);
@@ -299,7 +308,7 @@ function AuthenticatedRouter() {
         {user && <Route path="/work-hub/checklist/:instanceId">{params=><Layout><WorkHubLibraryPage kind="checklist" id={params.instanceId}/></Layout>}</Route>}
         {user && <Route path="/work-hub/library"><Layout><WorkHubLibraryPage/></Layout></Route>}
         {user && <Route path="/work-hub/:module"><Layout><WorkHubPage /></Layout></Route>}
-        {user && <Route path="/work-hub"><Layout><WorkHubPage /></Layout></Route>}
+        {user && <Route path="/work-hub"><Layout>{renderProgressMethod ? <WorkHubHomePage /> : <WorkHubPage />}</Layout></Route>}
         {!user && <Route path="/" component={MarketingHome} />}
         {!user ? (
           <>
@@ -482,6 +491,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
+          <TrainingCachePrefetch />
           <BrandProvider>
             <ThemeProvider>
               <NotificationsModalProvider>

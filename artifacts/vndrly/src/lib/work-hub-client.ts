@@ -1,5 +1,6 @@
 import { workHubItemDestination } from "@workspace/api-client-react/work-hub-destinations";
 import { withRequestDeadline } from "./request-deadline";
+import { trainingProgressMethod } from "./training-progress-experiment";
 export type WorkHubOwner = { type: "vendor" | "partner"; id: number };
 export type WorkHubUser = {
   role: string;
@@ -124,11 +125,14 @@ export async function workHubRequest<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
+  const experiment = trainingProgressMethod();
+  const experimentHeaders: Record<string, string> = experiment && ["baseline", "server", "render", "cache"].includes(experiment)
+    ? { "x-vndrly-progress-method": experiment } : {};
   return withRequestDeadline(async signal => {
   const response = await fetch(`/api/work-hub${path}`, {
     credentials: "include",
     ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
+    headers: { "Content-Type": "application/json", ...experimentHeaders, ...init?.headers },
     signal,
   });
   if (!response.ok) {
