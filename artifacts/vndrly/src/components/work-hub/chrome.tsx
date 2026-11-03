@@ -32,7 +32,7 @@ export function WorkHubPageHeading({
   backFallbackHref = "/work-hub",
 }: {
   module: WorkHubModuleKey;
-  title: string;
+  title: ReactNode;
   description?: string;
   actions?: ReactNode;
   compact?: boolean;

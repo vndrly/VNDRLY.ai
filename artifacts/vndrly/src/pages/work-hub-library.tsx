@@ -1,4 +1,5 @@
 import OwnerAssignment from "@/components/work-hub/library/owner-assignment";
+import { VndrlyUWordmark } from "@/components/work-hub/vndrly-u-wordmark";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -32,11 +33,9 @@ export default function LibraryPage({
       <div className="current-theme-page library-page space-y-4">
         <WorkHubPageHeading
           module="tasks"
-          title={t(
-            id && ["training", "checklist"].includes(kind)
-              ? "workHubLibrary.assignedWork"
-              : "workHubLibrary.manage",
-          )}
+          title={id && ["training", "checklist"].includes(kind)
+            ? t("workHubLibrary.assignedWork")
+            : <VndrlyUWordmark />}
         />
         {!valid ? (
           <p>{t("workHubLibrary.invalidLink")}</p>
