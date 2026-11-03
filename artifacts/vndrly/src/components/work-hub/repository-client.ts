@@ -20,6 +20,7 @@ export type RepositoryData = {
     title: string;
     userId: number;
     augmented: boolean;
+    standalone?: boolean;
     complete: boolean;
     steps: {
       id: string;
@@ -64,7 +65,7 @@ export type RepositoryData = {
   augmentations: RepositoryRecord[];
   courses: { id: string; title: string; version: number }[];
 };
-export function useRepository() {
+export function useRepository({ enabled = true }: { enabled?: boolean } = {}) {
   const { user } = useAuth(),
     owner = ownerForUser(user),
     cache = useQueryClient();
@@ -78,7 +79,7 @@ export function useRepository() {
   ];
   const query = useQuery({
     queryKey: key,
-    enabled: !!owner,
+    enabled: enabled && !!owner,
     queryFn: () => workHubRequest<RepositoryData>("/repository"),
   });
   const mutation = useMutation({

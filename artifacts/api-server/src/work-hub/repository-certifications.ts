@@ -250,6 +250,22 @@ export async function repositoryCertificationProgress(
   };
   const output = [];
   for (const person of people) {
+    // Direct course assignments are training progress, not certifications.
+    const directCourses = new Set(assigned.filter((row) => {
+      const a = AssignmentMetadataSchema.safeParse(row.instance.assignmentMetadata);
+      return row.instance.assigneeUserId === person && a.success &&
+        a.data.membershipId === membershipByUser.get(person) &&
+        !a.data.bundleId && !["cancelled", "exempted"].includes(a.data.status);
+    }).map((row) => row.instance.templateId));
+    for (const id of directCourses) {
+      const course = courseRows.find((row) => row.id === id);
+      const m = LibraryMetadataSchema.safeParse(course?.libraryMetadata);
+      if (!m.success || m.data.kind !== "training" || m.data.state !== "published") continue;
+      const step = courseStep(id, m.data.contentVersion, person);
+      if (!step.instanceId) continue;
+      output.push({ id, title: course!.name, userId: person, augmented: false,
+        standalone: true, steps: [step], complete: step.complete });
+    }
     for (const bundle of courseRows) {
       const m = LibraryMetadataSchema.safeParse(bundle.libraryMetadata),
         b = BundleDefinitionSchema.safeParse(bundle.bundleDefinition);

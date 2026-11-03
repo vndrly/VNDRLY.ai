@@ -3,7 +3,7 @@ import { workHubRequest } from "@/lib/work-hub-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { GraduationCap, Layers, CheckCircle, Plus } from "lucide-react";
-import { useRepository } from "./repository-client";
+import { useRepository, type RepositoryData } from "./repository-client";
 import {
   RepositoryAudience,
   emptyAudience,
@@ -16,16 +16,22 @@ export function CertificationProgress({
 }: {
   profile?: boolean;
 }) {
-  const repo = useRepository(),
-    d = repo.data;
-  if (!d) return null;
-  const items = d.certifications.filter((c) => !profile || c.complete);
+  const repo = useRepository({ enabled: false });
+  const progress = useQuery({
+    queryKey: ["training-progress", repo.user?.userId, repo.user?.activeMembershipId, repo.owner?.type, repo.owner?.id],
+    enabled: !!repo.owner,
+    queryFn: () => workHubRequest<Pick<RepositoryData, "certifications">>("/repository/progress"),
+    refetchInterval: 30_000,
+  });
+  const d = progress.data;
+  if (!d) return progress.isError ? <p role="alert">Training progress is unavailable. Refresh to try again.</p> : null;
+  const items = d.certifications.filter((c) => !profile || (c.complete && !c.standalone));
   if (!items.length) return null;
   return (
     <section className="vendor-repository space-y-3">
       <h2 className="flex gap-2 font-bold">
         <GraduationCap size={19} />
-        My certifications
+        {profile ? "My certifications" : "My training and certifications"}
       </h2>
       {items.map((c) => (
         <article className="repository-card space-y-2" key={c.id}>

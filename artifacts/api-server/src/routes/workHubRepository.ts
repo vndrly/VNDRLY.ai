@@ -81,6 +81,13 @@ function fail(res: any, error: unknown) {
             : "Repository operation could not be completed.",
     });
 }
+router.get("/work-hub/repository/progress", async (_req, res) => {
+  try {
+    const actor = res.locals.actor as LibraryActor;
+    const ctx = await repositoryContext(db, actor);
+    return res.json(await repositoryCertificationProgress(db, ctx.owner, actor.userId));
+  } catch (error) { return fail(res, error); }
+});
 router.get("/work-hub/repository", async (req, res) => {
   try {
     const actor = res.locals.actor as LibraryActor,
