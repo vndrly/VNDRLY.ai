@@ -10,10 +10,10 @@ vi.mock('./editor-controls',()=>({Frame:({children}:any)=><div>{children}</div>,
 vi.mock('./option-switch',()=>({default:({label,value,onChange,disabled}:any)=><label>{label}<input type="checkbox" checked={value} disabled={disabled} onChange={e=>onChange(e.target.checked)}/></label>}));
 const itemId='22222222-2222-4222-8222-222222222222';
 const published={items:[{itemId,title:'Assigned safety course',kind:'training',state:'published',version:12}]};
-const options={people:[{userId:17,name:'Alex Worker'},{userId:23,name:'Sam Worker'}],groups:[{id:'crew:1',name:'Night Crew'},{id:'crew:2',name:'Day Crew'}]};
+const options={people:[{userId:17,name:'Alex Worker'},{userId:23,name:'Sam Worker'}],positions:[{id:'staff:office',label:'Office Staff',userIds:[17]}],groups:[{id:'crew:1',name:'Night Crew'},{id:'crew:2',name:'Day Crew'}]};
 vi.mock('./use-library',()=>({useLibrary:(path:string,parse:(value:unknown)=>unknown)=>({data:parse(path.endsWith('/options')?options:published),contextKey:mock.context,busy:false,uncertain:false,loading:false,error:'',send:mock.send,reload:mock.reload,retryOriginal:mock.retry})}));
 const preview=()=>({itemId,version:12,title:'Assigned safety course',people:[{userId:17,name:'Alex Worker'}],items:[{title:'Assigned safety course',estimatedDeadline:'2026-11-05T12:00:00Z'}],existingCount:0,excluded:[],omitted:[],previewFingerprint:'preview-for-current-audience'});
-beforeEach(()=>{vi.clearAllMocks();mock.context='company:user:1';mock.request.mockResolvedValue(preview());mock.send.mockResolvedValue({resource:{assignmentId:'55555555-5555-4555-8555-555555555555'}});});
+beforeEach(()=>{sessionStorage.clear();vi.clearAllMocks();mock.context='company:user:1';mock.request.mockResolvedValue(preview());mock.send.mockResolvedValue({resource:{assignmentId:'55555555-5555-4555-8555-555555555555'}});});
 afterEach(cleanup);
 
 describe('Policy-preselected assignment recipients',()=>{
@@ -60,4 +60,19 @@ describe('Policy-preselected assignment recipients',()=>{
   mock.context='other-company:user:1';rerender(<AssignmentReview kind="training" initialItemId={itemId} initialUserIds={[17]} initialGroupIds={['crew:1']} onSaved={onSaved}/>);
   expect((screen.getByLabelText('Alex Worker') as HTMLInputElement).checked).toBe(true);expect((screen.getByLabelText('Sam Worker') as HTMLInputElement).checked).toBe(false);
  });
+});
+
+it('uses company positions for certification assignment without policy-only props',()=>{
+ render(<AssignmentReview kind="bundle" onSaved={vi.fn()}/>);
+ expect(screen.getByLabelText('Office Staff (1)')).toBeTruthy();
+});
+it('restores an unsaved audience after navigating away and makes preview-only status explicit',async()=>{
+ const first=render(<AssignmentReview kind="training" initialItemId={itemId} onSaved={vi.fn()}/>);
+ fireEvent.click(screen.getByLabelText('Alex Worker'));
+ fireEvent.click(screen.getByRole('button',{name:'workHubLibrary.review'}));
+ await waitFor(()=>expect(screen.getByText(/Preview only/)).toBeTruthy());
+ expect(mock.send).not.toHaveBeenCalled();first.unmount();
+ render(<AssignmentReview kind="training" initialItemId={itemId} onSaved={vi.fn()}/>);
+ expect((screen.getByLabelText('Alex Worker') as HTMLInputElement).checked).toBe(true);
+ expect(screen.getByText(/Restored assignment draft/)).toBeTruthy();
 });

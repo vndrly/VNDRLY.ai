@@ -11,6 +11,7 @@ import { z } from "zod/v4";
 import { useTranslation } from "react-i18next";
 import { useLibrary as useFormCampaigns } from "./use-library";
 import { workHubRequest } from "@/lib/work-hub-client";
+import { groupTrainingPositions } from "./training-position-options";
 const listSchema = z.object({
   items: z.array(
     z.object({
@@ -27,6 +28,7 @@ const optionsSchema = z.object({
     z.object({ userId: z.number(), name: z.string().nullable() }),
   ),
   groups: z.array(z.object({ id: z.string(), name: z.string() })),
+  positions: z.array(z.object({id:z.string(),label:z.string(),userIds:z.array(z.number())})).default([]),
 });
 const previewSchema = z.object({
   itemId: z.uuid(),
@@ -76,6 +78,10 @@ export default function LibraryAssignmentReview({
   const [renew, setRenew] = useState(false),
     [required, setRequired] = useState(false);
   const context = library.contextKey;
+  const draftKey = `library-assignment-draft:${context}:${kind}:${initialItemId}`;
+  const [draftScope,setDraftScope] = useState("");
+  const availablePositions = positions.length ? positions : options.data?.positions ?? [];
+  const groupedPositions = groupTrainingPositions(availablePositions).map(p=>({...p,userIds:[...new Set(availablePositions.filter(value=>p.ids.includes(value.id)).flatMap(value=>value.userIds))]}));
   const current = useRef(context);
   current.current = context;
   const captureAuthScope = () => context,
@@ -84,18 +90,27 @@ export default function LibraryAssignmentReview({
     workHubRequest(path.replace(/^\/api\/work-hub/, ""), init);
 
   useEffect(() => {
-    setItemId(initialItemId);
-    setUsers(initialUserIds);
-    setGroups(initialGroupIds);
+    let draft: {itemId:string;userIds:number[];groupIds:string[];positionIds:string[];renew:boolean;required:boolean} | undefined;
+    try { draft = z.object({itemId:z.string(),userIds:z.array(z.number()),groupIds:z.array(z.string()),positionIds:z.array(z.string()),renew:z.boolean(),required:z.boolean()}).parse(JSON.parse(sessionStorage.getItem(draftKey) ?? 'null')); } catch { /* Missing or old drafts start with the supplied audience. */ }
+    setItemId(draft?.itemId ?? initialItemId);
+    setUsers(draft?.userIds ?? initialUserIds);
+    setGroups(draft?.groupIds ?? initialGroupIds);
     setReview(null);
-    setPositionIds([]);
-    setNotice("");
+    setPositionIds(draft?.positionIds ?? []);
+    setRenew(draft?.renew ?? false);
+    setRequired(draft?.required ?? false);
+    setNotice(draft ? "Restored assignment draft — review and confirm to save." : "");
+    setDraftScope(draftKey);
   }, [kind, context, initialItemId]);
+  useEffect(()=>{
+    if(draftScope!==draftKey)return;
+    try { sessionStorage.setItem(draftKey,JSON.stringify({itemId,userIds,groupIds,positionIds,renew,required})); } catch { /* Storage availability never blocks assigning. */ }
+  },[draftScope,draftKey,itemId,userIds,groupIds,positionIds,renew,required]);
   const selected = library.data?.items.find((i) => i.itemId === itemId);
   const frozen = library.busy || library.uncertain || reviewing;
   const request = {
     itemId,
-    audience: { mode: "selected", userIds:[...new Set([...userIds,...positions.filter(p=>positionIds.includes(p.id)).flatMap(p=>p.userIds)])], groupIds },
+    audience: { mode: "selected", userIds:[...new Set([...userIds,...groupedPositions.filter(p=>positionIds.includes(p.id)).flatMap(p=>p.userIds)])], groupIds },
     renew,
     requiredBeforeWork: required,
     presentation: "immediate",
@@ -122,7 +137,7 @@ export default function LibraryAssignmentReview({
         ),
       );
       if (isAuthScopeCurrent(scope) && result.itemId === itemId)
-        setReview(result);
+        { setReview(result); setNotice("Preview only — not assigned yet. Confirm assignment below to save."); }
     } catch (e) {
       if (isAuthScopeCurrent(scope))
         setNotice(
@@ -200,7 +215,7 @@ export default function LibraryAssignmentReview({
         onChangeText={setSearch}
         style={field}
       />
-      <details className="space-y-2"><summary className="cursor-pointer font-semibold">{t("trainingPolicy.positions")}</summary><div className="grid grid-cols-1 gap-2">{positions.filter(p=>p.label.toLowerCase().includes(search.toLowerCase())).map(p=><OptionSwitch key={p.id} label={`${p.label} (${p.userIds.length})`} value={positionIds.includes(p.id)} disabled={frozen} onChange={()=>toggle(p.id,positionIds,setPositionIds)}/>)}</div></details>
+      <details className="space-y-2"><summary className="cursor-pointer font-semibold">{t("trainingPolicy.positions")}</summary><div className="grid grid-cols-1 gap-2">{groupedPositions.filter(p=>p.label.toLowerCase().includes(search.toLowerCase())).map(p=><OptionSwitch key={p.id} label={`${p.label} (${p.userIds.length})`} value={positionIds.includes(p.id)} disabled={frozen} onChange={()=>toggle(p.id,positionIds,setPositionIds)}/>)}</div></details>
       <details className="space-y-2"><summary className="cursor-pointer font-semibold">{t("trainingPolicy.people")}</summary><div className="grid grid-cols-1 gap-2">{options.data?.people.filter(p=>(p.name??'').toLowerCase().includes(search.toLowerCase())).map(p=><OptionSwitch key={p.userId} label={p.name??String(p.userId)} value={userIds.includes(p.userId)} disabled={frozen} onChange={()=>toggle(p.userId,userIds,setUsers)}/>)}</div></details>
       <details className="space-y-2"><summary className="cursor-pointer font-semibold">{t("trainingPolicy.groups")}</summary>{[true,false].map(automatic=><div key={String(automatic)} className="space-y-2"><p className="font-semibold">{t(automatic?'trainingPolicy.automaticAudiences':'trainingPolicy.definedGroups')}</p><div className="grid grid-cols-1 gap-2">{options.data?.groups.filter(g=>g.id.startsWith('audience:')===automatic&&g.name.toLowerCase().includes(search.toLowerCase())).map(g=><OptionSwitch key={g.id} label={g.name} value={groupIds.includes(g.id)} disabled={frozen} onChange={()=>toggle(g.id,groupIds,setGroups)}/>)}</div></div>)}</details>
       <OptionSwitch

@@ -7,6 +7,7 @@ import {
   workHubCrewMembersTable as groupMembers,
   workHubFilesTable as files,
   vendorPeopleTable as staffTable,
+  vendorsTable as vendors,
 } from "@workspace/db";
 import { LibraryAudienceSchema, type WorkHubOwner } from "@workspace/api-zod";
 import {
@@ -16,6 +17,7 @@ import {
   type LibraryTx,
 } from "./library-core";
 import {automaticLibraryAudiences,automaticAudienceMembers} from './automatic-library-audiences';
+import {trainingPositionIds} from '../lib/safety-training-position';
 export async function libraryGroupMembers(reader:Pick<typeof db,'select'>,owner:WorkHubOwner,groupIds:string[],people:Awaited<ReturnType<typeof companyLibraryPeople>>){
  const ids=new Set<number>();
  const staff=owner.type==='vendor'&&groupIds.some(id=>id.startsWith('audience:'))?await reader.select().from(staffTable).where(and(eq(staffTable.vendorId,owner.id),eq(staffTable.isActive,true),isNull(staffTable.deletedAt))):[];
@@ -66,6 +68,19 @@ export async function companyLibraryPeople(
 }
 export async function libraryOptions(actor: LibraryActor) {
   const { owner } = await libraryAuthority(db, actor, true);
+  const people = await companyLibraryPeople(db, owner);
+  const [vendorRows, staff] = owner.type === 'vendor' ? await Promise.all([
+    db.select({catalog:vendors.staffRoleCatalog}).from(vendors).where(eq(vendors.id,owner.id)).limit(1),
+    db.select().from(staffTable).where(and(eq(staffTable.vendorId,owner.id),eq(staffTable.isActive,true),isNull(staffTable.deletedAt))),
+  ]) : [[], []];
+  const catalog = vendorRows[0]?.catalog?.entries ?? [];
+  const positionOptions = new Map(catalog.map(p=>[`staff:${p.id}`,p.label]));
+  for (const person of staff) if (person.jobTitle?.trim()) positionOptions.set(`title:${person.jobTitle.trim().replace(/\s+/g,' ').toLowerCase()}`,person.jobTitle.trim());
+  for (const [id,label] of Object.entries({admin:'Admin',office_staff:'Office Staff',gate_supervisor:'Gate Supervisor',gatekeeper:'Gatekeeper'})) positionOptions.set(`account:${id}`,label);
+  const positions = [...positionOptions].map(([id,label])=>({id,label,userIds:people.filter(p=>{
+    const worker=staff.find(w=>w.id===p.vendorPeopleId||w.userId===p.userId);
+    return worker ? trainingPositionIds({...worker,membershipRole:p.role},catalog).includes(id) : p.role==='admin'&&id==='account:admin';
+  }).map(p=>p.userId)}));
   const groupRows = await db
     .select({ id: groupsTable.id, name: groupsTable.name })
     .from(groupsTable)
@@ -78,8 +93,9 @@ export async function libraryOptions(actor: LibraryActor) {
     )
     .limit(100);
   return {
-    people: await companyLibraryPeople(db, owner),
-    groups: [...automaticLibraryAudiences,...groupRows],
+    people,
+    positions,
+    groups: [...automaticLibraryAudiences.filter(a=>a.id==='audience:all-hands'),...automaticLibraryAudiences.filter(a=>a.id!=='audience:all-hands'),...groupRows],
     files: await db
       .select({ id: files.id, fileName: files.fileName })
       .from(files)
