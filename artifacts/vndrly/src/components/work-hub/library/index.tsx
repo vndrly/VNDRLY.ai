@@ -310,7 +310,7 @@ export default function LibraryWorkspace({
       {tab === "assignments" &&
         assignments.data?.anonymous.map((item) => (
           <View key={item.itemId} style={card}>
-            <Heading>{["training", "bundle"].includes(item.kind) ? formatTrainingTitle(item.title) : item.title}</Heading>
+            <Heading>{item.title}</Heading>
             <Text style={label}>
               {t("workHubLibrary.anonymous")} · {item.responded}/{item.assigned}
             </Text>
