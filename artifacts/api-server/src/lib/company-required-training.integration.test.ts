@@ -1,12 +1,12 @@
 import {afterEach,beforeEach,describe,expect,it} from 'vitest';
 import {createHash,randomUUID} from 'node:crypto';
-import {eq} from 'drizzle-orm';
+import {eq,sql} from 'drizzle-orm';
 import {db,usersTable as users,vendorsTable as vendors,vendorPeopleTable as workers,userOrgMembershipsTable as memberships,canonicalServicesTable as canonical,vendorCapabilitiesTable as capabilities,serviceMappingsTable as mappings,workHubFormTemplatesTable as templates,workHubFormInstancesTable as instances} from '@workspace/db';
 import {AssignmentMetadataSchema,LibraryDraftSchema,LibraryMetadataSchema} from '@workspace/api-zod';
 import {companyRequiredTraining,trainingCatalog} from './company-required-training';
 import {safetyTrainingContentHash} from './safety-training-content-hash';
 import {subjectFingerprint} from '../services/service-matching/candidates';
-import {ensureRequiredTraining} from '../work-hub/required-training';
+import {ensureRequiredTraining,requiredTrainingOwners} from '../work-hub/required-training';
 import {runOnboardingWork} from '../work-hub/onboarding-worker';
 import {getAssignedLibrary,submitGuidedTraining} from '../work-hub/training-service';
 
@@ -59,6 +59,22 @@ async function complete(c:Company,p:Person,id:string,wrong=false){
 }
 
 describe('platform-owned required training against isolated persistence',()=>{
+ it('discovers exactly the same eligible owners without inspecting every course for every owner',async()=>{
+  const eligible=await company(),draft=await company(),ordinary=await company();
+  await publish(eligible);await publish(eligible);
+  await publish(draft,1,{state:'draft'});
+  const nonSafety=await publish(ordinary);
+  const metadata={...nonSafety.metadata};delete (metadata as any).safetyResource;
+  await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,nonSafety.row.id));
+  const expected=await db.selectDistinct({type:templates.ownerOrgType,id:templates.ownerOrgId}).from(templates)
+   .where(sql`${templates.libraryMetadata}->>'state'='published' AND ${templates.libraryMetadata}->>'kind'='training' AND ${templates.libraryMetadata}->'safetyResource' IS NOT NULL`)
+   .orderBy(templates.ownerOrgType,templates.ownerOrgId);
+  const actual=await requiredTrainingOwners();
+  expect(actual).toEqual(expected);
+  expect(actual).toContainEqual(eligible.owner);
+  expect(actual).not.toContainEqual(draft.owner);
+  expect(actual).not.toContainEqual(ordinary.owner);
+ });
  it('retains earned credit for an explicitly compatible simplified version, rejects mismatched versions and edited old content, and creates no repeat assignment',async()=>{
   const c=await company(),gate=await c.person('Gate attendant');await selectService(c);const old=await publish(c);
   await db.transaction(tx=>ensureRequiredTraining(tx,c.owner));const[assignment]=await assigned(old.row.id);await complete(c,gate,assignment.id);

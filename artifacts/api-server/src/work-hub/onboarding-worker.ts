@@ -30,7 +30,11 @@ export async function runOnboardingWork(now = new Date()) {
         .select()
         .from(templates)
         .where(
-          sql`${templates.libraryMetadata}->>'kind'='bundle' AND ${templates.libraryMetadata}->>'state'='published' AND ${templates.bundleDefinition}->'onboarding'->>'enabled'='true' AND coalesce((${templates.bundleDefinition}->'onboarding'->>'nextScanAt')::timestamptz,'1970-01-01')<=${now}`,
+          // Non-bundles have no bundle definition. CASE guarantees we reject
+          // those rows before decompressing their potentially large course JSON.
+          sql`CASE WHEN ${templates.bundleDefinition} IS NULL THEN false ELSE
+          ${templates.libraryMetadata}->>'kind'='bundle' AND ${templates.libraryMetadata}->>'state'='published' AND ${templates.bundleDefinition}->'onboarding'->>'enabled'='true' AND coalesce((${templates.bundleDefinition}->'onboarding'->>'nextScanAt')::timestamptz,'1970-01-01')<=${now}
+          END`,
         )
         .orderBy(
           sql`coalesce(${templates.bundleDefinition}->'onboarding'->>'nextScanAt','1970-01-01')`,

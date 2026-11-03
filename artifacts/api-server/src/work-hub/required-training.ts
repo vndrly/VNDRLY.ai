@@ -28,10 +28,32 @@ export async function ensureRequiredTraining(tx:LibraryTx,owner:WorkHubOwner,onl
  return assigned;
 }
 let scanning=false,cursor=0;
+export async function requiredTrainingOwners(){
+ // Course bodies share a large toasted JSON value with their metadata. Gate
+ // JSON inspection on the owner first; PostgreSQL may reorder ordinary AND
+ // predicates and otherwise decompress other companies' courses repeatedly.
+ const result=await db.execute<{type:string;id:number}>(sql`
+  WITH owners AS MATERIALIZED (
+   SELECT DISTINCT owner_org_type,owner_org_id FROM work_hub_form_templates
+  )
+  SELECT owners.owner_org_type AS type,owners.owner_org_id AS id FROM owners
+  CROSS JOIN LATERAL (
+   SELECT 1 FROM work_hub_form_templates candidate
+   WHERE CASE WHEN candidate.owner_org_type=owners.owner_org_type AND candidate.owner_org_id=owners.owner_org_id THEN
+    candidate.library_metadata->>'state'='published'
+    AND candidate.library_metadata->>'kind'='training'
+    AND candidate.library_metadata->'safetyResource' IS NOT NULL
+   ELSE false END
+   LIMIT 1
+  ) eligible
+  ORDER BY owners.owner_org_type,owners.owner_org_id
+ `);
+ return result.rows;
+}
 export async function runRequiredTrainingWork(){
  if(scanning)return 0;scanning=true;
  try{
-  const owners=await db.selectDistinct({type:templates.ownerOrgType,id:templates.ownerOrgId}).from(templates).where(sql`${templates.libraryMetadata}->>'state'='published' AND ${templates.libraryMetadata}->>'kind'='training' AND ${templates.libraryMetadata}->'safetyResource' IS NOT NULL`).orderBy(templates.ownerOrgType,templates.ownerOrgId);
+  const owners=await requiredTrainingOwners();
   if(!owners.length)return 0;
   const selected=Array.from({length:Math.min(20,owners.length)},(_,i)=>owners[(cursor+i)%owners.length]);cursor=(cursor+selected.length)%owners.length;
   let assigned=0;
