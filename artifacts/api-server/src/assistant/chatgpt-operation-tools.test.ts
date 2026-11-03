@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { chatGptActionTools, chatGptReadableTools } from './chatgpt-tool-access';
-import { exposedOperationTools, resolveOperationTool, planOperationTools, operationToolAnnotations, canonicalOperationToolName } from './chatgpt-operation-tools';
+import { exposedOperationTools, resolveOperationTool, planOperationTools, operationToolAnnotations, canonicalOperationToolName, preparedToolDescription } from './chatgpt-operation-tools';
 import { prepareWorkPlan } from './chatgpt-coordinated-plan';
 import { specialistDirectory } from './chatgpt-specialists';
 describe('role-bound operation exposure', () => {
@@ -75,4 +75,25 @@ it('describes exact public workforce effects and schedule invalidation',()=>{
  const session={userId:17,role:'vendor',vendorId:4,membershipRole:'admin',activeMembershipId:8,sv:2};const exposed=exposedOperationTools(chatGptActionTools(session,['workforce:write','work_hub:write']));
  for(const [action,word] of [['assign','workerUserId'],['acknowledge','your own'],['evaluate','assignedCount'],['escalate','state and timestamp only']])expect(exposed.find(t=>t.name==='confirm_workforce_coverage_action_'+action)?.description).toContain(word);
  expect(operationToolAnnotations(exposed.find(t=>t.name==='reschedule_work_hub_meeting')!)).toMatchObject({destructiveHint:true});
+});
+
+it('publishes scanner-reviewed operations separately with conservative annotations and no action substitution', () => {
+ const session={userId:17,role:'vendor',vendorId:4,membershipRole:'admin',activeMembershipId:8,sv:2};
+ const actions=chatGptActionTools(session,['work_hub:write','assets:write','trips:write','safety:write']);
+ const exposed=exposedOperationTools(actions);
+ for (const family of ['moderate_work_hub_meeting','manage_work_hub_meeting','manage_library_assignment','confirm_asset_custody_action']) {
+  const original=actions.find(t=>t.name===family)!; expect(original).toBeDefined();
+  const operations=((original.inputSchema.properties as Record<string, {enum:string[]}>).action).enum;
+  expect(exposed.some(t=>t.name===family)).toBe(false);
+  for(const op of operations) {
+   const tool=exposed.find(t=>t.name===family+'_'+op)!;expect(tool).toBeDefined();
+   expect(tool.inputSchema.properties).not.toHaveProperty('action');
+   expect(canonicalOperationToolName(tool.name)).toBe(family);
+   expect(resolveOperationTool(tool.name,{},actions)).toEqual({name:family,input:{action:op}});
+   expect(()=>resolveOperationTool(tool.name,{action:'other'},actions)).toThrow('fixed');
+   expect(operationToolAnnotations(tool).destructiveHint).toBe(true);
+   expect(preparedToolDescription(tool)).toContain('pending request only');
+  }
+ }
+ expect(canonicalOperationToolName('manage_work_hub_meeting_file')).toBe('manage_work_hub_meeting_file');
 });

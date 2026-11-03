@@ -1,3 +1,9 @@
+# VNDRLY plugin 1.22.17
+
+Corrects MCP discovery metadata flagged by the publisher scanner. Reviewed action families expose fixed, individually named operations while preserving canonical authorization, permission checks and existing saved-action compatibility. Potentially destructive changes are advertised conservatively. Scheduling, flagging and reviewed action descriptions distinguish a pending preparation from execution. The generic action dispatcher remains accepted for older clients but is no longer advertised to the model. Existing plugin identities and grants remain unchanged.
+
+Scanner authorization is a separate account-side issue: the publisher reported “Authorization for scanning is missing or no longer works” on November 2. Reconnect the existing MCP scanner account, deploy these server changes, and rescan before calling the publisher clean. Further-review findings for file sharing and finance are not a proven code defect and still require OpenAI's fresh review. This package has not been submitted or approved.
+
 # VNDRLY plugin 1.22.15
 
 Matches capability-first vendor discovery, partner-assigned job AFEs, recurring tickets linked to the accepted job, and immutable submitted proof revisions. Service matching can return a vendor before a partner-specific rate exists; quote-required results do not authorize an award. New Gate billing setups select an accepted job with its saved daily terms and AFE and still require explicit Gate-contractor authority. Existing Gate agreements remain intact. Approval and kickback apply to the exact reviewed proof revision; unsupported conversational review must use the trusted VNDRLY review screen. Existing plugin/app identity, five service skills, branding, linked accounts and grants remain unchanged. Package validation is not deployment, submission, review approval or public availability.

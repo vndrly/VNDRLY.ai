@@ -447,10 +447,7 @@ describe("ChatGPT account connection boundary", () => {
     const listed = await invoke("tools/list");
     const tool = listed.body.result.tools.find((t: { name: string }) => t.name === "record_ticket_payment");
     expect(tool.securitySchemes).toEqual([{ type: "oauth2", scopes: ["finance:write"] }]);
-    const generic = listed.body.result.tools.find((t: { name: string }) => t.name === "v_prepare_action");
-    expect(generic.inputSchema.properties.toolName.enum).toContain("record_ticket_payment");
-    expect(generic.securitySchemes).toEqual([{ type: "oauth2", scopes: ["gate:read", "gate:write"] }]);
-    expect(generic._meta.securitySchemes).toEqual(generic.securitySchemes);
+    expect(listed.body.result.tools.some((t: { name: string }) => t.name === "v_prepare_action")).toBe(false);
     const ordinary = (await invoke("tools/call", { name: "v_prepare_action", arguments: { toolName: "manage_gate_shift", arguments: { action: "prepare_handoff", stationId: "00000000-0000-4000-8000-000000000009" } } })).body.result;
     expect(ordinary._meta?.["mcp/www_authenticate"]).toBeUndefined();
     expect(ordinary.isError).toBe(false);
@@ -471,7 +468,7 @@ describe("ChatGPT account connection boundary", () => {
     grants[0].session = { ...original, role: "field_employee" };
     const denied = await invoke("tools/list");
     expect(denied.body.result.tools.some((t: { name: string }) => t.name === "record_ticket_payment")).toBe(false);
-    expect(denied.body.result.tools.find((t: { name: string }) => t.name === "v_prepare_action").inputSchema.properties.toolName.enum).not.toContain("record_ticket_payment");
+    expect(denied.body.result.tools.some((t: { name: string }) => t.name === "v_prepare_action")).toBe(false);
     const deniedCall = (await invoke("tools/call", { name: "record_ticket_payment", arguments: {} })).body.result;
     expect(deniedCall._meta?.["mcp/www_authenticate"]).toBeUndefined();
     grants[0].session = { ...original, role: "partner", vendorId: null, partnerId: 8, membershipRole: "admin" };
@@ -624,7 +621,7 @@ describe("ChatGPT account connection boundary", () => {
     expect(mocks.run).not.toHaveBeenCalled();
     const descriptors = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 2, method: "tools/list" });
     expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "v_submit_panel_action")._meta.ui.visibility).toEqual(["app"]);
-    for (const name of ["manage_ticket_record_update", "v_prepare_action", "v_submit_panel_action"]) {
+    for (const name of ["manage_ticket_record_update", "v_submit_panel_action"]) {
       expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === name).annotations.destructiveHint).toBe(true);
     }
     const ticketTool = descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "manage_ticket_record_update");

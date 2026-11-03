@@ -1,6 +1,8 @@
 import type { AskVToolDefinition } from './tool-registry';
 
 const families = new Set(['manage_gate_shift', 'manage_ticket_record', 'manage_work_hub_away_responder', 'confirm_operations_displays_action', 'prepare_workforce_coverage_action', 'confirm_workforce_coverage_action']);
+const reviewedFamilies = ['manage_work_hub_crew_member', 'manage_work_hub_channel', 'manage_work_hub_message', 'manage_work_hub_task', 'manage_work_hub_shift', 'manage_work_hub_calendar_item', 'manage_work_hub_voicemail', 'manage_work_hub_meeting', 'moderate_work_hub_meeting', 'manage_work_hub_meeting_file', 'manage_work_hub_legal_hold', 'manage_library_assignment', 'confirm_asset_custody_action', 'confirm_field_trips_action', 'confirm_incident_response_action'];
+for (const name of reviewedFamilies) families.add(name);
 const workforceOperations = ['assign', 'acknowledge', 'evaluate', 'escalate'];
 function operations(tool: AskVToolDefinition): string[] {
   if (tool.name === 'prepare_workforce_coverage_action' || tool.name === 'confirm_workforce_coverage_action') return workforceOperations;
@@ -9,13 +11,14 @@ function operations(tool: AskVToolDefinition): string[] {
 }
 /** Metadata lookup only; callable resolution still requires the current permitted canonical tool. */
 export function canonicalOperationToolName(name: string): string {
-  for (const family of families) if (name.startsWith(family + '_')) return family;
+  if (families.has(name)) return name;
+  for (const family of [...families].sort((a,b) => b.length-a.length)) if (name.startsWith(family + '_')) return family;
   return name;
 }
 export function operationToolAnnotations(tool: AskVToolDefinition) {
   const canonical = canonicalOperationToolName(tool.name);
   return { readOnlyHint: !tool.mutating, destructiveHint: tool.mutating && (
-    canonical === 'manage_ticket_record' || canonical === 'confirm_asset_custody_action' || tool.name === 'manage_gate_shift_cancel_handoff' ||
+    reviewedFamilies.includes(canonical) || ['mark_notifications_read','set_ticket_flag','share_work_hub_file','manage_work_hub_finance'].includes(canonical) || canonical === 'manage_ticket_record' || canonical === 'confirm_asset_custody_action' || tool.name === 'manage_gate_shift_cancel_handoff' ||
     canonical === 'manage_work_hub_away_responder' || canonical === 'confirm_operations_displays_action' ||
     canonical === 'confirm_workforce_coverage_action' || canonical === 'reschedule_work_hub_meeting' || ['cancel_fleet_cargo_transfer','cancel_fleet_equipment_replacement'].includes(tool.name)
   ), openWorldHint: false };
@@ -61,7 +64,7 @@ export function planOperationTools(tools: AskVToolDefinition[]): AskVToolDefinit
 /** Publish each operation independently while retaining canonical authorization. */
 export function exposedOperationTools(tools: AskVToolDefinition[]): AskVToolDefinition[] {
   return tools.flatMap(tool => {
-    if (!families.has(tool.name)) return [tool];
+    if (!families.has(tool.name) || operations(tool).length === 0) return [tool];
     return operations(tool).map(operation => ({
       ...tool,
       name: `${tool.name}_${operation}`,
@@ -81,4 +84,17 @@ export function resolveOperationTool(name: string, input: Record<string, unknown
     }
   }
   return { name, input };
+}
+
+/** Public preparation must not inherit execution claims from in-app tools. */
+export function preparedToolDescription(tool: AskVToolDefinition): string {
+  const canonical = canonicalOperationToolName(tool.name);
+  const effect = canonical === 'schedule_ticket_crew'
+    ? 'the exact ticket crew schedule, worker and start time; conflict overrides require explicit review'
+    : canonical === 'set_ticket_flag'
+      ? 'the exact ticket flag or unflag state and supplied reason'
+      : reviewedFamilies.includes(canonical)
+        ? `the ${tool.name.slice(canonical.length + 1).replace(/_/g, ' ') || canonical} change using the supplied exact record identifiers and values`
+        : null;
+  return effect ? `Prepare ${effect} for authorization in the VNDRLY action panel. This call saves a pending request only; it does not execute the operation, send notifications, collect location, or change the target record. Submission separately rechecks current permissions and record version. Never claim preparation is completion.` : `${canonical === 'manage_ticket_record' ? 'This call only prepares the change. ' : ''}${tool.description} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`;
 }
