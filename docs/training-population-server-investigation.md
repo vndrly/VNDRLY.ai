@@ -62,3 +62,28 @@ script prints credentials, seeds data, or changes assignments.
 Live after-publication evidence and its exact commit are recorded separately in
 the ignored `.local/training-server-state.json` checkpoint and benchmark outputs.
 Do not infer sub-one-second cold population from a warm cache result.
+
+## Hosted retest and scheduled-load follow-up
+
+The first published normal-path samples were **2188, 1675, 1857 ms** cold and
+**41, 35, 54 ms** warm. Serving the exact Linux CI web artifact locally gave
+**2004, 1602, 1911 ms** cold and **40, 50, 46 ms** warm. The payload hashes and
+rendered card contents matched. Hosted execution alone did not make it instant.
+
+Rotating the hosted ghosts exposed intermittent 60-second readiness failures;
+a separate fresh login also timed out at 30 seconds. These failures mean the
+initial fast samples alone are insufficient evidence of reliable performance.
+Read-only activity inspection found scheduled onboarding and required-training
+discovery scanning large course JSON values across all companies. The local
+and hosted APIs also share the same database, so localhost is not an isolated
+database performance control.
+
+The required-training owner discovery now gates JSON inspection on the owner
+with CASE and stops at its first eligible course. Eligibility, deduplication,
+ordering and the existing 20-company round-robin remain unchanged. A read-only
+production plan returned 155 owners in **3422 ms**, compared with original
+discovery scans observed active beyond one minute. Onboarding bundle discovery
+also rejects rows with no bundle definition before reading their course JSON;
+the equivalent read-only plan took **2424 ms** and returned zero due bundles.
+No database schema, course content, assignments, or worker schedule is changed.
+Integration coverage compares discovery against the original predicate.
