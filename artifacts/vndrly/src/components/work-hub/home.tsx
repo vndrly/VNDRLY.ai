@@ -93,7 +93,7 @@ export function WorkHubHome() {
       </HomeCard>
       {gate && <WorkforcePanel />}
       <DashboardTasks />
-      <HomeCard className="hub-certificates" title="VNDRLY/U Certificates" titleContent={<><VndrlyUWordmark /> Certificates</>} subtitle="Your certificates and assigned courses" icon={GraduationCap} actions={<TrainingCompletionTotal />}>
+      <HomeCard className="hub-certificates" title="VNDRLY/U Certificates" titleContent={<VndrlyUWordmark />} subtitle="Your certificates and assigned courses" icon={GraduationCap} actions={<TrainingCompletionTotal />}>
         <div className="hub-training-content">
           <CertificationProgress embedded />
         </div>
