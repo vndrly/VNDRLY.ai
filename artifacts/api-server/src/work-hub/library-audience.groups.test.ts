@@ -8,7 +8,7 @@ vi.mock('@workspace/db',()=>{
   const query:any={from:(t:any)=>{source=t.name;state.sources.push(source);return query;},innerJoin:()=>query,where:()=>query,limit:()=>query,for:()=>Promise.resolve(result()),then:(ok:any,bad:any)=>Promise.resolve(result()).then(ok,bad)};
   return query;
  }};
- return {db,usersTable:table('users'),userOrgMembershipsTable:table('memberships'),workHubCrewsTable:table('groups'),workHubCrewMembersTable:table('groupMembers'),workHubFilesTable:table('files')};
+ return {db,usersTable:table('users'),userOrgMembershipsTable:table('memberships'),workHubCrewsTable:table('groups'),workHubCrewMembersTable:table('groupMembers'),workHubFilesTable:table('files'),vendorsTable:table('vendors'),vendorPeopleTable:table('staff')};
 });
 vi.mock('./library-core',()=>({libraryAuthority:vi.fn(async()=>({owner:{type:'vendor',id:1115}})),LibraryError:class extends Error{constructor(message:string,public status:number){super(message);}}}));
 import {db} from '@workspace/db';
@@ -17,8 +17,8 @@ const groupId='11111111-1111-4111-8111-111111111111';
 const actor:any={userId:1142};
 beforeEach(()=>{state.sources=[];state.groups=[];state.people=[];state.members=[];});
 it('returns no groups when no defined Groups exist, without reading channels or work-crew presets',async()=>{
- expect((await libraryOptions(actor)).groups.map(group=>group.name)).toEqual(['Admin','All Hands','Office Staff','Gate Supervisor','Gatekeepers']);
- expect(state.sources).toEqual(['groups','memberships','files']);
+ expect((await libraryOptions(actor)).groups.map(group=>group.name)).toEqual(['All Hands','Admin','Office Staff','Gate Supervisor','Gatekeepers']);
+ expect(state.sources).toEqual(['memberships','vendors','staff','groups','files']);
 });
 it('expands defined Group members only within eligible company staff',async()=>{
  state.groups=[{id:groupId,name:'Gatekeepers'}];

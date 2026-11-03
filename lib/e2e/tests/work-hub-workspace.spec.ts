@@ -80,6 +80,8 @@ test.describe("Work Hub workspace persisted flow", () => {
     await expect(page.getByRole("article").getByText(message, { exact: true })).toBeVisible();
     await page.reload();
     if (!(await conversations.isVisible())) await page.getByRole("button", { name: "Choose a conversation", exact: true }).click();
+    await expect(conversations.locator("details[open]")).toHaveCount(0);
+    await conversations.locator("summary").filter({ hasText: /^Channels/ }).click();
     await page
       .getByRole("navigation", { name: "Conversations" })
       .getByRole("button")
