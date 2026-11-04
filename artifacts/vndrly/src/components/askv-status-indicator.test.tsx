@@ -31,8 +31,10 @@ describe("AskV slider",()=>{
  const opened=vi.fn();window.addEventListener("askv:open-panel",opened);
  const {rerender}=render(<AskVStatusIndicator placement="top-strip"/>);
  const classes=screen.getByRole("switch").className;
+ expect(screen.getByRole("switch").closest(".askv-pane-brand-toggle")).not.toBeNull();
  fireEvent.click(screen.getByRole("switch"));expect(opened).not.toHaveBeenCalled();
  rerender(<AskVStatusIndicator/>);expect(screen.getByRole("switch").className).toBe(classes);
+ expect(screen.getByRole("switch").closest(".askv-pane-brand-toggle")).not.toBeNull();
  window.removeEventListener("askv:open-panel",opened);
  });
 });

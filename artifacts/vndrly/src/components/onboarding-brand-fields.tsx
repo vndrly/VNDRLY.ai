@@ -8,6 +8,7 @@ import { getContrastWarning, getColorPairWarning } from "@/lib/brand-color";
 export interface VendorBrandingValues {
   brandPrimaryColor: string;
   logoUrl: string;
+  logoSquareUrl: string;
 }
 
 export interface PartnerBrandingValues {
@@ -125,32 +126,35 @@ export function OnboardingBrandFields(
           </div>
         </>
       ) : (
-        <div>
-          <Label>Company logo</Label>
-          <p className="text-xs text-gray-500 mb-1">
-            Upload a PNG, JPG, SVG, or animated GIF — we&apos;ll suggest brand
-            colors and update the header preview.
-          </p>
-          <div className="flex items-center gap-3">
-            <input
-              type="file"
-              accept="image/*"
-              disabled={props.disabled || suggesting}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void handleFile(f, "square");
-              }}
-              data-testid="input-vendor-logo"
-              className="text-sm"
-            />
-            {props.value.logoUrl && (
-              <img
-                src={props.value.logoUrl}
-                alt="logo preview"
-                className="h-12 w-12 object-contain border rounded"
-              />
-            )}
-          </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {([
+            { slot: "horizontal", label: "Company logo", url: props.value.logoUrl, testId: "input-vendor-logo" },
+            { slot: "square", label: "Square icon", url: props.value.logoSquareUrl, testId: "input-vendor-logo-square" },
+          ] as const).map(({ slot, label, url, testId }) => (
+            <div key={slot} className="space-y-2">
+              <Label>{label}</Label>
+              <p className="text-xs text-muted-foreground">
+                {slot === "square" ? "Used in the navigation sidebar." : "Used in company headers."} PNG, JPG, SVG, or GIF.
+              </p>
+              {url && <img src={url} alt={`${label} preview`} className="h-12 max-w-[160px] rounded border object-contain" />}
+              <label className="vendor-mini-card-button relative cursor-pointer focus-within:outline focus-within:outline-2">
+                {url ? `Replace ${label.toLowerCase()}` : `Add ${label.toLowerCase()}`}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/gif"
+                  aria-label={label}
+                  disabled={props.disabled || suggesting}
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0];
+                    event.currentTarget.value = "";
+                    if (file) void handleFile(file, slot).catch(() => {});
+                  }}
+                  data-testid={testId}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                />
+              </label>
+            </div>
+          ))}
         </div>
       )}
 

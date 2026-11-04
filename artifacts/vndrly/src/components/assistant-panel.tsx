@@ -271,7 +271,7 @@ function pickAskVRecordingMimeType(): string | undefined {
   return preferred.find((type) => MediaRecorder.isTypeSupported(type));
 }
 
-export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embedded = false, placement = "default" }: AssistantPanelProps & { placement?: "default" | "onboarding" }) {
+export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embedded = false }: AssistantPanelProps) {
   const [minimized, setMinimized] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const { t } = useTranslation();
@@ -894,9 +894,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
           "border-2 border-[color:var(--brand-primary)] sm:translate-x-0 sm:translate-y-0 sm:resize sm:overflow-hidden",
           embedded
             ? "h-[min(72vh,760px)] w-full max-w-none rounded-xl bg-white text-gray-900 sm:resize-none"
-            : placement === "onboarding"
-              ? "bg-[#3a3d42] text-gray-100 sm:left-6 sm:right-auto sm:top-auto sm:bottom-24 sm:max-w-[min(24rem,calc(100vw-3rem))]"
-              : "bg-[#3a3d42] text-gray-100 sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem]",
+            : "bg-[#3a3d42] text-gray-100 sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem]",
           !embedded && (minimized ? "h-16" : "h-[min(86vh,768px)]"),
         )}
         data-testid="assistant-panel"
@@ -1487,7 +1485,7 @@ export function AssistantLauncher({
   tokenMode?: { token: string };
   signupMode?: { persona: "partner" | "vendor" };
   /** `floating` = bottom-left FAB; `askv-pane` = main layout AskV pane. */
-  placement?: "floating" | "askv-pane" | "onboarding";
+  placement?: "floating" | "askv-pane";
 } = {}) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -1501,7 +1499,6 @@ export function AssistantLauncher({
   const engaged = voiceActive || (hovered && !open);
   return (
     <>
-      <div className={cn(placement === "onboarding" ? "fixed bottom-5 left-5 z-40 flex items-center gap-2" : "contents")}>
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -1523,14 +1520,11 @@ export function AssistantLauncher({
         <span className="sr-only">ask V</span>
         <AskVFloatingLauncherMark engaged={engaged} panelOpen={open} />
       </button>
-      {placement === "onboarding" && <AskVStatusIndicator />}
-      </div>
       <AssistantPanel
         open={open}
         onOpenChange={setOpen}
         tokenMode={tokenMode}
         signupMode={signupMode}
-        placement={placement === "onboarding" ? "onboarding" : "default"}
       />
     </>
   );

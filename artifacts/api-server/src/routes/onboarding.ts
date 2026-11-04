@@ -1016,12 +1016,15 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     // strings are coerced to undefined so we don't blow away a logo
     // that's already configured for an existing vendor.
     const branding = (payload.branding ?? {}) as Record<string, string | undefined>;
-    const brandingPatch: { brandPrimaryColor?: string; logoUrl?: string } = {};
+    const brandingPatch: { brandPrimaryColor?: string; logoUrl?: string; logoSquareUrl?: string } = {};
     if (typeof branding.brandPrimaryColor === "string" && branding.brandPrimaryColor.trim()) {
       brandingPatch.brandPrimaryColor = branding.brandPrimaryColor.trim();
     }
     if (typeof branding.logoUrl === "string" && branding.logoUrl.trim()) {
       brandingPatch.logoUrl = branding.logoUrl.trim();
+    }
+    if (typeof branding.logoSquareUrl === "string" && branding.logoSquareUrl.trim()) {
+      brandingPatch.logoSquareUrl = branding.logoSquareUrl.trim();
     }
     const platformEulaPatch =
       acceptingUserId && isPlatformEulaPayloadAccepted(payload)

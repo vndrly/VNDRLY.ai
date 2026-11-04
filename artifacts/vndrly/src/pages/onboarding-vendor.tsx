@@ -78,7 +78,7 @@ interface VendorPayload {
     weeklyOtHours?: string;
     overtimeMultiplier?: string;
   };
-  branding?: { brandPrimaryColor?: string; logoUrl?: string };
+  branding?: { brandPrimaryColor?: string; logoUrl?: string; logoSquareUrl?: string };
   platformEula?: { accepted?: boolean; version?: string };
   legalConsent?: { accepted?: boolean; smsOptIn?: boolean; version?: string };
   firstEmployee?: {
@@ -161,6 +161,7 @@ export default function OnboardingVendor() {
   const [vendorBranding, setVendorBranding] = useState({
     brandPrimaryColor: "",
     logoUrl: "",
+    logoSquareUrl: "",
   });
   const [platformEula, setPlatformEula] = useState<PlatformEulaAcceptanceValue>({
     accepted: false,
@@ -243,6 +244,7 @@ export default function OnboardingVendor() {
           setVendorBranding({
             brandPrimaryColor: p.branding.brandPrimaryColor ?? "",
             logoUrl: p.branding.logoUrl ?? "",
+            logoSquareUrl: p.branding.logoSquareUrl ?? "",
           });
         }
         if (p.platformEula?.accepted) {
@@ -432,11 +434,11 @@ export default function OnboardingVendor() {
     }
   };
 
-  const uploadLogo = async (file: File, _slot: "horizontal" | "square"): Promise<void> => {
+  const uploadLogo = async (file: File, slot: "horizontal" | "square"): Promise<void> => {
     setLoading(true);
     try {
       const finalUrl = await uploadOnboardingLogo(file, "public");
-      setVendorBranding((b) => ({ ...b, logoUrl: finalUrl }));
+      setVendorBranding((b) => ({ ...b, [slot === "square" ? "logoSquareUrl" : "logoUrl"]: finalUrl }));
       toast({ title: "Logo uploaded." });
     } catch (err) {
       toast({ title: (err as Error).message, variant: "destructive" });
@@ -663,6 +665,7 @@ export default function OnboardingVendor() {
             branding: {
               brandPrimaryColor: vendorBranding.brandPrimaryColor.trim() || undefined,
               logoUrl: vendorBranding.logoUrl.trim() || undefined,
+              logoSquareUrl: vendorBranding.logoSquareUrl.trim() || undefined,
             },
           };
         case "platform-eula":
@@ -703,21 +706,23 @@ export default function OnboardingVendor() {
   const brandPreview = useMemo((): OnboardingBrandPreview | null => {
     const primary = vendorBranding.brandPrimaryColor.trim() || payload.branding?.brandPrimaryColor?.trim() || "";
     const logo = vendorBranding.logoUrl.trim() || payload.branding?.logoUrl?.trim() || "";
-    if (!primary && !logo && !basics.name.trim()) return null;
+    const square = vendorBranding.logoSquareUrl.trim() || payload.branding?.logoSquareUrl?.trim() || "";
+    if (!primary && !logo && !square && !basics.name.trim()) return null;
     return {
       name: basics.name.trim() || null,
       logoUrl: logo || null,
+      logoSquareUrl: square || null,
       primaryColor: primary || null,
     };
   }, [vendorBranding, payload.branding, basics.name]);
 
   const pageBrand = useMemo(() => {
-    if (!brandPreview?.primaryColor) return DEFAULT_BRAND;
+    if (!brandPreview?.primaryColor && !brandPreview?.logoUrl && !brandPreview?.logoSquareUrl) return DEFAULT_BRAND;
     return {
       ...DEFAULT_BRAND,
-      primary: brandPreview.primaryColor,
-      accent: brandPreview.primaryColor,
-      logoUrl: brandPreview.logoUrl ?? null,
+      primary: brandPreview.primaryColor || DEFAULT_BRAND.primary,
+      accent: brandPreview.primaryColor || DEFAULT_BRAND.accent,
+      logoUrl: brandPreview.logoSquareUrl ?? brandPreview.logoUrl ?? null,
       name: brandPreview.name ?? null,
       isOrgBranded: true,
     };
@@ -740,7 +745,7 @@ export default function OnboardingVendor() {
   };
 
   return (
-    <OnboardingPageShell brand={pageBrand}>
+    <OnboardingPageShell brand={pageBrand} vendorControls>
       <div className="vendor-workspace-page">
       <div className="vendor-onboarding-header p-5 shadow-2xl mb-4">
         <OnboardingBrandHeader
@@ -1056,8 +1061,8 @@ export default function OnboardingVendor() {
             </div>
           )}
 
-          <div className="mt-8 flex items-center justify-end gap-3">
-            <div className="flex items-center gap-2">
+          <div className="mt-8 flex flex-wrap items-center justify-end gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               {stepIndex > 0 && !REQUIRED_STEPS.has(currentStep.key as StepKey) && (
                 <OnboardingPillButton tone="secondary" onClick={skipStep} disabled={loading} data-testid="button-skip" className="px-5">
                   {t("onboardingActions.skipForNow")}

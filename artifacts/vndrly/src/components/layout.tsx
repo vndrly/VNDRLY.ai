@@ -37,7 +37,7 @@ import {
   Video,
   ArrowLeft,
 } from "lucide-react";
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
@@ -71,18 +71,14 @@ import { OnboardingProgressBanner, DashboardSetup } from "@/components/finish-se
 import { withGateLogNav, canViewGateLog } from "@/lib/gate-ops-nav";
 import { visitsApi } from "@/lib/visits-api";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
-import AskVStatusIndicator from "@/components/askv-status-indicator";
+import AskVPaneControls from "@/components/askv-pane-controls";
 import { orderPortalNavigation } from "@/lib/portal-nav-order";
 import { workHubIcons, getWorkHubNavItems, isWorkHubPath, orderWorkHubItems } from "@/lib/work-hub-nav";
 
 import { WorkHubNavigation, useHubPreferences } from "@/components/work-hub/navigation";
 import { MobilePageHeader } from "./mobile-page-header";
 
-const AssistantLauncher = React.lazy(() =>
-  import("@/components/assistant-panel").then((mod) => ({
-    default: mod.AssistantLauncher,
-  })),
-);
+
 
 function useNavItems(user: {
   role: string;
@@ -512,14 +508,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           className="relative isolate z-40 flex h-[48px] shrink-0 items-center gap-1 overflow-visible px-2"
           data-testid="askv-pane"
         >
-          <div className="relative flex shrink-0 items-center gap-0 overflow-visible">
-            <div className="relative top-[3px] flex items-center">
-              <Suspense fallback={null}>
-                <AssistantLauncher placement="askv-pane" />
-              </Suspense>
-            </div>
-            <div className="-ml-[10.8px]"><AskVStatusIndicator placement="top-strip" /></div>
-          </div>
+          <AskVPaneControls />
           <EnergyMarketTicker />
           <ReferToVndrlyDialog
             trigger={

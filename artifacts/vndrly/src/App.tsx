@@ -465,12 +465,12 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
     matches("/reset-password") ||
     matches("/login") ||
     matches("/switch-account") ||
-    matches("/signup") ||
+    matches("/signup") || matches("/onboarding/vendor") ||
     matches("/legal") || matches("/sms") || matches("/es/legal") || matches("/es/sms");
   if (hidden) return null;
   // Main admin/partner/vendor chrome mounts Ask V in the layout AskV pane.
   // Field ops portals (/field, /foreman) use the same AskV pane in
-  // FieldOpsPortalShell. Onboarding wizards keep the floating launcher.
+  // FieldOpsPortalShell. Vendor onboarding mounts the shared pane controls in its own header.
   if (user && !location.startsWith("/onboarding/")) {
     if (user.role !== "field_employee") {
       return null;
@@ -481,7 +481,7 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
   }
   return (
     <Suspense fallback={null}>
-      <AssistantLauncher placement={location.startsWith("/onboarding/vendor") ? "onboarding" : "floating"} />
+      <AssistantLauncher placement="floating" />
     </Suspense>
   );
 }

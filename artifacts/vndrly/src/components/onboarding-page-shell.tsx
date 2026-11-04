@@ -1,4 +1,6 @@
-import { type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
+import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
+import AskVPaneControls from "@/components/askv-pane-controls";
 import LanguageToggle from "@/components/language-toggle";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
@@ -7,6 +9,7 @@ import { brandStyleVars, type Brand } from "@/hooks/use-brand";
 interface OnboardingPageShellProps {
   brand: Brand;
   children: ReactNode;
+  vendorControls?: boolean;
 }
 
 /**
@@ -18,16 +21,18 @@ interface OnboardingPageShellProps {
 export function OnboardingPageShell({
   brand,
   children,
+  vendorControls = false,
 }: OnboardingPageShellProps): React.ReactElement {
 
 
   return (
     <div
-      className="min-h-screen relative overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10"
+      className={`min-h-screen relative overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 ${vendorControls ? "vendor-onboarding-shell" : ""}`}
       style={{
         ...brandStyleVars(brand),
         backgroundColor: NAV_PANE_DARK_BG,
-      }}
+        ...(vendorControls ? { "--onboarding-check-logo": `url(${JSON.stringify(brand.logoUrl || VNDRLY_LOGO_SQUARE)})` } : {}),
+      } as CSSProperties}
       data-testid="onboarding-page-shell"
       data-theme="dark"
     >
@@ -54,9 +59,16 @@ export function OnboardingPageShell({
       />
 
 
-      <div className="fixed top-4 right-4 z-30">
-        <LanguageToggle variant="dark" />
-      </div>
+      {vendorControls ? (
+        <div className="fixed inset-x-0 top-1 z-40 flex h-12 items-center justify-between gap-1 px-2 text-white sm:px-5">
+          <AskVPaneControls />
+          <LanguageToggle variant="dark" presentation="line" alwaysOn />
+        </div>
+      ) : (
+        <div className="fixed top-4 right-4 z-30">
+          <LanguageToggle variant="dark" />
+        </div>
+      )}
 
       <main className="relative z-10 mx-auto w-full max-w-4xl pt-10">
         {children}

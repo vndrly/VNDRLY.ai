@@ -1,4 +1,4 @@
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import { cn } from "@/lib/utils";
 
 interface OnboardingPillButtonProps {
   children: React.ReactNode;
@@ -10,10 +10,10 @@ interface OnboardingPillButtonProps {
   "data-testid"?: string;
 }
 
-export default function OnboardingPillButton({ children, onClick, className, type = "button", disabled, ...props }: OnboardingPillButtonProps) {
+export default function OnboardingPillButton({ children, onClick, className, type = "button", disabled, tone = "primary", ...props }: OnboardingPillButtonProps) {
   return (
-    <PillButton color="image" onClick={onClick} type={type} disabled={disabled} className={className} data-testid={props["data-testid"]}>
+    <button onClick={onClick} type={type} disabled={disabled} className={cn("vendor-mini-card-button onboarding-mini-card", tone === "primary" && "onboarding-mini-card-primary", className)} data-testid={props["data-testid"]}>
       {children}
-    </PillButton>
+    </button>
   );
 }
