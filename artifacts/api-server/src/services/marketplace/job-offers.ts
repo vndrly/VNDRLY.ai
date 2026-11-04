@@ -16,10 +16,10 @@ export const createJobOfferInput = z
     vendorPartnerServiceOfferId: id,
     siteLocationId: id,
     scope: z.string().trim().min(1).max(10000),
-    requestedStartAt: z.string().datetime({ offset: true }),
-    requestedEndAt: z.string().datetime({ offset: true }),
+    requestedStartAt: z.string().datetime({ offset: true }).optional(),
+    requestedEndAt: z.string().datetime({ offset: true }).optional(),
     crewCount: id.max(100000),
-    afeCode: z.string().trim().min(1, "The partner must assign an AFE to this job").max(200),
+    afeCode: z.string().trim().min(1).max(200).optional(),
     poNumber: z.string().trim().max(200).optional(),
     attachmentUrls: z
       .array(
@@ -30,13 +30,13 @@ export const createJobOfferInput = z
           .refine((value) => new URL(value).protocol === "https:"),
       )
       .max(20),
-    expiresAt: z.string().datetime({ offset: true }),
+    expiresAt: z.string().datetime({ offset: true }).optional(),
   })
   .strict()
   .refine(
     (value) =>
-      Date.parse(value.requestedEndAt) > Date.parse(value.requestedStartAt) &&
-      Date.parse(value.expiresAt) <= Date.parse(value.requestedStartAt),
+      (!value.requestedEndAt || (!!value.requestedStartAt && Date.parse(value.requestedEndAt) > Date.parse(value.requestedStartAt))) &&
+      (!value.expiresAt || !value.requestedStartAt || Date.parse(value.expiresAt) <= Date.parse(value.requestedStartAt)),
     { message: "Offer expiry and schedule are out of order" },
   );
 export type CreateJobOfferInput = z.infer<typeof createJobOfferInput>;
@@ -118,12 +118,12 @@ const fromOffer = (row: JobOffer): CreateJobOfferInput => ({
   vendorPartnerServiceOfferId: row.vendorPartnerServiceOfferId,
   siteLocationId: row.siteLocationId,
   scope: row.scope,
-  requestedStartAt: row.scheduledStartAt!.toISOString(),
-  requestedEndAt: row.scheduledEndAt!.toISOString(),
+  ...(row.scheduledStartAt ? { requestedStartAt: row.scheduledStartAt.toISOString() } : {}),
+  ...(row.scheduledEndAt ? { requestedEndAt: row.scheduledEndAt.toISOString() } : {}),
   crewCount: row.crewCount,
   attachmentUrls: (row.attachments ?? []) as string[],
-  expiresAt: row.expiresAt!.toISOString(),
-  afeCode: row.afeReference ?? "",
+  ...(row.expiresAt ? { expiresAt: row.expiresAt.toISOString() } : {}),
+  ...(row.afeReference ? { afeCode: row.afeReference } : {}),
   ...(row.poReference ? { poNumber: row.poReference } : {}),
 });
 
@@ -185,14 +185,13 @@ export function createJobOfferService(
   const open = (offer: JobOffer, now: Date) => {
     if (!["offered", "vendor_reviewing"].includes(offer.status))
       fail("offer_not_open");
-    if (!offer.expiresAt || offer.expiresAt <= now) fail("offer_expired");
+    if (offer.expiresAt && offer.expiresAt <= now) fail("offer_expired");
   };
   const validate = async (
     tx: JobOfferTransaction,
     offer: JobOffer,
     now: Date,
   ) => {
-    if (!offer.afeReference?.trim()) fail("afe_required");
     const facts = await tx.validate(fromOffer(offer), now);
     const { requestFingerprint: _request, ...frozen } =
       offer.commercialSnapshot;
@@ -247,7 +246,7 @@ export function createJobOfferService(
           return prior;
         }
         const now = clock();
-        if (new Date(input.expiresAt) <= now) fail("offer_expired");
+        if (input.expiresAt && new Date(input.expiresAt) <= now) fail("offer_expired");
         const facts = await tx.validate(input, now);
         return tx.insert({
           partnerId: input.partnerId,
@@ -258,14 +257,14 @@ export function createJobOfferService(
           vendorCapabilityId: input.vendorCapabilityId,
           vendorPartnerServiceOfferId: input.vendorPartnerServiceOfferId,
           commercialSnapshot: { ...facts.commercial, requestFingerprint },
-          scheduledStartAt: new Date(input.requestedStartAt),
-          scheduledEndAt: new Date(input.requestedEndAt),
+          scheduledStartAt: input.requestedStartAt ? new Date(input.requestedStartAt) : null,
+          scheduledEndAt: input.requestedEndAt ? new Date(input.requestedEndAt) : null,
           crewCount: input.crewCount,
           scope: input.scope,
           attachments: input.attachmentUrls,
-          afeReference: input.afeCode,
+          afeReference: input.afeCode ?? null,
           poReference: input.poNumber,
-          expiresAt: new Date(input.expiresAt),
+          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
           status: "draft",
           version: 1,
           idempotencyKey,
@@ -282,7 +281,7 @@ export function createJobOfferService(
           version(offer, input.version);
           if (offer.status !== "draft") fail("offer_not_draft");
           const now = clock();
-          if (!offer.expiresAt || offer.expiresAt <= now) fail("offer_expired");
+          if (offer.expiresAt && offer.expiresAt <= now) fail("offer_expired");
           await validate(tx, offer, now);
           return tx.update(offer.id, {
             status: "offered",

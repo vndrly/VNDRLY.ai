@@ -105,8 +105,7 @@ function adapter(tx: Transaction): JobOfferTransaction {
         eq(siteLocationsTable.partnerId, input.partnerId),
       )).for("share");
       if (!site) throw new MarketplaceError(404, "marketplace.work_type_or_site_not_found");
-      if (!site.afe?.trim()) throw new MarketplaceError(409, "marketplace.site_afe_required");
-      if (site.afe.trim() !== input.afeCode)
+      if (input.afeCode && site.afe?.trim() !== input.afeCode)
         throw new MarketplaceError(409, "marketplace.afe_changed");
       // Share locks make address invalidation and explicit relationship
       // revocation linearize before or after the entire acceptance transaction.
@@ -186,39 +185,41 @@ function adapter(tx: Transaction): JobOfferTransaction {
         weeklyOtHours: vendor?.weeklyOtHours ?? "40",
         overtimeMultiplier: billing?.overtimeMultiplier ?? "1.5",
       };
-      // Capacity belongs to the accepted job window, not the first shift's status.
-      // Approving one ticket must not release crews still committed to later shifts.
-      const reservations = await tx
-        .select({
-          crews: offers.crewCount,
-          start: offers.scheduledStartAt,
-          end: offers.scheduledEndAt,
-        })
-        .from(offers)
-        .where(
-          and(
-            eq(offers.vendorCapabilityId, input.vendorCapabilityId),
-            eq(offers.status, "accepted"),
-            lt(offers.scheduledStartAt, new Date(input.requestedEndAt)),
-            gt(offers.scheduledEndAt, new Date(input.requestedStartAt)),
-          ),
-        );
-      const exceedsScheduledCapacity =
-        peakReservedCrews(
-          new Date(input.requestedStartAt),
-          new Date(input.requestedEndAt),
-          reservations,
-        ) +
-          input.crewCount >
-        candidate.eligibility.facts.availableCapacity;
-      const reasonCodes = candidate.eligibility.reasonCodes;
-      if (exceedsScheduledCapacity && !reasonCodes.includes("INSUFFICIENT_CAPACITY"))
-        reasonCodes.push("INSUFFICIENT_CAPACITY");
+      const reasonCodes = [...candidate.eligibility.reasonCodes];
+      if (input.requestedStartAt && input.requestedEndAt) {
+        // Capacity belongs to the accepted job window, not the first shift's status.
+        // Approving one ticket must not release crews still committed to later shifts.
+        const reservations = await tx
+          .select({
+            crews: offers.crewCount,
+            start: offers.scheduledStartAt,
+            end: offers.scheduledEndAt,
+          })
+          .from(offers)
+          .where(
+            and(
+              eq(offers.vendorCapabilityId, input.vendorCapabilityId),
+              eq(offers.status, "accepted"),
+              lt(offers.scheduledStartAt, new Date(input.requestedEndAt)),
+              gt(offers.scheduledEndAt, new Date(input.requestedStartAt)),
+            ),
+          );
+        const exceedsScheduledCapacity =
+          peakReservedCrews(
+            new Date(input.requestedStartAt),
+            new Date(input.requestedEndAt),
+            reservations,
+          ) +
+            input.crewCount >
+          candidate.eligibility.facts.availableCapacity;
+        if (exceedsScheduledCapacity && !reasonCodes.includes("INSUFFICIENT_CAPACITY"))
+          reasonCodes.push("INSUFFICIENT_CAPACITY");
+      }
       return {
         canonicalServiceId: candidate.canonicalServiceId,
         commercial: {
           gateContractor: canonicalService?.code === "gatekeeping",
-          afeAssignment: { source: "site_locations", siteLocationId: site.id, partnerId: site.partnerId, afeCode: site.afe.trim() },
+          ...(input.afeCode ? { afeAssignment: { source: "site_locations", siteLocationId: site.id, partnerId: site.partnerId, afeCode: input.afeCode } } : {}),
           rateId: rate.id,
           rateVersion: rate.version,
           unitPrice: rate.unitPrice,
@@ -314,11 +315,9 @@ function adapter(tx: Transaction): JobOfferTransaction {
           description: offer.scope,
           createdById: offer.createdById,
           scheduledStartAt: offer.scheduledStartAt,
-          scheduledDurationMinutes: Math.ceil(
-            (offer.scheduledEndAt!.getTime() -
-              offer.scheduledStartAt!.getTime()) /
-              60000,
-          ),
+          scheduledDurationMinutes: offer.scheduledStartAt && offer.scheduledEndAt
+            ? Math.ceil((offer.scheduledEndAt.getTime() - offer.scheduledStartAt.getTime()) / 60000)
+            : null,
         },
         {
           userId: session.userId!,

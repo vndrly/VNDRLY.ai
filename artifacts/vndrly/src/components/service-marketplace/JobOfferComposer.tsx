@@ -23,13 +23,13 @@ export interface CreateJobOfferInput {
   vendorPartnerServiceOfferId: number;
   siteLocationId: number;
   scope: string;
-  requestedStartAt: string;
-  requestedEndAt: string;
+  requestedStartAt?: string;
+  requestedEndAt?: string;
   crewCount: number;
-  afeCode: string;
+  afeCode?: string;
   poNumber?: string;
   attachmentUrls: string[];
-  expiresAt: string;
+  expiresAt?: string;
 }
 
 export default function JobOfferComposer({
@@ -177,19 +177,14 @@ export default function JobOfferComposer({
           !vendor.offerable ||
           !vendor.eligibility.eligible ||
           !form.scope.trim() ||
-          afeLoading || afeError || !siteAfe ||
           siteAfe.length > 200 ||
           form.scope.trim().length > 10000 ||
-          !Number.isFinite(start) ||
-          !Number.isFinite(end) ||
-          end <= start ||
-          !Number.isFinite(expires) ||
-          expires <= Date.now() ||
-          expires > start ||
+          (form.start && !Number.isFinite(start)) ||
+          (form.end && (!Number.isFinite(end) || !Number.isFinite(start) || end <= start)) ||
+          (form.expires && (!Number.isFinite(expires) || expires <= Date.now() || (Number.isFinite(start) && expires > start))) ||
           !Number.isInteger(crews) ||
           crews < 1 ||
           crews > 100000 ||
-          crews > vendor.eligibility.facts.availableCapacity ||
           !validUrls ||
           attachments.length > 20
         ) {
@@ -205,12 +200,12 @@ export default function JobOfferComposer({
           vendorPartnerServiceOfferId: vendor.offer.id,
           siteLocationId,
           scope: form.scope.trim(),
-          requestedStartAt: new Date(start).toISOString(),
-          requestedEndAt: new Date(end).toISOString(),
+          ...(Number.isFinite(start) ? { requestedStartAt: new Date(start).toISOString() } : {}),
+          ...(Number.isFinite(end) ? { requestedEndAt: new Date(end).toISOString() } : {}),
           crewCount: crews,
           attachmentUrls: attachments,
-          expiresAt: new Date(expires).toISOString(),
-          afeCode: siteAfe,
+          ...(Number.isFinite(expires) ? { expiresAt: new Date(expires).toISOString() } : {}),
+          ...(siteAfe ? { afeCode: siteAfe } : {}),
           ...(form.po.trim() ? { poNumber: form.po.trim() } : {}),
         };
         setError(false);
@@ -266,7 +261,6 @@ export default function JobOfferComposer({
           busy ||
           sent ||
           isChecking ||
-          afeLoading || afeError || !siteAfe ||
           !vendor.offer ||
           !vendor.offerable ||
           !vendor.eligibility.eligible

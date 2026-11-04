@@ -177,12 +177,14 @@ describe("job offer lifecycle", () => {
     session: vendor,
     idempotencyKey: "accept-1",
   });
-  it("requires a partner-assigned AFE before creating or sending work", async () => {
-    await expect(service.createJobOffer({ ...input, afeCode: "  " }, partner, "blank")).rejects.toThrow();
-    const row = await draft();
-    row.afeReference = null;
-    await expect(service.sendJobOffer({ offerId: row.id, version: row.version, session: partner })).rejects.toThrow("marketplace.afe_required");
-    expect(tickets).toHaveLength(0);
+  it("issues and accepts work before the AFE or schedule is set", async () => {
+    const { afeCode, requestedStartAt, requestedEndAt, expiresAt, ...unscheduled } = input;
+    const row = await service.createJobOffer(unscheduled, partner, "unscheduled");
+    const offered = await service.sendJobOffer({ offerId: row.id, version: row.version, session: partner });
+    const accepted = await service.acceptJobOffer(acceptance(offered));
+    expect(accepted.ticketId).toBeGreaterThan(0);
+    expect(snapshots[0].scopeSnapshot).not.toHaveProperty("afeCode");
+    expect(snapshots[0].scopeSnapshot).not.toHaveProperty("requestedStartAt");
   });
   it("creates repeatable shifts under one accepted job without changing the first ticket", async () => {
     const row = structuredClone(await sent());

@@ -218,14 +218,14 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       service,
     };
   }
-  it("rejects missing, forged, cross-partner and changed site AFEs without creating work", async () => {
+  it("rejects forged, cross-partner and changed declared site AFEs without creating work", async () => {
     const f = await fixture();
     await expect(f.api.createJobOffer({ ...f.input, afeCode: "FORGED" }, f.actor, randomUUID()))
       .rejects.toMatchObject({ code: "marketplace.afe_changed" });
     await expect(f.api.createJobOffer({ ...f.input, partnerId: f.input.partnerId + 1000000 }, f.actor, randomUUID()))
       .rejects.toMatchObject({ code: "marketplace.work_type_or_site_not_found" });
     await db.update(s.siteLocationsTable).set({ afe: null }).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));
-    await expect(f.api.acceptJobOffer(f.accept)).rejects.toMatchObject({ code: "marketplace.site_afe_required" });
+    await expect(f.api.acceptJobOffer(f.accept)).rejects.toMatchObject({ code: "marketplace.afe_changed" });
     await db.update(s.siteLocationsTable).set({ afe: "CHANGED" }).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));
     await expect(f.api.acceptJobOffer(f.accept)).rejects.toMatchObject({ code: "marketplace.afe_changed" });
     expect(await db.select().from(s.ticketsTable).where(eq(s.ticketsTable.jobOfferId, f.sent.id))).toHaveLength(0);
