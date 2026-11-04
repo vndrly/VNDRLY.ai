@@ -131,9 +131,16 @@ export async function migrateSemanticServiceMarketplace(client: pg.Client): Prom
       const definitions = columnsFor(table).map((column) => `${columnDefinition(column)}${column.primary ? " PRIMARY KEY" : ""}`);
       definitions.push(...config.checks.map((check) => `CONSTRAINT ${quote(check.name)} CHECK (${bare(render(check.value), config.name)})`));
       await client.query(guardAdditiveReplay(`CREATE TABLE IF NOT EXISTS public.${quote(config.name)} (${definitions.join(", ")})`));
-      await client.query(guardAdditiveReplay(`ALTER TABLE public.${quote(config.name)} ENABLE ROW LEVEL SECURITY`));
+      const rls = await client.query(guardAdditiveReplay("SELECT relrowsecurity FROM pg_class WHERE oid = $1::regclass"), [`public.${config.name}`]);
+      if (!rls.rows[0]?.relrowsecurity)
+        await client.query(guardAdditiveReplay(`ALTER TABLE public.${quote(config.name)} ENABLE ROW LEVEL SECURITY`));
     }
+    const ticketColumns = await client.query(guardAdditiveReplay(
+      "SELECT attname FROM pg_attribute WHERE attrelid = 'public.tickets'::regclass AND attnum > 0 AND NOT attisdropped",
+    ));
+    const existingTicketColumns = new Set(ticketColumns.rows.map((row) => row.attname));
     for (const column of columnsFor(ticketsTable)) {
+      if (existingTicketColumns.has(column.name)) continue;
       await client.query(guardAdditiveReplay(`ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS ${columnDefinition(column)}`));
     }
     for (const table of [...marketplaceTables, ticketsTable]) {
