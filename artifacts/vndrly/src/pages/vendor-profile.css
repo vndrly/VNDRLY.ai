@@ -135,19 +135,31 @@ main:has(:is(.vendor-profile-page, .vendor-workspace-page)),
 
 /* Vendor dashboard, tracking, and setup use the same surfaces as Vendor Profile. */
 .vendor-workspace-page {
+  --background: 220 7% 24%;
+  --foreground: 0 0% 93%;
+  --card: 240 3% 15%;
+  --card-foreground: 0 0% 93%;
+  --popover: 240 4% 20%;
+  --popover-foreground: 0 0% 93%;
+  --muted: 240 4% 20%;
+  --muted-foreground: 0 0% 73%;
+  --accent: 240 4% 23%;
+  --accent-foreground: 0 0% 93%;
+  --border: 240 3% 33%;
   color: #ececec;
 }
 .vendor-workspace-page [data-slot="card"],
-.vendor-workspace-page .vendor-onboarding-header {
+.vendor-workspace-page .vendor-onboarding-header,
+.vendor-workspace-page.app-dialog {
   background: #242426;
   border: 1px solid var(--brand-primary);
   border-radius: 14px;
   color: #ececec;
 }
-.vendor-workspace-page :is(.text-muted-foreground, .text-gray-500, .text-gray-600) {
+.vendor-workspace-page :is(.text-muted-foreground, .text-gray-400, .text-gray-500, .text-gray-600, .text-gray-700, .text-slate-600, .text-slate-700) {
   color: #b3b3b3;
 }
-.vendor-workspace-page :is(h1, h2, h3, [data-slot="card-title"], .text-gray-900) {
+.vendor-workspace-page :is(h1, h2, h3, [data-slot="card-title"], .text-gray-800, .text-gray-900, .text-gray-950, .text-black) {
   color: #ececec;
 }
 .vendor-workspace-page :is(thead, input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
@@ -158,3 +170,21 @@ main:has(:is(.vendor-profile-page, .vendor-workspace-page)),
 .vendor-workspace-page :is(input, textarea)::placeholder { color: #b3b3b3; }
 .vendor-workspace-page input:is([type="checkbox"], [type="radio"]) { accent-color: var(--brand-primary); }
 .vendor-workspace-page tbody tr:hover { background-color: #303034; }
+
+/* Shared inner tiles are links, buttons, or divs rather than Card elements. */
+.vendor-workspace-page .app-card-inner-tile {
+  background-color: #303034;
+  color: #ececec;
+}
+.vendor-workspace-page .app-card-inner-tile:hover { background-color: #38383d; }
+.vendor-workspace-page .recharts-cartesian-axis-tick-value { fill: #b3b3b3; }
+.vendor-workspace-page .recharts-cartesian-axis-line,
+.vendor-workspace-page .recharts-cartesian-axis-tick-line,
+.vendor-workspace-page .recharts-cartesian-grid line { stroke: #707075; }
+.vendor-workspace-page .recharts-default-tooltip {
+  background-color: #303034 !important;
+  border-color: #707075 !important;
+  color: #ececec !important;
+}
+.vendor-workspace-page .recharts-tooltip-item { color: #ececec !important; }
+.vendor-workspace-page label.hover\:bg-gray-50:hover { background-color: #38383d; }

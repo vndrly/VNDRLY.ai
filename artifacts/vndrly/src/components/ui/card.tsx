@@ -13,7 +13,7 @@ export const CARD_SURFACE_CLASS =
 
 /** Read-only inner tile (stat box, subsection) — grey outline matches outer card. */
 export const CARD_INNER_TILE_CLASS =
-  `${CARD_CORNER_CLASS} border-2 border-[color:var(--brand-primary)] bg-white p-3 dark:border-[color:var(--brand-primary)] dark:bg-white`
+  `app-card-inner-tile ${CARD_CORNER_CLASS} border-2 border-[color:var(--brand-primary)] bg-white p-3 dark:border-[color:var(--brand-primary)] dark:bg-white`
 
 /** Shared hover lift for inner tiles — shadow only; clickable tiles add brand border below. */
 const CARD_INNER_TILE_HOVER_SHADOW_CLASS =

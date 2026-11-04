@@ -1776,7 +1776,7 @@ export default function Tickets() {
                 <Phone className="w-4 h-4" />
                 {t("tickets.phoneIntake", { defaultValue: "Phone intake" })}
               </PngPillButton>
-              <DialogContent>
+              <DialogContent className={isVendor ? "vendor-workspace-page app-dialog" : undefined}>
                 <DialogHeader>
                   <DialogTitle>
                     {t("tickets.phoneIntake", { defaultValue: "Phone intake" })}
@@ -2402,7 +2402,7 @@ export default function Tickets() {
                 }
               }}
             >
-              <DialogContent>
+              <DialogContent className={isVendor ? "vendor-workspace-page app-dialog" : undefined}>
                 <DialogHeader><DialogTitle>{t("tickets.authorizeNewTicket")}</DialogTitle></DialogHeader>
                 <form onSubmit={handleAddTicket} className="space-y-4">
                   {addSiteUnavailableNotice && (
@@ -3083,7 +3083,7 @@ export default function Tickets() {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className={isVendor ? "vendor-workspace-page app-dialog" : undefined}>
           <DialogHeader>
             <DialogTitle>{t("ticketDetail.reverseFundsTitle")}</DialogTitle>
           </DialogHeader>
@@ -3155,7 +3155,7 @@ export default function Tickets() {
           if (!open) setBulkReverseReason("");
         }}
       >
-        <DialogContent>
+        <DialogContent className={isVendor ? "vendor-workspace-page app-dialog" : undefined}>
           <DialogHeader>
             <DialogTitle>
               {t("tickets.bulkReverseTitle", {
