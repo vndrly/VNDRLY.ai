@@ -747,18 +747,15 @@ export default function OnboardingVendor() {
   return (
     <OnboardingPageShell brand={pageBrand} vendorControls>
       <div className="vendor-workspace-page">
-      <div className="vendor-onboarding-header p-5 shadow-2xl mb-4">
+      <div className="vendor-onboarding-page-heading mb-4">
         <OnboardingBrandHeader
-          title="VNDRLY Onboarding"
+          title="Onboarding"
           subtitle={basics.name.trim() ? `Welcome, ${basics.name.trim()}` : "A short setup flow so you can start taking work."}
           preview={brandPreview}
+          status={orgId && verification ? <OnboardingVerificationBanner compact email={verification.email} emailVerifiedAt={verification.emailVerifiedAt} /> : undefined}
           onBack={() => (stepIndex === 0 ? navigate("/signup") : prevStep())}
         />
 
-        {/* Email-verification banner — appears once an account
-              exists. Hidden on the anonymous step-1 visit so it doesn't
-              confuse first-time signups. */}
-        {orgId && verification && <OnboardingVerificationBanner email={verification.email} emailVerifiedAt={verification.emailVerifiedAt} />}
       </div>
 
       <Card className="shadow-2xl">
@@ -770,7 +767,7 @@ export default function OnboardingVendor() {
             skippedKeys={skipped}
             onStepClick={(index) => void goToStep(index)}
             disabled={loading || !orgId}
-            className="mb-8"
+            className="mb-3"
           />
 
           {orgId ? <CompanyOperationsChoice key={orgId} /> : null}

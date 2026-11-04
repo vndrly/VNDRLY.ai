@@ -1,6 +1,6 @@
 /* Vendor Profile uses the same steel background and charcoal cards as Gate Mode. */
-main:has(:is(.vendor-profile-page, .vendor-workspace-page)),
-.dark main:has(:is(.vendor-profile-page, .vendor-workspace-page)) {
+main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-workspace-page)),
+.dark main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-workspace-page)) {
   background: #3a3d42 !important;
   color: #ececec;
 }
@@ -149,7 +149,6 @@ main:has(:is(.vendor-profile-page, .vendor-workspace-page)),
   color: #ececec;
 }
 .vendor-workspace-page [data-slot="card"],
-.vendor-workspace-page .vendor-onboarding-header,
 .vendor-workspace-page.app-dialog {
   background: #242426;
   border: 1px solid var(--brand-primary);
@@ -223,8 +222,33 @@ main:has(:is(.vendor-profile-page, .vendor-workspace-page)),
   transform: translate(5px, 5px);
 }
 
-.vendor-onboarding-shell [data-testid="banner-email-verified"] {
-  background: #20342b;
-  border-color: #46765d;
-  color: #c3f0d5;
+.vendor-onboarding-shell main, .dark .vendor-onboarding-shell main { background: transparent !important; }
+.vendor-onboarding-shell .vendor-workspace-page [data-testid="input-brand-primary"],
+.vendor-onboarding-shell .vendor-workspace-page [data-testid="input-brand-primary-picker"] {
+  border-color: var(--brand-primary) !important;
+  border-radius: 8px;
+}
+.vendor-onboarding-shell :is([data-testid="input-brand-primary"], [data-testid="input-brand-primary-picker"]):focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+.vendor-onboarding-shell [data-testid="onboarding-brand-title"] { font-size: 18px; line-height: 1.5; }
+
+.vendor-onboarding-page-heading > div {
+  align-items: center;
+  margin-bottom: 0;
+}
+.vendor-onboarding-page-heading [data-testid="button-back"] { margin-top: 0; }
+@media (max-width: 480px) {
+  .vendor-onboarding-page-heading > div {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 4px;
+  }
+  .vendor-onboarding-page-heading > div > :nth-child(3) {
+    grid-column: 2;
+    justify-self: end;
+    min-height: 0;
+  }
 }

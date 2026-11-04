@@ -16,6 +16,7 @@ interface OnboardingBrandHeaderProps {
   subtitle: string;
   preview?: OnboardingBrandPreview | null;
   onBack: () => void;
+  status?: React.ReactNode;
 }
 
 export function OnboardingBrandHeader({
@@ -23,13 +24,14 @@ export function OnboardingBrandHeader({
   subtitle,
   preview,
   onBack,
+  status,
 }: OnboardingBrandHeaderProps): React.ReactElement {
   const logoSrc =
     preview?.logoSquareUrl?.trim() || preview?.logoUrl?.trim() || null;
   const hasOrgBrand = !!(logoSrc || preview?.primaryColor?.trim());
 
   return (
-    <div className="flex items-start gap-3 mb-6">
+    <div className={cn("flex items-start gap-3", !status && "mb-6")}>
       <button
         type="button"
         onClick={onBack}
@@ -94,6 +96,7 @@ export function OnboardingBrandHeader({
           </p>
         </div>
       </div>
+      {status && <div className="ml-auto flex min-h-11 shrink-0 items-center">{status}</div>}
     </div>
   );
 }

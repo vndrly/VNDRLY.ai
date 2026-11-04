@@ -1,3 +1,4 @@
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, MailWarning } from "lucide-react";
@@ -9,19 +10,26 @@ export interface OnboardingVerificationBannerProps {
   email: string | null;
   emailVerifiedAt: string | null;
   onResent?: () => void;
+  compact?: boolean;
 }
 
 export default function OnboardingVerificationBanner({
   email,
   emailVerifiedAt,
   onResent,
+  compact = false,
 }: OnboardingVerificationBannerProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [sending, setSending] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<"sent" | "verified" | null>(null);
 
   if (!email) return null;
 
+  if (compact && (emailVerifiedAt || status)) {
+    return <span role="status" className="text-sm font-medium text-emerald-200">{emailVerifiedAt || status === "verified" ? "Email Verified" : "Verification Sent"}</span>;
+  }
   if (emailVerifiedAt) {
     return (
       <div
@@ -53,6 +61,8 @@ export default function OnboardingVerificationBanner({
           }),
         });
       }
+      setStatus(r.alreadyVerified ? "verified" : "sent");
+      setOpen(false);
       onResent?.();
     } catch (err) {
       toast({
@@ -71,6 +81,28 @@ export default function OnboardingVerificationBanner({
       setSending(false);
     }
   };
+
+  if (compact) {
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button type="button" className="vendor-mini-card-button">Verify Email</button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-72 max-w-[calc(100vw-24px)]">
+          <form className="space-y-3 rounded-lg border border-[var(--brand-primary)] bg-[#242426] p-3 text-[#ececec]" onSubmit={(event) => { event.preventDefault(); void handleResend(); }}>
+            <label className="block space-y-1 text-sm">
+              <span>Account email</span>
+              <input type="email" value={email} readOnly className="w-full rounded border border-[#707075] bg-[#303034] p-2 text-[#ececec]" />
+            </label>
+            <div className="flex justify-end gap-2">
+              <button type="submit" className="vendor-mini-card-button" disabled={sending}>{sending ? "Sending…" : "Verify"}</button>
+              <button type="button" className="vendor-mini-card-button" onClick={() => setOpen(false)}>Cancel</button>
+            </div>
+          </form>
+        </PopoverContent>
+      </Popover>
+    );
+  }
 
   return (
     <div

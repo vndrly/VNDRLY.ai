@@ -9,19 +9,15 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { AskVFloatingLauncherMark, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
 import { PngPillButton as PillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import BrandPillButton from "@/components/brand-pill-button";
-import { PillColorLayer } from "@/components/png-pill-chrome";
 import { Textarea } from "@/components/ui/textarea";
-import { TICKET_STATUS_PILL_ASPECT } from "@/lib/ticket-status-palette";
 import { cn } from "@/lib/utils";
-import lightGreySquareSrc from "@assets/900x229_Light-grey_v2r_square_1778256462232.png";
-import AskVStatusIndicator from "@/components/askv-status-indicator";
+import AskVPaneControls from "@/components/askv-pane-controls";
 import { askVMicrophone } from '@workspace/askv-wake';
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 import { AskVMicrophoneSettings, ASKV_MICROPHONE_SETUP_KEY } from "@/components/askv-microphone-settings";
 import { captureAskVMicrophone, meterAskVMicrophone } from "@/lib/askv-microphone";
 import { writeAskVAcrossVndrly } from "@/lib/askv-voice-preferences";
 import { useAuth } from "@/hooks/use-auth";
-import { CooperativeVContext } from "@/components/cooperative-v-context";
 import { useBrand } from "@/hooks/use-brand";
 import {
   useAssistant,
@@ -907,7 +903,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
           logo={{ testId: "assistant-header-logo" }}
           title={
             <div className="flex items-center gap-2" data-testid="assistant-brand-controls">
-              {!embedded && !tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
+              {!embedded && !tokenMode && !signupMode && askVUserId != null && <AskVPaneControls closePanel={() => onOpenChange(false)} />}
               <DialogTitle className="sr-only">AskV</DialogTitle>
               <DialogDescription className="sr-only">
                 Conversational assistant for VNDRLY. Ask questions about
@@ -1065,15 +1061,9 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
           followLatestRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 48;
         }} className={cn("relative z-10 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4", embedded ? "pt-1" : "pt-4", minimized && "hidden")}>
           {messages.length === 0 && (
-            <div className="siace-y-3">
-              <div className={cn("relative w-fit max-w-[90%] rounded-2xl px-4 py-2 text-sm", embedded ? "bg-gray-200 text-gray-900" : "text-gray-300")}>
-                {!embedded && <PillColorLayer
-                    src={lightGreySquareSrc}
-                    imageAspect={TICKET_STATUS_PILL_ASPECT}
-                    stretch
-                    className="opacity-40"
-                  />}
-                <span className="relative z-10">{greeting}</span>
+            <div className="space-y-3">
+              <div className={cn("w-fit max-w-[90%] rounded-lg border px-4 py-3 text-sm", embedded ? "border-gray-300 bg-gray-200 text-gray-900" : "border-[#55555b] bg-[#2b2b2f] text-gray-100")} data-testid="assistant-greeting-card">
+                {greeting}
               </div>
               {!embedded && quickActions.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -1208,7 +1198,6 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
             handleSend();
           }}
         >
-          {!tokenMode && !signupMode && <CooperativeVContext identity={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`} revision={(sharedAssistant ?? legacyAssistant).contextRevision ?? 0} disabled={streaming || transcribing || voiceRecording} selectConnection={(sharedAssistant ?? legacyAssistant).selectConnection} selectSavedTask={(sharedAssistant ?? legacyAssistant).selectSavedTask} messages={messages} />}
           <div className="flex items-center gap-2">
             <Textarea
               value={input}
