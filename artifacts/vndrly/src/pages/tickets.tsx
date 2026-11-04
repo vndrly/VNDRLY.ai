@@ -1,3 +1,4 @@
+import "./vendor-profile.css";
 import { ContentCardHeader } from "@/components/ui/card";
 import { Fragment, useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useListTickets, useCreateTicket, useListSiteLocations, useListWorkTypes, useListVendors, useGetTicketGpsLogs, useGetSiteLocation, useReverseFundsDispersal, reverseFundsDispersal, getListTicketsQueryKey, getListSiteLocationsQueryKey, getGetTicketGpsLogsQueryKey, getGetSiteLocationQueryKey, getListWorkTypesQueryKey, getListVendorsQueryKey, getGetTicketQueryKey, getGetTicketNoteLogsQueryKey, getTicket, type Ticket } from "@workspace/api-client-react";
@@ -16,6 +17,7 @@ import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -1710,7 +1712,7 @@ export default function Tickets() {
   );
 
   return (
-    <div className="space-y-6" data-testid="tickets-page">
+    <div className={`space-y-6 ${user?.role === "vendor" ? "vendor-workspace-page" : ""}`} data-testid="tickets-page">
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
         <div className="flex items-start gap-3">
           <ContentPaneBackLink href="/" className="mt-0.5" />
@@ -2401,7 +2403,7 @@ export default function Tickets() {
               }}
             >
               <DialogContent>
-                <DialogHeader><DialogTitle>{t("tickets.createNewJob", { defaultValue: "Create New Job" })}</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>{t("tickets.authorizeNewTicket")}</DialogTitle></DialogHeader>
                 <form onSubmit={handleAddTicket} className="space-y-4">
                   {addSiteUnavailableNotice && (
                     <div
@@ -2518,7 +2520,9 @@ export default function Tickets() {
                           const checked = form.workTypeIds.includes(w.id);
                           return (
                             <label key={w.id} className="flex items-center gap-2 cursor-pointer text-sm" data-testid={`checkbox-work-type-${w.id}`}>
-                              <Checkbox
+                              <Switch
+                                aria-label={w.name}
+                                className="data-[state=checked]:bg-[var(--brand-primary)]"
                                 checked={checked}
                                 onCheckedChange={(v) => {
                                   setForm((prev) => ({
@@ -2604,9 +2608,7 @@ export default function Tickets() {
                   >
                     {creatingBatch
                       ? t("tickets.starting", { defaultValue: "Starting..." })
-                      : form.workTypeIds.length > 1
-                        ? t("tickets.startNJobs", { defaultValue: "Start {{n}} Tracking Numbers", n: form.workTypeIds.length })
-                        : t("tickets.startJob", { defaultValue: "Start Job" })}
+                      : t("tickets.authorizeNewTicket")}
                   </PngPillButton>
                 </form>
               </DialogContent>

@@ -1,3 +1,4 @@
+import "./vendor-profile.css";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PinFields } from "@/components/admin-pin-setup";
 import CompanyOperationsChoice from "@/components/company-operations-choice";
@@ -193,24 +194,15 @@ export default function OnboardingVendor() {
         // Capture verification state so the banner above the wizard
         // can render even when there's no progress row yet (defensive).
         if (me.user) setVerification(me.user);
-        // Already-onboarded redirect: only short-circuit when there
-        // are no outstanding skipped steps. Otherwise allow re-entry
-        // so the dashboard Finish-setup widget can deep-link back
-        // here to complete a previously-skipped item.
-        if ((onboardingRefresh.revision === 0 || onboardingRefresh.finalized) && me.progress?.completedAt && (me.progress.skippedSteps?.length ?? 0) === 0) {
+        const params = new URLSearchParams(window.location.search);
+        const stepParam = onboardingRefresh.followSavedStep ? null : params.get("step");
+        const overrideIdx = stepParam ? STEPS.findIndex((s) => s.key === stepParam) : -1;
+        if ((onboardingRefresh.revision === 0 || onboardingRefresh.finalized) && me.progress?.completedAt && (me.progress.skippedSteps?.length ?? 0) === 0 && (overrideIdx === -1 || onboardingRefresh.finalized)) {
           if (onboardingRefresh.revision > 0) navigate("/");
           else window.location.assign(`${BASE}/`);
           return;
         }
         if (!me.progress || me.progress.orgType !== "vendor") return;
-        // Deep-link support: ?step=<key> wins over the persisted
-        // currentStep so the dashboard's Finish-setup widget can jump
-        // straight to a skipped should-have step. Tolerate stale step
-        // keys from earlier wizard versions by falling back to the
-        // first incomplete step.
-        const params = new URLSearchParams(window.location.search);
-        const stepParam = onboardingRefresh.followSavedStep ? null : params.get("step");
-        const overrideIdx = stepParam ? STEPS.findIndex((s) => s.key === stepParam) : -1;
         const idx = overrideIdx !== -1 ? overrideIdx : STEPS.findIndex((s) => s.key === me.progress!.currentStep);
         setOrgId(me.progress.vendorId ?? null);
         setStepIndex(idx === -1 ? (me.progress.currentStep === "done" ? STEPS.length - 1 : 1) : idx);
@@ -749,7 +741,8 @@ export default function OnboardingVendor() {
 
   return (
     <OnboardingPageShell brand={pageBrand}>
-      <div className="rounded-2xl border border-white/25 bg-white/95 p-5 shadow-2xl backdrop-blur-xl mb-4">
+      <div className="vendor-workspace-page">
+      <div className="vendor-onboarding-header p-5 shadow-2xl mb-4">
         <OnboardingBrandHeader
           title="VNDRLY Onboarding"
           subtitle={basics.name.trim() ? `Welcome, ${basics.name.trim()}` : "A short setup flow so you can start taking work."}
@@ -763,7 +756,7 @@ export default function OnboardingVendor() {
         {orgId && verification && <OnboardingVerificationBanner email={verification.email} emailVerifiedAt={verification.emailVerifiedAt} />}
       </div>
 
-      <Card className="border-2 border-[color:var(--brand-primary)]/70 bg-white/95 shadow-2xl backdrop-blur-xl">
+      <Card className="shadow-2xl">
         <CardContent className="p-6 pt-6">
           <OnboardingStepper
             steps={STEPS}
@@ -1101,6 +1094,7 @@ export default function OnboardingVendor() {
         Step {stepIndex + 1} of {STEPS.length}. Your progress is saved automatically.
       </p>
       <OnboardingAccountCreatedDialog open={showAccountCreated} orgType="vendor" companyName={basics.name.trim()} onContinue={() => setShowAccountCreated(false)} onGoToDashboard={() => navigate("/")} />
+      </div>
     </OnboardingPageShell>
   );
 }

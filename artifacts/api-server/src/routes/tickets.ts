@@ -621,7 +621,8 @@ const ticketSelect = {
   // globe/phone/boots icon based on this column so partners and vendors can
   // see at a glance where a ticket originated (partner self-service vs.
   // office phone-intake vs. field self-service).
-  intakeChannel: ticketsTable.intakeChannel,
+  // These legacy values do not identify a supported intake channel.
+  intakeChannel: sql<IntakeChannel | null>`nullif(nullif(${ticketsTable.intakeChannel}, 'web'), 'vendor_direct')`,
   // Funds Dispersed step (Task #497). All four payment columns flip
   // together inside the disperse-funds endpoint, so the read shape always
   // exposes them as a coherent set.

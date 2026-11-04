@@ -156,6 +156,15 @@ describe("marketplace eligibility", () => {
       (await evaluateMarketplaceEligibility(fixture)).reasonCodes,
     ).toContain("SERVICE_AREA_MISSING");
   });
+  it("keeps offers eligible when service area and capacity need attention", async () => {
+    const fixture = input();
+    fixture.serviceAreas = [];
+    fixture.requestedCapacity = 3;
+    expect(await evaluateMarketplaceEligibility(fixture)).toMatchObject({
+      eligible: true,
+      reasonCodes: ["SERVICE_AREA_MISSING", "INSUFFICIENT_CAPACITY"],
+    });
+  });
   it.each([
     [
       "inactive capability",
@@ -184,13 +193,6 @@ describe("marketplace eligibility", () => {
         x.currentCredentials = [];
       },
       "CREDENTIAL_MISSING",
-    ],
-    [
-      "insufficient capacity",
-      (x: EligibilityInput) => {
-        x.requestedCapacity = 3;
-      },
-      "INSUFFICIENT_CAPACITY",
     ],
     [
       "unavailable",

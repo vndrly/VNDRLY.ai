@@ -283,14 +283,14 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
     await db.update(s.partnerVendorRelationshipsTable).set({ status: "pending_review" }).where(eq(s.partnerVendorRelationshipsTable.id, relationship.id));
     expect((await f.api.acceptJobOffer(f.accept)).ticketId).toBeGreaterThan(0);
   });
-  it("rechecks retired coverage after an address change before creating an acceptance snapshot or ticket", async () => {
+  it("records retired coverage as a warning while accepting the offer", async () => {
     const f = await fixture();
     const { updateVendorAddressAndCoverage } = await import("./vendor-address");
     await updateVendorAddressAndCoverage(db, f.vendor.id, { physicalAddress: "A new unverified service base" });
     expect((await db.select().from(s.vendorServiceAreasTable).where(eq(s.vendorServiceAreasTable.id, f.area.id)))[0].active).toBe(false);
-    await expect(f.api.acceptJobOffer(f.accept)).rejects.toMatchObject({ code: "marketplace.service_area_missing" });
-    expect(await db.select().from(s.ticketsTable).where(eq(s.ticketsTable.jobOfferId, f.sent.id))).toHaveLength(0);
-    expect(await db.select().from(s.jobOfferAcceptanceSnapshotsTable).where(eq(s.jobOfferAcceptanceSnapshotsTable.jobOfferId, f.sent.id))).toHaveLength(0);
+    expect((await f.api.acceptJobOffer(f.accept)).ticketId).toBeGreaterThan(0);
+    const [snapshot] = await db.select().from(s.jobOfferAcceptanceSnapshotsTable).where(eq(s.jobOfferAcceptanceSnapshotsTable.jobOfferId, f.sent.id));
+    expect(snapshot.eligibilitySnapshot.reasonCodes).toContain("SERVICE_AREA_MISSING");
   });
   it("serializes simultaneous accepts and writes exactly one coherent ticket and frozen snapshot", async () => {
     const f = await fixture();
@@ -393,7 +393,6 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
   });
   it.each([
     "coverage",
-    "capacity",
     "rate",
     "mapping",
     "authorization",
@@ -405,11 +404,6 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
         .update(s.vendorServiceAreasTable)
         .set({ latitude: 40 })
         .where(eq(s.vendorServiceAreasTable.id, f.area.id));
-    if (kind === "capacity")
-      await db
-        .update(s.vendorPartnerServiceOffersTable)
-        .set({ capacity: 1 })
-        .where(eq(s.vendorPartnerServiceOffersTable.id, f.rate.id));
     if (kind === "rate")
       await db
         .update(s.vendorPartnerServiceOffersTable)
@@ -481,7 +475,7 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
         ),
     ).toHaveLength(0);
   });
-  it("reserves capacity across different simultaneous accepted offers", async () => {
+  it("accepts simultaneous offers when recorded capacity is exceeded", async () => {
     const f = await fixture();
     const draft = await f.api.createJobOffer(f.input, f.actor, randomUUID());
     const other = await f.api.sendJobOffer({
@@ -498,8 +492,7 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
         idempotencyKey: randomUUID(),
       }),
     ]);
-    expect(results.filter((row) => row.status === "fulfilled")).toHaveLength(1);
-    expect(results.filter((row) => row.status === "rejected")).toHaveLength(1);
+    expect(results.filter((row) => row.status === "fulfilled")).toHaveLength(2);
   });
   it.each([
     { firstEnd: "10:00", allowed: true },
@@ -536,26 +529,10 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       const spanning = await prepare("09:00", "11:00");
       await f.api.acceptJobOffer(first);
       await f.api.acceptJobOffer(second);
-      if (allowed) {
-        const accepted = await f.api.acceptJobOffer(spanning);
-        expect(accepted.ticketId).toBeGreaterThan(0);
-        expect(
-          (await f.api.getJobOffer(spanning.offerId, f.actor)).createdTicketId,
-        ).toBe(accepted.ticketId);
-      } else {
-        await expect(f.api.acceptJobOffer(spanning)).rejects.toThrow(
-          "marketplace.capacity_changed",
-        );
-        expect(
-          (await f.api.getJobOffer(spanning.offerId, f.actor)).status,
-        ).toBe("offered");
-        expect(
-          await db
-            .select()
-            .from(s.ticketsTable)
-            .where(eq(s.ticketsTable.jobOfferId, spanning.offerId)),
-        ).toHaveLength(0);
-      }
+      const accepted = await f.api.acceptJobOffer(spanning);
+      expect(accepted.ticketId).toBeGreaterThan(0);
+      const [snapshot] = await db.select().from(s.jobOfferAcceptanceSnapshotsTable).where(eq(s.jobOfferAcceptanceSnapshotsTable.jobOfferId, spanning.offerId));
+      expect(snapshot.eligibilitySnapshot.reasonCodes.includes("INSUFFICIENT_CAPACITY")).toBe(!allowed);
     },
   );
   it("checks current partner/vendor membership and rejects a revoked vendor admin session", async () => {

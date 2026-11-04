@@ -1,6 +1,6 @@
 /* Vendor Profile uses the same steel background and charcoal cards as Gate Mode. */
-main:has(.vendor-profile-page),
-.dark main:has(.vendor-profile-page) {
+main:has(:is(.vendor-profile-page, .vendor-workspace-page)),
+.dark main:has(:is(.vendor-profile-page, .vendor-workspace-page)) {
   background: #3a3d42 !important;
   color: #ececec;
 }
@@ -9,13 +9,13 @@ main:has(.vendor-profile-page),
   margin-inline: auto;
   color: #ececec;
 }
-.vendor-profile-page [data-slot="card"],
+:is(.vendor-profile-page, .vendor-workspace-page) [data-slot="card"],
 .vendor-profile-page [data-testid="managed-subcontractor-hours-panel"],
 .vendor-profile-page div.bg-white {
   background-color: #242426;
   color: #ececec;
 }
-.vendor-profile-page [data-slot="card"] { border-radius: 14px; }
+:is(.vendor-profile-page, .vendor-workspace-page) [data-slot="card"] { border-radius: 14px; }
 .vendor-profile-page [data-slot="card"] > div:has(> [data-slot="card-title"]) {
   display:flex; flex-direction:row; flex-wrap:wrap; align-items:flex-start;
   justify-content:space-between; gap:12px; padding:16px;
@@ -132,3 +132,29 @@ main:has(.vendor-profile-page),
 .vendor-contractor-group { border-top: 1px solid #3a3a3a; }
 .vendor-contractor-header { display: flex; align-items: center; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; }
 .vendor-contractor-header .workforce-group-toggle { font-size: 13px; }
+
+/* Vendor dashboard, tracking, and setup use the same surfaces as Vendor Profile. */
+.vendor-workspace-page {
+  color: #ececec;
+}
+.vendor-workspace-page [data-slot="card"],
+.vendor-workspace-page .vendor-onboarding-header {
+  background: #242426;
+  border: 1px solid var(--brand-primary);
+  border-radius: 14px;
+  color: #ececec;
+}
+.vendor-workspace-page :is(.text-muted-foreground, .text-gray-500, .text-gray-600) {
+  color: #b3b3b3;
+}
+.vendor-workspace-page :is(h1, h2, h3, [data-slot="card-title"], .text-gray-900) {
+  color: #ececec;
+}
+.vendor-workspace-page :is(thead, input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+  background-color: #303034;
+  color: #ececec;
+  border-color: #5b5b60;
+}
+.vendor-workspace-page :is(input, textarea)::placeholder { color: #b3b3b3; }
+.vendor-workspace-page input:is([type="checkbox"], [type="radio"]) { accent-color: var(--brand-primary); }
+.vendor-workspace-page tbody tr:hover { background-color: #303034; }

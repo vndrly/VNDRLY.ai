@@ -67,7 +67,7 @@ import {
   portalDisplayLogo,
   shouldUseLayeredPortalLogo,
 } from "@/lib/portal-branding";
-import { OnboardingProgressBanner } from "@/components/finish-setup-widget";
+import { OnboardingProgressBanner, DashboardSetup } from "@/components/finish-setup-widget";
 import { withGateLogNav, canViewGateLog } from "@/lib/gate-ops-nav";
 import { visitsApi } from "@/lib/visits-api";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
@@ -542,7 +542,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           )}
         >
           <MobilePageHeader contentRef={contentRef} fallbackTitle={navItems.find(item=>item.href===location)?.label??"VNDRLY"} sidebarOpen={sidebarOpen} onToggleMenu={()=>setSidebarOpen(open=>!open)}/>
-          <OnboardingProgressBanner />
+          {location === "/" && user?.role === "vendor" && user.vendorId
+            ? <DashboardSetup key={`vendor:${user.vendorId}`} orgType="vendor" orgId={user.vendorId} />
+            : location === "/" && user?.role === "partner" && user.partnerId
+              ? <DashboardSetup key={`partner:${user.partnerId}`} orgType="partner" orgId={user.partnerId} />
+              : <OnboardingProgressBanner />}
           {children}
         </main>
         <nav className="portal-mobile-footer fixed bottom-0 inset-x-0 z-40 hidden max-sm:block" style={{paddingBottom:"env(safe-area-inset-bottom)"}} aria-label={t("common.navigation",{defaultValue:"Navigation"})}>

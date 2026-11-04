@@ -1,9 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { OnboardingProgressRow } from "@/lib/onboarding-api";
 
-vi.mock("wouter", () => ({
-  useLocation: () => ["/", vi.fn()],
+const { navigate, useProgress } = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  useProgress: vi.fn((): { progress: OnboardingProgressRow | null } => ({ progress: null })),
+}));
+
+vi.mock("wouter", async (importOriginal) => ({
+  ...await importOriginal<typeof import("wouter")>(),
+  useLocation: () => ["/", navigate],
 }));
 
 vi.mock("react-i18next", () => ({
@@ -15,10 +21,10 @@ vi.mock("@/hooks/use-brand", () => ({
 }));
 
 vi.mock("@/hooks/use-onboarding-progress", () => ({
-  useOnboardingProgress: () => ({ progress: null }),
+  useOnboardingProgress: useProgress,
 }));
 
-import FinishSetupWidget from "./finish-setup-widget";
+import FinishSetupWidget, { DashboardSetup } from "./finish-setup-widget";
 
 const completedVendorProgress: OnboardingProgressRow = {
   id: 1,
@@ -62,4 +68,20 @@ it('does not count a skipped mandatory legal step as completion', () => {
   render(<FinishSetupWidget progressOverride={{ ...completedVendorProgress, currentStep: 'legal-consent', completedSteps: completedVendorProgress.completedSteps.filter(step => step !== 'legal-consent'), skippedSteps: ['legal-consent'] }} />);
   expect(screen.getByTestId('finish-setup-widget')).not.toBeNull();
   expect(screen.getByText('Privacy & Messaging')).not.toBeNull();
+});
+
+
+it("links skipped and unvisited steps from the dashboard and opens the selected step", () => {
+  useProgress.mockReturnValueOnce({
+    progress: {
+      ...completedVendorProgress,
+      completedSteps: ["company-basics", "platform-eula", "legal-consent"],
+      skippedSteps: ["branding"],
+    },
+  });
+  render(<DashboardSetup orgType="vendor" orgId={1} />);
+  expect(screen.getByRole("link", { name: "Add your vendor logo and brand color" }).getAttribute("href")).toBe("/onboarding/vendor?step=branding");
+  expect(screen.getByRole("link", { name: "Set service area and work types" }).getAttribute("href")).toBe("/onboarding/vendor?step=work-types");
+  fireEvent.click(screen.getAllByRole("button", { name: "Tax IDs" })[0]);
+  expect(navigate).toHaveBeenCalledWith("/onboarding/vendor?step=tax-ids");
 });

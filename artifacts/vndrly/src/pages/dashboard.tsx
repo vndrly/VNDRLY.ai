@@ -1,3 +1,4 @@
+import "./vendor-profile.css";
 import "./dashboard-condensed.css";
 import { CardHeading } from "@/components/ui/card-heading";
 import {
@@ -639,7 +640,7 @@ export default function Dashboard() {
 
   return (
     <div
-      className="space-y-6 [&_[data-slot=card]]:!border-[color:var(--brand-primary)]"
+      className={cn("space-y-6 [&_[data-slot=card]]:!border-[color:var(--brand-primary)]", isVendor && "vendor-workspace-page")}
       data-testid="dashboard-page"
     >
       <div className="flex items-center gap-3">

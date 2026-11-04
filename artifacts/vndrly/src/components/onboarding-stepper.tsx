@@ -17,6 +17,7 @@ interface OnboardingStepperProps {
   /** Navigate to a visible step without changing its completion state. */
   onStepClick?: (index: number, step: StepperStep) => void;
   disabled?: boolean;
+  inferEarlierCompletion?: boolean;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export default function OnboardingStepper({
   skippedKeys = [],
   onStepClick,
   disabled = false,
+  inferEarlierCompletion = true,
   className,
 }: OnboardingStepperProps) {
   const completedSet = new Set(completedKeys);
@@ -57,7 +59,7 @@ export default function OnboardingStepper({
         style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
       >
         {steps.map((step, i) => {
-          const isCompleted = completedSet.has(step.key) || i < currentIndex;
+          const isCompleted = completedSet.has(step.key) || (inferEarlierCompletion && i < currentIndex);
           const isCurrent = i === currentIndex;
           const isSkipped = skippedSet.has(step.key);
           const isBrandActive = isCompleted || isCurrent;

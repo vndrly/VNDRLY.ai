@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
+import OnboardingStepper from "@/components/onboarding-stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { CheckCircle2, Circle } from "lucide-react";
@@ -298,6 +299,64 @@ export default function FinishSetupWidget({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/** Dashboard setup stays available after the wizard has been exited. */
+export function DashboardSetup({ orgType, orgId }: { orgType: "vendor" | "partner"; orgId: number }) {
+  const [, navigate] = useLocation();
+  const { t } = useTranslation();
+  const { progress, loading } = useOnboardingProgress();
+  const orgProgress = progress?.orgType === orgType && (orgType === "vendor" ? progress.vendorId : progress.partnerId) === orgId
+    ? progress
+    : null;
+  const steps = STEPS_BY_ORG[orgType].map((step) => ({
+    ...step,
+    label: step.key === "legal-consent" ? t("onboardingProgress.legalConsent") : step.label,
+  }));
+  const completed = orgProgress?.completedSteps ?? [];
+  const outstanding = orgProgress
+    ? steps.filter((step) => !completed.includes(step.key))
+    : [];
+  const currentIndex = steps.findIndex((step) => step.key === orgProgress?.currentStep);
+
+  return (
+    <section className={`mb-4 grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] ${orgType === "vendor" ? "vendor-workspace-page" : ""}`} aria-label="Company setup">
+      <Card>
+        <CardHeader><CardTitle>{orgType === "vendor" ? "Vendor Onboarding" : "Partner Onboarding"}</CardTitle></CardHeader>
+        <CardContent>
+          {orgProgress ? (
+            <div className="overflow-x-auto">
+              <OnboardingStepper
+                className="min-w-[36rem]"
+                steps={steps}
+                currentIndex={currentIndex}
+                completedKeys={completed}
+                skippedKeys={orgProgress.skippedSteps ?? []}
+                inferEarlierCompletion={false}
+                onStepClick={(_, step) => navigate(onboardingStepHref(orgType, step.key))}
+              />
+            </div>
+          ) : <p className="text-sm text-muted-foreground">{loading ? "Loading setup progress…" : "Setup progress is unavailable."}</p>}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Next Steps</CardTitle></CardHeader>
+        <CardContent>
+          {outstanding.length ? (
+            <ul className="space-y-2 text-sm">
+              {outstanding.map((step) => (
+                <li key={step.key}>
+                  <Link className="underline underline-offset-4" href={onboardingStepHref(orgType, step.key)}>
+                    {(orgType === "vendor" ? VENDOR_STEPS : PARTNER_STEPS)[step.key]?.label ?? step.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="text-sm text-muted-foreground">{orgProgress ? "Your onboarding steps are complete." : loading ? "Loading next steps…" : "Next steps are unavailable."}</p>}
+        </CardContent>
+      </Card>
+    </section>
   );
 }
 

@@ -27,7 +27,7 @@ import { createTicketWithHistory } from "../../lib/create-ticket";
 import { logger } from "../../lib/logger";
 import type { JobOfferPersistence, JobOfferTransaction } from "./job-offers";
 import { peakReservedCrews } from "./crew-capacity";
-import { isMarketplaceRelationshipRestricted } from "./eligibility";
+import { isMarketplaceBlockingReason, isMarketplaceRelationshipRestricted } from "./eligibility";
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 function adapter(tx: Transaction): JobOfferTransaction {
@@ -152,11 +152,9 @@ function adapter(tx: Transaction): JobOfferTransaction {
       );
       if (!candidate)
         throw new MarketplaceError(409, "marketplace.active_match_required");
-      if (!candidate.eligibility.eligible)
-        throw new MarketplaceError(
-          409,
-          `marketplace.${candidate.eligibility.reasonCodes[0].toLowerCase()}`,
-        );
+      const blockingReason = candidate.eligibility.reasonCodes.find(isMarketplaceBlockingReason);
+      if (blockingReason)
+        throw new MarketplaceError(409, `marketplace.${blockingReason.toLowerCase()}`);
       const [rate] = await tx
         .select()
         .from(rates)
@@ -205,16 +203,17 @@ function adapter(tx: Transaction): JobOfferTransaction {
             gt(offers.scheduledEndAt, new Date(input.requestedStartAt)),
           ),
         );
-      if (
+      const exceedsScheduledCapacity =
         peakReservedCrews(
           new Date(input.requestedStartAt),
           new Date(input.requestedEndAt),
           reservations,
         ) +
           input.crewCount >
-        candidate.eligibility.facts.availableCapacity
-      )
-        throw new MarketplaceError(409, "marketplace.capacity_changed");
+        candidate.eligibility.facts.availableCapacity;
+      const reasonCodes = candidate.eligibility.reasonCodes;
+      if (exceedsScheduledCapacity && !reasonCodes.includes("INSUFFICIENT_CAPACITY"))
+        reasonCodes.push("INSUFFICIENT_CAPACITY");
       return {
         canonicalServiceId: candidate.canonicalServiceId,
         commercial: {

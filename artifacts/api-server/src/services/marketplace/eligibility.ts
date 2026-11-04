@@ -88,6 +88,12 @@ export type EligibilityReason =
   | "UNAVAILABLE"
   | "RELATIONSHIP_REQUIRED"
   | "RELATIONSHIP_RESTRICTED";
+export function isMarketplaceBlockingReason(reason: EligibilityReason): boolean {
+  return reason !== "COMPLIANCE_STALE" &&
+    reason !== "SERVICE_AREA_MISSING" &&
+    reason !== "INSUFFICIENT_CAPACITY";
+}
+
 export interface EligibilityResult {
   eligible: boolean;
   reasonCodes: EligibilityReason[];
@@ -212,7 +218,7 @@ export async function evaluateMarketplaceEligibility(
   );
   return {
     // Compliance remains visible advice; it does not override the partner's hiring decision.
-    eligible: reasons.every((reason) => reason === "COMPLIANCE_STALE"),
+    eligible: !reasons.some(isMarketplaceBlockingReason),
     reasonCodes: reasons,
     facts: {
       distanceMiles: distance,
