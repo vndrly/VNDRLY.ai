@@ -27,7 +27,7 @@ export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId
     if(view==='arrivals')return !v.checkOutTime&&v.presence.expectedGateId!=null&&gates.find(g=>g.id===v.presence.expectedGateId)?.topology?.area===area;
     if(view==='departures')return root?v.presence.expectedSiteExit||!!v.checkOutTime:(history?v.movements.some(m=>m.area===area&&m.kind==='leave'):v.movements.filter(m=>m.area===area&&(m.kind==='enter'||m.kind==='leave')).at(-1)?.kind==='leave');
     if(view==='on_site')return !v.checkOutTime&&(root||gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area===area);
-    return true;
+    return root||gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area===area||v.movements.some(m=>m.area===area);
   });
   async function act(visitId:number,kind:string) {
     if(lock.current||!siteId||!gateId)return;

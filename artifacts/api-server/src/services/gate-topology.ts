@@ -19,7 +19,7 @@ export function movementPresence(movements:GateMovement[], entryGateId:string|nu
   return {currentGateId:closed?null:currentGateId,
     expectedGateId:closed?null:last?.destinationGateId??null,
     expectedSiteExit:!closed&&last?.destination==='site_exit',
-    label:closed?'Departed site':last?.kind==='enter'?(last.area?`Inside ${last.area}`:`Checked in at ${last.gateName}`):last?.destination==='site_exit'?`Left ${last.gateName} · Expected at Main Gate`:last?.destinationGateId?`On site · Heading to ${last.destination}`:last?'On site · Outside secure areas':'On site'};
+    label:closed?'Departed site':last?.kind==='enter'?(last.area?`Inside ${last.area}`:`Checked in at ${last.gateName}`):last?.destination==='site_exit'?last.kind==='leave'?`Left ${last.gateName} · Expected at Main Gate`:'On site · Expected at Main Gate':last?.destinationGateId?`On site · Heading to ${last.destination}`:last?'On site · Outside secure areas':'On site'};
 }
 export function validateGateTopology(gates:Array<{id:string;topology?:GateTopology|null}>,gateId:string,topology:GateTopology) {
   const byId=new Map(gates.map(g=>[g.id,g]));
