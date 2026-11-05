@@ -240,7 +240,7 @@ function adapter(tx: Transaction): JobOfferTransaction {
         },
         eligibility: {
           eligible: true,
-          reasonCodes: candidate.eligibility.reasonCodes,
+          reasonCodes,
           facts: candidate.eligibility.facts,
           checkedAt: now.toISOString(),
         },
