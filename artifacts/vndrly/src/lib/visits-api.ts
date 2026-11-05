@@ -292,6 +292,7 @@ export const visitsApi = {
     latitude?: number;
     longitude?: number;
     gateStationId?: string;
+    destinationGateId?: string;
   }) =>
     jf<VisitorRow>(`/api/visits/gate/check-in`, {
       method: "POST",

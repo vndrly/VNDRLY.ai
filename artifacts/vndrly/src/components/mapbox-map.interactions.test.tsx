@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { expect, it, vi } from "vitest";
-const mock = vi.hoisted(() => ({ ease: vi.fn(), zoom:9, zoomChanged:()=>{} }));
+const mock = vi.hoisted(() => ({ ease: vi.fn(), fit: vi.fn(), zoom:9, zoomChanged:()=>{}, dragEnd:()=>{} }));
 vi.mock("@/lib/maps", () => ({ loadMapboxAccessToken: async () => "test", readMapboxAccessToken: () => "test", getMapboxStyleUrl: () => "test-style" }));
 vi.mock("mapbox-gl", () => {
   class Map {
@@ -13,6 +13,7 @@ vi.mock("mapbox-gl", () => {
     getZoom() { return mock.zoom; }
     getContainer() { return this.container; } project() { return { x: 100, y: 100 }; }
     easeTo = mock.ease;
+    fitBounds = mock.fit;
   }
   class Popup {
     node = document.createElement("div");
@@ -27,11 +28,31 @@ vi.mock("mapbox-gl", () => {
     element: HTMLElement;
     constructor(options: any) { this.element = options.element; }
     setLngLat() { return this; } addTo(map: Map) { map.container.append(this.element); return this; }
+    on(event:string,handler:()=>void) {if(event==="dragend")mock.dragEnd=handler;return this;}
+    getLngLat(){return {lat:32,lng:-103};} setDraggable(){return this;}
     getElement() { return this.element; } remove() { this.element.remove(); } setPopup() { return this; }
   }
-  return { default: { Map, Marker, Popup, NavigationControl: class {} } };
+  class LngLatBounds { extend() { return this; } getCenter() { return [0, 0]; } }
+  return { default: { Map, Marker, Popup, LngLatBounds, NavigationControl: class {} } };
 });
 import { MapboxMap, type MapboxPoint } from "./mapbox-map";
+
+it("preserves a manually navigated view across refreshed and moving markers", async () => {
+  mock.fit.mockClear();
+  const client = new QueryClient();
+  const tree = (latitude: number) => <QueryClientProvider client={client}><MapboxMap points={[
+    { id: "a", title: "Radio A", latitude, longitude: -102 },
+    { id: "b", title: "Radio B", latitude: 32, longitude: -103 },
+  ]} /></QueryClientProvider>;
+  const view = render(tree(31));
+  const marker = await screen.findByRole("button", { name: "Radio A" });
+  expect(mock.fit).toHaveBeenCalled();
+  fireEvent.pointerDown(marker.parentElement!);
+  mock.fit.mockClear();
+  view.rerender(tree(31.01));
+  expect(mock.fit).not.toHaveBeenCalled();
+  view.unmount();
+});
 
 it("keeps G at overview zoom and reveals the full gate label at the configured zoom",async()=>{
  mock.zoom=9;
@@ -80,4 +101,11 @@ it("anchors React activity content inside the map, switches pins, and closes on 
   fireEvent.pointerDown(screen.getByText("Gate B activity")); expect(close).not.toHaveBeenCalled();
   fireEvent.pointerDown(document.body); expect(close).toHaveBeenCalledTimes(1);
   fireEvent.keyDown(document, { key: "Escape" }); expect(close).toHaveBeenCalledTimes(2);
+});
+
+it("enables dragging an existing gate marker after Move is chosen",async()=>{
+ const onPointDrag=vi.fn();const points=[{id:'gate:move',title:'Move gate',latitude:31,longitude:-102}];
+ const tree=(moving:boolean)=><QueryClientProvider client={new QueryClient()}><MapboxMap points={points} fitToData={false} onPointDrag={moving?onPointDrag:undefined} draggablePointId={moving?'gate:move':undefined}/></QueryClientProvider>;
+ const view=render(tree(false));await screen.findByRole('button',{name:'Move gate'});
+ view.rerender(tree(true));mock.dragEnd();expect(onPointDrag).toHaveBeenCalledWith('gate:move',32,-103);view.unmount();
 });

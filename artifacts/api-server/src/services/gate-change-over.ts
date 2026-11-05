@@ -1,4 +1,5 @@
 import { linkedGateScope, linkGateSite } from "./gate-links";
+import { validateGateTopology, type GateTopology } from './gate-topology';
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import {recordGateWorkday, endGateWorkdayForRecovery} from "./gate-workday";
 import {WorkdayError} from "./workday";
@@ -504,7 +505,7 @@ export async function listChangeOverStations(
   // History navigation uses the same current site authorization as notes/reports,
   // without requiring an active gate or a future scheduled shift.
   if (mode === "history") return (await pool.query(
-    "SELECT id,name,site_id,latitude,longitude,active FROM gate_stations WHERE site_id=$1 ORDER BY created_at,id",
+    "SELECT id,name,site_id,latitude,longitude,active,topology FROM gate_stations WHERE site_id=$1 ORDER BY created_at,id",
     [siteId],
   )).rows;
   return (
@@ -585,16 +586,19 @@ export async function addChangeOverStation(
   name: string,
   location?: { latitude: number; longitude: number },
   link?: { targetSiteId?: number; name?: string },
+  topology?: GateTopology,
 ) {
   if (location && (!Number.isFinite(location.latitude) || Math.abs(location.latitude) > 90 || !Number.isFinite(location.longitude) || Math.abs(location.longitude) > 180))
     return fail(400, "invalid_gate_location", "Enter valid gate coordinates");
   return changeOverTransaction(async (c) => {
     await requireGateStationManagementAccess(c, session, siteId);
+    await c.query('SELECT pg_advisory_xact_lock($1)',[siteId]);
+    const physicalLink=topology?validateGateTopology((await c.query('SELECT id,topology FROM gate_stations WHERE site_id=$1',[siteId])).rows,randomUUID(),topology):null;
     if (link) await linkGateSite(c, session, siteId, link.targetSiteId, link.name);
     if (location) {
       const result = await c.query(
-        "INSERT INTO gate_stations(site_id,name,latitude,longitude) VALUES($1,$2,$3,$4) ON CONFLICT(site_id,name) DO NOTHING RETURNING *",
-        [siteId, name, location.latitude, location.longitude],
+        physicalLink?"INSERT INTO gate_stations(site_id,name,latitude,longitude,topology) VALUES($1,$2,$3,$4,$5) ON CONFLICT(site_id,name) DO NOTHING RETURNING *":"INSERT INTO gate_stations(site_id,name,latitude,longitude) VALUES($1,$2,$3,$4) ON CONFLICT(site_id,name) DO NOTHING RETURNING *",
+        physicalLink?[siteId,name,location.latitude,location.longitude,JSON.stringify(physicalLink)]:[siteId,name,location.latitude,location.longitude],
       );
       if (!result.rows[0]) return fail(409, "gate_already_exists", "A gate with that name already exists at this site. Its location was not changed.");
       return result.rows[0];
@@ -610,7 +614,7 @@ export async function addChangeOverStation(
 export async function listGateStationManagementStations(session: SessionPayload, siteId: number) {
   await requireGateStationManagementAccess(pool, session, siteId);
   return (await pool.query(
-    'SELECT id,site_id AS "siteId",name,latitude,longitude,version,active FROM gate_stations WHERE site_id=$1 AND active IS DISTINCT FROM false ORDER BY name,id', [siteId],
+    'SELECT id,site_id AS "siteId",name,latitude,longitude,version,active,topology FROM gate_stations WHERE site_id=$1 AND active IS DISTINCT FROM false ORDER BY name,id', [siteId],
   )).rows;
 }
 

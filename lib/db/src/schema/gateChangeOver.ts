@@ -30,6 +30,7 @@ export const gateStationsTable = pgTable(
     active: boolean("active").notNull().default(true),
     version: integer("version").notNull().default(1),
     connection: jsonb("connection"),
+    topology: jsonb("topology"),
     createdAt: time("created_at").notNull().defaultNow(),
   },
   (t) => ({

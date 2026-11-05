@@ -63,6 +63,8 @@ type Props = {
   scrollZoom?: boolean;
   onPointDrag?: (id: string, latitude: number, longitude: number) => void;
   onMapClick?: (latitude: number, longitude: number) => void;
+  onMapContext?: (latitude:number,longitude:number,pointId?:string) => void;
+  draggablePointId?: string;
   bottomControls?: ReactNode;
   topControls?: ReactNode;
   customZoomControls?: boolean;
@@ -157,6 +159,8 @@ export function MapboxMap({
   scrollZoom = true,
   onPointDrag,
   onMapClick,
+  onMapContext,
+  draggablePointId,
   bottomControls,
   topControls,
   customZoomControls = true,
@@ -172,6 +176,8 @@ export function MapboxMap({
   const token = configuration.data || readMapboxAccessToken();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMapInstance | null>(null);
+  const userNavigated = useRef(false);
+  const lastPannedSelection = useRef<string | undefined>(undefined);
   const markerRefs = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const clickHandlers = useRef<Map<string, () => void>>(new Map());
   const hoverPoints = useRef<Map<string, MapboxPoint>>(new Map());
@@ -226,6 +232,10 @@ export function MapboxMap({
   popupClose.current = anchoredPopup?.onClose;
   const mapClick = useRef(onMapClick);
   mapClick.current = onMapClick;
+  const mapContext=useRef(onMapContext);
+  mapContext.current=onMapContext;
+  const pointDrag=useRef(onPointDrag);
+  pointDrag.current=onPointDrag;
   const hasBottomControls = Boolean(bottomControls);
   const popupPoint = points.find(point => point.id === anchoredPopup?.pointId);
   const popupLongitude = popupPoint?.longitude, popupLatitude = popupPoint?.latitude;
@@ -254,6 +264,12 @@ export function MapboxMap({
     map.on("click", event => {
       if ((event.originalEvent.target as Element | null)?.closest(".vndrly-mapbox-marker,.mapboxgl-popup")) return;
       mapClick.current?.(event.lngLat.lat, event.lngLat.lng);
+    });
+    map.on('contextmenu',event=>{
+      if(!mapContext.current)return;
+      event.originalEvent.preventDefault();
+      const marker=(event.originalEvent.target as Element|null)?.closest<HTMLElement>('.vndrly-mapbox-marker');
+      mapContext.current(event.lngLat.lat,event.lngLat.lng,marker?.dataset.markerId);
     });
     if (!customZoomControls) map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), navigationPosition);
     map.on("load", () => {
@@ -291,10 +307,30 @@ export function MapboxMap({
       });
     });
     mapRef.current = map;
+    userNavigated.current = false;
+    const preserveView = () => { userNavigated.current = true; };
+    const container = map.getContainer();
+    container.addEventListener("pointerdown", preserveView);
+    container.addEventListener("wheel", preserveView, { passive: true });
+    container.addEventListener("keydown", preserveView);
+    let longPress:ReturnType<typeof setTimeout>|undefined;
+    let touchStart:{x:number;y:number}|null=null;
+    const cancelLongPress=()=>{clearTimeout(longPress);touchStart=null;};
+    const startLongPress=(event:PointerEvent)=>{
+      if(event.pointerType!=='touch'||!mapContext.current)return;
+      touchStart={x:event.clientX,y:event.clientY};
+      longPress=setTimeout(()=>{const rect=container.getBoundingClientRect(),point=map.unproject([event.clientX-rect.left,event.clientY-rect.top]);const marker=(event.target as Element|null)?.closest<HTMLElement>('.vndrly-mapbox-marker');mapContext.current?.(point.lat,point.lng,marker?.dataset.markerId);cancelLongPress();},650);
+    };
+    const moveLongPress=(event:PointerEvent)=>{if(touchStart&&Math.hypot(event.clientX-touchStart.x,event.clientY-touchStart.y)>10)cancelLongPress();};
+    container.addEventListener('pointerdown',startLongPress);container.addEventListener('pointermove',moveLongPress);container.addEventListener('pointerup',cancelLongPress);container.addEventListener('pointercancel',cancelLongPress);
     const updateLabels = () => updateMarkerLabels.current();
     map.on("zoom", updateLabels);
     map.on("moveend", updateLabels);
     return () => {
+      container.removeEventListener("pointerdown", preserveView);
+      container.removeEventListener("wheel", preserveView);
+      container.removeEventListener("keydown", preserveView);
+      cancelLongPress();container.removeEventListener('pointerdown',startLongPress);container.removeEventListener('pointermove',moveLongPress);container.removeEventListener('pointerup',cancelLongPress);container.removeEventListener('pointercancel',cancelLongPress);
       markerRefs.current.forEach((marker) => marker.remove());
       markerRefs.current.clear();
       hoverPopup.current?.remove();
@@ -380,18 +416,17 @@ export function MapboxMap({
         el.addEventListener("mouseleave", hideDetails);
         el.addEventListener("focus", showDetails);
         el.addEventListener("blur", hideDetails);
-        marker = new mapboxgl.Marker({ element: el, draggable: !!onPointDrag })
+        marker = new mapboxgl.Marker({ element: el, draggable: !!onPointDrag && (!draggablePointId || draggablePointId===point.id) })
           .setLngLat([point.longitude, point.latitude])
           .addTo(map);
-        if (onPointDrag) {
-          marker.on("dragend", () => {
+          marker.on?.("dragend", () => {
             const lngLat = marker?.getLngLat();
-            if (lngLat) onPointDrag(point.id, lngLat.lat, lngLat.lng);
+            if (lngLat) pointDrag.current?.(point.id, lngLat.lat, lngLat.lng);
           });
-        }
         markerRefs.current.set(point.id, marker);
       } else {
         marker.setLngLat([point.longitude, point.latitude]);
+        marker.setDraggable?.(!!onPointDrag && (!draggablePointId || draggablePointId===point.id));
       }
       const el = marker.getElement();
       el.style.setProperty("--pin-color", point.color ?? "#2563eb");
@@ -420,12 +455,14 @@ export function MapboxMap({
       }
     }
     updateMarkerLabels.current();
-  }, [onPointDrag, points, selectedPointId, token, initialCenter, scrollZoom, styleKind, zoom]);
+  }, [onPointDrag, draggablePointId, points, selectedPointId, token, initialCenter, scrollZoom, styleKind, zoom]);
 
   useEffect(() => {
     if (!panToSelectedPoint || !selectedPointId) return;
+    if (userNavigated.current && lastPannedSelection.current === selectedPointId) return;
     const point = points.find(item => item.id === selectedPointId);
     if (point && isValidLatLng(point.latitude, point.longitude)) {
+      lastPannedSelection.current = selectedPointId;
       const map = mapRef.current, frame = map?.getContainer();
       const offset = anchoredPopup?.pointId === selectedPointId && frame && frame.clientWidth < 560
           ? { offset: [0, frame.clientHeight / 2 - 22] as [number, number] } : {};
@@ -439,7 +476,7 @@ export function MapboxMap({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !fitToData) return;
+    if (!map || !fitToData || userNavigated.current) return;
     const bounds = new mapboxgl.LngLatBounds();
     let count = 0;
     for (const point of fitPoints ?? points) {
@@ -501,8 +538,8 @@ export function MapboxMap({
       <div ref={containerRef} className="h-full w-full" />
       {topControls && <div className="vndrly-map-top-controls">{topControls}</div>}
       {customZoomControls && <div className="vndrly-map-zoom" role="group" aria-label="Map zoom">
-        <button type="button" aria-label="Zoom in" title="Zoom in" onClick={()=>mapRef.current?.zoomIn()}><Plus aria-hidden="true" /></button>
-        <button type="button" aria-label="Zoom out" title="Zoom out" onClick={()=>mapRef.current?.zoomOut()}><Minus aria-hidden="true" /></button>
+        <button type="button" aria-label="Zoom in" title="Zoom in" onClick={()=>{userNavigated.current=true;mapRef.current?.zoomIn();}}><Plus aria-hidden="true" /></button>
+        <button type="button" aria-label="Zoom out" title="Zoom out" onClick={()=>{userNavigated.current=true;mapRef.current?.zoomOut();}}><Minus aria-hidden="true" /></button>
       </div>}
       {bottomControls && <div className="vndrly-map-bottom-controls">{bottomControls}</div>}
       {anchoredPopup && createPortal(anchoredPopup.content, popupNode)}

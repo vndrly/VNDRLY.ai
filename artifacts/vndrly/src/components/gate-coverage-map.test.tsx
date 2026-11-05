@@ -96,7 +96,7 @@ it("keeps inactive gates selectable but uses a grey marker and an inactive flyou
   expect(north.title).toContain("Inactive");
   expect(mocks.points.find(point => point.id === "gate:east").color).not.toBe("#9ca3af");
   act(() => north.onClick());
-  expect(mocks.mapProps.anchoredPopup.content.props.active).toBe(false);
+  expect(mocks.mapProps.anchoredPopup.content.props.children[1].props.active).toBe(false);
 });
 it("uses the viewing selector to focus one gate without creating or editing a gate", async () => {
   mocks.read.mockResolvedValue({ at: new Date().toISOString(), staff: [], gates: [
@@ -122,7 +122,7 @@ it("uses the viewing selector to focus one gate without creating or editing a ga
   expect(mocks.mapProps.selectedPointId).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Center on Selection" }));
   expect(mocks.mapProps.fitPoints.map((point:any)=>point.id)).toEqual(["gate:a","gate:b","gate:c"]);
-  expect(mocks.read.mock.calls.every(call => call.length === 1 && (call[0] === "/coverage-map" || /^\/linked-gates\?siteId=[12]$/.test(call[0])))).toBe(true);
+  expect(mocks.read.mock.calls.every(call => call.length === 1 && (call[0] === "/coverage-map" || call[0] === "/station-management/sites" || /^\/linked-gates\?siteId=[12]$/.test(call[0])))).toBe(true);
 });
 it("centers on current GPS without replacing the chosen gate, then returns to that selection",async()=>{
  const geo=vi.fn((success:PositionCallback)=>success({coords:{latitude:30,longitude:-100}} as GeolocationPosition));
@@ -170,6 +170,7 @@ it("ticks beneath the Live controls without rerendering the map or fetching each
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity, staleTime: Infinity } } });
   await client.prefetchQuery({ queryKey: ["gate-coverage-map", 1, 3, null], queryFn: () => mocks.read("/coverage-map") });
   await client.prefetchQuery({queryKey:["equipment",1,2,3],queryFn:async()=>({equipment:[],capabilities:{canManage:true}})});
+  await client.prefetchQuery({queryKey:["gate-station-management-sites",1,3,2,undefined],queryFn:async()=>({sites:[]}),staleTime:30000});
   await act(async () => {
     render(<QueryClientProvider client={client}><GateCoverageMap /></QueryClientProvider>);
     await vi.advanceTimersByTimeAsync(5);

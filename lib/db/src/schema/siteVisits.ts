@@ -44,6 +44,7 @@ export const siteVisitsTable = pgTable(
     id: serial("id").primaryKey(),
     siteLocationId: integer("site_location_id").notNull().references(() => siteLocationsTable.id),
     gateStationId: uuid("gate_station_id").references(() => gateStationsTable.id),
+    gateMovements: jsonb("gate_movements").notNull().default([]),
     gateAssociationProvenance: jsonb("gate_association_provenance").$type<GateAssociationProvenance>(),
     guestSessionId: integer("guest_session_id").references(() => guestSessionsTable.id, { onDelete: "set null" }),
 

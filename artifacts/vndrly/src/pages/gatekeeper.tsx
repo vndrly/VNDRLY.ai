@@ -1,3 +1,4 @@
+import { GateAreaTraffic, useGateAreaTraffic } from '@/components/gate-area-traffic';
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import WorkdayControls from "@/components/workday-controls";
 import "@/components/gate-dashboard.css";
@@ -336,6 +337,9 @@ export default function GatekeeperPage() {
     enabled: !!confirmedCode,
     retry: false,
   });
+  const [areaDestination,setAreaDestination]=useState('');
+  const areaTraffic = useGateAreaTraffic(site.data?.site.id);
+  const hasSecureAreas = areaTraffic.data?.gates.some(g => g.topology?.area) ?? false;
   const linkedGates = useLinkedGates(site.data?.site.id);
   const sharedSiteIds = linkedGates.data?.siteIds ?? (site.data?.site.id ? [site.data.site.id] : []);
   const departures = useQuery({
@@ -350,6 +354,7 @@ export default function GatekeeperPage() {
   useEffect(() => {
     setDetailVisitId(null);
     setDetailRunId(null);
+    setAreaDestination('');
   }, [site.data?.site.id, user?.activeMembershipId]);
   const gateLocations = useQuery({
     queryKey: ["gate-visit-locations", user?.vendorId, site.data?.site.id],
@@ -1126,6 +1131,7 @@ export default function GatekeeperPage() {
         latitude: origin?.latitude,
         longitude: origin?.longitude,
         gateStationId: selectedGateLocation?.id,
+        destinationGateId: areaDestination||undefined,
       });
       resetEntry();
       setVoiceResponse({ messageKey: "gatekeeper.checkedInTitle" });
@@ -1154,6 +1160,12 @@ export default function GatekeeperPage() {
     setError(null);
     try {
       const coords = origin;
+      const areaGate=areaTraffic.data?.gates.find(g=>g.id===selectedGateLocation?.id);
+      if(areaGate?.topology?.area&&site.data?.site.id){
+        await changeOverRequest('/movements',{siteId:site.data.site.id,gateId:areaGate.id,visitId:id,operationId:crypto.randomUUID(),kind:'leave',destination:'site_exit'});
+        await queryClient.invalidateQueries({queryKey:['gate-area-traffic']});
+        return;
+      }
       await visitsApi.gateCheckOut(
         id,
         coords?.latitude,
@@ -1515,6 +1527,7 @@ export default function GatekeeperPage() {
                 )}
               </p>
             ) : null}
+            {hasSecureAreas&&<label className="grid gap-1 text-sm">{i18n.language.startsWith('es')?'Destino previsto':'Expected destination'}<BrandedSelect value={areaDestination} onChange={e=>setAreaDestination(e.target.value)}><option value="">{i18n.language.startsWith('es')?'Sin destino especificado':'No destination specified'}</option>{areaTraffic.data?.gates.filter(g=>g.active&&g.topology?.area).map(g=><option key={g.id} value={g.id}>{g.topology?.area} · {g.name}</option>)}</BrandedSelect></label>}
             {site.isLoading && (
               <Loader2 className="animate-spin text-muted-foreground" />
             )}
@@ -1636,6 +1649,7 @@ export default function GatekeeperPage() {
               role="region"
               aria-label={t(presenceView === "arrivals" ? "gatekeeper.arrivalsTab" : presenceView === "departures" ? "gatekeeper.departuresTab" : "gatekeeper.onSiteTab")}
             >
+            <GateAreaTraffic siteId={site.data?.site.id} gateId={selectedGateLocation?.id} view={presenceView==='active'?'on_site':presenceView} />
             {presenceView === "arrivals" ? <>
             {pendingVisits.length > 0 && <div className="space-y-2" data-testid="gate-pending-visitors">
               <p className="text-sm font-semibold text-foreground">{t("gatekeeper.pendingAdmit")}</p>
@@ -1650,7 +1664,7 @@ export default function GatekeeperPage() {
               departures.isLoading || site.isLoading ? <Loader2 className="animate-spin text-muted-foreground" />
               : departures.isError ? <p role="alert" className="text-sm text-destructive">{t("gatekeeper.departuresLoadFailed")}</p>
               : recentDepartures.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noRecentDepartures")}</p>
-              : recentDepartures.map(visit => <GateTrafficRecord key={visit.id} testId="gate-recent-departure"
+              : !hasSecureAreas && recentDepartures.map(visit => <GateTrafficRecord key={visit.id} testId="gate-recent-departure"
                   name={`${visit.firstName} ${visit.lastName}`} description={[visit.company, displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ")}
                   status={t("gatekeeper.departuresTab")} onOpen={() => setDetailVisitId(visit.id)}
                   flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
@@ -1661,7 +1675,7 @@ export default function GatekeeperPage() {
                   {visit.checkOutNotes && <span className="whitespace-pre-wrap text-xs text-muted-foreground">{visit.checkOutNotes}</span>}
                 </GateTrafficRecord>)
             ) : <>
-            {visits.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : onSiteVisits.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noActive")}</p> : onSiteVisits.map(visit => {
+            {visits.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : onSiteVisits.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noActive")}</p> : !hasSecureAreas && onSiteVisits.map(visit => {
               const dwell = onSiteDwell({ checkInTime: visit.checkInTime, expectedDurationMinutes: visit.expectedDurationMinutes });
               return <GateTrafficRecord key={visit.id} name={`${visit.firstName} ${visit.lastName}`}
                 description={[visit.company, displayPlate(visit.plateState, visit.vehiclePlate), visit.siteName].filter(Boolean).join(" · ")}

@@ -1,3 +1,4 @@
+import { GateAreaTraffic } from '@/components/gate-area-traffic';
 import { ContentCardHeader } from "@/components/ui/card";
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -126,6 +127,7 @@ export default function GateHistoryPage() {
               onChange={(nextSite, nextGate) => { setSiteId(String(nextSite)); setStationId(nextGate); setRecordId(null); setFocusedRecordId(null); }} /></div>
             <GateReportToolbar dropdown reportKind="history" filters={filters} disabled={rows.isLoading} />
           </div>
+          <GateAreaTraffic siteId={Number(resolvedSiteId)||undefined} gateId={resolvedStationId} view={trafficView} history />
           <div className="gate-history-filters" aria-label="Gate activity filters">
             {([['arrivals','Arrivals'],['on_site','On Site'],['departures','Departures'],['all','All']] as const).map(([type,label]) =>
               <button type="button" key={type} className="gate-history-filter" aria-pressed={trafficView === type} onClick={() => {

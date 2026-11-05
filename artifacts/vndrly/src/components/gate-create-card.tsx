@@ -10,16 +10,19 @@ import { BrandedInput, BrandedSelect } from "./work-hub/chrome";
 import { WorkspacePanel } from "./work-hub/workspace-panel";
 import "./gate-dashboard.css";
 import "./work-hub/site-shift-administration.css";
+import type { PhysicalGate } from './gate-area-traffic';
 
 type Method = "gps" | "coordinates" | "address";
-type EditableGate = { id: string; siteId: number; name: string; latitude: number | null; longitude: number | null; version: number };
-export default function GateCreateCard() {
+type EditableGate = PhysicalGate;
+const independent = {kind:'independent' as const,area:'',parentGateId:null,parallelGateId:null};
+export default function GateCreateCard({initialLocation,initialGateId,initialSiteId,onSaved}:{initialLocation?:{latitude:number;longitude:number};initialGateId?:string;initialSiteId?:number;onSaved?:()=>void}={}) {
   const { user } = useAuth(), cache = useQueryClient();
   const { t, i18n } = useTranslation();
   const c = (en: string, es: string) => i18n.language?.startsWith("es") ? es : en;
-  const [selectedSite, setSelectedSite] = useState("");
+  const [selectedSite, setSelectedSite] = useState(initialSiteId?String(initialSiteId):"");
+  const [topology,setTopology]=useState<NonNullable<PhysicalGate['topology']>>(independent);
   const [link, setLink] = useState(emptyGateLink);
-  const [mode, setMode] = useState<"create" | "move" | "edit">("create");
+  const [mode, setMode] = useState<"create" | "move" | "edit">(initialGateId?'edit':'create');
   const [editingGate, setEditingGate] = useState<EditableGate | null>(null);
   const editOperation = useRef<{ fingerprint: string; operationId: string } | null>(null);
   const [name, setName] = useState("");
@@ -43,6 +46,7 @@ export default function GateCreateCard() {
     queryFn: () => changeOverRequest<{ stations: EditableGate[] }>(`/station-management/stations?siteId=${siteId}`),
     enabled: canManage && Boolean(siteId), retry: false, refetchOnWindowFocus: false,
   });
+  useEffect(()=>{if(initialGateId&&editableGates.data&&!editingGate)loadGate(initialGateId);else if(initialLocation&&!initialGateId){setMethod('coordinates');setLatitude(String(initialLocation.latitude));setLongitude(String(initialLocation.longitude));}},[initialGateId,editableGates.data,initialLocation?.latitude,initialLocation?.longitude]);
   const lat = Number(latitude), lng = Number(longitude);
   const validLocation = latitude.trim() !== "" && longitude.trim() !== "" && Number.isFinite(lat) && Math.abs(lat) <= 90 && Number.isFinite(lng) && Math.abs(lng) <= 180;
   const editable = mode === "create" || Boolean(editingGate);
@@ -53,8 +57,9 @@ export default function GateCreateCard() {
   function loadGate(gateId: string) {
     const gate = editableGates.data?.stations.find(row => row.id === gateId) ?? null;
     clearLocation(); setAddress(""); setEditingGate(gate); setName(gate?.name ?? ""); setMethod("coordinates");
-    setLatitude(gate?.latitude == null ? "" : String(gate.latitude));
-    setLongitude(gate?.longitude == null ? "" : String(gate.longitude));
+    setTopology(gate?.topology??independent);
+    setLatitude(initialLocation?String(initialLocation.latitude):gate?.latitude == null ? "" : String(gate.latitude));
+    setLongitude(initialLocation?String(initialLocation.longitude):gate?.longitude == null ? "" : String(gate.longitude));
   }
   function locate() {
     clearLocation();
@@ -84,7 +89,7 @@ export default function GateCreateCard() {
     if (!canManage || !siteId || !name.trim() || !validLocation || !editable || (mode !== "create" && !hasEdits) || saveLock.current || locating || !navigator.onLine || sites.isError) return;
     saveLock.current = true; setBusy(true); setError(""); setSaved("");
     try {
-      const values = { siteId, name: name.trim(), location: { latitude: lat, longitude: lng }, ...(mode === "create" && link.mode !== "none" ? {link: gateLinkPayload(link)} : {}) };
+      const values = { siteId, name: name.trim(), location: { latitude: lat, longitude: lng }, ...(mode === "create" ? {topology}:{}), ...(mode === "create" && link.mode !== "none" ? {link: gateLinkPayload(link)} : {}) };
       if (mode !== "create" && editingGate) {
         const fingerprint = JSON.stringify({ ...values, id: editingGate.id, expectedVersion: editingGate.version });
         if (editOperation.current?.fingerprint !== fingerprint) editOperation.current = { fingerprint, operationId: crypto.randomUUID() };
@@ -96,6 +101,7 @@ export default function GateCreateCard() {
       }
       await Promise.all(["linked-gates", "gate-station-management-sites", "gate-coverage-map", "change-over-stations", "gate-site-gate-options", "change-over-history-stations", "gate-station-management-gates", "gate-locations"].map(key => cache.invalidateQueries({ queryKey: [key] })));
       setSaved(mode !== "create" ? c("Gate location saved.", "Ubicación del acceso guardada.") : c(`Gate created: ${values.name}`, `Acceso creado: ${values.name}`));
+      onSaved?.();
     } catch (failure) { setError(failure instanceof Error ? failure.message : t("changeOver.failed")); }
     finally { saveLock.current = false; setBusy(false); }
   }
@@ -109,6 +115,7 @@ export default function GateCreateCard() {
       await changeOverRequest(`/stations/${editingGate.id}/retire`, { ...values, operationId: editOperation.current.operationId });
       setEditingGate(null); setName(""); setAddress(""); clearLocation();
       await Promise.all(["linked-gates", "gate-station-management-sites", "gate-coverage-map", "change-over-stations", "gate-site-gate-options", "change-over-history-stations", "gate-station-management-gates", "gate-locations"].map(key => cache.invalidateQueries({ queryKey: [key] })));
+      onSaved?.();
       setSaved(c("Gate removed from active use. Its history is retained.", "Acceso retirado del uso activo. Su historial se conserva."));
     } catch (failure) { setError(failure instanceof Error ? failure.message : t("changeOver.failed")); }
     finally { saveLock.current = false; setBusy(false); }
@@ -127,10 +134,18 @@ export default function GateCreateCard() {
         </div>
       </details>
       <div className="pb-3">
+        <div className="grid gap-3 pb-3">
+          <label className="grid gap-1 text-sm">{c('Gate relationship','Relación del acceso')}<BrandedSelect value={topology.kind} disabled={busy} onChange={e=>setTopology({...independent,kind:e.target.value as typeof topology.kind})}><option value="independent">{c('Independent — site entrance','Independiente — entrada al sitio')}</option><option value="parallel">{c('Parallel — another entrance to the same area','Paralelo — otra entrada a la misma área')}</option><option value="series">{c('Series — secure area beyond another gate','En serie — área segura después de otro acceso')}</option></BrandedSelect></label>
+          {topology.kind==='series'&&<><label className="grid gap-1 text-sm">{c('Secure area name','Nombre del área segura')}<BrandedInput value={topology.area} maxLength={100} onChange={e=>setTopology({...topology,area:e.target.value})}/></label><label className="grid gap-1 text-sm">{c('Gate people pass through first','Acceso por el que pasan primero')}<BrandedSelect value={topology.parentGateId??''} onChange={e=>setTopology({...topology,parentGateId:e.target.value||null})}><option value="">{c('Choose upstream gate','Elegir acceso anterior')}</option>{editableGates.data?.stations.filter(g=>g.id!==editingGate?.id).map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</BrandedSelect></label></>}
+          {topology.kind==='parallel'&&<label className="grid gap-1 text-sm">{c('Share the controlled area of','Compartir el área controlada de')}<BrandedSelect value={topology.parallelGateId??''} onChange={e=>setTopology({...topology,parallelGateId:e.target.value||null})}><option value="">{c('Choose another entrance','Elegir otra entrada')}</option>{editableGates.data?.stations.filter(g=>g.id!==editingGate?.id).map(g=><option key={g.id} value={g.id}>{g.name}{g.topology?.area?` · ${g.topology.area}`:''}</option>)}</BrandedSelect></label>}
+          {editingGate&&<button type="button" className="gate-history-filter justify-self-start" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{const result=await changeOverRequest<EditableGate>(`/stations/${editingGate.id}/topology`,{siteId,topology,expectedVersion:editingGate.version});setEditingGate({...editingGate,version:result.version,topology:result.topology});await cache.invalidateQueries({queryKey:['gate-area-traffic']});await cache.invalidateQueries({queryKey:['gate-coverage-map']});setSaved(c('Gate relationship saved.','Relación guardada.'));}catch(e){setError(e instanceof Error?e.message:'Save failed');}finally{setBusy(false);}}}>{c('Save relationship','Guardar relación')}</button>}
+        </div>
+        <details><summary className="text-sm">{c('Site / spur traffic-sharing links','Vínculos de tráfico entre sitios / ramales')}</summary>
         <GateLinkFields value={link} onChange={value => setLink(value.mode === "new" && !value.name ? {...value,name:available.find(site => site.id === siteId)?.gateLinkName ?? available.find(site => site.id === siteId)?.name ?? ""} : value)} sites={available} siteId={siteId} partnerId={available.find(site => site.id === siteId)?.partnerId} disabled={busy}/>
         {mode !== "create" && link.mode !== "none" && <button type="button" className="gate-history-filter mt-2" disabled={busy || (link.mode === "new" ? !link.name.trim() : !link.targetSiteId)} onClick={async () => {
           setBusy(true); setError(""); try { await changeOverRequest("/site-link", {siteId,...gateLinkPayload(link)}); setLink(emptyGateLink); await Promise.all(["linked-gates","gate-station-management-sites","change-over-state"].map(key => cache.invalidateQueries({queryKey:[key]}))); setSaved(c("Parallel gates linked.","Accesos paralelos vinculados.")); } catch(e) {setError(e instanceof Error ? e.message : t("changeOver.failed"));} finally {setBusy(false);}
         }}>{c("Save link", "Guardar vínculo")}</button>}
+        </details>
       </div>
       <details className="gate-panel-disclosure" open>
         <summary><MapPin aria-hidden="true" /><span className="flex-1">{c("Gate Location", "Ubicación del acceso")}</span><small>{validLocation ? c("Location set", "Ubicación lista") : c("Not set", "Sin establecer")}</small></summary>
@@ -143,7 +158,7 @@ export default function GateCreateCard() {
         </div>
       </details>
       <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
-        {mode === "edit" && <button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} onClick={() => void removeGate()}>{c("Remove Gate", "Retirar acceso")}</button>}
+        {mode === "edit" && <><button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} onClick={() => void removeGate()}>{c("Mark Inactive", "Marcar inactivo")}</button><button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} onClick={() => void removeGate()}>{c("Remove Gate", "Retirar acceso")}</button></>}
         <button className="gate-history-filter ml-auto" type="submit" disabled={busy || locating || !editable || (mode !== "create" && !hasEdits) || !siteId || !name.trim() || !validLocation || !navigator.onLine}>{busy ? c("Saving…", "Guardando…") : mode === "move" ? c("Save Moved Gate Locations", "Guardar ubicaciones modificadas") : mode === "edit" ? c("Save Gate Changes", "Guardar cambios del acceso") : t("changeOver.addGate")}</button>
       </div>
       {error && <p role="alert" className="pt-2 text-sm text-red-400">{error}</p>}

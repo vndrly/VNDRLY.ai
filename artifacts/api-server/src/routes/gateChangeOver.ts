@@ -1,4 +1,5 @@
 import { readLinkedGates, saveGateSiteLink, gateConnectionHeartbeat } from "../services/gate-links";
+import { readGateTopology, saveGateTopology, readGateMovements, recordGateMovement, topologySchema, movementSchema } from "../services/gate-topology";
 import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { readGateCoverageMap } from "../services/gate-coverage-map";
 import { saveGateMapPin, setGateMapPinRemoved } from "../services/gate-map-pins";
@@ -176,12 +177,19 @@ router.get("/gate-change-over/stations", async (req, res) => {
     ),
   });
 });
+router.get("/gate-change-over/topology",async(req,res)=>res.json(await readGateTopology(sessionFor(req),siteId.parse(req.query.siteId))));
+router.get("/gate-change-over/movements",async(req,res)=>res.json(await readGateMovements(sessionFor(req),siteId.parse(req.query.siteId))));
+router.post("/gate-change-over/movements",async(req,res)=>res.json(await recordGateMovement(sessionFor(req),movementSchema.parse(req.body))));
+router.post("/gate-change-over/stations/:stationId/topology",async(req,res)=>{
+  const b=z.object({siteId,topology:topologySchema,expectedVersion:z.number().int().positive()}).strict().parse(req.body);
+  res.json(await saveGateTopology(sessionFor(req),b.siteId,uuid.parse(req.params.stationId),b.topology,b.expectedVersion));
+});
 router.post("/gate-change-over/stations", async (req, res) => {
   const b = z.object({ siteId, name: text.max(80), location: z.object({
     latitude: z.number().finite().min(-90).max(90),
     longitude: z.number().finite().min(-180).max(180),
-  }).strict().optional(), link: z.object({targetSiteId: siteId.optional(), name: text.max(100).optional()}).strict().optional() }).parse(req.body);
-  res.json(await addChangeOverStation(sessionFor(req), b.siteId, b.name, b.location, b.link));
+  }).strict().optional(), link: z.object({targetSiteId: siteId.optional(), name: text.max(100).optional()}).strict().optional(),topology:topologySchema.optional() }).parse(req.body);
+  res.json(await addChangeOverStation(sessionFor(req), b.siteId, b.name, b.location, b.link,b.topology));
 });
 router.get("/gate-change-over/station-management/stations", async (req, res) => {
   res.json({ stations: await listGateStationManagementStations(sessionFor(req), siteId.parse(req.query.siteId)) });

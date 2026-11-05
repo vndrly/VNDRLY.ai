@@ -1,3 +1,4 @@
+import { recordGateMovement } from '../services/gate-topology';
 import { linkedGateScope } from "../services/gate-links";
 import {offlineGateObservationService,OfflineGateError} from "../services/gate-offline-observation";
 import { gateVisitGpsEvidence } from "../lib/gate-visit-gps";
@@ -1381,6 +1382,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     latitude?: number;
     longitude?: number;
     gateStationId?: string;
+    destinationGateId?: string;
   };
   let entryCategory;
   try { entryCategory = parseVisitEntryCategory(b.entryCategory); }
@@ -1481,6 +1483,16 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     return;
   }
 
+  let destinationGate: typeof selectedGate = null;
+  if(b.destinationGateId){
+    if(!z.string().uuid().safeParse(b.destinationGateId).success){res.status(400).json({message:'Choose a destination gate at this site.'});return;}
+    [destinationGate]=await db.select().from(gateStationsTable).where(and(eq(gateStationsTable.id,b.destinationGateId),eq(gateStationsTable.siteId,site.id),eq(gateStationsTable.active,true)));
+    if(!destinationGate){res.status(400).json({message:'Destination gate unavailable at this site.'});return;}
+  }
+  const selectedArea=(selectedGate?.topology as {area?:string}|null)?.area??'';
+  const arrivalMovement=selectedGate?{operationId:crypto.randomUUID(),kind:'enter',gateId:selectedGate.id,gateName:selectedGate.name,area:selectedArea,destinationGateId:null,destination:'remain',at:new Date().toISOString(),actorId:session.userId}:null;
+  const routeMovement=selectedGate&&destinationGate?{...arrivalMovement,operationId:crypto.randomUUID(),kind:'route',destinationGateId:destinationGate.id,destination:destinationGate.name}:null;
+  const initialMovements=[arrivalMovement,routeMovement].filter(Boolean);
   const linkedVisitScope = await linkedGateScope(pool, session, site.id);
   // Serialize this plate across parallel gates, retaining one active site visit.
   const saved = await db.transaction(async tx => {
@@ -1491,7 +1503,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       plate.plateState ? eq(siteVisitsTable.plateState, plate.plateState) : isNull(siteVisitsTable.plateState),
       isNull(siteVisitsTable.checkOutTime),
       sql`${siteVisitsTable.reconciliationState} IS DISTINCT FROM 'confirmed_off_site'`,
-    )).limit(1);
+    )).limit(1).for("update");
     if (active) {
       const same = active.firstName.trim().toLowerCase() === firstName.toLowerCase()
         && active.lastName.trim().toLowerCase() === lastName.toLowerCase()
@@ -1503,6 +1515,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
         const duration = expectedDuration ?? active.expectedDurationMinutes;
         const [arrived] = await tx.update(siteVisitsTable).set({
           admissionStatus: "admitted", checkInTime: arrivedAt, observedArrivalAt: arrivedAt,
+          gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify(initialMovements)}::jsonb`,
           observedDirection: "entry", observationSource: "gatekeeper",
           checkInLatitude: gpsEvidence.latitude, checkInLongitude: gpsEvidence.longitude,
           checkInGpsEvidence: gpsEvidence,
@@ -1512,6 +1525,10 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
         }).where(and(eq(siteVisitsTable.id, active.id), eq(siteVisitsTable.admissionStatus, "pending"), isNull(siteVisitsTable.checkOutTime))).returning();
         return { visit: arrived ?? null, reused: false };
       }
+      if(same && selectedArea && arrivalMovement){
+        const [entered]=await tx.update(siteVisitsTable).set({gateMovements:sql`${siteVisitsTable.gateMovements} || ${JSON.stringify([arrivalMovement])}::jsonb`}).where(eq(siteVisitsTable.id,active.id)).returning();
+        return {visit:entered,reused:true};
+      }
       return { visit: same ? active : null, reused: true };
     }
     const [created] = await tx
@@ -1519,6 +1536,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     .values({
       siteLocationId: site.id,
       gateStationId: selectedGate?.id ?? null,
+      gateMovements: initialMovements,
       guestSessionId: null,
       firstName,
       lastName,
@@ -1660,11 +1678,16 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     const allowed = await listChangeOverStations(session, selectedGate.siteId);
     if (!allowed.some(gate => gate.id === gateId)) { res.status(403).json({ message: "Gate location is not available to this operator", code: VISIT_NO_ACCESS }); return; }
   }
+  if(selectedGate && (selectedGate.topology as {area?:string}|null)?.area){
+    await recordGateMovement(session,{siteId:visit.siteLocationId,gateId:selectedGate.id,visitId:id,operationId:crypto.randomUUID(),kind:'leave',destination:'site_exit'});
+    const [current]=await db.select().from(siteVisitsTable).where(eq(siteVisitsTable.id,id));res.json(current);return;
+  }
   const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
   const [updated] = await db
     .update(siteVisitsTable)
     .set({
       checkOutTime: new Date(),
+      ...(selectedGate ? {gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify([{operationId:crypto.randomUUID(),kind:"site_exit",gateId:selectedGate.id,gateName:selectedGate.name,area:"",destinationGateId:null,destination:"remain",at:new Date().toISOString(),actorId:session.userId}])}::jsonb`} : {}),
       checkOutLatitude: gpsEvidence.latitude,
       checkOutLongitude: gpsEvidence.longitude,
       checkOutGpsEvidence: gpsEvidence,
