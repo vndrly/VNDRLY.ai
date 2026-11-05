@@ -93,7 +93,7 @@ it("saves manually entered coordinates as numbers for the selected site", async 
   expect((screen.getByRole("button", { name: "Add gate" }) as HTMLButtonElement).disabled).toBe(true);
   fireEvent.change(screen.getByLabelText("Longitude"), { target: { value: "-97.25" } });
   fireEvent.click(screen.getByRole("button", { name: "Add gate" }));
-  await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/stations", { siteId: 10, name: "West gate", location: { latitude: 35.12, longitude: -97.25 } }));
+  await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/stations", { siteId: 10, name: "West gate", location: { latitude: 35.12, longitude: -97.25 }, topology: {kind:"independent",area:"",parentGateId:null,parallelGateId:null} }));
   expect(await screen.findByText("Gate created: West gate")).toBeTruthy();
 });
 it("uses device GPS only after the user asks and sends the captured coordinates", async () => {

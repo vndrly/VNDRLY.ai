@@ -1010,6 +1010,7 @@
     }
   },
   "tickets": {
+    "authorizeNewTicket": "Autorizar nuevo ticket",
     "title": "Seguimiento",
     "ticketNumber": "Seguimiento #",
     "status": "Estado",
@@ -5170,7 +5171,6 @@
     "quickActions": "Acciones rápidas",
     "alerts": "Alertas",
     "startJob": "Iniciar trabajo",
-    "authorizeNewTicket": "Autorizar nuevo ticket",
     "schedule": "Agenda",
     "safetyReports": "Reportes de seguridad",
     "startNewJob": "Iniciar nuevo trabajo",

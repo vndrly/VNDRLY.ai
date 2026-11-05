@@ -1010,6 +1010,7 @@
     }
   },
   "tickets": {
+    "authorizeNewTicket": "Authorize New Ticket",
     "title": "Tracking",
     "ticketNumber": "Tracking #",
     "status": "Status",
@@ -5170,7 +5171,6 @@
     "quickActions": "Quick actions",
     "alerts": "Alerts",
     "startJob": "Start job",
-    "authorizeNewTicket": "Authorize New Ticket",
     "schedule": "Schedule",
     "safetyReports": "Safety Reports",
     "startNewJob": "Start New Job",

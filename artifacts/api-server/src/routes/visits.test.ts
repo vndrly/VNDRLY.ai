@@ -333,6 +333,7 @@ function makeQuery(tableName: string, selection?: Selection) {
       return q;
     },
     offset: () => q,
+    for: () => q,
     then: (resolve: any, reject?: any) =>
       Promise.resolve(run()).then(resolve, reject),
     catch: (reject: any) => Promise.resolve(run()).catch(reject),

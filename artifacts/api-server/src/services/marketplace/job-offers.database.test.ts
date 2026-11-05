@@ -501,13 +501,14 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
     "persists peak concurrency rather than summed intersecting crews ($firstEnd, allowed=$allowed)",
     async ({ firstEnd, allowed }) => {
       const f = await fixture();
+      const day = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
       const prepare = async (start: string, end: string) => {
         const draft = await f.api.createJobOffer(
           {
             ...f.input,
             crewCount: 1,
-            requestedStartAt: `2026-11-01T${start}:00Z`,
-            requestedEndAt: `2026-11-01T${end}:00Z`,
+            requestedStartAt: `${day}T${start}:00Z`,
+            requestedEndAt: `${day}T${end}:00Z`,
           },
           f.actor,
           randomUUID(),

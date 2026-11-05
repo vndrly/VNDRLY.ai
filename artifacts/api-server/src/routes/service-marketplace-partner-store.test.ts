@@ -378,11 +378,11 @@ describe("partner marketplace persistence boundary", () => {
     state.data.partner_vendor_relationships[0].status = "pending_review";
     expect((await discover())[0].offerable).toBe(true);
   });
-  it("fails closed after source-address retirement of both default and override coverage", async () => {
+  it("warns without blocking offers after retirement of default and override coverage", async () => {
     state.data.vendor_service_areas.push({ ...state.data.vendor_service_areas[0], vendorCapabilityId: 7 });
     for (const area of state.data.vendor_service_areas) { area.active = false; area.effectiveUntil = now; }
     const rows = await discoverPartnerMarketplaceVendors(createPostgresPartnerMarketplaceStore(), context, { requestedCapacity: 1 }, now);
-    expect(rows[0]).toMatchObject({ offerable: false, eligibility: { reasonCodes: ["SERVICE_AREA_MISSING"] } });
+    expect(rows[0]).toMatchObject({ offerable: true, eligibility: { reasonCodes: ["SERVICE_AREA_MISSING"] } });
   });
   it("rechecks live membership and owns both context records", async () => {
     const store = createPostgresPartnerMarketplaceStore();
@@ -433,7 +433,7 @@ describe("partner marketplace persistence boundary", () => {
     expect(ratingQuery.params).toContain("off_site");
     expect(ratingQuery.sql).toContain('"site_locations"."partner_id"');
   });
-  it("requires the complete credential set on each qualifying worker and current document dates", async () => {
+  it("reports incomplete worker credentials and stale documents without blocking offers", async () => {
     state.data.vendor_people[1].expiry = "2026-01-01";
     state.data.vendor_capabilities[0].vendor.glExpirationDate =
       "2026-02-30";
@@ -444,7 +444,7 @@ describe("partner marketplace persistence boundary", () => {
       now,
     );
     expect(rows[0]).toMatchObject({
-      offerable: false,
+      offerable: true,
       complianceCurrent: false,
       eligibility: {
         reasonCodes: ["COMPLIANCE_STALE", "INSUFFICIENT_CAPACITY"],

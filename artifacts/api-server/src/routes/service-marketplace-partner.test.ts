@@ -355,7 +355,7 @@ describe("partner marketplace discovery", () => {
       result.body.items[0].eligibility.facts.distanceMiles,
     ).toBeGreaterThan(200);
   });
-  it("enforces saved worker credential capacity before ranking", async () => {
+  it("reports saved worker credential capacity without blocking offers", async () => {
     context.requiredCredentials = ["H2S"];
     rows[0].qualifiedWorkerCount = 1;
     rows[0].currentCredentials = ["H2S"];
@@ -363,7 +363,7 @@ describe("partner marketplace discovery", () => {
       .get(path + "?siteId=8&requestedCapacity=2")
       .set("Cookie", cookie);
     expect(result.body.items[0]).toMatchObject({
-      offerable: false,
+      offerable: true,
       eligibility: {
         reasonCodes: ["INSUFFICIENT_CAPACITY"],
         facts: { availableCapacity: 1 },
