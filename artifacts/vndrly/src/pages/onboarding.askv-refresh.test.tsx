@@ -11,7 +11,14 @@ const mocks = vi.hoisted(() => ({
   realtimeOptions: null as null | { onMutation?: (mutation: { name: string; refresh: string[] }) => void },
   voice: { state: "stopped", error: null, greeting: null, startConversation: vi.fn(), stop: vi.fn(), setMicEnabled: vi.fn(), updateContext: vi.fn(), sendText: vi.fn() },
 }));
-vi.mock("@/lib/onboarding-api", () => ({ onboardingApi: { getMine: mocks.getMine, getFieldByToken: mocks.getFieldByToken, getWorkTypes: async () => [] } }));
+vi.mock("@/lib/onboarding-api", () => ({
+  onboardingApi: {
+    getMine: mocks.getMine,
+    getFieldByToken: mocks.getFieldByToken,
+    getWorkTypes: async () => ({ rows: [], aliases: [] }),
+    getVendorBasics: async () => ({ name: "", contactName: "", contactEmail: "", contactPhone: null }),
+  },
+}));
 vi.mock("wouter", () => ({ useLocation: () => ["/onboarding/vendor", mocks.navigate], useRoute: () => [true, { token: "synthetic-invite" }] }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 11, vendorId: 22, role: "vendor" }, setPreferredLanguage: vi.fn() }) }));
 vi.mock("@/hooks/use-askv-realtime", () => ({ useAskVRealtime: (options: typeof mocks.realtimeOptions) => { mocks.realtimeOptions = options; return mocks.voice; } }));

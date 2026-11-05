@@ -1,6 +1,8 @@
 import "./vendor-profile.css";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PinFields } from "@/components/admin-pin-setup";
+import { OnboardingServiceCatalog } from "@/components/onboarding-service-catalog";
+import SphereBackButton from "@/components/sphere-back-button";
 import CompanyOperationsChoice from "@/components/company-operations-choice";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
@@ -102,7 +104,9 @@ export default function OnboardingVendor() {
   const [skipped, setSkipped] = useState<string[]>([]);
   const [payload, setPayload] = useState<VendorPayload>({});
   const [loading, setLoading] = useState(false);
-  const [workTypes, setWorkTypes] = useState<Array<{ id: number; name: string; category: string | null }>>([]);
+  const [catalog, setCatalog] = useState<Awaited<ReturnType<typeof onboardingApi.getWorkTypes>> | null>(null);
+  const [catalogError, setCatalogError] = useState("");
+  const [basicsLoaded, setBasicsLoaded] = useState(false);
   // Email verification state — captured from /onboarding/me. The
   // banner renders only when the user has an account (post-step-1)
   // and is unverified.
@@ -344,7 +348,7 @@ export default function OnboardingVendor() {
     (async () => {
       try {
         const wt = await onboardingApi.getWorkTypes();
-        if (!cancelled) setWorkTypes(wt);
+        if (!cancelled) setCatalog(wt);
       } catch {
         // server may briefly 401 right after signup if cookie sync is
         // delayed; the user can refresh.
@@ -534,6 +538,35 @@ export default function OnboardingVendor() {
     }
   };
 
+  useEffect(() => {
+    if (!orgId) return;
+    let cancelled = false;
+    setBasicsLoaded(false);
+    void onboardingApi.getVendorBasics(orgId).then(vendor => {
+      if (cancelled) return;
+      const { name, contactName, contactEmail, contactPhone } = vendor;
+      setBasics(previous => ({ ...previous, name, contactName, contactEmail, contactPhone: contactPhone ?? "" }));
+      setBasicsLoaded(true);
+    }).catch(() => {
+      if (!cancelled) toast({ title: "Could not load company information. Reload to try again.", variant: "destructive" });
+    });
+    return () => { cancelled = true; };
+  }, [orgId, toast]);
+
+  const saveExistingBasics = async () => {
+    if (!orgId || currentStep.key !== "company-basics") return;
+    if (!basicsLoaded) throw new Error("Company information is unavailable.");
+    const { name, contactName, contactEmail, contactPhone } = basics;
+    if (!name.trim() || !contactName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim())) {
+      throw new Error("Enter the company name, contact name, and a valid contact email.");
+    }
+    const digits = stripPhone(contactPhone);
+    if (digits && digits.length !== 10) throw new Error("Enter a 10-digit phone number.");
+    await onboardingApi.saveVendorBasics(orgId, {
+      name: name.trim(), contactName: contactName.trim(), contactEmail: contactEmail.trim(), contactPhone: digits || null,
+    });
+  };
+
   const nextStep = async () => {
     const err = validateCurrentStep();
     if (err) {
@@ -542,6 +575,7 @@ export default function OnboardingVendor() {
     }
     setLoading(true);
     try {
+      await saveExistingBasics();
       await persist({
         currentStep: STEPS[stepIndex + 1].key,
         completedKey: currentStep.key as StepKey,
@@ -567,6 +601,7 @@ export default function OnboardingVendor() {
     }
     setLoading(true);
     try {
+      await saveExistingBasics();
       await persist({ payloadPatch: buildPayloadPatch() });
       window.location.assign(`${BASE}/`);
     } catch (e) {
@@ -691,18 +726,6 @@ export default function OnboardingVendor() {
     };
   }, [currentStep.key, taxIds, selectedWtIds, serviceRadius, compliance, rates, vendorBranding, platformEula, legalConsent, firstEmp]);
 
-  // Group work-types by category so the picker is scannable instead of
-  // a 60-item flat list.
-  const wtByCategory = useMemo(() => {
-    const groups = new Map<string, typeof workTypes>();
-    for (const wt of workTypes) {
-      const key = wt.category ?? "Other";
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(wt);
-    }
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [workTypes]);
-
   const brandPreview = useMemo((): OnboardingBrandPreview | null => {
     const primary = vendorBranding.brandPrimaryColor.trim() || payload.branding?.brandPrimaryColor?.trim() || "";
     const logo = vendorBranding.logoUrl.trim() || payload.branding?.logoUrl?.trim() || "";
@@ -760,17 +783,25 @@ export default function OnboardingVendor() {
 
       <Card className="shadow-2xl">
         <CardContent className="p-6 pt-6">
-          <OnboardingStepper
-            steps={STEPS}
-            currentIndex={stepIndex}
-            completedKeys={completed}
-            skippedKeys={skipped}
-            onStepClick={(index) => void goToStep(index)}
-            disabled={loading || !orgId}
-            className="mb-3"
-          />
+          <div className="mb-3 flex items-start gap-1 sm:gap-2">
+            <button type="button" className="group shrink-0 disabled:invisible" aria-label="Previous step" disabled={stepIndex === 0 || loading} onClick={prevStep}>
+              <SphereBackButton size={24} />
+            </button>
+            <OnboardingStepper
+              steps={STEPS}
+              currentIndex={stepIndex}
+              completedKeys={completed}
+              skippedKeys={skipped}
+              onStepClick={(index) => void goToStep(index)}
+              disabled={loading || !orgId}
+              className="min-w-0 flex-1"
+            />
+            <button type="button" className="group shrink-0 disabled:invisible" aria-label="Next step" disabled={!orgId || stepIndex === STEPS.length - 1 || loading} onClick={nextStep}>
+              <SphereBackButton size={24} direction="right" />
+            </button>
+          </div>
 
-          {orgId ? <CompanyOperationsChoice key={orgId} /> : null}
+          {orgId && currentStep.key === "work-types" && <CompanyOperationsChoice key={orgId} />}
           {currentStep.key === "company-basics" && (
             <div className="space-y-4" data-testid="step-company-basics-body">
               <CardHeading as="h2" className="text-lg font-semibold text-gray-900">Tell us about your company</CardHeading>
@@ -808,11 +839,11 @@ export default function OnboardingVendor() {
                 )}
               </div>
               <div>
-                <Label>Your Name *</Label>
+                <Label>{orgId ? "Company Contact *" : "Your Name *"}</Label>
                 <Input value={basics.contactName} onChange={(e) => setBasics({ ...basics, contactName: e.target.value })} placeholder="Full name" data-testid="input-contact-name" />
               </div>
               <div>
-                <Label>Email *</Label>
+                <Label>{orgId ? "Company Contact Email *" : "Email *"}</Label>
                 <Input type="email" value={basics.contactEmail} onChange={(e) => setBasics({ ...basics, contactEmail: e.target.value })} placeholder="email@company.com" data-testid="input-contact-email" />
               </div>
               <div>
@@ -829,6 +860,7 @@ export default function OnboardingVendor() {
                   data-testid="input-contact-phone"
                 />
               </div>
+              {!orgId && <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Password *</Label>
@@ -841,6 +873,7 @@ export default function OnboardingVendor() {
               </div>
               <PinFields pin={basics.adminPin} confirm={basics.confirmPin} onPin={adminPin => setBasics(prev => ({ ...prev, adminPin }))} onConfirm={confirmPin => setBasics(prev => ({ ...prev, confirmPin }))} />
               <p className="text-xs text-gray-500">8 characters minimum.</p>
+              </>}
             </div>
           )}
 
@@ -878,34 +911,17 @@ export default function OnboardingVendor() {
                 <Input type="number" step="1" min="1" value={serviceRadius} onChange={(e) => setServiceRadius(e.target.value)} data-testid="input-service-radius" className="max-w-[160px]" />
                 <p className="text-xs text-gray-500 mt-1">How far from your physical address you'll accept work.</p>
               </div>
-              {workTypes.length === 0 ? (
-                <p className="text-sm text-gray-400" data-testid="work-types-loading">
-                  Loading the work-types catalog…
-                </p>
-              ) : (
-                <div className="space-y-4 max-h-[420px] overflow-y-auto pr-2">
-                  {wtByCategory.map(([cat, items]) => (
-                    <div key={cat}>
-                      <p className="text-xs font-semibold uppercase text-gray-500 mb-1">{cat}</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {items.map((wt) => (
-                          <label key={wt.id} className="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:bg-gray-50" data-testid={`work-type-option-${wt.id}`}>
-                            <Checkbox checked={selectedWtIds.includes(wt.id)} onCheckedChange={() => toggleWt(wt.id)} />
-                            <span className="text-sm">{wt.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                After signup, open{" "}
-                <a href="/vendor-catalog" className="font-medium underline">
-                  Your services &amp; rates
-                </a>{" "}
-                to set pricing for the work types you selected.
-              </p>
+              {catalog ? (
+                <OnboardingServiceCatalog catalog={catalog} selected={selectedWtIds}
+                  onSelect={(ids, checked) => setSelectedWtIds(previous => checked
+                    ? [...new Set([...previous, ...ids])]
+                    : previous.filter(id => !ids.includes(id)))}
+                  onRatesSaved={() => {
+                    void onboardingApi.getWorkTypes().then(setCatalog).catch(() => {
+                      toast({ title: "Rates saved. Reload to see the updated prices." });
+                    });
+                  }} />
+              ) : <p role="status">{catalogError || "Loading the service catalog…"}</p>}
             </div>
           )}
 
@@ -1069,22 +1085,22 @@ export default function OnboardingVendor() {
                   Persists the current step's edits then sends the user
                   to the dashboard, where the Finish-setup widget
                   surfaces a Resume CTA. */}
-              {stepIndex > 0 && (
+              {orgId && (
                 <OnboardingPillButton tone="secondary" onClick={saveAndQuit} disabled={loading} data-testid="button-save-and-quit" className="px-5">
                   {t("onboardingActions.saveAndQuit")}
                 </OnboardingPillButton>
               )}
-              {stepIndex === 0 ? (
+              {stepIndex === 0 && !orgId ? (
                 <OnboardingPillButton onClick={submitBasics} disabled={loading || !namePassesDuplicateCheck} data-testid="button-create-account" className="px-6">
                   {loading ? "Creating…" : "Create account"}
                 </OnboardingPillButton>
               ) : stepIndex === STEPS.length - 1 ? (
                 <OnboardingPillButton onClick={finish} disabled={loading} data-testid="button-finish" className="px-6">
-                  {loading ? "Finishing…" : "Finish setup"}
+                  {loading ? "Finishing…" : "Complete Onboarding"}
                 </OnboardingPillButton>
               ) : (
                 <OnboardingPillButton onClick={nextStep} disabled={loading} data-testid="button-next" className="px-6">
-                  {loading ? "Saving…" : "Continue"}
+                  {loading ? "Saving…" : "Save & Continue"}
                 </OnboardingPillButton>
               )}
             </div>

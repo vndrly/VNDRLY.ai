@@ -36,7 +36,7 @@ export function OnboardingLegalConsentStep({
         </p>
       </div>
 
-      <div className="rounded-md border border-gray-200 bg-white p-4 text-sm text-gray-700">
+      <div className="onboarding-legal-panel rounded-md border border-gray-200 bg-white p-4 text-sm text-gray-700">
         <p className="font-semibold text-gray-900">Legal documents</p>
         <div className="mt-2 flex flex-wrap gap-3">
           <a href={PRIVACY_POLICY_PATH} target="_blank" rel="noopener noreferrer" className="underline">
@@ -73,7 +73,7 @@ export function OnboardingLegalConsentStep({
         </p>
       )}
 
-      <label className="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+      <label className="onboarding-legal-panel flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 bg-gray-50 p-3">
         <Checkbox
           checked={value.smsOptIn}
           disabled={disabled}

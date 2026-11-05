@@ -141,11 +141,41 @@ export const onboardingApi = {
   // The work-types catalog used by the vendor onboarding "Work Types"
   // step. Server requires a valid session, which the just-signed-up
   // vendor admin already has via the cookie set by /onboarding/vendor.
-  getWorkTypes: () =>
-    ojson<Array<{ id: number; name: string; category: string | null }>>("GET", "/api/work-types"),
+  getWorkTypes: async () => {
+    const catalog = await ojson<{ rows: OnboardingWorkType[]; aliases: { canonicalId: number; alias: string }[] }>("GET", "/api/work-types?scope=onboarding");
+    if (!Array.isArray(catalog.rows) || !Array.isArray(catalog.aliases)) {
+      throw new Error("The onboarding catalog is unavailable on this server.");
+    }
+    return catalog;
+  },
+
+  saveWorkTypeRates: (rates: { id: number; amount: number; unit: string }[]) =>
+    ojson("PUT", "/api/work-types/onboarding-rates", rates),
+
+  getVendorBasics: (id: number) =>
+    ojson<{ name: string; contactName: string; contactEmail: string; contactPhone: string | null }>("GET", `/api/vendors/${id}`),
+
+  saveVendorBasics: (id: number, basics: { name: string; contactName: string; contactEmail: string; contactPhone: string | null }) =>
+    ojson("PATCH", `/api/vendors/${id}`, basics),
 
   // Email a friend a public /signup link to start their own org's
   // onboarding (vendor or partner). Any logged-in user may invoke.
   referToVndrly: (email: string) =>
     ojson<{ ok: true; sentTo: string }>("POST", "/api/onboarding/refer", { email }),
+};
+export type OnboardingWorkType = {
+  id: number;
+  name: string;
+  category: string;
+  description: string | null;
+  partnerId: number | null;
+  partnerName: string | null;
+  sourceWorkTypeId: number | null;
+  canonicalId: number | null;
+  canonicalName: string | null;
+  canonicalCategory: string | null;
+  selectedId: number | null;
+  unitPrice: string | null;
+  unit: string | null;
+  currency: string | null;
 };

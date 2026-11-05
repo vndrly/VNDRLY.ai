@@ -34,7 +34,7 @@ export function OnboardingPlatformEulaStep({
         </p>
       </div>
       <ScrollArea
-        className="h-64 rounded-md border bg-white p-4 text-sm text-gray-700 whitespace-pre-wrap"
+        className="onboarding-agreement-reader h-64 rounded-md border bg-white p-4 text-sm text-gray-700 whitespace-pre-wrap"
         data-testid="scroll-platform-eula"
       >
         {PLATFORM_EULA_TEXT}

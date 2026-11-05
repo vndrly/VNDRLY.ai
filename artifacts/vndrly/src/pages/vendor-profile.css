@@ -223,6 +223,37 @@ main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-wo
 }
 
 .vendor-onboarding-shell main, .dark .vendor-onboarding-shell main { background: transparent !important; }
+.vendor-onboarding-shell :is(.onboarding-agreement-reader, .onboarding-legal-panel) {
+  background-color: #2b2b2f;
+  border-color: var(--brand-primary);
+  border-radius: 12px;
+  color: #ececec;
+  overflow-wrap: anywhere;
+}
+.vendor-onboarding-shell .onboarding-legal-panel > :is(.text-gray-900, .text-gray-800) {
+  color: inherit;
+}
+.vendor-onboarding-shell .onboarding-legal-panel > .text-gray-500 {
+  color: #b3b3b3;
+}
+.vendor-onboarding-shell .onboarding-agreement-reader [data-orientation="vertical"] > div {
+  background-color: var(--brand-primary);
+}
+.onboarding-catalog-select {
+  display: block;
+  max-width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--brand-primary);
+  border-radius: 8px;
+  background: #303034;
+  color: #ececec;
+  padding: 4px 8px;
+}
+.onboarding-rate-flyout {
+  width: min(360px, calc(100vw - 24px));
+  max-height: var(--radix-popover-content-available-height);
+  overflow-y: auto;
+}
 .vendor-onboarding-shell .vendor-workspace-page [data-testid="input-brand-primary"],
 .vendor-onboarding-shell .vendor-workspace-page [data-testid="input-brand-primary-picker"] {
   border-color: var(--brand-primary) !important;

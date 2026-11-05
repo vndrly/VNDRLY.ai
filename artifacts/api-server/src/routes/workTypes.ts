@@ -9,12 +9,18 @@ import {
   siteLocationsTable,
   partnersTable,
   partnerVendorRelationshipsTable,
+  canonicalServicesTable,
+  canonicalServiceAliasesTable,
+  serviceMappingsTable,
+  VENDOR_WORK_TYPE_UNITS,
 } from "@workspace/db";
-import { eq, asc, inArray, isNull, sql, and } from "drizzle-orm";
+import { eq, asc, inArray, isNull, sql, and, or } from "drizzle-orm";
 import { ListWorkTypesResponse } from "@workspace/api-zod";
 import { requireAdmin, requireSession, getSessionFromRequest } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
 import { classifySavedWorkType } from "../services/service-matching/catalog-classification";
+import { vendorCatalogPartnerIds } from "../lib/partner-catalog-access";
+import { z } from "zod/v4";
 
 import { sendValidationFailed } from "../lib/validation-error";
 const router: IRouter = Router();
@@ -80,6 +86,41 @@ router.get("/work-types", requireSession, async (req, res): Promise<void> => {
         eq(partnerVendorRelationshipsTable.status, "approved")));
     partnerIds = relationships.map(row => row.partnerId);
   }
+  if (scope === "onboarding" && session.role === "vendor") {
+    const rows = await db.select({
+      id: workTypesTable.id,
+      name: workTypesTable.name,
+      category: workTypesTable.category,
+      description: workTypesTable.description,
+      partnerId: workTypesTable.partnerId,
+      partnerName: partnersTable.name,
+      sourceWorkTypeId: workTypesTable.sourceWorkTypeId,
+      canonicalId: canonicalServicesTable.id,
+      canonicalName: canonicalServicesTable.name,
+      canonicalCategory: canonicalServicesTable.category,
+      selectedId: vendorWorkTypesTable.workTypeId,
+      unitPrice: vendorWorkTypesTable.unitPrice,
+      unit: vendorWorkTypesTable.unit,
+      currency: vendorWorkTypesTable.currency,
+    }).from(workTypesTable)
+      .leftJoin(partnersTable, eq(partnersTable.id, workTypesTable.partnerId))
+      .leftJoin(serviceMappingsTable, and(eq(serviceMappingsTable.workTypeId, workTypesTable.id), eq(serviceMappingsTable.status, "active")))
+      .leftJoin(canonicalServicesTable, and(eq(canonicalServicesTable.id, serviceMappingsTable.canonicalServiceId), eq(canonicalServicesTable.active, true)))
+      .leftJoin(vendorWorkTypesTable, and(eq(vendorWorkTypesTable.workTypeId, workTypesTable.id), eq(vendorWorkTypesTable.vendorId, session.vendorId!)))
+      .where(or(isNull(workTypesTable.partnerId), partnerIds.length ? inArray(workTypesTable.partnerId, partnerIds) : undefined))
+      .orderBy(workTypesTable.category, workTypesTable.name);
+    const canonicalIds = [...new Set(rows.flatMap(row => row.canonicalId === null ? [] : [row.canonicalId]))];
+    const aliases = canonicalIds.length ? await db.select({
+      canonicalId: canonicalServiceAliasesTable.canonicalServiceId,
+      alias: canonicalServiceAliasesTable.alias,
+    }).from(canonicalServiceAliasesTable).where(and(
+      inArray(canonicalServiceAliasesTable.canonicalServiceId, canonicalIds),
+      eq(canonicalServiceAliasesTable.active, true),
+    )) : [];
+    res.json({ rows, aliases });
+    return;
+  }
+
   const workTypes =
     session.role !== "admin"
       ? partnerIds.length ? await db.select().from(workTypesTable)
@@ -119,6 +160,41 @@ router.get("/work-types", requireSession, async (req, res): Promise<void> => {
   }));
 
   res.json(result);
+});
+
+const onboardingRates = z.array(z.object({
+  id: z.number().int().positive(),
+  amount: z.number().min(0).max(9999999999.99),
+  unit: z.enum(VENDOR_WORK_TYPE_UNITS),
+})).min(1).max(500);
+
+router.put("/work-types/onboarding-rates", requireSession, async (req, res): Promise<void> => {
+  const session = getSessionFromRequest(req)!;
+  if (session.role !== "vendor" || session.membershipRole !== "admin" || !session.vendorId) {
+    sendApiError(res, 403, "auth.forbidden", "Vendor administrator access required");
+    return;
+  }
+  const parsed = onboardingRates.safeParse(req.body);
+  if (!parsed.success || new Set(parsed.data.map(row => row.id)).size !== parsed.data.length) {
+    sendApiError(res, 400, "validation.invalid_input", "Enter valid rates for distinct services");
+    return;
+  }
+  const vendorId = session.vendorId;
+  const partnerIds = await vendorCatalogPartnerIds(session, vendorId);
+  const rows = await db.select({ partnerId: workTypesTable.partnerId })
+    .from(workTypesTable).where(inArray(workTypesTable.id, parsed.data.map(row => row.id)));
+  if (!partnerIds || rows.length !== parsed.data.length ||
+      rows.some(row => row.partnerId !== null && !partnerIds.includes(row.partnerId))) {
+    sendApiError(res, 403, "auth.forbidden", "Service is outside your catalog");
+    return;
+  }
+  await db.insert(vendorWorkTypesTable).values(parsed.data.map(row => ({
+    vendorId, workTypeId: row.id, unitPrice: row.amount.toFixed(2), unit: row.unit, currency: "USD",
+  }))).onConflictDoUpdate({
+    target: [vendorWorkTypesTable.vendorId, vendorWorkTypesTable.workTypeId],
+    set: { unitPrice: sql`excluded.unit_price`, unit: sql`excluded.unit`, currency: sql`excluded.currency` },
+  });
+  res.json({ saved: true });
 });
 
 router.post("/work-types", requireAdmin, async (req, res): Promise<void> => {
