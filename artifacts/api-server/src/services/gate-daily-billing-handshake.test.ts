@@ -101,7 +101,7 @@ beforeEach(() => {
         rows = [{ id: args[0] }];
       else if (sql.startsWith("SELECT id,started_at"))
         rows = [{ id: 1, started_at: "2026-10-01T05:00:00Z", ended_at: null }];
-      else if (sql.startsWith("SELECT status,engagement"))
+      else if (sql.startsWith("SELECT status,COALESCE(engagement_job_offer_id"))
         rows = [{ status: "initiated", engagement_job_offer_id: 50 }];
       else if (sql.startsWith("SELECT count(*)")) rows = [{ n: 0 }];
       return { rows, rowCount: rows.length };
@@ -109,6 +109,25 @@ beforeEach(() => {
 });
 
 describe("accepted Gate job billing", () => {
+  it("resolves a linked gate to the configured post and bills coverage across both gates", async () => {
+    const linked = "10000000-0000-4000-8000-000000000002";
+    const baseQuery = state.query.getMockImplementation()!;
+    state.query.mockImplementation(async (sql: string, args: unknown[]) => {
+      if (sql.startsWith("SELECT g.id,g.name,g.site_id")) {
+        const result = await baseQuery(sql, args);
+        return { rows: [{ ...result.rows[0], id: args[0], gate_link_id: "linked" }] };
+      }
+      if (sql.includes("WHERE s.gate_link_id")) return { rows: [{ id: station }, { id: linked }] };
+      if (sql.startsWith("SELECT DISTINCT target_id")) return { rows: [{ target_id: station }] };
+      return baseQuery(sql, args);
+    });
+    expect(await service.scope(session, linked)).toEqual({ stationId: station });
+    await service.configure(session, station, input());
+    await service.preview(session, station);
+    expect(state.query.mock.calls.find(([sql]) => sql.startsWith("SELECT id,started_at"))?.[1][0])
+      .toEqual([station, linked]);
+  });
+
   it("requires an accepted job for a new setup without retroassigning old data", async () => {
     const { jobOfferId: _, ...legacyInput } = input();
     await expect(
@@ -186,11 +205,13 @@ describe("accepted Gate job billing", () => {
     ],
     [{ ...commercial, unitPrice: "100.001" }, { afeCode: "AFE" }],
     [{ ...commercial, currency: "CAD" }, { afeCode: "AFE" }],
-    [commercial, { afeCode: "  " }],
   ])(
-    "does not invent a daily price or AFE for unsupported accepted terms",
+    "does not invent a daily price for unsupported accepted terms",
     (terms, scope) => {
       expect(() => acceptedGateDailyTerms(terms, scope)).toThrow();
     },
   );
+  it("keeps a missing partner AFE blank", () => {
+    expect(acceptedGateDailyTerms(commercial, { afeCode: "  " }).afe).toBe("");
+  });
 });

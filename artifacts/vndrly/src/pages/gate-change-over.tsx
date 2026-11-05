@@ -1,3 +1,4 @@
+import GateDailyBillingPanel from "@/components/gate-daily-billing-panel";
 import { CardHeading } from "@/components/ui/card-heading";
 import { GateShiftNoteContent } from "@/components/gate-shift-note-content";
 import GateShiftNotesList from "@/components/gate-shift-notes-list";
@@ -404,16 +405,16 @@ export default function GateChangeOverPage({
       <div className={history ? "flex items-center gap-3" : "flex flex-wrap items-center gap-x-3 gap-y-1"}>
         {history
           ? <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("changeOver.title")} testId="button-back" />
-          : <ContentPaneBackLink href="/work-hub" ariaLabel={t("changeOver.title")} testId="button-back" className="h-11 self-start" />}
+          : <ContentPaneBackLink href="/work-hub" ariaLabel={t("changeOver.title")} testId="button-back" className="h-11" />}
         {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         {!history && <LayoutDashboard aria-hidden="true" data-testid="gate-dashboard-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
-        <div>
+        <div className={history ? undefined : "order-1 basis-full md:order-none md:min-w-0 md:flex-1 md:basis-auto"}>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? linkedNote ? "changeOver.selectedNoteIntro" : "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
-        {!history && <LanguageToggle presentation="line" className="ml-auto shrink-0 self-start" />}
+        {!history && <LanguageToggle presentation="line" className="ml-auto shrink-0" />}
       </div>
       {!history && stationId && <GateAssumeWatchFlyout stationId={stationId} open={assumeOpen} onOpenChange={setAssumeOpen} onSaved={watchSaved} onPendingChange={setPendingWatch} />}
       {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}
@@ -567,6 +568,12 @@ export default function GateChangeOverPage({
                     </>
                   )}
                 </div>
+              </WorkspacePanel>
+            )}
+            {stationId && user?.role === "vendor" && (user.vendorRole === "office" ||
+              user.availableMemberships.some(membership => membership.id === user.activeMembershipId && membership.role === "admin")) && (
+              <WorkspacePanel title={t("changeOver.administrator", { defaultValue: "Administrator Controls" })} subtitle="" icon={Shield}>
+                <GateDailyBillingPanel scopeKey={`${user.userId}:${user.activeMembershipId}`} dashboardPostId={stationId} showGateGoDemo={user.vendorId === 1115} />
               </WorkspacePanel>
             )}
           </div>

@@ -90,10 +90,14 @@ export const CreateMarketplaceJobOfferBody = zod.object({
   vendorPartnerServiceOfferId: zod.number().min(1),
   siteLocationId: zod.number().min(1),
   scope: zod.string().min(1).max(createMarketplaceJobOfferBodyScopeMax),
-  requestedStartAt: zod.coerce.date(),
-  requestedEndAt: zod.coerce.date(),
+  requestedStartAt: zod.coerce.date().optional(),
+  requestedEndAt: zod.coerce.date().optional(),
   crewCount: zod.number().min(1).max(createMarketplaceJobOfferBodyCrewCountMax),
-  afeCode: zod.string().min(1).max(createMarketplaceJobOfferBodyAfeCodeMax),
+  afeCode: zod
+    .string()
+    .min(1)
+    .max(createMarketplaceJobOfferBodyAfeCodeMax)
+    .optional(),
   poNumber: zod
     .string()
     .max(createMarketplaceJobOfferBodyPoNumberMax)
@@ -106,7 +110,7 @@ export const CreateMarketplaceJobOfferBody = zod.object({
         .regex(createMarketplaceJobOfferBodyAttachmentUrlsItemRegExp),
     )
     .max(createMarketplaceJobOfferBodyAttachmentUrlsMax),
-  expiresAt: zod.coerce.date(),
+  expiresAt: zod.coerce.date().optional(),
 });
 
 /**

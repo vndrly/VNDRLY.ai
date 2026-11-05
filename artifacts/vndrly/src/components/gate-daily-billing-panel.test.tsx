@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import type { GateDailyBillingConfig } from "@workspace/api-zod";
 import { calculateGateBillingPeriod } from "@workspace/api-zod";
@@ -19,7 +19,7 @@ const post = {
   partnerId: 8,
   partnerName: "Test Partner",
 };
-it("lets the office choose continuation and submits the displayed server quote, then shows the independently saved billing result", async () => {
+it.each([false, true])("submits the displayed server quote and shows the saved result (dashboard: %s)", async (dashboard) => {
   let config: GateDailyBillingConfig = {
     version: 1,
     stationId: post.id,
@@ -40,6 +40,12 @@ it("lets the office choose continuation and submits the displayed server quote, 
     autoInvoiceEveryDays: null,
   };
   const request = vi.fn(async (path: string, init?: RequestInit) => {
+    if (path === "/gate-billing/tickets") return [{
+      id: 100, group: "open", tone: "blue", invoiceCents: 20002,
+      daysSinceBilled: 0, siteName: post.siteName, gateName: post.name,
+      stationId: post.id, workTypeId: 10, jobOfferId: null,
+    }];
+    if (path.endsWith("/scope")) return { stationId: post.id };
     if (path.endsWith("/posts")) return { items: [post], nextCursor: null };
     if (path.endsWith("/setup"))
       return {
@@ -79,8 +85,16 @@ it("lets the office choose continuation and submits the displayed server quote, 
     }
     throw Error("Unexpected request " + path);
   });
-  render(<GateDailyBillingPanel scopeKey="company7-user1" request={request} />);
-  const next = await screen.findByRole("checkbox", {
+  render(<GateDailyBillingPanel scopeKey="company7-user1" request={request}
+    dashboardPostId={dashboard ? "10000000-0000-4000-8000-000000000002" : undefined} />);
+  if (dashboard) {
+    fireEvent.click(await screen.findByText("You have 1 ticket open"));
+    expect(screen.getByText("Invoice amount")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Invoice Now" }));
+    expect(await screen.findByRole("button", { name: "Start New Ticket" })).toBeTruthy();
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Close Ticket" }));
+  } else {
+    const next = await screen.findByRole("checkbox", {
     name: "Start next billing ticket",
   });
   expect(next.getAttribute("aria-checked")).toBe("true");
@@ -90,6 +104,7 @@ it("lets the office choose continuation and submits the displayed server quote, 
   expect((screen.getByRole("combobox", { name: "Approved daily service" }) as HTMLSelectElement).value).toBe("10:50");
   fireEvent.click(next);
   fireEvent.click(screen.getByRole("button", { name: "Invoice Now" }));
+  }
   await waitFor(() =>
     expect(
       request.mock.calls.some(([path]) => path.endsWith("/invoice-now")),
@@ -107,6 +122,7 @@ it("lets the office choose continuation and submits the displayed server quote, 
     continueBilling: false,
   });
   expect(body).not.toHaveProperty("dailyRateCents");
+  expect(request.mock.calls.some(([path]) => path === `/gate-billing/${post.id}/invoice-now`)).toBe(true);
   expect(
     await screen.findByText("Submitted ticket 100 for partner approval."),
   ).toBeTruthy();

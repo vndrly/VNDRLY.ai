@@ -31,6 +31,41 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-watch-stander-list > button:not(:disabled):hover { color: #f59e0b; background: #303034; }
 .gate-watch-stander-list small { font-size: 11px; color: #b3b3b3; }
 .gate-panel-disclosure { border-top: 1px solid #3a3a3a; }
+.gate-billing-ticket-lists .gate-panel-disclosure > summary > small { color: #86efac; }
+.gate-billing-ticket-subcard {
+  background: #242426;
+  border: 1px solid var(--brand-primary);
+  border-radius: 14px;
+  padding-inline: 12px;
+}
+.gate-billing-ticket-scroll {
+  max-height: min(70dvh, 44rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-primary) transparent;
+  margin-inline-end: -11px;
+  padding-inline-end: 11px;
+  overflow-wrap: anywhere;
+}
+.gate-billing-ticket-scroll > details > summary { flex-wrap: wrap; gap: 2px 8px; }
+.gate-billing-ticket-scroll > details > summary > small { white-space: nowrap; }
+.gate-billing-ticket-scroll > .gate-panel-disclosure:first-of-type { border-top: 0; }
+.gate-billing-ticket-lists .gate-profitability-card {
+  background: #242426;
+  border: 1px solid var(--brand-primary);
+  border-radius: 14px;
+  padding-inline: 12px;
+}
+.gate-billing-ticket-lists .gate-profitability-card > summary > small {
+  color: #fff;
+}
+.gate-billing-ticket-lists .gate-billing-ticket-card {
+  background: #29292c;
+  border: 1px solid #414145;
+  border-radius: 8px;
+}
 .gate-panel-disclosure > summary { min-height: 44px; display: flex; align-items: center; gap: 11px; cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; }
 .gate-panel-disclosure > summary::-webkit-details-marker { display: none; }
 .gate-panel-disclosure > summary > svg { width: 19px; height: 19px; color: var(--brand-primary); flex-shrink: 0; }

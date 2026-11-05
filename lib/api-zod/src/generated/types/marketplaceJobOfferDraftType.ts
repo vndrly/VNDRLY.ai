@@ -24,8 +24,8 @@ export interface MarketplaceJobOfferDraftType {
    * @maxLength 10000
    */
   scope: string;
-  requestedStartAt: Date;
-  requestedEndAt: Date;
+  requestedStartAt?: Date;
+  requestedEndAt?: Date;
   /**
    * @minimum 1
    * @maximum 100000
@@ -35,10 +35,10 @@ export interface MarketplaceJobOfferDraftType {
    * @minLength 1
    * @maxLength 200
    */
-  afeCode: string;
+  afeCode?: string;
   /** @maxLength 200 */
   poNumber?: string;
   /** @maxItems 20 */
   attachmentUrls: string[];
-  expiresAt: Date;
+  expiresAt?: Date;
 }

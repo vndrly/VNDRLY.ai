@@ -14,8 +14,8 @@ import { ChangeOverError } from "../services/gate-change-over";
 export function createGateDailyBillingRouter(
   service: Pick<
     typeof gateDailyBillingService,
-    "posts" | "setup" | "preview" | "configure" | "invoiceNow" | "receipt"
-  > = gateDailyBillingService,
+    "scope" | "posts" | "setup" | "preview" | "configure" | "invoiceNow" | "receipt" | "ticketInventory"
+  > & Partial<Pick<typeof gateDailyBillingService, "saveEstimate">> = gateDailyBillingService,
 ) {
   const router = Router();
   const endpoint =
@@ -40,6 +40,24 @@ export function createGateDailyBillingRouter(
       }
     };
   router.get(
+    "/gate-billing/tickets",
+    endpoint((session) => service.ticketInventory(session)),
+  );
+  router.put("/gate-billing/tickets/:ticketId/estimate", endpoint((session, req) =>
+    (service.saveEstimate ?? gateDailyBillingService.saveEstimate)(
+      session,
+      z.coerce.number().int().positive().parse(req.params.ticketId),
+      z.object({
+        risk: z.enum(["low", "moderate", "high"]),
+        equipment: z.array(z.object({
+          kind: z.enum(["purchase", "rental"]),
+          description: z.string().trim().min(1).max(200),
+          cents: z.number().int().positive().max(100_000_000),
+        }).strict()).max(100),
+      }).strict().parse(req.body),
+    ),
+  ));
+  router.get(
     "/gate-billing/posts",
     endpoint((session, req) =>
       service.posts(
@@ -57,6 +75,10 @@ export function createGateDailyBillingRouter(
         z.uuid().parse(req.params.operationId),
       ),
     ),
+  );
+  router.get(
+    "/gate-billing/:stationId/scope",
+    endpoint((session, req) => service.scope(session, z.uuid().parse(req.params.stationId))),
   );
   router.get(
     "/gate-billing/:stationId/setup",

@@ -61,9 +61,11 @@ type Context = {
     partner_id: number;
     partner_name: string;
     afe: string | null;
+    gate_link_id?: string | null;
   };
   vendorId: number;
   userId: number;
+  coverageStationIds: string[];
 };
 async function readRecord(
   c: PoolClient,
@@ -123,19 +125,41 @@ async function authorize(
   c: PoolClient,
   session: SessionPayload,
   stationId: string,
+  resolvingScope = false,
 ): Promise<Context> {
   await requireOffice(c, session);
   const station = (
     await c.query(
-      "SELECT g.id,g.name,g.site_id,s.name AS site_name,s.partner_id,p.name AS partner_name,s.afe FROM gate_stations g JOIN site_locations s ON s.id=g.site_id JOIN partners p ON p.id=s.partner_id WHERE g.id=$1 AND EXISTS(SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$2 AND a.is_gate_contractor=true) FOR SHARE OF g,s",
+      "SELECT g.id,g.name,g.site_id,s.name AS site_name,s.partner_id,p.name AS partner_name,s.afe,s.gate_link_id FROM gate_stations g JOIN site_locations s ON s.id=g.site_id JOIN partners p ON p.id=s.partner_id WHERE g.id=$1 AND EXISTS(SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$2 AND a.is_gate_contractor=true) FOR SHARE OF g,s",
       [stationId, session.vendorId],
     )
   ).rows[0];
   if (!station) fail("post_forbidden", 403);
   await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
-    `gate-billing:${session.vendorId}:${stationId}`,
+    `gate-billing:${session.vendorId}:${station.gate_link_id ?? stationId}`,
   ]);
-  return { station, vendorId: session.vendorId!, userId: session.userId! };
+  let coverageStationIds = [stationId];
+  if (station.gate_link_id) {
+    const stations = (await c.query(
+      `SELECT g.id FROM gate_stations g JOIN site_locations s ON s.id=g.site_id
+       WHERE s.gate_link_id=$1 AND s.partner_id=$2
+         AND EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3 AND a.is_gate_contractor=true)
+         AND (g.active OR EXISTS (SELECT 1 FROM assistant_action_audit h WHERE h.vendor_id=$3 AND h.target_type='gate-billing-config' AND h.target_id=g.id::text))
+       ORDER BY g.id`,
+      [station.gate_link_id, station.partner_id, session.vendorId],
+    )).rows;
+    coverageStationIds = stations.map(row => row.id);
+    const configured = (await c.query(
+      "SELECT DISTINCT target_id FROM assistant_action_audit WHERE vendor_id=$1 AND partner_id IS NULL AND target_type='gate-billing-config' AND target_id=ANY($2::text[])",
+      [session.vendorId, coverageStationIds],
+    )).rows;
+    if (configured.length > 1) fail("linked_billing_conflict");
+    const canonical = configured[0]?.target_id ?? coverageStationIds[0];
+    if (!canonical) fail("post_forbidden", 403);
+    if (!resolvingScope && canonical !== stationId) fail("use_linked_billing_post");
+    if (resolvingScope) return { station: { ...station, id: canonical }, vendorId: session.vendorId!, userId: session.userId!, coverageStationIds };
+  }
+  return { station, vendorId: session.vendorId!, userId: session.userId!, coverageStationIds };
 }
 async function terms(c: PoolClient, context: Context, workTypeId: number, jobOfferId?: number) {
   // A retained assignment/rate is not authority after the partner explicitly
@@ -207,8 +231,7 @@ export function acceptedGateDailyTerms(commercial: Record<string, unknown>, scop
   if (!match) fail("precise_agreement_review_required");
   const dailyRateCents = Number(BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0")));
   if (!Number.isSafeInteger(dailyRateCents) || dailyRateCents > 100000000) fail("precise_agreement_review_required");
-  if (typeof scope.afeCode !== "string" || !scope.afeCode.trim()) fail("job_afe_required");
-  return { dailyRateCents, afe: scope.afeCode };
+  return { dailyRateCents, afe: typeof scope.afeCode === "string" ? scope.afeCode.trim() : "" };
 }
 async function config(c: PoolClient, context: Context) {
   const value = await readRecord(
@@ -274,9 +297,9 @@ async function preview(
 ) {
   const rows = (
     await c.query(
-      "SELECT id,started_at,ended_at FROM gate_duty_sessions WHERE station_id=$1 AND post_coverage->>'vendorId'=$2 AND started_at<$3 AND (ended_at IS NULL OR ended_at>=($4::date-interval '1 day')) ORDER BY id",
+      "SELECT id,started_at,ended_at FROM gate_duty_sessions WHERE station_id=ANY($1::uuid[]) AND post_coverage->>'vendorId'=$2 AND started_at<$3 AND (ended_at IS NULL OR ended_at>=($4::date-interval '1 day')) ORDER BY id",
       [
-        context.station.id,
+        context.coverageStationIds,
         String(context.vendorId),
         now,
         current.periodStartDay,
@@ -339,6 +362,131 @@ export function createGateDailyBillingService(
     return prior;
   };
   const basic = {
+    saveEstimate: (session: SessionPayload, ticketId: number, estimate: {
+      risk: "low" | "moderate" | "high";
+      equipment: { kind: "purchase" | "rental"; description: string; cents: number }[];
+    }) => changeOverTransaction(async (c) => {
+      await requireOffice(c, session);
+      const ticket = (await c.query(
+        "SELECT id FROM tickets WHERE id=$1 AND vendor_id=$2 AND status IN ('initiated','in_progress') FOR UPDATE",
+        [ticketId, session.vendorId],
+      )).rows[0];
+      if (!ticket) fail("ticket_not_open", 404);
+      const open = (await c.query(
+        `SELECT 1 FROM (
+          SELECT DISTINCT ON (target_id) tool_output FROM assistant_action_audit
+          WHERE vendor_id=$1 AND partner_id IS NULL AND target_type='gate-billing-config'
+          ORDER BY target_id,id DESC
+        ) configs WHERE tool_output->>'openTicketId'=$2`,
+        [session.vendorId, String(ticketId)],
+      )).rows[0];
+      if (!open) fail("ticket_not_open", 404);
+      await append(c, session, "gate-billing-estimate", String(ticketId), estimate);
+      return estimate;
+    }),
+    ticketInventory: (session: SessionPayload) => changeOverTransaction(async (c) => {
+      await requireOffice(c, session);
+      const at = now();
+      const day = (value: Date | string) => new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "America/Chicago", year: "numeric", month: "2-digit", day: "2-digit",
+      }).format(new Date(value));
+      const age = (value: Date | string) => Math.max(0, (Date.parse(day(at)) - Date.parse(day(value))) / 86_400_000);
+      const today = day(at);
+      const yearStart = `${today.slice(0, 4)}-01-01`;
+      const quarterMonth = Math.floor((Number(today.slice(5, 7)) - 1) / 3) * 3 + 1;
+      const quarterStart = `${today.slice(0, 4)}-${String(quarterMonth).padStart(2, "0")}-01`;
+      const rows = (await c.query(`
+        WITH audit AS (
+          SELECT DISTINCT ON (target_type,target_id) target_type,target_id,tool_output
+          FROM assistant_action_audit WHERE vendor_id=$1 AND partner_id IS NULL
+            AND target_type IN ('gate-billing-config','gate-billing-ticket')
+          ORDER BY target_type,target_id,id DESC
+        ), periods AS (
+          SELECT target_id AS station_id,tool_output AS config,
+            tool_output->>'openTicketId' AS ticket_id,NULL::jsonb AS period
+          FROM audit WHERE target_type='gate-billing-config'
+          UNION ALL
+          SELECT tool_output->>'stationId',tool_output->'agreement',target_id,tool_output->'period'
+          FROM audit WHERE target_type='gate-billing-ticket'
+        )
+        SELECT t.id,t.status,t.created_at,p.station_id,p.config,p.period,g.name AS gate_name,s.name AS site_name,
+          COALESCE(t.closed_at,t.cancelled_at,submitted.created_at) AS closed_at,submitted.created_at AS submitted_at,
+          NULL::int AS job_id,t.work_type_id,w.name AS service_name
+        FROM periods p JOIN tickets t ON t.id::text=p.ticket_id AND t.vendor_id=$1
+        JOIN gate_stations g ON g.id::text=p.station_id JOIN site_locations s ON s.id=g.site_id
+        LEFT JOIN work_types w ON w.id=t.work_type_id
+        LEFT JOIN LATERAL (SELECT h.created_at FROM ticket_status_history h WHERE h.ticket_id=t.id
+          AND h.to_status='submitted' ORDER BY h.created_at DESC LIMIT 1) submitted ON true
+        UNION ALL
+        SELECT t.id,t.status,t.created_at,g.id::text,NULL,NULL,g.name,s.name,NULL,NULL,j.id,t.work_type_id,w.name
+        FROM tickets t JOIN job_offers j ON j.created_ticket_id=t.id AND j.status='accepted'
+        JOIN site_locations s ON s.id=t.site_location_id
+        LEFT JOIN work_types w ON w.id=t.work_type_id
+        LEFT JOIN LATERAL (SELECT id,name FROM gate_stations WHERE site_id=s.id AND active ORDER BY id LIMIT 1) g ON true
+        WHERE t.vendor_id=$1 AND t.status='initiated' AND t.check_in_time IS NULL
+          AND EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=t.site_location_id
+            AND a.vendor_id=$1 AND a.work_type_id=t.work_type_id AND a.is_gate_contractor)
+          AND NOT EXISTS (SELECT 1 FROM audit a WHERE a.tool_output->>'jobOfferId'=j.id::text
+            OR a.tool_output->'agreement'->>'jobOfferId'=j.id::text)
+        ORDER BY id DESC`, [session.vendorId])).rows;
+      const result = [];
+      const countedPayrollShifts = new Set<string>();
+      const gateGoShiftPayCents = 15_000;
+      for (const row of rows) {
+        const group = row.period ? "closed" : row.config ? "open" : "unstarted";
+        const elapsed = age(row.created_at);
+        let period = row.period;
+        let stationIds: string[] = row.period?.coverageStationIds ?? (row.station_id ? [row.station_id] : []);
+        if (group === "open") {
+          const current = ConfigSchema.parse(row.config);
+          const context = await authorize(c, session, row.station_id, true);
+          if (context.station.id !== row.station_id) continue;
+          period = (await preview(c, context, current, at)).period;
+          stationIds = context.coverageStationIds;
+        }
+        const startDay = period?.periodStartDay ?? row.config?.periodStartDay;
+        const payrollAvailable = session.vendorId === 1115 && Boolean(startDay && stationIds.length);
+        const payrollShifts = payrollAvailable ? (await c.query<{ id: string; pay_day: string }>(
+          `SELECT DISTINCT ON (shift_key) shift_key AS id, to_char(ended_at AT TIME ZONE 'America/Chicago','YYYY-MM-DD') AS pay_day
+           FROM (SELECT COALESCE(work_hub_shift_id,source_legacy_shift_id,id)::text || ':' || user_id::text AS shift_key,ended_at
+             FROM gate_duty_sessions WHERE station_id=ANY($1::uuid[]) AND post_coverage->>'vendorId'=$2
+               AND ended_at>started_at AND ended_at >= ($3::date::timestamp AT TIME ZONE 'America/Chicago')
+               AND ended_at <= $4::timestamptz AND ($5::timestamptz IS NULL OR ended_at < $5)) shifts
+           ORDER BY shift_key,ended_at DESC`,
+          [stationIds, String(session.vendorId), startDay, at, group === "closed" ? period?.cutoffExclusive ?? row.closed_at : null],
+        )).rows : [];
+        const newPayrollShifts = payrollShifts.filter(shift => {
+          if (countedPayrollShifts.has(shift.id)) return false;
+          countedPayrollShifts.add(shift.id);
+          return true;
+        });
+        const invoiceCents = period?.totalCents ?? 0;
+        const charges: { day: string; chargeCents: number }[] = period?.days
+          ?? (period?.throughDay ? [{ day: period.throughDay, chargeCents: invoiceCents }] : []);
+        const accruedSince = (start: string) => charges.reduce((total, charge) =>
+          charge.day >= start && charge.day <= today ? total + charge.chargeCents : total, 0);
+        const billedThrough = row.period?.throughDay ?? row.config?.lastBilledThroughDay;
+        const tone = row.status === "funds_dispersed" ? "green"
+          : ["kicked_back", "cancelled", "denied"].includes(row.status) ? "red"
+          : group === "closed" ? row.submitted_at && age(row.submitted_at) > 30 ? "amber" : "white"
+          : elapsed >= 30 ? "red" : elapsed >= 14 ? "amber" : group === "open" ? "blue" : "white";
+        result.push({ id: row.id, group, tone, status: row.status, invoiceCents,
+          revenueByDay: charges,
+          estimate: group === "unstarted" ? null : await readRecord(c, session.vendorId!, "gate-billing-estimate", String(row.id)),
+          quarterCents: accruedSince(quarterStart), yearToDateCents: accruedSince(yearStart),
+          payrollCents: payrollAvailable ? payrollShifts.length * gateGoShiftPayCents : null,
+          quarterPayrollCents: newPayrollShifts.filter(shift => shift.pay_day >= quarterStart).length * gateGoShiftPayCents,
+          yearToDatePayrollCents: newPayrollShifts.filter(shift => shift.pay_day >= yearStart).length * gateGoShiftPayCents,
+          daysSinceBilled: billedThrough ? age(`${billedThrough}T18:00:00Z`) : 0,
+          siteName: row.site_name, gateName: row.gate_name, stationId: row.station_id,
+          jobOfferId: row.job_id, workTypeId: row.work_type_id, serviceName: row.service_name });
+      }
+      return result;
+    }),
+    scope: (session: SessionPayload, stationId: string) => changeOverTransaction(async (c) => {
+      const context = await authorize(c, session, stationId, true);
+      return { stationId: context.station.id };
+    }),
     posts: (session: SessionPayload, raw: unknown) =>
       changeOverTransaction(async (c) => {
         await requireOffice(c, session);
@@ -348,7 +496,21 @@ export function createGateDailyBillingService(
           .parse(raw);
         const rows = (
           await c.query(
-            "SELECT g.id,g.name,g.site_id,s.name AS site_name,s.partner_id,p.name AS partner_name FROM gate_stations g JOIN site_locations s ON s.id=g.site_id JOIN partners p ON p.id=s.partner_id WHERE ($2::uuid IS NULL OR g.id>$2) AND EXISTS(SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=g.site_id AND a.vendor_id=$1 AND a.is_gate_contractor=true) ORDER BY g.id LIMIT 101",
+            `WITH eligible AS (
+               SELECT g.id,g.name,g.site_id,s.name AS site_name,s.partner_id,p.name AS partner_name,
+                      s.gate_link_id,g.active,
+                      EXISTS(SELECT 1 FROM assistant_action_audit h WHERE h.vendor_id=$1 AND h.partner_id IS NULL
+                        AND h.target_type='gate-billing-config' AND h.target_id=g.id::text) AS configured
+               FROM gate_stations g JOIN site_locations s ON s.id=g.site_id JOIN partners p ON p.id=s.partner_id
+               WHERE EXISTS(SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=g.site_id
+                 AND a.vendor_id=$1 AND a.is_gate_contractor=true)
+             ), ranked AS (
+               SELECT *,row_number() OVER (PARTITION BY partner_id,gate_link_id,
+                 CASE WHEN gate_link_id IS NULL THEN id END ORDER BY configured DESC,id) AS rank
+               FROM eligible WHERE gate_link_id IS NULL OR active OR configured
+             )
+             SELECT id,name,site_id,site_name,partner_id,partner_name FROM ranked
+             WHERE rank=1 AND ($2::uuid IS NULL OR id>$2) ORDER BY id LIMIT 101`,
             [session.vendorId, query.after ?? null],
           )
         ).rows;
@@ -467,8 +629,7 @@ export function createGateDailyBillingService(
           (previous.workTypeId !== input.workTypeId ||
             previous.jobOfferId !== input.jobOfferId ||
             previous.periodStartDay !== input.startDay ||
-            previous.partialDayRule !== input.partialDayRule ||
-            previous.agreementReference !== input.agreementReference)
+            previous.partialDayRule !== input.partialDayRule)
         )
           fail("close_period_before_terms_change");
         if (
@@ -491,6 +652,17 @@ export function createGateDailyBillingService(
               ...(previous.jobOfferId ? { jobOfferId: previous.jobOfferId } : {}),
             }
           : await terms(c, context, input.workTypeId, input.jobOfferId);
+        const issuedTicketId = input.jobOfferId && !previous?.openTicketId ? (await c.query(
+          `SELECT t.id FROM job_offers j JOIN tickets t ON t.id=j.created_ticket_id
+           WHERE j.id=$1 AND j.status='accepted' AND t.vendor_id=$2 AND t.site_location_id=$3
+             AND t.work_type_id=$4 AND t.status='initiated' AND t.closed_at IS NULL AND t.check_in_time IS NULL
+             AND NOT EXISTS (SELECT 1 FROM ticket_line_items l WHERE l.ticket_id=t.id)
+             AND NOT EXISTS (SELECT 1 FROM assistant_action_audit h WHERE h.vendor_id=$2
+               AND h.target_type='gate-billing-config' AND h.tool_output->>'openTicketId'=t.id::text)
+           FOR UPDATE OF t`,
+          [input.jobOfferId, context.vendorId, context.station.site_id, input.workTypeId],
+        )).rows[0]?.id : undefined;
+        if (input.ticketId && issuedTicketId !== input.ticketId) fail("ticket_review_required");
         const saved = ConfigSchema.parse({
           version: (previous?.version ?? 0) + 1,
           stationId,
@@ -501,6 +673,7 @@ export function createGateDailyBillingService(
           periodStartDay: input.startDay,
           openTicketId:
             previous?.openTicketId ??
+            issuedTicketId ??
             (await newTicket(
               c,
               session,
@@ -509,7 +682,7 @@ export function createGateDailyBillingService(
               input.startDay,
               input.jobOfferId,
             )),
-          agreementReference: input.agreementReference,
+          agreementReference: previous?.agreementReference ?? "",
           partialDayRule: input.partialDayRule,
           ...approved,
           lastBilledThroughDay: previous?.lastBilledThroughDay ?? null,
@@ -612,7 +785,7 @@ export function createGateDailyBillingService(
           fail("coverage_review_required");
         const ticket = (
           await c.query(
-            "SELECT status,engagement_job_offer_id FROM tickets WHERE id=$1 AND vendor_id=$2 AND site_location_id=$3 AND work_type_id=$4 FOR UPDATE",
+            "SELECT status,COALESCE(engagement_job_offer_id,job_offer_id) AS engagement_job_offer_id FROM tickets WHERE id=$1 AND vendor_id=$2 AND site_location_id=$3 AND work_type_id=$4 FOR UPDATE",
             [
               current.openTicketId,
               context.vendorId,
@@ -641,7 +814,7 @@ export function createGateDailyBillingService(
               "INSERT INTO ticket_line_items(ticket_id,type,description,quantity,unit_price) VALUES($1,'labor',$2,1,$3)",
               [
                 current.openTicketId,
-                `${context.station.name} - ${day.day} Central - day rate agreement ${current.agreementReference}${day.hasCoverageGap ? " (partial/recorded coverage reviewed)" : ""}`,
+                `${context.station.name} - ${day.day} Central - daily gate coverage${day.hasCoverageGap ? " (partial/recorded coverage reviewed)" : ""}`,
                 `${Math.floor(day.chargeCents / 100)}.${String(day.chargeCents % 100).padStart(2, "0")}`,
               ],
             );
@@ -707,7 +880,7 @@ export function createGateDailyBillingService(
           {
             stationId,
             agreement: publicConfig(current),
-            period: quote.period,
+            period: { ...quote.period, coverageStationIds: context.coverageStationIds },
             officeUserId: context.userId,
             reviewedAt: now().toISOString(),
             coverageGapAcknowledged: input.acknowledgeCoverageGaps,

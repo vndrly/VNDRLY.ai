@@ -5816,6 +5816,7 @@
     "recovery": "If the connection fails during transfer, sign in normally as the incoming user and check Shift Notes before trying another handoff. Passwords are never saved with the handoff.",
     "cancel": "Cancel prepared handoff",
     "supervisor": "Supervisor controls",
+    "administrator": "Administrator Controls",
     "newGate": "New gate name",
     "addGate": "Add gate",
     "refresh": "Refresh connection and records",

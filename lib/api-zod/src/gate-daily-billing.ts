@@ -11,10 +11,11 @@ export const GateDailyBillingConfigureSchema = z
     expectedVersion: z.number().int().min(0),
     workTypeId: z.number().int().positive(),
     jobOfferId: z.number().int().positive().optional(),
+    ticketId: z.number().int().positive().optional(),
     startDay: z.iso.date(),
-    agreementReference: z.string().trim().min(1).max(1000),
+    agreementReference: z.string().trim().max(1000).optional(),
     partialDayRule: rule,
-    confirmedUnbilledStart: z.literal(true),
+    confirmedUnbilledStart: z.literal(true).optional(),
     autoInvoiceEveryDays: z
       .number()
       .int()

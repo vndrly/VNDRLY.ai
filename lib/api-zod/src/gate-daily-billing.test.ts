@@ -12,7 +12,6 @@ it("defaults to full daily rate and continuation without silently enabling a sch
       workTypeId: 1,
       startDay: "2026-10-01",
       agreementReference: "Agreement1",
-      confirmedUnbilledStart: true,
     }),
   ).toMatchObject({ partialDayRule: "full_day", autoInvoiceEveryDays: null });
   expect(
@@ -27,7 +26,7 @@ it("defaults to full daily rate and continuation without silently enabling a sch
     minimumCompletedDays: null,
   });
 });
-it("never accepts client rates, billing cutoffs, membership or unconfirmed prior unbilled dates", () => {
+it("rejects client rates, billing cutoffs, and membership overrides", () => {
   const save = {
     operationId: id,
     expectedVersion: 0,

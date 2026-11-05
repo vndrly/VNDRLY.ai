@@ -82,6 +82,34 @@ const es: Readonly<Record<string, string>> = {
     "La configuración requiere atención. Revise el puesto y el acuerdo seleccionados.",
   "Automatic billing submits reviewed coverage at the saved interval; partner approval still applies.":
     "La facturación automática envía la cobertura revisada en el intervalo guardado; aún se requiere la aprobación del cliente.",
+  "Start Ticket": "Iniciar ticket",
+  "Start New Ticket": "Iniciar nuevo ticket",
+  "You have {count} tickets waiting to start": "Tienes {count} tickets por iniciar",
+  "You have 1 ticket waiting to start": "Tienes 1 ticket por iniciar",
+  "You have {count} tickets open": "Tienes {count} tickets abiertos",
+  "You have 1 ticket open": "Tienes 1 ticket abierto",
+  "You have {count} tickets closed": "Tienes {count} tickets cerrados",
+  "You have 1 ticket closed": "Tienes 1 ticket cerrado",
+  "This Quarter": "Este trimestre",
+  "Accrued payroll": "Nómina acumulada",
+  "Estimated profit": "Ganancia estimada",
+  "PAID": "PAGADO",
+  "Review": "Revisar",
+  "Amend": "Modificar",
+  "Ticketed Money Inflow/Outflow": "Ingresos y gastos de tickets",
+  "Year to Date": "En lo que va del año",
+  "Could not load billing tickets.": "No se pudieron cargar los tickets de facturación.",
+  "Close Ticket closes the period without opening another.": "Cerrar ticket cierra el período sin abrir otro.",
+  "Submit this period for partner approval. Start New Ticket continues from the next unbilled day. Close Ticket closes the period without opening another.": "Envía este período al socio para su aprobación. Iniciar nuevo ticket continúa desde el próximo día sin facturar. Cerrar ticket cierra el período sin abrir otro.",
+  "Close Ticket": "Cerrar ticket",
+  "No open billing ticket.": "No hay un ticket de facturación abierto.",
+  "No prior invoice recorded.": "No se ha registrado una factura previa.",
+  "days since last billed": "días desde la última facturación",
+  "Invoice amount": "Importe de la factura",
+  "Multiple billing histories exist for these linked gates. Office review is required.":
+    "Hay varios historiales de facturación para estos accesos vinculados. Se requiere revisión de oficina.",
+  "Select the billing post for this linked gate group.":
+    "Seleccione el puesto de facturación de este grupo de accesos vinculados.",
   "Per day": "Por día",
 };
 export function gateDailyBillingCopy(text: string, language: string) {
@@ -89,7 +117,11 @@ export function gateDailyBillingCopy(text: string, language: string) {
 }
 export function gateDailyBillingError(code: string, language: string) {
   const text =
-    code.includes("office_required") || code.includes("post_forbidden")
+    code.endsWith("linked_billing_conflict")
+      ? "Multiple billing histories exist for these linked gates. Office review is required."
+      : code.endsWith("use_linked_billing_post")
+        ? "Select the billing post for this linked gate group."
+        : code.includes("office_required") || code.includes("post_forbidden")
       ? "Office billing access is required."
       : code.startsWith("auth.") || code.startsWith("workday.")
         ? "Sign in again to continue billing."

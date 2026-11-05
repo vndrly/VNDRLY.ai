@@ -5816,6 +5816,7 @@
     "recovery": "Si falla la conexión durante la transferencia, inicie sesión normalmente como usuario entrante y consulte las notas antes de intentar otra entrega. Las contraseñas nunca se guardan en la entrega.",
     "cancel": "Cancelar entrega preparada",
     "supervisor": "Controles del supervisor",
+    "administrator": "Controles del administrador",
     "newGate": "Nombre de nueva entrada",
     "addGate": "Agregar entrada",
     "refresh": "Actualizar conexión y registros",

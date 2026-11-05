@@ -625,7 +625,7 @@ export default function TicketDetail({ id }: { id: number }) {
   // form fields and never fight over which mutation is in flight.
   const [reverseDispersalOpen, setReverseDispersalOpen] = useState(false);
   const [reverseDispersalReason, setReverseDispersalReason] = useState("");
-  const [isEditing, setIsEditing] = useState(true);
+  const [isEditing, setIsEditing] = useState(() => !new URLSearchParams(window.location.search).has("review"));
   const [editDescription, setEditDescription] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [noteContent, setNoteContent] = useState("");

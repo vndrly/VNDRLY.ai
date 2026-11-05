@@ -532,7 +532,9 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       const accepted = await f.api.acceptJobOffer(spanning);
       expect(accepted.ticketId).toBeGreaterThan(0);
       const [snapshot] = await db.select().from(s.jobOfferAcceptanceSnapshotsTable).where(eq(s.jobOfferAcceptanceSnapshotsTable.jobOfferId, spanning.offerId));
-      expect(snapshot.eligibilitySnapshot.reasonCodes.includes("INSUFFICIENT_CAPACITY")).toBe(!allowed);
+      const reasonCodes = expect(snapshot.eligibilitySnapshot.reasonCodes);
+      if (allowed) reasonCodes.not.toContain("INSUFFICIENT_CAPACITY");
+      else reasonCodes.toContain("INSUFFICIENT_CAPACITY");
     },
   );
   it("checks current partner/vendor membership and rejects a revoked vendor admin session", async () => {
