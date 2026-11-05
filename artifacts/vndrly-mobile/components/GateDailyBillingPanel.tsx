@@ -63,9 +63,7 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
     frozen = Boolean(config?.openTicketId);
   const [service, setService] = useState(""),
     [start, setStart] = useState(""),
-    [agreement, setAgreement] = useState(""),
     [rule, setRule] = useState<"full_day" | "prorate_actual_day">("full_day"),
-    [confirmed, setConfirmed] = useState(false),
     [automatic, setAutomatic] = useState(false),
     [interval, setIntervalDays] = useState("30"),
     [continueBilling, setContinue] = useState(true);
@@ -85,9 +83,7 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
           "America/Chicago",
         )!.slice(0, 10),
     );
-    setAgreement(value?.agreementReference ?? "");
     setRule(value?.partialDayRule ?? "full_day");
-    setConfirmed(Boolean(value));
     setAutomatic(
       value?.autoInvoiceEveryDays !== null &&
         value?.autoInvoiceEveryDays !== undefined,
@@ -123,9 +119,7 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
       workTypeId: Number(service.split(":")[0]),
       ...(service.split(":")[1] !== "legacy" ? { jobOfferId: Number(service.split(":")[1]) } : {}),
       startDay: start,
-      agreementReference: agreement,
       partialDayRule: rule,
-      confirmedUnbilledStart: confirmed as true,
       autoInvoiceEveryDays: automatic ? Number(interval) : null,
     });
   return (
@@ -216,14 +210,6 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
             placeholder="YYYY-MM-DD"
             placeholderTextColor={colors.mutedForeground}
           />
-          <Text style={text}>{copy("Agreement reference")}</Text>
-          <TextInput
-            accessibilityLabel={copy("Agreement reference")}
-            style={field}
-            value={agreement}
-            editable={!locked && !frozen}
-            onChangeText={setAgreement}
-          />
           <FleetChoiceField
             label={copy("Partial-day billing")}
             value={rule}
@@ -237,19 +223,10 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
             ]}
             onChange={(value) => setRule(value as typeof rule)}
           />
-          {frozen ? (
+          {frozen && (
             <Text style={text}>
               {copy("Close the current period before changing its agreement.")}
             </Text>
-          ) : (
-            <FleetCheckbox
-              label={copy(
-                "Confirm this starts after all previously billed days.",
-              )}
-              checked={confirmed}
-              disabled={locked}
-              onChange={setConfirmed}
-            />
           )}
           <FleetCheckbox
             label={copy("Automatic billing")}
@@ -282,7 +259,7 @@ function ScopedPanel({ request }: { request: GateBillingRequest }) {
           ) : null}
           <TogglePillButton
             disabled={
-              locked || !service || !start || !agreement.trim() || !confirmed
+              locked || !service || !start
             }
             onPress={save}
           >

@@ -5,7 +5,7 @@ export function VndrlyUWordmark() {
       <img
         src={`${import.meta.env.BASE_URL}images/vndrly-u-wordmark.png`}
         alt="VNDRLY/U"
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-contain object-left"
       />
     </span>
   );

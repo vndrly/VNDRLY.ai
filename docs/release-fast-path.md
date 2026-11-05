@@ -157,6 +157,15 @@ status update naming the blocked stage while continuing the authorized repair.
 
 ## Mandatory unattended handoff gate
 
+`Full ship` is a command to execute and monitor every required track until the
+gate passes. An explicit plugin exclusion leaves eight required tracks, including
+TestFlight and local synchronization. Preserve the exact user command in
+`authorization.instruction`, omit the plugin from `authorization.scope` and
+`tracks`, and record it under `excludedTracks`. The gate rejects any attempt
+to waive an included track via ledger edits, or to report completion while work
+remains runnable, queued, or unverified.
+
+
 Keep `.local/release-state.json` as the single recovery checkpoint. Start from
 `docs/release-state.example.json`; never overwrite an existing checkpoint on
 recovery. Record the exact user authorization and restrictions, request time,

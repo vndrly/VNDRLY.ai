@@ -123,9 +123,12 @@ try {
   const contractors = await q(
     "select s.*,u.display_name,u.email from managed_subcontractor_worker_sponsorships s join users u on u.id=s.worker_user_id join managed_subcontractor_organizations o on o.id=s.managed_organization_id where s.sponsor_vendor_id=1115 and o.name='StaffGO' order by s.worker_user_id",
   );
+  const originalContractors = contractors.filter((worker) =>
+    [1157, 1158, 1159, 1160, 1161].includes(worker.worker_user_id),
+  );
   if (
-    contractors.length !== 5 ||
-    contractors.map((x) => x.worker_user_id).join() !==
+    originalContractors.length !== 5 ||
+    originalContractors.map((x) => x.worker_user_id).join() !==
       "1157,1158,1159,1160,1161"
   )
     throw Error("StaffGO cast changed");
@@ -252,8 +255,8 @@ try {
     }
   }
   // Contacts remain on the same accounts. No login, invitation or qualification changes.
-  for (let i = 0; i < contractors.length; i++) {
-    const p = contractors[i],
+  for (let i = 0; i < originalContractors.length; i++) {
+    const p = originalContractors[i],
       [first, last] = profileNames[i],
       display = `${first} ${last}`,
       email = `${first.toLowerCase()}.${last.toLowerCase()}@staffgo.example.invalid`;
@@ -813,7 +816,7 @@ try {
           vendor === 1113 ? (worker.user_id === 1115 ? 1115 : 1114) : null;
       const ticket = (
         await q(
-          `insert into tickets (site_location_id,vendor_id,field_employee_id,work_type_id,status,lifecycle_state,intake_channel,description,notes,scheduled_start_at,scheduled_duration_minutes,scheduled_at,scheduled_by_id,created_by_id,foreman_user_id,created_at,updated_at,check_in_time,check_out_time,arrived_at) values($1,$2,$3,$4,$5,$6,'vendor_direct',$7,$8,$9,$10,$11,$12,$12,$13,$11,$14,$15,$16,$15) returning id`,
+          `insert into tickets (site_location_id,vendor_id,field_employee_id,work_type_id,status,lifecycle_state,intake_channel,description,notes,scheduled_start_at,scheduled_duration_minutes,scheduled_at,scheduled_by_id,created_by_id,foreman_user_id,created_at,updated_at,check_in_time,check_out_time,arrived_at) values($1,$2,$3,$4,$5,$6,'vendor_field_self_service',$7,$8,$9,$10,$11,$12,$12,$13,$11,$14,$15,$16,$15) returning id`,
           [
             site.id,
             vendor,

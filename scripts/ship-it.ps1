@@ -109,7 +109,7 @@ $Summary["Local iOS preview"] = "http://localhost:8081/ (health checked; rendere
 Write-ShipStep "Checking complete release synchronization"
 node (Join-Path $Root "scripts/release-handoff-gate.mjs") (Join-Path $Root ".local/release-state.json") complete
 if ($LASTEXITCODE -ne 0) {
-  Fail-Ship "Full ship completion" "All nine tracks, including exact local source and rendered previews, must pass the release handoff gate. This release is incomplete."
+  Fail-Ship "Full ship completion" "All tracks required by the user’s full-ship command, including exact local source and rendered previews, must pass the release handoff gate. This release is incomplete."
 }
 
 Write-ShipSuccess -Summary $Summary

@@ -124,3 +124,26 @@ test('fails closed when authorization, checkpoint, mode, or process inventory is
   assert.ok(checkHandoff(ledger(), 'skip').length);
   assert.ok(checkHandoff(ledger(), 'blocked').length);
 });
+test('explicit plugin exclusion still requires every other track, including TestFlight', () => {
+  for (const instruction of ['full ship minus plugin', 'full ship everything except the plugin i meant']) {
+    const state = ledger();
+    state.authorization.instruction = instruction;
+    state.authorization.scope = TRACKS.filter(id => id !== 'plugin');
+    state.excludedTracks = { plugin: { status: 'excluded_by_user' } };
+    delete state.tracks.plugin;
+    assert.deepEqual(checkHandoff(state, 'complete'), []);
+    state.tracks.testflight.status = 'running';
+    state.activeJobs.push({ track: 'testflight', id: 'build-123' });
+    for (const mode of ['complete', 'blocked']) {
+      const errors = checkHandoff(state, mode);
+      assert.ok(errors.some(error => error.includes('testflight')));
+      assert.ok(errors.some(error => error.includes('active jobs')));
+    }
+  }
+});
+
+test('a ledger exclusion cannot override the full ship command', () => {
+  const state = ledger();
+  state.excludedTracks = { plugin: { status: 'excluded_by_user' } };
+  assert.ok(checkHandoff(state, 'complete').some(error => error.includes('exclusion is not authorized')));
+});

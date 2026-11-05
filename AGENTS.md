@@ -41,13 +41,15 @@ These compliance guardrails do not replace or amend any existing hard directive 
 
 ### HARD GUARDRAIL — EXECUTE THE MANIFEST, DO NOT SUBSTITUTE (John, 2026-10-25)
 
-- A full ship executes ALL nine tracks below. Do not replace execution with an audit, a plan, a status report, or a subset chosen by the agent. Reusing passing checks does not waive publishing a required track.
+- **“Full ship” is an execution command.** Begin the release and keep executing and monitoring until the mandatory handoff gate passes. The agent has no discretion to downgrade the command, skip a runnable track, or end the turn with a partial result. A web release, passing test suite, or queued job is never a stopping point.
+- **“Full ship minus plugin” and “full ship everything except the plugin” execute the other eight tracks**, including TestFlight. Record the user's exact instruction and the exclusion in the ledger. The gate derives the required scope from the instruction, so editing the scope or marking an included track excluded cannot waive work.
+- An unqualified full ship executes ALL nine tracks below. Do not replace execution with an audit, a plan, a status report, or a subset chosen by the agent. Reusing passing checks does not waive publishing a required track.
 - Before each release action, identify its manifest track and the specific required outcome it advances. If it serves neither that outcome nor a demonstrated failure of that track, do not do it. No unrelated refactors, account setup, product changes, or investigation side quests.
 - Use the established release entry points. Read the manifest and existing release scripts before choosing a route. Do not invent a publishing route and then promote that route's requirements into requirements of full ship. A failed route proves only that route failed.
 - Preserve John's exact command and subsequent corrections in the ledger. Agent interpretations must be labeled separately; never overwrite the command, reset its deadline, or narrow its completion criteria. Corrections govern the very next action.
 - Plugin scope, as explicitly corrected by John: rebuild the matching plugin and submit the updated plugin to ChatGPT. Updating John's personal installed instance, reconnecting that instance, creating another catalogue entry, and waiting for public approval are NOT full-ship requirements. Do not introduce them as blockers.
 - Do not add approvals to already authorized work. Any unavoidable higher-priority permission restriction must be identified by its exact action and source; it is not permission to abandon other tracks or invent work for John.
-- Maintain all nine tracks through completion. Never silently skip a step, label an attempt complete, or use success on one track as proof for another. If no commit or migration is needed, record the concrete state and reason; do not invent empty commits or database changes.
+- Maintain all required tracks through completion. Never silently skip a step, label an attempt complete, or use success on one track as proof for another. If no commit or migration is needed, record the concrete state and reason; do not invent empty commits or database changes.
 - Batch necessary checks logically, reuse valid results for unchanged code, and monitor independent release jobs concurrently. Do not restart checks or jobs merely because a turn or context ended.
 - An interruption preserves the task and its authorization. Inspect saved jobs before further execution. Never describe a partial ship as a full ship or claim continued agent work after ending a turn.
 - Do not edit these rules, the manifest, or the handoff gate to make a failing release appear complete. Only an explicit user instruction can change scope. A genuine tool restriction remains a restriction, not an invented exception or a success.
@@ -64,7 +66,7 @@ authorization and does not justify stopping independent work.
   restrictions, requested deadline, and completion criteria in
   `.local/release-state.json`. Preserve them across retries and interruptions;
   only a subsequent user instruction changes them. Store no credentials.
-- Track all nine full-ship tracks separately using the ledger and gate described
+- Track every required full-ship track separately using the ledger and gate described
   in `docs/release-fast-path.md`. A blocked track must not stop runnable tracks
   or monitoring of active jobs. Investigate supported alternatives without
   bypassing security restrictions or expanding the authorized scope.
@@ -143,12 +145,12 @@ Do not treat any of these as optional, later, or "separate":
    `docs/release-fast-path.md`. A mixed version, stale process, uncommitted source
    change, or missing local preview forbids full-ship completion.
 
-**Full means operationally synchronized, not partially updated.** All nine tracks
+**Full means operationally synchronized, not partially updated.** All authorized tracks
 must refer to the same final shipped commit. If a later fix changes that commit,
 invalidate and refresh affected publication and local evidence. A partial update
 must be called partial; it must never be called a full ship.
 
-Stay on it through troubleshooting until all nine tracks are verified. Do not
+Stay on it through troubleshooting until every required track is verified. Do not
 pause to re-ask permission between stages.
 
 This standing authorization never permits a force push/history rewrite,

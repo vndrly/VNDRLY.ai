@@ -59,7 +59,7 @@ export function CertificationProgress({
 }) {
   const { repo, progress } = useTrainingProgress();
   const d = progress.data;
-  if (!d) return progress.isError ? <p role="alert" data-progress-personal-state="error">Training progress is unavailable. Refresh to try again.</p> : embedded ? <p role="status" data-progress-personal-state="loading">Loading training…</p> : null;
+  if (!d) return progress.isError ? <p role="alert" data-progress-personal-state="error">Training progress is unavailable. Refresh to try again.</p> : embedded ? <p role="status" data-progress-personal-state="loading">Consulting your Advisor…</p> : null;
   const items = d.certifications.filter((c) => !profile || (c.complete && !c.standalone && !c.groupingOnly));
   const certifications = items.filter((c) => !c.standalone);
   const standalone = items.filter((c) => c.standalone && !certifications.some((cert) =>

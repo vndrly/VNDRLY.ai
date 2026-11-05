@@ -36,7 +36,7 @@ export default function TeamTrainingProgress() {
     <summary className="hub-home-row hub-training-summary"><Users aria-hidden="true" className="hub-row-icon" /><span className="hub-row-label">Team Training</span><span className="hub-row-value">{query.data ? percent(courses) : "…"}</span><ChevronRight aria-hidden="true" className="hub-chevron" /></summary>
     <div className="team-training-people">
       <p className="text-xs text-muted-foreground py-2">Unfinished assignments: green through 7 days · amber over 7–14 days · red over 14 days.</p>
-      {query.isPending && <p role="status">Loading team training…</p>}
+      {query.isPending && <p role="status">Consulting your Advisor…</p>}
       {query.isError && <p role="alert">Team training is unavailable. Try again shortly.</p>}
       {people.map(person => {
         const status = personTrainingStatus(person.courses, now);

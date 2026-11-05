@@ -7,19 +7,31 @@ const text = value => typeof value === 'string' && value.trim().length > 0;
 const timestamp = value => text(value) && Number.isFinite(Date.parse(value));
 const strings = value => Array.isArray(value) && value.length > 0 && value.every(text);
 
+// Only explicit wording in the preserved user command can exclude the plugin.
+export function requiredTracks(instruction) {
+  const excludesPlugin = text(instruction) &&
+    /\b(?:minus|except(?:\s+for)?|excluding|without|skip)\s+(?:the\s+)?(?:chatgpt\s+)?plug[\s-]*in\b/i.test(instruction);
+  return TRACKS.filter(id => id !== 'plugin' || !excludesPlugin);
+}
+
 export function checkHandoff(state, mode) {
   const errors = [];
   if (!['complete', 'blocked'].includes(mode)) errors.push('Mode must be complete or blocked.');
   if (!state || typeof state !== 'object') return [...errors, 'Missing release ledger.'];
   const auth = state.authorization;
   const scope = auth?.scope;
-  if (!Array.isArray(scope) || scope.length !== TRACKS.length
-      || new Set(scope).size !== TRACKS.length
-      || TRACKS.some(id => !scope.includes(id))) {
-    errors.push('Full ship scope must contain exactly all nine manifest tracks, without additions, omissions, or duplicates.');
+  const required = requiredTracks(auth?.instruction);
+  if (!Array.isArray(scope) || scope.length !== required.length
+      || new Set(scope).size !== required.length
+      || required.some(id => !scope.includes(id))) {
+    errors.push(`Full ship scope must contain exactly ${required.length === TRACKS.length ? 'all nine' : 'the eight authorized'} manifest tracks: ${required.join(', ')}.`);
   }
   for (const id of Object.keys(state.tracks ?? {})) {
     if (!TRACKS.includes(id)) errors.push(`${id}: not a full-ship manifest track; do not add substitute requirements.`);
+    else if (!required.includes(id)) errors.push(`${id}: explicitly excluded by the user; do not run this track.`);
+  }
+  for (const id of Object.keys(state.excludedTracks ?? {})) {
+    if (!TRACKS.includes(id) || required.includes(id)) errors.push(`${id}: exclusion is not authorized by the full-ship command.`);
   }
   if (!text(auth?.instruction) || !strings(auth?.scope) || !strings(auth?.restrictions)
       || !strings(auth?.completionCriteria) || !timestamp(auth?.requestedAt)) {
@@ -32,7 +44,7 @@ export function checkHandoff(state, mode) {
   const evidence = items => Array.isArray(items) && items.length > 0 && items.every(item =>
     text(item?.source) && timestamp(item?.observedAt) && item.commit === state.releaseCommit && text(item?.result));
   let blocked = 0;
-  for (const id of TRACKS) {
+  for (const id of required) {
     const track = state.tracks?.[id];
     if (!track) { errors.push(`${id}: missing track.`); continue; }
     if (typeof track.canProceed !== 'boolean') errors.push(`${id}: explicitly record whether work can proceed.`);
@@ -106,7 +118,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       console.error(`HANDOFF REFUSED\n${errors.map(error => `- ${error}`).join('\n')}`);
       process.exitCode = 1;
     } else console.log(mode === 'complete'
-      ? 'Completion gate passed: all nine tracks, including exact local synchronization, have recorded verification evidence.'
+      ? `Completion gate passed: all ${requiredTracks(state.authorization.instruction).length} authorized tracks have recorded verification evidence for ${state.releaseCommit}.`
       : 'Blocked handoff gate passed: release remains INCOMPLETE; report the documented boundaries.');
   } catch {
     console.error('HANDOFF REFUSED: supply a readable JSON ledger and complete or blocked mode.');
