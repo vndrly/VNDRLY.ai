@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import {
@@ -394,7 +395,7 @@ export default function Vendors() {
     <div className="space-y-6" data-testid="vendors-page">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+          <PageHistoryLink href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
           <div>
             <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("vendors.title")}</h1>
             <p className="text-muted-foreground text-sm mt-1">{t("vendors.subtitle", { defaultValue: "Manage vendor companies" })}</p>

@@ -1,7 +1,7 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "wouter";
 import Layout from "@/components/layout";
 import SphereBackButton from "@/components/sphere-back-button";
 import { useAuth } from "@/hooks/use-auth";
@@ -65,14 +65,14 @@ export default function AccountLocationPage() {
     <Layout>
       <div className="max-w-3xl mx-auto p-6 space-y-6">
         <div className="flex items-start gap-4">
-          <Link
+          <PageHistoryLink
             href={backHref}
             className="group inline-flex items-center shrink-0 mt-1"
             aria-label="Back"
             data-testid="button-back"
           >
             <SphereBackButton size={32} />
-          </Link>
+          </PageHistoryLink>
           <div>
             <h1 className="text-2xl font-semibold">{t("accountLocation.title")}</h1>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">

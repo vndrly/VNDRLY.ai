@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { CardHeading } from "@/components/ui/card-heading";
 import { Link } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
@@ -28,9 +29,9 @@ export function LegalDocumentPage({
   children,
 }: LegalDocumentPageProps): React.ReactElement {
   return (
-    <main className="min-h-screen text-gray-100" style={{ backgroundColor: NAV_PANE_DARK_BG, "--brand-primary": "#F59E0B" } as React.CSSProperties}>
+    <main className="min-h-screen text-gray-100" style={{ backgroundColor: NAV_PANE_DARK_BG, "--brand-primary": "#F59E0B", "--brand-icon-color": "#242426" } as React.CSSProperties}>
       <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-12">
-        <Link href="/login" className="group mb-6 inline-flex items-center gap-2 font-semibold text-amber-400"><SphereBackButton size={32} />Back to sign in</Link>
+        <PageHistoryLink href="/login" className="group mb-6 inline-flex items-center gap-2 font-semibold text-amber-400"><SphereBackButton size={32} />Back to sign in</PageHistoryLink>
         <header className="mb-8 border-b border-white/15 pb-6">
           <div className="mb-5 flex items-center gap-3">
             <img

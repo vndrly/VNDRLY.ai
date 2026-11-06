@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 
 import { useSubmittedProof, TicketSubmittedProof } from "@/components/ticket-submitted-proof";
@@ -1409,7 +1410,7 @@ export default function TicketDetail({ id }: { id: number }) {
         }}
       />
       <div className="relative z-10 flex items-center gap-4">
-        <Link href="/tickets" className="group inline-flex items-center gap-2" aria-label={t("ticketDetail.backAlt")} data-testid="button-back"><SphereBackButton size={40} /></Link>
+        <PageHistoryLink href="/tickets" className="group inline-flex items-center gap-2" aria-label={t("ticketDetail.backAlt")} data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg font-bold" data-testid="text-ticket-id">{formatTicketTrackingNumber(ticket.id)}</h1>

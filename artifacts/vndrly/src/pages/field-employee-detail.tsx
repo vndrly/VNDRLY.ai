@@ -1,3 +1,4 @@
+import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { useTranslation } from "react-i18next";
@@ -354,7 +355,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            if (confirmLeave()) navigate("/field-employees");
+            if (confirmLeave()) navigateBackInApp(navigate, "/field-employees");
           }}
         >
           <span className="group inline-flex items-center" aria-label={t("fieldEmployeeDetail.back")} data-testid="button-back"><SphereBackButton size={40} /></span>

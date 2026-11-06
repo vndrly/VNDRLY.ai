@@ -1,6 +1,6 @@
+import PageBackButton from "@/components/page-back-button";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
-import SphereBackButton from "@/components/sphere-back-button";
 import { ShoppingCart } from "lucide-react";
 import { CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { useBrand } from "@/hooks/use-brand";
@@ -32,14 +32,7 @@ export default function PartnerCatalogPage() {
   return (
     <div className="p-6 space-y-6" data-testid="page-partner-catalog">
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => window.history.back()}
-          className="group inline-flex items-center"
-          aria-label="Back"
-        >
-          <SphereBackButton size={40} />
-        </button>
+        <PageBackButton fallbackHref="/partners" />
         <h1 className="text-2xl font-semibold flex items-center gap-2">
           <ShoppingCart className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
           {t("partners.productServiceCatalog.title")}

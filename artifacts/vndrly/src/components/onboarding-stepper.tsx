@@ -1,5 +1,9 @@
-import { Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { brandIconColor } from "@/lib/brand-color";
+
+const markerClass = "z-10 grid size-6 place-items-center rounded-full border-2 shadow-sm transition-all";
+const interactiveMarkerClass = "cursor-pointer hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[color:var(--brand-primary)]";
 
 export interface StepperStep {
   key: string;
@@ -8,6 +12,7 @@ export interface StepperStep {
 
 interface OnboardingStepperProps {
   steps: StepperStep[];
+  primaryColor: string;
   /** Index of the step the user is currently editing. */
   currentIndex: number;
   /** Step keys the user has explicitly completed (Next-clicked or saved). */
@@ -19,6 +24,8 @@ interface OnboardingStepperProps {
   disabled?: boolean;
   inferEarlierCompletion?: boolean;
   className?: string;
+  previous?: { onClick: () => void; disabled: boolean };
+  next?: { onClick: () => void; disabled: boolean };
 }
 
 /**
@@ -30,6 +37,7 @@ interface OnboardingStepperProps {
  */
 export default function OnboardingStepper({
   steps,
+  primaryColor,
   currentIndex,
   completedKeys = [],
   skippedKeys = [],
@@ -37,13 +45,17 @@ export default function OnboardingStepper({
   disabled = false,
   inferEarlierCompletion = true,
   className,
+  previous,
+  next,
 }: OnboardingStepperProps) {
   const completedSet = new Set(completedKeys);
   const skippedSet = new Set(skippedKeys);
+  const iconColor = brandIconColor(primaryColor);
 
   // Brand-color glossy fill: matches TicketStatusStepper exactly so the
   // two visual families read as one design system.
   const brandGlossStyle = {
+    color: iconColor,
     backgroundColor: "var(--brand-primary, #f59e0b)",
     backgroundImage:
       "linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.5) 50%, transparent 50%, transparent 100%)",
@@ -53,7 +65,7 @@ export default function OnboardingStepper({
   const brandTextStyle = { color: "var(--brand-primary, #f59e0b)" } as const;
 
   return (
-    <div className={cn("w-full", className)} data-testid="onboarding-stepper">
+    <div className={cn("w-full", previous && "pl-7", next && "pr-7", className)} data-testid="onboarding-stepper">
       <div
         className="grid gap-0"
         style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
@@ -81,6 +93,13 @@ export default function OnboardingStepper({
 
           return (
             <div key={step.key} className="flex flex-col items-center relative">
+              {i === 0 && previous && (
+                <button type="button" aria-label="Previous step" disabled={previous.disabled} onClick={previous.onClick}
+                  className={cn("absolute right-[calc(50%+20px)] top-0 text-white disabled:invisible", markerClass, interactiveMarkerClass)}
+                  style={brandGlossStyle}>
+                  <ArrowLeft aria-hidden="true" className="size-3.5" strokeWidth={3} />
+                </button>
+              )}
               {i > 0 && (
                 <div
                   className={cn(
@@ -106,8 +125,9 @@ export default function OnboardingStepper({
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={`Go to ${step.label}`}
                 className={cn(
-                  "relative z-10 w-6 h-6 rounded-full border-2 shadow-sm flex items-center justify-center transition-all",
-                  onStepClick && !disabled && "cursor-pointer hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[color:var(--brand-primary)]",
+                  "relative",
+                  markerClass,
+                  onStepClick && !disabled && interactiveMarkerClass,
                   dotBg,
                 )}
                 style={isBrandActive && !isSkipped ? brandGlossStyle : undefined}
@@ -116,7 +136,7 @@ export default function OnboardingStepper({
                 {isCompleted ? (
                   <Check className="w-3.5 h-3.5" strokeWidth={3} />
                 ) : isCurrent ? (
-                  <div className="w-2 h-2 rounded-full bg-white" />
+                  <div className="w-2 h-2 rounded-full bg-current" />
                 ) : isSkipped ? (
                   <span className="text-[10px] font-bold leading-none">!</span>
                 ) : null}
@@ -130,6 +150,13 @@ export default function OnboardingStepper({
               >
                 {step.label}
               </button>
+              {i === steps.length - 1 && next && (
+                <button type="button" aria-label="Next step" disabled={next.disabled} onClick={next.onClick}
+                  className={cn("absolute left-[calc(50%+20px)] top-0 text-white disabled:invisible", markerClass, interactiveMarkerClass)}
+                  style={brandGlossStyle}>
+                  <ArrowRight aria-hidden="true" className="size-3.5" strokeWidth={3} />
+                </button>
+              )}
             </div>
           );
         })}

@@ -98,3 +98,10 @@ export function getSidebarContrastWarningKind(color: string): SidebarContrastWar
   if (ratio < 4.5) return { kind: "lowContrastOnSidebar", ratio: ratio.toFixed(2) };
   return null;
 }
+
+export function brandIconColor(color: string): "#242426" | "#ffffff" {
+  const rgb = hexToRgb(color);
+  const charcoal = { r: 36, g: 36, b: 38 };
+  const white = { r: 255, g: 255, b: 255 };
+  return rgb && contrastRatio(rgb, charcoal) >= contrastRatio(rgb, white) ? "#242426" : "#ffffff";
+}

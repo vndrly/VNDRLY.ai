@@ -87,6 +87,7 @@ const OnboardingField = lazy(() => import("@/pages/onboarding-field"));
 const ForgotPassword = lazy(() => import("@/pages/forgot-password"));
 const LegalPrivacyPage = lazy(() => import("@/pages/legal-privacy"));
 const LegalTermsPage = lazy(() => import("@/pages/legal-terms"));
+const LegalSmsPolicyPage = lazy(() => import("@/pages/legal-sms-enrollment-policy"));
 const LegalMessagingConsentPage = lazy(() => import("@/pages/legal-messaging-consent"));
 const PlatformEulaPage = lazy(() => import("@/pages/platform-eula"));
 const ResetPassword = lazy(() => import("@/pages/reset-password"));
@@ -278,6 +279,8 @@ function AuthenticatedRouter() {
         <Route path="/es/legal/privacy/" component={LegalPrivacyPage} />
         <Route path="/es/legal/terms/" component={LegalTermsPage} />
         <Route path="/es/legal/messaging/" component={LegalMessagingConsentPage} />
+        <Route path="/es/legal/sms-enrollment-policy/" component={LegalSmsPolicyPage} />
+        <Route path="/legal/sms-enrollment-policy/" component={LegalSmsPolicyPage} />
         <Route path="/es/sms/" component={LegalMessagingConsentPage} />
         <Route path="/legal/privacy" component={LegalPrivacyPage} />
         <Route path="/legal/terms" component={LegalTermsPage} />

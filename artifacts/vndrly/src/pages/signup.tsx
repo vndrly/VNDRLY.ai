@@ -1,3 +1,4 @@
+import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useLocation } from "wouter";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
@@ -41,7 +42,7 @@ export default function Signup() {
           <div className="flex items-start gap-3 mb-10">
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigateBackInApp(navigate, "/")}
               className="group inline-flex items-center shrink-0 mt-0.5"
               aria-label="Back"
               data-testid="button-back"

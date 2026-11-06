@@ -1,3 +1,4 @@
+import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import SphereBackButton from "@/components/sphere-back-button";
@@ -28,7 +29,7 @@ export default function PlatformEulaPage() {
   return (
     <div
       className="min-h-screen flex flex-col px-6 py-12 lg:px-16 relative overflow-hidden"
-      style={{ backgroundColor: NAV_PANE_DARK_BG, "--brand-primary": "#F59E0B" } as React.CSSProperties}
+      style={{ backgroundColor: NAV_PANE_DARK_BG, "--brand-primary": "#F59E0B", "--brand-icon-color": "#242426" } as React.CSSProperties}
     >
       <NavPaneHalftoneBackground enabled variant="auth" />
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
@@ -36,7 +37,7 @@ export default function PlatformEulaPage() {
         <LanguageToggle variant="dark" />
       </div>
       <div className="w-full max-w-3xl mx-auto relative z-10">
-        <button type="button" className="group mb-6 inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300" onClick={() => navigate("/login")}>
+        <button type="button" className="group mb-6 inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300" onClick={() => navigateBackInApp(navigate, "/login")}>
           <SphereBackButton size={32} />{backLabel}
         </button>
         <div className="flex items-center gap-3 mb-6">
@@ -88,7 +89,7 @@ export default function PlatformEulaPage() {
               "group inline-flex items-center gap-2 text-sm font-semibold",
               "text-amber-400 hover:text-amber-300",
             )}
-            onClick={() => navigate("/login")}
+            onClick={() => navigateBackInApp(navigate, "/login")}
             data-testid="link-eula-back-sign-in"
           >
             <SphereBackButton size={32} />{backLabel}

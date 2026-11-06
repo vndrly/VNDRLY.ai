@@ -1,3 +1,4 @@
+import { brandIconColor } from "@/lib/brand-color";
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -234,6 +235,7 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty("--brand-primary", brand.primary);
+    root.style.setProperty("--brand-icon-color", brandIconColor(brand.primary));
     root.style.setProperty("--brand-accent", brand.accent);
   }, [brand.primary, brand.accent]);
 
@@ -247,6 +249,7 @@ export function useBrand(): Brand {
 export function brandStyleVars(brand: Brand): React.CSSProperties {
   return {
     ["--brand-primary" as any]: brand.primary,
+    ["--brand-icon-color" as any]: brandIconColor(brand.primary),
     ["--brand-accent" as any]: brand.accent,
   };
 }

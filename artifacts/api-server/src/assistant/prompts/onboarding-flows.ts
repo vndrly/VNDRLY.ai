@@ -67,14 +67,13 @@ const partnerFlow: StepSpec[] = [
     step: "legal-consent",
     title: "Privacy and messaging",
     required: true,
-    purpose: "Accept the VNDRLY Privacy Policy and Terms & Conditions, and offer voluntary SMS opt-in.",
+    purpose: "Review the three legal documents and record the organization acknowledgment.",
     fields: [
-      { path: "legalConsent.accepted", label: "Accept Privacy Policy and Terms & Conditions", required: true },
+      { path: "legalConsent.accepted", label: "Accept Privacy Policy, Terms & Conditions, and SMS Enrollment Policy for the organization", required: true },
       { path: "legalConsent.version", label: "Legal policy version", hint: "Must match current policy version", required: true },
-      { path: "legalConsent.smsOptIn", label: "Optional SMS opt-in", hint: "Must be user-selected and never required", required: false },
     ],
     guidance:
-      "The Privacy Policy and Terms & Conditions acknowledgment is mandatory. SMS opt-in is optional and must be separate from acceptance. Do not infer SMS consent from silence or from accepting the terms.",
+      "Use the single organization checkbox for the three legal documents. Individual SMS enrollment is separate from company onboarding.",
   },
   {
     step: "branding",
@@ -166,14 +165,13 @@ const vendorFlow: StepSpec[] = [
     step: "legal-consent",
     title: "Privacy and messaging",
     required: true,
-    purpose: "Accept the VNDRLY Privacy Policy and Terms & Conditions, and offer voluntary SMS opt-in.",
+    purpose: "Review the three legal documents and record the organization acknowledgment.",
     fields: [
-      { path: "legalConsent.accepted", label: "Accept Privacy Policy and Terms & Conditions", required: true },
+      { path: "legalConsent.accepted", label: "Accept Privacy Policy, Terms & Conditions, and SMS Enrollment Policy for the organization", required: true },
       { path: "legalConsent.version", label: "Legal policy version", hint: "Must match current policy version", required: true },
-      { path: "legalConsent.smsOptIn", label: "Optional SMS opt-in", hint: "Must be user-selected and never required", required: false },
     ],
     guidance:
-      "Mandatory for terms/privacy acceptance. SMS consent is optional and separate; never require it to complete onboarding.",
+      "Use the single organization checkbox for the three legal documents. Individual SMS enrollment is separate from company onboarding.",
   },
   {
     step: "branding",

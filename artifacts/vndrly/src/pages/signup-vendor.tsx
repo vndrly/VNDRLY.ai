@@ -1,3 +1,5 @@
+import PageBackButton from "@/components/page-back-button";
+import PageHistoryLink from "@/components/page-history-link";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useState } from "react";
@@ -16,7 +18,6 @@ import LanguageToggle from "@/components/language-toggle";
 import { cn } from "@/lib/utils";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
-import backIcon from "@assets/Amber-back-button-logo-tuned.png";
 import { getContrastWarning, getColorPairWarning } from "@/lib/brand-color";
 import { translateApiError } from "@/lib/api-error";
 
@@ -170,7 +171,7 @@ export default function SignupVendor() {
           <div className="flex flex-col items-start mb-8">
             <img src={vndrlyLogo} alt="VNDRLY Logo" className="w-16 h-16 rounded-xl mb-3" draggable={false} />
             <div className="flex items-center gap-3">
-              <img src={backIcon} alt="Back" className="w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity" draggable={false} onClick={() => navigate("/signup")} data-testid="button-back" />
+              <PageBackButton fallbackHref="/signup" />
               <h1 className={cn("text-2xl font-bold tracking-tight", "text-white")}>Vendor Onboarding</h1>
             </div>
             <p className={cn("text-sm mt-1", "text-gray-300")}>Tell us about your company to get started.</p>
@@ -332,9 +333,9 @@ export default function SignupVendor() {
 
           <div className="mt-4 pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-500 text-center">
-              <a href="/signup" className="font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2" onClick={(e) => { e.preventDefault(); navigate("/signup"); }}>
+              <PageHistoryLink href="/signup" className="inline-block font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2 motion-safe:transition-transform motion-safe:hover:scale-105">
                 Back to account type selection
-              </a>
+              </PageHistoryLink>
             </p>
           </div>
         </div>

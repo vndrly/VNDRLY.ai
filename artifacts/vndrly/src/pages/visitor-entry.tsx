@@ -1,3 +1,5 @@
+import PageBackButton from "@/components/page-back-button";
+import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
@@ -14,7 +16,6 @@ import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
-import backButtonImg from "@assets/Amber-back-button-logo-tuned.png";
 import { sortSitesByNameAndDistance } from "@workspace/gate-booth";
 
 type GeoState =
@@ -100,15 +101,7 @@ export default function VisitorEntryPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/login")}
-                    aria-label={t("common.cancel") as string}
-                    className="shrink-0 transition-transform hover:scale-105 active:scale-95"
-                    data-testid="button-back"
-                  >
-                    <img src={backButtonImg} alt="" className="h-10 w-10 block" draggable={false} />
-                  </button>
+                  <PageBackButton fallbackHref="/login" ariaLabel={t("common.back") as string} />
                   <Label className="text-sm font-medium">{t("visitor.web.selectSite")}</Label>
                 </div>
                 {geo.kind === "locating" && (
@@ -182,7 +175,7 @@ export default function VisitorEntryPage() {
               </div>
 
               <div className="flex justify-center pt-1">
-                <PngPillButton color="red" onClick={() => navigate("/login")} data-testid="link-back-to-login">
+                <PngPillButton color="red" className="motion-safe:transition-transform motion-safe:hover:scale-105" onClick={() => navigateBackInApp(navigate, "/login")} data-testid="link-back-to-login">
                   {t("common.cancel")}
                 </PngPillButton>
               </div>

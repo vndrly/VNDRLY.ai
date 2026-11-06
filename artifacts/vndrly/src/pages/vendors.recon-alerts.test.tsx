@@ -91,6 +91,7 @@ vi.mock("@/hooks/use-toast", () => ({
 }));
 
 vi.mock("wouter", () => ({
+  useLocation: () => [window.location.pathname, vi.fn()],
   Link: ({ children, ...rest }: { children: React.ReactNode }) =>
     React.createElement("a", rest, children),
 }));

@@ -1,3 +1,4 @@
+import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -122,13 +123,7 @@ export default function VisitorsPage({ embedded = false }: { embedded?: boolean 
       {!embedded && <div className="flex items-center gap-3 mb-1">
         <button
           type="button"
-          onClick={() => {
-            if (typeof window !== "undefined" && window.history.length > 1) {
-              window.history.back();
-            } else {
-              setLocation("/");
-            }
-          }}
+          onClick={() => navigateBackInApp(setLocation, "/")}
           className="group inline-flex items-center"
           aria-label={t("common.back", { defaultValue: "Back" })}
           data-testid="button-back"

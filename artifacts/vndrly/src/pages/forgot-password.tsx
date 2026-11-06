@@ -1,3 +1,5 @@
+import { navigateBackInApp } from "@/lib/in-app-navigation";
+import PageHistoryLink from "@/components/page-history-link";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useState } from "react";
@@ -83,7 +85,7 @@ export default function ForgotPassword() {
                 If an account exists for <span className="font-medium text-gray-900">{email}</span>, we've sent a password reset link. The link expires in 1 hour.
               </p>
               <div className="pt-5">
-                <PngPillButton color="amber" type="button" className="w-full h-11" onClick={() => navigate("/login")} data-testid="button-back-to-login">
+                <PngPillButton color="amber" type="button" className="w-full h-11 motion-safe:transition-transform motion-safe:hover:scale-105" onClick={() => navigateBackInApp(navigate, "/login")} data-testid="button-back-to-login">
                   Back to Sign In
                 </PngPillButton>
               </div>
@@ -121,14 +123,13 @@ export default function ForgotPassword() {
           )}
 
           <div className={cn("mt-4 pt-4 border-t text-center", "border-white/20")}>
-            <a
+            <PageHistoryLink
               href="/login"
-              className="font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2 text-sm"
-              onClick={(e) => { e.preventDefault(); navigate("/login"); }}
+              className="font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2 text-sm inline-block motion-safe:transition-transform motion-safe:hover:scale-105"
               data-testid="link-back-to-login"
             >
               Back to Sign In
-            </a>
+            </PageHistoryLink>
           </div>
         </div>
       </div>

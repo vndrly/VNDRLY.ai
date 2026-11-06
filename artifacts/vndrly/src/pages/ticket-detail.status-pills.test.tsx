@@ -126,6 +126,7 @@ vi.mock("@tanstack/react-query", async () => {
 // --- wouter Link: rendered as a plain <a> so the back button doesn't
 // reach for the wouter routing context (we don't mount a Router here).
 vi.mock("wouter", () => ({
+  useLocation: () => [window.location.pathname, vi.fn()],
   Link: ({
     href,
     children,

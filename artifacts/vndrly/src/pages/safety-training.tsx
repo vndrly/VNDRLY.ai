@@ -1,6 +1,6 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 import { useState } from "react";
-import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
@@ -41,9 +41,9 @@ export default function SafetyTrainingPage() {
   return (
     <div className="space-y-6 max-w-xl" data-testid="safety-training-page">
       <div className="flex items-center gap-4">
-        <Link href="/" className="group inline-flex items-center" aria-label="Back">
+        <PageHistoryLink href="/" className="group inline-flex items-center" aria-label="Back">
           <SphereBackButton size={40} />
-        </Link>
+        </PageHistoryLink>
         <div>
           <h1 className="text-2xl font-bold">{t("safety.trainingPageTitle")}</h1>
           <p className="text-muted-foreground text-sm">{t("safety.trainingPageSubtitle")}</p>

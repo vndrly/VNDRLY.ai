@@ -20,7 +20,7 @@ describe("SiteStatusToggle", () => {
     render(
       <SiteStatusToggle active={false} onActiveClick={onActiveClick} onInactiveClick={vi.fn()} />,
     );
-    await userEvent.click(screen.getByTestId("site-status-active"));
+    await userEvent.click(screen.getByRole("switch"));
     expect(onActiveClick).toHaveBeenCalledTimes(1);
   });
 
@@ -29,7 +29,7 @@ describe("SiteStatusToggle", () => {
     render(
       <SiteStatusToggle active onInactiveClick={onInactiveClick} onActiveClick={vi.fn()} />,
     );
-    await userEvent.click(screen.getByTestId("site-status-inactive"));
+    await userEvent.click(screen.getByRole("switch"));
     expect(onInactiveClick).toHaveBeenCalledTimes(1);
   });
 
@@ -44,8 +44,8 @@ describe("SiteStatusToggle", () => {
         onInactiveClick={onInactiveClick}
       />,
     );
-    await userEvent.click(screen.getByTestId("site-status-active"));
-    await userEvent.click(screen.getByTestId("site-status-inactive"));
+    expect((screen.getByRole("switch") as HTMLButtonElement).disabled).toBe(true);
+    await userEvent.click(screen.getByRole("switch"));
     expect(onActiveClick).not.toHaveBeenCalled();
     expect(onInactiveClick).not.toHaveBeenCalled();
   });

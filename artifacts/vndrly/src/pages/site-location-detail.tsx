@@ -1,3 +1,6 @@
+import PageHistoryLink from "@/components/page-history-link";
+import "./vendor-profile.css";
+import "./site-location-detail.css";
 import { useState, useEffect } from "react";
 import {
   useGetSiteLocation,
@@ -28,7 +31,6 @@ import { visitsApi, type VisitorRow } from "@/lib/visits-api";
 import { reactivateSiteLocation, useSafetyCapabilities, fetchOpenStopWorkEvents, closeStopWorkAndReactivateSite } from "@/lib/safety-api";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -44,15 +46,7 @@ import { useBrand } from "@/hooks/use-brand";
 import StatusBadge from "@/components/status-badge";
 import TicketStatusBadge from "@/components/ticket-status-badge";
 import { SiteLocationMap } from "@/components/site-location-map";
-import BlueButton from "@/components/blue-button";
-import RedButton from "@/components/red-button";
-import GreyButton from "@/components/grey-button";
-import LightGreyRedButton from "@/components/light-grey-red-button";
-import AmberButton from "@/components/amber-button";
-import BrandPill from "@/components/brand-pill";
 import ImagePill from "@/components/image-pill";
-import { PngPillButton } from "@/components/png-pill-rollover";
-import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
 import AfePill from "@/components/afe-pill";
 import SiteStatusToggle from "@/components/site-status-toggle";
@@ -169,9 +163,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
       Number.isFinite(expandTargetVendorId),
   });
   const [expandChecked, setExpandChecked] = useState<Set<number>>(new Set());
-  const [expandInitial, setExpandInitial] = useState<Set<number>>(new Set());
   const [expandSaving, setExpandSaving] = useState(false);
-  const expandDirty = expandChecked.size !== expandInitial.size || Array.from(expandChecked).some((id) => !expandInitial.has(id));
   const canRemove = user?.role === "admin" || user?.role === "partner";
   const siteTicketsParams = { siteLocationId: id, limit: 100, offset: 0 };
   const { data: siteTicketsPage, isLoading: ticketsLoading } = useListTickets(siteTicketsParams, { query: { enabled: !!id, queryKey: getListTicketsQueryKey(siteTicketsParams), staleTime: 30_000 } });
@@ -610,7 +602,6 @@ export default function SiteLocationDetail({ id }: { id: number }) {
     const existingForVendor = (site?.assignments ?? []).filter((a: any) => targetVendorId == null || a.vendorId === targetVendorId);
     const initial = new Set<number>(existingForVendor.map((a: any) => a.workTypeId));
     setExpandChecked(new Set(initial));
-    setExpandInitial(initial);
     setExpandOpen(true);
   };
 
@@ -620,7 +611,6 @@ export default function SiteLocationDetail({ id }: { id: number }) {
     const existingForVendor = (site?.assignments ?? []).filter((a: any) => a.vendorId === vid);
     const initial = new Set<number>(existingForVendor.map((a: any) => a.workTypeId));
     setExpandChecked(new Set(initial));
-    setExpandInitial(initial);
   };
 
   const toggleExpandCheck = (workTypeId: number, alreadyAssigned: boolean) => {
@@ -757,13 +747,13 @@ export default function SiteLocationDetail({ id }: { id: number }) {
     );
   };
 
-  if (isLoading) return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-48 w-full" /></div>;
-  if (!site) return <p className="text-muted-foreground">{t("siteLocations.siteNotFound")}</p>;
+  if (isLoading) return <div className="vendor-workspace-page site-location-detail space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-48 w-full" /></div>;
+  if (!site) return <p className="vendor-workspace-page text-muted-foreground">{t("siteLocations.siteNotFound")}</p>;
 
   return (
-    <div className="space-y-6" data-testid="site-location-detail-page">
+    <div className="vendor-workspace-page site-location-detail space-y-6" data-testid="site-location-detail-page">
       <div className="flex items-center gap-4">
-        <Link href="/site-locations" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+        <PageHistoryLink href="/site-locations" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold" data-testid="text-site-name">{site.name}</h1>
           <p className="text-muted-foreground text-sm">{site.address}</p>
@@ -771,7 +761,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
         {(user?.role === "admin" || user?.role === "partner") && (
           <Link
             href={`/site-locations/${id}/cameras`}
-            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
+            className="vendor-mini-card-button"
             data-testid="link-camera-center"
           >
             <Camera className="h-4 w-4" />
@@ -804,7 +794,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
               ) : (
                 <div className="flex items-center gap-2">
                   <Input value={editAfe} onChange={(e) => setEditAfe(e.target.value)} className="w-44 h-7 text-xs" placeholder={t("siteLocations.afePlaceholder")} data-testid="input-edit-afe" />
-                  <button className="text-green-600 hover:text-green-700" onClick={handleSaveAfe} data-testid="button-save-afe"><Save className="w-4 h-4" /></button>
+                  <button className="text-green-300 hover:text-green-200" onClick={handleSaveAfe} data-testid="button-save-afe"><Save className="w-4 h-4" /></button>
                   <button className="text-muted-foreground hover:text-foreground" onClick={() => setEditingAfe(false)} data-testid="button-cancel-afe"><X className="w-4 h-4" /></button>
                 </div>
               )}
@@ -843,7 +833,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                   <div className="flex flex-wrap items-center gap-2">
                     <Input type="number" step="any" value={editLat} onChange={(e) => setEditLat(e.target.value)} className="w-28 h-7 text-xs" placeholder={t("siteLocations.latitude")} data-testid="input-edit-lat" />
                     <Input type="number" step="any" value={editLng} onChange={(e) => setEditLng(e.target.value)} className="w-28 h-7 text-xs" placeholder={t("siteLocations.longitude")} data-testid="input-edit-lng" />
-                    <BrandPillButton
+                    <button className="vendor-mini-card-button"
                       type="button"
 
                       onClick={handleUseCurrentLocation}
@@ -854,15 +844,15 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                       {geoLocating
                         ? t("siteLocations.locating", { defaultValue: "Locating..." })
                         : t("siteLocations.useCurrentLocation", { defaultValue: "Use my current location" })}
-                    </BrandPillButton>
-                    <button className="text-green-600 hover:text-green-700" onClick={handleSaveCoords} data-testid="button-save-coords"><Save className="w-4 h-4" /></button>
+                    </button>
+                    <button className="text-green-300 hover:text-green-200" onClick={handleSaveCoords} data-testid="button-save-coords"><Save className="w-4 h-4" /></button>
                     <button className="text-muted-foreground hover:text-foreground" onClick={() => setEditingCoords(false)} data-testid="button-cancel-coords"><X className="w-4 h-4" /></button>
                   </div>
                 )}
               </div>
               {!editingCoords && canManageAssignments ? (
                 <div className="mt-1">
-                  <BrandPillButton
+                  <button className="vendor-mini-card-button"
                     type="button"
 
                     onClick={handleUseCurrentLocation}
@@ -873,7 +863,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                     {geoLocating
                       ? t("siteLocations.locating", { defaultValue: "Locating..." })
                       : t("siteLocations.useCurrentLocation", { defaultValue: "Use my current location" })}
-                  </BrandPillButton>
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -918,7 +908,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                       data-testid="input-edit-radius"
                     />
                     <button
-                      className="text-green-600 hover:text-green-700"
+                      className="text-green-300 hover:text-green-200"
                       onClick={handleSaveRadius}
                       disabled={updateSite.isPending}
                       data-testid="button-save-radius"
@@ -956,7 +946,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                     onInactiveClick={handleStatusInactiveClick}
                   />
                   {siteIsInactive && openStopWorkEvents.length > 0 ? (
-                    <span className="text-xs text-red-600" data-testid="text-stop-work-hint">
+                    <span className="text-xs text-red-300" data-testid="text-stop-work-hint">
                       {t("siteLocations.stopWorkInactiveHint")}
                     </span>
                   ) : null}
@@ -965,7 +955,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                 <StatusBadge status={site.status} className="w-[100px] justify-center" />
               )}
               <AlertDialog open={reactivateOpen} onOpenChange={(o) => { if (!reactivating) setReactivateOpen(o); }}>
-                <AlertDialogContent>
+                <AlertDialogContent className="vendor-workspace-page site-location-dialog">
                   <AlertDialogHeader>
                     <AlertDialogTitle>{t("siteLocations.reactivateSiteConfirmTitle")}</AlertDialogTitle>
                     <AlertDialogDescription>{t("siteLocations.reactivateSiteConfirmDescription")}</AlertDialogDescription>
@@ -979,7 +969,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                 </AlertDialogContent>
               </AlertDialog>
               <AlertDialog open={deactivateOpen} onOpenChange={(o) => { if (!updateSite.isPending) setDeactivateOpen(o); }}>
-                <AlertDialogContent>
+                <AlertDialogContent className="vendor-workspace-page site-location-dialog">
                   <AlertDialogHeader>
                     <AlertDialogTitle>{t("siteLocations.deactivateSiteConfirmTitle")}</AlertDialogTitle>
                     <AlertDialogDescription>{t("siteLocations.deactivateSiteConfirmDescription")}</AlertDialogDescription>
@@ -1041,28 +1031,28 @@ export default function SiteLocationDetail({ id }: { id: number }) {
           {isAdmin && site.hidden && (
             <div className="px-6 pt-2 pb-2">
               <div
-                className="rounded-md border border-amber-300 bg-amber-50 p-3 space-y-2"
+                className="rounded-lg border border-amber-500/50 bg-amber-950/40 p-3 space-y-2"
                 data-testid="panel-hidden-site"
               >
                 <div className="flex items-start gap-2">
-                  <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <Info className="w-4 h-4 text-amber-300 mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-medium text-amber-900" data-testid="text-hidden-banner">{t("siteLocations.hiddenBannerTitle")}</p>
-                    <p className="text-xs text-amber-800 mt-1">
+                    <p className="font-medium text-amber-200" data-testid="text-hidden-banner">{t("siteLocations.hiddenBannerTitle")}</p>
+                    <p className="text-xs text-amber-200 mt-1">
                       {site.supersededAt
                         ? t("siteLocations.hiddenBannerSupersededDesc", { date: new Date(site.supersededAt).toLocaleDateString() })
                         : t("siteLocations.hiddenBannerDesc")}
                     </p>
                   </div>
                 </div>
-                <PngPillButton color="brand"
-                  className="w-full"
+                <button type="button"
+                  className="vendor-mini-card-button w-full"
                   onClick={handleUnhide}
                   disabled={updateSite.isPending}
                   data-testid="button-unhide-site"
                 >
                   {updateSite.isPending ? t("siteLocations.unhiding") : t("siteLocations.unhideSite")}
-                </PngPillButton>
+                </button>
               </div>
             </div>
           )}
@@ -1070,14 +1060,14 @@ export default function SiteLocationDetail({ id }: { id: number }) {
             <div className="px-6 pb-6">
               <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                 <DialogTrigger asChild>
-                  <PngPillButton color="red" className="w-full px-2" data-testid="button-remove-site"><Trash2 className="w-4 h-4" />{t("siteLocations.removeSite")}</PngPillButton>
+                  <button type="button" className="vendor-mini-card-button w-full px-2" data-testid="button-remove-site"><Trash2 className="w-4 h-4" />{t("siteLocations.removeSite")}</button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="vendor-workspace-page site-location-dialog">
                   <DialogHeader><DialogTitle>{t("siteLocations.removeSiteTitle")}</DialogTitle></DialogHeader>
                   <p className="text-sm text-muted-foreground">{t("siteLocations.removeSiteConfirmPrefix")} <strong>{site.name}</strong>{t("siteLocations.removeSiteConfirmSuffix")}</p>
                   <div className="flex gap-3 justify-end mt-4">
-                    <PillButton color="red" onClick={() => setDeleteOpen(false)}>{t("common.cancel")}</PillButton>
-                    <PngPillButton color="red" onClick={handleDeleteSite} data-testid="button-confirm-remove">{deleteSite.isPending ? t("siteLocations.removing") : t("siteLocations.removeSite")}</PngPillButton>
+                    <button className="vendor-mini-card-button" type="button" onClick={() => setDeleteOpen(false)}>{t("common.cancel")}</button>
+                    <button className="vendor-mini-card-button" type="button" onClick={handleDeleteSite} data-testid="button-confirm-remove">{deleteSite.isPending ? t("siteLocations.removing") : t("siteLocations.removeSite")}</button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -1090,19 +1080,19 @@ export default function SiteLocationDetail({ id }: { id: number }) {
           <CardContent className="flex flex-col items-center">
             {qrData ? (
               <>
-                <img src={qrData.qrCodeUrl} alt={t("siteLocations.siteQrAlt")} className="w-48 h-48 border rounded" data-testid="img-qr-code" />
-                <p className="text-xs text-muted-foreground mt-2">{t("siteLocations.portalLabel")} {qrData.portalUrl}</p>
+                <img src={qrData.qrCodeUrl} alt={t("siteLocations.siteQrAlt")} className="w-48 h-48 max-w-full object-contain bg-white border rounded-lg" data-testid="img-qr-code" />
+                <p className="text-xs text-muted-foreground mt-2 break-all">{t("siteLocations.portalLabel")} {qrData.portalUrl}</p>
               </>
             ) : (
               <Skeleton className="w-48 h-48" />
             )}
-            <BrandPillButton
-              className="mt-4"
+            <button type="button"
+              className="vendor-mini-card-button mt-4"
               onClick={() => window.open(`${import.meta.env.BASE_URL}print-visitor-qr/${id}`, "_blank")}
               data-testid="button-print-visitor-qr"
             >
               <Printer className="w-4 h-4" />{t("siteLocations.printVisitorQr")}
-            </BrandPillButton>
+            </button>
 
             <div className="w-full mt-6 pt-4 border-t">
               <div className="flex items-center gap-2 mb-3">
@@ -1135,7 +1125,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                       <li key={v.id}>
                         <button
                           type="button"
-                          className="w-full text-left flex flex-col gap-1 p-2 rounded border hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring"
+                          className="w-full text-left flex flex-col gap-1 p-2 rounded-lg border app-card-inner-tile hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring"
                           onClick={() => navigate(`/visits/${v.id}`)}
                           data-testid={`recent-visitor-${v.id}`}
                         >
@@ -1157,13 +1147,13 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                   })}
                 </ul>
               )}
-              <BrandPillButton
-                className="mt-3 w-full justify-center"
+              <button type="button"
+                className="vendor-mini-card-button mt-3 w-full justify-center"
                 onClick={() => navigate(`/visitors?siteLocationId=${id}`)}
                 data-testid="button-view-full-visitors-log"
               >
                 {t("siteLocations.viewFullVisitorsLog")}<ArrowRight className="w-4 h-4" />
-              </BrandPillButton>
+              </button>
             </div>
           </CardContent>
         </Card>
@@ -1172,14 +1162,14 @@ export default function SiteLocationDetail({ id }: { id: number }) {
       <FleetSiteTicketPolicy siteId={id} />
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5" style={iconStyle} />{t("siteLocations.workAssignmentsCount", { count: isVendor && user?.vendorId ? (site.assignments ?? []).filter((a: any) => a.vendorId === user.vendorId).length : (site.assignments?.length ?? 0) })}</CardTitle>
           <div className="flex items-center gap-2">
             <Dialog open={expandOpen} onOpenChange={setExpandOpen}>
               <DialogTrigger asChild>
-                <BrandPillButton tone="brand" onClick={handleOpenExpand} data-testid="button-expand-catalog"><ListChecks className="w-4 h-4" />{t("siteLocations.addSiteAssignments")}</BrandPillButton>
+                <button className="vendor-mini-card-button" type="button" onClick={handleOpenExpand} data-testid="button-expand-catalog"><ListChecks className="w-4 h-4" />{t("siteLocations.addSiteAssignments")}</button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+              <DialogContent className="vendor-workspace-page site-location-dialog max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                 <DialogHeader>
                   <DialogTitle>{t("siteLocations.addSiteAssignments")}</DialogTitle>
                   <p className="text-sm text-muted-foreground">
@@ -1193,7 +1183,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                     <Label>{t("siteLocations.vendor")}</Label>
                     <Select value={expandVendorId} onValueChange={handleExpandVendorChange}>
                       <SelectTrigger data-testid="select-expand-vendor"><SelectValue placeholder={t("siteLocations.selectVendor")} /></SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="site-location-menu">
                         {vendors?.map((v) => <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -1272,28 +1262,24 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                   })()}
                 </div>
                 <div className="flex gap-8 justify-end pt-3 border-t">
-                  <LightGreyRedButton onClick={() => setExpandOpen(false)} data-testid="button-cancel-expand">{t("common.cancel")}</LightGreyRedButton>
-                  {expandDirty ? (
-                    <PngPillButton color="green" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</PngPillButton>
-                  ) : (
-                    <PngPillButton color="brand" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</PngPillButton>
-                  )}
+                  <button className="vendor-mini-card-button" type="button" onClick={() => setExpandOpen(false)} data-testid="button-cancel-expand">{t("common.cancel")}</button>
+                  <button className="vendor-mini-card-button" type="button" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</button>
                 </div>
               </DialogContent>
             </Dialog>
             {canManageAssignments && (
               <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <BrandPillButton tone="brand" data-testid="button-add-assignment"><Plus className="w-4 h-4" />{t("common.add", { defaultValue: "Add" })}</BrandPillButton>
+                <button className="vendor-mini-card-button" type="button" data-testid="button-add-assignment"><Plus className="w-4 h-4" />{t("common.add", { defaultValue: "Add" })}</button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="vendor-workspace-page site-location-dialog">
                 <DialogHeader><DialogTitle>{t("siteLocations.addAssignmentTitle")}</DialogTitle></DialogHeader>
                 <form onSubmit={handleAddAssignment} className="space-y-4">
                   <div>
                     <Label>{t("siteLocations.workType")}</Label>
                     <Select value={form.workTypeId} onValueChange={(v) => setForm({ ...form, workTypeId: v })}>
                       <SelectTrigger data-testid="select-work-type"><SelectValue placeholder={t("siteLocations.selectWorkType")} /></SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="site-location-menu">
                         {workTypes?.map((wt) => <SelectItem key={wt.id} value={String(wt.id)}>{wt.category} - {wt.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -1302,12 +1288,12 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                     <Label>{t("siteLocations.vendor")}</Label>
                     <Select value={form.vendorId} onValueChange={(v) => setForm({ ...form, vendorId: v })}>
                       <SelectTrigger data-testid="select-vendor"><SelectValue placeholder={t("siteLocations.selectVendor")} /></SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="site-location-menu">
                         {vendors?.map((v) => <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-                  <PngPillButton color="brand" type="submit" disabled={createAssignment.isPending} data-testid="button-submit-assignment" className="w-full">{createAssignment.isPending ? t("siteLocations.addingAssignment") : t("siteLocations.addAssignment")}</PngPillButton>
+                  <button type="submit" disabled={createAssignment.isPending} data-testid="button-submit-assignment" className="vendor-mini-card-button w-full">{createAssignment.isPending ? t("siteLocations.addingAssignment") : t("siteLocations.addAssignment")}</button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -1381,7 +1367,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
               <div className="p-6 space-y-3">
                 {canManageAssignments && (
                   <div
-                    className="rounded-md border border-blue-300 bg-blue-50 p-3 text-sm text-blue-900"
+                    className="rounded-lg border border-blue-400/50 bg-blue-950/40 p-3 text-sm text-blue-200"
                     data-testid="banner-no-vendors-assigned"
                   >
                     {t("siteLocations.noVendorsAssignedBanner")}
@@ -1404,7 +1390,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
           here for vendors would just produce a 403. */}
       {canManageAssignments && (
         <Card data-testid="card-direct-assignments">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2">
               <Send className="w-5 h-5" style={iconStyle} />
               {t("directAssignment.sectionTitle")}
@@ -1412,12 +1398,12 @@ export default function SiteLocationDetail({ id }: { id: number }) {
             {canManageAssignments && (
               <Dialog open={directOpen} onOpenChange={setDirectOpen}>
                 <DialogTrigger asChild>
-                  <PngPillButton color="brand" className="px-2" data-testid="button-add-direct-assignment">
+                  <button type="button" className="vendor-mini-card-button px-2" data-testid="button-add-direct-assignment">
                     <Plus className="w-4 h-4" />
                     {t("directAssignment.addButton")}
-                  </PngPillButton>
+                  </button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="vendor-workspace-page site-location-dialog">
                   <DialogHeader>
                     <DialogTitle>{t("directAssignment.addDialogTitle")}</DialogTitle>
                   </DialogHeader>
@@ -1431,7 +1417,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                         <SelectTrigger data-testid="select-direct-vendor">
                           <SelectValue placeholder={t("siteLocations.selectVendor")} />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="site-location-menu">
                           {vendors?.map((v) => (
                             <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>
                           ))}
@@ -1495,7 +1481,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                         <SelectTrigger data-testid="select-direct-priority">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="site-location-menu">
                           <SelectItem value="low">{t("directAssignment.priorityLow")}</SelectItem>
                           <SelectItem value="normal">{t("directAssignment.priorityNormal")}</SelectItem>
                           <SelectItem value="high">{t("directAssignment.priorityHigh")}</SelectItem>
@@ -1512,18 +1498,17 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                         data-testid="textarea-direct-scope"
                       />
                     </div>
-                    <PngPillButton
-                      color="brand"
+                    <button
                       type="submit"
 
-                      className="w-full px-2"
+                      className="vendor-mini-card-button w-full px-2"
                       disabled={createDirectAssignment.isPending}
                       data-testid="button-submit-direct-assignment"
                     >
                       {createDirectAssignment.isPending
                         ? t("directAssignment.sending")
                         : t("directAssignment.sendOffer")}
-                    </PngPillButton>
+                    </button>
                   </form>
                 </DialogContent>
               </Dialog>
@@ -1571,7 +1556,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                               : <span className="italic text-muted-foreground">{t("directAssignment.noScope")}</span>}
                           </span>
                           {a.status === "passed" && a.passReason && (
-                            <div className="mt-1 text-xs text-red-700">
+                            <div className="mt-1 text-xs text-red-300">
                               {t("directAssignment.passReasonPrefix")}: {a.passReason}
                             </div>
                           )}
@@ -1589,14 +1574,13 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                         {canManageAssignments && (
                           <TableCell className="text-right">
                             {a.status === "pending" && (
-                              <PillButton
-                                color="image"
-                                className="min-w-[28px] px-0"
+                              <button type="button"
+                                className="vendor-mini-card-button min-w-[28px] px-0"
                                 onClick={() => setCancelDirectId(a.id)}
                                 data-testid={`button-cancel-direct-${a.id}`}
                               >
                                 <X className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                              </PillButton>
+                              </button>
                             )}
                           </TableCell>
                         )}
@@ -1688,7 +1672,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
           if (!o) setCancelDirectId(null);
         }}
       >
-        <AlertDialogContent data-testid="dialog-cancel-direct-assignment">
+        <AlertDialogContent className="vendor-workspace-page site-location-dialog" data-testid="dialog-cancel-direct-assignment">
           <AlertDialogHeader>
             <AlertDialogTitle>{t("directAssignment.cancelConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
@@ -1724,7 +1708,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
           if (!o) setCatalogConflict(null);
         }}
       >
-        <AlertDialogContent data-testid="dialog-catalog-conflict">
+        <AlertDialogContent className="vendor-workspace-page site-location-dialog" data-testid="dialog-catalog-conflict">
           <AlertDialogHeader>
             <AlertDialogTitle>
               {t("siteLocations.catalogConflictTitle", {

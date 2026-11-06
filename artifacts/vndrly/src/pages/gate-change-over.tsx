@@ -404,8 +404,8 @@ export default function GateChangeOverPage({
     <div className={history ? `${FIELD_OPS_PAGE_CLASS} space-y-5` : "gate-dashboard w-full space-y-3"}>
       <div className={history ? "flex items-center gap-3" : "flex flex-wrap items-center gap-x-3 gap-y-1"}>
         {history
-          ? <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("changeOver.title")} testId="button-back" />
-          : <ContentPaneBackLink href="/work-hub" ariaLabel={t("changeOver.title")} testId="button-back" className="h-11" />}
+          ? <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("common.back")} testId="button-back" />
+          : <ContentPaneBackLink href="/work-hub" ariaLabel={t("common.back")} testId="button-back" className="h-11" />}
         {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         {!history && <LayoutDashboard aria-hidden="true" data-testid="gate-dashboard-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         <div className={history ? undefined : "order-1 basis-full md:order-none md:min-w-0 md:flex-1 md:basis-auto"}>

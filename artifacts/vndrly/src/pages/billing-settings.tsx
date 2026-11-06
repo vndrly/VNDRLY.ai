@@ -1,5 +1,5 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useGetVendor,
@@ -290,14 +290,14 @@ export default function BillingSettingsPage({
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <Link
+          <PageHistoryLink
             href={backHref}
             className="group inline-flex items-center"
             data-testid="link-back-billing-settings"
             aria-label="Back"
           >
             <SphereBackButton size={32} />
-          </Link>
+          </PageHistoryLink>
           <div>
             <h1 className="text-2xl font-semibold">
               {t("invoices.billingSettings.title")}

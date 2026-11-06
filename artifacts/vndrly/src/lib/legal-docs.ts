@@ -1,3 +1,4 @@
+export const SMS_ENROLLMENT_POLICY_PATH = "/legal/sms-enrollment-policy/";
 export const LEGAL_EFFECTIVE_DATE = "August 24, 2026";
 import { LEGAL_POLICY_VERSION } from "@workspace/api-zod/legal-policy";
 export { LEGAL_POLICY_VERSION };

@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import {FleetAgreementEditor} from "@/components/fleet-agreement-editor";
 import type {FleetRateCardRevision} from "@workspace/api-zod";
 import { Fragment, useState, useRef, useMemo, useEffect } from "react";
@@ -1757,7 +1758,7 @@ export default function PartnerDetail({ id }: { id: number }) {
         onClose={() => setPendingSquareLogoFile(null)}
       />
       <div className="flex items-center gap-4">
-        <Link href="/partners" className="group inline-flex items-center gap-2" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+        <PageHistoryLink href="/partners" className="group inline-flex items-center gap-2" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
         {(partner.logoUrl || partner.logoSquareUrl) && (
           <div className="flex h-14 max-w-44 shrink-0 items-center justify-start" data-testid="partner-header-logo">
             <img src={partner.logoUrl || partner.logoSquareUrl || ""} alt={t("partners.logoAlt", { name: partner.name })} className="h-full w-auto max-w-44 object-contain object-left" />

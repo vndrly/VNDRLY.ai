@@ -287,6 +287,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useWorkHubDevicePresence(location, Boolean(user?.vendorId || user?.partnerId), user?.userId, `${user?.vendorId ?? ""}:${user?.partnerId ?? ""}`);
 
   const navItems = inFleet && canEnterFleet ? fleetNavItems : inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
+  const vendorSidebar = user?.role === "vendor" && !inWorkHub && !inFleet;
   const {preferences:hubPreferences}=useHubPreferences(inWorkHub);
   const phoneNavItems=inWorkHub?orderWorkHubItems(navItems,hubPreferences.order).flatMap(item=>{const source=navItems.find(nav=>nav.key===item.key);return source&&hubPreferences.pinned.includes(item.key)?[source]:[];}):navItems;
   const { data: vendor } = useGetVendor(user?.vendorId ?? 0, { query: { enabled: user?.role === "vendor" && !!user.vendorId, queryKey: getGetVendorQueryKey(user?.vendorId ?? 0) } });
@@ -461,7 +462,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               nav has no analytics entry) never saw them. Render once
               after the nav loop so every role — admin / vendor /
               partner / field — gets the same toggles in the sidebar. */}
-          {!inWorkHub && <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
+          {!inWorkHub && !vendorSidebar && <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
             <LanguageToggle variant={isDarkTheme ? "dark" : "light"} />
           </div>}
           {user && !inWorkHub && (
@@ -482,6 +483,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </SidebarButton>
             </div>
           )}
+          {vendorSidebar && <div className="flex justify-center px-1 pt-2 text-white"><LanguageToggle variant="dark" presentation="line" alwaysOn /></div>}
         </nav>
       </aside>
 

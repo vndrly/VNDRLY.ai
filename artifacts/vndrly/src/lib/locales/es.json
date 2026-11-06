@@ -47,7 +47,6 @@
   },
   "smsEnrollment": {
     "link": "Inscribirse en actualizaciones por SMS",
-    "signupHint": "Abra la página de inscripción por SMS en una pestaña nueva. Termine de crear su cuenta e inicie sesión antes de guardar su consentimiento opcional para SMS.",
     "preferencesHint": "Abra la página de inscripción por SMS en una pestaña nueva para elegir actualizaciones de texto opcionales. Lea la información, ingrese su número móvil y guarde su consentimiento."
   },
   "jobOffers": {
@@ -522,7 +521,7 @@
     "analytics": "Analítica",
     "catalog": "Catálogo de Productos/Servicios",
     "platformCatalog": "Catálogo de plataforma",
-    "yourServices": "Sus servicios y tarifas",
+    "yourServices": "Servicios y tarifas",
     "partnerCatalog": "Productos y servicios",
     "vendorCatalog": "Catálogo de Proveedor",
     "invoices": "Facturas",

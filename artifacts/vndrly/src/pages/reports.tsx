@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { CardHeading } from "@/components/ui/card-heading";
 import {
   Fragment,
@@ -9871,7 +9872,7 @@ export default function ReportsPage(): ReactElement {
   return (
     <div className="p-6 space-y-8">
       <div className="flex items-center gap-3">
-        <Link href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+        <PageHistoryLink href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
             {t("reports.pageTitle")}

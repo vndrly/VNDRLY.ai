@@ -1,3 +1,5 @@
+import PageBackButton from "@/components/page-back-button";
+import PageHistoryLink from "@/components/page-history-link";
 import {PartnerAugmentationSummary} from "@/components/work-hub/repository-certifications";
 import VendorOperatingArea from "@/components/vendor-operating-area";
 import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
@@ -467,9 +469,9 @@ export default function VendorDetail({ id }: { id: number }) {
       />
       <div className="flex items-center gap-4">
         {!isOwnVendor ? (
-          <Link href="/vendors" className="group inline-flex items-center gap-2" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+          <PageHistoryLink href="/vendors" className="group inline-flex items-center gap-2" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
         ) : (
-          <button type="button" onClick={() => window.history.back()} className="group inline-flex items-center gap-2" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></button>
+          <PageBackButton fallbackHref="/vendors" />
         )}
         {(vendor.logoUrl || vendor.logoSquareUrl) && (
           <div className="flex h-14 max-w-44 shrink-0 items-center justify-start" data-testid="vendor-header-logo">

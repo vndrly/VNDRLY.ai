@@ -1,3 +1,4 @@
+import { brandIconColor } from "@/lib/brand-color";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
@@ -331,7 +332,7 @@ export default function OnboardingField() {
   return (
     <div
       className="min-h-screen bg-gray-100 px-4 py-8"
-      style={{ "--brand-primary": brandColor } as CSSProperties}
+      style={{ "--brand-primary": brandColor, "--brand-icon-color": brandIconColor(brandColor) } as CSSProperties}
     >
       <div className="max-w-xl mx-auto">
         <div
@@ -382,7 +383,7 @@ export default function OnboardingField() {
           data-testid="field-onboarding-card"
         >
           <CardContent className="p-6 pt-6">
-            <OnboardingStepper steps={STEPS} currentIndex={stepIndex} completedKeys={completed} skippedKeys={skipped} className="mb-8" />
+            <OnboardingStepper primaryColor={brandColor} steps={STEPS} currentIndex={stepIndex} completedKeys={completed} skippedKeys={skipped} className="mb-8" />
 
           {currentStep.key === "personal-info" && (
             <div className="space-y-4" data-testid="step-personal-info-body">

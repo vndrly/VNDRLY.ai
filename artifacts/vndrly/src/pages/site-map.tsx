@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
@@ -527,7 +528,7 @@ export default function SiteMapPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <Link href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+          <PageHistoryLink href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
           <div>
             <h1 className="text-2xl font-semibold" data-testid="text-site-map-title">
               {t("siteMap.title", "Site Map")}

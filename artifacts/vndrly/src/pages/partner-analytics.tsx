@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { useTranslation } from "react-i18next";
 import {
   usePartnerAnalytics,
@@ -201,7 +202,7 @@ export default function PartnerAnalytics({ partnerId }: { partnerId: number }) {
   return (
     <div className="space-y-6" data-testid="partner-analytics-page">
       <div className="flex items-center gap-4">
-        {!isOwnPartner && <Link href={`/partners/${partnerId}`} className="group inline-flex items-center" aria-label="Back"><SphereBackButton size={40} /></Link>}
+        {!isOwnPartner && <PageHistoryLink href={`/partners/${partnerId}`} className="group inline-flex items-center" aria-label="Back"><SphereBackButton size={40} /></PageHistoryLink>}
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("partnerAnalytics.titleFor", { defaultValue: "{{name}} Analytics", name: partner?.name || t("partnerAnalytics.partnerFallback", { defaultValue: "Partner" }) })}</h1>
           <p className="text-muted-foreground text-sm mt-1">{t("partnerAnalytics.subtitle", { defaultValue: "Cost tracking and vendor performance overview" })}</p>

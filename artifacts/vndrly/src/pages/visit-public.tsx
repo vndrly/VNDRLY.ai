@@ -1,3 +1,5 @@
+import { navigateBackInApp } from "@/lib/in-app-navigation";
+import { useLocation } from "wouter";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -27,13 +29,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import backButtonImg from "@assets/Amber-back-button-logo-tuned.png";
+import SphereBackButton from "@/components/sphere-back-button";
 import headerBg from "@assets/VNDRLY_Header_1776977091600.png";
 
 type Step = "signin" | "checkin" | "active";
 
 export default function VisitPublicPage({ siteCode }: { siteCode: string }) {
   const { t } = useTranslation();
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<Step>("signin");
   const [busy, setBusy] = useState(false);
@@ -439,19 +442,14 @@ export default function VisitPublicPage({ siteCode }: { siteCode: string }) {
                     setStep("signin");
                     setError(null);
                   } else {
-                    window.history.back();
+                    navigateBackInApp(navigate, "/visitor");
                   }
                 }}
                 aria-label={t("common.back") as string}
-                className="shrink-0 transition-transform hover:scale-105 active:scale-95"
+                className="group shrink-0"
                 data-testid="button-back"
               >
-                <img
-                  src={backButtonImg}
-                  alt=""
-                  className="h-10 w-10 block"
-                  draggable={false}
-                />
+                <SphereBackButton size={40} />
               </button>
               <div className="min-w-0">
                 <CardTitle className="text-lg">

@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
@@ -907,7 +908,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Link href={isForemanPortal ? "/foreman" : "/"} className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+          <PageHistoryLink href={isForemanPortal ? "/foreman" : "/"} className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold">{isForemanPortal ? t("foremanMap.title") : t("crewMap.title")}</h1>

@@ -75,7 +75,7 @@ interface PartnerPayload {
   preferences?: { hoursOfOperation?: string; operatingRadiusMiles?: number };
   inviteEmails?: string[];
   platformEula?: { accepted?: boolean; version?: string };
-  legalConsent?: { accepted?: boolean; smsOptIn?: boolean; version?: string };
+  legalConsent?: { accepted?: boolean; version?: string };
 }
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -137,7 +137,6 @@ export default function OnboardingPartner() {
   });
   const [legalConsent, setLegalConsent] = useState<OnboardingLegalConsentValue>({
     accepted: false,
-    smsOptIn: false,
     version: LEGAL_POLICY_VERSION,
   });
 
@@ -224,7 +223,6 @@ export default function OnboardingPartner() {
         if (p.legalConsent) {
           setLegalConsent({
             accepted: p.legalConsent.accepted === true,
-            smsOptIn: p.legalConsent.smsOptIn === true,
             version: p.legalConsent.version ?? LEGAL_POLICY_VERSION,
           });
         }
@@ -431,7 +429,7 @@ export default function OnboardingPartner() {
         return null;
       case "legal-consent":
         if (!legalConsent.accepted) {
-          return "You must accept the VNDRLY Privacy Policy and Terms & Conditions to continue.";
+          return "You must accept the VNDRLY legal documents to continue.";
         }
         return null;
       case "first-site":
@@ -494,7 +492,6 @@ export default function OnboardingPartner() {
     } else if (currentStep.key === "legal-consent") {
       patch.legalConsent = {
         accepted: legalConsent.accepted,
-        smsOptIn: legalConsent.smsOptIn,
         version: LEGAL_POLICY_VERSION,
       };
     } else if (currentStep.key === "branding") {
@@ -649,7 +646,7 @@ export default function OnboardingPartner() {
 
       <Card className="border-2 border-[color:var(--brand-primary)]/70 bg-white/95 shadow-2xl backdrop-blur-xl">
         <CardContent className="p-6 pt-6">
-          <OnboardingStepper steps={STEPS} currentIndex={stepIndex} completedKeys={completed} skippedKeys={skipped} className="mb-8" />
+          <OnboardingStepper primaryColor={pageBrand.primary} steps={STEPS} currentIndex={stepIndex} completedKeys={completed} skippedKeys={skipped} className="mb-8" />
 
           {currentStep.key === "company-basics" && (
             <div className="space-y-4" data-testid="step-company-basics-body">

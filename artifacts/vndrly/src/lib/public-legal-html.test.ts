@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderPublicMessagingHtml, renderPublicTermsHtml, renderPublicPrivacyHtml } from "./public-legal-html";
+import { renderPublicMessagingHtml, renderPublicTermsHtml, renderPublicPrivacyHtml, renderPublicSmsPolicyHtml } from "./public-legal-html";
 import { PUBLIC_SMS_CONSENT_DISCLOSURE, PUBLIC_SMS_CONSENT_DISCLOSURE_ES } from "@workspace/api-zod/legal-policy";
 import { TERMS_SECTIONS } from "./legal-docs";
 describe("public carrier-review documents", () => {
@@ -38,5 +38,14 @@ it("serves complete Spanish documents, a selected-language consent, and working 
     expect(es.querySelectorAll("main section").length).toBe(en.querySelectorAll("main section").length);
     expect(es.querySelectorAll("main section p").length).toBe(en.querySelectorAll("main section p").length);
     expect(es.documentElement.lang).toBe("es");
+  }
+});
+
+it("keeps the organization SMS policy read-only in both languages", () => {
+  for (const language of ["en", "es"] as const) {
+    const doc = new DOMParser().parseFromString(renderPublicSmsPolicyHtml(language), "text/html");
+    expect(doc.documentElement.lang).toBe(language);
+    expect(doc.querySelectorAll("main section")).toHaveLength(2);
+    expect(doc.querySelector("form")).toBeNull();
   }
 });

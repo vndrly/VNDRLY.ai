@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -974,14 +975,14 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <Link
+          <PageHistoryLink
             href="/invoices"
             className="group inline-flex items-center"
             data-testid="link-back-invoices"
             aria-label="Back to invoices"
           >
             <SphereBackButton size={32} />
-          </Link>
+          </PageHistoryLink>
           <h1 className="text-2xl font-semibold">{data.invoiceNumber}</h1>
           <ImagePill color={statusPillColor(data.status)} data-testid="badge-status">
             {t(`invoices.status.${data.status}`)}

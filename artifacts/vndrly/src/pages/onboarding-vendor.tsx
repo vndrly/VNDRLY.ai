@@ -2,7 +2,6 @@ import "./vendor-profile.css";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PinFields } from "@/components/admin-pin-setup";
 import { OnboardingServiceCatalog } from "@/components/onboarding-service-catalog";
-import SphereBackButton from "@/components/sphere-back-button";
 import CompanyOperationsChoice from "@/components/company-operations-choice";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
@@ -82,7 +81,7 @@ interface VendorPayload {
   };
   branding?: { brandPrimaryColor?: string; logoUrl?: string; logoSquareUrl?: string };
   platformEula?: { accepted?: boolean; version?: string };
-  legalConsent?: { accepted?: boolean; smsOptIn?: boolean; version?: string };
+  legalConsent?: { accepted?: boolean; version?: string };
   firstEmployee?: {
     firstName?: string;
     lastName?: string;
@@ -173,7 +172,6 @@ export default function OnboardingVendor() {
   });
   const [legalConsent, setLegalConsent] = useState<OnboardingLegalConsentValue>({
     accepted: false,
-    smsOptIn: false,
     version: LEGAL_POLICY_VERSION,
   });
   const [firstEmp, setFirstEmp] = useState({
@@ -260,7 +258,6 @@ export default function OnboardingVendor() {
         if (p.legalConsent) {
           setLegalConsent({
             accepted: p.legalConsent.accepted === true,
-            smsOptIn: p.legalConsent.smsOptIn === true,
             version: p.legalConsent.version ?? LEGAL_POLICY_VERSION,
           });
         }
@@ -508,7 +505,7 @@ export default function OnboardingVendor() {
         return null;
       case "legal-consent":
         if (!legalConsent.accepted) {
-          return "You must accept the VNDRLY Privacy Policy and Terms & Conditions to continue.";
+          return "You must accept the VNDRLY legal documents to continue.";
         }
         return null;
       case "tax-ids":
@@ -714,7 +711,6 @@ export default function OnboardingVendor() {
           return {
             legalConsent: {
               accepted: legalConsent.accepted,
-              smsOptIn: legalConsent.smsOptIn,
               version: LEGAL_POLICY_VERSION,
             },
           };
@@ -783,23 +779,18 @@ export default function OnboardingVendor() {
 
       <Card className="shadow-2xl">
         <CardContent className="p-6 pt-6">
-          <div className="mb-3 flex items-start gap-1 sm:gap-2">
-            <button type="button" className="group shrink-0 disabled:invisible" aria-label="Previous step" disabled={stepIndex === 0 || loading} onClick={prevStep}>
-              <SphereBackButton size={24} />
-            </button>
-            <OnboardingStepper
-              steps={STEPS}
-              currentIndex={stepIndex}
-              completedKeys={completed}
-              skippedKeys={skipped}
-              onStepClick={(index) => void goToStep(index)}
-              disabled={loading || !orgId}
-              className="min-w-0 flex-1"
-            />
-            <button type="button" className="group shrink-0 disabled:invisible" aria-label="Next step" disabled={!orgId || stepIndex === STEPS.length - 1 || loading} onClick={nextStep}>
-              <SphereBackButton size={24} direction="right" />
-            </button>
-          </div>
+          <OnboardingStepper
+            steps={STEPS}
+            primaryColor={pageBrand.primary}
+            currentIndex={stepIndex}
+            completedKeys={completed}
+            skippedKeys={skipped}
+            onStepClick={(index) => void goToStep(index)}
+            disabled={loading || !orgId}
+            previous={{ onClick: prevStep, disabled: stepIndex === 0 || loading }}
+            next={{ onClick: nextStep, disabled: !orgId || stepIndex === STEPS.length - 1 || loading }}
+            className="mb-3"
+          />
 
           {orgId && currentStep.key === "work-types" && <CompanyOperationsChoice key={orgId} />}
           {currentStep.key === "company-basics" && (

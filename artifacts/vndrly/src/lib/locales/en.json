@@ -47,7 +47,6 @@
   },
   "smsEnrollment": {
     "link": "Enroll in SMS updates",
-    "signupHint": "Open the SMS enrollment page in a new tab. Finish creating your account and sign in before saving your optional SMS consent.",
     "preferencesHint": "Open the SMS enrollment page in a new tab to choose optional text updates. Read the disclosure, enter your mobile number and save your consent."
   },
   "jobOffers": {
@@ -522,7 +521,7 @@
     "analytics": "Analytics",
     "catalog": "Product/Service Catalog",
     "platformCatalog": "Platform catalog",
-    "yourServices": "Your services & rates",
+    "yourServices": "Services & Rates",
     "partnerCatalog": "Products & services",
     "vendorCatalog": "Vendor Catalog",
     "invoices": "Invoices",

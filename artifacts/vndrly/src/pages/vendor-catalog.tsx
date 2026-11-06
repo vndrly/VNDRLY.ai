@@ -1,3 +1,4 @@
+import PageBackButton from "@/components/page-back-button";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,7 +32,6 @@ import {
 } from "@/components/ui/dialog";
 import { AlertCircle, Info, ShoppingCart } from "lucide-react";
 import { PngPillButton } from "@/components/png-pill-rollover";
-import SphereBackButton from "@/components/sphere-back-button";
 import GreyButton from "@/components/grey-button";
 import AfePill from "@/components/afe-pill";
 import { useAuth } from "@/hooks/use-auth";
@@ -420,7 +420,7 @@ export default function VendorCatalog() {
   return (
     <div className="container max-w-3xl py-8 space-y-4" data-testid="page-vendor-catalog">
       <div className="flex items-center gap-4">
-        <button type="button" onClick={() => window.history.back()} className="group inline-flex items-center gap-2" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></button>
+        <PageBackButton fallbackHref="/" />
         <h1 className="text-2xl font-semibold flex items-center gap-2" data-testid="text-page-title">
           <ShoppingCart className="w-6 h-6" style={{ color: "var(--brand-primary)" }} />
           {vendorRecord?.name ? `${vendorRecord.name} Catalog` : t("vendorCatalog.title")}

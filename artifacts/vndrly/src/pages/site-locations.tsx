@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 import GateLinkFields, { emptyGateLink, gateLinkPayload } from "@/components/gate-link-fields";
 import { useState, useMemo, useRef } from "react";
@@ -410,7 +411,7 @@ export default function SiteLocations() {
     <div className="space-y-6" data-testid="site-locations-page">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+          <PageHistoryLink href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
           <div>
             <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("siteLocations.title")}</h1>
             <p className="text-muted-foreground text-sm mt-1">{isVendor ? t("siteLocations.subtitleVendor") : t("siteLocations.subtitleAdmin")}</p>

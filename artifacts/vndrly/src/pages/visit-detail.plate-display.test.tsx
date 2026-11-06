@@ -12,6 +12,7 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 vi.mock("wouter", () => ({
+  useLocation: () => [window.location.pathname, vi.fn()],
   Link: ({ href, children }: { href: string; children: React.ReactNode }) =>
     React.createElement("a", { href }, children),
 }));

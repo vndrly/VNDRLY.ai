@@ -1,8 +1,6 @@
-import { cn } from "@/lib/utils";
+import "@/components/workday-controls.css";
 import { useTranslation } from "react-i18next";
-import SplitToggleHalf from "@/components/split-toggle-half";
-import { TOGGLE_IDLE_PILL_SRC, splitToggleDividerClass } from "@/lib/pick-toggle-pill";
-import { pillGreen, pillRed } from "@/lib/pill-palette-assets";
+import WorkdayStatusSwitch from "@/components/workday-status-switch";
 
 export default function SiteStatusToggle({
   active,
@@ -20,43 +18,17 @@ export default function SiteStatusToggle({
   className?: string;
 }) {
   const { t } = useTranslation();
-  const canInteract = !readOnly && !disabled;
-  const dividerClass = splitToggleDividerClass("light");
+  const toggle = active ? onInactiveClick : onActiveClick;
 
   return (
-    <div
-      className={cn(
-        "inline-flex items-stretch rounded-full overflow-hidden",
-        (readOnly || disabled) && "opacity-80",
-        className,
-      )}
-      data-testid="site-status-toggle"
-    >
-      <SplitToggleHalf
-        side="left"
+    <div className={className} data-testid="site-status-toggle">
+      <WorkdayStatusSwitch
         active={active}
-        pillSrc={active ? pillGreen : TOGGLE_IDLE_PILL_SRC}
-        onClick={canInteract ? onActiveClick : undefined}
-        disabled={!canInteract}
-        data-testid="site-status-active"
-        aria-pressed={active}
-        aria-label={t("siteLocations.statusOption.active")}
-      >
-        {t("siteLocations.statusOption.active")}
-      </SplitToggleHalf>
-      <span aria-hidden className={cn("w-px shrink-0 self-stretch", dividerClass)} />
-      <SplitToggleHalf
-        side="right"
-        active={!active}
-        pillSrc={!active ? pillRed : TOGGLE_IDLE_PILL_SRC}
-        onClick={canInteract ? onInactiveClick : undefined}
-        disabled={!canInteract}
-        data-testid="site-status-inactive"
-        aria-pressed={!active}
-        aria-label={t("siteLocations.statusOption.inactive")}
-      >
-        {t("siteLocations.statusOption.inactive")}
-      </SplitToggleHalf>
+        label={t(active ? "siteLocations.statusOption.active" : "siteLocations.statusOption.inactive")}
+        accessibilityLabel={t("siteLocations.statusLabel")}
+        disabled={readOnly || disabled || !toggle}
+        onClick={() => toggle?.()}
+      />
     </div>
   );
 }

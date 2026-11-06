@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -304,7 +305,7 @@ export default function StatementPage() {
     <div className="p-6 space-y-6 print:p-0">
       <div className="flex items-center justify-between flex-wrap gap-3 print:hidden">
         <div className="flex items-center gap-3">
-          <Link href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+          <PageHistoryLink href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
           <h1 className="text-2xl font-semibold" data-testid="text-statement-title">
             {t("statement.title")}
           </h1>

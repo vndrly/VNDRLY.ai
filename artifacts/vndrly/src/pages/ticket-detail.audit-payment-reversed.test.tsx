@@ -96,6 +96,7 @@ vi.mock("@tanstack/react-query", async () => {
 });
 
 vi.mock("wouter", () => ({
+  useLocation: () => [window.location.pathname, vi.fn()],
   Link: ({
     href,
     children,

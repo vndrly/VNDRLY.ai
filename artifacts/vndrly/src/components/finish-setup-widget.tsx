@@ -304,6 +304,7 @@ export default function FinishSetupWidget({
 
 /** Dashboard setup stays available after the wizard has been exited. */
 export function DashboardSetup({ orgType, orgId }: { orgType: "vendor" | "partner"; orgId: number }) {
+  const { primary } = useBrand();
   const [, navigate] = useLocation();
   const { t } = useTranslation();
   const { progress, loading } = useOnboardingProgress();
@@ -328,6 +329,7 @@ export function DashboardSetup({ orgType, orgId }: { orgType: "vendor" | "partne
           {orgProgress ? (
             <div className="overflow-x-auto">
               <OnboardingStepper
+                primaryColor={primary}
                 className="min-w-[36rem]"
                 steps={steps}
                 currentIndex={currentIndex}

@@ -1,9 +1,9 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { Save } from "lucide-react";
-import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { visitsApi } from "@/lib/visits-api";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
@@ -141,14 +141,14 @@ export default function VisitDetailPage({ id }: { id: string }) {
           status pills floated to the right of the same row. */}
       <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
         <div className="flex items-center gap-4">
-          <Link
+          <PageHistoryLink
             href="/visitors"
             className="group inline-flex items-center"
             aria-label={t("visitor.detail.back")}
             data-testid="button-back"
           >
             <SphereBackButton size={40} />
-          </Link>
+          </PageHistoryLink>
           <div>
             <h1 className="text-2xl font-bold">
               {data.firstName} {data.lastName}

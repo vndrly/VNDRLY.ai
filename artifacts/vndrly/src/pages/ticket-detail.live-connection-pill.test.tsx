@@ -151,6 +151,7 @@ vi.mock("@tanstack/react-query", async () => {
 
 // wouter Link → plain <a> so we don't need a Router context.
 vi.mock("wouter", () => ({
+  useLocation: () => [window.location.pathname, vi.fn()],
   Link: ({
     href,
     children,

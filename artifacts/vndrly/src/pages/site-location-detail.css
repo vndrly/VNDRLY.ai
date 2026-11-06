@@ -1,0 +1,46 @@
+.site-location-detail [data-slot="card"] {
+  min-width: 0;
+}
+
+.site-location-detail :is(th, td, .border-t),
+.site-location-detail tr {
+  border-color: #3e3e43;
+}
+
+.site-location-detail th {
+  color: #c9c9cc;
+}
+
+.site-location-detail .app-card-inner-tile {
+  border-color: #4b4b50;
+}
+
+.site-location-detail .mapboxgl-map {
+  border-radius: 10px;
+}
+
+.site-location-dialog[role="alertdialog"],
+.site-location-dialog.app-dialog,
+.site-location-menu[role="listbox"] {
+  background: #242426;
+  color: #ececec;
+  border: 1px solid var(--brand-primary, #e6ac00);
+  border-radius: 14px;
+}
+
+.site-location-menu [role="option"][data-highlighted] {
+  background: #38383d;
+  color: #fff;
+}
+
+:is(.site-location-detail, .site-location-dialog) :is(input:not([type="checkbox"]), textarea, [role="combobox"]) {
+  background: #303034;
+  color: #ececec;
+  border: 1px solid var(--brand-primary);
+  border-radius: 8px;
+}
+
+:is(.site-location-detail, .site-location-dialog) :is(button, input, textarea, a):focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}

@@ -1,3 +1,4 @@
+import PageHistoryLink from "@/components/page-history-link";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -248,7 +249,7 @@ export default function BillsToPayPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+        <PageHistoryLink href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
         <h1 className="text-2xl font-semibold" data-testid="text-bills-title">
           {t("billsToPay.title")}
         </h1>

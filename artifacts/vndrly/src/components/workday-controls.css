@@ -19,6 +19,9 @@ button.workday-status-text { font-weight: 700 !important; }
 .language-status-slider .workday-status-switch.is-active .workday-switch-track { background: var(--brand-primary); }
 .language-slider-always-on .workday-status-switch .workday-switch-track { background: var(--brand-primary); }
 /* The dashboard language labels explicitly override the normal button weight. */
+.language-slider-always-on .workday-switch-dot,
+.language-status-slider .is-active .workday-switch-dot { background: var(--brand-icon-color, #242426); }
+
 .language-status-slider > button { font-weight: 700 !important; }
 .workday-status-switch.is-active .workday-switch-dot { transform: translateX(20px); }
 .watch-pass-control { max-width: 100%; display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 4px 8px; background: none; border: 0; color: #9ca3af; font: inherit; font-size: 17px; font-weight: 700 !important; cursor: pointer; }
