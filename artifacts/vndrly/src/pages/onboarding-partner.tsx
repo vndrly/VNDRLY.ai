@@ -1,3 +1,6 @@
+import OnboardingPillButton from "@/components/onboarding-pill-button";
+import { useAuth } from "@/hooks/use-auth";
+import { LeadAdminInvite, OnboardingAdminProfile, prefillAdminProfile, type OnboardingAdminDetails } from "@/components/onboarding-admin-profile";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PinFields } from "@/components/admin-pin-setup";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -40,7 +43,7 @@ const STEPS: (StepperStep & { key: StepKey })[] = [
   { key: "first-site", label: "First Site" },
   { key: "tax-billing", label: "Tax & Billing" },
   { key: "preferences", label: "Preferences" },
-  { key: "invite-team", label: "Invite Team" },
+  { key: "invite-team", label: "Admin Profile" },
 ];
 
 // Per spec: first site and tax IDs are must-haves at /complete.
@@ -51,9 +54,10 @@ const STEPS: (StepperStep & { key: StepKey })[] = [
 // from the dashboard's Finish-setup widget. Required data is still
 // enforced at /complete time (the user can't actually finalise
 // onboarding without it), but they're free to walk away in between.
-const REQUIRED_STEPS = new Set<StepKey>(["company-basics", "platform-eula", "legal-consent"]);
+const REQUIRED_STEPS = new Set<StepKey>(["company-basics", "platform-eula", "legal-consent", "invite-team"]);
 
 interface PartnerPayload {
+  adminProfile?: OnboardingAdminDetails;
   brandPrimaryColor?: string;
   brandAccentColor?: string;
   logoUrl?: string;
@@ -73,7 +77,6 @@ interface PartnerPayload {
   // Should-have operating preferences (hours-of-operation copy on the
   // visitor portal + default vendor-matching radius).
   preferences?: { hoursOfOperation?: string; operatingRadiusMiles?: number };
-  inviteEmails?: string[];
   platformEula?: { accepted?: boolean; version?: string };
   legalConsent?: { accepted?: boolean; version?: string };
 }
@@ -81,6 +84,7 @@ interface PartnerPayload {
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function OnboardingPartner() {
+  const { user: signedInUser } = useAuth();
   const onboardingRefresh = useOnboardingRefresh();
   const [, navigate] = useLocation();
   const { t } = useTranslation();
@@ -91,6 +95,7 @@ export default function OnboardingPartner() {
   const [stepIndex, setStepIndex] = useState(0);
   const [completed, setCompleted] = useState<string[]>([]);
   const [skipped, setSkipped] = useState<string[]>([]);
+  const [adminProfile, setAdminProfile] = useState(() => prefillAdminProfile({ email: null }));
   const [payload, setPayload] = useState<PartnerPayload>({});
   const [loading, setLoading] = useState(false);
   // Email verification state — captured from /onboarding/me. The
@@ -164,10 +169,18 @@ export default function OnboardingPartner() {
   });
 
   // Step 6 — Invite team.
-  const [inviteText, setInviteText] = useState("");
   const [showAccountCreated, setShowAccountCreated] = useState(false);
 
   const currentStep = STEPS[stepIndex];
+
+  const adminName = signedInUser?.displayName;
+  useEffect(() => {
+    if (!adminName) return;
+    setAdminProfile(previous => previous.firstName || previous.lastName
+      ? previous
+      : { ...prefillAdminProfile({ displayName: adminName, email: previous.email, phone: previous.phone }) });
+  }, [adminName, orgId]);
+
 
   // Resume an in-flight wizard if the user hits the URL while already
   // signed in (e.g. closed the tab and came back). Re-hydrate every
@@ -206,6 +219,7 @@ export default function OnboardingPartner() {
         setSkipped(me.progress.skippedSteps ?? []);
         const p = (me.progress.payload ?? {}) as PartnerPayload;
         setPayload(p);
+        setAdminProfile(p.adminProfile ?? prefillAdminProfile(me.adminProfile ?? me.user ?? { email: null }));
         if (p.brandPrimaryColor || p.brandAccentColor || p.logoUrl || p.logoSquareUrl) {
           setBranding({
             brandPrimaryColor: p.brandPrimaryColor ?? "",
@@ -248,9 +262,7 @@ export default function OnboardingPartner() {
             operatingRadiusMiles: typeof p.preferences.operatingRadiusMiles === "number" ? String(p.preferences.operatingRadiusMiles) : "",
           });
         }
-        if (p.inviteEmails && p.inviteEmails.length > 0) {
-          setInviteText(p.inviteEmails.join(", "));
-        }
+
       } catch {
         // Not authenticated yet — that's the normal first-visit flow.
       }
@@ -387,6 +399,7 @@ export default function OnboardingPartner() {
         confirmPin: basics.confirmPin,
       });
       setOrgId(resp.orgId);
+      setAdminProfile(prefillAdminProfile({ displayName: basics.contactName, email: basics.contactEmail, phone: basics.contactPhone }));
       setCompleted(resp.progress.completedSteps);
       setSkipped(resp.progress.skippedSteps);
       setPayload(resp.progress.payload as PartnerPayload);
@@ -503,14 +516,15 @@ export default function OnboardingPartner() {
       patch.firstSite = firstSite;
     } else if (currentStep.key === "tax-billing") {
       patch.taxBilling = taxBilling;
+    } else if (currentStep.key === "invite-team") {
+      patch.adminProfile = adminProfile;
     } else if (currentStep.key === "preferences") {
       const radius = Number(preferences.operatingRadiusMiles);
       patch.preferences = {
         hoursOfOperation: preferences.hoursOfOperation.trim() || undefined,
         operatingRadiusMiles: Number.isFinite(radius) && radius > 0 ? Math.round(radius) : undefined,
       };
-    } else if (currentStep.key === "invite-team") {
-      patch.inviteEmails = inviteEmails;
+
     }
     return patch;
   };
@@ -570,21 +584,11 @@ export default function OnboardingPartner() {
     }
   };
 
-  const finish = async (extras?: { payloadPatch?: Partial<PartnerPayload>; skipCurrent?: boolean }) => {
+  const finish = async () => {
     if (!orgId) return;
     setLoading(true);
     try {
-      // Persist whatever the user filled (or skipped) on the *current*
-      // last step. Done inline rather than via nextStep() because there
-      // is no `STEPS[stepIndex + 1]` to advance to.
-      const completedKey = extras?.skipCurrent ? undefined : (currentStep.key as StepKey);
-      const skippedKey = extras?.skipCurrent ? (currentStep.key as StepKey) : undefined;
-      await persist({
-        currentStep: currentStep.key as StepKey,
-        completedKey,
-        skippedKey,
-        payloadPatch: extras?.payloadPatch,
-      });
+      await persist({ currentStep: currentStep.key, completedKey: currentStep.key, payloadPatch: currentStepPatch() });
       await onboardingApi.complete("partner", orgId);
       toast({ title: "Welcome aboard!" });
       // Hard navigation so the auth provider re-fetches /api/auth/me
@@ -598,15 +602,6 @@ export default function OnboardingPartner() {
   };
 
   const prevStep = () => setStepIndex((i) => Math.max(0, i - 1));
-
-  const inviteEmails = useMemo(
-    () =>
-      inviteText
-        .split(/[\s,;]+/)
-        .map((e) => e.trim())
-        .filter((e) => e.includes("@")),
-    [inviteText],
-  );
 
   const brandPreview = useMemo((): OnboardingBrandPreview | null => {
     const primary = branding.brandPrimaryColor.trim() || payload.brandPrimaryColor?.trim() || "";
@@ -886,22 +881,11 @@ export default function OnboardingPartner() {
             </div>
           )}
 
-          {currentStep.key === "invite-team" && (
-            <div className="space-y-4" data-testid="step-invite-team-body">
-              <h2 className="text-lg font-semibold text-gray-900">Invite your team (optional)</h2>
-              <p className="text-sm text-gray-500">Paste one or more email addresses (separated by commas, spaces, or new lines). They'll get an invite link to join your account.</p>
-              <Textarea value={inviteText} onChange={(e) => setInviteText(e.target.value)} placeholder="alice@company.com, bob@company.com" rows={5} data-testid="input-invite-emails" />
-              {inviteEmails.length > 0 && (
-                <p className="text-sm text-gray-700">
-                  {inviteEmails.length} email
-                  {inviteEmails.length === 1 ? "" : "s"} ready to invite.
-                </p>
-              )}
-            </div>
-          )}
+          {currentStep.key === "invite-team" && <OnboardingAdminProfile profile={adminProfile} onChange={setAdminProfile} />}
 
           <div className="mt-8 flex items-center justify-end gap-3">
-            <div className="flex items-center gap-2">
+            <div className={currentStep.key === "invite-team" ? "flex items-stretch gap-2 max-[440px]:grid max-[440px]:w-full max-[440px]:grid-cols-3 max-[440px]:gap-1" : "flex items-center gap-2"}>
+              {currentStep.key === "invite-team" && orgId && <LeadAdminInvite orgType="partner" orgId={orgId} />}
               {stepIndex > 0 && !REQUIRED_STEPS.has(currentStep.key as StepKey) && (
                 <PngPillButton onClick={skipStep} disabled={loading} data-testid="button-skip" className="px-4 h-10">
                   {t("onboardingActions.skipForNow")}
@@ -912,18 +896,18 @@ export default function OnboardingPartner() {
                   to the dashboard, where the Finish-setup widget
                   surfaces a Resume CTA. */}
               {stepIndex > 0 && (
-                <PngPillButton onClick={saveAndQuit} disabled={loading} data-testid="button-save-and-quit" className="px-4 h-10">
+                <OnboardingPillButton tone="secondary" onClick={saveAndQuit} disabled={loading} data-testid="button-save-and-quit" className="max-[440px]:!px-1">
                   {t("onboardingActions.saveAndQuit")}
-                </PngPillButton>
+                </OnboardingPillButton>
               )}
               {stepIndex === 0 ? (
                 <PngPillButton color="blue" onClick={submitBasics} disabled={loading || !namePassesDuplicateCheck} data-testid="button-create-account" className="px-6 h-10">
                   {loading ? "Creating…" : "Create account"}
                 </PngPillButton>
               ) : stepIndex === STEPS.length - 1 ? (
-                <PngPillButton color="blue" onClick={() => finish({ payloadPatch: { inviteEmails } })} disabled={loading} data-testid="button-finish" className="px-6 h-10">
-                  {loading ? "Finishing…" : "Finish setup"}
-                </PngPillButton>
+                <OnboardingPillButton onClick={() => finish()} disabled={loading} data-testid="button-finish" className="max-[440px]:!px-1">
+                  {loading ? "Finishing…" : "Complete Onboarding"}
+                </OnboardingPillButton>
               ) : (
                 <PngPillButton color="blue" onClick={() => nextStep({ payloadPatch: currentStepPatch() })} disabled={loading} data-testid="button-next" className="px-6 h-10">
                   {loading ? "Saving…" : "Continue"}

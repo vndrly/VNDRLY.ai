@@ -1,5 +1,8 @@
 import { cn } from "@/lib/utils";
 
+export const BRANDED_CIRCLE_GLOSS =
+  "linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.5) 50%, transparent 50%, transparent 100%)";
+
 export const BRANDED_CIRCLE_HOVER_CLASS =
   "transition-[transform,filter] duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.04] hover:drop-shadow-[0_6px_10px_rgba(0,0,0,0.35)] group-hover:-translate-y-0.5 group-hover:scale-[1.04] group-hover:drop-shadow-[0_6px_10px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-[0.98] group-active:translate-y-0 group-active:scale-[0.98] motion-reduce:transform-none";
 

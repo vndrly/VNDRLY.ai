@@ -1,5 +1,4 @@
 import { type CSSProperties, type ReactNode } from "react";
-import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import AskVPaneControls from "@/components/askv-pane-controls";
 import LanguageToggle from "@/components/language-toggle";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
@@ -27,11 +26,10 @@ export function OnboardingPageShell({
 
   return (
     <div
-      className={`min-h-screen relative overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 ${vendorControls ? "vendor-onboarding-shell" : ""}`}
+      className={`onboarding-page-shell min-h-screen relative overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 ${vendorControls ? "vendor-onboarding-shell" : ""}`}
       style={{
         ...brandStyleVars(brand),
         backgroundColor: NAV_PANE_DARK_BG,
-        ...(vendorControls ? { "--onboarding-check-logo": `url(${JSON.stringify(brand.logoUrl || VNDRLY_LOGO_SQUARE)})` } : {}),
       } as CSSProperties}
       data-testid="onboarding-page-shell"
       data-theme="dark"
@@ -60,13 +58,13 @@ export function OnboardingPageShell({
 
 
       {vendorControls ? (
-        <div className="fixed inset-x-0 top-1 z-40 flex h-12 items-center justify-between gap-1 px-2 text-white sm:px-5">
+        <div className="absolute inset-x-0 top-1 z-40 flex h-12 items-center justify-between gap-1 px-2 text-white sm:px-5">
           <AskVPaneControls />
-          <LanguageToggle variant="dark" presentation="line" alwaysOn />
+          <LanguageToggle />
         </div>
       ) : (
-        <div className="fixed top-4 right-4 z-30">
-          <LanguageToggle variant="dark" />
+        <div className="absolute top-4 right-4 z-30">
+          <LanguageToggle />
         </div>
       )}
 

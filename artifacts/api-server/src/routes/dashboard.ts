@@ -201,6 +201,82 @@ router.get("/dashboard/summary", requireSession, async (req, res): Promise<void>
 // Non-partner sessions intentionally get a zero/null roll-up rather
 // than a 403: this endpoint is hit unconditionally on the dashboard
 // mount, and the partner-only rendering decision lives in the client.
+router.get("/dashboard/ticket-panels", requireSession, async (req, res) => {
+  const session = getSession(req);
+  if (!session) {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
+  if (!await enforceDashboardRateLimit(req, res, session)) return;
+  const scope = session.role === "vendor" && session.vendorId
+    ? sql`t.vendor_id = ${session.vendorId}`
+    : session.role === "partner" && session.partnerId
+      ? sql`s.partner_id = ${session.partnerId}`
+      : sql`${session.role === "admin"}`;
+  const result = await db.execute(sql`
+    WITH gate_vendor AS (
+      SELECT EXISTS (
+        SELECT 1 FROM site_work_assignments
+        WHERE vendor_id = ${session.role === "vendor" ? session.vendorId : null} AND is_gate_contractor
+      ) AS enabled
+    )
+    SELECT t.id, t.status, s.id AS "siteId", s.name AS "siteName",
+      CASE WHEN gate.is_gate THEN s.gate_link_id END AS "linkId",
+      station.id AS "stationId", station.name AS "gateName",
+      (t.status = 'approved' AND t.updated_at >= date_trunc('month', CURRENT_DATE)) AS "approvedThisMonth"
+    FROM tickets t
+    JOIN site_locations s ON s.id = t.site_location_id
+    LEFT JOIN (
+      SELECT DISTINCT ON (vendor_id, ticket_id) vendor_id, ticket_id, station_id
+      FROM (
+        SELECT a.id, a.vendor_id, a.target_type,
+          CASE WHEN a.target_type = 'gate-billing-ticket' THEN a.target_id
+            ELSE a.tool_output->>'openTicketId' END AS ticket_id,
+          CASE WHEN a.target_type = 'gate-billing-ticket' THEN a.tool_output->>'stationId'
+            ELSE a.target_id END AS station_id
+        FROM assistant_action_audit a
+        WHERE a.partner_id IS NULL
+          AND a.target_type IN ('gate-billing-ticket', 'gate-billing-config')
+          AND (${session.role !== "vendor"} OR a.vendor_id = ${session.vendorId ?? null})
+      ) history
+      WHERE ticket_id IS NOT NULL
+      ORDER BY vendor_id, ticket_id, (target_type = 'gate-billing-ticket') DESC, id DESC
+    ) billing ON billing.vendor_id = t.vendor_id AND billing.ticket_id = t.id::text
+    CROSS JOIN LATERAL (
+      SELECT billing.station_id IS NOT NULL OR EXISTS (
+        SELECT 1 FROM site_work_assignments a
+        WHERE a.site_location_id = s.id AND a.vendor_id = t.vendor_id
+          AND a.work_type_id = t.work_type_id AND a.is_gate_contractor
+      ) AS is_gate
+    ) gate
+    LEFT JOIN LATERAL (
+      SELECT g.id, g.name FROM gate_stations g WHERE g.site_id = s.id AND (
+        g.id::text = billing.station_id OR (
+          billing.station_id IS NULL AND gate.is_gate AND g.active
+          AND NOT EXISTS (SELECT 1 FROM gate_stations other WHERE other.site_id = s.id AND other.active AND other.id <> g.id)
+        )
+      ) LIMIT 1
+    ) station ON true
+    WHERE ${scope} AND (NOT (SELECT enabled FROM gate_vendor)
+      OR billing.station_id IS NOT NULL
+      OR (gate.is_gate AND EXISTS (
+        SELECT 1 FROM job_offers j WHERE j.created_ticket_id = t.id AND j.status = 'accepted'
+      )))
+    ORDER BY t.id DESC
+  `);
+  const gateLocations = session.role === "vendor" && session.vendorId
+    ? await db.execute<{ count: number }>(sql`
+        SELECT count(DISTINCT COALESCE(s.gate_link_id::text, g.id::text))::int AS count
+        FROM gate_stations g JOIN site_locations s ON s.id = g.site_id
+        WHERE g.active AND EXISTS (
+          SELECT 1 FROM site_work_assignments a WHERE a.site_location_id = s.id
+            AND a.vendor_id = ${session.vendorId} AND a.is_gate_contractor
+        )
+      `)
+    : null;
+  res.json({ tickets: result.rows, gateLocationCount: gateLocations?.rows[0]?.count || null });
+});
+
 router.get("/dashboard/awaiting-payment", requireSession, async (req, res): Promise<void> => {
   const session = getSession(req);
   if (!await enforceDashboardRateLimit(req, res, session)) return;

@@ -1,3 +1,4 @@
+import { AccountNextSteps } from "@/components/next-steps";
 import { CardHeading } from "@/components/ui/card-heading";
 import { VndrlyUWordmark } from "./vndrly-u-wordmark";
 import { CertificationProgress, TrainingCompletionTotal } from "./repository-certifications";
@@ -74,8 +75,9 @@ export function WorkHubHome() {
   ];
 
   return <section className="work-hub-home" aria-label="Work Hub workspace" data-testid="work-hub-activity">
-    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact actions={<LanguageToggle presentation="line" alwaysOn />} />
+    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact actions={<LanguageToggle />} />
     <WorkdayControls />
+    <AccountNextSteps surface="work-hub" />
     {home.isError && <p role="alert">{c("Work Hub summaries are unavailable. Open a row to check its records.", "Los resúmenes no están disponibles. Abra una fila para consultar sus registros.")}</p>}
     <div className="hub-home-columns">
 

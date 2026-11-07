@@ -2,20 +2,12 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useBrand } from "@/hooks/use-brand";
-import SplitToggleHalf from "@/components/split-toggle-half";
 import WorkdayStatusSwitch from "@/components/workday-status-switch";
 import "@/components/workday-controls.css";
-import {
-  pickTogglePillSrc,
-  splitToggleDividerClass,
-  TOGGLE_IDLE_PILL_SRC,
-  type SplitToggleVariant,
-} from "@/lib/pick-toggle-pill";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-export default function LanguageToggle({ className, variant = "dark", presentation = "pill", alwaysOn = false }: { className?: string; variant?: SplitToggleVariant; presentation?: "pill" | "line"; alwaysOn?: boolean }) {
+export default function LanguageToggle({ className }: { className?: string }) {
   const { t, i18n } = useTranslation();
   const { user, setPreferredLanguage } = useAuth();
   const { toast } = useToast();
@@ -48,47 +40,19 @@ export default function LanguageToggle({ className, variant = "dark", presentati
       }
     })();
   };
-  const brand = useBrand();
-  const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
-  const dividerClass = splitToggleDividerClass(variant);
+  return <LanguageSlider current={current} onChange={set} className={className} />;
+}
 
-  if (presentation === "line") return (
-    <div className={cn("language-status-slider inline-flex items-center gap-2 text-sm font-bold", alwaysOn && "language-slider-always-on", className)} data-testid="language-toggle">
-      <button type="button" onClick={() => set("en")} data-testid="lang-en" aria-pressed={current === "en"} className={cn("min-h-11 rounded px-1 font-bold focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]", current === "en" ? "text-[var(--brand-primary)]" : "text-muted-foreground")}>English</button>
-      <WorkdayStatusSwitch active={current === "es"} label="" accessibilityLabel="English / Español" onClick={() => set(current === "en" ? "es" : "en")} />
-      <button type="button" onClick={() => set("es")} data-testid="lang-es" aria-pressed={current === "es"} className={cn("min-h-11 rounded px-1 font-bold focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]", current === "es" ? "text-[var(--brand-primary)]" : "text-muted-foreground")}>Español</button>
-    </div>
-  );
-
+export function LanguageSlider({ current, onChange, className }: {
+  current: "en" | "es";
+  onChange: (language: "en" | "es") => void;
+  className?: string;
+}) {
   return (
-    <div
-      className={cn(
-        "inline-flex items-stretch rounded-full overflow-hidden",
-        className,
-      )}
-      data-testid="language-toggle"
-    >
-      <SplitToggleHalf
-        side="left"
-        active={current === "en"}
-        pillSrc={current === "en" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-        onClick={() => set("en")}
-        data-testid="lang-en"
-        aria-pressed={current === "en"}
-      >
-        EN
-      </SplitToggleHalf>
-      <span aria-hidden className={cn("w-px shrink-0 self-stretch", dividerClass)} />
-      <SplitToggleHalf
-        side="right"
-        active={current === "es"}
-        pillSrc={current === "es" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-        onClick={() => set("es")}
-        data-testid="lang-es"
-        aria-pressed={current === "es"}
-      >
-        ES
-      </SplitToggleHalf>
+    <div className={cn("language-status-slider inline-flex items-center gap-2 text-sm font-bold", className)} data-testid="language-toggle">
+      <button type="button" onClick={() => onChange("en")} data-testid="lang-en" aria-pressed={current === "en"} className={cn("min-h-11 rounded px-1 font-bold focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]", current === "en" ? "text-[var(--brand-primary)]" : "text-muted-foreground")}>English</button>
+      <WorkdayStatusSwitch active={current === "es"} label="" accessibilityLabel="English / Español" onClick={() => onChange(current === "en" ? "es" : "en")} />
+      <button type="button" onClick={() => onChange("es")} data-testid="lang-es" aria-pressed={current === "es"} className={cn("min-h-11 rounded px-1 font-bold focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]", current === "es" ? "text-[var(--brand-primary)]" : "text-muted-foreground")}>Español</button>
     </div>
   );
 }

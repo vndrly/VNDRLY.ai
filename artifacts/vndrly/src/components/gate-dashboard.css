@@ -44,7 +44,6 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
   overflow-y: auto;
   overscroll-behavior-y: contain;
   scrollbar-width: thin;
-  scrollbar-color: var(--brand-primary) transparent;
   margin-inline-end: -11px;
   padding-inline-end: 11px;
   overflow-wrap: anywhere;

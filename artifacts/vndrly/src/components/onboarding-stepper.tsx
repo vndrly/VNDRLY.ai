@@ -1,4 +1,7 @@
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { useState } from "react";
+import { CompactStepCaption } from "@/components/compact-step-caption";
+import { BRANDED_CIRCLE_GLOSS } from "@/components/branded-circle-chrome";
 import { cn } from "@/lib/utils";
 import { brandIconColor } from "@/lib/brand-color";
 
@@ -48,6 +51,9 @@ export default function OnboardingStepper({
   previous,
   next,
 }: OnboardingStepperProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const captionIndex = hoveredIndex ?? currentIndex;
+  const captionStep = steps[captionIndex];
   const completedSet = new Set(completedKeys);
   const skippedSet = new Set(skippedKeys);
   const iconColor = brandIconColor(primaryColor);
@@ -57,15 +63,14 @@ export default function OnboardingStepper({
   const brandGlossStyle = {
     color: iconColor,
     backgroundColor: "var(--brand-primary, #f59e0b)",
-    backgroundImage:
-      "linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.5) 50%, transparent 50%, transparent 100%)",
+    backgroundImage: BRANDED_CIRCLE_GLOSS,
     borderColor: "var(--brand-primary, #f59e0b)",
   } as const;
   const brandLineStyle = { backgroundColor: "var(--brand-primary, #f59e0b)" } as const;
   const brandTextStyle = { color: "var(--brand-primary, #f59e0b)" } as const;
 
   return (
-    <div className={cn("w-full", previous && "pl-7", next && "pr-7", className)} data-testid="onboarding-stepper">
+    <div className={cn("@container w-full", previous && "pl-7", next && "pr-7", className)} data-testid="onboarding-stepper">
       <div
         className="grid gap-0"
         style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
@@ -120,6 +125,8 @@ export default function OnboardingStepper({
               )}
               <button
                 type="button"
+                onPointerEnter={(event) => { if (event.pointerType === "mouse") setHoveredIndex(i); }}
+                onPointerLeave={() => setHoveredIndex(null)}
                 onClick={() => onStepClick?.(i, step)}
                 disabled={disabled || !onStepClick}
                 aria-current={isCurrent ? "step" : undefined}
@@ -128,6 +135,7 @@ export default function OnboardingStepper({
                   "relative",
                   markerClass,
                   onStepClick && !disabled && interactiveMarkerClass,
+                  isCurrent && "outline-2 outline-offset-2 outline-white",
                   dotBg,
                 )}
                 style={isBrandActive && !isSkipped ? brandGlossStyle : undefined}
@@ -141,15 +149,12 @@ export default function OnboardingStepper({
                   <span className="text-[10px] font-bold leading-none">!</span>
                 ) : null}
               </button>
-              <button
-                type="button"
-                onClick={() => onStepClick?.(i, step)}
-                disabled={disabled || !onStepClick}
-                className={cn("mt-1.5 text-[11px] text-center leading-tight px-1", labelClass, onStepClick && !disabled && "cursor-pointer hover:underline")}
+              <span
+                className={cn("mt-1.5 hidden w-full break-words px-1 text-center text-[11px] leading-tight @[460px]:block", labelClass)}
                 style={isCurrent ? brandTextStyle : undefined}
               >
                 {step.label}
-              </button>
+              </span>
               {i === steps.length - 1 && next && (
                 <button type="button" aria-label="Next step" disabled={next.disabled} onClick={next.onClick}
                   className={cn("absolute left-[calc(50%+20px)] top-0 text-white disabled:invisible", markerClass, interactiveMarkerClass)}
@@ -161,6 +166,10 @@ export default function OnboardingStepper({
           );
         })}
       </div>
+      {captionStep && (
+        <CompactStepCaption index={captionIndex} total={steps.length} label={captionStep.label}
+          color={brandTextStyle.color} preview={captionIndex !== currentIndex} />
+      )}
     </div>
   );
 }

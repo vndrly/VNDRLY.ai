@@ -1611,3 +1611,15 @@ export async function sendAccountInvitationEmail(input: {
     text: `${input.sponsorName} created your VNDRLY account.\nUsername: ${input.username}\nSet your password and finish onboarding: ${input.activationUrl}\nThis single-use link expires ${expiration}. No temporary password was created or sent.`,
   });
 }
+
+export function sendLeadAdminInvitationEmail(input: { to: string; orgName: string; url: string; makeOwner?: boolean }) {
+  const org = escapeHtml(input.orgName);
+  const url = escapeHtml(input.url);
+  return sendSendGridMail({
+    to: input.to,
+    subject: `Lead Admin invitation from ${input.orgName}`,
+    categories: ["lead-admin-invitation"],
+    html: `<p>${org} invited you to join VNDRLY as ${input.makeOwner ? "the organization owner" : "a Lead Admin"}.</p><p><a href="${url}">Review invitation</a></p><p>This link expires in 48 hours.</p>`,
+    text: `${input.orgName} invited you to join VNDRLY as ${input.makeOwner ? "the organization owner" : "a Lead Admin"}. Review the invitation: ${input.url}`,
+  });
+}

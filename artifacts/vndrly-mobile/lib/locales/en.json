@@ -959,6 +959,13 @@
     "cameraUnavailablePickSite": "Camera is unavailable in this build. Choose a site by name instead."
   },
   "errors": {
+    "lead_admin": {
+      "sign_in": "Sign in with the invited email, then return here to accept.",
+      "invalid_invitation": "Enter a valid invitation and password.",
+      "unavailable": "This invitation is unavailable or has expired.",
+      "send_failed": "The invitation email could not be sent. Try again.",
+      "password_required": "Choose a password with at least eight characters to create your VNDRLY account."
+    },
     "gate_arrivals": {
       "unavailable": "Incoming runs are temporarily unavailable. Try again.",
       "invalid_request": "Select a valid site or run and try again.",
@@ -1538,6 +1545,10 @@
       "cancelled": "This invoice is cancelled."
     },
     "members": {
+      "owner_protected": "Transfer ownership before changing or removing the owner’s access.",
+      "owner_required": "Only the current owner can transfer ownership.",
+      "confirm_transfer": "Choose another administrator and confirm the transfer.",
+      "inactive_admin": "That person is no longer an active administrator of this organization.",
       "cant_demote_self": "You can't demote your own role.",
       "cant_remove_self": "You can't remove yourself from the organization.",
       "field_only": "Only field employees can do that.",

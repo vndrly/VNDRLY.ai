@@ -1,4 +1,5 @@
-import "./vendor-profile.css";
+import { DashboardTicketPanels, useDashboardTicketPanels } from "@/components/dashboard-ticket-panels";
+import { DashboardSetup } from "@/components/finish-setup-widget";
 import "./dashboard-condensed.css";
 import { CardHeading } from "@/components/ui/card-heading";
 import {
@@ -638,6 +639,21 @@ export default function Dashboard() {
     { key: "approved-month", label: t("dashboard.stats.approvedThisMonth"), value: summary?.approvedThisMonth ?? 0, icon: CheckCircle2, definition: "Tickets approved during the current month.", destination: "/tickets?status=approved" },
   ];
 
+  const showTicketPanels = isVendor || isPartner;
+  const ticketPanelsEnabled = showTicketPanels && !rateLimitedState;
+  const ticketPanels = useDashboardTicketPanels(
+    `${user?.role}:${user?.vendorId ?? user?.partnerId}`, ticketPanelsEnabled,
+  );
+  const gateLocationCount = ticketPanels.data?.gateLocationCount;
+  const displayedStats = gateLocationCount != null ? [{
+    ...firstStatCard,
+    key: "gate-locations",
+    label: t("nav.gateLocations"),
+    value: gateLocationCount,
+    definition: "Standalone gates and linked gate groups.",
+    destination: "/gate-locations",
+  }] : showTicketPanels ? statCards.slice(0, -4) : statCards;
+
   return (
     <div
       className={cn("space-y-6 [&_[data-slot=card]]:!border-[color:var(--brand-primary)]", isVendor && "vendor-workspace-page")}
@@ -647,7 +663,7 @@ export default function Dashboard() {
         <ContentPaneBackLink href="/" />
         <div>
           <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("dashboard.title")}</h1>
-          <p className="text-muted-foreground text-sm mt-1">{t("dashboard.subtitle")}</p>
+          <p className="text-muted-foreground text-sm mt-1">{(isVendor || isPartner) && brand.name ? t("dashboard.companyOperations", { company: brand.name }) : t("dashboard.subtitle")}</p>
         </div>
       </div>
 
@@ -817,8 +833,8 @@ export default function Dashboard() {
 
       <div className={cn("grid grid-cols-2 gap-3 md:grid-cols-4", isVendor ? "lg:grid-cols-5" : "lg:grid-cols-7")}>
         {summaryLoading
-          ? statCards.map((stat) => <Skeleton key={stat.key} className="h-[82px] w-full" />)
-          : statCards.map((stat) => (
+          ? displayedStats.map((stat) => <Skeleton key={stat.key} className="h-[82px] w-full" />)
+          : displayedStats.map((stat) => (
               <DashboardStatCard
                 key={stat.key}
                 icon={stat.icon}
@@ -832,6 +848,19 @@ export default function Dashboard() {
               />
             ))}
       </div>
+
+      {showTicketPanels && (
+        <DashboardTicketPanels
+          query={ticketPanels}
+          enabled={ticketPanelsEnabled}
+        />
+      )}
+
+      {isVendor && user?.vendorId ? (
+        <DashboardSetup orgType="vendor" orgId={user.vendorId} section="next-steps" />
+      ) : isPartner && user?.partnerId ? (
+        <DashboardSetup orgType="partner" orgId={user.partnerId} section="next-steps" />
+      ) : null}
 
       <div id="hotlist">
         <HotlistSection />

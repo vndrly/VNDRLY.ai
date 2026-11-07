@@ -14,6 +14,7 @@ import {
   siteLocationsTable,
   partnerContactsTable,
   platformSettingsTable,
+  leadAdminInvitationsTable,
 } from "@workspace/db";
 import {
   CreatePartnerOnboardingBody,
@@ -22,7 +23,7 @@ import {
   CompleteFieldOnboardingBody,
 } from "@workspace/api-zod";
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
-import { addMembership } from "../lib/membership-sync";
+import { addMembership, type DbExecutor } from "../lib/membership-sync";
 import { syncOnboardingStepSideEffects } from "../lib/onboarding-step-sync";
 import { updateVendorAddressAndCoverageInTransaction } from "../services/marketplace/vendor-address";
 import { addOnboardingCatalogSelections, onboardingCatalogSelection } from "../lib/onboarding-catalog";
@@ -38,6 +39,7 @@ import { absoluteUploadUrl } from "../lib/uploadUrl";
 import { normalizeVendorName } from "../lib/vendor-match";
 import {
   sendEmailVerificationEmail,
+  sendLeadAdminInvitationEmail,
   sendFieldEmployeeOnboardingInviteEmail,
 } from "../lib/sendgrid";
 
@@ -45,6 +47,158 @@ import { sendValidationFailed } from "../lib/validation-error";
 const onboardingObjectStorageService = new ObjectStorageService();
 
 const router: IRouter = Router();
+
+const leadInviteHash = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
+
+function leadInviteRecipient(orgType: string, orgId: number, email: string) {
+  return and(eq(leadAdminInvitationsTable.orgType, orgType), eq(leadAdminInvitationsTable.orgId, orgId),
+    eq(leadAdminInvitationsTable.email, email), isNull(leadAdminInvitationsTable.acceptedAt));
+}
+
+async function lockLeadInviteRecipient(tx: DbExecutor, orgType: string, orgId: number, email: string) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`lead-admin:${orgType}:${orgId}:${email}`}, 0))`);
+}
+
+function leadAdminMembership(orgType: string, orgId: number, userId: number) {
+  return and(
+    eq(userOrgMembershipsTable.userId, userId),
+    eq(userOrgMembershipsTable.role, "admin"),
+    orgType === "vendor" ? eq(userOrgMembershipsTable.vendorId, orgId) : eq(userOrgMembershipsTable.partnerId, orgId),
+  );
+}
+
+router.get("/onboarding/:orgType/ownership", async (req, res) => {
+  const session = getSessionFromRequest(req);
+  const type = req.params.orgType;
+  const orgId = type === "vendor" ? session?.vendorId : type === "partner" ? session?.partnerId : null;
+  if (!orgId || !session?.userId || session.publicDemo) {
+    res.json({ canTransfer: false });
+    return;
+  }
+  const org = type === "vendor" ? vendorsTable : partnersTable;
+  const [owner] = await db.select({ id: org.ownerUserId }).from(org).where(eq(org.id, orgId));
+  const [admin] = await db.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable)
+    .where(leadAdminMembership(type, orgId, session.userId));
+  res.json({ canTransfer: owner?.id === session.userId && Boolean(admin) });
+});
+
+router.post("/onboarding/lead-admin-invite", async (req, res) => {
+  const session = getSessionFromRequest(req);
+  const orgType = req.body?.orgType;
+  const orgId = orgType === "vendor" ? session?.vendorId : orgType === "partner" ? session?.partnerId : null;
+  if (!session?.userId || session.publicDemo || !orgId) {
+    res.status(403).json({ error: "Organization administrator access required.", code: "auth.forbidden" });
+    return;
+  }
+  const [admin] = await db.select({ id: userOrgMembershipsTable.id, email: usersTable.email })
+    .from(userOrgMembershipsTable).innerJoin(usersTable, eq(usersTable.id, userOrgMembershipsTable.userId))
+    .where(leadAdminMembership(orgType, orgId, session.userId));
+  if (!admin) {
+    res.status(403).json({ error: "Organization administrator access required.", code: "auth.forbidden" });
+    return;
+  }
+  const email = trim(req.body.email).toLowerCase();
+  const firstName = trim(req.body.firstName);
+  const lastName = trim(req.body.lastName);
+  const phone = trim(req.body.phone);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
+      !firstName || !lastName || firstName.length > 100 || lastName.length > 100 || phone.length > 40 || admin.email?.toLowerCase() === email) {
+    res.status(400).json({ error: "Enter the name and email of another person.", code: "validation.invalid_input" });
+    return;
+  }
+  const organization = orgType === "vendor" ? vendorsTable : partnersTable;
+  const makeOwner = req.body.makeOwner === true;
+  const [org] = await db.select({ name: organization.name, ownerUserId: organization.ownerUserId }).from(organization).where(eq(organization.id, orgId));
+  if (!org) {
+    res.status(404).json({ error: "Organization unavailable.", code: "auth.not_found" });
+    return;
+  }
+  if (makeOwner && (org.ownerUserId !== session.userId || req.body.confirmOwnership !== true)) {
+    res.status(403).json({ error: "Only the current owner can confirm an ownership invitation.", code: "members.owner_required" });
+    return;
+  }
+  const token = crypto.randomBytes(32).toString("hex");
+  const tokenHash = leadInviteHash(token);
+  await db.transaction(async tx => {
+    await lockLeadInviteRecipient(tx, orgType, orgId, email);
+    await tx.update(leadAdminInvitationsTable).set({ expiresAt: new Date() })
+      .where(leadInviteRecipient(orgType, orgId, email));
+    await tx.insert(leadAdminInvitationsTable).values({
+      tokenHash, orgType, orgId, invitedBy: session.userId!, email,
+      name: `${firstName} ${lastName}`, phone: phone || null, makeOwner, expiresAt: new Date(Date.now() + 48 * 3600_000),
+    });
+  });
+  try {
+    await sendLeadAdminInvitationEmail({ to: email, orgName: org.name, makeOwner, url: `${getAppOrigin()}/accept-lead-admin#${token}` });
+  } catch {
+    await db.delete(leadAdminInvitationsTable).where(eq(leadAdminInvitationsTable.tokenHash, tokenHash));
+    res.status(502).json({ error: "The invitation email could not be sent. Try again.", code: "lead_admin.send_failed" });
+    return;
+  }
+  res.json({ sent: true });
+});
+
+router.post("/onboarding/accept-lead-admin", async (req, res) => {
+  const token = typeof req.body?.token === "string" ? req.body.token : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (!/^[a-f0-9]{64}$/.test(token) || Buffer.byteLength(password) > 72) {
+    res.status(400).json({ error: "Enter a valid invitation and password.", code: "lead_admin.invalid_invitation" });
+    return;
+  }
+  const tokenHash = leadInviteHash(token);
+  const [recipient] = await db.select().from(leadAdminInvitationsTable).where(eq(leadAdminInvitationsTable.tokenHash, tokenHash));
+  if (!recipient) {
+    res.status(410).json({ error: "This invitation is unavailable or has expired.", code: "lead_admin.unavailable" });
+    return;
+  }
+  const result = await db.transaction(async tx => {
+    await lockLeadInviteRecipient(tx, recipient.orgType, recipient.orgId, recipient.email);
+    const [invite] = await tx.select().from(leadAdminInvitationsTable)
+      .where(eq(leadAdminInvitationsTable.tokenHash, tokenHash)).for("update");
+    if (!invite || invite.acceptedAt || invite.expiresAt <= new Date()) return "unavailable";
+    const organization = invite.orgType === "vendor" ? vendorsTable : partnersTable;
+    if (invite.makeOwner) {
+      const [org] = await tx.select({ ownerUserId: organization.ownerUserId }).from(organization)
+        .where(eq(organization.id, invite.orgId)).for("update");
+      if (org?.ownerUserId !== invite.invitedBy) return "unavailable";
+    }
+    const [inviter] = await tx.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable)
+      .where(leadAdminMembership(invite.orgType, invite.orgId, invite.invitedBy)).for("update");
+    if (!inviter) return "unavailable";
+    const orgType = invite.orgType === "vendor" ? "vendor" : "partner";
+    const matchingUsers = await tx.select().from(usersTable).where(sql`lower(${usersTable.email}) = ${invite.email}`).limit(2);
+    if (matchingUsers.length > 1) return "unavailable";
+    let [user] = matchingUsers;
+    const newAccount = !user;
+    if (user) {
+      const session = getSessionFromRequest(req);
+      if (session?.userId !== user.id || session.publicDemo || user.suspendedAt || user.mustChangePassword || (session.sv ?? 0) !== user.sessionVersion) return "sign_in";
+    } else {
+      if (password.length < 8) return "password";
+      [user] = await tx.insert(usersTable).values({
+        email: invite.email, username: invite.email, displayName: invite.name,
+        passwordHash: await bcrypt.hash(password, 10), emailVerifiedAt: new Date(), role: orgType,
+      }).onConflictDoNothing().returning();
+      if (!user) return "password";
+    }
+    const [membership] = await tx.select().from(userOrgMembershipsTable).where(and(
+      eq(userOrgMembershipsTable.userId, user.id),
+      orgType === "vendor" ? eq(userOrgMembershipsTable.vendorId, invite.orgId) : eq(userOrgMembershipsTable.partnerId, invite.orgId),
+    ));
+    await addMembership({ userId: user.id, orgType, orgId: invite.orgId, role: "admin", vendorPeopleId: membership?.vendorPeopleId }, tx);
+    if (invite.makeOwner) {
+      await tx.update(organization).set({ ownerUserId: user.id }).where(eq(organization.id, invite.orgId));
+      if (!user.emailVerifiedAt) await tx.update(usersTable).set({ emailVerifiedAt: new Date() }).where(eq(usersTable.id, user.id));
+    }
+    if (newAccount) await linkOnboardingAdmin(tx, orgType, invite.orgId, user.id, { phone: invite.phone ?? "" });
+    await tx.update(leadAdminInvitationsTable).set({ acceptedAt: new Date() }).where(eq(leadAdminInvitationsTable.tokenHash, tokenHash));
+    return "accepted";
+  });
+  if (result === "accepted") res.json({ accepted: true });
+  else if (result === "sign_in") res.status(401).json({ code: "lead_admin.sign_in", error: "Sign in with the invited email, then return here to accept." });
+  else if (result === "password") res.status(400).json({ error: "Choose a password with at least eight characters to create your VNDRLY account.", code: "lead_admin.password_required" });
+  else res.status(410).json({ error: "This invitation is unavailable or has expired.", code: "lead_admin.unavailable" });
+});
 
 const COOKIE_NAME = "vndrly_session";
 const SESSION_TTL_SECS = 24 * 60 * 60;
@@ -256,6 +410,7 @@ router.post("/onboarding/partner", async (req: Request, res: Response): Promise<
         },
         tx,
       );
+      await tx.update(partnersTable).set({ ownerUserId: user.id }).where(eq(partnersTable.id, partner.id));
       const [progress] = await tx
         .insert(onboardingProgressTable)
         .values({
@@ -386,6 +541,7 @@ router.post("/onboarding/vendor", async (req: Request, res: Response): Promise<v
         },
         tx,
       );
+      await tx.update(vendorsTable).set({ ownerUserId: user.id }).where(eq(vendorsTable.id, vendor.id));
       const [progress] = await tx
         .insert(onboardingProgressTable)
         .values({
@@ -480,16 +636,38 @@ router.get("/onboarding/me", async (req: Request, res: Response): Promise<void> 
   const [u] = await db
     .select({
       email: usersTable.email,
+      displayName: usersTable.displayName,
       emailVerifiedAt: usersTable.emailVerifiedAt,
     })
     .from(usersTable)
     .where(eq(usersTable.id, session.userId!))
     .limit(1);
+  const org = session.role === "vendor" ? vendorsTable : partnersTable;
+  const orgId = session.role === "vendor" ? session.vendorId : session.partnerId;
+  const [contact] = orgId && u?.email ? await db.select({ phone: org.contactPhone }).from(org)
+    .where(and(eq(org.id, orgId), sql`lower(${org.contactEmail}) = ${u.email.toLowerCase()}`)) : [];
+  let profile: { displayName: string; email: string; phone: string | null } | undefined;
+  if (session.role === "vendor" && session.vendorId) {
+    [profile] = await db.select({
+      displayName: sql<string>`concat_ws(' ', ${vendorPeopleTable.firstName}, nullif(${vendorPeopleTable.lastName}, ''))`,
+      email: vendorPeopleTable.email,
+      phone: vendorPeopleTable.phone,
+    }).from(vendorPeopleTable).where(and(eq(vendorPeopleTable.vendorId, session.vendorId),
+      eq(vendorPeopleTable.userId, session.userId!), isNull(vendorPeopleTable.deletedAt))).limit(1);
+  } else if (session.role === "partner" && session.partnerId) {
+    [profile] = await db.select({
+      displayName: partnerContactsTable.name, email: partnerContactsTable.email, phone: partnerContactsTable.phone,
+    }).from(partnerContactsTable).where(and(eq(partnerContactsTable.partnerId, session.partnerId),
+      eq(partnerContactsTable.userId, session.userId!), isNull(partnerContactsTable.deletedAt))).limit(1);
+  }
   res.json({
     progress: row ? serializeProgress(row) : null,
+    adminProfile: profile ?? null,
     user: u
       ? {
           email: u.email,
+          displayName: u.displayName,
+          phone: contact?.phone ?? null,
           emailVerifiedAt: u.emailVerifiedAt ? u.emailVerifiedAt.toISOString() : null,
         }
       : null,
@@ -877,11 +1055,71 @@ function validateVendorPayload(p: Record<string, unknown>): string[] {
     ),
   );
   if (validIds.length === 0) missing.push("workTypeIds");
-  const emp = (p.firstEmployee ?? {}) as Record<string, unknown>;
-  if (!trim(emp.firstName)) missing.push("firstEmployee.firstName");
-  if (!trim(emp.lastName)) missing.push("firstEmployee.lastName");
-  if (!trim(emp.email)) missing.push("firstEmployee.email");
   return missing;
+}
+
+async function linkOnboardingAdmin(tx: DbExecutor, orgType: "vendor" | "partner", orgId: number, userId: number | undefined, draft: unknown) {
+  if (!userId) return;
+  const org = orgType === "vendor" ? vendorsTable : partnersTable;
+  const orgMembership = orgType === "vendor" ? userOrgMembershipsTable.vendorId : userOrgMembershipsTable.partnerId;
+  const [admin] = await tx.select({
+    membershipId: userOrgMembershipsTable.id,
+    vendorPeopleId: userOrgMembershipsTable.vendorPeopleId,
+    name: usersTable.displayName,
+    email: usersTable.email,
+    contactEmail: org.contactEmail,
+    contactPhone: org.contactPhone,
+  }).from(userOrgMembershipsTable)
+    .innerJoin(usersTable, eq(usersTable.id, userOrgMembershipsTable.userId))
+    .innerJoin(org, eq(org.id, orgMembership))
+    .where(and(eq(orgMembership, orgId), eq(usersTable.id, userId), eq(userOrgMembershipsTable.role, "admin")));
+  if (!admin?.email) return;
+  const fields = (draft ?? {}) as Record<string, unknown>;
+  const [accountFirstName = admin.name, ...accountLastName] = admin.name.trim().split(/\s+/);
+  const firstName = trim(fields.firstName) || accountFirstName;
+  const lastName = typeof fields.lastName === "string" ? fields.lastName.trim() : accountLastName.join(" ");
+  const email = trim(fields.email) || admin.email;
+  const phone = typeof fields.phone === "string" ? fields.phone.trim() || null
+    : admin.email.toLowerCase() === admin.contactEmail?.toLowerCase() ? admin.contactPhone : null;
+  const name = [firstName, lastName].filter(Boolean).join(" ");
+
+  if (orgType === "partner") {
+    const contacts = await tx.select({ id: partnerContactsTable.id, userId: partnerContactsTable.userId })
+      .from(partnerContactsTable)
+      .where(and(eq(partnerContactsTable.partnerId, orgId), isNull(partnerContactsTable.deletedAt),
+        sql`(${partnerContactsTable.userId} = ${userId} OR (lower(${partnerContactsTable.email}) = lower(${admin.email}) AND ${partnerContactsTable.userId} IS NULL))`));
+    const linked = contacts.find(contact => contact.userId === userId);
+    if (linked) {
+      if (draft) await tx.update(partnerContactsTable).set({ name, email, phone }).where(eq(partnerContactsTable.id, linked.id));
+    } else if (contacts.length === 1) {
+      await tx.update(partnerContactsTable).set({ userId, name, email, phone, inviteToken: null, acceptedAt: new Date() })
+        .where(and(eq(partnerContactsTable.id, contacts[0].id), isNull(partnerContactsTable.userId)));
+    } else if (contacts.length === 0) {
+      await tx.insert(partnerContactsTable).values({
+        partnerId: orgId, userId, name, email, phone, jobTitle: "Administrator", acceptedAt: new Date(),
+      });
+    }
+    return;
+  }
+
+  const people = await tx.select({ id: vendorPeopleTable.id, userId: vendorPeopleTable.userId })
+    .from(vendorPeopleTable)
+    .where(and(eq(vendorPeopleTable.vendorId, orgId), isNull(vendorPeopleTable.deletedAt),
+      sql`(${vendorPeopleTable.id} = ${admin.vendorPeopleId} OR ${vendorPeopleTable.userId} = ${userId} OR (lower(${vendorPeopleTable.email}) = lower(${admin.email}) AND ${vendorPeopleTable.userId} IS NULL))`));
+  let profile = people.find(person => person.userId === userId);
+  if (profile) {
+    if (draft) await tx.update(vendorPeopleTable).set({ firstName, lastName, email, phone }).where(eq(vendorPeopleTable.id, profile.id));
+  } else if (people.length === 1 && people[0].userId === null) {
+    [profile] = await tx.update(vendorPeopleTable).set({ userId, firstName, lastName, email, phone, inviteToken: null })
+      .where(and(eq(vendorPeopleTable.id, people[0].id), isNull(vendorPeopleTable.userId)))
+      .returning({ id: vendorPeopleTable.id, userId: vendorPeopleTable.userId });
+  } else if (people.length === 0) {
+    [profile] = await tx.insert(vendorPeopleTable).values({
+      vendorId: orgId, userId, firstName, lastName, email, phone, vendorRole: "office", jobTitle: "Administrator",
+    }).onConflictDoNothing({ target: vendorPeopleTable.userId }).returning({ id: vendorPeopleTable.id, userId: vendorPeopleTable.userId });
+  }
+  if (profile) await tx.update(userOrgMembershipsTable).set({ vendorPeopleId: profile.id })
+    .where(and(eq(userOrgMembershipsTable.id, admin.membershipId), isNull(userOrgMembershipsTable.vendorPeopleId)));
 }
 
 router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Response): Promise<void> => {
@@ -964,6 +1202,8 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
           })
           .where(eq(partnersTable.id, orgId));
 
+        await linkOnboardingAdmin(tx, "partner", orgId, acceptingUserId, payload.adminProfile);
+
         // Avoid duplicate site rows on resume → re-finish: if a site
         // with this code already exists for this partner, skip insert.
         const [existingSite] = await tx
@@ -998,7 +1238,6 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     }
     const tax = payload.taxIds as Record<string, string>;
     const rates = (payload.rates ?? {}) as Record<string, string | number>;
-    const emp = payload.firstEmployee as Record<string, string>;
     const compliance = (payload.compliance ?? {}) as Record<string, string>;
     const serviceArea = (payload.serviceArea ?? {}) as Record<string, unknown>;
     const compliancePatch: Partial<typeof vendorsTable.$inferInsert> = {};
@@ -1039,8 +1278,6 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
           .filter((n) => Number.isFinite(n) && Number.isInteger(n) && n > 0),
       ),
     );
-    let firstEmployeeId: number | null = null;
-    let firstEmployeeNeedsInvite = false;
     const catalogIds = session ? await onboardingCatalogSelection(session, orgId, wtIds) : null;
     if (catalogIds === null) {
       res.status(400).json({ error: "Choose existing master services or services from an approved partner catalog", code: "onboarding.invalid_work_types" });
@@ -1073,34 +1310,7 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
 
         await addOnboardingCatalogSelections(tx, orgId, catalogIds);
 
-        // First employee: insert if no row with same email already
-        // exists for this vendor (resume safety).
-        const cleanEmp = trim(emp.email).toLowerCase();
-        const [existingEmp] = await tx
-          .select({ id: vendorPeopleTable.id, inviteToken: vendorPeopleTable.inviteToken, userId: vendorPeopleTable.userId })
-          .from(vendorPeopleTable)
-          .where(and(eq(vendorPeopleTable.vendorId, orgId), sql`lower(${vendorPeopleTable.email}) = ${cleanEmp}`))
-          .limit(1);
-        if (existingEmp) {
-          firstEmployeeId = existingEmp.id;
-          // Already-invited or already-onboarded → skip auto-invite.
-          firstEmployeeNeedsInvite = !existingEmp.userId && !existingEmp.inviteToken;
-        } else {
-          const [created] = await tx
-            .insert(vendorPeopleTable)
-            .values({
-              vendorId: orgId,
-              vendorRole: "field",
-              firstName: trim(emp.firstName),
-              lastName: trim(emp.lastName),
-              email: cleanEmp,
-              phone: trim(emp.phone) || null,
-              ...(rates.hourlyRate != null ? { hourlyRate: String(rates.hourlyRate) } : {}),
-            })
-            .returning({ id: vendorPeopleTable.id });
-          firstEmployeeId = created.id;
-          firstEmployeeNeedsInvite = true;
-        }
+        await linkOnboardingAdmin(tx, "vendor", orgId, acceptingUserId, payload.adminProfile);
       });
     } catch (err) {
       logger.error({ err }, "completeVendorOnboarding failed");
@@ -1108,16 +1318,7 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
       return;
     }
 
-    // Issue the onboarding invite outside the transaction so an email
-    // failure doesn't roll back canonical writes. Best-effort: admin can
-    // re-issue from the employees screen when outbound email is enabled.
-    if (firstEmployeeId !== null && firstEmployeeNeedsInvite) {
-      try {
-        await issueAndEmailFieldInvite(firstEmployeeId);
-      } catch (err) {
-        logger.warn({ err, firstEmployeeId }, "Auto-invite for first employee failed");
-      }
-    }
+
   }
 
   const [updated] = await db

@@ -131,11 +131,11 @@ const partnerFlow: StepSpec[] = [
   },
   {
     step: "invite-team",
-    title: "Invite teammates",
-    required: false,
-    purpose: "Send invite emails to additional admin or member teammates.",
-    fields: [{ path: "inviteEmails", label: "Email addresses (comma-separated)", required: false }],
-    guidance: "Optional. The user can always invite teammates later from Settings → Team.",
+    title: "Confirm Your Admin Profile",
+    required: true,
+    purpose: "Confirm your existing account as an organization administrator.",
+    fields: [],
+    guidance: "Ask the user to confirm their prefilled profile and finish onboarding on the page. Additional staff can be added later in Employee Management.",
   },
 ];
 
@@ -212,16 +212,11 @@ const vendorFlow: StepSpec[] = [
   },
   {
     step: "first-employee",
-    title: "First field employee",
+    title: "Confirm Your Admin Profile",
     required: true,
-    purpose: "Add the first crew member so you can issue invites and dispatch tickets.",
-    fields: [
-      { path: "firstEmployee.firstName", label: "First name", required: true },
-      { path: "firstEmployee.lastName", label: "Last name", required: true },
-      { path: "firstEmployee.email", label: "Email (used for invite)", required: true },
-    ],
-    guidance:
-      "After completion, the wizard sends an invite email to that address. Make sure the user enters a real, monitored inbox — typos will silently fail.",
+    purpose: "Confirm your existing account as an organization administrator.",
+    fields: [],
+    guidance: "Ask the user to confirm their prefilled profile and finish onboarding on the page. Additional staff can be added later in Employee Management.",
   },
 ];
 

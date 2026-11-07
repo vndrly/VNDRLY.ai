@@ -252,10 +252,18 @@
   background-color: rgba(0, 0, 0, 0.06) !important;
 }
 
-/* In dark mode, force native scrollbars and form-control chrome to stay
- * light — the content pane is grey (#d1d5db), not a true dark background. */
+/* Keep native form-control chrome light on the legacy gray content pane. */
 .dark {
   color-scheme: light;
+}
+
+/* Neutral gray scrollbars, matching the Notifications list on dark cards. */
+:root {
+  --app-scrollbar-thumb: #9b9b9b;
+  scrollbar-color: var(--app-scrollbar-thumb) transparent;
+}
+:where(*) {
+  scrollbar-width: thin;
 }
 
 /* Modals match the grey content-pane surface. */
@@ -651,5 +659,56 @@ main :is(button, a).relative.inline-flex.items-center.select-none:hover {
   ) {
     color: inherit !important;
     text-shadow: none !important;
+  }
+}
+
+/* Shared dropdown chrome. Keep platform picker behavior on browsers without a stylable picker. */
+:is(.app-select-trigger[role="combobox"], select:not([multiple], [size]:not([size="1"]))) {
+  background-color: #303034;
+  border: 1px solid var(--brand-primary, #e6ac00);
+  border-radius: 9999px;
+  color: #ececec;
+  color-scheme: dark;
+}
+.app-select-menu[role="listbox"] {
+  background-color: #303034;
+  border-color: var(--brand-primary, #e6ac00);
+  border-radius: 8px;
+  color: #ececec;
+}
+.app-select-menu [role="option"][data-state="checked"] svg {
+  color: var(--brand-primary, #e6ac00);
+}
+.app-select-menu [role="option"][data-highlighted] {
+  background-color: color-mix(in srgb, var(--brand-primary, #e6ac00) 20%, #303034);
+  color: #fff;
+}
+select:not([multiple], [size]:not([size="1"])) :is(option, optgroup) {
+  background-color: #303034;
+  color: #ececec;
+}
+@supports (appearance: base-select) {
+  select:not([multiple], [size]:not([size="1"])),
+  select:not([multiple], [size]:not([size="1"]))::picker(select) {
+    appearance: base-select;
+  }
+  select::picker(select) {
+    margin-block-start: 4px;
+    max-block-size: 60vh;
+    background-color: #303034;
+    border: 1px solid var(--brand-primary, #e6ac00);
+    border-radius: 8px;
+    color: #ececec;
+  }
+  select:not([multiple], [size]:not([size="1"])) option {
+    padding: 6px 10px;
+  }
+  select option::checkmark,
+  select::picker-icon {
+    color: var(--brand-primary, #e6ac00);
+  }
+  select:not([multiple], [size]:not([size="1"])) option:is(:hover, :focus-visible) {
+    background-color: color-mix(in srgb, var(--brand-primary, #e6ac00) 20%, #303034);
+    color: #fff;
   }
 }

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { OnboardingProgressRow } from "@/lib/onboarding-api";
@@ -79,9 +80,9 @@ it("links skipped and unvisited steps from the dashboard and opens the selected 
       skippedSteps: ["branding"],
     },
   });
-  render(<DashboardSetup orgType="vendor" orgId={1} />);
+  render(<QueryClientProvider client={new QueryClient()}><DashboardSetup orgType="vendor" orgId={1} /></QueryClientProvider>);
   expect(screen.getByRole("link", { name: "Add your vendor logo and brand color" }).getAttribute("href")).toBe("/onboarding/vendor?step=branding");
   expect(screen.getByRole("link", { name: "Set service area and work types" }).getAttribute("href")).toBe("/onboarding/vendor?step=work-types");
-  fireEvent.click(screen.getAllByRole("button", { name: "Tax IDs" })[0]);
+  fireEvent.click(screen.getAllByRole("button", { name: "Go to Tax IDs" })[0]);
   expect(navigate).toHaveBeenCalledWith("/onboarding/vendor?step=tax-ids");
 });

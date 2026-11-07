@@ -1,3 +1,5 @@
+import { useAuth } from "@/hooks/use-auth";
+import { LeadAdminInvite, OnboardingAdminProfile, prefillAdminProfile, type OnboardingAdminDetails } from "@/components/onboarding-admin-profile";
 import "./vendor-profile.css";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PinFields } from "@/components/admin-pin-setup";
@@ -44,7 +46,7 @@ const STEPS: (StepperStep & { key: StepKey })[] = [
   { key: "branding", label: "Branding" },
   { key: "tax-ids", label: "Tax IDs" },
   { key: "work-types", label: "Service Area & Work Types" },
-  { key: "first-employee", label: "First Employee" },
+  { key: "first-employee", label: "Admin Profile" },
 ];
 
 // Required steps cannot be skipped — the Skip button is hidden for
@@ -55,9 +57,10 @@ const STEPS: (StepperStep & { key: StepKey })[] = [
 // from the dashboard's Finish-setup widget. Required data is still
 // enforced at /complete time (the user can't actually finalise
 // onboarding without it), but they're free to walk away in between.
-const REQUIRED_STEPS = new Set<StepKey>(["company-basics", "platform-eula", "legal-consent"]);
+const REQUIRED_STEPS = new Set<StepKey>(["company-basics", "platform-eula", "legal-consent", "first-employee"]);
 
 interface VendorPayload {
+  adminProfile?: OnboardingAdminDetails;
   taxIds?: {
     federalTaxId?: string;
     stateTaxId?: string;
@@ -82,17 +85,13 @@ interface VendorPayload {
   branding?: { brandPrimaryColor?: string; logoUrl?: string; logoSquareUrl?: string };
   platformEula?: { accepted?: boolean; version?: string };
   legalConsent?: { accepted?: boolean; version?: string };
-  firstEmployee?: {
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    phone?: string;
-  };
+
 }
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function OnboardingVendor() {
+  const { user: signedInUser } = useAuth();
   const onboardingRefresh = useOnboardingRefresh();
   const [, navigate] = useLocation();
   const { t } = useTranslation();
@@ -101,6 +100,7 @@ export default function OnboardingVendor() {
   const [stepIndex, setStepIndex] = useState(0);
   const [completed, setCompleted] = useState<string[]>([]);
   const [skipped, setSkipped] = useState<string[]>([]);
+  const [adminProfile, setAdminProfile] = useState(() => prefillAdminProfile({ email: null }));
   const [payload, setPayload] = useState<VendorPayload>({});
   const [loading, setLoading] = useState(false);
   const [catalog, setCatalog] = useState<Awaited<ReturnType<typeof onboardingApi.getWorkTypes>> | null>(null);
@@ -174,15 +174,18 @@ export default function OnboardingVendor() {
     accepted: false,
     version: LEGAL_POLICY_VERSION,
   });
-  const [firstEmp, setFirstEmp] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
   const [showAccountCreated, setShowAccountCreated] = useState(false);
 
   const currentStep = STEPS[stepIndex];
+
+  const adminName = signedInUser?.displayName;
+  useEffect(() => {
+    if (!adminName) return;
+    setAdminProfile(previous => previous.firstName || previous.lastName
+      ? previous
+      : { ...prefillAdminProfile({ displayName: adminName, email: previous.email, phone: previous.phone }) });
+  }, [adminName, orgId]);
+
 
   // Resume / already-onboarded redirect. If the signed-in vendor admin
   // has already finished onboarding, the wizard is a no-op for them —
@@ -213,6 +216,7 @@ export default function OnboardingVendor() {
         setSkipped(me.progress.skippedSteps ?? []);
         const p = (me.progress.payload ?? {}) as VendorPayload;
         setPayload(p);
+        setAdminProfile(p.adminProfile ?? prefillAdminProfile(me.adminProfile ?? me.user ?? { email: null }));
         if (p.taxIds) {
           setTaxIds({
             federalTaxId: p.taxIds.federalTaxId ?? "",
@@ -261,14 +265,7 @@ export default function OnboardingVendor() {
             version: p.legalConsent.version ?? LEGAL_POLICY_VERSION,
           });
         }
-        if (p.firstEmployee) {
-          setFirstEmp({
-            firstName: p.firstEmployee.firstName ?? "",
-            lastName: p.firstEmployee.lastName ?? "",
-            email: p.firstEmployee.email ?? "",
-            phone: p.firstEmployee.phone ?? "",
-          });
-        }
+
       } catch {
         // anonymous visitor — sit on step 1 (account creation)
       }
@@ -422,6 +419,7 @@ export default function OnboardingVendor() {
         confirmPin: basics.confirmPin,
       });
       setOrgId(resp.orgId);
+      setAdminProfile(prefillAdminProfile({ displayName: basics.contactName, email: basics.contactEmail, phone: basics.contactPhone }));
       setCompleted(resp.progress.completedSteps);
       setSkipped(resp.progress.skippedSteps);
       setPayload(resp.progress.payload as VendorPayload);
@@ -526,10 +524,6 @@ export default function OnboardingVendor() {
         if (!rates.weeklyOtHours.trim() || isNaN(Number(rates.weeklyOtHours))) return "Enter a weekly OT threshold.";
         if (!rates.overtimeMultiplier.trim() || isNaN(Number(rates.overtimeMultiplier))) return "Enter an overtime multiplier.";
         return null;
-      case "first-employee":
-        if (!firstEmp.firstName.trim() || !firstEmp.lastName.trim()) return "First and last name are required.";
-        if (!firstEmp.email.trim()) return "Email is required.";
-        return null;
       default:
         return null;
     }
@@ -543,12 +537,15 @@ export default function OnboardingVendor() {
       if (cancelled) return;
       const { name, contactName, contactEmail, contactPhone } = vendor;
       setBasics(previous => ({ ...previous, name, contactName, contactEmail, contactPhone: contactPhone ?? "" }));
+      if (contactPhone && adminName?.trim().toLowerCase() === contactName.trim().toLowerCase()) {
+        setAdminProfile(previous => previous.phone ? previous : { ...previous, phone: contactPhone });
+      }
       setBasicsLoaded(true);
     }).catch(() => {
       if (!cancelled) toast({ title: "Could not load company information. Reload to try again.", variant: "destructive" });
     });
     return () => { cancelled = true; };
-  }, [orgId, toast]);
+  }, [orgId, toast, adminName]);
 
   const saveExistingBasics = async () => {
     if (!orgId || currentStep.key !== "company-basics") return;
@@ -600,7 +597,7 @@ export default function OnboardingVendor() {
     try {
       await saveExistingBasics();
       await persist({ payloadPatch: buildPayloadPatch() });
-      window.location.assign(`${BASE}/`);
+      navigate("/", { replace: true });
     } catch (e) {
       toast({ title: (e as Error).message, variant: "destructive" });
     } finally {
@@ -663,7 +660,7 @@ export default function OnboardingVendor() {
       });
       await onboardingApi.complete("vendor", orgId);
       toast({ title: "Welcome aboard!" });
-      window.location.assign(`${BASE}/`);
+      navigate("/", { replace: true });
     } catch (e) {
       const msg = (e as Error).message;
       // Server returns "Required fields missing" with a list — show it
@@ -715,12 +712,12 @@ export default function OnboardingVendor() {
             },
           };
         case "first-employee":
-          return { firstEmployee: firstEmp };
+          return { adminProfile };
         default:
           return {};
       }
     };
-  }, [currentStep.key, taxIds, selectedWtIds, serviceRadius, compliance, rates, vendorBranding, platformEula, legalConsent, firstEmp]);
+  }, [currentStep.key, taxIds, selectedWtIds, serviceRadius, compliance, rates, vendorBranding, platformEula, legalConsent, adminProfile]);
 
   const brandPreview = useMemo((): OnboardingBrandPreview | null => {
     const primary = vendorBranding.brandPrimaryColor.trim() || payload.branding?.brandPrimaryColor?.trim() || "";
@@ -903,7 +900,7 @@ export default function OnboardingVendor() {
                 <p className="text-xs text-gray-500 mt-1">How far from your physical address you'll accept work.</p>
               </div>
               {catalog ? (
-                <OnboardingServiceCatalog catalog={catalog} selected={selectedWtIds}
+                <OnboardingServiceCatalog catalog={catalog} brand={pageBrand} selected={selectedWtIds}
                   onSelect={(ids, checked) => setSelectedWtIds(previous => checked
                     ? [...new Set([...previous, ...ids])]
                     : previous.filter(id => !ids.includes(id)))}
@@ -1031,42 +1028,11 @@ export default function OnboardingVendor() {
             </div>
           )}
 
-          {currentStep.key === "first-employee" && (
-            <div className="space-y-4" data-testid="step-first-employee-body">
-              <h2 className="text-lg font-semibold text-gray-900">Add your first field employee</h2>
-              <p className="text-sm text-gray-500">Once you finish setup, we'll send them an invite to set up their own account and profile photo.</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>First name *</Label>
-                  <Input value={firstEmp.firstName} onChange={(e) => setFirstEmp({ ...firstEmp, firstName: e.target.value })} data-testid="input-emp-first" />
-                </div>
-                <div>
-                  <Label>Last name *</Label>
-                  <Input value={firstEmp.lastName} onChange={(e) => setFirstEmp({ ...firstEmp, lastName: e.target.value })} data-testid="input-emp-last" />
-                </div>
-              </div>
-              <div>
-                <Label>Email *</Label>
-                <Input type="email" value={firstEmp.email} onChange={(e) => setFirstEmp({ ...firstEmp, email: e.target.value })} data-testid="input-emp-email" />
-              </div>
-              <div>
-                <Label>Phone</Label>
-                <Input
-                  value={firstEmp.phone}
-                  onChange={(e) =>
-                    setFirstEmp({
-                      ...firstEmp,
-                      phone: handlePhoneInput(e.target.value),
-                    })
-                  }
-                  data-testid="input-emp-phone"
-                />
-              </div>
-            </div>
-          )}
+          {currentStep.key === "first-employee" && <div data-testid="step-first-employee-body"><OnboardingAdminProfile profile={adminProfile} onChange={setAdminProfile} /></div>}
 
           <div className="mt-8 flex flex-wrap items-center justify-end gap-3">
-            <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className={currentStep.key === "first-employee" ? "flex items-stretch gap-2 max-[440px]:grid max-[440px]:w-full max-[440px]:grid-cols-3 max-[440px]:gap-1" : "flex flex-wrap items-center justify-end gap-2"}>
+              {currentStep.key === "first-employee" && orgId && <LeadAdminInvite orgType="vendor" orgId={orgId} />}
               {stepIndex > 0 && !REQUIRED_STEPS.has(currentStep.key as StepKey) && (
                 <OnboardingPillButton tone="secondary" onClick={skipStep} disabled={loading} data-testid="button-skip" className="px-5">
                   {t("onboardingActions.skipForNow")}
@@ -1077,7 +1043,7 @@ export default function OnboardingVendor() {
                   to the dashboard, where the Finish-setup widget
                   surfaces a Resume CTA. */}
               {orgId && (
-                <OnboardingPillButton tone="secondary" onClick={saveAndQuit} disabled={loading} data-testid="button-save-and-quit" className="px-5">
+                <OnboardingPillButton tone="secondary" onClick={saveAndQuit} disabled={loading} data-testid="button-save-and-quit" className={currentStep.key === "first-employee" ? "max-[440px]:!px-1" : "px-5"}>
                   {t("onboardingActions.saveAndQuit")}
                 </OnboardingPillButton>
               )}
@@ -1086,7 +1052,7 @@ export default function OnboardingVendor() {
                   {loading ? "Creating…" : "Create account"}
                 </OnboardingPillButton>
               ) : stepIndex === STEPS.length - 1 ? (
-                <OnboardingPillButton onClick={finish} disabled={loading} data-testid="button-finish" className="px-6">
+                <OnboardingPillButton onClick={finish} disabled={loading} data-testid="button-finish" className="max-[440px]:!px-1">
                   {loading ? "Finishing…" : "Complete Onboarding"}
                 </OnboardingPillButton>
               ) : (

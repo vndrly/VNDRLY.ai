@@ -28,7 +28,7 @@ export default function OnboardingVerificationBanner({
   if (!email) return null;
 
   if (compact && (emailVerifiedAt || status)) {
-    return <span role="status" className="text-sm font-medium text-emerald-200">{emailVerifiedAt || status === "verified" ? "Email Verified" : "Verification Sent"}</span>;
+    return <span role="status" className="vendor-mini-card">{emailVerifiedAt || status === "verified" ? "Email Verified" : "Verification Sent"}</span>;
   }
   if (emailVerifiedAt) {
     return (

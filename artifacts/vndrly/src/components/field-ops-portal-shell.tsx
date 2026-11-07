@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { LogOut, Menu, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { useTheme } from "@/hooks/use-theme";
 import { useBrand, brandStyleVars } from "@/hooks/use-brand";
 import LanguageToggle from "@/components/language-toggle";
 import NotificationsBell from "@/components/notifications-bell";
@@ -77,8 +76,6 @@ export function FieldOpsPortalShell({
   const { user, logout } = useAuth();
   const brand = useBrand();
   const branded = brand.isOrgBranded;
-  const { resolved: themeResolved } = useTheme();
-  const isDarkTheme = themeResolved === "dark";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const contentRef=useRef<HTMLElement>(null);
   const [vendorName, setVendorName] = useState<string | null>(null);
@@ -261,7 +258,7 @@ export function FieldOpsPortalShell({
             );
           })}
           {!tabs.some(tab => tab.href === "/gate/change-over") && <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
-            <LanguageToggle variant={isDarkTheme ? "dark" : "light"} />
+            <LanguageToggle />
           </div>}
           {user && (
             <div>

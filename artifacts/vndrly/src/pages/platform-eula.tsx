@@ -34,7 +34,7 @@ export default function PlatformEulaPage() {
       <NavPaneHalftoneBackground enabled variant="auth" />
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
 
-        <LanguageToggle variant="dark" />
+        <LanguageToggle />
       </div>
       <div className="w-full max-w-3xl mx-auto relative z-10">
         <button type="button" className="group mb-6 inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300" onClick={() => navigateBackInApp(navigate, "/login")}>

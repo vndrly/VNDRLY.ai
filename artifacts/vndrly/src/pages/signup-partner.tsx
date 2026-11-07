@@ -164,7 +164,7 @@ export default function SignupPartner() {
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/8 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/8 to-transparent pointer-events-none" />
         <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle variant="dark" />
+          <LanguageToggle />
         </div>
 
         <div className="w-full max-w-md relative z-10">

@@ -278,7 +278,7 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
           className={cn("absolute bottom-4 right-4 z-20", "text-gray-300")}
         />
         <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle variant="dark" />
+          <LanguageToggle />
         </div>
         <div className="absolute top-4 left-4 z-20">
           <LoginHomeLink />

@@ -12,6 +12,7 @@ import {
   canonicalServicesTable,
   canonicalServiceAliasesTable,
   serviceMappingsTable,
+  onboardingProgressTable,
   VENDOR_WORK_TYPE_UNITS,
 } from "@workspace/db";
 import { eq, asc, inArray, isNull, sql, and, or } from "drizzle-orm";
@@ -19,6 +20,7 @@ import { ListWorkTypesResponse } from "@workspace/api-zod";
 import { requireAdmin, requireSession, getSessionFromRequest } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
 import { classifySavedWorkType } from "../services/service-matching/catalog-classification";
+import { reviewedServiceDefinition, reviewedServiceDefinitionJoin, reviewedServiceDefinitionMatch } from "../services/service-matching/reviewed-service-definitions";
 import { vendorCatalogPartnerIds } from "../lib/partner-catalog-access";
 import { z } from "zod/v4";
 
@@ -98,6 +100,7 @@ router.get("/work-types", requireSession, async (req, res): Promise<void> => {
       canonicalId: canonicalServicesTable.id,
       canonicalName: canonicalServicesTable.name,
       canonicalCategory: canonicalServicesTable.category,
+      canonicalDefinition: reviewedServiceDefinition,
       selectedId: vendorWorkTypesTable.workTypeId,
       unitPrice: vendorWorkTypesTable.unitPrice,
       unit: vendorWorkTypesTable.unit,
@@ -106,6 +109,7 @@ router.get("/work-types", requireSession, async (req, res): Promise<void> => {
       .leftJoin(partnersTable, eq(partnersTable.id, workTypesTable.partnerId))
       .leftJoin(serviceMappingsTable, and(eq(serviceMappingsTable.workTypeId, workTypesTable.id), eq(serviceMappingsTable.status, "active")))
       .leftJoin(canonicalServicesTable, and(eq(canonicalServicesTable.id, serviceMappingsTable.canonicalServiceId), eq(canonicalServicesTable.active, true)))
+      .leftJoin(reviewedServiceDefinitionJoin, reviewedServiceDefinitionMatch)
       .leftJoin(vendorWorkTypesTable, and(eq(vendorWorkTypesTable.workTypeId, workTypesTable.id), eq(vendorWorkTypesTable.vendorId, session.vendorId!)))
       .where(or(isNull(workTypesTable.partnerId), partnerIds.length ? inArray(workTypesTable.partnerId, partnerIds) : undefined))
       .orderBy(workTypesTable.category, workTypesTable.name);
@@ -117,7 +121,10 @@ router.get("/work-types", requireSession, async (req, res): Promise<void> => {
       inArray(canonicalServiceAliasesTable.canonicalServiceId, canonicalIds),
       eq(canonicalServiceAliasesTable.active, true),
     )) : [];
-    res.json({ rows, aliases });
+    const [progress] = await db.select({ payload: onboardingProgressTable.payload })
+      .from(onboardingProgressTable).where(eq(onboardingProgressTable.vendorId, session.vendorId!));
+    const baseRates = (progress?.payload as { catalogBaseRates?: unknown } | undefined)?.catalogBaseRates ?? {};
+    res.json({ rows, aliases, baseRates });
     return;
   }
 
@@ -166,6 +173,7 @@ const onboardingRates = z.array(z.object({
   id: z.number().int().positive(),
   amount: z.number().min(0).max(9999999999.99),
   unit: z.enum(VENDOR_WORK_TYPE_UNITS),
+  base: z.literal(true).optional(),
 })).min(1).max(500);
 
 router.put("/work-types/onboarding-rates", requireSession, async (req, res): Promise<void> => {
@@ -175,24 +183,44 @@ router.put("/work-types/onboarding-rates", requireSession, async (req, res): Pro
     return;
   }
   const parsed = onboardingRates.safeParse(req.body);
-  if (!parsed.success || new Set(parsed.data.map(row => row.id)).size !== parsed.data.length) {
+  if (!parsed.success || new Set(parsed.data.map(row => `${row.id}:${!!row.base}`)).size !== parsed.data.length) {
     sendApiError(res, 400, "validation.invalid_input", "Enter valid rates for distinct services");
     return;
   }
   const vendorId = session.vendorId;
   const partnerIds = await vendorCatalogPartnerIds(session, vendorId);
-  const rows = await db.select({ partnerId: workTypesTable.partnerId })
-    .from(workTypesTable).where(inArray(workTypesTable.id, parsed.data.map(row => row.id)));
-  if (!partnerIds || rows.length !== parsed.data.length ||
+  const ids = [...new Set(parsed.data.map(row => row.id))];
+  const rows = await db.select({ id: workTypesTable.id, partnerId: workTypesTable.partnerId, canonicalId: canonicalServicesTable.id })
+    .from(workTypesTable)
+    .leftJoin(serviceMappingsTable, and(eq(serviceMappingsTable.workTypeId, workTypesTable.id), eq(serviceMappingsTable.status, "active")))
+    .leftJoin(canonicalServicesTable, and(eq(canonicalServicesTable.id, serviceMappingsTable.canonicalServiceId), eq(canonicalServicesTable.active, true)))
+    .where(inArray(workTypesTable.id, ids));
+  if (!partnerIds || new Set(rows.map(row => row.id)).size !== ids.length ||
       rows.some(row => row.partnerId !== null && !partnerIds.includes(row.partnerId))) {
     sendApiError(res, 403, "auth.forbidden", "Service is outside your catalog");
     return;
   }
-  await db.insert(vendorWorkTypesTable).values(parsed.data.map(row => ({
-    vendorId, workTypeId: row.id, unitPrice: row.amount.toFixed(2), unit: row.unit, currency: "USD",
-  }))).onConflictDoUpdate({
-    target: [vendorWorkTypesTable.vendorId, vendorWorkTypesTable.workTypeId],
-    set: { unitPrice: sql`excluded.unit_price`, unit: sql`excluded.unit`, currency: sql`excluded.currency` },
+  const partnerRates = parsed.data.filter(row => !row.base);
+  const baseRates = Object.fromEntries(parsed.data.filter(row => row.base).map(row => {
+    const canonicalId = rows.find(candidate => candidate.id === row.id)?.canonicalId;
+    return [canonicalId ? `canonical:${canonicalId}` : `work-type:${row.id}`, { amount: row.amount.toFixed(2), unit: row.unit }];
+  }));
+  await db.transaction(async tx => {
+    if (Object.keys(baseRates).length) {
+      const payload = { catalogBaseRates: baseRates };
+      await tx.insert(onboardingProgressTable).values({ orgType: "vendor", vendorId, payload })
+        .onConflictDoUpdate({
+          target: onboardingProgressTable.vendorId,
+          set: { payload: sql`jsonb_set(${onboardingProgressTable.payload}, '{catalogBaseRates}', coalesce(${onboardingProgressTable.payload}->'catalogBaseRates', '{}'::jsonb) || ${JSON.stringify(baseRates)}::jsonb)` },
+        });
+    }
+    if (!partnerRates.length) return;
+    await tx.insert(vendorWorkTypesTable).values(partnerRates.map(row => ({
+      vendorId, workTypeId: row.id, unitPrice: row.amount.toFixed(2), unit: row.unit, currency: "USD",
+    }))).onConflictDoUpdate({
+      target: [vendorWorkTypesTable.vendorId, vendorWorkTypesTable.workTypeId],
+      set: { unitPrice: sql`excluded.unit_price`, unit: sql`excluded.unit`, currency: sql`excluded.currency` },
+    });
   });
   res.json({ saved: true });
 });

@@ -6,6 +6,7 @@ import { usersTable } from "./users";
 
 export const vendorsTable = pgTable("vendors", {
   id: serial("id").primaryKey(),
+  ownerUserId: integer("owner_user_id").references(() => usersTable.id),
   gateMapPins: jsonb("gate_map_pins").$type<Array<{ id: string; siteId: number; label: string; notes: string; latitude: number; longitude: number; createdById: number; createdAt: string; removedAt?: string | null; removedById?: number | null }>>().notNull().default([]),
   callTranscriptionPolicy: jsonb("call_transcription_policy").$type<{ enabled: boolean; version: number; verifiedByUserId: number; effectiveAt: string }>(),
   operationsCategories: text("operations_categories").array(),
@@ -183,6 +184,6 @@ export const vendorsTable = pgTable("vendors", {
   }).onDelete("set null"),
 }));
 
-export const insertVendorSchema = createInsertSchema(vendorsTable).omit({ id: true, createdAt: true });
+export const insertVendorSchema = createInsertSchema(vendorsTable).omit({ id: true, createdAt: true, ownerUserId: true });
 export type InsertVendor = z.infer<typeof insertVendorSchema>;
 export type Vendor = typeof vendorsTable.$inferSelect;

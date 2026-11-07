@@ -67,7 +67,7 @@ export function OnboardingLegalConsentStep({
         </span>
       </label>
       {!currentAcceptance && (
-        <p className="text-xs text-amber-700" data-testid="text-legal-consent-required-hint">
+        <p className="text-xs font-bold text-white" data-testid="text-legal-consent-required-hint">
           Confirm your organization’s acceptance of the legal documents to continue.
         </p>
       )}

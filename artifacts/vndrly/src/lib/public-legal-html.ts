@@ -142,13 +142,12 @@ function renderDocument(title: string, slug: string, body: string, canonicalPath
 .public-legal button:hover { background: #353539; color: var(--legal-accent); }
 .public-legal button:disabled { opacity: .6; cursor: wait; }
 .public-legal :focus-visible { outline: 2px solid var(--legal-accent); outline-offset: 3px; }
+:root { scrollbar-color: #9b9b9b transparent; }
+:where(*) { scrollbar-width: thin; }
 .public-legal .back { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 600; }
 .public-legal .back-icon { width: 32px; height: 32px; position: relative; display: inline-block; flex-shrink: 0; }
-.public-legal .back-icon::before { content: ""; position: absolute; inset: 0; background: var(--legal-primary); mask: url(/legal-assets/back-sphere.png) center / contain no-repeat; }
-.public-legal .back-icon img { position: absolute; inset: 0; width: 100%; height: 100%; }
-.public-legal .back-gloss { opacity: 0; transition: opacity .2s; }
-.public-legal .back:hover .back-gloss { opacity: 1; }
-.public-legal .back-arrow { position: absolute; inset: 18%; width: 64%; height: 64%; color: var(--brand-icon-color, #242426); }
+.public-legal .back-icon::before { content: ""; position: absolute; inset: 0; background-color: var(--legal-primary); background-image: linear-gradient(to bottom, #ffffff80 50%, transparent 50%); mask: url(/legal-assets/back-sphere.png) center / contain no-repeat; }
+.public-legal .back-icon img { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: screen; }
 @media (prefers-reduced-motion: no-preference) {
   .public-legal .back-icon { transition: transform .15s; }
   .public-legal .back:hover .back-icon { transform: scale(1.1); }
@@ -183,7 +182,7 @@ function renderDocument(title: string, slug: string, body: string, canonicalPath
   height: 24px;
   padding: 3px;
   border-radius: 12px;
-  background: var(--legal-primary);
+  background: #6b7280;
 }
 .language-slider span::after {
   content: "";
@@ -191,7 +190,7 @@ function renderDocument(title: string, slug: string, body: string, canonicalPath
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--brand-icon-color, #242426);
+  background: #fff;
 }
 .language-slider:has(+ a[aria-current]) span::after { transform: translateX(20px); }
 .public-legal footer { border-top: 1px solid #ffffff33; margin-top: 24px; padding-top: 16px; color: #b3b3b3; font-size: 12px; }
@@ -207,6 +206,6 @@ function renderDocument(title: string, slug: string, body: string, canonicalPath
   .public-legal .language { gap: 2px; }
   .public-legal .language a { font-size: 12px; padding-inline: 2px; }
 }
-</style></head><body><div class="public-legal ${slug}"><div class="document"><div class="toolbar"><a class="back" href="/login"><span class="back-icon" aria-hidden="true"><svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7M5 12h14"/></svg></span>Back to sign in</a><nav class="language" aria-label="Language">${englishLink}${slider}${spanishLink}</nav></div><header><a href="/login" aria-label="VNDRLY sign in"><img src="${escapeHtml(logoUrl)}" alt="" width="48" height="48"></a><div><h1>VNDRLY ${escapeHtml(title)}</h1><p>Effective ${escapeHtml(LEGAL_EFFECTIVE_DATE)}</p></div></header><nav><a href="/legal/privacy/">Privacy Policy</a> · <a href="/legal/terms/">Terms & Conditions</a> · <a href="/sms/">SMS Enrollment</a></nav><main>${body}</main><footer><p><a class="back" href="/login"><span class="back-icon" aria-hidden="true"><svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7M5 12h14"/></svg></span>Back to sign in</a><a href="mailto:${escapeHtml(LEGAL_CONTACT_EMAIL)}">${escapeHtml(LEGAL_CONTACT_EMAIL)}</a></p></footer></div></div></body></html>`;
+</style></head><body><div class="public-legal ${slug}"><div class="document"><div class="toolbar"><a class="back" href="/login"><span class="back-icon" aria-hidden="true"><img src="/legal-assets/back-arrow.png" alt=""></span>Back to sign in</a><nav class="language" aria-label="Language">${englishLink}${slider}${spanishLink}</nav></div><header><a href="/login" aria-label="VNDRLY sign in"><img src="${escapeHtml(logoUrl)}" alt="" width="48" height="48"></a><div><h1>VNDRLY ${escapeHtml(title)}</h1><p>Effective ${escapeHtml(LEGAL_EFFECTIVE_DATE)}</p></div></header><nav><a href="/legal/privacy/">Privacy Policy</a> · <a href="/legal/terms/">Terms & Conditions</a> · <a href="/sms/">SMS Enrollment</a></nav><main>${body}</main><footer><p><a class="back" href="/login"><span class="back-icon" aria-hidden="true"><img src="/legal-assets/back-arrow.png" alt=""></span>Back to sign in</a><a href="mailto:${escapeHtml(LEGAL_CONTACT_EMAIL)}">${escapeHtml(LEGAL_CONTACT_EMAIL)}</a></p></footer></div></div></body></html>`;
   return language === "es" ? translatePublicHtml(page) : page;
 }

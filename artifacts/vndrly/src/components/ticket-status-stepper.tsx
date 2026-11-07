@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import { CompactStepCaption } from "@/components/compact-step-caption";
 import { Check, AlertTriangle, Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +62,8 @@ const SUCCESS_GREEN = "#16a34a";
 export default function TicketStatusStepper({ status, className }: TicketStatusStepperProps) {
   const { t } = useTranslation();
   const activeIndex = statusToActiveIndex(status);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const captionIndex = hoveredIndex ?? activeIndex;
   const isCancelled = status === "cancelled";
   const isKickedBack = status === "kicked_back";
   const isAllSuccess = status === "funds_dispersed";
@@ -99,7 +103,7 @@ export default function TicketStatusStepper({ status, className }: TicketStatusS
   const futureTextStyle = { color: FUTURE_GREY } as const;
 
   return (
-    <div className={cn("w-full", className)} data-testid="ticket-status-stepper">
+    <div className={cn("@container w-full", className)} data-testid="ticket-status-stepper">
       <div className="grid grid-cols-6 gap-0">
         {stepsForStatus.map((step, i) => {
           const isCompleted = !isCancelled && i < activeIndex;
@@ -167,9 +171,15 @@ export default function TicketStatusStepper({ status, className }: TicketStatusS
                 />
               )}
               <div
+                onPointerEnter={(event) => { if (event.pointerType === "mouse") setHoveredIndex(i); }}
+                onPointerLeave={() => setHoveredIndex(null)}
+                aria-current={isCurrent ? "step" : undefined}
+                aria-label={t(step.labelKey)}
+                role="img"
                 className={cn(
                   "relative z-10 w-6 h-6 rounded-full border-2 shadow-sm flex items-center justify-center transition-colors",
                   dotBg,
+                  isCurrent && "outline-2 outline-offset-2 outline-[var(--brand-primary)] @[460px]:outline-none",
                 )}
                 style={
                   isBrandActive
@@ -201,7 +211,7 @@ export default function TicketStatusStepper({ status, className }: TicketStatusS
                 ) : null}
               </div>
               <span
-                className={cn("mt-1.5 text-[11px] text-center leading-tight px-1", labelClass)}
+                className={cn("mt-1.5 hidden w-full break-words px-1 text-center text-[11px] leading-tight @[460px]:block", labelClass)}
                 style={
                   isCancelled
                     ? undefined
@@ -218,6 +228,10 @@ export default function TicketStatusStepper({ status, className }: TicketStatusS
           );
         })}
       </div>
+      {stepsForStatus[captionIndex] && (
+        <CompactStepCaption index={captionIndex} total={stepsForStatus.length} label={t(stepsForStatus[captionIndex].labelKey)}
+          color={isKickedBack ? "#b91c1c" : brandColor} preview={captionIndex !== activeIndex} />
+      )}
       {isKickedBack && (
         <p className="mt-2 text-xs text-red-700 text-center font-semibold" data-testid="stepper-note-kicked-back">
           {t("tickets.stepperKickedBackNote")}

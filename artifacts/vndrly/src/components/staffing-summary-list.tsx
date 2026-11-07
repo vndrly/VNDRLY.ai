@@ -10,6 +10,7 @@ export type StaffingSummary = {
   role: string;
   enrollment: ReactNode;
   remove?: ReactNode;
+  action?: ReactNode;
   onOpen: () => void;
 };
 
@@ -27,7 +28,7 @@ export default function StaffingSummaryList({ people, emptyText = "No employees 
       <span className="staffing-summary-name" role="cell"><button type="button" onClick={person.onOpen}>{person.name}</button></span>
       <span role="cell" data-label="Email" className="staffing-summary-email">{person.email || "—"}</span>
       <span role="cell" data-label="Phone">{person.phone ? formatPhone(person.phone) : "—"}</span>
-      <span role="cell" data-label="Role">{person.role}</span>
+      <span role="cell" data-label="Role">{person.role}{person.action && <div>{person.action}</div>}</span>
       <span role="cell" data-label="Sent Invite">{person.enrollment}</span>
       <span role="cell" className="staffing-summary-remove">{person.remove}</span>
     </div>)}

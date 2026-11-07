@@ -82,6 +82,7 @@ const FieldNewTicket = lazy(() => import("@/pages/field-new-ticket"));
 const AccountLocation = lazy(() => import("@/pages/account-location"));
 const Signup = lazy(() => import("@/pages/signup"));
 const OnboardingPartner = lazy(() => import("@/pages/onboarding-partner"));
+const AcceptLeadAdmin = lazy(() => import("@/pages/accept-lead-admin"));
 const OnboardingVendor = lazy(() => import("@/pages/onboarding-vendor"));
 const OnboardingField = lazy(() => import("@/pages/onboarding-field"));
 const ForgotPassword = lazy(() => import("@/pages/forgot-password"));
@@ -276,6 +277,7 @@ function AuthenticatedRouter() {
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/activate-account" component={ActivateAccount} />
+        <Route path="/accept-lead-admin" component={AcceptLeadAdmin} />
         <Route path="/es/legal/privacy/" component={LegalPrivacyPage} />
         <Route path="/es/legal/terms/" component={LegalTermsPage} />
         <Route path="/es/legal/messaging/" component={LegalMessagingConsentPage} />

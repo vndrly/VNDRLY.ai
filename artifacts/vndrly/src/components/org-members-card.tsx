@@ -7,6 +7,7 @@
 // Add / remove / patch all reject field-employee targets server-side.
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { onboardingApi } from "@/lib/onboarding-api";
 import StaffingSummaryList from "./staffing-summary-list";
 import RemovePill from "./remove-pill";
 import { useQueryClient } from "@tanstack/react-query";
@@ -185,6 +186,18 @@ export default function OrgMembersCard({
       enabled: canManage && !!orgId,
     },
   });
+
+  const ownerUserId = (data as (typeof data & { ownerUserId?: number | null }) | undefined)?.ownerUserId;
+  const [transferTarget, setTransferTarget] = useState<MemberRow | null>(null);
+  const [transferPending, setTransferPending] = useState(false);
+  const [transferError, setTransferError] = useState("");
+  const transferAction = (member: MemberRow) => ownerUserId && ownerUserId === currentUserId
+    && member.role === "admin" && member.userId !== ownerUserId ? (
+    <button type="button" className="org-transfer-ownership text-xs text-[var(--brand-primary)] focus-visible:underline"
+      onClick={() => { setTransferError(""); setTransferTarget(member); }}>
+      Transfer Ownership
+    </button>
+  ) : null;
 
   const addMutation = useAddOrgMember({
     mutation: {
@@ -500,6 +513,37 @@ export default function OrgMembersCard({
           </DialogContent>
         </Dialog>
       </CardHeader>
+      <AlertDialog open={Boolean(transferTarget)} onOpenChange={open => { if (!open && !transferPending) setTransferTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Transfer ownership to {transferTarget?.displayName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure? This takes effect immediately. You’ll remain an administrator, and only the new owner can transfer ownership again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {transferError && <p role="alert" className="text-sm">{transferError}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={transferPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={transferPending} onClick={async event => {
+              event.preventDefault();
+              if (!transferTarget || transferPending) return;
+              setTransferPending(true);
+              try {
+                await onboardingApi.transferOwnership(orgType, orgId, transferTarget.userId);
+                queryClient.setQueryData(getListOrgMembersQueryKey(orgType, orgId), { ...data, ownerUserId: transferTarget.userId });
+                void queryClient.invalidateQueries({ queryKey: getListOrgMembersQueryKey(orgType, orgId) });
+                void queryClient.invalidateQueries({ queryKey: ["onboarding-ownership", orgType, orgId] });
+                setTransferTarget(null);
+                toast({ title: "Ownership transferred" });
+              } catch (error) {
+                setTransferError(error instanceof Error ? error.message : "Could not transfer ownership.");
+              } finally {
+                setTransferPending(false);
+              }
+            }}>{transferPending ? "Transferring…" : "Confirm Transfer"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {(!collapsibleWorkforce || workforceExpanded) && <CardContent className="p-0">
         {isLoading ? (
           <div className="p-6 text-center text-muted-foreground text-sm">
@@ -514,9 +558,10 @@ export default function OrgMembersCard({
           })),
           ...members.map(member => ({
             id: `account:${member.userId}`, name: member.displayName, email: member.username, phone: member.phone,
-            role: member.jobTitle || (member.role === "admin" ? "Admin" : member.role === "ap" ? "Accounts Payable" : "Office Staff"),
+            role: member.userId === ownerUserId ? "Owner" : member.jobTitle || (member.role === "admin" ? "Admin" : member.role === "ap" ? "Accounts Payable" : "Office Staff"),
             onOpen: () => { if (!onEditStaff?.(member)) { setEditTarget(member); setEditTempPassword(""); setResetPasswordError(null); } },
             enrollment: <StaffEnrollmentControl vendorId={orgId} personKey={`account:${member.userId}`} name={member.displayName} email={member.username} canManage={canManage} />,
+            action: transferAction(member),
             remove: <AlertDialog><AlertDialogTrigger asChild><RemovePill aria-label={`Remove ${member.displayName}`} disabled={currentUserId === member.userId || removeMutation.isPending} /></AlertDialogTrigger>
               <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Remove {member.displayName}?</AlertDialogTitle><AlertDialogDescription>{member.username} will lose access to this {orgType}. The login itself stays active for any other organizations they belong to.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => removeMutation.mutate({ orgType, orgId, membershipId: member.membershipId })}>Remove</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
             </AlertDialog>,
@@ -723,6 +768,8 @@ export default function OrgMembersCard({
                     {orgType === "vendor" && <TableCell><StaffEnrollmentControl vendorId={orgId} personKey={`account:${m.userId}`} name={m.displayName} email={m.username} canManage={canManage} /></TableCell>}
                     {collapsibleWorkforce && <TableCell>Administrative Team</TableCell>}
                     <TableCell className="text-right">
+                      {m.userId === ownerUserId && <span className="mr-2">Owner</span>}
+                      {transferAction(m)}
                       {(
                         <AlertDialog>
                           <AlertDialogTrigger asChild>

@@ -21,3 +21,12 @@
   .staffing-summary-row > [data-label]::before { content: attr(data-label) ": "; color: #b3b3b3; font-size: 11px; }
   .staffing-summary-remove { grid-column: 3; grid-row: 1; }
 }
+
+@media (hover: hover) {
+  .staffing-summary-row .org-transfer-ownership,
+  tr .org-transfer-ownership { opacity: 0; }
+  .staffing-summary-row:hover .org-transfer-ownership,
+  .staffing-summary-row:focus-within .org-transfer-ownership,
+  tr:hover .org-transfer-ownership,
+  tr:focus-within .org-transfer-ownership { opacity: 1; }
+}

@@ -16,11 +16,12 @@ import {
 } from "@workspace/db";
 import {
   removeMembership,
+  type DbExecutor,
   type MembershipRole,
   type OrgType,
 } from "../lib/membership-sync";
 import { logger } from "../lib/logger";
-import { SESSION_SECRET } from "../lib/session";
+import { getSessionFromRequest, SESSION_SECRET } from "../lib/session";
 
 const router = Router();
 
@@ -150,6 +151,46 @@ async function requireOrgAdmin(
   };
 }
 
+async function lockOrgOwner(tx: DbExecutor, orgType: OrgType, orgId: number) {
+  const org = orgType === "vendor" ? vendorsTable : partnersTable;
+  const [row] = await tx.select({ ownerUserId: org.ownerUserId }).from(org)
+    .where(eq(org.id, orgId)).for("update");
+  return row?.ownerUserId ?? null;
+}
+
+router.post("/orgs/:orgType/:orgId/transfer-ownership", async (req, res) => {
+  const orgType = parseOrgType(req.params.orgType);
+  const orgId = Number(req.params.orgId);
+  const userId = req.body?.userId;
+  const session = getSessionFromRequest(req);
+  const activeOrgId = orgType === "vendor" ? session?.vendorId : session?.partnerId;
+  if (!orgType || !session?.userId || session.publicDemo || activeOrgId !== orgId) {
+    res.status(403).json({ error: "Only the current owner can transfer ownership.", code: "members.owner_required" });
+    return;
+  }
+  if (!Number.isSafeInteger(userId) || userId === session.userId || req.body.confirmOwnership !== true) {
+    res.status(400).json({ error: "Choose another administrator and confirm the transfer.", code: "members.confirm_transfer" });
+    return;
+  }
+  const org = orgType === "vendor" ? vendorsTable : partnersTable;
+  const scope = orgType === "vendor" ? userOrgMembershipsTable.vendorId : userOrgMembershipsTable.partnerId;
+  const result = await db.transaction(async tx => {
+    if (await lockOrgOwner(tx, orgType, orgId) !== session.userId) return 403;
+    const admins = await tx.select({ userId: usersTable.id, suspendedAt: usersTable.suspendedAt })
+      .from(userOrgMembershipsTable).innerJoin(usersTable, eq(usersTable.id, userOrgMembershipsTable.userId))
+      .where(and(eq(scope, orgId), eq(userOrgMembershipsTable.role, "admin"),
+        sql`${usersTable.id} IN (${session.userId}, ${userId})`))
+      .orderBy(asc(usersTable.id)).for("update");
+    if (!admins.some(admin => admin.userId === session.userId && !admin.suspendedAt)) return 403;
+    if (!admins.some(admin => admin.userId === userId && !admin.suspendedAt)) return 409;
+    await tx.update(org).set({ ownerUserId: userId }).where(eq(org.id, orgId));
+    return 200;
+  });
+  if (result === 200) res.json({ transferred: true });
+  else if (result === 403) res.status(403).json({ code: "members.owner_required", error: "Only the current owner can transfer ownership." });
+  else res.status(409).json({ code: "members.inactive_admin", error: "That person is no longer an active administrator of this organization." });
+});
+
 router.get(
   "/orgs/:orgType/:orgId/members",
   async (req, res): Promise<void> => {
@@ -219,9 +260,12 @@ router.get(
         ),
       )
       .orderBy(asc(userOrgMembershipsTable.id));
+    const org = orgType === "vendor" ? vendorsTable : partnersTable;
+    const [organization] = await db.select({ ownerUserId: org.ownerUserId }).from(org).where(eq(org.id, orgId));
     res.json({
       orgType,
       orgId,
+      ownerUserId: organization?.ownerUserId ?? null,
       members: rows.map((r) => ({
         membershipId: r.membershipId,
         userId: r.userId,
@@ -310,6 +354,7 @@ router.post(
       // / displayName left untouched — this endpoint only attaches
       // memberships, never reaches into other accounts.
       const result = await db.transaction(async (tx) => {
+        const ownerUserId = await lockOrgOwner(tx, orgType, orgId);
         const [existingUser] = await tx
           .select()
           .from(usersTable)
@@ -399,6 +444,9 @@ router.post(
             .limit(1);
           if (!existingMembership) {
             throw new Error("Failed to add or find membership");
+          }
+          if (userId === ownerUserId && role !== "admin") {
+            throw Object.assign(new Error("Transfer ownership before changing the owner’s role."), { http: 409, code: "members.owner_protected" });
           }
           membershipId = existingMembership.id;
           if (existingMembership.role !== role) {
@@ -556,6 +604,7 @@ router.patch(
     // token to expire (mirrors the POST handler's behavior when it
     // mutates an existing membership's role).
     const updated = await db.transaction(async (tx) => {
+      if (newRole !== "admin" && await lockOrgOwner(tx, orgType, orgId) === m.userId) return "owner" as const;
       const [row] = await tx
         .update(userOrgMembershipsTable)
         .set({ role: newRole })
@@ -568,6 +617,10 @@ router.patch(
         .where(eq(usersTable.id, row.userId));
       return row;
     });
+    if (updated === "owner") {
+      res.status(409).json({ message: "Transfer ownership before changing the owner’s role.", code: "members.owner_protected" });
+      return;
+    }
     if (!updated) {
       res.status(404).json({
         message: "Membership not found",
@@ -651,7 +704,15 @@ router.delete(
       return;
     }
 
-    await removeMembership(membershipId);
+    const removed = await db.transaction(async tx => {
+      if (await lockOrgOwner(tx, orgType, orgId) === m.userId) return false;
+      await removeMembership(membershipId, tx);
+      return true;
+    });
+    if (!removed) {
+      res.status(409).json({ message: "Transfer ownership before removing the owner.", code: "members.owner_protected" });
+      return;
+    }
 
     // activeMembershipId cleanup is handled inside removeMembership().
     // The user record itself is preserved because they may belong to

@@ -100,7 +100,7 @@ export default function VendorPartnerRelationshipsCard({
   const items = data?.items ?? [];
 
   return (
-    <Card data-testid="card-vendor-partner-relationships">
+    <Card id="partner-approvals" data-testid="card-vendor-partner-relationships">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Handshake

@@ -80,7 +80,7 @@ export default function VisitorEntryPage() {
       <NavPaneHeaderBlur height={240} />
       <div className="flex justify-between items-center p-4 relative z-20">
 
-        <LanguageToggle variant="dark" />
+        <LanguageToggle />
       </div>
       <div className="flex-1 flex items-start justify-center px-4 pb-10 relative z-10">
         <Card className="w-full max-w-md">

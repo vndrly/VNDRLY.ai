@@ -82,12 +82,12 @@ const STEP_LABELS: Record<string, string> = {
   "first-site": "First site",
   "tax-billing": "Tax & billing",
   "preferences": "Preferences",
-  "invite-team": "Invite team",
+  "invite-team": "Admin Profile",
   "tax-ids": "Tax IDs",
   "work-types": "Work types",
   "compliance": "Compliance",
   "rates": "Rates",
-  "first-employee": "First employee",
+  "first-employee": "Admin Profile",
   "done": "Finished",
 };
 

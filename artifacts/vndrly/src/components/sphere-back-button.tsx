@@ -1,6 +1,5 @@
-import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BRANDED_CIRCLE_HOVER_CLASS } from "@/components/branded-circle-chrome";
+import { BRANDED_CIRCLE_GLOSS, BRANDED_CIRCLE_HOVER_CLASS } from "@/components/branded-circle-chrome";
 import brandSphere from "@assets/VNDRLYai-Button-blank_1777361718577.png";
 import hoverGlossSphere from "@assets/download_1777663665476.png";
 import backIcon from "@assets/Symbol_Arrow_Left_1777371273492.png";
@@ -11,16 +10,14 @@ import backIcon from "@assets/Symbol_Arrow_Left_1777371273492.png";
  * Layer stack (bottom -> top):
  *   1. Brand sphere — sphere mask tinted var(--brand-primary). Always
  *      visible; this is the foundation of the button's color.
- *   2. Hover highlight — sphere mask tinted white, opacity 0 at rest
- *      and ~25% on hover. Adds a subtle bright wash over the brand
- *      color so the button feels responsive without losing the brand
- *      hue.
- *   3. A directional arrow with contrast against the brand sphere.
+ *   2. Onboarding-style gloss at rest for Back, or a hover overlay
+ *      for alternate directions and custom icons.
+ *   3. The original white directional arrow artwork.
  *
  * This component renders only the visual icon. Wrap it in a <Link>,
  * <button>, or shadcn <Button> at the call site and add the `group`
  * class to that wrapper so hovering the whole control (including any
- * adjacent text label) triggers the gray overlay.
+ * adjacent text label) triggers the hover treatment.
  */
 interface SphereBackButtonProps {
   size?: number;
@@ -64,6 +61,7 @@ export default function SphereBackButton({
           WebkitMaskImage: `url(${brandSphere})`,
           maskImage: `url(${brandSphere})`,
           backgroundColor: "var(--brand-primary)",
+          backgroundImage: isBack ? BRANDED_CIRCLE_GLOSS : undefined,
         }}
       />
       {/* 2. Hover highlight — full black-sphere-with-gloss PNG laid on
@@ -84,8 +82,6 @@ export default function SphereBackButton({
         >
           {overlay}
         </span>
-      ) : isBack ? (
-        <ArrowLeft className="absolute inset-[18%] size-[64%] text-[var(--brand-icon-color,#242426)]" strokeWidth={3} />
       ) : (
         <img
           src={backIcon}

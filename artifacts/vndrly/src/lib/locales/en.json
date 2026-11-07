@@ -497,6 +497,9 @@
     "tryAgain": "Please try again.",
     "refresh": "Refresh"
   },
+  "onboardingStepper": {
+    "currentStep": "Step {{current}} of {{total}} · {{label}}"
+  },
   "languageToggle": {
     "english": "English",
     "spanish": "Español",
@@ -618,8 +621,6 @@
       "lastName": "Last name *",
       "phone": "Phone",
       "preferredLanguage": "Preferred language",
-      "english": "English",
-      "spanish": "Español",
       "roleQuestion": "What kind of work will you do? *",
       "roleField": "Field",
       "roleForeman": "Foreman",
@@ -702,6 +703,8 @@
     "heroDescription": "VNDRLY bridges the gap between Partners, Vendors, and Field Employees with real-time GPS tracking and seamless work order management."
   },
   "dashboard": {
+    "ticketPanels": { "title": "Tickets", "all": "All Tickets" },
+    "companyOperations": "{{company}} Operations",
     "title": "Dashboard",
     "subtitle": "VNDRLY Field Operations Overview",
     "stats": {
@@ -4181,6 +4184,13 @@
     "mismatch": "Passwords do not match."
   },
   "errors": {
+    "lead_admin": {
+      "sign_in": "Sign in with the invited email, then return here to accept.",
+      "invalid_invitation": "Enter a valid invitation and password.",
+      "unavailable": "This invitation is unavailable or has expired.",
+      "send_failed": "The invitation email could not be sent. Try again.",
+      "password_required": "Choose a password with at least eight characters to create your VNDRLY account."
+    },
     "gate_arrivals": {
       "unavailable": "Incoming runs are temporarily unavailable. Try again.",
       "invalid_request": "Select a valid site or run and try again.",
@@ -4650,6 +4660,10 @@
       "reminder_throttled": "A reminder was sent recently — please wait before sending another."
     },
     "members": {
+      "owner_protected": "Transfer ownership before changing or removing the owner’s access.",
+      "owner_required": "Only the current owner can transfer ownership.",
+      "confirm_transfer": "Choose another administrator and confirm the transfer.",
+      "inactive_admin": "That person is no longer an active administrator of this organization.",
       "add_failed": "We couldn't add that member. Please try again.",
       "cant_remove_self": "You can't remove yourself.",
       "field_only": "That action is only available for field employees.",

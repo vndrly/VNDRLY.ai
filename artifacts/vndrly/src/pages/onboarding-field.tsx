@@ -1,3 +1,4 @@
+import { LanguageSlider } from "@/components/language-toggle";
 import { brandIconColor } from "@/lib/brand-color";
 import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -405,8 +406,7 @@ export default function OnboardingField() {
               <div>
                 <Label>{t("fieldOnboarding.personal.preferredLanguage")}</Label>
                 <div className="flex gap-2">
-                  <PillButton type="button" color={info.preferredLanguage === "en" ? "blue" : "image"} onClick={() => pickLanguage("en")} data-testid="lang-en">{t("fieldOnboarding.personal.english")}</PillButton>
-                  <PillButton type="button" color={info.preferredLanguage === "es" ? "blue" : "image"} onClick={() => pickLanguage("es")} data-testid="lang-es">{t("fieldOnboarding.personal.spanish")}</PillButton>
+                  <LanguageSlider current={info.preferredLanguage} onChange={pickLanguage} />
                 </div>
               </div>
               <div>

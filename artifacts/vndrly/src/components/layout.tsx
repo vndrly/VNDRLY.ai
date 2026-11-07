@@ -1,3 +1,4 @@
+import "@/pages/vendor-profile.css";
 import { fleetCopy } from "@/lib/fleet-copy";
 import { Link, useLocation } from "wouter";
 import { EnergyMarketTicker } from './energy-market-ticker';
@@ -45,7 +46,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { fleetClient } from "@/lib/fleet-client";
 import { readWebFleetWorkspace } from "@/lib/fleet-offline-bootstrap";
 import LanguageToggle from "@/components/language-toggle";
-import { useTheme } from "@/hooks/use-theme";
 import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
 import { MeetingSessionProvider } from "@/components/meeting-session-provider";
 import { useGetVendor, useGetPartner, useGetVendorRatings, getGetVendorRatingsQueryKey, getGetVendorQueryKey, getGetPartnerQueryKey } from "@workspace/api-client-react";
@@ -309,8 +309,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const recentAvg = recentRatings.length > 0 ? recentRatings.reduce((s, r) => s + r.rating, 0) / recentRatings.length : null;
   const brand = useBrand();
   const branded = brand.isOrgBranded;
-  const { resolved: themeResolved } = useTheme();
-  const isDarkTheme = themeResolved === "dark";
   // Sidebar prefers the dedicated square logo (rendered at 64x64). If the
   // partner hasn't uploaded a square one yet, fall back to the main logo so
   // they aren't visually downgraded — and finally to the VNDRLY mark. We use
@@ -463,7 +461,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               after the nav loop so every role — admin / vendor /
               partner / field — gets the same toggles in the sidebar. */}
           {!inWorkHub && !vendorSidebar && <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
-            <LanguageToggle variant={isDarkTheme ? "dark" : "light"} />
+            <LanguageToggle />
           </div>}
           {user && !inWorkHub && (
             <div>
@@ -483,7 +481,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </SidebarButton>
             </div>
           )}
-          {vendorSidebar && <div className="flex justify-center px-1 pt-2 text-white"><LanguageToggle variant="dark" presentation="line" alwaysOn /></div>}
+          {vendorSidebar && <div className="flex justify-center px-1 pt-2 text-white"><LanguageToggle /></div>}
         </nav>
       </aside>
 
@@ -529,14 +527,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           ref={contentRef}
           className={cn(
             "portal-phone-main flex-1 p-6 max-sm:pb-24",
+            location === "/" && user?.role === "vendor" && "vendor-workspace-page vendor-dashboard-shell",
             FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
           )}
         >
           <MobilePageHeader contentRef={contentRef} fallbackTitle={navItems.find(item=>item.href===location)?.label??"VNDRLY"} sidebarOpen={sidebarOpen} onToggleMenu={()=>setSidebarOpen(open=>!open)}/>
           {location === "/" && user?.role === "vendor" && user.vendorId
-            ? <DashboardSetup key={`vendor:${user.vendorId}`} orgType="vendor" orgId={user.vendorId} />
+            ? <DashboardSetup key={`vendor:${user.vendorId}`} orgType="vendor" orgId={user.vendorId} section="stepper" />
             : location === "/" && user?.role === "partner" && user.partnerId
-              ? <DashboardSetup key={`partner:${user.partnerId}`} orgType="partner" orgId={user.partnerId} />
+              ? <DashboardSetup key={`partner:${user.partnerId}`} orgType="partner" orgId={user.partnerId} section="stepper" />
               : <OnboardingProgressBanner />}
           {children}
         </main>

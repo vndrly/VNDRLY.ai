@@ -4,7 +4,8 @@ import { useLocation } from "wouter";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import LanguageToggle from "@/components/language-toggle";
 import SphereBackButton from "@/components/sphere-back-button";
-import SidebarButton from "@/components/sidebar-button";
+import OnboardingPillButton from "@/components/onboarding-pill-button";
+import "./vendor-profile.css";
 import { brandStyleVars, DEFAULT_BRAND } from "@/hooks/use-brand";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
@@ -16,7 +17,8 @@ export default function Signup() {
 
   return (
     <div
-      className="min-h-screen flex flex-col lg:flex-row"
+      className="min-h-screen flex flex-col text-white lg:flex-row [--app-card-heading-color:#fff]"
+      data-theme="dark"
       style={brandStyleVars(DEFAULT_BRAND)}
     >
       <div
@@ -27,7 +29,7 @@ export default function Signup() {
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/8 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/8 to-transparent pointer-events-none" />
         <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle variant="dark" />
+          <LanguageToggle />
         </div>
 
         <div className="w-full max-w-md relative z-10">
@@ -73,7 +75,7 @@ export default function Signup() {
             <div data-card-layout
               className={cn(
                 "border-2 rounded-xl p-6 transition-colors",
-                "border-amber-500/70 hover:bg-white/5",
+                "border-[color:var(--brand-primary)] bg-[#242426]",
               )}
             >
               <CardHeading as="h2"
@@ -93,22 +95,20 @@ export default function Signup() {
                 You provide field services and assign employees to job sites.
               </p>
               <div className="mt-4">
-                <SidebarButton
-                  isActive={false}
-                  theme={"dark"}
+                <OnboardingPillButton
                   className="w-full"
-                  testId="button-begin-vendor-onboarding"
+                  data-testid="button-begin-vendor-onboarding"
                   onClick={() => navigate("/signup/vendor")}
                 >
                   Begin Vendor Onboarding
-                </SidebarButton>
+                </OnboardingPillButton>
               </div>
             </div>
 
             <div data-card-layout
               className={cn(
                 "border-2 rounded-xl p-6 transition-colors",
-                "border-[color:var(--brand-primary)]/70 hover:bg-white/5",
+                "border-[color:var(--brand-primary)] bg-[#242426]",
               )}
             >
               <CardHeading as="h2"
@@ -128,15 +128,13 @@ export default function Signup() {
                 You own or manage drilling sites and oversee vendor operations.
               </p>
               <div className="mt-4">
-                <SidebarButton
-                  isActive={false}
-                  theme={"dark"}
+                <OnboardingPillButton
                   className="w-full"
-                  testId="button-begin-partner-onboarding"
+                  data-testid="button-begin-partner-onboarding"
                   onClick={() => navigate("/signup/partner")}
                 >
                   Begin Partner Onboarding
-                </SidebarButton>
+                </OnboardingPillButton>
               </div>
             </div>
           </div>
@@ -179,7 +177,7 @@ export default function Signup() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/30 to-transparent" />
         <div className="relative z-10 flex items-end justify-center p-12 w-full h-full">
-          <div data-card-layout className="bg-white/10 backdrop-blur-md rounded-xl p-8 max-w-md border-2 border-[color:var(--brand-primary)]">
+          <div data-card-layout className="bg-[#242426] rounded-xl p-8 max-w-md border-2 border-[color:var(--brand-primary)]">
             <CardHeading as="h2" className="text-xl font-bold text-white mb-2">
               Field Management Elevated
             </CardHeading>

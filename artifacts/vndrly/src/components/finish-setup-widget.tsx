@@ -1,5 +1,6 @@
+import { AccountNextSteps, NextStepLinks } from "@/components/next-steps";
 import { useMemo, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import OnboardingStepper from "@/components/onboarding-stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
@@ -22,7 +23,7 @@ const PARTNER_STEPS: Record<string, { label: string; href: string }> = {
   "first-site": { label: "Set up your first site", href: "/onboarding/partner?step=first-site" },
   "tax-billing": { label: "Add tax IDs and billing address", href: "/onboarding/partner?step=tax-billing" },
   preferences: { label: "Set hours of operation and operating radius", href: "/onboarding/partner?step=preferences" },
-  "invite-team": { label: "Invite teammates", href: "/onboarding/partner?step=invite-team" },
+  "invite-team": { label: "Confirm your admin profile", href: "/onboarding/partner?step=invite-team" },
 };
 
 const VENDOR_STEPS: Record<string, { label: string; href: string }> = {
@@ -30,7 +31,7 @@ const VENDOR_STEPS: Record<string, { label: string; href: string }> = {
   branding: { label: "Add your vendor logo and brand color", href: "/onboarding/vendor?step=branding" },
   "tax-ids": { label: "Add tax IDs and billing address", href: "/onboarding/vendor?step=tax-ids" },
   "work-types": { label: "Set service area and work types", href: "/onboarding/vendor?step=work-types" },
-  "first-employee": { label: "Add your first field employee", href: "/onboarding/vendor?step=first-employee" },
+  "first-employee": { label: "Confirm your admin profile", href: "/onboarding/vendor?step=first-employee" },
 };
 
 // Canonical step order per org type. Mirrors the same lists used by
@@ -46,7 +47,7 @@ const STEPS_BY_ORG: Record<"partner" | "vendor", { key: string; label: string }[
     { key: "first-site", label: "First Site" },
     { key: "tax-billing", label: "Tax & Billing" },
     { key: "preferences", label: "Preferences" },
-    { key: "invite-team", label: "Invite Team" },
+    { key: "invite-team", label: "Admin Profile" },
   ],
   vendor: [
     { key: "company-basics", label: "Company Basics" },
@@ -55,7 +56,7 @@ const STEPS_BY_ORG: Record<"partner" | "vendor", { key: string; label: string }[
     { key: "branding", label: "Branding" },
     { key: "tax-ids", label: "Tax IDs" },
     { key: "work-types", label: "Service & Work Types" },
-    { key: "first-employee", label: "First Employee" },
+    { key: "first-employee", label: "Admin Profile" },
   ],
 };
 
@@ -303,7 +304,7 @@ export default function FinishSetupWidget({
 }
 
 /** Dashboard setup stays available after the wizard has been exited. */
-export function DashboardSetup({ orgType, orgId }: { orgType: "vendor" | "partner"; orgId: number }) {
+export function DashboardSetup({ orgType, orgId, section }: { orgType: "vendor" | "partner"; orgId: number; section?: "stepper" | "next-steps" }) {
   const { primary } = useBrand();
   const [, navigate] = useLocation();
   const { t } = useTranslation();
@@ -322,15 +323,13 @@ export function DashboardSetup({ orgType, orgId }: { orgType: "vendor" | "partne
   const currentIndex = steps.findIndex((step) => step.key === orgProgress?.currentStep);
 
   return (
-    <section className={`mb-4 grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] ${orgType === "vendor" ? "vendor-workspace-page" : ""}`} aria-label="Company setup">
-      <Card>
+    <section className={`min-w-0 space-y-4 ${section === "stepper" ? "mb-4" : ""} ${orgType === "vendor" ? "vendor-workspace-page" : ""}`} aria-label="Company setup">
+      {section !== "next-steps" && <Card className="min-w-0">
         <CardHeader><CardTitle>{orgType === "vendor" ? "Vendor Onboarding" : "Partner Onboarding"}</CardTitle></CardHeader>
         <CardContent>
           {orgProgress ? (
-            <div className="overflow-x-auto">
               <OnboardingStepper
                 primaryColor={primary}
-                className="min-w-[36rem]"
                 steps={steps}
                 currentIndex={currentIndex}
                 completedKeys={completed}
@@ -338,26 +337,21 @@ export function DashboardSetup({ orgType, orgId }: { orgType: "vendor" | "partne
                 inferEarlierCompletion={false}
                 onStepClick={(_, step) => navigate(onboardingStepHref(orgType, step.key))}
               />
-            </div>
           ) : <p className="text-sm text-muted-foreground">{loading ? "Loading setup progress…" : "Setup progress is unavailable."}</p>}
         </CardContent>
-      </Card>
-      <Card>
+      </Card>}
+      {section !== "stepper" && <Card className="min-w-0">
         <CardHeader><CardTitle>Next Steps</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           {outstanding.length ? (
-            <ul className="space-y-2 text-sm">
-              {outstanding.map((step) => (
-                <li key={step.key}>
-                  <Link className="underline underline-offset-4" href={onboardingStepHref(orgType, step.key)}>
-                    {(orgType === "vendor" ? VENDOR_STEPS : PARTNER_STEPS)[step.key]?.label ?? step.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <NextStepLinks actions={outstanding.map(step => ({
+              title: (orgType === "vendor" ? VENDOR_STEPS : PARTNER_STEPS)[step.key]?.label ?? step.label,
+              href: onboardingStepHref(orgType, step.key),
+            }))} />
           ) : <p className="text-sm text-muted-foreground">{orgProgress ? "Your onboarding steps are complete." : loading ? "Loading next steps…" : "Next steps are unavailable."}</p>}
+          <AccountNextSteps surface="dashboard" />
         </CardContent>
-      </Card>
+      </Card>}
     </section>
   );
 }

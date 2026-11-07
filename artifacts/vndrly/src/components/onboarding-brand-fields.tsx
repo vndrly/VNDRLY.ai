@@ -218,7 +218,7 @@ export function OnboardingBrandFields(
             />
           </div>
           {primary && getContrastWarning(primary) && (
-            <p className="mt-1 text-xs text-amber-600">{getContrastWarning(primary)}</p>
+            <p className="mt-1 text-xs text-white">{getContrastWarning(primary)}</p>
           )}
         </div>
         {props.variant === "partner" && (
@@ -252,7 +252,7 @@ export function OnboardingBrandFields(
               />
             </div>
             {accent && getContrastWarning(accent) && (
-              <p className="mt-1 text-xs text-amber-600">{getContrastWarning(accent)}</p>
+              <p className="mt-1 text-xs text-white">{getContrastWarning(accent)}</p>
             )}
           </div>
         )}

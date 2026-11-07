@@ -118,10 +118,10 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")("AskV onboardi
     expect(await domain("set_onboarding_field", { path: "partnerId", value: 999999 })).toMatchObject({ error: expect.stringMatching(/valid onboarding field/) });
     expect(await domain("complete_onboarding_step", { step: "first-employee", nextStep: "done", skipped: true })).toMatchObject({ error: expect.stringContaining("only canonical final completion") });
     expect(await domain("set_onboarding_field", { path: "firstEmployee.email", value: "" })).toMatchObject({ ok: true });
-    expect(await domain("complete_onboarding_step", { step: "first-employee", nextStep: "done" })).toMatchObject({ error: expect.stringContaining("firstEmployee.email") });
+    expect(await domain("complete_onboarding_step", { step: "first-employee", nextStep: "first-employee" })).toMatchObject({ ok: true });
     const fetcher = routeCanonicalRequests();
     try {
-      expect(await domain("finalize_onboarding", {})).toMatchObject({ ok: false, code: "onboarding.required_fields_missing", missing: expect.arrayContaining(["firstEmployee.email"]) });
+      expect(await domain("finalize_onboarding", {})).toMatchObject({ ok: false, code: "onboarding.required_fields_missing", missing: expect.arrayContaining(["legalConsent"]) });
       expect((await progress()).completedAt).toBeNull();
     } finally {
       fetcher.mockRestore();

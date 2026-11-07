@@ -141,14 +141,15 @@ export async function addMembership(
  */
 export async function removeMembership(
   membershipId: number,
+  executor: DbExecutor = db,
 ): Promise<typeof userOrgMembershipsTable.$inferSelect | null> {
-  const [removed] = await db
+  const [removed] = await executor
     .delete(userOrgMembershipsTable)
     .where(eq(userOrgMembershipsTable.id, membershipId))
     .returning();
   if (!removed) return null;
 
-  const [user] = await db
+  const [user] = await executor
     .select({
       id: usersTable.id,
       activeMembershipId: usersTable.activeMembershipId,
@@ -162,7 +163,7 @@ export async function removeMembership(
   // Invalidate any previously-issued session tokens for this user so
   // that stale Bearer tokens cannot continue accessing the org after
   // the membership is removed.
-  await db
+  await executor
     .update(usersTable)
     .set({ sessionVersion: sql`${usersTable.sessionVersion} + 1` })
     .where(eq(usersTable.id, user.id));
@@ -172,14 +173,14 @@ export async function removeMembership(
   // exists so the user keeps a working session without going through
   // the picker again.
   if (user.activeMembershipId === null) {
-    const [next] = await db
+    const [next] = await executor
       .select({ id: userOrgMembershipsTable.id })
       .from(userOrgMembershipsTable)
       .where(eq(userOrgMembershipsTable.userId, user.id))
       .orderBy(asc(userOrgMembershipsTable.id))
       .limit(1);
     if (next) {
-      await db
+      await executor
         .update(usersTable)
         .set({ activeMembershipId: next.id })
         .where(eq(usersTable.id, user.id));

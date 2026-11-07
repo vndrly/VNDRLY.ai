@@ -959,6 +959,13 @@
     "cameraUnavailablePickSite": "La cámara no está disponible en esta versión. Elija un sitio por nombre."
   },
   "errors": {
+    "lead_admin": {
+      "sign_in": "Inicia sesión con el correo invitado y vuelve aquí para aceptar.",
+      "invalid_invitation": "Ingresa una invitación y una contraseña válidas.",
+      "unavailable": "Esta invitación no está disponible o ha vencido.",
+      "send_failed": "No se pudo enviar la invitación. Inténtalo de nuevo.",
+      "password_required": "Elige una contraseña de al menos ocho caracteres para crear tu cuenta de VNDRLY."
+    },
     "gate_arrivals": {
       "unavailable": "Los viajes entrantes no están disponibles temporalmente. Inténtelo de nuevo.",
       "invalid_request": "Seleccione un sitio o viaje válido e inténtelo de nuevo.",
@@ -1538,6 +1545,10 @@
       "cancelled": "Esta factura está cancelada."
     },
     "members": {
+      "owner_protected": "Transfiere la propiedad antes de cambiar o quitar el acceso del propietario.",
+      "owner_required": "Solo el propietario actual puede transferir la propiedad.",
+      "confirm_transfer": "Elige a otro administrador y confirma la transferencia.",
+      "inactive_admin": "Esa persona ya no es administradora activa de esta organización.",
       "cant_demote_self": "No puede reducir su propio rol.",
       "cant_remove_self": "No puede eliminarse a sí mismo de la organización.",
       "field_only": "Solo los empleados de campo pueden hacer eso.",

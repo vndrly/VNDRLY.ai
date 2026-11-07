@@ -497,6 +497,9 @@
     "tryAgain": "Inténtalo de nuevo.",
     "refresh": "Actualizar"
   },
+  "onboardingStepper": {
+    "currentStep": "Paso {{current}} de {{total}} · {{label}}"
+  },
   "languageToggle": {
     "english": "English",
     "spanish": "Español",
@@ -618,8 +621,6 @@
       "lastName": "Apellido *",
       "phone": "Teléfono",
       "preferredLanguage": "Idioma preferido",
-      "english": "English",
-      "spanish": "Español",
       "roleQuestion": "¿Qué tipo de trabajo realizarás? *",
       "roleField": "Campo",
       "roleForeman": "Capataz",
@@ -702,6 +703,8 @@
     "heroDescription": "VNDRLY conecta a Socios, Proveedores y Empleados de Campo con seguimiento GPS en tiempo real y gestión sin interrupciones de órdenes de trabajo."
   },
   "dashboard": {
+    "ticketPanels": { "title": "Tickets", "all": "Todos los tickets" },
+    "companyOperations": "Operaciones de {{company}}",
     "title": "Panel",
     "subtitle": "Resumen de Operaciones de Campo VNDRLY",
     "stats": {
@@ -4181,6 +4184,13 @@
     "mismatch": "Las contraseñas no coinciden."
   },
   "errors": {
+    "lead_admin": {
+      "sign_in": "Inicia sesión con el correo invitado y vuelve aquí para aceptar.",
+      "invalid_invitation": "Ingresa una invitación y una contraseña válidas.",
+      "unavailable": "Esta invitación no está disponible o ha vencido.",
+      "send_failed": "No se pudo enviar la invitación. Inténtalo de nuevo.",
+      "password_required": "Elige una contraseña de al menos ocho caracteres para crear tu cuenta de VNDRLY."
+    },
     "gate_arrivals": {
       "unavailable": "Los viajes entrantes no están disponibles temporalmente. Inténtelo de nuevo.",
       "invalid_request": "Seleccione un sitio o viaje válido e inténtelo de nuevo.",
@@ -4650,6 +4660,10 @@
       "reminder_throttled": "Se envió un recordatorio recientemente — espera antes de enviar otro."
     },
     "members": {
+      "owner_protected": "Transfiere la propiedad antes de cambiar o quitar el acceso del propietario.",
+      "owner_required": "Solo el propietario actual puede transferir la propiedad.",
+      "confirm_transfer": "Elige a otro administrador y confirma la transferencia.",
+      "inactive_admin": "Esa persona ya no es administradora activa de esta organización.",
       "add_failed": "No pudimos agregar a ese miembro. Inténtalo de nuevo.",
       "cant_remove_self": "No puedes eliminarte a ti mismo.",
       "field_only": "Esa acción solo está disponible para empleados de campo.",

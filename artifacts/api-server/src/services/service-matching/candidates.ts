@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { sql, type SQL } from "drizzle-orm";
 import { canonicalServicesTable as services, canonicalServiceAliasesTable as aliases } from "@workspace/db/schema";
 import type { ServiceCandidate, ServiceCandidateProvider, ServiceSubjectInput } from "./types";
+import { reviewedServiceDefinition, reviewedServiceDefinitionJoin, reviewedServiceDefinitionMatch } from "./reviewed-service-definitions";
 
 export function normalizeServiceText(text: string): string {
   return text.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -40,28 +41,37 @@ export function createPostgresCandidateProvider(execute?: CandidateQuery): Servi
       // Aliases improve retrieval only: every candidate still passes through the
       // classifier, including exact matches with ambiguous operational meaning.
       const query = sql`
-        with vocabulary as (
+        with search as (
+          select plainto_tsquery('english', ${text}) as all_terms,
+            coalesce((
+              select string_agg(quote_literal(term), ' | ')::tsquery
+              from unnest(tsvector_to_array(to_tsvector('english', ${text}))) as term
+            ), ''::tsquery) as any_term
+        ), vocabulary as (
           select ${services.id} as id, ${services.code} as code, ${services.name} as name,
-            ${services.category} as category, ${services.definition} as definition,
+            ${services.category} as category, ${reviewedServiceDefinition} as definition,
             ${services.inclusionGuidance} as "inclusionGuidance",
-            ${services.exclusionGuidance} as "exclusionGuidance",
+            nullif(concat_ws(' ', ${services.exclusionGuidance}, reviewed.guidance), '') as "exclusionGuidance",
             coalesce(array_agg(${aliases.alias}) filter (where ${aliases.id} is not null), array[]::text[]) as aliases
           from ${services}
+          left join ${reviewedServiceDefinitionJoin} on ${reviewedServiceDefinitionMatch}
           left join ${aliases} on ${aliases.canonicalServiceId} = ${services.id} and ${aliases.active} = true
           where ${services.active} = true
-          group by ${services.id}
+          group by ${services.id}, reviewed.definition, reviewed.guidance
         ), ranked as (
           select *, (
             lower(btrim(regexp_replace(name, '[^[:alnum:]]+', ' ', 'g'))) = ${name}
             or exists (select 1 from unnest(aliases) alias where lower(btrim(regexp_replace(alias, '[^[:alnum:]]+', ' ', 'g'))) = ${name})
           ) as exact_alias,
-          to_tsvector('english', name || ' ' || definition || ' ' || category || ' ' || array_to_string(aliases, ' ')) as document
+            setweight(to_tsvector('english', name || ' ' || array_to_string(aliases, ' ')), 'A')
+              || setweight(to_tsvector('english', definition), 'B')
+              || setweight(to_tsvector('english', category), 'D') as document
           from vocabulary
         )
         select id, code, name, category, definition, "inclusionGuidance", "exclusionGuidance", aliases
-        from ranked
-        where exact_alias or document @@ plainto_tsquery('english', ${text})
-        order by exact_alias desc, ts_rank_cd(document, plainto_tsquery('english', ${text})) desc, id asc
+        from ranked cross join search
+        where exact_alias or document @@ any_term
+        order by exact_alias desc, (document @@ all_terms) desc, ts_rank(document, any_term) desc, id asc
         limit ${limit}`;
       const result = execute ? await execute(query) : await (await import("@workspace/db")).db.execute<ServiceCandidate & Record<string, unknown>>(query);
       return result.rows;

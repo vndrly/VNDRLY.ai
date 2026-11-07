@@ -20,7 +20,7 @@ vi.mock("@workspace/db", async () => {
     let table = initial, condition: any, values: any;
     const execute = async () => {
       const name = getTableName(table);
-      if (name === "vendor_people" && state.failEmployee) throw new Error("fixture employee failure");
+      if (name === "vendor_people" && mode === "update" && state.failEmployee) throw new Error("fixture employee failure");
       let rows = state.rows[name] ?? [];
       if (condition) {
         const built = new PgDialect().sqlToQuery(condition);
@@ -36,7 +36,7 @@ vi.mock("@workspace/db", async () => {
       return structuredClone(rows);
     };
     const q: any = { from: (value: any) => { table = value; return q; }, where: (value: any) => { condition = value; return q; },
-      set: (value: any) => { values = value; return q; }, for: () => q, limit: () => q,
+      innerJoin: () => q, set: (value: any) => { values = value; return q; }, for: () => q, limit: () => q,
       returning: execute, then: (resolve: any, reject: any) => execute().then(resolve, reject) };
     return q;
   };
@@ -74,7 +74,7 @@ beforeEach(() => {
   state.rows = {
     vendors: [{ id: 3, physicalAddress: "Old base", latitude: 35, longitude: -97, geocodedAt: now, insuranceCarrier: "Keep insurer", brandPrimaryColor: "#123456" }],
     vendor_service_areas: [null, 7].map((vendorCapabilityId, index) => ({ id: index + 1, vendorId: 3, vendorCapabilityId, active: true, verifiedAt: now, effectiveFrom: now, effectiveUntil: null, latitude: 35, longitude: -97, radiusMiles: "50" })),
-    work_types: [{ id: 21, partnerId: null }], partner_vendor_relationships: [], vendor_people: [{ id: 4, vendorId: 3, email: "worker@example.invalid", userId: 5, inviteToken: null }],
+    user_org_memberships: [{ id: 1, userId: 1, vendorId: 3, role: "admin", vendorPeopleId: 4, name: "Test Admin", email: "admin@example.invalid" }], work_types: [{ id: 21, partnerId: null }], partner_vendor_relationships: [], vendor_people: [{ id: 4, vendorId: 3, email: "admin@example.invalid", userId: 1, inviteToken: null }],
     onboarding_progress: [{ id: 10, orgType: "vendor", vendorId: 3, partnerId: null, currentStep: "tax-ids", completedSteps: [], skippedSteps: [], startedAt: now, updatedAt: now, completedAt: now,
       payload: { taxIds: { federalTaxId: "tax", stateTaxId: "state", physicalAddress: "New base", billingAddress: "Billing" }, platformEula: { accepted: true, version: PLATFORM_EULA_VERSION }, legalConsent: { accepted: true, version: LEGAL_POLICY_VERSION }, serviceArea: { operatingRadiusMiles: 100 }, workTypeIds: [21], firstEmployee: { firstName: "Test", lastName: "Worker", email: "worker@example.invalid" } } }],
   };
@@ -118,6 +118,7 @@ describe("onboarding address and marketplace coverage", () => {
   });
   it("rolls back address and retired areas if a later completion write fails", async () => {
     state.failEmployee = true;
+    progress().payload.adminProfile = { firstName: "Updated" };
     expectStatus(await request(app).post("/api/onboarding/vendor/3/complete").set("Cookie", cookie).send({}), 500);
     expect(vendor()).toMatchObject({ physicalAddress: "Old base", latitude: 35, longitude: -97, geocodedAt: now });
     expect((await coverage()).eligible).toBe(true);

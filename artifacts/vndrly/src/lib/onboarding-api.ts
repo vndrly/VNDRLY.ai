@@ -56,6 +56,15 @@ async function ojson<T>(method: string, path: string, body?: unknown): Promise<T
 }
 
 export const onboardingApi = {
+  ownership: (orgType: "vendor" | "partner", signal?: AbortSignal) =>
+    fetch(`${BASE}/api/onboarding/${orgType}/ownership`, { credentials: "include", signal })
+      .then(async response => response.ok ? await response.json() as { canTransfer: boolean } : { canTransfer: false }),
+  transferOwnership: (orgType: "vendor" | "partner", orgId: number, userId: number) =>
+    ojson<{ transferred: true }>("POST", `/api/orgs/${orgType}/${orgId}/transfer-ownership`, { userId, confirmOwnership: true }),
+  acceptLeadAdmin: (token: string, password: string) =>
+    ojson<{ accepted: true }>("POST", "/api/onboarding/accept-lead-admin", { token, password }),
+  inviteLeadAdmin: (orgType: "vendor" | "partner", details: { firstName: string; lastName: string; email: string; phone: string; makeOwner: boolean; confirmOwnership: boolean }) =>
+    ojson<{ sent: true }>("POST", "/api/onboarding/lead-admin-invite", { orgType, ...details }),
   startPartner: (body: { name: string; contactName: string; contactEmail: string; contactPhone: string; password: string; adminPin?: string; confirmPin?: string }) =>
     ojson<OnboardingStartResp>("POST", "/api/onboarding/partner", body),
 
@@ -77,7 +86,8 @@ export const onboardingApi = {
   getMine: () =>
     ojson<{
       progress: OnboardingProgressRow | null;
-      user: { email: string | null; emailVerifiedAt: string | null } | null;
+      adminProfile?: { displayName: string; email: string; phone: string | null } | null;
+      user: { displayName: string; email: string | null; phone: string | null; emailVerifiedAt: string | null } | null;
     }>("GET", "/api/onboarding/me"),
 
   resendVerification: () =>
@@ -142,14 +152,14 @@ export const onboardingApi = {
   // step. Server requires a valid session, which the just-signed-up
   // vendor admin already has via the cookie set by /onboarding/vendor.
   getWorkTypes: async () => {
-    const catalog = await ojson<{ rows: OnboardingWorkType[]; aliases: { canonicalId: number; alias: string }[] }>("GET", "/api/work-types?scope=onboarding");
+    const catalog = await ojson<{ rows: OnboardingWorkType[]; aliases: { canonicalId: number; alias: string }[]; baseRates?: Record<string, { amount: string; unit: string }> }>("GET", "/api/work-types?scope=onboarding");
     if (!Array.isArray(catalog.rows) || !Array.isArray(catalog.aliases)) {
       throw new Error("The onboarding catalog is unavailable on this server.");
     }
     return catalog;
   },
 
-  saveWorkTypeRates: (rates: { id: number; amount: number; unit: string }[]) =>
+  saveWorkTypeRates: (rates: { id: number; amount: number; unit: string; base?: true }[]) =>
     ojson("PUT", "/api/work-types/onboarding-rates", rates),
 
   getVendorBasics: (id: number) =>
@@ -174,6 +184,7 @@ export type OnboardingWorkType = {
   canonicalId: number | null;
   canonicalName: string | null;
   canonicalCategory: string | null;
+  canonicalDefinition?: string | null;
   selectedId: number | null;
   unitPrice: string | null;
   unit: string | null;

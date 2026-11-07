@@ -7,6 +7,7 @@ export type ApiAllowRule = { method: string; pattern: RegExp };
 // The random, single-use token authenticates activation itself. Administrative
 // issue/resend/revoke endpoints remain behind the normal staff session gate.
 export const ACCOUNT_ACTIVATION_ALLOWLIST: ApiAllowRule[] = [
+  { method: "POST", pattern: /^\/api\/onboarding\/accept-lead-admin\/?$/ },
   {
     method: "GET",
     pattern:

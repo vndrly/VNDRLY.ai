@@ -68,8 +68,8 @@ const tables = {
     "vendorPeopleId",
     "createdAt",
   ]),
-  partners: tableTag("partners", ["id", "name", "logoUrl"]),
-  vendors: tableTag("vendors", ["id", "name", "logoUrl"]),
+  partners: tableTag("partners", ["id", "name", "logoUrl", "ownerUserId"]),
+  vendors: tableTag("vendors", ["id", "name", "logoUrl", "ownerUserId"]),
   vendorPeople: tableTag("vendorPeople", [
     "id",
     "userId",
@@ -349,6 +349,7 @@ function makeQuery(
   };
 
   const q: any = {
+    for: () => q,
     leftJoin: (t: any, on: Pred) => {
       joins.push({ type: "left", table: t.__name, on });
       return q;

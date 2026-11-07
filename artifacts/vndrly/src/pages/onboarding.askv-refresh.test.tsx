@@ -8,12 +8,16 @@ const mocks = vi.hoisted(() => ({
   getMine: vi.fn(),
   getFieldByToken: vi.fn(),
   navigate: vi.fn(),
+  updateProgress: vi.fn(),
+  complete: vi.fn(),
   realtimeOptions: null as null | { onMutation?: (mutation: { name: string; refresh: string[] }) => void },
   voice: { state: "stopped", error: null, greeting: null, startConversation: vi.fn(), stop: vi.fn(), setMicEnabled: vi.fn(), updateContext: vi.fn(), sendText: vi.fn() },
 }));
 vi.mock("@/lib/onboarding-api", () => ({
   onboardingApi: {
     getMine: mocks.getMine,
+    updateProgress: mocks.updateProgress,
+    complete: mocks.complete,
     getFieldByToken: mocks.getFieldByToken,
     getWorkTypes: async () => ({ rows: [], aliases: [] }),
     getVendorBasics: async () => ({ name: "", contactName: "", contactEmail: "", contactPhone: null }),
@@ -33,7 +37,7 @@ import { useOnboardingProgress } from "@/hooks/use-onboarding-progress";
 function row(orgType: "vendor" | "partner", currentStep: string, payload: Record<string, unknown> = {}): OnboardingProgressRow {
   return { id: 1, orgType, vendorId: orgType === "vendor" ? 22 : null, partnerId: orgType === "partner" ? 33 : null, currentStep, completedSteps: [], skippedSteps: [], payload, startedAt: "2026-09-07T00:00:00Z", updatedAt: "2026-09-07T00:00:00Z", completedAt: null };
 }
-function saved(progress: OnboardingProgressRow) { return { progress, user: { email: null, emailVerifiedAt: null } }; }
+function saved(progress: OnboardingProgressRow) { return { progress, user: { displayName: "Morgan Saved", email: "morgan@example.invalid", phone: null, emailVerifiedAt: null } }; }
 function notify(refresh = ["onboarding"], name = "complete_onboarding_step") {
   window.dispatchEvent(new CustomEvent("askv:data-changed", { detail: { name, refresh } }));
 }
@@ -50,10 +54,38 @@ beforeEach(() => {
   mocks.getMine.mockReset();
   mocks.getFieldByToken.mockReset();
   mocks.navigate.mockReset();
+  mocks.updateProgress.mockReset().mockResolvedValue(undefined);
+  mocks.complete.mockReset().mockResolvedValue(undefined);
   vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, json: async () => ({}) })));
   window.history.replaceState({}, "", "/");
 });
 afterEach(() => vi.unstubAllGlobals());
+
+describe("Vendor onboarding exits", () => {
+  it.each([
+    { action: "Save & Quit", completes: false },
+    { action: "Complete Onboarding", completes: true },
+  ])("$action saves the admin profile and returns to the dashboard", async ({ action, completes }) => {
+    mocks.getMine.mockResolvedValue(saved(row("vendor", "first-employee")));
+    renderPage(OnboardingVendor);
+    const firstName = await screen.findByLabelText("First name");
+    fireEvent.change(firstName, { target: { value: "Morgan Updated" } });
+    fireEvent.click(screen.getByRole("button", { name: action }));
+
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith("/", { replace: true }));
+    expect(mocks.updateProgress).toHaveBeenCalledWith("vendor", 22, expect.objectContaining({
+      payload: expect.objectContaining({ adminProfile: expect.objectContaining({ firstName: "Morgan Updated" }) }),
+    }));
+    expect(mocks.complete.mock.calls).toEqual(completes ? [["vendor", 22]] : []);
+    const lastSave = mocks.updateProgress.mock.invocationCallOrder.at(-1)!;
+    const exit = mocks.navigate.mock.invocationCallOrder.at(-1)!;
+    expect(lastSave).toBeLessThan(exit);
+    if (completes) {
+      expect(lastSave).toBeLessThan(mocks.complete.mock.invocationCallOrder[0]);
+      expect(mocks.complete.mock.invocationCallOrder[0]).toBeLessThan(exit);
+    }
+  });
+});
 
 describe("AskV onboarding refresh on the active wizard", () => {
   it("refreshes field onboarding while keeping the password step available for user completion", async () => {
@@ -73,10 +105,10 @@ describe("AskV onboarding refresh on the active wizard", () => {
     mocks.getMine.mockResolvedValue(saved(row("vendor", "work-types", { serviceArea: { operatingRadiusMiles: 40 }, workTypeIds: [] })));
     renderPage(OnboardingVendor, true);
     await screen.findByTestId("step-work-types-body");
-    mocks.getMine.mockResolvedValue(saved(row("vendor", "first-employee", { firstEmployee: { firstName: "Morgan", lastName: "Saved", email: "morgan@example.invalid" } })));
+    mocks.getMine.mockResolvedValue(saved(row("vendor", "first-employee")));
     act(() => mocks.realtimeOptions?.onMutation?.({ name: "complete_onboarding_step", refresh: ["onboarding"] }));
     await screen.findByTestId("step-first-employee-body");
-    expect((screen.getByTestId("input-emp-first") as HTMLInputElement).value).toBe("Morgan");
+    expect(screen.getByLabelText("First name")).toHaveProperty("value", "Morgan");
     await waitFor(() => expect(screen.getByTestId("saved-progress").textContent).toBe("first-employee"));
   });
 

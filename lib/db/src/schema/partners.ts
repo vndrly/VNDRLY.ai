@@ -6,6 +6,7 @@ import { usersTable } from "./users";
 
 export const partnersTable = pgTable("partners", {
   id: serial("id").primaryKey(),
+  ownerUserId: integer("owner_user_id").references(() => usersTable.id),
   nativeOperationsPolicy: jsonb("native_operations_policy").$type<Record<string, unknown>>().notNull().default({}),
   fleetCommercialSettings: jsonb("fleet_commercial_settings"),
   name: text("name").notNull(),
@@ -70,6 +71,6 @@ export const partnersTable = pgTable("partners", {
   }).onDelete("set null"),
 }));
 
-export const insertPartnerSchema = createInsertSchema(partnersTable).omit({ id: true, createdAt: true });
+export const insertPartnerSchema = createInsertSchema(partnersTable).omit({ id: true, createdAt: true, ownerUserId: true });
 export type InsertPartner = z.infer<typeof insertPartnerSchema>;
 export type Partner = typeof partnersTable.$inferSelect;
