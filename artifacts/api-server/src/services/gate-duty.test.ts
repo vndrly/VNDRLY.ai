@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import {workdayService} from "./workday";
+import { databaseGateCoverageDependencies } from "./gate-coverage-monitor";
 import {startGateShift,prepareGateHandoff,appendGateShiftNote,signGateHandoff,releaseGateWatch,transferGateShift,getShiftNotes,markShiftNoteViewed,assumeGateWatch,getGateWatchOperation,getChangeOverState,actOnShiftItem} from "./gate-change-over";
 import {
   assumeGateDuty,
@@ -203,8 +204,21 @@ describe("Gate duty teams", () => {
     expect((await pool.query("SELECT summary FROM gate_preparations WHERE id=$1",[signed.id])).rows[0].summary.signature.userId).toBe(outgoing.userId);
     const beforeRelease=await getChangeOverState(outgoing,f.stationId);
     const resigned=await signGateHandoff(outgoing,{...input,operationId:key(),expectedPreparationId:beforeRelease.preparation!.id,notes:beforeRelease.preparation!.notes});
-    await releaseGateWatch(outgoing,{stationId:f.stationId,expectedShiftId:current.shift!.id,notes:beforeRelease.preparation!.notes});
+    await releaseGateWatch(outgoing,{stationId:f.stationId,expectedShiftId:current.shift!.id,notes:"Unsaved draft"});
     const released=await getChangeOverState(other,f.stationId);expect(released.preparation?.summary.signature?.contentHash).toBe(resigned.summary.signature.contentHash);
+    expect(released.shift).toBeNull();
+    expect(released.preparation?.notes).toBe(resigned.notes);
+  });
+  it("routes overdue coverage to the same-company scheduler and gate supervisor", async () => {
+    const f = await fixture();
+    const [scheduler, relief, supervisor] = f.workers;
+    await pool.query("UPDATE vendor_people SET vendor_role='gate_supervisor' WHERE user_id=$1", [supervisor!.userId]);
+    await pool.query("INSERT INTO work_hub_shift_assignments(shift_id,user_id,assigned_by_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",
+      [f.shiftId, relief!.userId, scheduler!.userId]);
+    const candidates = await databaseGateCoverageDependencies.loadCandidates(new Date());
+    const candidate = candidates.find(row => row.shiftId === f.shiftId);
+    expect(candidate?.leadershipUserIds).toEqual(expect.arrayContaining([scheduler!.userId, supervisor!.userId]));
+    expect(candidate?.assignedUserIds).toContain(relief!.userId);
   });
   it("keeps paid clocks and sessions unchanged while saving the exact acknowledged watch facts and original notes", async () => {
     const f = await fixture(), outgoing=f.workers[0]!, incoming=f.workers[1]!;

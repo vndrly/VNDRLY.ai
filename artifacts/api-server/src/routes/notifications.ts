@@ -357,6 +357,7 @@ export const HIGH_PRIORITY_NOTIFICATION_TYPES: ReadonlySet<string> = new Set([
   "work_hub_shift_changed",
   "work_hub_meeting_changed",
   "gate_coverage_uncovered",
+  "gate_coverage_unconfirmed",
   "gate_coverage_understaffed",
   "gate_coverage_restored",
   "gate_watch_confirmed",

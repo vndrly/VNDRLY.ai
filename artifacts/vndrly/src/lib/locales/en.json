@@ -6394,7 +6394,7 @@
     "nextActions": "Next Actions",
     "nextReview": "Review the last shift notes, then assume the watch.",
     "nextPrepare": "Prepare shift notes for the next watch.",
-    "nextHandoff": "Keep your shift notes current. When relieved or leaving the watch, use Handoff to save them as written and end only your watch.",
+    "nextHandoff": "Sign the handoff when your briefing is ready. Keep the watch until relief assumes it. Use Release watch if you need to leave the post vacant.",
     "needsSave": "Update handoff",
     "selectedFacts": "Selected recorded gate facts",
     "recordedFacts": "Recorded gate facts",

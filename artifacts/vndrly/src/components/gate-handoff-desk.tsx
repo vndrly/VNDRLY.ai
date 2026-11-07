@@ -106,7 +106,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
           </div>
         ))}
       </div>
-      {itemView === "open" && mayEditItems && <div className="handoff-add-item">
+      {!stationId && itemView === "open" && mayEditItems && <div className="handoff-add-item">
         <textarea aria-label={t("changeOver.newItem")} placeholder={t("changeOver.newItem")}
           maxLength={2000} rows={2} value={itemText} disabled={blocked}
           onChange={(event) => onItemTextChange(event.target.value)} />
@@ -148,7 +148,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
     </div>
   </div>;
 
-  return <section className="gate-handoff-desk" aria-label={t("handoffDesk.title")}>
+  return <section id="gate-turnover" className="gate-handoff-desk" aria-label={t("handoffDesk.title")}>
     <header className="handoff-heading">
       <span className="hub-card-icon"><ClipboardCheck aria-hidden="true" /></span>
       <div><h2>{t("handoffDesk.title")}</h2><p>{t(ownWatch ? "handoffDesk.outgoingIntro" : "handoffDesk.incomingIntro")}</p></div>
@@ -179,7 +179,8 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       <div className="handoff-compose-panels">
         <section data-card-layout className="handoff-panel" aria-label={t("changeOver.carryForward")}>
           <CardHeading as="h3"><ClipboardList aria-hidden="true" />{t("changeOver.carryForward")}</CardHeading>
-          {stationId ? <GateTaskHopper stationId={stationId} showTitle={false} /> : itemEditor}
+          {stationId && <GateTaskHopper stationId={stationId} showTitle={false} />}
+          {(!stationId || current.items.length > 0) && itemEditor}
         </section>
         <section data-card-layout className="handoff-panel" aria-label={t("changeOver.outgoingNotes")}>
           <CardHeading as="h3"><NotebookPen aria-hidden="true" />{t("changeOver.outgoingNotes")}</CardHeading>
@@ -205,6 +206,10 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
     </> : preparation ? <>
       {savedReview}
     </> : <p className="handoff-waiting" role="status">{t(current.shift ? "handoffDesk.waiting" : "handoffDesk.noWatch", { name: current.shift?.operator_name })}</p>}
+    {stationId && current.items.length > 0 && (!ownWatch || (signature && !editingSigned)) && <details className="handoff-disclosure">
+      <summary>{t("changeOver.carryForward")}</summary>
+      {itemEditor}
+    </details>}
 
     {current.snapshot?.linkedScope?.groupId && <details className="handoff-disclosure">
       <summary>{es ? "Informes de accesos vinculados" : "Linked gate handoffs"} · {(preparation?.snapshot ?? current.snapshot).linkedHandoffs?.length ?? 0}</summary>

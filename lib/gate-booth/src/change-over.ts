@@ -46,6 +46,7 @@ export interface ChangeOverPreparation {
 }
 export interface ChangeOverState {
   releasedWatch?: { id: string; operator_id: number; operator_name: string; started_at: string } | null;
+  coverageUnconfirmed?: boolean;
   station: { id: string; name: string; site_id: number };
   site: { id: number; name: string };
   supervisor: boolean;

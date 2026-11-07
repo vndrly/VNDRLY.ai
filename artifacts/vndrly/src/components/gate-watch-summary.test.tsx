@@ -56,14 +56,16 @@ it("keeps sites with missing history or schedules visible without inventing note
   expect(screen.getAllByText("No upcoming watch scheduled.")).toHaveLength(2);
   expect(screen.queryByRole("link", { name: "Open shift notes", hidden: true })).toBeNull();
 });
-it("expands the all-gates watch count and uses a text Handoff action for the owner",async()=>{
+it("separates turnover preparation from releasing the watch",async()=>{
   const onHandoff=vi.fn(),onAssume=vi.fn();
   m.request.mockImplementation(async(path:string)=>path==="/watches"?{watches:[{userId:7,name:"Tasha Greene",stationId:"gate-1",siteName:"Antelope Draw",gateName:"Main Gate"},{userId:8,name:"Nadia Farouk",stationId:"gate-2",siteName:"Coyote Ridge",gateName:"East Gate"}]}:path.endsWith("/roster")?{roster:[]}:{rows:[]});
   render(<QueryClientProvider client={new QueryClient()}><GateWatchSummary stationId="gate-1" current={{shift:{operator_id:7}} as any} onAssume={onAssume} onHandoff={onHandoff}/></QueryClientProvider>);
   const disclosure=await screen.findByText("On watch");
   await screen.findByText("2");fireEvent.click(disclosure);
   expect(screen.getByText("Nadia Farouk")).toBeTruthy();expect(screen.getByText("Coyote Ridge · East Gate")).toBeTruthy();
-  const handoff=screen.getByRole("button",{name:"Handoff"});expect(handoff.getAttribute("data-active")).toBe("true");fireEvent.click(handoff);
+  expect(screen.getByRole("link", { name: "Prepare turnover" }).getAttribute("href")).toBe("#gate-turnover");
+  expect(onHandoff).not.toHaveBeenCalled();
+  const handoff=screen.getByRole("button",{name:"Release watch"});expect(handoff.getAttribute("data-active")).toBe("true");fireEvent.click(handoff);
   expect(onHandoff).toHaveBeenCalledOnce();expect(onAssume).not.toHaveBeenCalled();
 });
 

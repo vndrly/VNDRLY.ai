@@ -40,3 +40,18 @@ it("retains an uncertain command through close and rechecks its receipt before r
   fireEvent.click(screen.getByRole("button",{name:"Check assumption"}));
   await waitFor(()=>expect(writes).toBe(2));expect(m.request.mock.calls.filter(([path])=>path.endsWith("/assume"))[1]).toEqual(original);
 });
+it("records a discrepancy against the reviewed watch without assuming it", async () => {
+  mount();
+  await screen.findByText("Radio battery replaced");
+  fireEvent.click(screen.getByText("Report a turnover discrepancy"));
+  fireEvent.change(screen.getByRole("textbox", { name: "What needs to be checked?" }), {
+    target: { value: "Confirm the vehicle count at South Gate" },
+  });
+  expect((screen.getByRole("button", { name: "ASSUME" }) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Save discrepancy" }));
+  await screen.findByText("Discrepancy added to the gate’s open items.");
+  expect(m.request).toHaveBeenCalledWith("/gate/handoff/discrepancy", {
+    operationId: expect.any(String), expectedWatchId: "old-watch", text: "Confirm the vehicle count at South Gate",
+  });
+  expect(m.request.mock.calls.some(([path]) => path.endsWith("/watch/assume"))).toBe(false);
+});

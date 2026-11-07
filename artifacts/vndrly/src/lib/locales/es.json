@@ -6394,7 +6394,7 @@
     "nextActions": "Próximas acciones",
     "nextReview": "Revisa las notas del último turno y luego asume la guardia.",
     "nextPrepare": "Prepara las notas del turno para la siguiente guardia.",
-    "nextHandoff": "Mantén tus notas al día. Al ser relevado o dejar la guardia, usa Entregar para guardarlas tal como están y finalizar solo tu guardia.",
+    "nextHandoff": "Firma el relevo cuando el informe esté listo. Conserva la guardia hasta que el relevo la asuma. Usa Liberar guardia si debes dejar el puesto vacante.",
     "needsSave": "Actualizar entrega",
     "selectedFacts": "Datos registrados del acceso seleccionados",
     "recordedFacts": "Datos registrados del acceso",

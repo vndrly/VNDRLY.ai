@@ -363,7 +363,7 @@ export async function releaseGateWatch(session: SessionPayload, input: {stationI
     const facts=await gateTrafficSnapshot(c, session,access.station.site_id,input.stationId,shift.started_at);
     const signed=shift.preparation_id?(await c.query("SELECT notes,summary FROM gate_preparations WHERE id=$1",[shift.preparation_id])).rows[0]:null;
     const prep=(await c.query("INSERT INTO gate_preparations(shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5) RETURNING id",
-      [shift.id,session.userId,JSON.stringify(facts),input.notes,JSON.stringify({source:"structured_facts",facts:facts.facts,watchReleased:true,signature:signed?.notes===input.notes?signed.summary?.signature:undefined})])).rows[0];
+      [shift.id,session.userId,JSON.stringify(facts),signed?.summary?.signature ? signed.notes : input.notes,JSON.stringify({source:"structured_facts",facts:facts.facts,watchReleased:true,signature:signed?.summary?.signature})])).rows[0];
     const now=new Date();
     await c.query("UPDATE gate_shifts SET ended_at=$2,preparation_id=$3 WHERE id=$1",[shift.id,now,prep.id]);
     await c.query("UPDATE gate_duty_sessions SET ended_at=$3,ended_by_user_id=$2,end_reason='Watch handed off; paid shift remains active' WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL",[input.stationId,session.userId,now]);
@@ -716,6 +716,12 @@ export async function getChangeOverState(
     const access = await stationAccess(c, session, stationId);
     const shift = await activeShift(c, stationId);
     const released = !shift ? await releasedWatch(c,stationId) : null;
+    const coverageUnconfirmed = Boolean(shift && (await c.query(
+      `SELECT 1 FROM workforce_coverage_records r JOIN work_hub_shifts s ON s.id=r.shift_id
+       WHERE s.gate_station_id=$1 AND s.starts_at<=now() AND s.ends_at>now()
+         AND r.state='unconfirmed' AND r.updated_at >= $2 LIMIT 1`,
+      [stationId, shift.started_at],
+    )).rowCount);
     const preparationId=shift?.preparation_id??released?.preparation_id;
     const preparation = preparationId
       ? (
@@ -733,6 +739,7 @@ export async function getChangeOverState(
       supervisor: access.supervisor,
       shift,
       releasedWatch: released,
+      coverageUnconfirmed,
       preparation: await projectGatePreparation(c, preparation, session.vendorId),
       snapshot: await projectGateTaskItems(c, current, session.vendorId),
       // Elapsed time alone does not invalidate saved notes. The incoming
@@ -993,6 +1000,37 @@ export async function recoverGateShift(
       [stationId, session.userId, shift.id, `${reason.trim()} — Watch assigned to ${incomingName}; outgoing watch and shift ended; outgoing account signed out.`]);
     await c.query("UPDATE users SET session_version=session_version+1 WHERE id=$1", [shift.operator_id]);
     return next;
+  });
+}
+
+export async function reportGateTurnoverDiscrepancy(
+  session: SessionPayload,
+  input: { stationId: string; expectedWatchId: string; operationId: string; text: string },
+) {
+  const text = `Turnover discrepancy: ${input.text.trim()}`;
+  return changeOverTransaction(async (client) => {
+    await stationAccess(client, session, input.stationId);
+    await lockStation(client, input.stationId);
+    const prior = (await client.query(
+      "SELECT station_id, actor_id, kind, text FROM gate_shift_actions WHERE id=$1",
+      [input.operationId],
+    )).rows[0];
+    if (prior) {
+      if (prior.station_id !== input.stationId || prior.actor_id !== session.userId ||
+        prior.kind !== "open" || prior.text !== text) {
+        return fail(409, "operation_conflict", "This request belongs to another report.");
+      }
+      return { id: input.operationId };
+    }
+    const shift = await activeShift(client, input.stationId) ?? await releasedWatch(client, input.stationId);
+    if (shift?.id !== input.expectedWatchId) {
+      return fail(409, "shift_changed", "The watch changed. Review it again before reporting.");
+    }
+    await client.query(
+      "INSERT INTO gate_shift_actions(id,station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,$1,'open',$4)",
+      [input.operationId, input.stationId, session.userId, text],
+    );
+    return { id: input.operationId };
   });
 }
 

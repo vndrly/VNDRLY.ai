@@ -22,6 +22,8 @@ export type GateCoverageCandidate = {
   activeUserIds?: number[];
   assignedUserIds: number[];
   recipientUserIds: number[];
+  leadershipUserIds?: number[];
+  coverageUnconfirmed?: boolean;
   coverageMode: GateCoverageMode;
   pausedUntil?: Date | null;
 };
@@ -35,7 +37,7 @@ export type GateCoverageRecord = {
 };
 
 export type GateCoverageNotice = {
-  kind: "watch_radar" | "uncovered" | "understaffed" | "restored";
+  kind: "watch_radar" | "uncovered" | "understaffed" | "unconfirmed" | "restored";
   candidate: GateCoverageCandidate;
   recipientUserIds: number[];
   at: Date;
@@ -132,7 +134,7 @@ async function loadCandidates(at: Date): Promise<GateCoverageCandidate[]> {
     await pool.query(
       `SELECT s.id AS shift_id,s.gate_station_id AS station_id,g.name AS station_name,
         s.title,s.starts_at,s.ends_at,coalesce(s.required_staff_count,1)::int AS required_count,
-        coalesce(c.mode,'active') AS coverage_mode,c.paused_until,s.owner_org_type,s.owner_org_id
+        coalesce(c.mode,'active') AS coverage_mode,c.paused_until,s.owner_org_type,s.owner_org_id,s.created_by_id
        FROM work_hub_shifts s
        JOIN gate_stations g ON g.id=s.gate_station_id
        LEFT JOIN gate_coverage_status c ON c.station_id=s.gate_station_id
@@ -145,20 +147,28 @@ async function loadCandidates(at: Date): Promise<GateCoverageCandidate[]> {
   for (const shift of shifts) {
     const activeRows = (
         await pool.query(
-          `SELECT user_id FROM gate_duty_sessions
-           WHERE station_id=$1 AND started_at <= $2 AND ended_at IS NULL`,
+          `SELECT user_id,started_at FROM gate_duty_sessions
+           WHERE station_id=$1 AND started_at <= $2 AND ended_at IS NULL
+             AND post_coverage->>'assigneeAcknowledged' IS DISTINCT FROM 'false'`,
           [shift.station_id, at],
         )
       ).rows;
-    const activeUserIds = activeRows.map((row) => Number(row.user_id));
-    const actualCount = activeUserIds.length;
-    const assignedUserIds = (
+    const assignments = (
       await pool.query(
-        `SELECT user_id FROM work_hub_shift_assignments
+        `SELECT user_id,assigned_by_id FROM work_hub_shift_assignments
          WHERE shift_id=$1 AND status IN ('assigned','accepted','claimed')`,
         [shift.shift_id],
       )
-    ).rows.map((row) => Number(row.user_id));
+    ).rows;
+    const assignedUserIds = assignments.map((row) => Number(row.user_id));
+    const assigned = new Set(assignedUserIds);
+    // A prior watch can remain open after its operator has left. At the next
+    // scheduled watch, count only an assigned operator or a new assumption.
+    const activeUserIds = activeRows.filter(row =>
+      assigned.has(Number(row.user_id)) || new Date(row.started_at) >= new Date(shift.starts_at),
+    ).map(row => Number(row.user_id));
+    const actualCount = activeUserIds.length;
+    const schedulerIds = [shift.created_by_id, ...assignments.map(row => row.assigned_by_id)].filter(id => id != null);
     const leadership = (
       await pool.query(
         `SELECT DISTINCT u.id FROM users u
@@ -168,8 +178,12 @@ async function loadCandidates(at: Date): Promise<GateCoverageCandidate[]> {
            ($1='vendor' AND m.org_type='vendor' AND m.vendor_id=$2 AND m.role='admin')
            OR ($1='partner' AND m.org_type='partner' AND m.partner_id=$2 AND m.role='admin')
            OR ($1='vendor' AND p.vendor_id=$2 AND p.vendor_role='gate_supervisor')
+           OR (m.org_type=$1 AND CASE WHEN $1='vendor' THEN m.vendor_id ELSE m.partner_id END=$2 AND u.id=ANY($3::int[]))
+           OR ($1='vendor' AND p.vendor_id=$2 AND EXISTS(
+             SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id AND r.is_active=true AND r.role='gate_supervisor'
+           ))
          )`,
-        [shift.owner_org_type, shift.owner_org_id],
+        [shift.owner_org_type, shift.owner_org_id, schedulerIds],
       )
     ).rows.map((row) => Number(row.id));
     candidates.push({
@@ -184,6 +198,8 @@ async function loadCandidates(at: Date): Promise<GateCoverageCandidate[]> {
       activeUserIds,
       assignedUserIds,
       recipientUserIds: [...new Set([...assignedUserIds, ...leadership])],
+      leadershipUserIds: leadership,
+      coverageUnconfirmed: activeRows.length > actualCount,
       coverageMode: shift.coverage_mode,
       pausedUntil: shift.paused_until ? new Date(shift.paused_until) : null,
     });
@@ -261,7 +277,9 @@ async function deliver(notice: GateCoverageNotice) {
       : `${notice.candidate.stationName} is ${notice.kind}`,
     body: restored
       ? `${notice.candidate.actualCount} of ${notice.candidate.requiredCount} required gatekeepers are now on duty.`
-      : `${gap} required Gate position${gap === 1 ? " is" : "s are"} still open. Assume the Gate or share your ETA now.`,
+      : notice.kind === "unconfirmed"
+        ? "Relief has not assumed the watch and the previous watch is still open. Confirm who is at the gate or arrange backup."
+        : `${gap} required Gate position${gap === 1 ? " is" : "s are"} still open. Assume the Gate or share your ETA now.`,
     link: "/work-hub/workforce-coverage",
     dedupeKey: `gate-coverage:${notice.candidate.shiftId}:${notice.kind}:${Math.floor(notice.at.getTime() / TEN_MINUTES)}`,
     forceImmediateDelivery: true,
@@ -334,7 +352,7 @@ export async function evaluateGateCoverage(
     const covered = candidate.actualCount >= candidate.requiredCount;
     if (covered) {
       const shouldRestore = Boolean(
-        prior && ["uncovered", "understaffed", "escalated"].includes(prior.state),
+        prior && ["uncovered", "understaffed", "unconfirmed", "escalated"].includes(prior.state),
       );
       if (shouldRestore) {
         await dependencies.deliver({
@@ -360,7 +378,7 @@ export async function evaluateGateCoverage(
       results.push({ shiftId: candidate.shiftId, state: "grace" });
       continue;
     }
-    const state = candidate.actualCount === 0 ? "uncovered" : "understaffed";
+    const state = candidate.coverageUnconfirmed ? "unconfirmed" : candidate.actualCount === 0 ? "uncovered" : "understaffed";
     const reminderDue =
       !prior?.lastReminderAt ||
       at.getTime() - prior.lastReminderAt.getTime() >= TEN_MINUTES;
@@ -377,7 +395,9 @@ export async function evaluateGateCoverage(
       await dependencies.deliver({
         kind: state,
         candidate,
-        recipientUserIds: candidate.recipientUserIds,
+        recipientUserIds: candidate.leadershipUserIds && candidate.assignedUserIds.length > 0 && at.getTime() < candidate.startsAt.getTime() + 2 * TEN_MINUTES
+          ? candidate.assignedUserIds
+          : candidate.recipientUserIds,
         at,
       });
     }

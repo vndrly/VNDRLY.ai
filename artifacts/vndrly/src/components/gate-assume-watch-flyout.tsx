@@ -8,6 +8,7 @@ import type { ChangeOverState } from "@workspace/gate-booth";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { changeOverRequest } from "@/lib/change-over-api";
+import { useGateAreaTraffic } from "./gate-area-traffic";
 import "./gate-assume-watch-flyout.css";
 
 type Props={stationId:string;open:boolean;onOpenChange:(open:boolean)=>void;adminWatchId?:string;onSaved?:()=>void|Promise<void>;onPendingChange?:(pending:boolean)=>void};
@@ -20,10 +21,27 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
   const {user}=useAuth(),{i18n}=useTranslation(),cache=useQueryClient();
   const es=(i18n?.language??"en").startsWith("es"),c=(en:string,spanish:string)=>es?spanish:en;
   const [pending,setPending]=useState<Command|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState("");
+  const [discrepancy, setDiscrepancy] = useState("");
+  const [report, setReport] = useState<{ operationId: string; expectedWatchId: string; text: string } | null>(null);
+  const [reportSaved, setReportSaved] = useState(false);
   const lock=useRef(false);
   const state=useQuery({queryKey:["gate-assume-review",user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId,stationId],queryFn:()=>changeOverRequest<ChangeOverState>(`/${stationId}/state`),enabled:open&&Boolean(stationId),staleTime:0,retry:false,refetchOnWindowFocus:false});
   useEffect(()=>{onPendingChange?.(Boolean(pending));},[Boolean(pending),onPendingChange]);
   const current=state.data,prep=current?.preparation,watch=current?.shift??current?.releasedWatch;
+  const areaTraffic = useGateAreaTraffic(open ? current?.site?.id : undefined);
+  const areasByGate = new Map<string, string>();
+  const areaCounts = new Map<string, number>();
+  for (const gate of areaTraffic.data?.gates ?? []) {
+    const area = gate.topology?.area;
+    if (area) {
+      areasByGate.set(gate.id, area);
+      areaCounts.set(area, 0);
+    }
+  }
+  for (const visit of areaTraffic.data?.visits ?? []) {
+    const area = areasByGate.get(visit.presence.currentGateId ?? "");
+    if (area && !visit.checkOutTime) areaCounts.set(area, (areaCounts.get(area) ?? 0) + 1);
+  }
   const own=current?.shift?.operator_id===user?.userId;
   const changed=Boolean(adminWatchId&&current?.shift?.id!==adminWatchId);
   async function saved() {
@@ -41,7 +59,7 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
     }
   }
   async function assume() {
-    if(lock.current||pending||!current||own||changed||state.isFetching||state.isError||!navigator.onLine)return;
+    if(lock.current||pending||report||discrepancy.trim()||!current||own||changed||state.isFetching||state.isError||!navigator.onLine)return;
     lock.current=true;setBusy(true);setError("");
     const operationId=crypto.randomUUID(),review={preparationId:prep?.id??null,reviewedRevision:current.snapshot?.revision,acknowledged:true,allowUnprepared:!prep};
     const command:Command=adminWatchId?{path:`/${stationId}/watch/admin`,receiptPath:`/${stationId}/watch/admin-operations/${operationId}`,body:{operationId,expectedShiftId:adminWatchId,action:"assume",...review}}:{path:`/${stationId}/watch/assume`,receiptPath:`/${stationId}/watch/operations/${operationId}`,body:{operationId,source:"web",expectedWatchId:watch?.id??null,...review}};
@@ -54,6 +72,34 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
     catch(e){setError(e instanceof Error?e.message:c("The result could not be checked.","No se pudo comprobar el resultado."));}
     finally{lock.current=false;setBusy(false);}
   }
+  async function submitDiscrepancy() {
+    if (lock.current || pending || !watch || own || changed || !navigator.onLine) return;
+    const command = report ?? {
+      operationId: crypto.randomUUID(), expectedWatchId: watch.id, text: discrepancy.trim(),
+    };
+    if (!command.text) return;
+    lock.current = true;
+    setBusy(true);
+    setError("");
+    setReport(command);
+    try {
+      await changeOverRequest(`/${stationId}/handoff/discrepancy`, command);
+      setReport(null);
+      setDiscrepancy("");
+      setReportSaved(true);
+      await Promise.all([state.refetch(), cache.invalidateQueries({ queryKey: ["change-over-state"] })]);
+    } catch (cause) {
+      const status = (cause as { status?: number }).status;
+      if (status && status >= 400 && status < 500) {
+        setReport(null);
+        void state.refetch();
+      }
+      setError(cause instanceof Error ? cause.message : c("The report could not be confirmed.", "No se pudo confirmar el informe."));
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
   return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent bare hideClose className="gate-assume-flyout" accentHeaderStyle={{display:"none"}}>
     <AppModalHeader compact title={<DialogTitle>{c("Assume Watch","Asumir vigilancia")}</DialogTitle>} description={<DialogDescription>{c("Review the watch, then select ASSUME to take responsibility.","Revisa la guardia y selecciona ASUMIR para aceptar la responsabilidad.")}</DialogDescription>} closeControl={<button type="button" aria-label={c("Close watch summary","Cerrar resumen de guardia")} onClick={()=>onOpenChange(false)}><X aria-hidden="true"/></button>}/>
     <div className="gate-assume-summary">
@@ -61,12 +107,33 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
         <strong>{current.site.name} · {current.station.name}</strong>
         {watch&&<p>{watch.operator_name} · {new Date(watch.started_at).toLocaleString()}</p>}
         {prep?<><CardHeading as="h3">{c("Saved handover","Relevo guardado")}</CardHeading><ul>{prep.summary.facts.map(f=><li key={f.id}>{f.text}</li>)}</ul>{prep.notes&&<p className="whitespace-pre-wrap">{prep.notes}</p>}{prep.snapshot.openItems.filter(item=>item.status==="open").map(item=><p key={item.id}>{item.text}</p>)}</>:<p className="gate-assume-no-handover">{c("No handover prepared","No hay relevo preparado")}</p>}
-        {prep&&current.stale&&<><p>{c("Gate activity has changed since this handover was saved.","La actividad cambió desde que se guardó este relevo.")}</p><ul>{current.snapshot?.facts.map(f=><li key={f.id}>{f.text}</li>)}</ul></>}
+        {(!prep || current.stale) && <div>
+          <CardHeading as="h3">{c("Current gate activity", "Actividad actual del acceso")}</CardHeading>
+          {prep && <p>{c("Gate activity has changed since this handover was saved.", "La actividad cambió desde que se guardó este relevo.")}</p>}
+          <ul>{current.snapshot?.facts?.map(f => <li key={f.id}>{f.text}</li>)}</ul>
+        </div>}
+        {areaCounts.size > 0 && <div>
+          <CardHeading as="h3">{c("Open visits by area", "Visitas abiertas por área")}</CardHeading>
+          <ul>{Array.from(areaCounts, ([area, count]) => <li key={area}>{area} · {count}</li>)}</ul>
+        </div>}
+        {areaTraffic.isError && <p role="status">{c("Area traffic is unavailable.", "El tráfico por área no está disponible.")}</p>}
         {own&&<p>{c("You already hold this watch.","Ya tienes esta guardia.")}</p>}{changed&&<p role="alert">{c("This watch has changed. Close this summary and select the current watch.","Esta guardia cambió. Cierra el resumen y selecciona la guardia actual.")}</p>}
+        {watch && !own && !changed && !pending && <details className="handoff-disclosure">
+          <summary>{c("Report a turnover discrepancy", "Informar una discrepancia del relevo")}</summary>
+          <label>{c("What needs to be checked?", "¿Qué se debe verificar?")}
+            <textarea className="block w-full" rows={3} maxLength={2000} value={discrepancy}
+              disabled={busy || Boolean(report)} onChange={event => { setDiscrepancy(event.target.value); setReportSaved(false); }} />
+          </label>
+          <button type="button" className="gate-watch-text-action" disabled={busy || !discrepancy.trim() || !navigator.onLine}
+            onClick={() => void submitDiscrepancy()}>
+            {report ? c("Retry report", "Reintentar informe") : c("Save discrepancy", "Guardar discrepancia")}
+          </button>
+        </details>}
       </>:null}
       {error&&<p role="alert">{error}</p>}
+      {reportSaved && <p role="status">{c("Discrepancy added to the gate’s open items.", "Discrepancia añadida a los asuntos pendientes del acceso.")}</p>}
       {pending&&<p role="status">{c("Checking is required before another attempt. Closing this window keeps the original request available.","Debes comprobar el resultado antes de reintentar. Cerrar esta ventana conserva la solicitud original.")}</p>}
     </div>
-    <div className="gate-assume-footer">{pending?<button type="button" className="gate-watch-text-action" disabled={busy||!navigator.onLine} onClick={()=>void check()}>{c("Check assumption","Comprobar guardia")}</button>:<button type="button" className="gate-assume-confirm" disabled={busy||!current||state.isFetching||state.isError||own||changed||!navigator.onLine} onClick={()=>void assume()}>{c("ASSUME","ASUMIR")}</button>}</div>
+    <div className="gate-assume-footer">{pending?<button type="button" className="gate-watch-text-action" disabled={busy||!navigator.onLine} onClick={()=>void check()}>{c("Check assumption","Comprobar guardia")}</button>:<button type="button" className="gate-assume-confirm" disabled={busy||!current||state.isFetching||state.isError||own||changed||Boolean(report)||Boolean(discrepancy.trim())||!navigator.onLine} onClick={()=>void assume()}>{c("ASSUME","ASUMIR")}</button>}</div>
   </DialogContent></Dialog>;
 }

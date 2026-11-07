@@ -89,9 +89,18 @@ test("gate watch survives sign-out and transfers only after the incoming account
     const logout=await page.request.post('/api/auth/logout');
     expect(logout.ok()).toBe(true);
     expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([{operator_id:outgoing.userId}]);
+    await loginAsVendor(page,outgoing);
+    await page.goto(`/gate/change-over?siteId=${site.id}&stationId=${gate}`,{waitUntil:'domcontentloaded'});
+    await page.getByRole('button',{name:'Release watch',exact:true}).click();
+    await expect.poll(async () => (await pool.query(
+      "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],
+    )).rows).toEqual([]);
+    expect((await page.request.post('/api/auth/logout')).ok()).toBe(true);
     await loginAsVendor(page,incoming);
     await page.goto(`/gate/change-over?siteId=${site.id}&stationId=${gate}`,{waitUntil:'domcontentloaded'});
-    expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([{operator_id:outgoing.userId}]);
+    expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([]);
+    await expect(page.getByText(/Gate uncovered/)).toBeVisible();
+    await page.screenshot({path:'.local/releases/handoff-uncovered-desktop.png',fullPage:true});
     const shiftNotes=page.locator('details[aria-label="Shift Notes"]');
     await shiftNotes.locator('summary').click();
     await expect(shiftNotes).toContainText('Inspect the north barrier');
@@ -102,8 +111,20 @@ test("gate watch survives sign-out and transfers only after the incoming account
     await page.locator('#watch-review').scrollIntoViewIfNeeded();
     await page.getByRole('region',{name:'Shift handoff',exact:true}).screenshot({path:'.local/releases/handoff-incoming-phone.png'});
     await page.locator('#watch-review').getByRole('button',{name:'Reviewed — Assume Watch',exact:true}).click();
-    expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([{operator_id:outgoing.userId}]);
+    expect((await pool.query("SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL",[gate])).rows).toEqual([]);
     await expect(page.getByRole('dialog')).toContainText('Inspect the north barrier');
+    const dialog = page.getByRole('dialog');
+    const discrepancy = "North barrier latch needs inspection.";
+    await dialog.getByText("Report a turnover discrepancy", { exact: true }).click();
+    await dialog.getByRole("textbox").fill(discrepancy);
+    await dialog.getByRole("button", { name: "Save discrepancy" }).click();
+    await expect.poll(async () => (await pool.query(
+      "SELECT text FROM gate_shift_actions WHERE station_id=$1 AND actor_id=$2 AND kind='open'",
+      [gate, incoming.userId],
+    )).rows.map(row => row.text)).toEqual([`Turnover discrepancy: ${discrepancy}`]);
+    expect((await pool.query(
+      "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],
+    )).rows).toEqual([]);
     await page.getByRole('button',{name:'ASSUME',exact:true}).click();
     await expect.poll(async () => (await pool.query(
       "SELECT operator_id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [gate],

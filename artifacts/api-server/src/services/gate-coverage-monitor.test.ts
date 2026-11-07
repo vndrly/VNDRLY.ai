@@ -51,7 +51,7 @@ describe("Gate coverage monitoring", () => {
     expect(delivered).toHaveLength(1);
   });
 
-  it("alerts after ten minutes, repeats every ten, and sends restoration", async () => {
+  it("alerts relief first, escalates to the supervisor and scheduler, then sends restoration", async () => {
     let actualCount = 0;
     let state: GateCoverageRecord | null = null;
     const delivered: Array<{ kind: string; recipients: number[] }> = [];
@@ -67,6 +67,7 @@ describe("Gate coverage monitoring", () => {
         actualCount,
         assignedUserIds: [10],
         recipientUserIds: [10, 20, 30],
+        leadershipUserIds: [20, 30],
         coverageMode: "active" as const,
       }]),
       getRecord: vi.fn(async () => state),
@@ -86,11 +87,11 @@ describe("Gate coverage monitoring", () => {
     await evaluateGateCoverage(at("08:09"), deps);
     expect(delivered).toHaveLength(0);
     await evaluateGateCoverage(at("08:10"), deps);
-    expect(delivered).toEqual([{ kind: "uncovered", recipients: [10, 20, 30] }]);
+    expect(delivered).toEqual([{ kind: "uncovered", recipients: [10] }]);
     await evaluateGateCoverage(at("08:19"), deps);
     expect(delivered).toHaveLength(1);
     await evaluateGateCoverage(at("08:20"), deps);
-    expect(delivered).toHaveLength(2);
+    expect(delivered[1]).toEqual({ kind: "uncovered", recipients: [10, 20, 30] });
     actualCount = 1;
     await evaluateGateCoverage(at("08:21"), deps);
     expect(delivered.at(-1)?.kind).toBe("restored");
