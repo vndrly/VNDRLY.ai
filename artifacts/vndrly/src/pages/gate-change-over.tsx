@@ -355,7 +355,7 @@ export default function GateChangeOverPage({
     (history ? log.isLoading : state.isLoading);
   const loadError =
     sites.error || stations.error || (history ? log.error : state.error);
-  const locationSelectors = !history ? <GateSiteGateSelect
+  const locationSelectors = !history ? <GateSiteGateSelect gateFirst
     sites={sites.data?.sites ?? []} siteId={Number(siteId)} gate={gpsGate}
     onChange={(nextSite, nextGate) => { setSelectedSite(String(nextSite)); setSelectedStation(nextGate); }}
     gpsStatus={gpsStatus} gpsLabel={gpsLabel}

@@ -153,7 +153,7 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 
 @media (max-width: 480px) { .gate-map-control-group { gap: 4px; } .gate-map-controls .gate-map-control { font-size: 10px; padding: 6px; } .gate-map-controls .gate-map-control svg { width: 12px; height: 12px; } }
 /* Compact Gate Map only; shared selectors and other map surfaces keep their sizing. */
-.gate-map-compact .gate-map-selector-row { display:grid; grid-template-columns:minmax(110px,1fr) minmax(0,375px) minmax(110px,1fr); align-items:start; gap:18px; }
+.gate-map-compact .gate-map-selector-row { display:grid; grid-template-columns:minmax(110px,1fr) minmax(0,1fr) minmax(110px,1fr); align-items:start; gap:18px; }
 .gate-map-compact .gate-map-selector-row > .gate-site-gate-select { flex:1; min-width:0; }
 .gate-map-compact .gate-map-controls { justify-content:flex-start; gap:6px; }
 .gate-map-compact .gate-map-control-group { gap:6px; }
@@ -265,7 +265,7 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-note-list-record summary small { color:#b3b3b3; font-size:11px; font-weight:400; }
 .gate-note-list-record .gate-panel-detail { padding-left:0; }
 
-.gate-shift-notes-header { display:grid; grid-template-columns:minmax(145px,1fr) minmax(0,375px) minmax(145px,1fr); align-items:start; gap:16px; margin-bottom:16px; }
+.gate-shift-notes-header { display:grid; grid-template-columns:minmax(145px,1fr) minmax(0,1fr) minmax(145px,1fr); align-items:start; gap:16px; margin-bottom:16px; }
 .gate-shift-notes-header h2 { white-space:nowrap; }
 .gate-shift-notes-export { position:relative; justify-self:end; }
 .gate-shift-notes-export [data-testid="gate-shift_notes-report-toolbar"] > .max-w-2xl { position:absolute; top:calc(100% + 8px); right:0; width:min(32rem,calc(100vw - 4rem)); z-index:40; background:#242426; color:#ececec; }

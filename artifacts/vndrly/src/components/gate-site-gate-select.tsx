@@ -8,8 +8,8 @@ import { BrandedSelect } from "@/components/work-hub/chrome";
 import GateGpsSelector from "./gate-gps-selector";
 import "./gate-dashboard.css";
 
-type GateChoice = { id: string; name: string; siteId: number };
-export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsStatus = "unavailable", gpsLabel = "", gpsDetail, testId, history = false, showGps = true, gateOptions, allOptionLabel }: {
+type GateChoice = { id: string; name: string; siteId: number; active?: boolean; topology?: { parentGateId?: string | null; parallelGateId?: string | null } | null };
+export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsStatus = "unavailable", gpsLabel = "", gpsDetail, testId, history = false, showGps = true, gateOptions, allOptionLabel, gateFirst = false }: {
   sites: { id: number; name: string }[];
   siteId: number;
   gate?: { id: string; name: string };
@@ -22,6 +22,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   showGps?: boolean;
   gateOptions?: GateChoice[];
   allOptionLabel?: string;
+  gateFirst?: boolean;
 }) {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
@@ -47,6 +48,14 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   const gates = [...(gateOptions ?? options.data?.gates ?? [])];
   // Keep the current selection visible while the all-site choices are loading.
   if (gate && !gates.some(row => row.id === gate.id)) gates.push({ ...gate, siteId });
+  const optionName = (siteName: string, row: GateChoice) => {
+    if (!gateFirst) return `${siteName} | ${row.name}`;
+    const references = (source: GateChoice, target: GateChoice) =>
+      source.topology?.parentGateId === target.id || source.topology?.parallelGateId === target.id;
+    const peers = gates.filter(other => other.id !== row.id && other.active !== false &&
+      (references(row, other) || references(other, row)));
+    return [row.name, ...peers.map(peer => peer.name)].join(" | ");
+  };
   const selector = <BrandedSelect className="gate-dashboard-location-select" aria-label={label} data-testid={testId}
           value={gate ? gate.id : ""} onChange={event => {
             if (allOptionLabel && !event.target.value) { onChange(0, ""); return; }
@@ -55,7 +64,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
           }}>
           <option value="" disabled={!allOptionLabel}>{allOptionLabel ?? t("changeOver.choose")}</option>
           {sites.flatMap(site => gates.filter(row => row.siteId === site.id).map(row =>
-            <option key={row.id} value={row.id}>{site.name} | {row.name}{linked && link.data?.gates?.some(g => g.id === row.id && g.connection === "online") ? (es ? " · Conectado" : " · Online") : ""}</option>))}
+            <option key={row.id} value={row.id}>{optionName(site.name, row)}{linked && link.data?.gates?.some(g => g.id === row.id && g.connection === "online") ? (es ? " · Conectado" : " · Online") : ""}</option>))}
         </BrandedSelect>;
   return <div className="gate-dashboard-location-selectors gate-site-gate-select">
     <label className="space-y-1 text-sm font-medium">
