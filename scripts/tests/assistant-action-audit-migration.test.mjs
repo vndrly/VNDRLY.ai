@@ -22,17 +22,25 @@ test("rejects additional SQL, target changes, destructive changes and altered co
   }
 });
 
-test("secures the table and sequence inside the creation transaction and rolls back schema mismatch", async () => {
+for (const existingRls of [false, true, undefined]) {
+test(`secures table and sequence with existing RLS ${existingRls} and rolls back schema mismatch`, async () => {
   const calls = [];
-  const client = { query: async query => { calls.push(query); return { rows: query.startsWith("SELECT rolname") ? [{ rolname: "anon" }, { rolname: "authenticated" }] : [] }; } };
+  const client = { query: async query => {
+    calls.push(query);
+    if (query.startsWith("SELECT relrowsecurity FROM pg_class")) {
+      return { rows: existingRls === undefined ? [] : [{ relrowsecurity: existingRls }] };
+    }
+    return { rows: query.startsWith("SELECT rolname") ? [{ rolname: "anon" }, { rolname: "authenticated" }] : [] };
+  } };
   await assert.rejects(runAssistantActionAuditMigration(client, sql), /column preflight failed/);
   assert.equal(calls[0], "BEGIN");
-  assert.ok(calls.includes('ALTER TABLE public."assistant_action_audit" ENABLE ROW LEVEL SECURITY'));
+  assert.equal(calls.includes('ALTER TABLE public."assistant_action_audit" ENABLE ROW LEVEL SECURITY'), existingRls !== true);
   assert.ok(calls.includes('REVOKE ALL ON TABLE public."assistant_action_audit" FROM PUBLIC, "anon", "authenticated"'));
   assert.ok(calls.includes('REVOKE ALL ON SEQUENCE public."assistant_action_audit_id_seq" FROM PUBLIC, "anon", "authenticated"'));
   assert.equal(calls.at(-1), "ROLLBACK");
   assert.ok(!calls.includes("COMMIT"));
 });
+}
 
 test("deployment paths include the audit migration before greeting and restart", async () => {
   const { buildApiMigrationAndRestartCommands } = await import("../plate-state-migration.mjs");

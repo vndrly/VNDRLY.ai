@@ -38,7 +38,12 @@ export async function runAssistantActionAuditMigration(client, sqlText) {
     for (const statement of statements) await client.query(statement);
     // Supabase's public schema can inherit browser-role grants by default.
     // The Express server uses its private database role and enforces user RBAC.
-    await client.query('ALTER TABLE public."assistant_action_audit" ENABLE ROW LEVEL SECURITY');
+    // Re-enabling RLS still requests an exclusive table lock. Avoid blocking
+    // live audit readers on repeat deploys when the required state already holds.
+    const existingSecurity = await client.query("SELECT relrowsecurity FROM pg_class WHERE oid = 'public.assistant_action_audit'::regclass");
+    if (existingSecurity.rows[0]?.relrowsecurity !== true) {
+      await client.query('ALTER TABLE public."assistant_action_audit" ENABLE ROW LEVEL SECURITY');
+    }
     const browserRoles = await client.query("SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated') ORDER BY rolname");
     const roles = ["PUBLIC", ...browserRoles.rows.map(row => {
       if (!["anon", "authenticated"].includes(row.rolname)) throw new Error("Unexpected browser role");

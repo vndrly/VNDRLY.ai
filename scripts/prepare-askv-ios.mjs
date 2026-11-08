@@ -5,14 +5,13 @@
  *   node scripts/prepare-askv-ios.mjs --check
  */
 import { createHash } from 'node:crypto';
-import { createReadStream, createWriteStream } from 'node:fs';
+import { createReadStream } from 'node:fs';
 import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { downloadNativeArchive } from './lib/download-native-archive.mjs';
 
 const VERSION = '1.12.29';
 const SHA256 = '7c956e0d6261bb4d9e71eca425fdd32b7479933e20987beceead576577b2ee26';
@@ -121,9 +120,7 @@ async function main() {
       : path.join(staging, 'engine.tar.bz2');
     if (archiveIndex < 0) {
       console.log('Downloading pinned sherpa-onnx iOS engine v' + VERSION + '...');
-      const response = await fetch(URL, { signal: AbortSignal.timeout(180_000) });
-      if (!response.ok || !response.body) throw new Error('Native engine download failed: HTTP ' + response.status);
-      await pipeline(Readable.fromWeb(response.body), createWriteStream(archive, { flags: 'wx' }));
+      await downloadNativeArchive(URL, archive, fetch, 'https://api.github.com/repos/k2-fsa/sherpa-onnx/releases/assets/371993301');
     }
     if (await digest(archive) !== SHA256) throw new Error('Native engine archive SHA-256 mismatch; nothing installed.');
     await extract(archive, staging);
