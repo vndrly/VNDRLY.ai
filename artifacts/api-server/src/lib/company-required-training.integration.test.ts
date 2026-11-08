@@ -51,6 +51,22 @@ async function publish(c:Company,version=1,metadataOverrides:Record<string,unkno
 }
 const synthetic=(plan:Awaited<ReturnType<typeof companyRequiredTraining>>)=>plan.requirements.filter(r=>r.familyId===familyId);
 async function assigned(itemId:string){return db.select().from(instances).where(eq(instances.templateId,itemId));}
+async function scanRenewalPages(now:Date, untilScheduledId?:string){
+ // Each tick deliberately examines only 25 primary-key candidates. The cursor
+ // can start anywhere after an earlier test, and UUIDs are not insertion order.
+ // Allow two bounded sweeps (including wraparound and newly created renewals),
+ // rather than assuming this company's history appears on the first page.
+ const [total]=await db.select({count:sql<number>`count(*)::integer`}).from(instances);
+ const ticks=2*Math.ceil(total.count/25)+3;
+ for(let tick=0;tick<ticks;tick++){
+  await runOnboardingWork(now);
+  if(untilScheduledId){
+   const [row]=await db.select({metadata:instances.assignmentMetadata}).from(instances).where(eq(instances.id,untilScheduledId));
+   if(AssignmentMetadataSchema.parse(row.metadata).refresherScheduledAt===now.toISOString())return;
+  }
+ }
+ if(untilScheduledId)throw Error('Eligible renewal was starved across bounded worker page sweeps');
+}
 async function complete(c:Company,p:Person,id:string,wrong=false){
  const action=async(payload:unknown)=>{const read=await getAssignedLibrary(p.actor,id);return submitGuidedTraining(p.actor,id,{operationId:randomUUID(),owner:c.owner,context:{kind:'organization',id:c.vendor.id},payloadVersion:1,expectedVersion:read.version,payload});};
  await action({action:'advance',acknowledged:true});await action({action:'answer',questionId:'q',optionIds:[wrong?'b':'a']});
@@ -214,7 +230,7 @@ describe('platform-owned required training against isolated persistence',()=>{
   await db.update(instances).set({assignmentMetadata:{...completed.assignment,refresherDueAt:expiredDueAt,refresherScheduledAt:null}}).where(eq(instances.id,original.id));
   expect(synthetic(await companyRequiredTraining(db,c.owner))[0].completed).toBe(false);
 
-  const scanAt=new Date();await runOnboardingWork(scanAt);
+  const scanAt=new Date();await scanRenewalPages(scanAt,original.id);
   let rows=await assigned(course.row.id);expect(rows).toHaveLength(2);
   const history=AssignmentMetadataSchema.parse(rows.find(r=>r.id===original.id)!.assignmentMetadata);
   expect(history.status).toBe('completed');expect(history.refresherDueAt).toBe(expiredDueAt);
@@ -223,20 +239,20 @@ describe('platform-owned required training against isolated persistence',()=>{
   expect(AssignmentMetadataSchema.parse(renewal.assignmentMetadata)).toMatchObject({status:'assigned',membershipId:learner.member.id});
   const waiting=await companyRequiredTraining(db,c.owner);expect(synthetic(waiting)[0].completed).toBe(false);expect(waiting.completed).toBe(0);
 
-  await runOnboardingWork(new Date(scanAt.getTime()+60000));
+  await scanRenewalPages(new Date(scanAt.getTime()+60000));
   await db.transaction(tx=>ensureRequiredTraining(tx,c.owner));
   rows=await assigned(course.row.id);expect(rows).toHaveLength(2);expect(rows.some(r=>r.id===renewal.id)).toBe(true);
   expect(AssignmentMetadataSchema.parse(rows.find(r=>r.id===original.id)!.assignmentMetadata).refresherDueAt).toBe(expiredDueAt);
   expect(synthetic(await companyRequiredTraining(db,c.owner))[0].completed).toBe(false);
  });
 
- it('does not let 25 expired suspended-user or vanished-membership records consume the active renewal batch',async()=>{
+ it('advances past 25 expired suspended-user or vanished-membership records without starving active renewal',async()=>{
   const c=await company(),learner=await c.person('Gate attendant'),suspended=await c.person('Gate attendant');await selectService(c);const course=await publish(c);
   const missingMembershipId=1000000000+c.admin.member.id;
   expect(await db.select({id:memberships.id}).from(memberships).where(eq(memberships.id,missingMembershipId))).toHaveLength(0);
   const expiredDueAt='2020-01-01T00:00:00Z';
-  // Insert the invalid histories before the valid candidate: these are the
-  // records which previously occupied LIMIT 25 indefinitely. The nonexistent
+  // Include a full page of invalid histories: an eligible candidate must be
+  // reached across cursor sweeps regardless of UUID ordering. The nonexistent
   // membership is JSON history only; no actual membership is deleted.
   const blocked=await db.insert(instances).values(Array.from({length:25},(_,index)=>({templateId:course.row.id,templateVersion:1,assigneeUserId:index<13?suspended.user.id:learner.user.id,definitionSnapshot:[],createdAt:new Date('2020-01-01T00:00:00Z'),assignmentMetadata:AssignmentMetadataSchema.parse({assignmentId:randomUUID(),sourceItemId:course.row.id,contentVersion:1,membershipId:index<13?suspended.member.id:missingMembershipId,status:'completed',assignedAt:'2019-01-01T00:00:00Z',dueAt:'2019-02-01T00:00:00Z',refresherDueAt:expiredDueAt,refresherScheduledAt:null})}))).returning();
   await db.update(users).set({suspendedAt:new Date()}).where(eq(users.id,suspended.user.id));
@@ -245,7 +261,7 @@ describe('platform-owned required training against isolated persistence',()=>{
   const completed=await complete(c,learner,active.id);
   await db.update(instances).set({assignmentMetadata:{...completed.assignment,refresherDueAt:expiredDueAt,refresherScheduledAt:null}}).where(eq(instances.id,active.id));
 
-  const scanAt=new Date();await runOnboardingWork(scanAt);
+  const scanAt=new Date();await scanRenewalPages(scanAt,active.id);
   let rows=await assigned(course.row.id);expect(rows).toHaveLength(27);
   const renewed=rows.find(row=>row.id!==active.id&&!blocked.some(old=>old.id===row.id))!;
   expect(renewed.assigneeUserId).toBe(learner.user.id);
@@ -253,7 +269,7 @@ describe('platform-owned required training against isolated persistence',()=>{
   expect(AssignmentMetadataSchema.parse(rows.find(row=>row.id===active.id)!.assignmentMetadata)).toMatchObject({refresherDueAt:expiredDueAt,refresherScheduledAt:scanAt.toISOString()});
   for(const invalid of blocked)expect(AssignmentMetadataSchema.parse(rows.find(row=>row.id===invalid.id)!.assignmentMetadata)).toMatchObject({refresherDueAt:expiredDueAt,refresherScheduledAt:null});
   expect(synthetic(await companyRequiredTraining(db,c.owner))).toEqual([expect.objectContaining({userId:learner.user.id,completed:false})]);
-  await runOnboardingWork(new Date(scanAt.getTime()+60000));rows=await assigned(course.row.id);expect(rows).toHaveLength(27);
+  await scanRenewalPages(new Date(scanAt.getTime()+60000));rows=await assigned(course.row.id);expect(rows).toHaveLength(27);
  });
 
  it('recomputes new hires and changed roles, deduplicates overlapping services/rules and safely reuses assignments on repeated scans',async()=>{
