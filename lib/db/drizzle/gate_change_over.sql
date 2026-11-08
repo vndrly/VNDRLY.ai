@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS gate_stations (
  name text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS gate_stations_site_name_unique ON gate_stations(site_id, name);
-INSERT INTO gate_stations(site_id,name) SELECT id,'Main gate' FROM site_locations ON CONFLICT DO NOTHING;
+-- Do not backfill existing sites: doing so recreates gates users deleted or renamed.
 CREATE OR REPLACE FUNCTION gate_change_over_provision_station() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
  INSERT INTO gate_stations(site_id,name) VALUES(NEW.id,'Main gate') ON CONFLICT DO NOTHING;
