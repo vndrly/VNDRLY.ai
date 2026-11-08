@@ -13,7 +13,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   mock.query.mockImplementation(async (sql: string, values: any[]) => {
     let data: any[] = [];
-    if (sql === "SELECT * FROM gate_stations WHERE id=$1") data = [{ id: values[0], site_id: 10, name: "Main Gate" }];
+    if (sql.startsWith("SELECT row_to_json(station) AS station")) data = values[2] === 2 && values[3] === 3 ? [{
+      station: { id: values[0], site_id: 10, name: "Main Gate" },
+      site: { id: 10, name: "Site A" },
+      account: { id: 1, role: "vendor", session_version: 2 },
+    }] : [];
+    else if (sql === "SELECT * FROM gate_stations WHERE id=$1") data = [{ id: values[0], site_id: 10, name: "Main Gate" }];
     else if (sql.includes("FROM users WHERE id=$1")) data = [{ id: 1, role: "vendor", session_version: 2 }];
     else if (sql.includes("SELECT id, name, partner_id")) data = [{ id: 10, name: "Site A" }];
     else if (sql.includes("FROM site_work_assignments")) data = [{ id: 1 }];
@@ -26,6 +31,12 @@ beforeEach(() => {
 it("uses dashboard definitions with explicit visitor/GPS and employee gate attribution, without returning people", async () => {
   const result = await readGateMapActivity(session, "gate-a");
   expect(result).toMatchObject({ stationId: "gate-a", siteId: 10, scope: "gate_attributed", window: "current_shift", metrics: { checkIns: 2, checkOuts: 1, pendingAdmission: 1, itemsToReview: 1 } });
+  const [accessSql, accessValues] = mock.query.mock.calls.find(([sql]) => sql.startsWith("SELECT row_to_json(station) AS station"))!;
+  expect(accessValues).toEqual(["gate-a", 1, 2, 3, 2]);
+  expect(accessSql).toContain("account.session_version=$3 AND account.suspended_at IS NULL");
+  expect(accessSql).toContain("membership.id=$4 AND membership.user_id=account.id");
+  expect(accessSql).toContain("membership.vendor_id=$5 AND membership.role='admin'");
+  expect(accessSql).toContain("assignment.vendor_id=$5 AND assignment.site_location_id=site.id AND assignment.is_gate_contractor=true");
   const [sql, values] = mock.query.mock.calls.find(([sql]) => sql.includes("FROM site_visits WHERE"))!;
   expect(values).toEqual([[10], start, "gate-a"]);
   expect(sql).toContain("coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=$3");

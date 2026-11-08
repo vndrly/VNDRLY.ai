@@ -6,6 +6,10 @@ const fixtures=vi.hoisted(()=>({
   catalog:{curriculum:[],additional:{courses:[]},catalog:{services:[{id:'VMS-SEISMIC',name:'Seismic acquisition',deliveryMode:'site',roleRuleIds:['survey'],conditionalRuleIds:['driving'],sourceUrls:['https://example.invalid/source'],scopeNotes:[],gapTopicIds:[]}],roleRules:{survey:{role:'Field survey crew',familyIds:['H01'],rationale:'Direct survey knowledge.'}},conditionalRules:{driving:{roles:['Assigned drivers','Loaders'],familyIds:['H19','H20','E03'],trigger:'Only actual driving, delivery or loading duties.',rationale:'Desk support is not driving.'}},gapTopics:{}}},
 }));
 vi.mock('@workspace/db',()=>({db:{}}));
+// These unit tests exercise catalog construction; saved-read behavior has its own contract tests.
+vi.mock('../work-hub/stored-training-projections',()=>({
+  storedTrainingProjection: async (_key:string, compute:()=>Promise<unknown>)=>compute(),
+}));
 vi.mock('../work-hub/library-core',()=>({libraryAuthority:fixtures.authority}));
 vi.mock('./company-required-training',()=>({trainingCatalog:fixtures.catalog,companyRequiredTraining:fixtures.required}));
 import {safetyTrainingCatalogView}from'./safety-training-catalog-view';

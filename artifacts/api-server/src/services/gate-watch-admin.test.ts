@@ -16,7 +16,8 @@ beforeEach(()=>{
   m.deliver.mockImplementation(async()=>{expect(m.query.mock.calls.some(([sql])=>sql==="COMMIT")).toBe(true);});
   m.query.mockImplementation(async(sql:string,args:any[]=[])=>{
     let rows:any[]=[];
-    if(sql.startsWith("SELECT * FROM gate_stations"))rows=[{id:"gate",site_id:3,name:"Main Gate",active:true}];
+    if(sql.startsWith("SELECT row_to_json(station) AS station"))rows=[{station:{id:"gate",site_id:3,name:"Main Gate",active:true},site:{id:3,name:"Antelope Draw",partner_id:5},account:{id:args[1],role:"vendor",session_version:1,display_name:"Admin"}}];
+    else if(sql.startsWith("SELECT * FROM gate_stations"))rows=[{id:"gate",site_id:3,name:"Main Gate",active:true}];
     else if(sql.startsWith("SELECT id, role, session_version"))rows=[{id:args[0],role:"vendor",session_version:1,display_name:"Admin"}];
     else if(sql.startsWith("SELECT id, name, partner_id"))rows=[{id:3,name:"Antelope Draw",partner_id:5}];
     else if(sql.startsWith("SELECT id,partner_id,gate_link_id,gate_link_name"))rows=[{id:3,partner_id:5,gate_link_id:null,gate_link_name:null}];

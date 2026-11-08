@@ -70,7 +70,12 @@ it("discovers inactive gates for authorized history reads without adding them to
 it("lets operational navigation find an authorized site without a current scheduled or active shift", async () => {
   const base = state.query.getMockImplementation()!;
   state.query.mockImplementation(async (sql: string, p: any[] = []) => {
-    if (sql.startsWith("SELECT s.id, s.name")) return { rows: [{ id: 22, name: "Authorized gate site" }], rowCount: 1 };
+    if (sql.startsWith("WITH current_account AS MATERIALIZED")) {
+      expect(sql).not.toContain("FROM gate_shifts");
+      expect(sql).not.toContain("FROM work_hub_shifts");
+      expect(p.slice(0, 3)).toEqual([7, 1, "admin"]);
+      return { rows: [{ session_user_id: 7, id: 22, name: "Authorized gate site" }], rowCount: 1 };
+    }
     return base(sql, p);
   });
   expect(await listChangeOverSites(session)).toMatchObject([{ id: 22 }]);

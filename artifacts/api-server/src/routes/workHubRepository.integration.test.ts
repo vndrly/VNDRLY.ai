@@ -18,6 +18,8 @@ import {
 import { buildTestCookie } from "../test-utils/session";
 import router from "./workHubRepository";
 import { requireRepositoryDocumentAccess } from "../work-hub/vendor-repository";
+import { repositoryCertificationProgress } from '../work-hub/repository-certifications';
+import { prepareTrainingProjections } from '../test-utils/training-projections';
 it("isolates folders and trips, enforces Assign Travel, deduplicates retries and locks submitted expenses", async () => {
   if (
     process.env.VNDRLY_TEST_DB_MODE !== "fresh-local" ||
@@ -65,6 +67,7 @@ it("isolates folders and trips, enforces Assign Travel, deduplicates retries and
       .returning();
     return {
       id: u.id,
+      membershipId: m.id,
       cookie: buildTestCookie({
         userId: u.id,
         sv: u.sessionVersion,
@@ -103,6 +106,11 @@ it("isolates folders and trips, enforces Assign Travel, deduplicates retries and
     }),
   );
   expect(folder.status, JSON.stringify(folder.body)).toBe(200);
+  await prepareTrainingProjections(async () => {
+    for (const person of [worker, other]) {
+      await repositoryCertificationProgress(db, {type:'vendor',id:vendor.id}, person.id, {membershipId:person.membershipId});
+    }
+  });
   const visible = await request(app)
     .get("/work-hub/repository")
     .set("Cookie", worker.cookie);

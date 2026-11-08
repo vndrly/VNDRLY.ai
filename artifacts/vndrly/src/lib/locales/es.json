@@ -4578,6 +4578,7 @@
       "idempotency_required": "AskV no pudo identificar esta acción de forma segura. Revisa el registro antes de volver a intentarlo."
     },
     "auth": {
+      "session_temporarily_unavailable": "No se pudo comprobar tu sesión en este momento. Inténtalo de nuevo.",
       "session_invalidated": "Esta sesión ha finalizado. Inicia sesión de nuevo.",
       "access_unavailable": "No se puede verificar el acceso en este momento. Inténtalo de nuevo.",
       "admin_login_required": "Inicia sesión como administrador para continuar.",
@@ -5414,7 +5415,6 @@
     "gateMode": "Modo de portería",
     "returnToAdmin": "Ir a Administración",
     "goToWorkHub": "Ir a Work Hub",
-    "more": "Más",
     "returnToGate": "Volver a acceso",
     "aria": "Navegación del portal de portería"
   },
@@ -6470,8 +6470,6 @@
     "mappingBoundary": "La capacitación depende de las tareas asignadas.",
     "openQualifications": "Capacitación y cualificaciones especializadas adicionales",
     "scopeSource": "Fuente del alcance {{number}}",
-    "previous": "Servicios anteriores",
-    "next": "Servicios siguientes",
     "mappingUnavailable": "No están disponibles las correspondencias de capacitación por servicio.",
     "applicability": "Confirmar el alcance real del servicio",
     "applicabilityHelp": "Estos cursos adicionales dependen del material, la tarea y la jurisdicción reales. Registre si la condición revisada se aplica y la base de su decisión. El alcance sin revisar permanece pendiente; esto no otorga una cualificación especializada.",

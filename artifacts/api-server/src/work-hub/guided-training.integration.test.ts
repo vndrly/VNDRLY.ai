@@ -1,3 +1,4 @@
+import {prepareTrainingProjections} from '../test-utils/training-projections';
 import {it,expect} from 'vitest';
 import {randomUUID} from 'node:crypto';
 import {eq} from 'drizzle-orm';
@@ -6,7 +7,7 @@ import {LibraryMetadataSchema} from '@workspace/api-zod';
 import {saveLibrary,changeLibraryState} from './library-service';
 import {previewLibraryAssignment,assignLibrary,employeeChecklist,ownerAssignmentDetail} from './library-assignments';
 import {getAssignedLibrary,submitAssignedLibrary,submitGuidedTraining} from './training-service';
-import {companySafetyReadiness} from '../lib/company-safety-readiness';
+import {companySafetyReadiness,storedCompanySafetyReadiness} from '../lib/company-safety-readiness';
 it.each(['H03','H20','C05'] as const)('stores original/remediated scores for %s, blocks bypass/cross-user access, and rejects untrusted score credit',async(familyId)=>{
  if(process.env.VNDRLY_TEST_DB_MODE!=='fresh-local'||new URL(process.env.DATABASE_URL!).hostname!=='127.0.0.1')throw Error('Fresh isolated database required');
  const key=randomUUID();const[v]=await db.insert(vendors).values({name:'H03 synthetic '+key,contactName:'Synthetic',contactEmail:key+'@example.invalid'}).returning();
@@ -18,6 +19,7 @@ it.each(['H03','H20','C05'] as const)('stores original/remediated scores for %s,
  const[row]=await db.select().from(templates).where(eq(templates.id,itemId));const metadata=LibraryMetadataSchema.parse(row.libraryMetadata);metadata.safetyResource={familyId,categoryId:familyId.startsWith('C')?'competence':'hazards',resourceType:'training',sourceVersion:'3.0',sourceSha256:'a'.repeat(64)};await db.update(templates).set({libraryMetadata:metadata}).where(eq(templates.id,itemId));
  const request={itemId,audience:{mode:'selected',userIds:[learner.userId],groupIds:[]}};const preview=await previewLibraryAssignment(admin,request);await assignLibrary(admin,command({...request,previewFingerprint:preview.previewFingerprint},preview.version));
  const id=(await employeeChecklist(learner)).items[0].instanceId;
+ await prepareTrainingProjections(()=>storedCompanySafetyReadiness(owner));
  const before=(await companySafetyReadiness(admin)).categories.find(c=>c.id==='training')!;
  let read=await getAssignedLibrary(learner,id);expect(JSON.stringify(read.metadata)).not.toContain('Verify the actual safeguard');
  await expect(submitGuidedTraining(foreign,id,command({action:'advance',acknowledged:true},read.version))).rejects.toBeTruthy();
@@ -30,6 +32,7 @@ it.each(['H03','H20','C05'] as const)('stores original/remediated scores for %s,
  await submitGuidedTraining(learner,id,command({action:'advance',acknowledged:true},read.version));read=await getAssignedLibrary(learner,id);
  expect(read.assignment.status).toBe('completed');expect(read.assignment.progress.guided?.scores).toMatchObject({originalPercent:0,remediatedPercent:100,remediationCount:1});
  const ownerRead=await ownerAssignmentDetail(admin,id);expect(ownerRead.assignment.progress.guided?.scores?.originalPercent).toBe(0);
+ await prepareTrainingProjections(()=>storedCompanySafetyReadiness(owner));
  const after=(await companySafetyReadiness(admin)).categories.find(c=>c.id==='training')!;expect(after.completed).toBe(before.completed);expect(after.required).toBe(before.required);expect(after.points).toBe(before.points);
  expect(read.history.some(h=>(h.values as any).progress?.responses?.q?.originalOptionIds?.[0]==='b')).toBe(true);
 },30000);

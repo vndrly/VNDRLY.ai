@@ -47,7 +47,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
     enabled: gateOptions === undefined && sites.length > 0 && (!reportConnection || choicesRequested),
     retry: false,
   });
-  const gates = [...(gateOptions ?? options.data?.gates ?? [])];
+  const gates: GateChoice[] = [...(gateOptions ?? options.data?.gates ?? [])];
   // Keep the current selection visible while the all-site choices are loading.
   if (gate && !gates.some(row => row.id === gate.id)) gates.push({ ...gate, siteId });
   const optionName = (siteName: string, row: GateChoice) => {

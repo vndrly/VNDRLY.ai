@@ -3,7 +3,8 @@ import { randomUUID } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubFormTemplatesTable } from "@workspace/db";
 import { SAFETY_LIBRARY_REQUIREMENTS, SAFETY_LIBRARY_RESOURCE_TYPES } from "@workspace/api-zod";
-import { companySafetyMaturity } from "./company-safety-maturity";
+import { companySafetyMaturity, storedCompanySafetyMaturity } from "./company-safety-maturity";
+import { prepareTrainingProjections } from '../test-utils/training-projections';
 
 it("returns all 59 company-scoped requirements and 236 published links without credit or cross-company access", async () => {
   if (process.env.VNDRLY_TEST_DB_MODE !== "fresh-local" || new URL(process.env.DATABASE_URL!).hostname !== "127.0.0.1") throw Error("Requires a newly provisioned isolated test database");
@@ -23,6 +24,10 @@ it("returns all 59 company-scoped requirements and 236 published links without c
     return {id,ownerOrgType:"vendor",ownerOrgId:a.vendor.id,name:`${r.id} ${type}`,definition:[],createdById:a.user.id,
       libraryMetadata:{kind:"policy",seriesId:id,contentVersion:1,state:"published",safetyResource:{familyId:r.id,categoryId:r.category,resourceType:type,sourceVersion:"1.0",sourceSha256:"a".repeat(64)}}};
   })));
+  await prepareTrainingProjections(async () => {
+    await storedCompanySafetyMaturity({type:'vendor',id:a.vendor.id});
+    await storedCompanySafetyMaturity({type:'vendor',id:b.vendor.id});
+  });
   const result=await companySafetyMaturity(a.actor);
   expect(result.categories.flatMap(c=>c.requirements)).toHaveLength(59);
   expect(result.categories.flatMap(c=>c.requirements.flatMap(r=>r.resources))).toHaveLength(236);

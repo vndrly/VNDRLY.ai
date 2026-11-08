@@ -4578,6 +4578,7 @@
       "idempotency_required": "AskV couldn't safely identify this action. Check the record before trying again."
     },
     "auth": {
+      "session_temporarily_unavailable": "Your session could not be checked right now. Please try again.",
       "session_invalidated": "This session has ended. Please sign in again.",
       "access_unavailable": "Unable to verify access right now. Please try again.",
       "admin_login_required": "Sign in as an administrator to continue.",
@@ -5414,7 +5415,6 @@
     "gateMode": "Gate Mode",
     "returnToAdmin": "Go to Admin",
     "goToWorkHub": "Go to Work Hub",
-    "more": "More",
     "returnToGate": "Return to Gate",
     "aria": "Gate portal navigation"
   },
@@ -6470,8 +6470,6 @@
     "mappingBoundary": "Training depends on the work assigned.",
     "openQualifications": "Additional specialist training and qualifications",
     "scopeSource": "Scope source {{number}}",
-    "previous": "Previous services",
-    "next": "Next services",
     "mappingUnavailable": "Service training mappings are unavailable.",
     "applicability": "Confirm the actual service scope",
     "applicabilityHelp": "These additional foundations depend on the actual material, task and jurisdiction. Record whether the reviewed condition applies and the basis for that decision. Unreviewed scope remains open; this does not grant a specialist qualification.",

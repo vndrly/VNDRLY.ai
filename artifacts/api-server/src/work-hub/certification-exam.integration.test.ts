@@ -1,3 +1,4 @@
+import {prepareTrainingProjections} from '../test-utils/training-projections';
 import {it,expect,vi} from 'vitest';
 vi.mock('../data/safety-training-catalog',async(importOriginal)=>{
  const original=await importOriginal<typeof import('../data/safety-training-catalog')>();
@@ -15,7 +16,7 @@ import {LibraryMetadataSchema} from '@workspace/api-zod';
 import {getLibrary,saveLibrary,changeLibraryState} from './library-service';
 import {previewLibraryAssignment,assignLibrary,employeeChecklist,ownerAssignmentDetail} from './library-assignments';
 import {getAssignedLibrary,submitAssignedLibrary,submitGuidedTraining,personalEnergySafetyCredentials} from './training-service';
-import {companySafetyReadiness} from '../lib/company-safety-readiness';
+import {companySafetyReadiness,storedCompanySafetyReadiness} from '../lib/company-safety-readiness';
 import {trainingStudyGuide} from './training-study-guide';
 import {trainingCourseReview} from './training-review';
 it('separates certification, guards ownership and prerequisite, locks attempts, and preserves learning history',async()=>{
@@ -50,6 +51,7 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  LibraryMetadataSchema.parse(metadata);
  expect(JSON.stringify(ownerCourse.metadata)).not.toContain('correctOptionIds');
  expect(ownerCourse.metadata.content?.training?.guided).not.toHaveProperty('explanations');
+ await prepareTrainingProjections(()=>storedCompanySafetyReadiness(owner));
  const before=(await companySafetyReadiness(admin)).categories.find(c=>c.id==='training')!;
  let read=await getAssignedLibrary(learner,id);
  await expect(submitGuidedTraining(learner,id,command({action:'exam_start'},read.version))).rejects.toThrow('Complete all learning');
@@ -64,6 +66,7 @@ it('separates certification, guards ownership and prerequisite, locks attempts, 
  await submitGuidedTraining(learner,id,command({action:'advance',acknowledged:true},read.version));read=await getAssignedLibrary(learner,id);
  expect(read.assignment.status).toBe('completed');expect(read.assignment.progress.guided?.scores).toMatchObject({originalPercent:0,remediatedPercent:100,remediationCount:1});
  const ownerRead=await ownerAssignmentDetail(admin,id);expect(ownerRead.assignment.progress.guided?.scores?.originalPercent).toBe(0);
+ await prepareTrainingProjections(()=>storedCompanySafetyReadiness(owner));
  const after=(await companySafetyReadiness(admin)).categories.find(c=>c.id==='training')!;expect(after.completed).toBe(before.completed);expect(after.required).toBe(before.required);expect(after.points).toBe(before.points);
  expect(read.history.some(h=>(h.values as any).progress?.responses?.q?.originalOptionIds?.[0]==='b')).toBe(true);
  const learning=structuredClone(read.assignment.progress.guided);

@@ -8,4 +8,5 @@ export function warwickGateLabel(siteId: number, gateName: string): string | und
   }
   if (siteId === 412 && gateName === "Cactus 152") return "Warwick Cactus 152";
   if (siteId === 413 && gateName === "Precision 550") return "Warwick Precision 550";
+  return undefined;
 }

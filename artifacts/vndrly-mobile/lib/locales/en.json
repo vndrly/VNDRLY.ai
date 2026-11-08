@@ -1167,6 +1167,7 @@
       "employee_inactive": "That crew member was just deactivated by the office. Refresh and pick someone else."
     },
     "auth": {
+      "session_temporarily_unavailable": "Your session could not be checked right now. Please try again.",
       "session_invalidated": "This session has ended. Please sign in again.",
       "access_unavailable": "Unable to verify access right now. Please try again.",
       "missing_credentials": "Please enter your username and password.",

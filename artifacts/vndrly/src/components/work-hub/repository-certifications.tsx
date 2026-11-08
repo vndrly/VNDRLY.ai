@@ -49,6 +49,7 @@ export function CertificationProgress({
   const d = progress.data;
   if (!d) return progress.isError ? <p role="alert" data-progress-personal-state="error">Training progress is unavailable. Refresh to try again.</p> : embedded ? <p role="status" data-progress-personal-state="loading">Consulting your Advisor…</p> : null;
   const groups = profile ? d.profileGroups : d.displayGroups;
+  if (!Array.isArray(groups)) return <p role="status">Saved training progress is unavailable. Refresh to try again.</p>;
   if (!groups.length && !(embedded && d.canViewTeamTraining)) return trainingProgressExperimentsEnabled ? <span hidden data-progress-personal-state={progress.isError ? "error" : progress.isFetching ? "loading" : "ready"} data-progress-team-required="false" /> : null;
   return (
     <section className={embedded ? "vendor-repository" : "vendor-repository space-y-3"}
