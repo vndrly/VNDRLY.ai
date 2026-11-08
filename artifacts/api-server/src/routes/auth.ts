@@ -30,8 +30,6 @@ import { revokeStaffSession } from "../lib/staff-session-revocation";
 import { loginBrandQueryFromContext } from "../lib/loginBrandQuery";
 import { requireIsolatedFixtureContext } from "../lib/isolated-fixture-guard";
 
-import { needsAdminPin, adminPinAction } from "../lib/admin-pin";
-
 const router = Router();
 
 const COOKIE_NAME = "vndrly_session";
@@ -104,6 +102,7 @@ function verifyPayload(signed: string): string | null {
   if (lastDot === -1) return null;
   const payload = signed.slice(0, lastDot);
   const sig = signed.slice(lastDot + 1);
+  if (!/^[a-f0-9]{64}$/i.test(sig)) return null;
   const expected = crypto
     .createHmac("sha256", SESSION_SECRET)
     .update(payload)
@@ -687,32 +686,13 @@ router.get("/auth/me", async (req, res) => {
       mustChangePassword: !!user.mustChangePassword,
     });
   } catch {
-    res.clearCookie(COOKIE_NAME, { path: "/" });
-    return res.status(401).json({
-      message: "Invalid session",
-      code: "auth.invalid_session",
+    // A database/connection failure is not evidence of an invalid credential.
+    // Preserve the signed cookie so a transient outage does not log users out.
+    return res.status(503).json({
+      message: "Session verification is temporarily unavailable. Please retry.",
+      code: "auth.session_temporarily_unavailable",
     });
   }
-});
-
-// PINs are per user, never returned to clients, and never replace account permissions.
-router.all("/auth/admin-pin", async (req, res) => {
-  const session = readSession(req);
-  if (!session?.userId) return res.status(401).json({ message: "Not authenticated" });
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId)).limit(1);
-  if (!user) return res.status(401).json({ message: "Not authenticated" });
-  const ctx = await resolveContext(user);
-  const eligible = needsAdminPin(ctx);
-  const result = await db.execute(sql`SELECT admin_pin_hash FROM users WHERE id = ${user.id}`);
-  const hash = (result.rows[0] as { admin_pin_hash: string | null }).admin_pin_hash;
-  const outcome = await adminPinAction({ method: req.method, eligible, hash, body: req.body }, {
-    attempts: async () => (await getDefaultBucketStore().increment("admin-pin", String(user.id), 15 * 60_000, Date.now())).count,
-    create: async nextHash => {
-      const saved = await db.execute(sql`UPDATE users SET admin_pin_hash = ${nextHash} WHERE id = ${user.id} AND admin_pin_hash IS NULL RETURNING id`);
-      return saved.rows.length > 0;
-    },
-  });
-  return res.status(outcome.status).json(outcome.body);
 });
 
 router.get("/auth/memberships", async (req, res) => {

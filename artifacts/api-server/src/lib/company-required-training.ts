@@ -1,4 +1,5 @@
 import {safetyTrainingContentHash}from'./safety-training-content-hash';
+import {memoTrainingBuild} from '../work-hub/stored-training-projections';
 import {and,eq,inArray,isNull,or,sql,getTableColumns}from'drizzle-orm';
 import {db,vendorsTable as vendors,canonicalServicesTable as canonical,vendorCapabilitiesTable as capabilities,vendorWorkTypesTable as vendorWork,workTypesTable as workTypes,serviceMappingsTable as mappings,vendorPartnerServiceOffersTable as offers,vendorPeopleTable as workers,workHubFormTemplatesTable as templates,workHubFormInstancesTable as instances}from'@workspace/db';
 import {LibraryMetadataSchema,LibraryDraftSchema,AssignmentMetadataSchema,type WorkHubOwner}from'@workspace/api-zod';
@@ -56,6 +57,9 @@ export async function selectedTrainingServices(reader:Reader,owner:WorkHubOwner)
  return {services,unmapped:[...new Set(unmapped)]};
 }
 export async function companyRequiredTraining(reader:Reader,owner:WorkHubOwner,onlyUserId?:number){
+ return reader===db?memoTrainingBuild(`requirements:${owner.type}:${owner.id}:${onlyUserId??'all'}`,()=>computeCompanyRequiredTraining(reader,owner,onlyUserId)):computeCompanyRequiredTraining(reader,owner,onlyUserId);
+}
+async function computeCompanyRequiredTraining(reader:Reader,owner:WorkHubOwner,onlyUserId?:number){
   const [members,staff,selected,published,assigned,vendorRows]=await Promise.all([
   companyLibraryPeople(reader,owner).then(people=>onlyUserId?people.filter(person=>person.userId===onlyUserId):people),
   owner.type==='vendor'?reader.select().from(workers).where(and(eq(workers.vendorId,owner.id),eq(workers.isActive,true),isNull(workers.deletedAt))):Promise.resolve([] as (typeof workers.$inferSelect)[]),

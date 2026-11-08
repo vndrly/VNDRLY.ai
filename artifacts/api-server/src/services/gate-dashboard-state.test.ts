@@ -21,4 +21,8 @@ it("returns real site activity before a watch exists without starting or assigni
   expect(state.snapshot?.metrics).toMatchObject({ checkIns: 1, onSiteVisitorRecords: 1, onSiteVehicles: 1 });
   expect(Date.parse(state.snapshot!.startedAt)).toBeGreaterThanOrEqual(now - 24 * 60 * 60_000);
   expect(query.mock.calls.some(([sql]) => /INSERT INTO|UPDATE |DELETE FROM/.test(sql))).toBe(false);
+  expect(query.mock.calls.filter(([sql]) => /^(BEGIN|SET (?:LOCAL|TRANSACTION))/.test(sql))).toHaveLength(1);
+  expect(query.mock.calls.some(([sql]) => sql.startsWith("WITH active_shift AS MATERIALIZED"))).toBe(true);
+  expect(query.mock.calls.some(([sql]) => sql.startsWith("SELECT s.*, u.display_name AS operator_name"))).toBe(false);
+  expect(query.mock.calls.some(([sql]) => sql.includes('d.station_id AS "stationId"'))).toBe(false);
 });

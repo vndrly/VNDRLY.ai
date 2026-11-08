@@ -1,5 +1,6 @@
 import { and, eq, desc, sql, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
+import { storedTrainingProjection } from "./stored-training-projections";
 import {
   db,
   timeDatabaseStage,
@@ -8,6 +9,7 @@ import {
   workHubFormTemplatesTable as templates,
   workHubFormInstancesTable as instances,
   workHubFormSubmissionsTable as submissions,
+  userOrgMembershipsTable as memberships,
 } from "@workspace/db";
 import {
   AssignmentMetadataSchema,
@@ -126,15 +128,31 @@ export async function repositoryCertificationProgress(
   reader: Pick<typeof db, "select">,
   owner: WorkHubOwner,
   userId: number | null = null,
-  options: { optimized?: boolean; bonusOnly?: boolean } = {},
+  options: { optimized?: boolean; bonusOnly?: boolean; membershipId?: number } = {},
 ) {
-  if (options.optimized && options.bonusOnly) {
-    const augmentation = await timeDatabaseStage("bonus_presence", async () => await reader.select({ id: records.id }).from(records)
-      .where(and(repositoryScope(owner), eq(records.kind, "vendor_augmentation"))).limit(1));
-    // A company without vendor augmentations has no bonus requirements. Avoid
-    // loading every employee's course assignments just to establish zero.
-    if (!augmentation.length) return { certifications: [], bonusScore: 0, bonusCompleted: 0, bonusRequired: 0 };
+  let membershipId = options.membershipId;
+  if (userId !== null && membershipId === undefined) {
+    // Identity lookup only: ordinary reads must never inspect or aggregate
+    // assignments to recover a missing projection.
+    const [member] = await reader.select({ id: memberships.id }).from(memberships).where(and(
+      eq(memberships.userId, userId), eq(memberships.orgType, owner.type),
+      owner.type === "vendor" ? eq(memberships.vendorId, owner.id) : eq(memberships.partnerId, owner.id),
+    )).limit(1);
+    if (!member) throw new LibraryError("Current company membership required", 403);
+    membershipId = member.id;
   }
+  // Only the projection worker invokes this callback. GET callers read the
+  // saved payload; a missing summary must never trigger a read-time rebuild.
+  return storedTrainingProjection(`${owner.type}:${owner.id}:progress:${userId === null ? "company" : `${userId}:${membershipId}`}`,
+    () => computeRepositoryCertificationProgress(reader, owner, userId, { ...options, membershipId }));
+}
+
+async function computeRepositoryCertificationProgress(
+  reader: Pick<typeof db, "select">,
+  owner: WorkHubOwner,
+  userId: number | null = null,
+  options: { optimized?: boolean; membershipId?: number } = {},
+) {
   const catalog = timeDatabaseStage("catalog", async () => await reader
     .select({
       id: templates.id,
@@ -185,8 +203,8 @@ export async function repositoryCertificationProgress(
   timeDatabaseStage("people", () => companyLibraryPeople(reader, owner)),
   ]);
   const finishProjection = startDatabaseStage("projection");
-  // Request-local indexes retain database ordering and the baseline validators.
-  // No result or authorization decision is shared between users or requests.
+  // Worker-local indexes retain database ordering and the baseline validators.
+  // Authorization remains live at readers; only the display projection is saved.
   const coursesById = new Map(courseRows.map((course) => [course.id, course]));
   const assignmentsByCourse = new Map<string, typeof assigned>();
   if (options.optimized) for (const row of assigned) {
@@ -227,10 +245,12 @@ export async function repositoryCertificationProgress(
   const membershipByUser = new Map(
     currentPeople.map((p) => [p.userId, p.membershipId]),
   );
+  if (userId !== null && options.membershipId !== membershipByUser.get(userId))
+    throw new LibraryError("Company membership changed while preparing training summary", 409);
   const people = [
     ...new Set(
       [
-        ...(options.optimized && options.bonusOnly ? [] : assigned.map((r) => r.instance.assigneeUserId)),
+        ...assigned.map((r) => r.instance.assigneeUserId),
         ...augmentations.flatMap((r) => (r.data.userIds as number[]) ?? []),
       ].filter(
         (id): id is number =>
@@ -320,7 +340,6 @@ export async function repositoryCertificationProgress(
   };
   const output = [];
   for (const person of people) {
-    if (!(options.optimized && options.bonusOnly)) {
     // Direct course assignments are training progress, not certifications.
     const directCourses = new Set(assigned.filter((row) => {
       const a = parseAssignment(row.instance.assignmentMetadata);
@@ -371,7 +390,6 @@ export async function repositoryCertificationProgress(
         steps,
         complete: steps.length > 0 && steps.every((s) => s.complete),
       });
-    }
     }
     for (const aug of augmentations.filter((r) =>
       ((r.data.userIds as number[]) ?? []).includes(person),
@@ -486,7 +504,7 @@ export async function repositoryCertificationProgress(
   const required = [...uniqueRequirements.values()];
   finishProjection();
   return {
-    certifications: output,
+    ...trainingDisplaySummary(output),
     bonusScore: vendorBonus(
       required.filter((c) => c.complete).length,
       required.length,
@@ -494,4 +512,45 @@ export async function repositoryCertificationProgress(
     bonusCompleted: required.filter((c) => c.complete).length,
     bonusRequired: required.length,
   };
+}
+
+type DisplaySource = {
+  id: string; title: string; userId: number; complete: boolean;
+  standalone?: boolean; groupingOnly?: boolean;
+  steps: { id: string; type: string; title: string; href: string; complete: boolean; expiresAt?: string | null; [key: string]: unknown }[];
+};
+
+/** Called while building a persisted projection, never from a request or UI. */
+export function trainingDisplaySummary<T extends DisplaySource>(items: T[]) {
+  const decorate = (item: T) => {
+    const completedCount = item.steps.filter(step => step.complete).length;
+    const totalCount = item.steps.length;
+    const nextStepIndex = item.steps.findIndex(step => !step.complete);
+    return { ...item, completedCount, totalCount,
+      percent: totalCount ? Math.round(completedCount / totalCount * 100) : item.complete ? 100 : 0,
+      nextStepIndex,
+      steps: item.steps.map((step, index) => ({ ...step, ordinal: index + 1,
+        progressState: step.complete ? "completed" as const : index === nextStepIndex ? "next" as const : "upcoming" as const })),
+    };
+  };
+  const certifications = items.map(decorate);
+  const grouped = certifications.filter(item => !item.standalone);
+  const standalone = items.filter(item => item.standalone && !grouped.some(cert =>
+    cert.userId === item.userId && cert.steps.some(step => step.id === item.id)));
+  const displayGroups = [
+    { title: "Certifications", items: grouped },
+    { title: "Standalone Courses", items: standalone.length ? [decorate({ ...standalone[0],
+      id: "standalone-courses", title: "Standalone Courses", complete: standalone.every(course => course.complete),
+      steps: standalone.flatMap(course => course.steps) })] : [] },
+  ].filter(group => group.items.length);
+  const profileItems = grouped.filter(item => item.complete && !item.groupingOnly);
+  const profileGroups = profileItems.length ? [{ title: "Certifications", items: profileItems }] : [];
+  const steps = new Map<string, boolean>();
+  for (const course of items) for (const step of course.steps) {
+    const key = JSON.stringify([course.userId, step.type, step.id]);
+    steps.set(key, step.complete && (steps.get(key) ?? true));
+  }
+  const overallCompleted = [...steps.values()].filter(Boolean).length;
+  return { certifications, completedCertifications: certifications.filter(item => item.complete), displayGroups, profileGroups, overallCompleted, overallTotal: steps.size,
+    overallPercent: steps.size ? Math.round(overallCompleted / steps.size * 100) : 0 };
 }

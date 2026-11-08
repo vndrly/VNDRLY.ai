@@ -283,8 +283,7 @@ export function NativeRepository({
           {error}
         </Text>
       )}
-      {d.certifications
-        .filter((c: any) => !completedOnly || c.complete)
+      {(completedOnly ? d.completedCertifications : d.certifications)
         .map((c: any) => (
           <View style={card} key={c.id}>
             <Text style={{ ...text, fontWeight: "700" }}>
@@ -292,7 +291,7 @@ export function NativeRepository({
               {c.augmented ? " · Vendor Augmented" : ""}
             </Text>
             <Text style={text}>
-              {c.steps.filter((s: any) => s.complete).length} / {c.steps.length}{" "}
+              {c.completedCount} / {c.totalCount}{" "}
               complete
             </Text>
             {c.augmented &&
@@ -301,10 +300,10 @@ export function NativeRepository({
                 "Prepare current course assignments",
                 () => void save("renew", { augmentationId: c.id }),
               )}
-            {c.steps.map((s: any, i: number) => (
+            {c.steps.map((s: any) => (
               <View key={s.id}>
                 {button(
-                  `${s.complete ? "✓" : "○"} ${i + 1}. ${s.title}`,
+                  `${s.complete ? "✓" : "○"} ${s.ordinal}. ${s.title}`,
                   () => {
                     if (s.type === "course") router.push(s.href as never);
                     else router.push("/work-hub/files-notes" as never);

@@ -7,6 +7,7 @@ import TogglePillButton from '@/components/brand-pill-button';
 import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import CertificationExam from './certification-exam';
 import {LibraryBody} from './library-body';
+import QualificationRequirements from './qualification-requirements';
 type Data=z.infer<typeof AssignedLibraryReadSchema>;
 export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Data;busy:boolean;uncertain:boolean;send:(payload:unknown)=>Promise<unknown>;retry:()=>Promise<unknown>}) {
  const {t}=useTranslation();const training=data.metadata.content!.training!, guided=training.guided!, progress=data.assignment.progress.guided;
@@ -18,6 +19,7 @@ export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Da
  const scores=progress?.scores,complete=data.assignment.status==='completed';
  return <section className="space-y-4" data-guided-training={data.metadata.safetyResource?.familyId??'course'}>
   <h2 className="text-xl font-bold">{formatTrainingTitle(data.title)}</h2>
+  <QualificationRequirements items={data.qualificationRequirements}/>
   <p>{t(complete?'h03Course.completed':'h03Course.section',{current:Math.min(index+1,guided.steps.length),total:guided.steps.length})}</p>
   {scores&&<div className="rounded-xl border p-4 space-y-2" data-testid="course-scores">
    <p>{t('h03Course.originalScore')}: {scores.originalCorrect}/{scores.total} ({scores.originalPercent.toFixed(1)}%)</p>

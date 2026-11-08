@@ -1,3 +1,5 @@
+import {startTrainingProjectionWorker,stopTrainingProjectionWorker} from './work-hub/training-projection-worker';
+import { workHubBackgroundWorkersEnabled } from "./work-hub/background-worker-config";
 import {startGateDailyBillingWorker,stopGateDailyBillingWorker} from "./services/gate-daily-billing-worker";
 import {startFleetMonitoringWorker,stopFleetMonitoringWorker} from "./services/fleet-monitoring";
 import {startOnboardingWorker,stopOnboardingWorker} from "./work-hub/onboarding-worker";
@@ -186,9 +188,12 @@ function onListening(): void {
   startImplementationARetentionWorker();
   startNativeOperationsWorker();
   startInternalVoicemailWorker();
-startFormCampaignWorker();
-startOnboardingWorker();
-startGateShiftDefinitionWorker();
+  if (workHubBackgroundWorkersEnabled()) {
+    startFormCampaignWorker();
+    startOnboardingWorker();
+    startTrainingProjectionWorker();
+    startGateShiftDefinitionWorker();
+  }
   startGateCoverageMonitor();
   startGatePostMonitor();
   startInvoicePeriodWorker();
@@ -272,6 +277,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopInternalVoicemailWorker();
 stopFormCampaignWorker();
 stopOnboardingWorker();
+stopTrainingProjectionWorker();
 stopGateShiftDefinitionWorker();
   stopGateCoverageMonitor();
   stopGatePostMonitor();

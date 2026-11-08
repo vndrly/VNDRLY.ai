@@ -1,0 +1,48 @@
+# Specialist curriculum author review — 2026-11-07
+
+Authored file: `specialist-curricula.mjs`. Scope: OG20–25 and OG44–49 only. The file exports a `programs` object with 12 programs, 72 original substantive lessons, 216 individually explained multiple-choice checks, source URLs and explicit coverage limitations. Every lesson exceeds 200 words. Total lesson prose is 16,067 whitespace-separated words. Each lesson has three checks, four distinct options per check, official-source links and an empty attachment list (no nonexistent attachment evidence).
+
+These are original VNDRLY technical knowledge units with worked calculations and assessor-directed practical/case rubrics. They are not outlines or renamed baseline courses. They do not establish comprehensive coverage of proprietary standards or external credential examinations. A real physical assessment must be performed and recorded before any practical requirement can be marked complete.
+
+## Baseline inspected
+
+Read catalog entries and the existing prepared-course-publication.json records for G70, G71, G72, G73, G77, G83, G86 and G92; inspected actual G70/G72/G77 lesson bodies. G70 explicitly avoided procedure parameters and real scan interpretation; G72 avoided welding parameters and code ranges; G77 avoided pressure calculations and live technical authorization. New lessons add technical physics, numerical cases and specific methods while retaining the boundary between learning and production authority.
+
+G73 is **hazardous-material survey limits and exposure-pathway planning**, not coatings inspection. It may support a coating-removal hazard discussion but cannot substantiate coating-application competence. OG45 now supplies dedicated coating instruction independently of that catalog association.
+
+## Coverage and genuine residuals
+
+| Program | New taught content | Residual that must remain explicit |
+|---|---|---|
+| OG20 | Vessel damage maps; corrosion rates/life; membrane and supplied pressure-wall models; welding/NDE; repair/alteration; test head; disposition | Full API 510 examination-window crosswalk; licensed ASME/API rules; all heads, nozzles, external-pressure and fitness calculations; actual inspector qualification |
+| OG21 | Piping circuits/dead legs/injection zones; loss/life; supplied pressure-wall/tolerance calculation; flanges; repairs; test/reinstatement | Licensed code limits, complete API 570 BOK, branch/flexibility calculations, actual owner classifications and field assessment |
+| OG22 | Tank components/head; shell stress/life; floor mapping; settlement; brittle fracture; repair and turnover | Full API 653/API 650 equations/tables; actual material/survey/inspection evidence and practical authorization |
+| OG23 | ITP/hold points; route/excavation; material/weld maps; coatings/lowering/backfill; test volume/head; turnover | Project specs, permits, US/Canadian reference crosswalk and actual field demonstration |
+| OG24 | Welding processes; metallurgy/heat input; symbols/geometry; qualification matrix; gauge/visual practice; code-report capstone | Full CWI BOK, chosen licensed code, actual replicas/measurements and AWS eligibility/exams |
+| OG25 | Shared NDT controls plus separate UT, RT, MT and PT/VT lessons; time-of-flight, beam geometry and unsharpness; method practical rubric | This is cross-method technical foundation, **not** a completed Level II course for every method. ET and other methods are absent; method/sector hours, experience, qualified procedures/specimens and actual practical exams are required |
+| OG44 | WPS/person scope; fit-up/consumables; arc/energy; discontinuities/repair; coupon/specimen traceability; continuity | Actual selected process/WPS/code, instructor supervision, physical coupon and accepted tests; no welder qualification granted by knowledge completion |
+| OG45 | Corrosion/coating systems; preparation/profile/salts; dew point; mixing/WFT/cure; DFT/adhesion/holidays; dossier | Product instructions, licensed standards, complete selected AMPP level blueprint and observed practical work |
+| OG46 | Mechanism hypothesis; aqueous/CUI; SCC/wet hydrogen; high-temperature; fatigue/brittle fracture; mitigation | API 571 covers the entire RP. This course covers selected major mechanisms, **not** every named mechanism, material window or reference curve |
+| OG47 | Scope/team; data; probability; consequence; inspection/mitigation; reassessment with numerical cases | Licensed API 580 clause mapping, methodology-specific quantitative implementation, actual risk acceptance and interval authority |
+| OG48 | Design/system safety; program/metrics/economics; exposure/noise; ergonomics/training; emergency/environment; ethics/investigation | Broad CSP11 domains addressed, not every blueprint subobjective; degree/credential/experience/exam remain BCSP requirements |
+| OG49 | Construction sequencing; falls/excavations; equipment/lifting/electrical; health; emergency; leadership | Broad CHST5 domains addressed, not every specialty/subobjective; actual site plans and BCSP experience/exam remain separate |
+
+## Official sources inspected live
+
+- [API inspector program index / 510](https://www.api.org/products-and-services/individual-certification-programs/certifications) and its linked [September 2026–May 2027 BOK](https://apidam.widen.net/content/iwrbfu5t58/pdf/ICP_Documents_Sept-2026-510-BOK_final-1_20260930.pdf). Exam-window effectivity and code editions must be preserved.
+- [API 570](https://www.api.org/products-and-services/individual-certification-programs/certifications/api570), [API 653](https://www.api.org/products-and-services/individual-certification-programs/certifications/api653), [API 1169](https://www.api.org/products-and-services/individual-certification-programs/certifications/api1169).
+- [API 571](https://www.api.org/products-and-services/individual-certification-programs/certifications/api571) and its linked [BOK](https://www.api.org/-/media/Files/Certification/ICP/ICP-Certification-Programs/571_577_580/571_BOK_2024_final.pdf). The official page and linked PDF differ in exam-question counts; no question-count claim was taught. Both identify the RP as the source, and the course does not claim complete RP coverage.
+- [API 580](https://www.api.org/products-and-services/individual-certification-programs/certifications/api580) and [2026 BOK](https://www.api.org/-/media/Files/Certification/ICP/ICP-Certification-Programs/571_577_580/2026/580_2026_BOK_final.pdf), which identifies fourth edition with Addendum 1 (March 2025).
+- [ASNT Level II examinations and method outlines](https://certification.asnt.org/certification/examinations/asnt-ndt-level-ii). The page distinguishes general/specific examinations from employer practical/job-specific responsibilities and has MT and UT outline transition dates across 2026–2027.
+- [AWS Certified Welder](https://www.aws.org/certification-and-education/professional-certification/certified-welder-program/) and [CWI Part B practical training](https://www.aws.org/certification-and-education/education/in-person-training/certified-welding-inspector-part-b/). These support the physical skill/qualification distinction, not proprietary exam content reproduction.
+- [AMPP inspector roles](https://www.ampp.org/education/job-function/coatings-inspectors/coating-inspector-roles-and-responsibilities). Technical supervision depends on level, experience and project complexity.
+- [CSP program](https://www.bcsp.org/certified-safety-professional-csp/) and [CSP11 blueprint](https://www.bcsp.org/hubfs/Website/Blueprints-References/CSP-Blueprint.pdf?hsLang=en), version 2024.04.24; [CHST program](https://www.bcsp.org/construction-health-and-safety-technician-chst/) and [CHST5 blueprint](https://www.bcsp.org/hubfs/Website/Blueprints-References/CHST-Blueprint.pdf?hsLang=en), version 2022.04.12, linked by the current official program page.
+- [OSHA safety management](https://www.osha.gov/safety-management), [construction silica](https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1153), [construction fall protection](https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.501), and [NIOSH noise exposure](https://www.cdc.gov/niosh/noise/prevent/understand.html). The NIOSH recommended 3 dB exchange rate is explicitly distinguished from OSHA calculations.
+
+Source pages establish public program scope, current references and regulatory concepts. The numerical cases and instructional prose are original educational examples; they do not reproduce licensed acceptance tables or proprietary exam questions. General engineering equations are labeled with assumptions and limits. Site production decisions require actual governing references and competent authorization.
+
+## Validation performed
+
+Imported the module with Node successfully. Checked all 12 required program keys, 72 lesson IDs, 216 question IDs, lesson references, at least 200 words per lesson, exactly three checks per lesson, nonempty explanations, three distractors and four unique options per question. Recomputed principal numerical examples independently: vessel and piping rates/life; shell/pipe model thickness; static head; tank tilt; pipe volume; welding energy; UT travel time/geometry; RT unsharpness; salt conversion; coating WFT/DFT; probability/expected loss; incident-rate/payback; exposure/noise; containment; fall clearance; sling tension.
+
+No production database, assignment, publication, shared builder or unrelated source file was modified by this specialist authoring work. No external certification, practical pass or field acceptance is asserted.

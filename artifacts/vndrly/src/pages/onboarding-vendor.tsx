@@ -2,7 +2,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { LeadAdminInvite, OnboardingAdminProfile, prefillAdminProfile, type OnboardingAdminDetails } from "@/components/onboarding-admin-profile";
 import "./vendor-profile.css";
 import { CardHeading } from "@/components/ui/card-heading";
-import { PinFields } from "@/components/admin-pin-setup";
 import { OnboardingServiceCatalog } from "@/components/onboarding-service-catalog";
 import CompanyOperationsChoice from "@/components/company-operations-choice";
 import { useEffect, useMemo, useState } from "react";
@@ -120,8 +119,6 @@ export default function OnboardingVendor() {
     contactEmail: "",
     contactPhone: "",
     password: "",
-    adminPin: "",
-    confirmPin: "",
     confirm: "",
   });
 
@@ -385,7 +382,6 @@ export default function OnboardingVendor() {
       toast({ title: "Contact phone is required.", variant: "destructive" });
       return;
     }
-    if (!/^\d{4}$/.test(basics.adminPin) || basics.adminPin !== basics.confirmPin) { toast({ title: t("gateNav.pinMismatch"), variant: "destructive" }); return; }
     if (basics.password.length < 8) {
       toast({
         title: "Password must be at least 8 characters.",
@@ -415,8 +411,6 @@ export default function OnboardingVendor() {
         contactEmail: basics.contactEmail.trim(),
         contactPhone: phoneDigits,
         password: basics.password,
-        adminPin: basics.adminPin,
-        confirmPin: basics.confirmPin,
       });
       setOrgId(resp.orgId);
       setAdminProfile(prefillAdminProfile({ displayName: basics.contactName, email: basics.contactEmail, phone: basics.contactPhone }));
@@ -859,7 +853,6 @@ export default function OnboardingVendor() {
                   <Input type="password" value={basics.confirm} onChange={(e) => setBasics({ ...basics, confirm: e.target.value })} data-testid="input-password-confirm" />
                 </div>
               </div>
-              <PinFields pin={basics.adminPin} confirm={basics.confirmPin} onPin={adminPin => setBasics(prev => ({ ...prev, adminPin }))} onConfirm={confirmPin => setBasics(prev => ({ ...prev, confirmPin }))} />
               <p className="text-xs text-gray-500">8 characters minimum.</p>
               </>}
             </div>

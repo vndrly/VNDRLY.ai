@@ -360,6 +360,12 @@ function ownerFilter(session: Actor) {
           : undefined,
       );
 }
+
+function dashboardCompanyScope(session: Actor) {
+  return !session.managedSubcontractor && (session.role === "admin" ||
+    !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "") &&
+    (session.membershipRole === "admin" || ["office", "both"].includes(session.vendorRole ?? "")));
+}
 function ownerFilterFor(
   session: Actor,
   table: { ownerOrgType: AnyPgColumn; ownerOrgId: AnyPgColumn },
@@ -587,12 +593,64 @@ router.get("/work-hub/tasks", async (req, res) => {
       "auth.unauthenticated",
       "Authentication required",
     );
+  if (req.query.dashboard === "summary") {
+    const company = dashboardCompanyScope(session);
+    const boundary = ownerFilter(session) ?? sql`true`;
+    const visibility = company ? sql`true` : or(
+      eq(workHubTasksTable.assigneeUserId, session.userId),
+      and(isNull(workHubTasksTable.assigneeUserId), isNull(workHubTasksTable.gateHopper), isNull(workHubTasksTable.channelId)),
+      sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(session.userId)}`,
+    )!;
+    const summary = (await db.execute(sql`
+      WITH visible AS (
+        SELECT work_hub_tasks.*,
+          COALESCE((SELECT max(e.created_at) FROM work_hub_task_events e
+            WHERE e.task_id=work_hub_tasks.id AND e.event_type='assigned'),work_hub_tasks.created_at) AS assigned_at,
+          COALESCE(CASE WHEN work_hub_tasks.gate_hopper->>'completedById' ~ '^[0-9]+$'
+            THEN (work_hub_tasks.gate_hopper->>'completedById')::int END,work_hub_tasks.assignee_user_id) AS effective_assignee
+        FROM work_hub_tasks
+        WHERE ${boundary} AND ${visibility} AND work_hub_tasks.gate_hopper->>'clearedAt' IS NULL
+      )
+      SELECT
+        count(*) FILTER (WHERE status IN ('new','open','assigned','pending') AND assignee_user_id IS NOT NULL
+          AND created_at>=now()-interval '30 days' AND assigned_at BETWEEN now()-interval '48 hours' AND now())::int AS "newTotal",
+        count(*) FILTER (WHERE status IN ('new','open','assigned','pending') AND assignee_user_id IS NOT NULL
+          AND created_at>=now()-interval '30 days' AND assigned_at BETWEEN now()-interval '48 hours' AND now()
+          AND effective_assignee=${session.userId})::int AS "newMine",
+        count(*) FILTER (WHERE status IN ('new','open','assigned','pending','in_progress','started','active')
+          AND assignee_user_id IS NULL)::int AS "unassignedTotal",
+        count(*) FILTER (WHERE status IN ('new','open','assigned','pending') AND assignee_user_id IS NOT NULL
+          AND created_at>=now()-interval '30 days' AND NOT (assigned_at BETWEEN now()-interval '48 hours' AND now()))::int AS "unstartedTotal",
+        count(*) FILTER (WHERE status IN ('new','open','assigned','pending') AND assignee_user_id IS NOT NULL
+          AND created_at>=now()-interval '30 days' AND NOT (assigned_at BETWEEN now()-interval '48 hours' AND now())
+          AND effective_assignee=${session.userId})::int AS "unstartedMine",
+        count(*) FILTER (WHERE status IN ('in_progress','started','active') AND created_at>=now()-interval '30 days')::int AS "progressTotal",
+        count(*) FILTER (WHERE status IN ('in_progress','started','active') AND created_at>=now()-interval '30 days'
+          AND effective_assignee=${session.userId})::int AS "progressMine",
+        count(*) FILTER (WHERE status IN ('new','open','assigned','pending','in_progress','started','active')
+          AND created_at<now()-interval '30 days')::int AS "staleTotal",
+        count(*) FILTER (WHERE status IN ('new','open','assigned','pending','in_progress','started','active')
+          AND created_at<now()-interval '30 days' AND effective_assignee=${session.userId})::int AS "staleMine",
+        count(*) FILTER (WHERE status IN ('new','open','assigned','pending','in_progress','started','active')
+          AND created_at<now()-interval '30 days' AND assignee_user_id IS NULL)::int AS "staleUnassigned",
+        count(*) FILTER (WHERE status='completed')::int AS "completedTotal",
+        count(*) FILTER (WHERE status='completed' AND effective_assignee=${session.userId})::int AS "completedMine"
+      FROM visible
+    `)).rows[0] as Record<string, number | string | null>;
+    const count = (key: string) => Number(summary?.[key] ?? 0);
+    return res.json({ scope: company ? "company" : "self", groups: {
+      new: { mine: count("newMine"), total: count("newTotal"), unassigned: 0 },
+      unassigned: { mine: 0, total: count("unassignedTotal"), unassigned: 0 },
+      unstarted: { mine: count("unstartedMine"), total: count("unstartedTotal"), unassigned: 0 },
+      progress: { mine: count("progressMine"), total: count("progressTotal"), unassigned: 0 },
+      stale: { mine: count("staleMine"), total: count("staleTotal"), unassigned: count("staleUnassigned") },
+      completed: { mine: count("completedMine"), total: count("completedTotal"), unassigned: 0 },
+    } });
+  }
   if (req.query.dashboard === "1") {
     const cursor = z.string().uuid().optional().safeParse(req.query.cursor);
     if (!cursor.success) return sendApiError(res, 400, "work_hub.invalid_cursor", "Invalid task cursor");
-    const company = !session.managedSubcontractor && (session.role === "admin" ||
-      !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "") &&
-      (session.membershipRole === "admin" || ["office", "both"].includes(session.vendorRole ?? "")));
+    const company = dashboardCompanyScope(session);
     const rows = await db.select({ ...getTableColumns(workHubTasksTable), assigneeName: usersTable.displayName })
       .from(workHubTasksTable).leftJoin(usersTable, eq(usersTable.id, workHubTasksTable.assigneeUserId))
       .where(and(ownerFilter(session), company ? undefined : or(eq(workHubTasksTable.assigneeUserId, session.userId), and(isNull(workHubTasksTable.assigneeUserId), isNull(workHubTasksTable.gateHopper), isNull(workHubTasksTable.channelId)), sql`${workHubTasksTable.gateHopper}->>'completedById'=${String(session.userId)}`),

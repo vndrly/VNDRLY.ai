@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { isForemanPersona } from "@/lib/portal-base";
 import { trainingProgressOptions } from "@/lib/training-progress-query";
 import { isWorkHubAdmin, ownerForUser } from "@/lib/work-hub-client";
+import "./workday-controls.css";
 
 const expiredDocuments: Record<string, string> = {
   coi_expired: "Certificate of insurance",
@@ -136,9 +137,9 @@ export function AccountNextSteps({ surface }: { surface: "dashboard" | "work-hub
     </div>
   );
   return surface === "dashboard" ? content : (
-    <Card data-work-hub-card>
-      <CardHeader><CardTitle>Next Steps</CardTitle></CardHeader>
+    <section className="work-hub-next-steps" aria-label="Next Steps">
+      <CardHeader><CardTitle className="!text-inherit">Next Steps</CardTitle></CardHeader>
       <CardContent>{content}</CardContent>
-    </Card>
+    </section>
   );
 }

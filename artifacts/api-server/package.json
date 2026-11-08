@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "migrate:training-projections": "node scripts/apply-training-projections.mjs",
     "migrate:linked-gates": "tsx scripts/migrate-linked-gates.ts",
     "migrate:gate-topology": "tsx scripts/migrate-gate-topology.ts",
     "migrate:gate-map-pins": "tsx scripts/migrate-gate-map-pins.ts",
@@ -15,7 +16,6 @@
     "migrate:native-operations": "tsx scripts/migrate-native-operations.ts",
     "migrate:stripe-billing": "tsx scripts/migrate-stripe-billing.ts",
     "migrate:assistant-connection": "tsx scripts/migrate-assistant-connection.ts",
-    "migrate:admin-pin": "tsx scripts/migrate-admin-pin.ts",
     "migrate:staff-session-revocation": "tsx scripts/migrate-staff-session-revocation.ts",
     "migrate:assistant-plan-execution": "tsx scripts/migrate-assistant-plan-execution.ts",
     "migrate:gate-visit-gps": "tsx scripts/migrate-gate-visit-gps.ts",

@@ -1,0 +1,1198 @@
+{
+  "version": 1,
+  "courses": [
+    {
+      "id": "C09",
+      "title": "Training Assurance | Credential and Qualification Decisions",
+      "categoryId": "competence",
+      "sourceVersion": "1.0",
+      "sourceSha256": "243cd0c98ff3a4cd0b81ddf90efc8a2f255d8576776a6ba0a816ec4b0e744858",
+      "contentSha256": "c75b58edb7d5be85bf3d4b2bca10e6859c6277774a317c668a774fd8a722f9d1",
+      "content": {
+        "kind": "training",
+        "title": "Training Assurance | Credential and Qualification Decisions",
+        "description": "Original VNDRLY knowledge instruction with worked cases, explained checks and preserved remediation. Actual task qualification follows the applicable employer, operator or issuer requirements.",
+        "policyText": "",
+        "policyAttachmentId": null,
+        "fields": [],
+        "training": {
+          "guided": {
+            "steps": [
+              {
+                "lessonId": "QA01",
+                "questionIds": [
+                  "QA01_1",
+                  "QA01_2",
+                  "QA01_3",
+                  "QA01_4"
+                ]
+              },
+              {
+                "lessonId": "QA02",
+                "questionIds": [
+                  "QA02_1",
+                  "QA02_2",
+                  "QA02_3",
+                  "QA02_4"
+                ]
+              },
+              {
+                "lessonId": "QA03",
+                "questionIds": [
+                  "QA03_1",
+                  "QA03_2",
+                  "QA03_3",
+                  "QA03_4"
+                ]
+              },
+              {
+                "lessonId": "QA04",
+                "questionIds": [
+                  "QA04_1",
+                  "QA04_2",
+                  "QA04_3",
+                  "QA04_4"
+                ]
+              }
+            ],
+            "explanations": {
+              "QA01_1": "A title helps locate a role but does not establish the particular work or its requirements.",
+              "QA01_2": "Entry is a material change in task and needs the applicable role-specific preparation.",
+              "QA01_3": "An actionable record explains what evidence supports which work and who can accept it.",
+              "QA01_4": "Use the actual program rather than inventing or omitting assessment requirements.",
+              "QA02_1": "Knowledge, observed performance and permission are distinct records.",
+              "QA02_2": "OSHA identifies Outreach as basic education with its own delivery rules, not a universal certification.",
+              "QA02_3": "Access credentials and occupational competence answer different questions.",
+              "QA02_4": "Medical evaluation belongs to the appropriate clinical process; only necessary outcome information belongs in routine coordination.",
+              "QA03_1": "The rule distinguishes qualified third-party evaluation from an employer-qualified evaluator.",
+              "QA03_2": "The operator program and actual evaluation scope govern the decision.",
+              "QA03_3": "Uploading evidence does not renew it.",
+              "QA03_4": "Preserve uncertainty instead of inventing a positive or negative finding.",
+              "QA04_1": "The remedy addresses the new hazard without falsifying past completion.",
+              "QA04_2": "Remediation must resolve the actual missing evidence.",
+              "QA04_3": "The score must retain its stated meaning; separate statuses describe qualification evidence.",
+              "QA04_4": "Actions such as reminders are not evidence that the underlying requirement was satisfied."
+            }
+          },
+          "lessons": [
+            {
+              "id": "QA01",
+              "title": "Read the work before selecting the credential",
+              "body": "A job title is an unreliable training specification. A person called a technician may inspect paperwork, operate a forklift, enter a vessel or interpret ultrasonic indications. Each task has a different competence boundary. Start with the work package: what the person will do, where, with which equipment, under whose procedure and with what exposure. Separate normal work from emergency duties. Someone who calls emergency services is not automatically an entry rescuer.\n\nBuild a requirement record from five concrete facts. Identify the person and current employer membership. Name the task and its limits. Identify the governing source, such as an employer procedure, an operator covered-task list, a regulation or a contract. Identify the evidence that source actually calls for. Name who can decide acceptance. Do not add a medical test, independent assessor or external card merely because it sounds more rigorous. Do not omit a requirement that actually applies.\n\nConsider a field worker delivering sealed supplies to a fenced yard. The delivery needs traffic and site-induction controls. It does not, by itself, establish a permit-space entry role. The same worker is later asked to enter a tank to retrieve equipment. That change creates a new task review. A completed general orientation remains valid evidence of orientation, but it cannot answer whether the worker has the entry-role training and arrangements for that tank.\n\nThe useful question is not 'Does this worker have every certificate?' It is 'What evidence supports this worker doing this task under these conditions?' Excessive assignment creates noise, wastes time and can hide the few requirements that matter. An assignment matrix should explain each connection in plain language so both the worker and the supervisor know why the requirement exists.\n\nWorked example: A warehouse coordinator occasionally drives a powered industrial truck. Their desk duties do not require operator certification. Their driving duties trigger the relevant truck training and workplace evaluation. Assign the knowledge course to prepare them, arrange practical instruction on the actual truck and have the employer evaluate workplace performance. Record the outcome with the truck/workplace scope. If they later use a different type of truck or encounter a relevant workplace change, review what additional training and evaluation are needed. Do not simply copy the old result into a broader scope.\n\nExercise: Write two sentences for a proposed assignment. First state the actual task and exposure. Then state the source of the requirement and the evidence needed. If either sentence depends on an assumption, mark the scope unresolved and obtain that fact before representing the worker as ready.",
+              "fileIds": [],
+              "links": [
+                "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178",
+                "https://www.phmsa.dot.gov/pipeline/operator-qualifications/operator-qualification"
+              ]
+            },
+            {
+              "id": "QA02",
+              "title": "Separate learning, skill, credential and authorization",
+              "body": "Four records answer four different questions. A learning record shows completion of identified instruction and its assessment. A practical evaluation records observed performance against defined criteria. An external credential records an issuer's decision within its stated scope. Employer or operator authorization records permission to perform a particular task. One record may support another, but the names are not interchangeable.\n\nRead a learning record for the course identity, version, completion date and assessment outcome. A high score is evidence about the assessed knowledge. It does not prove that an assessor watched the learner operate equipment. Similarly, a practical evaluation needs more than a checked box. It should identify the observed activity, equipment or method, criteria, evaluator, date, result and limitations required by the applicable program. Use the actual program's records requirements, with enough detail to explain the decision later.\n\nAn official issuer credential requires verification through the issuer's supported method when available. A photograph can help locate a record but does not establish current validity by itself. Verify the name, credential type, level or endorsement and validity. Record the source and date of verification. Avoid collecting sensitive identity or medical details that are not necessary for that purpose. A respiratory program needs the relevant medical recommendation, not a general training coordinator's copy of a worker's clinical history.\n\nWorked example: An employee completes VNDRLY's safety orientation and has an old OSHA Outreach card. The orientation completion and the card are different records. Outreach courses are not OSHA certifications, and Outreach does not fulfill every specific OSHA training requirement. The supervisor still needs to determine the worker's actual task training. The VNDRLY record must not be relabeled as an OSHA 10 or 30 card.\n\nWorked example: A maritime contractor holds a TWIC. That is an access credential issued through TSA's process, not evidence of crane, first-aid or welding competence. The facility still controls access under its security arrangements. A safety administrator may verify the relevant credential details without pretending that an online security-awareness quiz issues a replacement card.\n\nExercise: Sort these facts into four columns: completed a rig-orientation examination; demonstrated the prescribed signaling sequence to a qualified evaluator; holds a current issuer credential; authorized by the employer for a specified crane configuration. Keep an unknown column for unsupported statements. Never turn 'unknown' into 'passed' to improve a dashboard percentage.",
+              "fileIds": [],
+              "links": [
+                "https://www.osha.gov/training/outreach/faq",
+                "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427",
+                "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+              ]
+            },
+            {
+              "id": "QA03",
+              "title": "Resolve conflicting, expired and limited evidence",
+              "body": "Evidence can be genuine and still fail to support the proposed task. A record may cover a different machine, method, employer, operator, site or level. A worker may have passed the course but not the required examination. A certificate may have expired. A scanned document may omit the endorsement page. These are different findings and should produce different next steps.\n\nUse a sequence that preserves what is known. First confirm identity and source. Next compare the scope to the work. Then check dates and any renewal conditions. Finally review the applicable acceptance and authorization decision. If a fact is missing, record it as missing rather than guessing a favorable value. If an issuer explicitly confirms suspension or revocation, retain that status and stop relying on the credential. Do not overwrite the original historical completion record.\n\nWorked example: A new hire presents a signal-person evaluation completed by their former employer's qualified evaluator. The evaluation may be useful training history. Under the construction signal-person rule, an employer-qualified evaluator's documentation does not establish qualification for another employer. The receiving employer must follow the applicable qualification route. Calling the old document 'verified' does not remove that portability limit.\n\nWorked example: A pipeline worker has a current qualification record for Operator A's task number 17. Operator B uses a different task definition and evaluation program. Matching the words 'valve operation' is not enough. Compare the actual procedure, task scope, abnormal conditions and acceptance rules in Operator B's program. Obtain the operator's decision. Preserve Operator A's record as history instead of treating it as universally portable.\n\nRenewal rules also differ. Some require a fixed expiry date, others retraining after changes or demonstrated deficiencies, and some combine both. A single global 'annual certification' setting is therefore misleading. Use the relevant rule and actual record dates. Do not calculate validity from the upload date. Late uploading must not extend a credential's life.\n\nExercise: A record was issued on June 1, expires June 1 three years later and is uploaded a month before expiry. State the correct expiration, identify what must be checked if the planned assignment extends past it and explain why a fresh upload is not renewal. Then compare a task training record governed by change-triggered retraining rather than fixed expiration. Those two cases need different reminders.",
+              "fileIds": [],
+              "links": [
+                "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1428",
+                "https://www.phmsa.dot.gov/pipeline/operator-qualifications/oq-frequently-asked-questions"
+              ]
+            },
+            {
+              "id": "QA04",
+              "title": "Remediate existing training without erasing history",
+              "body": "Remediation corrects the gap between the existing learning record and the newly established requirement. It does not require pretending the old course never happened. Begin by identifying the exact omission. A changed legal reference, missing practical evaluation, unverified external credential and missing teaching objective are four different gaps. The remedy should address the actual gap.\n\nIf instruction is missing, author or assign a targeted module with an observable learning objective and an assessment. Preserve the prior completion and bind the new module to its own version. If an evaluation is missing, arrange the appropriate evaluation rather than assigning the same online course again and assuming that solves it. If an issuer credential is unverified, resolve the verification. If the task itself is unclear, establish the task before imposing training on the worker.\n\nWorked example: A worker completed hazard communication instruction before a new chemical hazard was introduced. Retain the previous completion. Provide instruction on the new hazard and affected protective measures, then record that additional training. Do not reset unrelated first-aid or driving records. The correct record tells a reviewer what changed and how the employee was prepared for that change.\n\nWorked example: A worker's knowledge course is complete but their powered-truck evaluation has not been recorded. The knowledge status can remain complete while the operator qualification status remains unresolved. Sending a reminder should say what is missing, such as scheduling the workplace evaluation. A message accusing the worker of failing the whole course obscures the real issue.\n\nFor a company view, keep the completion percentage tied to its declared denominator. Count course progress as course progress. Show qualification gaps separately so a perfect learning score does not imply universal readiness. Prioritize actionable gaps by upcoming work, consequence and due date. A missing record for an imminent confined-space rescue assignment deserves attention even if the company average is high.\n\nClose remediation with evidence. Record the specific module/version, evaluation or verification used, who reviewed it and what task scope it supports. A coordinator may mark the administrative gap resolved only when the relevant evidence exists. The employer/operator retains the actual authorization responsibility. Recheck when scope, equipment, rules or performance changes.",
+              "fileIds": [],
+              "links": [
+                "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200",
+                "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178"
+              ]
+            }
+          ],
+          "completionMode": "both",
+          "questions": [
+            {
+              "id": "QA01_1",
+              "prompt": "A job title says technician. What establishes the training requirement?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "The actual task, exposure and governing requirement."
+                },
+                {
+                  "id": "option2",
+                  "label": "Every certification in the catalog."
+                },
+                {
+                  "id": "option3",
+                  "label": "The most demanding task anyone with that title has performed."
+                },
+                {
+                  "id": "option4",
+                  "label": "The worker’s preferred course."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option1"
+              ]
+            },
+            {
+              "id": "QA01_2",
+              "prompt": "A delivery driver is asked to enter a tank. What should happen before that new work?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Treat delivery induction as entry training."
+                },
+                {
+                  "id": "option2",
+                  "label": "Copy another worker’s entry record."
+                },
+                {
+                  "id": "option3",
+                  "label": "Issue a completion certificate from the job title."
+                },
+                {
+                  "id": "option4",
+                  "label": "Review the entry role, hazards and required arrangements."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option4"
+              ]
+            },
+            {
+              "id": "QA01_3",
+              "prompt": "Which requirement record is actionable?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "A list of all available credentials."
+                },
+                {
+                  "id": "option2",
+                  "label": "The latest upload date only."
+                },
+                {
+                  "id": "option3",
+                  "label": "Identified worker, task, source, evidence and acceptance authority."
+                },
+                {
+                  "id": "option4",
+                  "label": "Course title and a green icon."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option3"
+              ]
+            },
+            {
+              "id": "QA01_4",
+              "prompt": "When should an outside assessor be required?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Never, even if the issuer requires one."
+                },
+                {
+                  "id": "option2",
+                  "label": "When the actual governing requirement calls for that route."
+                },
+                {
+                  "id": "option3",
+                  "label": "For every online course."
+                },
+                {
+                  "id": "option4",
+                  "label": "Whenever a certificate contains a logo."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option2"
+              ]
+            },
+            {
+              "id": "QA02_1",
+              "prompt": "What does passing a written knowledge assessment establish?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "The assessed knowledge outcome for the identified course."
+                },
+                {
+                  "id": "option2",
+                  "label": "Observed equipment performance."
+                },
+                {
+                  "id": "option3",
+                  "label": "Every professional qualification in that subject."
+                },
+                {
+                  "id": "option4",
+                  "label": "Permission for every task at the site."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option1"
+              ]
+            },
+            {
+              "id": "QA02_2",
+              "prompt": "Which statement about OSHA Outreach is correct?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Any 80% safety quiz can issue a DOL card."
+                },
+                {
+                  "id": "option2",
+                  "label": "A company can rename its orientation OSHA 30."
+                },
+                {
+                  "id": "option3",
+                  "label": "An Outreach card fulfills every OSHA task-training duty."
+                },
+                {
+                  "id": "option4",
+                  "label": "An official completion card requires the authorized Outreach route."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option4"
+              ]
+            },
+            {
+              "id": "QA02_3",
+              "prompt": "What does TWIC address?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "A first-aid skills evaluation."
+                },
+                {
+                  "id": "option2",
+                  "label": "A crane load-chart examination."
+                },
+                {
+                  "id": "option3",
+                  "label": "The TSA maritime access credential process."
+                },
+                {
+                  "id": "option4",
+                  "label": "General oilfield equipment competence."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option3"
+              ]
+            },
+            {
+              "id": "QA02_4",
+              "prompt": "What should a general training coordinator retain about a respirator medical evaluation?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "A course score substituted for medical clearance."
+                },
+                {
+                  "id": "option2",
+                  "label": "The necessary program recommendation, with clinical details protected."
+                },
+                {
+                  "id": "option3",
+                  "label": "The worker’s complete medical history."
+                },
+                {
+                  "id": "option4",
+                  "label": "A guessed clearance based on age."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option2"
+              ]
+            },
+            {
+              "id": "QA03_1",
+              "prompt": "A former employer evaluated a construction signal person using its own evaluator. What must the new employer consider?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "The rule’s portability limits and its own qualification route."
+                },
+                {
+                  "id": "option2",
+                  "label": "All employer evaluations are universally portable."
+                },
+                {
+                  "id": "option3",
+                  "label": "A scan automatically creates third-party qualification."
+                },
+                {
+                  "id": "option4",
+                  "label": "The document’s font establishes acceptance."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option1"
+              ]
+            },
+            {
+              "id": "QA03_2",
+              "prompt": "An OQ record uses the same task title at another operator. Is title matching enough?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Yes, identical words prove identical qualification."
+                },
+                {
+                  "id": "option2",
+                  "label": "Yes, if uploaded this month."
+                },
+                {
+                  "id": "option3",
+                  "label": "Only the worker’s years of service matter."
+                },
+                {
+                  "id": "option4",
+                  "label": "No. Check task scope, AOCs and the receiving operator’s program."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option4"
+              ]
+            },
+            {
+              "id": "QA03_3",
+              "prompt": "A credential is uploaded shortly before expiry. Which date controls its expiry?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "The current calendar-year end."
+                },
+                {
+                  "id": "option2",
+                  "label": "The first date the dashboard displays it."
+                },
+                {
+                  "id": "option3",
+                  "label": "The actual issuer/program validity date."
+                },
+                {
+                  "id": "option4",
+                  "label": "Three years after upload."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option3"
+              ]
+            },
+            {
+              "id": "QA03_4",
+              "prompt": "A required endorsement cannot be verified. Which status is accurate?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Not applicable without reviewing the task."
+                },
+                {
+                  "id": "option2",
+                  "label": "Unverified pending evidence."
+                },
+                {
+                  "id": "option3",
+                  "label": "Passed because another endorsement is valid."
+                },
+                {
+                  "id": "option4",
+                  "label": "Expired, even though no expiry is known."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option2"
+              ]
+            },
+            {
+              "id": "QA04_1",
+              "prompt": "A new chemical hazard is introduced after prior HazCom training. What is the targeted response?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Teach the new hazard and affected controls while preserving prior records."
+                },
+                {
+                  "id": "option2",
+                  "label": "Delete all training history."
+                },
+                {
+                  "id": "option3",
+                  "label": "Mark the old course failed."
+                },
+                {
+                  "id": "option4",
+                  "label": "Rely only on posting the SDS."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option1"
+              ]
+            },
+            {
+              "id": "QA04_2",
+              "prompt": "Knowledge training is complete but a required practical evaluation is missing. What should the reminder request?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Retake unrelated completed courses."
+                },
+                {
+                  "id": "option2",
+                  "label": "Upload the same certificate twice."
+                },
+                {
+                  "id": "option3",
+                  "label": "Increase the course score manually."
+                },
+                {
+                  "id": "option4",
+                  "label": "Arrange the missing evaluation."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option4"
+              ]
+            },
+            {
+              "id": "QA04_3",
+              "prompt": "What does a company’s 100% course-completion score mean?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Every employee can perform any task."
+                },
+                {
+                  "id": "option2",
+                  "label": "Practical evaluations can be omitted."
+                },
+                {
+                  "id": "option3",
+                  "label": "The declared course denominator is complete."
+                },
+                {
+                  "id": "option4",
+                  "label": "All external credentials and authorizations are valid."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option3"
+              ]
+            },
+            {
+              "id": "QA04_4",
+              "prompt": "When is a remediation item ready to close?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "When the company average increases."
+                },
+                {
+                  "id": "option2",
+                  "label": "When the specific required evidence exists and the responsible review is recorded."
+                },
+                {
+                  "id": "option3",
+                  "label": "When a reminder was sent."
+                },
+                {
+                  "id": "option4",
+                  "label": "When a course title was renamed."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option2"
+              ]
+            }
+          ],
+          "passingPercent": 80,
+          "allowRetries": true,
+          "maximumAttempts": 3,
+          "refresherDays": null
+        },
+        "poll": null,
+        "delivery": {
+          "reminderHours": null,
+          "briefing": {
+            "enabled": false,
+            "hour": 8,
+            "minute": 0,
+            "push": false
+          },
+          "escalationHours": null
+        },
+        "safetyRelated": true,
+        "dueHours": 720,
+        "timezone": "America/Chicago"
+      }
+    },
+    {
+      "id": "C10",
+      "title": "Pipeline Safety | OQ Program Coordination",
+      "categoryId": "competence",
+      "sourceVersion": "1.0",
+      "sourceSha256": "7c3b9397892e87d19093895a5fcc0757e49a28ba496b7b4d58523e4180dfc8aa",
+      "contentSha256": "001046edd3168900618263f202a8b8e07d6ec4fc278301e1bffa1523a0852414",
+      "content": {
+        "kind": "training",
+        "title": "Pipeline Safety | OQ Program Coordination",
+        "description": "Original VNDRLY knowledge instruction with worked cases, explained checks and preserved remediation. Actual task qualification follows the applicable employer, operator or issuer requirements.",
+        "policyText": "",
+        "policyAttachmentId": null,
+        "fields": [],
+        "training": {
+          "guided": {
+            "steps": [
+              {
+                "lessonId": "OQ01",
+                "questionIds": [
+                  "OQ01_1",
+                  "OQ01_2",
+                  "OQ01_3"
+                ]
+              },
+              {
+                "lessonId": "OQ02",
+                "questionIds": [
+                  "OQ02_1",
+                  "OQ02_2",
+                  "OQ02_3"
+                ]
+              },
+              {
+                "lessonId": "OQ03",
+                "questionIds": [
+                  "OQ03_1",
+                  "OQ03_2",
+                  "OQ03_3"
+                ]
+              },
+              {
+                "lessonId": "OQ04",
+                "questionIds": [
+                  "OQ04_1",
+                  "OQ04_2",
+                  "OQ04_3"
+                ]
+              },
+              {
+                "lessonId": "OQ05",
+                "questionIds": [
+                  "OQ05_1",
+                  "OQ05_2",
+                  "OQ05_3"
+                ]
+              },
+              {
+                "lessonId": "OQ06",
+                "questionIds": [
+                  "OQ06_1",
+                  "OQ06_2",
+                  "OQ06_3"
+                ]
+              }
+            ],
+            "explanations": {
+              "OQ01_1": "OQ is tied to the operator program and actual covered work.",
+              "OQ01_2": "Location is one criterion, not the entire determination.",
+              "OQ01_3": "A broad label cannot establish task qualification requirements.",
+              "OQ02_1": "Evaluation includes appropriate response, not recognition alone.",
+              "OQ02_2": "The training and evaluation scope must match the actual task and equipment.",
+              "OQ02_3": "Generic instruction cannot replace the governing procedure.",
+              "OQ03_1": "Evaluation evidence must support the program’s qualification decision.",
+              "OQ03_2": "Coached learning must not be silently represented as independent evaluation.",
+              "OQ03_3": "Evaluation methods must establish the required task capability.",
+              "OQ04_1": "Reuse is possible only within the receiving program’s acceptance rules.",
+              "OQ04_2": "Conditions must permit the required observation and immediate correction.",
+              "OQ04_3": "Participation and qualification are different facts.",
+              "OQ05_1": "Current dates do not override a reason to question current capability.",
+              "OQ05_2": "Intervals and triggers are program specific.",
+              "OQ05_3": "The response follows the actual changed criteria while preserving history.",
+              "OQ06_1": "Name and resolve the missing decision accurately.",
+              "OQ06_2": "Scope cannot be widened without the required qualification basis.",
+              "OQ06_3": "The review must explain the actual evidence and unresolved conditions."
+            }
+          },
+          "lessons": [
+            {
+              "id": "OQ01",
+              "title": "Identify the operator and the covered task",
+              "body": "Operator qualification begins with a regulated pipeline operator's written program. It is not a universal pipeline card. The program identifies covered tasks and the process used to qualify people for them. A contractor's learning system can organize training and evidence, but the operator's program determines what must be demonstrated for its covered work.\n\nThe covered-task analysis uses four criteria: the activity is performed on a pipeline facility, is an operations or maintenance task, is performed as a requirement of the applicable pipeline safety part, and affects operation or integrity of the pipeline. Apply the criteria together. A task can be important and hazardous without meeting all four criteria. Conversely, a routine maintenance activity can be covered even when a worker performs it frequently. The operator documents its task determination rather than relying on a course title.\n\nStart a work review with the operator identity, facility, proposed activity, controlling procedure and operator task identifier. A broad service description such as 'pipeline support' is insufficient. Describe whether the person will observe, assist under permitted direction or independently perform the covered activity. The program may allow a nonqualified individual to perform a task when directed and observed by a qualified person who can take immediate corrective action. That provision is conditional, not a blanket exemption for new hires.\n\nWorked example: Two people are sent to a pipeline site. One delivers unopened supplies to a designated laydown area. The other performs a maintenance activity identified on the operator's covered-task list. Their location is the same, but their OQ requirements differ. Giving both people every task qualification is not a sound substitute for identifying their actual duties. Giving neither person OQ training because both are called delivery support is equally unreliable.\n\nExercise: Build a task statement using 'person will perform [activity] on [facility] under [operator procedure/version] as [independent performer or permitted directed/observed trainee].' Then locate the operator's covered-task determination. If the task identifier or procedure is unknown, the determination remains unresolved. Escalate that factual gap before recording qualification. This exercise uses planning records only and does not instruct a live pipeline operation.",
+              "fileIds": [],
+              "links": [
+                "https://www.phmsa.dot.gov/pipeline/operator-qualifications/oq-frequently-asked-questions",
+                "https://www.phmsa.dot.gov/pipeline/operator-qualifications/operator-qualification"
+              ]
+            },
+            {
+              "id": "OQ02",
+              "title": "Define the normal task and abnormal conditions",
+              "body": "A qualification needs a defined performance target. The operator procedure identifies the normal task, applicable equipment, expected conditions, limits, communications and completion criteria. Training explains those elements. Evaluation checks whether the individual can perform the covered task and recognize and react to abnormal operating conditions within the operator's program.\n\nAn abnormal condition is not simply anything surprising. Use the program's defined abnormal operating conditions and the task-specific situations the person must recognize. The evaluation should include credible deviations relevant to the task and the person's role. Training should explain what cues are available, how the person distinguishes them from normal conditions, what action is authorized and when escalation is required. It should not teach a generic action that conflicts with the actual procedure.\n\nConsider a fictional work packet containing three records: a controlled procedure, an equipment identification sheet and a communication plan. The equipment sheet refers to asset P-24, while the procedure references P-42. The correct planning response is to resolve the discrepancy. It is not to choose whichever identifier resembles the asset in the photograph. A qualification evaluation based on the wrong asset or procedure cannot establish the proposed task capability.\n\nAnother fictional case describes an indication that the approved procedure identifies as an abnormal condition. A trainee recognizes the indication but improvises an unapproved recovery action. Recognition alone is incomplete. The evaluation must address the appropriate reaction, including the boundaries of the person's authority. Equally, memorizing an escalation phrase without recognizing when it applies is not adequate task competence.\n\nCreate a training worksheet with four columns: normal expectation, available cue, abnormal interpretation and authorized response reference. Populate it from the actual operator documents. Keep numerical limits and operating sequences tied to those documents, not invented in generic learning material. Use controlled simulations or record-based exercises until the responsible operator has approved the practical training conditions.\n\nExercise: Review a mock packet with an obsolete procedure revision and a current equipment sheet. Identify the conflict, the person who can resolve it and the evidence needed before training continues. The expected answer is a controlled-document correction and scope confirmation, not a guessed operating instruction.",
+              "fileIds": [],
+              "links": [
+                "https://www.phmsa.dot.gov/pipeline/operator-qualifications/oq-frequently-asked-questions"
+              ]
+            },
+            {
+              "id": "OQ03",
+              "title": "Select and document a valid evaluation",
+              "body": "Training and evaluation have different jobs. Training helps a person acquire knowledge and skills. Evaluation establishes whether the person meets the operator program's qualification criteria. Attendance alone does not demonstrate that ability. An evaluator needs the competence and authority required by the program and must use its accepted methods.\n\nA knowledge examination can test recognition, reasoning and procedure understanding. A practical or performance evaluation can test observable task capability. Oral questioning, simulations, work-history review and observation may contribute where the program permits them. The permitted evaluation design must establish the required knowledge, skill and ability, including abnormal-condition recognition and response. Do not assume that years of experience alone provide all required evidence.\n\nUse criteria that can be observed and recorded. 'Understands the task' is too vague to reproduce. A better criterion identifies the required decision or performance and the accepted result under the operator procedure. Document critical failures, assistance, interruptions and limitations. A coached learning attempt should not be silently recorded as an independent evaluation. If the individual needs more instruction, preserve that result and schedule remediation followed by the appropriate reevaluation.\n\nWorked example: A trainee receives a mock abnormal-condition scenario. They identify the condition but require the evaluator to supply the next action. The evaluator records the assistance and the unmet criterion. The trainee receives targeted instruction, then completes the program's reassessment. The final record distinguishes the original deficiency from the later successful result. Deleting the first attempt would remove information needed to understand the learning and evaluation history.\n\nQualification documentation needs to establish who was evaluated, for which covered task, when, by what method and with what result under the program. Link the applicable procedure or criteria version when needed to understand scope. A software status must be derived from the verified record. A manually entered green badge is not an evaluation method.\n\nExercise: Compare two records. Record A says 'attended pipeline training.' Record B identifies the individual, operator task, evaluation date, method and result with the program's required supporting evidence. Which record supports qualification, and what else must be checked? Record B is the relevant candidate, but its validity, scope and acceptance still need verification.",
+              "fileIds": [],
+              "links": [
+                "https://www.phmsa.dot.gov/pipeline/operator-qualifications/oq-frequently-asked-questions",
+                "https://primis.phmsa.dot.gov/stakeholder-comms/factsheets/fsoperatorqualification/"
+              ]
+            },
+            {
+              "id": "OQ04",
+              "title": "Handle contractor acceptance and supervised participation",
+              "body": "Contractor records often move between projects, but qualification acceptance is not established by identical job titles or familiar logos. The receiving operator must determine whether the evidence satisfies its written program. Compare the actual covered task, evaluation method, procedure scope, abnormal conditions and current status. A commercial database can make evidence easier to retrieve without making every record acceptable to every operator.\n\nWorked example: Operator North accepts a contractor's task evaluation for a defined activity and equipment scope. Operator South uses a differently defined task with additional abnormal-condition expectations. The contractor's record is useful history. It does not prove that South's additional criteria have been met. The next step is to identify and resolve the difference through South's program, then record the acceptance or required additional evaluation.\n\nDirected and observed work also needs explicit boundaries. The qualified person must be able to recognize problems and take immediate corrective action under the program's permitted arrangements. Physical separation, noise, visibility, simultaneous duties and the number of people involved can affect whether that is possible. A name on a roster does not establish effective direction and observation.\n\nUse the program's rules to determine whether a trainee may participate and under what conditions. Record the qualified person's relevant task scope and the planned arrangement. If conditions change so immediate correction is no longer possible, stop relying on that arrangement and resolve it through the responsible authority. Do not label a directed trainee independently qualified merely because the crew completed the job.\n\nExercise: A proposed observer is qualified for the task but is assigned to another location with no direct view of the activity. A phone is available. Identify the unresolved issue. The key issue is whether the actual arrangement permits the direction, observation and immediate correction required by the operator program. The record should not claim compliance based solely on the observer's credential or phone number.",
+              "fileIds": [],
+              "links": [
+                "https://www.phmsa.dot.gov/pipeline/operator-qualifications/oq-frequently-asked-questions"
+              ]
+            },
+            {
+              "id": "OQ05",
+              "title": "Maintain qualification through change and reevaluation",
+              "body": "Qualification is maintained through the operator's program, not through a universal calendar setting. The program specifies reevaluation intervals and conditions that require a new evaluation. Changes in task procedures, equipment or other relevant conditions may require communication, additional instruction or reevaluation. An incident or reason to believe a person is no longer qualified must be handled under the applicable requirements.\n\nSeparate a planned renewal from a performance concern. A planned renewal is driven by the program's interval. A performance concern may require action before that date. An unexpired record does not override credible evidence that the person cannot currently perform the task. Conversely, a changed document does not automatically mean every worker must restart every course. Identify the affected task criteria and apply the program's change process.\n\nWorked example: An operator revises a task procedure to include a new abnormal-condition cue. The training coordinator identifies which qualified people perform that task, distributes the controlled change and arranges the required instruction/evaluation. Historical qualifications remain in the record. Their continuing acceptance is determined by the program's transition decision, not by rewriting their original evaluation dates.\n\nTrack the earliest applicable due date for the actual task qualification. If an external provider record and an operator acceptance have different validity limits, do not extend the shorter one to match the longer one. Record why each date exists. A dashboard reminder should identify the specific task and next action, such as reevaluation under the revised procedure, instead of vaguely saying 'all training expired.'\n\nExercise: A worker has an unexpired evaluation but demonstrates a task-related deficiency. What should the coordinator do? Preserve the current record, notify the responsible operator/employer, apply the program's restriction and reevaluation process, and arrange targeted remediation. The coordinator should not quietly move the expiry date or wait for the annual review.",
+              "fileIds": [],
+              "links": [
+                "https://www.phmsa.dot.gov/pipeline/operator-qualifications/oq-frequently-asked-questions"
+              ]
+            },
+            {
+              "id": "OQ06",
+              "title": "Audit a qualification packet and close the real gap",
+              "body": "A useful qualification packet lets a reviewer reconstruct the decision without inventing missing facts. Review identity, operator/task scope, evaluation evidence, acceptance, validity and change history. An incomplete packet needs a precise finding. 'Needs training' is often too broad to be helpful.\n\nUse a fictional packet for this final case. The worker completed a general pipeline course, has a provider evaluation for an identified task and has been assigned to a receiving operator. The evaluation is current, but the receiving operator's acceptance is not recorded. The general course and provider evaluation are genuine. The missing fact is acceptance under the receiving program. Resolve that fact rather than retaking a general course and assuming the gap is closed.\n\nNow change the case. The receiving operator confirms acceptance, but the evaluation covers a different equipment variant. The gap is scope, not missing paperwork alone. The responsible operator must determine the additional preparation and evaluation needed. An administrator cannot widen the evaluated scope by editing a label.\n\nFinally, suppose the record lacks an evaluation result. A completion date for a classroom course cannot fill that field. Obtain the actual evaluation evidence or arrange evaluation through the program. Keep the learning status complete if that is true, while leaving qualification unresolved. Accurate separate statuses help supervisors make better decisions and help workers understand exactly what remains.\n\nFor an internal review, choose a sample of workers assigned to covered tasks. Trace each assignment back to the operator task requirement and supporting evidence. Record unsupported scope, expired acceptance, missing result or changed-procedure gaps separately. Assign a responsible owner and due date according to work risk and schedule. Close the finding only after the appropriate evidence is verified. This is a review method, not an authorization to operate pipeline equipment.\n\nFinal exercise: Produce a one-page decision record for the fictional packet. It must state what is verified, what remains unknown, who can resolve it and what assignment boundary applies until resolution. A strong answer preserves valid learning and evaluation history while refusing to invent the missing operator decision.",
+              "fileIds": [],
+              "links": [
+                "https://www.phmsa.dot.gov/pipeline/operator-qualifications/oq-frequently-asked-questions"
+              ]
+            }
+          ],
+          "completionMode": "both",
+          "questions": [
+            {
+              "id": "OQ01_1",
+              "prompt": "What determines the OQ covered-task scope?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "The operator’s written program and covered-task determination."
+                },
+                {
+                  "id": "option2",
+                  "label": "A generic course title."
+                },
+                {
+                  "id": "option3",
+                  "label": "The worker’s preferred job title."
+                },
+                {
+                  "id": "option4",
+                  "label": "The training vendor’s logo alone."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option1"
+              ]
+            },
+            {
+              "id": "OQ01_2",
+              "prompt": "Does being physically on a pipeline facility make every activity a covered task?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Yes, every activity at the site is covered."
+                },
+                {
+                  "id": "option2",
+                  "label": "Only activities taking more than one hour are covered."
+                },
+                {
+                  "id": "option3",
+                  "label": "Only employees, never contractors, perform covered tasks."
+                },
+                {
+                  "id": "option4",
+                  "label": "No. Apply all covered-task criteria."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option4"
+              ]
+            },
+            {
+              "id": "OQ01_3",
+              "prompt": "What is missing from “pipeline support worker”?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "An automatically generated expiry date."
+                },
+                {
+                  "id": "option2",
+                  "label": "A supervisor’s favorite training provider."
+                },
+                {
+                  "id": "option3",
+                  "label": "The actual task, procedure, operator and performance role."
+                },
+                {
+                  "id": "option4",
+                  "label": "A more impressive course title."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option3"
+              ]
+            },
+            {
+              "id": "OQ02_1",
+              "prompt": "A trainee recognizes an AOC but improvises a recovery action. What is unresolved?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "The color of their badge."
+                },
+                {
+                  "id": "option2",
+                  "label": "Whether they can react as required by the operator program."
+                },
+                {
+                  "id": "option3",
+                  "label": "Nothing; recognition is always enough."
+                },
+                {
+                  "id": "option4",
+                  "label": "Only their attendance record."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option2"
+              ]
+            },
+            {
+              "id": "OQ02_2",
+              "prompt": "The procedure and equipment sheet identify different assets. What is the correct planning decision?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Resolve the controlled-document discrepancy."
+                },
+                {
+                  "id": "option2",
+                  "label": "Choose the closer-looking identifier."
+                },
+                {
+                  "id": "option3",
+                  "label": "Assume both assets are identical."
+                },
+                {
+                  "id": "option4",
+                  "label": "Use the older procedure because it is familiar."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option1"
+              ]
+            },
+            {
+              "id": "OQ02_3",
+              "prompt": "Where should task limits and operating sequences come from?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "A generic awareness course’s invented example."
+                },
+                {
+                  "id": "option2",
+                  "label": "An unrelated operator’s task with the same name."
+                },
+                {
+                  "id": "option3",
+                  "label": "A learner’s memory of another job."
+                },
+                {
+                  "id": "option4",
+                  "label": "The actual approved operator documents."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option4"
+              ]
+            },
+            {
+              "id": "OQ03_1",
+              "prompt": "Which record is stronger evidence of an evaluation?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "A supervisor saying “experienced.”"
+                },
+                {
+                  "id": "option2",
+                  "label": "An uploaded blank certificate."
+                },
+                {
+                  "id": "option3",
+                  "label": "Identity, task, date, method, criteria and result required by the program."
+                },
+                {
+                  "id": "option4",
+                  "label": "Attendance only."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option3"
+              ]
+            },
+            {
+              "id": "OQ03_2",
+              "prompt": "The evaluator supplies a critical answer during an attempt. How should that be handled?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Ignore it because the job was completed."
+                },
+                {
+                  "id": "option2",
+                  "label": "Record the assistance and apply the remediation/reassessment process."
+                },
+                {
+                  "id": "option3",
+                  "label": "Record an independent pass."
+                },
+                {
+                  "id": "option4",
+                  "label": "Delete the attempt and invent a new date."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option2"
+              ]
+            },
+            {
+              "id": "OQ03_3",
+              "prompt": "What is the purpose of a practical evaluation?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Establish observable capability against accepted task criteria."
+                },
+                {
+                  "id": "option2",
+                  "label": "Count classroom attendance."
+                },
+                {
+                  "id": "option3",
+                  "label": "Issue every operator’s qualification automatically."
+                },
+                {
+                  "id": "option4",
+                  "label": "Replace the operator procedure."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option1"
+              ]
+            },
+            {
+              "id": "OQ04_1",
+              "prompt": "Can an evaluation accepted by Operator North automatically be used for Operator South?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Yes, all OQ task names are standardized."
+                },
+                {
+                  "id": "option2",
+                  "label": "Yes, if the worker uploads it again."
+                },
+                {
+                  "id": "option3",
+                  "label": "No evidence can ever be reused."
+                },
+                {
+                  "id": "option4",
+                  "label": "Only after South’s program requirements and acceptance are established."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option4"
+              ]
+            },
+            {
+              "id": "OQ04_2",
+              "prompt": "A qualified observer cannot see or promptly correct a trainee’s work. What is the concern?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "A phone number guarantees adequacy."
+                },
+                {
+                  "id": "option2",
+                  "label": "No concern exists while the credential is current."
+                },
+                {
+                  "id": "option3",
+                  "label": "The actual direction-and-observation arrangement may be inadequate."
+                },
+                {
+                  "id": "option4",
+                  "label": "Only the observer’s course score matters."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option3"
+              ]
+            },
+            {
+              "id": "OQ04_3",
+              "prompt": "Does participating as a directed trainee create independent qualification?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Yes, if the trainee watched a qualified worker."
+                },
+                {
+                  "id": "option2",
+                  "label": "No. Qualification requires the program’s evaluation and acceptance."
+                },
+                {
+                  "id": "option3",
+                  "label": "Yes, after any completed job."
+                },
+                {
+                  "id": "option4",
+                  "label": "Yes, when the crew leader signs a timesheet."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option2"
+              ]
+            },
+            {
+              "id": "OQ05_1",
+              "prompt": "An unexpired qualification is accompanied by evidence of deficient task performance. What next?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Apply the program’s restriction, remediation and reevaluation process."
+                },
+                {
+                  "id": "option2",
+                  "label": "Wait until expiry regardless of the deficiency."
+                },
+                {
+                  "id": "option3",
+                  "label": "Extend the expiry to avoid a warning."
+                },
+                {
+                  "id": "option4",
+                  "label": "Delete the performance report."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option1"
+              ]
+            },
+            {
+              "id": "OQ05_2",
+              "prompt": "What sets a task’s reevaluation interval?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "A universal annual OQ rule for every task."
+                },
+                {
+                  "id": "option2",
+                  "label": "The upload date."
+                },
+                {
+                  "id": "option3",
+                  "label": "The most convenient company reporting cycle."
+                },
+                {
+                  "id": "option4",
+                  "label": "The applicable operator program."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option4"
+              ]
+            },
+            {
+              "id": "OQ05_3",
+              "prompt": "A procedure change affects one task. What is the targeted response?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "Rewrite old evaluation dates."
+                },
+                {
+                  "id": "option2",
+                  "label": "Assume no action is needed until a card expires."
+                },
+                {
+                  "id": "option3",
+                  "label": "Identify affected people and apply the program’s change-training/evaluation process."
+                },
+                {
+                  "id": "option4",
+                  "label": "Reset every employee’s unrelated courses."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option3"
+              ]
+            },
+            {
+              "id": "OQ06_1",
+              "prompt": "A current provider evaluation lacks receiving-operator acceptance. What is the gap?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "No gap exists because the provider is well known."
+                },
+                {
+                  "id": "option2",
+                  "label": "Unresolved acceptance under the receiving program."
+                },
+                {
+                  "id": "option3",
+                  "label": "All classroom training is invalid."
+                },
+                {
+                  "id": "option4",
+                  "label": "The worker must retake every safety course."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option2"
+              ]
+            },
+            {
+              "id": "OQ06_2",
+              "prompt": "The accepted evaluation covers a different equipment variant. Who can resolve the scope?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "The responsible authority under the operator program."
+                },
+                {
+                  "id": "option2",
+                  "label": "An administrator changing the label."
+                },
+                {
+                  "id": "option3",
+                  "label": "The employee choosing a broader title."
+                },
+                {
+                  "id": "option4",
+                  "label": "The dashboard’s completion percentage."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option1"
+              ]
+            },
+            {
+              "id": "OQ06_3",
+              "prompt": "What makes a final qualification review defensible?",
+              "options": [
+                {
+                  "id": "option1",
+                  "label": "A green badge without supporting records."
+                },
+                {
+                  "id": "option2",
+                  "label": "A list of course names only."
+                },
+                {
+                  "id": "option3",
+                  "label": "Deleting all findings after sending a reminder."
+                },
+                {
+                  "id": "option4",
+                  "label": "Verified facts, explicit unknowns, responsible decision owner and task boundaries."
+                }
+              ],
+              "multiple": false,
+              "correctOptionIds": [
+                "option4"
+              ]
+            }
+          ],
+          "passingPercent": 80,
+          "allowRetries": true,
+          "maximumAttempts": 3,
+          "refresherDays": null
+        },
+        "poll": null,
+        "delivery": {
+          "reminderHours": null,
+          "briefing": {
+            "enabled": false,
+            "hour": 8,
+            "minute": 0,
+            "push": false
+          },
+          "escalationHours": null
+        },
+        "safetyRelated": true,
+        "dueHours": 720,
+        "timezone": "America/Chicago"
+      }
+    }
+  ]
+}

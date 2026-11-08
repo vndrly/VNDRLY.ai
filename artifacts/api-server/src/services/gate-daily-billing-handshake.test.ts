@@ -214,4 +214,28 @@ describe("accepted Gate job billing", () => {
   it("keeps a missing partner AFE blank", () => {
     expect(acceptedGateDailyTerms(commercial, { afeCode: "  " }).afe).toBe("");
   });
+  it("loads synthetic demo billing records without treating their marker as commercial config", async () => {
+    const saved = await service.configure(session, station, input());
+    const stored = { ...saved, directionActor: null, synthetic: true };
+    const baseQuery = state.query.getMockImplementation()!;
+    state.query.mockImplementation(async (sql: string, args: unknown[]) => {
+      if (sql.includes("WITH audit AS")) return { rows: [{
+        id: 100, status: "initiated", created_at: "2026-10-01T00:00:00Z",
+        station_id: station, config: stored, period: null, gate_name: "Main",
+        site_name: "Site", closed_at: null, submitted_at: null, job_id: 50,
+        work_type_id: 10, service_name: "Gate service", site_id: 9, partner_id: 8,
+        partner_name: "Partner", afe: "PARTNER-JOB-AFE", gate_link_id: null,
+        estimate: null, coverage_station_ids: [station],
+      }], rowCount: 1 };
+      return baseQuery(sql, args);
+    });
+
+    const beforeInventory = state.query.mock.calls.length;
+    await expect(service.ticketInventory(session)).resolves.toMatchObject([
+      { id: 100, group: "open", stationId: station },
+    ]);
+    const inventoryQueries = state.query.mock.calls.slice(beforeInventory);
+    expect(inventoryQueries).toHaveLength(3);
+    expect(inventoryQueries.filter(([sql]) => sql.startsWith("SELECT tool_output"))).toHaveLength(0);
+  });
 });

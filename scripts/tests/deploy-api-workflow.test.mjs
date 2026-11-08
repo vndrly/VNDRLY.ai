@@ -42,7 +42,7 @@ test("API deploy builds, migrates, restarts, health-checks and provisions scoped
   assert.match(workflow, /pnpm --filter @workspace\/api-server run build/);
   assert.match(workflow, /migrate:plate-state/);
   assert.match(workflow, /migrate:notes-admission/);
-  for (const migration of ["vendor-note-ownership", "visit-entry-category", "partner-owned-catalogs"]) {
+  for (const migration of ["vendor-note-ownership", "visit-entry-category", "partner-owned-catalogs", "training-projections"]) {
     assert.ok(workflow.indexOf(`migrate:${migration}`) > 0);
     assert.ok(workflow.indexOf(`migrate:${migration}`) < workflow.indexOf("systemctl restart vndrly-api"));
   }
@@ -61,6 +61,7 @@ test("API deploy builds, migrates, restarts, health-checks and provisions scoped
   assert.doesNotMatch(workflow, /drizzle(?:-kit)?\s+push/i);
   assert.doesNotMatch(workflow, /\b(?:DROP|TRUNCATE)\b/i);
   assert.doesNotMatch(workflow, /tee \.env\.production/);
+  assert.doesNotMatch(workflow, /migrate:admin-pin/);
 });
 
 test("API deploy applies gate notification preferences before restarting the API", () => {

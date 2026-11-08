@@ -1,9 +1,10 @@
 import { runLibraryDeliveryWork } from "./library-delivery-worker";
 import {assignPolicyTraining} from './training-course-policy';
 import {runRequiredTrainingWork} from './required-training';
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, getTableColumns, sql } from "drizzle-orm";
 import {
   db,
+  runWithTrainingWorkerDatabase,
   workHubFormTemplatesTable as templates,
   workHubFormInstancesTable as instances,
   usersTable as users,
@@ -21,28 +22,50 @@ import { allocateLibraryItems } from "./library-assignments";
 import { companyLibraryPeople } from "./library-audience";
 let timer: ReturnType<typeof setInterval> | null = null,
   running = false;
+const WORKER_PAGE_SIZE = 25;
+let bundleCursor: string | undefined,
+  refresherCursor: string | undefined,
+  policyCursor: string | undefined;
 export async function runOnboardingWork(now = new Date()) {
   if (running) return 0;
   running = true;
   try {
     return await db.transaction(async (tx) => {
-      const bundles = await tx
-        .select()
-        .from(templates)
-        .where(
-          // Non-bundles have no bundle definition. CASE guarantees we reject
-          // those rows before decompressing their potentially large course JSON.
-          sql`CASE WHEN ${templates.bundleDefinition} IS NULL THEN false ELSE
-          ${templates.libraryMetadata}->>'kind'='bundle' AND ${templates.libraryMetadata}->>'state'='published' AND ${templates.bundleDefinition}->'onboarding'->>'enabled'='true' AND coalesce((${templates.bundleDefinition}->'onboarding'->>'nextScanAt')::timestamptz,'1970-01-01')<=${now}
-          END`,
+      const lock = await tx.execute<{ acquired: boolean }>(
+        sql`SELECT pg_try_advisory_xact_lock(hashtext(${"work-hub:onboarding-worker"})) AS acquired`,
+      );
+      if (lock.rows[0]?.acquired !== true) return 0;
+      const dueAt = now.toISOString();
+      const bundleBoundary = bundleCursor
+        ? sql`WHERE candidate.id > ${bundleCursor}`
+        : sql``;
+      const bundlePage = await tx.execute<{ id: string; eligible: boolean }>(sql`
+        WITH candidate_page AS MATERIALIZED (
+          SELECT candidate.id,candidate.library_metadata,candidate.bundle_definition
+          FROM work_hub_form_templates candidate
+          ${bundleBoundary}
+          ORDER BY candidate.id
+          LIMIT ${WORKER_PAGE_SIZE}
+          FOR UPDATE SKIP LOCKED
         )
-        .orderBy(
-          sql`coalesce(${templates.bundleDefinition}->'onboarding'->>'nextScanAt','1970-01-01')`,
-        )
-        .limit(25)
-        .for("update", { skipLocked: true });
+        SELECT candidate.id,
+          (candidate.bundle_definition IS NOT NULL
+            AND candidate.library_metadata->>'kind'='bundle'
+            AND candidate.library_metadata->>'state'='published'
+            AND candidate.bundle_definition->'onboarding'->>'enabled'='true'
+            AND coalesce(candidate.bundle_definition->'onboarding'->>'nextScanAt','1970-01-01T00:00:00.000Z')<=${dueAt}) AS eligible
+        FROM candidate_page candidate
+        ORDER BY candidate.id
+      `);
+      bundleCursor = bundlePage.rows.at(-1)?.id;
       let assigned = 0;
-      for (const record of bundles) {
+      for (const candidate of bundlePage.rows.filter((row) => row.eligible)) {
+        const [record] = await tx
+          .select()
+          .from(templates)
+          .where(eq(templates.id, candidate.id))
+          .limit(1);
+        if (!record) continue;
         try {
           const result = await tx.transaction(async (inner) => {
             const { root, items, bundle } = await savedBundleItems(
@@ -81,47 +104,57 @@ export async function runOnboardingWork(now = new Date()) {
           console.error("Work Hub onboarding bundle deferred", record.id);
         }
       }
-      const refreshers = await tx
-        .select()
-        .from(instances)
-        .where(
-          sql`${instances.assignmentMetadata}->>'status'='completed'
-          AND (${instances.assignmentMetadata}->>'refresherDueAt')::timestamptz<=${now}
-          AND ${instances.assignmentMetadata}->>'refresherScheduledAt' IS NULL
-          AND EXISTS (
-            SELECT 1 FROM ${memberships} INNER JOIN ${users} ON ${users.id}=${memberships.userId}
-            WHERE ${memberships.id}=(${instances.assignmentMetadata}->>'membershipId')::integer
-            AND ${memberships.userId}=${instances.assigneeUserId} AND ${users.suspendedAt} IS NULL
-          )
-          AND EXISTS (
-            SELECT 1 FROM work_hub_form_templates due_course
-            WHERE due_course.id=${instances.templateId}
-            AND due_course.library_metadata->>'state'='published'
-            AND due_course.library_metadata->>'kind'='training'
-            AND NOT EXISTS (
-              SELECT 1 FROM work_hub_form_templates newer
-              WHERE newer.owner_org_type=due_course.owner_org_type AND newer.owner_org_id=due_course.owner_org_id
-              AND newer.library_metadata->>'seriesId'=due_course.library_metadata->>'seriesId'
-              AND newer.current_version>due_course.current_version AND newer.library_metadata->>'state'<>'draft'
-            )
-          )`,
+      const refresherBoundary = refresherCursor
+        ? sql`WHERE candidate.id > ${refresherCursor}`
+        : sql``;
+      const refresherPage = await tx.execute<{ id: string; eligible: boolean }>(sql`
+        WITH candidate_page AS MATERIALIZED (
+          SELECT candidate.id,candidate.assignment_metadata,candidate.assignee_user_id,candidate.template_id
+          FROM work_hub_form_instances candidate
+          ${refresherBoundary}
+          ORDER BY candidate.id
+          LIMIT ${WORKER_PAGE_SIZE}
+          FOR UPDATE SKIP LOCKED
         )
-        .limit(25);
-      for (const candidate of refreshers) {
-        const [record] = await tx
-          .select()
-          .from(templates)
-          .where(eq(templates.id, candidate.templateId))
-          .limit(1)
-          .for("update", { skipLocked: true });
-        if (!record) continue;
+        SELECT candidate.id,
+          (candidate.assignment_metadata->>'status'='completed'
+            AND candidate.assignment_metadata->>'refresherDueAt'<=${dueAt}
+            AND candidate.assignment_metadata->>'refresherScheduledAt' IS NULL
+            AND EXISTS (
+              SELECT 1 FROM user_org_memberships membership INNER JOIN users account ON account.id=membership.user_id
+              WHERE membership.id=(candidate.assignment_metadata->>'membershipId')::integer
+              AND membership.user_id=candidate.assignee_user_id AND account.suspended_at IS NULL
+            )
+            AND EXISTS (
+              SELECT 1 FROM work_hub_form_templates due_course
+              WHERE due_course.id=candidate.template_id
+              AND due_course.library_metadata->>'state'='published'
+              AND due_course.library_metadata->>'kind'='training'
+              AND NOT EXISTS (
+                SELECT 1 FROM work_hub_form_templates newer
+                WHERE newer.owner_org_type=due_course.owner_org_type AND newer.owner_org_id=due_course.owner_org_id
+                AND newer.library_metadata->>'seriesId'=due_course.library_metadata->>'seriesId'
+                AND newer.current_version>due_course.current_version AND newer.library_metadata->>'state'<>'draft'
+              )
+            )) AS eligible
+        FROM candidate_page candidate
+        ORDER BY candidate.id
+      `);
+      refresherCursor = refresherPage.rows.at(-1)?.id;
+      for (const candidate of refresherPage.rows.filter((row) => row.eligible)) {
         const [instance] = await tx
           .select()
           .from(instances)
           .where(eq(instances.id, candidate.id))
+          .limit(1);
+        if (!instance?.assignmentMetadata) continue;
+        const [record] = await tx
+          .select()
+          .from(templates)
+          .where(eq(templates.id, instance.templateId))
           .limit(1)
           .for("update", { skipLocked: true });
-        if (!instance?.assignmentMetadata) continue;
+        if (!record) continue;
         const a = AssignmentMetadataSchema.parse(instance.assignmentMetadata);
         if (!a.refresherDueAt || Date.parse(a.refresherDueAt) > now.getTime())
           continue;
@@ -164,13 +197,43 @@ export async function runOnboardingWork(now = new Date()) {
           .set({ assignmentMetadata: a })
           .where(eq(instances.id, instance.id));
       }
-      const policies=await tx.select().from(templates).where(sql`
-        ${templates.libraryMetadata}->>'state'='published'
-        AND (${templates.libraryMetadata}->'trainingPolicy'->>'newHireRequired'='true' OR ${templates.libraryMetadata}->'trainingPolicy'->>'roleChangeRequired'='true')
-        AND coalesce((${templates.libraryMetadata}->'trainingPolicy'->>'nextScanAt')::timestamptz,'1970-01-01')<=${now}
-        AND NOT EXISTS (SELECT 1 FROM work_hub_form_templates newer WHERE newer.owner_org_type=${templates.ownerOrgType} AND newer.owner_org_id=${templates.ownerOrgId} AND newer.library_metadata->>'seriesId'=${templates.libraryMetadata}->>'seriesId' AND newer.current_version>${templates.currentVersion} AND newer.library_metadata->>'state'<>'draft')
-      `).orderBy(sql`coalesce(${templates.libraryMetadata}->'trainingPolicy'->>'nextScanAt','1970-01-01')`).limit(25).for('update',{skipLocked:true});
-      for(const record of policies){
+      const policyBoundary = policyCursor
+        ? sql`WHERE candidate.id > ${policyCursor}`
+        : sql``;
+      const policyPage=await tx.execute<{id:string;eligible:boolean}>(sql`
+        WITH candidate_page AS MATERIALIZED (
+          SELECT candidate.id,candidate.library_metadata,candidate.owner_org_type,
+            candidate.owner_org_id,candidate.current_version
+          FROM work_hub_form_templates candidate
+          ${policyBoundary}
+          ORDER BY candidate.id
+          LIMIT ${WORKER_PAGE_SIZE}
+          FOR UPDATE SKIP LOCKED
+        )
+        SELECT candidate.id,
+          (candidate.library_metadata->>'state'='published'
+            AND (candidate.library_metadata->'trainingPolicy'->>'newHireRequired'='true'
+              OR candidate.library_metadata->'trainingPolicy'->>'roleChangeRequired'='true')
+            AND coalesce(candidate.library_metadata->'trainingPolicy'->>'nextScanAt','1970-01-01T00:00:00.000Z')<=${dueAt}
+            AND NOT EXISTS (
+              SELECT 1 FROM work_hub_form_templates newer
+              WHERE newer.owner_org_type=candidate.owner_org_type
+                AND newer.owner_org_id=candidate.owner_org_id
+                AND newer.library_metadata->>'seriesId'=candidate.library_metadata->>'seriesId'
+                AND newer.current_version>candidate.current_version
+                AND newer.library_metadata->>'state'<>'draft'
+            )) AS eligible
+        FROM candidate_page candidate
+        ORDER BY candidate.id
+      `);
+      policyCursor=policyPage.rows.at(-1)?.id;
+      for(const candidate of policyPage.rows.filter((row)=>row.eligible)){
+        const [record]=await tx.select({
+          ...getTableColumns(templates),
+          definition:sql<unknown[]>`'[]'::jsonb`,
+          libraryMetadata:sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content' - 'fileSnapshots'`,
+        }).from(templates).where(eq(templates.id,candidate.id)).limit(1);
+        if(!record?.libraryMetadata)continue;
         const metadata=LibraryMetadataSchema.parse(record.libraryMetadata);
         try{
           const count=await tx.transaction(inner=>assignPolicyTraining(inner,record,undefined,now));
@@ -191,13 +254,14 @@ export async function runOnboardingWork(now = new Date()) {
 export function startOnboardingWorker() {
   if (timer) return;
   const run = () =>
-    void runOnboardingWork()
-      .then(() => runLibraryDeliveryWork())
-      .then(() => runRequiredTrainingWork())
-      .catch(() => console.error("Work Hub onboarding scan unavailable"));
+    void runWithTrainingWorkerDatabase(() =>
+      runOnboardingWork()
+        .then(() => runLibraryDeliveryWork())
+        .then(() => runRequiredTrainingWork())
+        .catch(() => console.error("Work Hub onboarding scan unavailable")),
+    );
   timer = setInterval(run, 60000);
   timer.unref?.();
-  run();
 }
 export function stopOnboardingWorker() {
   if (timer) clearInterval(timer);

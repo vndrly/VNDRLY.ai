@@ -27,37 +27,47 @@ export async function ensureRequiredTraining(tx:LibraryTx,owner:WorkHubOwner,onl
  }
  return assigned;
 }
-let scanning=false,cursor=0;
-export async function requiredTrainingOwners(){
- // Course bodies share a large toasted JSON value with their metadata. Gate
- // JSON inspection on the owner first; PostgreSQL may reorder ordinary AND
- // predicates and otherwise decompress other companies' courses repeatedly.
- const result=await db.execute<{type:string;id:number}>(sql`
-  WITH owners AS MATERIALIZED (
-   SELECT DISTINCT owner_org_type,owner_org_id FROM work_hub_form_templates
+let scanning=false,cursor:string|undefined;
+type RequiredTrainingOwnerRow={cursorId:string;type:string;id:number;eligible:boolean};
+async function requiredTrainingOwnerPage(options:{afterId?:string;limit?:number}={}){
+ const boundary=options.afterId?sql`WHERE candidate.id > ${options.afterId}`:sql``;
+ const limit=options.limit??25;
+ // Limit on the primary key first. The JSON predicates are evaluated only for
+ // that small page, so large course bodies can never turn this worker into a
+ // table-wide scan.
+ const result=await db.execute<RequiredTrainingOwnerRow>(sql`
+  WITH candidate_page AS MATERIALIZED (
+   SELECT candidate.id,candidate.owner_org_type,candidate.owner_org_id,candidate.library_metadata
+   FROM work_hub_form_templates candidate
+   ${boundary}
+   ORDER BY candidate.id
+   LIMIT ${limit}
   )
-  SELECT owners.owner_org_type AS type,owners.owner_org_id AS id FROM owners
-  CROSS JOIN LATERAL (
-   SELECT 1 FROM work_hub_form_templates candidate
-   WHERE CASE WHEN candidate.owner_org_type=owners.owner_org_type AND candidate.owner_org_id=owners.owner_org_id THEN
-    candidate.library_metadata->>'state'='published'
+  SELECT candidate.id AS "cursorId",candidate.owner_org_type AS type,candidate.owner_org_id AS id,
+   (candidate.library_metadata->>'state'='published'
     AND candidate.library_metadata->>'kind'='training'
-    AND candidate.library_metadata->'safetyResource' IS NOT NULL
-   ELSE false END
-   LIMIT 1
-  ) eligible
-  ORDER BY owners.owner_org_type,owners.owner_org_id
+    AND candidate.library_metadata->'safetyResource' IS NOT NULL) AS eligible
+  FROM candidate_page candidate
+  ORDER BY candidate.id
  `);
- return result.rows;
+ const owners=new Map<string,{type:string;id:number}>();
+ for(const row of result.rows){
+  if(row.eligible)owners.set(`${row.type}:${row.id}`,{type:row.type,id:row.id});
+ }
+ return {owners:[...owners.values()],cursorId:result.rows.at(-1)?.cursorId};
+}
+export async function requiredTrainingOwners(options:{afterId?:string;limit?:number}={}){
+ return (await requiredTrainingOwnerPage(options)).owners;
 }
 export async function runRequiredTrainingWork(){
  if(scanning)return 0;scanning=true;
  try{
-  const owners=await requiredTrainingOwners();
+  const page=await requiredTrainingOwnerPage({afterId:cursor,limit:25});
+  cursor=page.cursorId;
+  const owners=page.owners;
   if(!owners.length)return 0;
-  const selected=Array.from({length:Math.min(20,owners.length)},(_,i)=>owners[(cursor+i)%owners.length]);cursor=(cursor+selected.length)%owners.length;
   let assigned=0;
-  for(const owner of selected){try{assigned+=await db.transaction(tx=>ensureRequiredTraining(tx,owner as WorkHubOwner));}catch{console.error('VNDRLY required-training scan deferred',owner.type,owner.id);}}
+  for(const owner of owners){try{assigned+=await db.transaction(tx=>ensureRequiredTraining(tx,owner as WorkHubOwner));}catch{console.error('VNDRLY required-training scan deferred',owner.type,owner.id);}}
   return assigned;
  }finally{scanning=false;}
 }

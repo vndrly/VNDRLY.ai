@@ -1,4 +1,4 @@
-import { pgTable, serial, timestamp, integer, text } from "drizzle-orm/pg-core";
+import { pgTable, serial, timestamp, integer, text, index } from "drizzle-orm/pg-core";
 import { ticketsTable } from "./tickets";
 import { usersTable } from "./users";
 
@@ -17,7 +17,9 @@ export const ticketStatusHistoryTable = pgTable("ticket_status_history", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => ({
+  ticketStatusTimeIdx: index("ticket_status_history_ticket_status_time_idx").on(t.ticketId, t.toStatus, t.createdAt),
+}));
 
 export type TicketStatusHistoryRow =
   typeof ticketStatusHistoryTable.$inferSelect;

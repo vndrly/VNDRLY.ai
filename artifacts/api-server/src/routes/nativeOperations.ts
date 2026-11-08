@@ -99,6 +99,7 @@ router.put(
     ),
   ),
 );
+router.get("/native-operations/on-call", handler(req => nativeOperationsService.onCallStatus(getSessionFromRequest(req)!)));
 router.put(
   "/native-operations/on-call",
   handler((req) =>

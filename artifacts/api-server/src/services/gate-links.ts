@@ -13,12 +13,29 @@ async function requireLinkedRead(c: Client, session: SessionPayload, siteId: num
 }
 
 /** A parallel group is explicit, partner-owned, and never grants site access. */
-export async function linkedGateScope(c: Client, session: SessionPayload, siteId: number) {
+export async function linkedGateScope(c: Client, session: SessionPayload, siteId: number, sourceAlreadyAuthorized = false) {
+  if (sourceAlreadyAuthorized && session.role === "vendor" && session.membershipRole === "admin" && session.vendorId) {
+    const row = (await c.query(`WITH source AS MATERIALIZED (
+        SELECT id,partner_id,gate_link_id,gate_link_name FROM site_locations WHERE id=$1
+      ), visible AS (
+        SELECT candidate.id FROM source
+        JOIN site_locations candidate ON (source.gate_link_id IS NULL AND candidate.id=source.id)
+          OR (source.gate_link_id IS NOT NULL AND candidate.gate_link_id=source.gate_link_id
+            AND candidate.partner_id=source.partner_id AND candidate.is_active IS DISTINCT FROM false AND candidate.hidden IS DISTINCT FROM true)
+        WHERE EXISTS(SELECT 1 FROM site_work_assignments assignment
+          WHERE assignment.site_location_id=candidate.id AND assignment.vendor_id=$2 AND assignment.is_gate_contractor=true)
+      )
+      SELECT source.gate_link_id,source.gate_link_name,array_agg(visible.id ORDER BY visible.id) AS site_ids
+      FROM source JOIN visible ON true GROUP BY source.gate_link_id,source.gate_link_name`, [siteId,session.vendorId])).rows[0];
+    if (!row?.site_ids?.includes(siteId)) fail(403, "Current site access required");
+    return { siteIds: row.site_ids as number[], groupId: row.gate_link_id as string | null, name: row.gate_link_name as string | null };
+  }
   const source = (await c.query("SELECT id,partner_id,gate_link_id,gate_link_name FROM site_locations WHERE id=$1", [siteId])).rows[0];
   if (!source?.gate_link_id) return { siteIds: [siteId], groupId: null, name: null };
   const candidates = (await c.query("SELECT id FROM site_locations WHERE gate_link_id=$1 AND partner_id=$2 AND is_active IS DISTINCT FROM false AND hidden IS DISTINCT FROM true ORDER BY id", [source.gate_link_id, source.partner_id])).rows;
   const siteIds: number[] = [];
   for (const row of candidates) {
+    if (sourceAlreadyAuthorized && row.id === siteId) { siteIds.push(row.id); continue; }
     try { await requireLinkedRead(c, session, row.id); siteIds.push(row.id); }
     catch (error) { if (!(error instanceof ChangeOverError) || error.status !== 403) throw error; }
   }

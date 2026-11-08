@@ -1,14 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
+const { storedTrainingProjection } = vi.hoisted(() => ({ storedTrainingProjection: vi.fn(async (_key: string, compute: () => Promise<unknown>) => compute()) }));
+vi.mock('./stored-training-projections', () => ({ storedTrainingProjection }));
 vi.mock('./library-audience', () => ({ companyLibraryPeople: vi.fn(async () => [{userId:7,membershipId:9}]) }));
 vi.mock('./vendor-repository', async (importOriginal) => ({ ...(await importOriginal<typeof import('./vendor-repository')>()), repositoryRecipientCanRead: vi.fn(async () => true) }));
 import { repositoryRecipientCanRead } from './vendor-repository';
-import { repositoryCertificationProgress } from './repository-certifications';
-import { workHubFormTemplatesTable as templates, workHubFormInstancesTable as instances, workHubFileLibraryTable as records } from '@workspace/db';
+import { repositoryCertificationProgress, trainingDisplaySummary } from './repository-certifications';
+import { workHubFormTemplatesTable as templates, workHubFormInstancesTable as instances, workHubFileLibraryTable as records, userOrgMembershipsTable as memberships } from '@workspace/db';
 const id='11111111-1111-4111-8111-111111111111';
 const metadata={kind:'training',seriesId:id,contentVersion:1,state:'published'};
 function reader(status='assigned', membershipId=9, version=1, hasCertificationExam=false, bundles:any[] = [], repository:any[] = []) {
  const result:any[]=[[{id,name:'Assigned course',libraryMetadata:metadata,hasCertificationExam},...bundles], [{instance:{id:'assignment',templateId:id,assigneeUserId:7,assignmentMetadata:{assignmentId:id,sourceItemId:id,contentVersion:version,membershipId,status,assignedAt:'2026-11-01T00:00:00Z',dueAt:'2026-12-01T00:00:00Z'}},submission:status==='completed'?new Date('2026-11-03T12:00:00Z'):null}], repository];
- return { select:vi.fn((fields?:Record<string,unknown>)=>{let value:any; const presence=fields&&Object.keys(fields).length===1&&'id'in fields; const chain:any={from:(table:unknown)=>{value=table===templates?result[0]:table===instances?result[1]:presence?repository.filter(row=>row.kind==='vendor_augmentation').slice(0,1):result[2];return chain;},where:()=>chain,limit:()=>chain,innerJoin:()=>chain,leftJoin:()=>chain,orderBy:()=>chain,then:(resolve:any)=>Promise.resolve(value).then(resolve)};return chain;}) } as any;
+ return { select:vi.fn((fields?:Record<string,unknown>)=>{let value:any; const presence=fields&&Object.keys(fields).length===1&&'id'in fields; const chain:any={from:(table:unknown)=>{value=table===memberships?[{id:9}]:table===templates?result[0]:table===instances?result[1]:presence?repository.filter(row=>row.kind==='vendor_augmentation').slice(0,1):result[2];return chain;},where:()=>chain,limit:()=>chain,innerJoin:()=>chain,leftJoin:()=>chain,orderBy:()=>chain,then:(resolve:any)=>Promise.resolve(value).then(resolve)};return chain;}) } as any;
 }
 describe('direct assigned training progress',()=>{
  it('groups reused course assignments under their published bundle without granting a certification',async()=>{
@@ -82,16 +84,60 @@ describe('optimized material authorization reuse', () => {
  });
 });
 
-it('skips all non-augmented work for the safety bonus without changing the bonus',async()=>{
+it('uses the same complete stored snapshot for safety bonus and company progress',async()=>{
  const baseline=await repositoryCertificationProgress(reader('completed'),{type:'vendor',id:1},null);
  const optimized=await repositoryCertificationProgress(reader('completed'),{type:'vendor',id:1},null,{optimized:true,bonusOnly:true});
- expect(optimized.certifications).toEqual([]);
+ expect(optimized.certifications).toEqual(baseline.certifications);
  expect(optimized.bonusScore).toBe(baseline.bonusScore);
  expect(optimized.bonusRequired).toBe(baseline.bonusRequired);
 });
 
-it('reads only augmentation presence when no bonus can exist',async()=>{
+it('returns stored progress without executing the source reader',async()=>{
  const source=reader('completed',9,1,false,[],[{id:'document',kind:'document',data:{}}]);
- expect(await repositoryCertificationProgress(source,{type:'vendor',id:1},null,{optimized:true,bonusOnly:true})).toEqual({certifications:[],bonusScore:0,bonusCompleted:0,bonusRequired:0});
+ const saved={...trainingDisplaySummary([]),bonusScore:0,bonusCompleted:0,bonusRequired:0};
+ vi.mocked(storedTrainingProjection).mockResolvedValueOnce(saved);
+ expect(await repositoryCertificationProgress(source,{type:'vendor',id:1},null,{optimized:true,bonusOnly:true})).toEqual(saved);
+ expect(source.select).not.toHaveBeenCalled();
+ expect(storedTrainingProjection).toHaveBeenLastCalledWith('vendor:1:progress:company',expect.any(Function));
+});
+
+it('precomputes deduplication, grouping, counts and step navigation in the saved display payload',()=>{
+ const step=(id:string,complete:boolean)=>({id,type:'course',title:id,href:`/training/${id}`,complete});
+ const result=trainingDisplaySummary([
+  {id:'shared',title:'Shared',userId:7,standalone:true,complete:true,steps:[step('shared',true)]},
+  {id:'bundle',title:'Bundle',userId:7,standalone:false,complete:false,steps:[step('shared',true),step('pending',false)]},
+ ]);
+ expect(result.overallPercent).toBe(50);
+ expect(result.overallTotal).toBe(2);
+ expect(result.displayGroups.map(group=>group.title)).toEqual(['Certifications']);
+ expect(result.displayGroups[0].items[0]).toMatchObject({completedCount:1,totalCount:2,percent:50,nextStepIndex:1,
+  steps:[{ordinal:1,progressState:'completed'},{ordinal:2,progressState:'next'}]});
+ expect(result.profileGroups).toEqual([]);
+});
+
+it('never reads the prior membership summary for the same person and company',async()=>{
+ const source={select:vi.fn()} as any;
+ const saved={...trainingDisplaySummary([]),bonusScore:0,bonusCompleted:0,bonusRequired:0};
+ storedTrainingProjection.mockImplementationOnce(async(key)=>{
+  expect(key).toBe('vendor:1:progress:7:10');
+  // Only the old membership exists; a missing new row must not rebuild or fall back.
+  throw Object.assign(new Error('Projection pending'),{status:503});
+ });
+ await expect(repositoryCertificationProgress(source,{type:'vendor',id:1},7,{membershipId:10})).rejects.toMatchObject({status:503});
+ expect(source.select).not.toHaveBeenCalled();
+ storedTrainingProjection.mockResolvedValueOnce(saved);
+ expect(await repositoryCertificationProgress(source,{type:'vendor',id:1},7,{membershipId:11})).toEqual(saved);
+ expect(storedTrainingProjection).toHaveBeenLastCalledWith('vendor:1:progress:7:11',expect.any(Function));
+ expect(source.select).not.toHaveBeenCalled();
+});
+it('resolves membership identity only when a caller has not already supplied it',async()=>{
+ const source=reader();
+ const saved={...trainingDisplaySummary([]),bonusScore:0,bonusCompleted:0,bonusRequired:0};
+ storedTrainingProjection.mockResolvedValueOnce(saved);
+ expect(await repositoryCertificationProgress(source,{type:'vendor',id:1},7)).toEqual(saved);
  expect(source.select).toHaveBeenCalledOnce();
+ expect(storedTrainingProjection).toHaveBeenLastCalledWith('vendor:1:progress:7:9',expect.any(Function));
+});
+it('refuses to persist a build when its discovered membership has been replaced',async()=>{
+ await expect(repositoryCertificationProgress(reader(),{type:'vendor',id:1},7,{membershipId:10})).rejects.toMatchObject({status:409});
 });

@@ -1,0 +1,49 @@
+{
+  "source": "https://www.osha.gov/sites/default/files/OTP_General_Industry_Procedures_2024.pdf",
+  "effectiveDate": "2024-10-01",
+  "verifiedDate": "2026-11-07",
+  "status": "delivery_requirements_only_not_completed_instruction",
+  "programs": [
+    {
+      "programId": "OG04",
+      "minimumInstructionHours": 10,
+      "requiredTopicHours": {
+        "oshaIntroduction": 1,
+        "walkingWorkingSurfaces": 1,
+        "exitsEmergencyFire": 1,
+        "electrical": 1,
+        "ppe": 1,
+        "hazardCommunication": 1
+      },
+      "electiveHours": 2,
+      "minimumElectiveTopics": 2,
+      "optionalHours": 2
+    },
+    {
+      "programId": "OG05",
+      "minimumInstructionHours": 30,
+      "requiredTopicHours": {
+        "oshaIntroduction": 1,
+        "safetyManagement": 2,
+        "walkingWorkingSurfaces": 1,
+        "exitsEmergencyFire": 2,
+        "electrical": 2,
+        "ppe": 1,
+        "materialsHandling": 2,
+        "hazardCommunication": 1
+      },
+      "electiveHours": 10,
+      "minimumElectiveTopics": 5,
+      "optionalHours": 8
+    }
+  ],
+  "minimumElectiveOrOptionalTopicHours": 0.5,
+  "excludedFromOutreachHours": ["CPR and first aid", "Training delivered to satisfy specific OSHA standards"],
+  "issuerBoundary": "An authorized delivery route is required for an official Outreach card. VNDRLY knowledge completion does not issue that card or establish job-specific qualification.",
+  "verificationStillRequired": [
+    "Map actual instruction and participatory activities to every required objective.",
+    "Validate elective selection against the current allowed topics.",
+    "Verify trainer/provider authorization, attendance, instructional time and reporting.",
+    "Do not convert estimated reading times or repeated quizzes into verified contact hours."
+  ]
+}

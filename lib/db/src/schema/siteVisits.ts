@@ -100,6 +100,7 @@ export const siteVisitsTable = pgTable(
   (t) => ({
     siteIdx: index("site_visits_site_idx").on(t.siteLocationId),
     activeIdx: index("site_visits_active_idx").on(t.siteLocationId, t.checkOutTime),
+    siteCheckInIdx: index("site_visits_site_checkin_idx").on(t.siteLocationId, t.checkInTime),
     hostPartnerIdx: index("site_visits_host_partner_idx").on(t.hostPartnerId),
     hostVendorIdx: index("site_visits_host_vendor_idx").on(t.hostVendorId),
   }),

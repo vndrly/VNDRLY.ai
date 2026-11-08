@@ -6,4 +6,6 @@ it("allows office/admin and excludes field roles", () => {
  expect(canUseOfficeNavigation({role:"admin"})).toBe(true);
  expect(canUseOfficeNavigation({role:"field_employee"})).toBe(false);
  expect(canUseOfficeNavigation({role:"vendor",vendorRole:"gatekeeper",activeMembershipId:2,availableMemberships:[{id:2,role:"admin"}]})).toBe(true);
+ expect(canUseOfficeNavigation({role:"vendor",vendorRole:null,activeMembershipId:2,availableMemberships:[{id:2,role:"member"}]})).toBe(false);
+ expect(canUseOfficeNavigation({role:"partner",vendorRole:null,activeMembershipId:3,availableMemberships:[{id:3,role:"member"}]})).toBe(false);
 });

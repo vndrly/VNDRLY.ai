@@ -1,9 +1,8 @@
 import { useAuth } from "@/hooks/use-auth";
 import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import "./gate-portal-workspace.css";
-import { type ReactNode, useState } from "react";
+import { type ReactNode } from "react";
 import { useLocation } from "wouter";
-import { ReturnToAdminPinDialog } from "@/components/return-to-admin-pin-dialog";
 import { ArrowLeft, History, MapPin, Mic, Shield } from "lucide-react";
 import { FieldOpsPortalShell, type FieldOpsTabDef } from "@/components/field-ops-portal-shell";
 
@@ -57,15 +56,12 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
 export function GatePortalLayout({ children, returnToAdmin = false }: { children: ReactNode; returnToAdmin?: boolean }) {
   const [location] = useLocation();
   const { user } = useAuth();
-  const [pinOpen, setPinOpen] = useState(false);
   const pageTabs = location === "/gate" || location === "/"
     ? GATE_PORTAL_TABS
     : GATE_PORTAL_TABS.filter(tab => !tab.voiceEntry);
   const tabs = returnToAdmin && canUseOfficeNavigation(user) ? [
     ...pageTabs,
-    { href: "/", icon: ArrowLeft, labelKey: "gateNav.returnToAdmin", testId: "tab-gate-return-admin", match: () => false,
-      ...(location === "/gate/change-over" ? { onSelect: () => { setPinOpen(true); } } : {}),
-    },
+    { href: "/", icon: ArrowLeft, labelKey: "gateNav.returnToAdmin", testId: "tab-gate-return-admin", match: () => false },
   ] : pageTabs;
   return (
     <FieldOpsPortalShell
@@ -74,7 +70,6 @@ export function GatePortalLayout({ children, returnToAdmin = false }: { children
       navAriaKey="gateNav.aria"
     >
       <div className="gate-portal-workspace">{children}</div>
-      <ReturnToAdminPinDialog open={pinOpen} onOpenChange={setPinOpen} />
     </FieldOpsPortalShell>
   );
 }

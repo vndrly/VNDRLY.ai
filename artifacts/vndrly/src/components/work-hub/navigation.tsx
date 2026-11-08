@@ -1,10 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { ReturnToAdminPinDialog } from "@/components/return-to-admin-pin-dialog";
 import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowLeft, Pin, ArrowUp, ArrowDown, MoreHorizontal, BookOpen, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Pin, ArrowUp, ArrowDown, MoreHorizontal, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
@@ -61,8 +60,7 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
   const office = canUseOfficeNavigation(user);
   const [unlocked, setCustomize] = useState(false);
   const customize = office && unlocked;
-  const [pinAction, setPinAction] = useState<"admin" | "more" | null>(null);
-  useEffect(() => { setCustomize(false); setPinAction(null); }, [user?.userId, user?.activeMembershipId, office]);
+  useEffect(() => { setCustomize(false); }, [user?.userId, user?.activeMembershipId, office]);
   const { preferences, save } = useHubPreferences();
   const items = orderWorkHubItems(
     getWorkHubNavItems(undefined, brand.name),
@@ -151,20 +149,14 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
           <span>VNDRLY/U</span>
         </SidebarButton>
       </Link>
-      <Link href="/safety-score" onClick={onNavigate} className="block" data-testid="nav-safety-maturity" aria-current={location === "/safety-score" ? "page" : undefined}>
-        <SidebarButton isActive={location === "/safety-score"}>
-          <ShieldCheck className="h-4 w-4 shrink-0" strokeWidth={1.6} />
-          <span className="min-w-0 whitespace-normal text-left text-xs leading-tight">Safety Program Maturity</span>
-        </SidebarButton>
-      </Link>
       {office && <>
-      <button type="button" className="block w-full text-left" onClick={() => setPinAction("admin")} data-testid="nav-go-to-admin">
+      <Link href="/" onClick={onNavigate} className="block w-full text-left" data-testid="nav-go-to-admin">
         <SidebarButton isActive={false}><ArrowLeft className="h-4 w-4" />{t("gateNav.returnToAdmin")}</SidebarButton>
-      </button>
+      </Link>
       <button
         type="button"
         className="block w-full text-left"
-        onClick={() => customize ? setCustomize(false) : setPinAction("more")}
+        onClick={() => setCustomize(!customize)}
         aria-expanded={customize}
       >
         <SidebarButton isActive={false}>
@@ -172,9 +164,6 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
           {customize ? "Done" : "More"}
         </SidebarButton>
       </button>
-      <ReturnToAdminPinDialog open={pinAction !== null} onOpenChange={open => { if (!open) setPinAction(null); }}
-        titleKey={pinAction === "more" ? "gateNav.more" : "gateNav.returnToAdmin"}
-        onVerified={pinAction === "more" ? () => setCustomize(true) : undefined} />
       </>}
       {footer}
       {save.error && (

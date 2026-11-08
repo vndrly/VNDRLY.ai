@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { workHubRequest } from "@/lib/work-hub-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { GraduationCap, Layers, CheckCircle, Plus, ChevronRight } from "lucide-react";
-import { useRepository, type RepositoryData } from "./repository-client";
+import { useRepository } from "./repository-client";
 import {
   RepositoryAudience,
   emptyAudience,
@@ -16,11 +17,6 @@ import TeamTrainingProgress from "./team-training-progress";
 import { trainingProgressOptions } from "@/lib/training-progress-query";
 import { trainingProgressExperimentsEnabled } from "@/lib/training-progress-experiment";
 export { formatTrainingTitle as certificateDisplayTitle } from "@/lib/training-title";
-function completionPercent(items: RepositoryData["certifications"]) {
-  const total = items.reduce((sum, item) => sum + Math.max(item.steps.length, 1), 0);
-  const completed = items.reduce((sum, item) => sum + (item.steps.length ? item.steps.filter((step) => step.complete).length : Number(item.complete)), 0);
-  return total ? Math.round(completed / total * 100) : 0;
-}
 function useTrainingProgress() {
   const repo = useRepository({ enabled: false });
   const progress = useQuery(trainingProgressOptions(repo.user, repo.owner));
@@ -34,19 +30,11 @@ export function TrainingCompletionTotal() {
     enabled: !!repo.owner, staleTime: 15_000, refetchInterval: 30_000, retry: false,
   });
   if (!progress.data) return trainingProgressExperimentsEnabled ? <span hidden data-progress-overall-state={progress.isError || safety.isError ? "error" : "loading"} /> : null;
-  const steps = new Map<string, boolean>();
-  for (const course of progress.data.certifications) {
-    for (const step of course.steps) {
-      const key = `${course.userId}:${step.type}:${step.id}`;
-      steps.set(key, step.complete && (steps.get(key) ?? true));
-    }
-  }
-  const percent = steps.size ? Math.round([...steps.values()].filter(Boolean).length / steps.size * 100) : 0;
   return <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold"
     data-progress-overall-state={progress.isError || safety.isError ? "error" : safety.data && !progress.isFetching && !safety.isFetching ? "ready" : "loading"}
     data-progress-personal-updated-at={progress.dataUpdatedAt}
     data-progress-safety-updated-at={safety.dataUpdatedAt}>
-    <span aria-label="Overall training completion">{percent}%</span>
+    <span aria-label="Overall training completion">{progress.data.overallPercent}%</span>
     {safety.data && <><span aria-label="Company safety score" title={safety.data.incomplete ? "Safety assessment is incomplete" : "Combined company safety score"}>{safety.data.score}/{safety.data.maximum}</span><span aria-label="Safety bonus points">+{safety.data.bonus}</span></>}
   </span>;
 }
@@ -60,22 +48,8 @@ export function CertificationProgress({
   const { repo, progress } = useTrainingProgress();
   const d = progress.data;
   if (!d) return progress.isError ? <p role="alert" data-progress-personal-state="error">Training progress is unavailable. Refresh to try again.</p> : embedded ? <p role="status" data-progress-personal-state="loading">Consulting your Advisor…</p> : null;
-  const items = d.certifications.filter((c) => !profile || (c.complete && !c.standalone && !c.groupingOnly));
-  const certifications = items.filter((c) => !c.standalone);
-  const standalone = items.filter((c) => c.standalone && !certifications.some((cert) =>
-    cert.userId === c.userId && cert.steps.some((step) => step.id === c.id),
-  ));
-  const groups = [
-    { title: "Certifications", items: certifications },
-    { title: "Standalone Courses", items: standalone.length ? [{
-      ...standalone[0],
-      id: "standalone-courses",
-      title: "Standalone Courses",
-      complete: standalone.every((course) => course.complete),
-      steps: standalone.flatMap((course) => course.steps),
-    }] : [] },
-  ].filter((group) => group.items.length > 0);
-  if (!items.length && !(embedded && d.canViewTeamTraining)) return trainingProgressExperimentsEnabled ? <span hidden data-progress-personal-state={progress.isError ? "error" : progress.isFetching ? "loading" : "ready"} data-progress-team-required="false" /> : null;
+  const groups = profile ? d.profileGroups : d.displayGroups;
+  if (!groups.length && !(embedded && d.canViewTeamTraining)) return trainingProgressExperimentsEnabled ? <span hidden data-progress-personal-state={progress.isError ? "error" : progress.isFetching ? "loading" : "ready"} data-progress-team-required="false" /> : null;
   return (
     <section className={embedded ? "vendor-repository" : "vendor-repository space-y-3"}
       data-progress-personal-state={progress.isError ? "error" : progress.isFetching ? "loading" : "ready"}
@@ -95,12 +69,12 @@ export function CertificationProgress({
             <span title={formatTrainingTitle(c.title)} className={embedded ? "hub-row-label" : "inline-flex w-[calc(100%-1.5rem)] items-center gap-2"}>
             {c.complete && <CheckCircle size={17} />} {formatTrainingTitle(c.title)}{" "}
             {c.augmented && <Layers size={16} aria-label="Vendor Augmented" />}
-            {!embedded && <span className="ml-auto whitespace-nowrap text-sm">{completionPercent([c])}% complete</span>}
+            {!embedded && <span className="ml-auto whitespace-nowrap text-sm">{c.percent}% complete</span>}
             </span>
-            {embedded && <><span className="hub-row-value">{completionPercent([c])}%</span><ChevronRight aria-hidden="true" className="hub-chevron" /></>}
+            {embedded && <><span className="hub-row-value">{c.percent}%</span><ChevronRight aria-hidden="true" className="hub-chevron" /></>}
           </summary>
           <p>
-            {c.steps.filter((s) => s.complete).length} / {c.steps.length}{" "}
+            {c.completedCount} / {c.totalCount}{" "}
             complete
           </p>
           {c.augmented && !c.complete && (
@@ -118,13 +92,13 @@ export function CertificationProgress({
             </button>
           )}
           <ol aria-label={`${c.title} progress`} className="space-y-2">
-            {c.steps.map((step, i) => (
+            {c.steps.map((step) => (
               <li key={step.id} className="flex flex-wrap items-center gap-3 border-t border-[var(--brand-primary)] py-3">
-                <span className="flex items-center gap-2" aria-current={!step.complete && i === c.steps.findIndex((s) => !s.complete) ? "step" : undefined}>
+                <span className="flex items-center gap-2" aria-current={step.progressState === "next" ? "step" : undefined}>
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-[var(--brand-primary)] font-bold">
-                    {step.complete ? "✓" : i + 1}
+                    {step.complete ? "✓" : step.ordinal}
                   </span>
-                  <span>{step.complete ? "Completed" : i === c.steps.findIndex((s) => !s.complete) ? "Next step" : "Upcoming"}</span>
+                  <span>{step.progressState === "completed" ? "Completed" : step.progressState === "next" ? "Next step" : "Upcoming"}</span>
                 </span>
                 <a className="repo-action" href={step.href}>
                   {step.type === "course" ? formatTrainingTitle(step.title) : step.title}
@@ -387,11 +361,9 @@ export function VendorBonusScore() {
     d = repo.data;
   return (
     d && (
-      <section className="vendor-repository repository-card">
-        <h2 className="font-bold flex gap-2">
-          <Layers size={18} />
-          Vendor Augmented bonus
-        </h2>
+      <Card className="safety-program-card">
+        <CardHeader><CardTitle><Layers aria-hidden="true" />Vendor Augmented bonus</CardTitle></CardHeader>
+        <CardContent className="safety-score-body">
         <p>
           {d.bonusScore.toFixed(2)} / 10 bonus points · {d.bonusCompleted} /{" "}
           {d.bonusRequired} required augmented requirements complete.
@@ -399,7 +371,8 @@ export function VendorBonusScore() {
         <p>
           The VNDRLY base score remains out of 100. Maximum combined score: 110.
         </p>
-      </section>
+        </CardContent>
+      </Card>
     )
   );
 }

@@ -355,7 +355,17 @@ export const EmployeeTrainingSchema = z.object({
   maximumAttempts: z.number(),
   refresherDays: z.number().nullable(),
 });
+export const TrainingQualificationContextSchema = z.object({
+  programId: z.string().regex(/^OG\d{2}$/),
+  title: z.string(),
+  benchmark: z.string(),
+  audience: z.string(),
+  requirement: z.string(),
+  renewal: z.string(),
+  sourceUrls: z.array(z.url().refine(url => url.startsWith('https://'))),
+});
 export const AssignedLibraryReadSchema = z.object({
+  qualificationRequirements: z.array(TrainingQualificationContextSchema).default([]),
   certificationExam:CertificationExamReadSchema.nullable().optional(),
   guidedFeedback: z.object({questionId:key,correctOptionIds:z.array(key),explanation:z.string()}).nullable().optional(),
   instanceId: z.uuid(),

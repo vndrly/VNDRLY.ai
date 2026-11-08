@@ -1,4 +1,5 @@
 import {selectedTrainingServices,trainingCatalog,additionalTrainingApplies} from "../lib/company-required-training";
+import {storedTrainingProjection} from './stored-training-projections';
 import { randomUUID, createHash } from "node:crypto";
 import { and, eq, isNull, desc, sql } from "drizzle-orm";
 import {
@@ -26,31 +27,29 @@ import { safeLibraryContent } from "./library-policy";
 import { getObjectStore } from "../lib/objectStore";
 export { safeLibraryContent } from "./library-policy";
 
+export async function storedLibraryRows(owner:{type:string;id:number}) {
+ return storedTrainingProjection(`${owner.type}:${owner.id}:library`,()=>db.select({
+ id:templates.id,name:templates.name,currentVersion:templates.currentVersion,
+ libraryMetadata:sql<Record<string,unknown>|null>`${templates.libraryMetadata} - 'content' - 'fileSnapshots' - 'trainingPolicy'`,
+ }).from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),isNull(templates.campaignConfig))).orderBy(desc(templates.createdAt)).limit(1000));
+}
 export async function listLibrary(
   actor: LibraryActor,
   archived = false,
   publishedOnly = false,
   myServices = false,
+  bundlesOnly = false,
 ) {
   const { owner, member } = await libraryAuthority(db, actor);
-  const rows = await db
-    .select()
-    .from(templates)
-    .where(
-      and(
-        eq(templates.ownerOrgType, owner.type),
-        eq(templates.ownerOrgId, owner.id),
-        isNull(templates.campaignConfig),
-      ),
-    )
-    .orderBy(desc(templates.createdAt))
-    .limit(1000);
+  const rows = await storedLibraryRows(owner);
+
   let applicable:Set<string>|null=null;
   if(myServices){const selected=await selectedTrainingServices(db,owner);applicable=new Set([...trainingCatalog.common.rules.flatMap(r=>r.familyIds),...selected.services.flatMap(s=>s.roleMappings.flatMap(r=>r.familyIds)),...trainingCatalog.additional.courses.filter(c=>selected.services.some(s=>additionalTrainingApplies(c,s))).map(c=>c.courseId)]);}
   const seen = new Set<string>();
   const result = [];
   for (const row of rows) {
     if (!row.libraryMetadata) {
+      if (bundlesOnly) continue;
       if (!archived)
         result.push({
           itemId: row.id,
@@ -65,6 +64,9 @@ export async function listLibrary(
       continue;
     }
     const m = LibraryMetadataSchema.parse(row.libraryMetadata);
+    // Filter after owner scoping; a JSON predicate can make Postgres decompress
+    // every company's course bodies before applying the company predicate.
+    if (bundlesOnly && m.kind !== "bundle") continue;
     if ((member.role !== "admin" || publishedOnly) && m.state !== "published")
       continue;
     if(myServices&&m.kind==="training"&&(!m.safetyResource||!applicable?.has(m.safetyResource.familyId)))continue;

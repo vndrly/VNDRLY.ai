@@ -54,7 +54,7 @@ export function SafetyDashboardCard() {
           data-testid="safety-dashboard-open-notifications"
         >
           <div className="grid grid-cols-2 gap-3">
-            <button type="button" className="text-left" onClick={()=>navigate("/safety-score")}>
+            <button type="button" className="text-left" onClick={()=>navigate("/work-hub/library?tab=certifications")}>
               <div className="text-xs text-muted-foreground">{t("safetyMaturity.title")}</div>
               <div className="text-2xl font-bold">{maturity.data ? maturity.data.score : "—"}</div>
             <span className="block text-xs">{maturity.data?.incomplete ? t("safetyMaturity.incomplete") : ""}</span>

@@ -8,6 +8,10 @@ export type DashboardTask = {
 };
 export type DashboardTaskPage = { tasks: DashboardTask[]; scope: "self" | "company"; nextCursor: string | null };
 export type DashboardTaskGroup = "new" | "unassigned" | "unstarted" | "progress" | "stale" | "completed";
+export type DashboardTaskSummary = {
+  scope: "self" | "company";
+  groups: Record<DashboardTaskGroup, { mine: number; total: number; unassigned: number }>;
+};
 const HOUR = 3600000;
 
 function unfinished(task: DashboardTask) {
@@ -73,4 +77,12 @@ export async function readDashboardTasks(request: (path: string) => Promise<Dash
     if (cursor) seen.add(cursor);
   } while (cursor);
   return { tasks, scope };
+}
+
+export async function readDashboardTaskSummary(request: (path: string) => Promise<unknown>): Promise<DashboardTaskSummary | null> {
+  const value = await request("/tasks?dashboard=summary") as DashboardTaskSummary | null;
+  if (!value || !["self", "company"].includes(value.scope) || !value.groups) return null;
+  const groups: DashboardTaskGroup[] = ["new", "unassigned", "unstarted", "progress", "stale", "completed"];
+  return groups.every(group => value.groups[group] && ["mine", "total", "unassigned"].every(key =>
+    Number.isFinite(value.groups[group][key as keyof typeof value.groups[typeof group]]))) ? value : null;
 }

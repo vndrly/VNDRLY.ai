@@ -5407,14 +5407,6 @@
     "purposeFilter": "Visit purpose"
   },
   "gateNav": {
-    "createPin": "Create PIN",
-    "confirmPin": "Confirm PIN",
-    "pinIntro": "Choose four digits for Go to Admin.",
-    "pinMismatch": "Enter matching four-digit PINs.",
-    "savePin": "Save PIN",
-    "checkingPin": "Checking account…",
-    "pinLoadError": "Unable to load PIN setup. Please retry.",
-    "retryPin": "Retry",
     "map": "Gate Map",
     "voice": "Voice entry",
     "gate": "Gate",
@@ -5424,8 +5416,6 @@
     "goToWorkHub": "Go to Work Hub",
     "more": "More",
     "returnToGate": "Return to Gate",
-    "enterPin": "Enter the four-digit PIN",
-    "incorrectPin": "Incorrect PIN. Try again.",
     "aria": "Gate portal navigation"
   },
   "plateStatePicker": {
@@ -6322,7 +6312,8 @@
     "publishReview": "Publish this exact version? Published content will be available for assignments. This does not assign it.",
     "archiveReview": "Archive this item? Existing assignments and responses will remain available.",
     "versionHistory": "Version history",
-    "kind_bundle": "Bundle",
+    "kind_bundle": "Certification",
+    "trainingNeededByRole": "Training Needed by Role",
     "titleRequired": "Enter a title.",
     "hours": "hours",
     "newHireOnboarding": "New-hire onboarding",
@@ -6475,8 +6466,8 @@
     "serviceConnections": "Services linked to {{familyId}}",
     "searchServices": "Search the master service catalog",
     "search": "Search services",
-    "mappingCount": "{{matched}} matching services in the {{total}}-service master",
-    "mappingBoundary": "Courses apply to the stated roles and actual duties. A related service does not require every course for every worker. Any additional legal duty below names its regulation and covered work role.",
+    "mappingCount": "{{matched}} matching services",
+    "mappingBoundary": "Training depends on the work assigned.",
     "openQualifications": "Additional specialist training and qualifications",
     "scopeSource": "Scope source {{number}}",
     "previous": "Previous services",
@@ -6488,7 +6479,8 @@
     "applies": "Applies to the stated service duties",
     "doesNotApply": "Does not apply to the stated service duties",
     "applicabilityReason": "Basis for this scope decision",
-    "baselineHeading": "VNDRLY-required training",
+    "baselineHeading": "VNDRLY Safety Score",
+    "safetyScoreBreakdown": "Base: {{base}} / 100 · Vendor bonus: {{bonus}} / 10",
     "baselineCounts": "{{completed}} of {{required}} applicable person/course requirements completed",
     "baselinePoints": "Training component: {{points}} / 10",
     "baselinePart": "Training is one part of company readiness. Practical qualifications, program evidence and other safety measures are assessed separately.",
@@ -6506,10 +6498,16 @@
     "exposureAudienceHelp": "Select the people or positions whose actual duties you reviewed. This decision applies only to them. Everyone else remains unreviewed; an ordinary assignment never establishes exposure.",
     "conditionalRule": "Conditional on the actual duties and service scope",
     "taskGapsHeading": "Task-specific courses and applicable legal requirements",
-    "taskGapsHelp": "Search a service to find its courses and affected roles. Additional task duties appear only with a cited regulation and its applicable role; there is no blanket evidence upload or practical evaluation for course completion.",
+    "taskGapsHelp": "Search by service to find courses and roles.",
     "taskCourse": "Open task-specific course {{courseId}}",
     "vendorEvidence": "Records required by the cited regulation",
     "practicalEvidence": "Legal requirements for the named work role",
-    "preservedExtensions": "Other source-backed services"
+    "preservedExtensions": "Additional services",
+    "servicesList": "Services",
+    "roleGuidance": "Role guidance"
+  },
+  "trainingQualifications": {
+    "heading": "Task qualifications and credential requirements",
+    "help": "Apply these requirements only to your actual assigned role. Course completion, practical evaluation, external credentials and work authorization are separate records."
   }
 }

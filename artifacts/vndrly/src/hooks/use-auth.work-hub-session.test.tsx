@@ -52,7 +52,13 @@ it("does not discard an established session when a focus recheck encounters a te
   render(<AuthProvider><View /></AuthProvider>);
   await screen.findByText("Gate operator");
   fireEvent.focus(window);
-  await waitFor(() => expect(sessionReads).toBe(2));
+  expect(sessionReads).toBe(1);
+  const later = Date.now() + 16000;
+  const clock = vi.spyOn(Date, "now").mockReturnValue(later);
+  try {
+    fireEvent.focus(window);
+    await waitFor(() => expect(sessionReads).toBe(2));
+  } finally { clock.mockRestore(); }
   expect(screen.getByText("Gate operator")).toBeTruthy();
 });
 
@@ -106,15 +112,35 @@ it("does not sign out a valid user when a Conversations request is forbidden rat
   expect(screen.getByText("Gate operator")).toBeTruthy();
 });
 
-it("leaves the loading screen when the initial session request stalls", async () => {
+it("does not turn a stalled initial session check into logout and recovers through a fresh authenticated response", async () => {
   vi.useFakeTimers();
-  vi.stubGlobal("fetch", vi.fn((_url, options: RequestInit) => new Promise((_resolve, reject) => {
+  const fetcher=vi.fn().mockImplementationOnce((_url, options: RequestInit) => new Promise((_resolve, reject) => {
     options.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
-  })));
+  })).mockResolvedValue(new Response(JSON.stringify(account)));
+  vi.stubGlobal("fetch", fetcher);
   try {
     render(<AuthProvider><View /></AuthProvider>);
     expect(screen.getByText("Checking session")).toBeTruthy();
     await act(async () => { await vi.advanceTimersByTimeAsync(8000); });
-    expect(screen.getByText("Sign in required")).toBeTruthy();
+    expect(screen.getByText("Checking session")).toBeTruthy();
+    expect(screen.queryByText("Sign in required")).toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    expect(screen.getByText("Gate operator")).toBeTruthy();
+    expect(fetcher).toHaveBeenCalledTimes(2);
   } finally { vi.useRealTimers(); }
+});
+
+it("keeps a 503 bootstrap unresolved until the server confirms an expired session",async()=>{
+ vi.useFakeTimers();
+ const fetcher=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({message:'Unavailable'}),{status:503}))
+  .mockResolvedValueOnce(new Response(JSON.stringify({message:'Not authenticated'}),{status:401}));
+ vi.stubGlobal('fetch',fetcher);
+ try{
+  render(<AuthProvider><View/></AuthProvider>);
+  await act(async()=>{await vi.advanceTimersByTimeAsync(0);});
+  expect(screen.getByText('Checking session')).toBeTruthy();
+  expect(screen.queryByText('Sign in required')).toBeNull();
+  await act(async()=>{await vi.advanceTimersByTimeAsync(1000);});
+  expect(screen.getByText('Sign in required')).toBeTruthy();
+ }finally{vi.useRealTimers();}
 });

@@ -1,5 +1,3 @@
-import { AdminPinSetup } from "@/components/admin-pin-setup";
-import LibraryEntryNotice from "@/components/work-hub/library/entry-notice";
 import TrainingCachePrefetch from "@/components/work-hub/training-cache-prefetch";
 import { trainingProgressMethod } from "@/lib/training-progress-experiment";
 import { Redirect, Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
@@ -25,6 +23,7 @@ import ChangePasswordModal from "@/components/change-password-modal";
 import { FieldPortalLayout } from "@/components/field-portal-layout";
 import { ForemanPortalLayout } from "@/components/foreman-portal-layout";
 import { GatePortalLayout } from "@/components/gate-portal-layout";
+import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { isForemanPersona } from "@/lib/portal-base";
 
 const Dashboard = lazy(() => import("@/pages/dashboard"));
@@ -58,7 +57,6 @@ const BillingSettingsPage = lazy(() => import("@/pages/billing-settings"));
 const BillsToPayPage = lazy(() => import("@/pages/bills-to-pay"));
 const StatementPage = lazy(() => import("@/pages/statement"));
 const FlaggedTicketsPage = lazy(() => import("@/pages/flagged-tickets"));
-const CompanySafetyScorePage = lazy(() => import("@/pages/safety-score"));
 const SafetyInboxPage = lazy(() => import("@/pages/safety-inbox"));
 const SafetyEventDetailPage = lazy(() => import("@/pages/safety-event-detail"));
 const SafetyReportPage = lazy(() => import("@/pages/safety-report"));
@@ -189,7 +187,7 @@ function AdminRoutes() {
         <Route path="/site-locations/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
         <Route path="/tickets" component={Tickets} />
         <Route path="/flagged" component={FlaggedTicketsPage} />
-        <Route path="/safety-score" component={CompanySafetyScorePage} />
+        <Route path="/safety-score">{() => <Redirect to="/work-hub/library?tab=certifications" replace />}</Route>
         <Route path="/safety" component={SafetyInboxPage} />
         <Route path="/safety-report" component={SafetyReportPage} />
         <Route path="/safety-training" component={SafetyTrainingPage} />
@@ -242,7 +240,8 @@ function AuthenticatedRouter() {
   const fleetHome = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.homeOverview, enabled: Boolean(user?.vendorId && location === "/" && !standardHome && ["vendor", "field_employee"].includes(user?.role ?? "")), retry: false, staleTime: 30_000 });
   const homeTarget = fleetHomePath(fleetHome.data, search);
   useEffect(() => { if (location === "/" && homeTarget) navigate(homeTarget, { replace: true }); }, [location, homeTarget, navigate]);
-  const gateWorker = Boolean(user && ((user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user)));
+  const officeAccess = canUseOfficeNavigation(user);
+  const gateWorker = Boolean(user && !officeAccess && ((user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user)));
 
   if (isLoading) {
     return (
@@ -254,7 +253,6 @@ function AuthenticatedRouter() {
 
   return (
     <>
-      <LibraryEntryNotice enabled={Boolean(user)}/>
       <Suspense fallback={<RouteFallback />}>
         <Switch>
         <Route path="/portal/:siteCode">{(params) => <Portal siteCode={params.siteCode} />}</Route>
@@ -320,7 +318,7 @@ function AuthenticatedRouter() {
             <Route path="/login"><Login /></Route>
             <Route path="/*splat"><Login /></Route>
           </>
-        ) : (user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user) ? (
+        ) : gateWorker ? (
           <GatePortalLayout>
             <Switch>
               <Route path="/gate/history/billing" component={GateDailyBillingPage} />
@@ -332,10 +330,10 @@ function AuthenticatedRouter() {
               <Route path="/">
                 <GatekeeperRootRedirect />
               </Route>
-              <Route path="/*splat" component={GatekeeperPage} />
+              <Route path="/*splat">{() => <Redirect to="/gate/change-over" replace />}</Route>
             </Switch>
           </GatePortalLayout>
-        ) : user.role === "field_employee" && isForemanPersona(user) ? (
+        ) : !officeAccess && user.role === "field_employee" && isForemanPersona(user) ? (
           <ForemanPortalLayout>
             <Switch>
               <Route path="/foreman" component={ForemanHome} />
@@ -359,10 +357,10 @@ function AuthenticatedRouter() {
               <Route path="/">
                 <ForemanRootRedirect />
               </Route>
-              <Route path="/*splat" component={ForemanHome} />
+              <Route path="/*splat">{() => <Redirect to="/foreman" replace />}</Route>
             </Switch>
           </ForemanPortalLayout>
-        ) : user.role === "field_employee" ? (
+        ) : !officeAccess && user.role === "field_employee" ? (
           <FieldPortalLayout>
             <Switch>
               <Route path="/field" component={FieldHome} />
@@ -382,15 +380,17 @@ function AuthenticatedRouter() {
               <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
               <Route path="/notifications" component={NotificationsInboxPage} />
               <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
-              <Route path="/*splat" component={FieldHome} />
+              <Route path="/*splat">{() => <Redirect to="/field" replace />}</Route>
             </Switch>
           </FieldPortalLayout>
-        ) : (
+        ) : officeAccess ? (
           <>
             <Route path="/login" component={LoginRedirect} />
             <Route path="/login/" component={LoginRedirect} />
             <Route path="/*splat" component={AdminRoutes} />
           </>
+        ) : (
+          <Route path="/*splat">{() => <Redirect to="/work-hub" replace />}</Route>
         )}
         </Switch>
       </Suspense>
@@ -501,7 +501,7 @@ function App() {
             <ThemeProvider>
               <NotificationsModalProvider>
                 <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                  <AdminPinSetup><AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary></AdminPinSetup>
+                  <AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary>
                 </WouterRouter>
               </NotificationsModalProvider>
               <Toaster />

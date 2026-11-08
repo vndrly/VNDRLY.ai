@@ -9,9 +9,34 @@ vi.mock('@workspace/db',()=>({db:{}}));
 vi.mock('../work-hub/library-core',()=>({libraryAuthority:fixtures.authority}));
 vi.mock('./company-required-training',()=>({trainingCatalog:fixtures.catalog,companyRequiredTraining:fixtures.required}));
 import {safetyTrainingCatalogView}from'./safety-training-catalog-view';
+import {safetyTrainingCatalog}from'../data/safety-training-catalog';
 
 beforeEach(()=>vi.clearAllMocks());
 describe('catalog conditional course connections',()=>{
+  it('finds real catalog entries by common field terms',async()=>{
+    const original={...fixtures.catalog};
+    Object.assign(fixtures.catalog,safetyTrainingCatalog);
+    try {
+      for(const [search,id] of [['visitor check in','VMS-5D2D3CEB7A'],['H₂S','h2s_monitoring_safety_trailer'],['sour gas','h2s_monitoring_safety_trailer'],['3D seismic','VMS-A1652B8D16']]){
+        const view=await safetyTrainingCatalogView({userId:1} as never,{search,allServices:true});
+        expect([...view.services,...view.extensions].map(service=>service.id)).toContain(id);
+      }
+    } finally {
+      for(const key of Object.keys(fixtures.catalog)) if(!Object.hasOwn(original,key)) Reflect.deleteProperty(fixtures.catalog,key);
+      Object.assign(fixtures.catalog,original);
+    }
+  });
+  it('finds the mapped master service by reviewed service name or description',async()=>{
+    const catalog=fixtures.catalog as typeof fixtures.catalog&{legacy?:{entries:unknown[]}};
+    catalog.legacy={entries:[{name:'Gatekeeping',code:'gatekeeping',canonicalDefinition:'Staffed entrance control',masterServiceIds:['VMS-SEISMIC']}]};
+    try {
+      for(const search of ['gate','Gatekeeping','entrance control']){
+        const view=await safetyTrainingCatalogView({userId:1} as never,{search,familyId:'H01'});
+        expect(view.services.map(service=>service.id)).toEqual(['VMS-SEISMIC']);
+        expect(view.services[0].roleMappings).toEqual([fixtures.catalog.catalog.roleRules.survey]);
+      }
+    } finally { delete catalog.legacy; }
+  });
   it('includes an H19 connection supplied only by a reviewed conditional rule and preserves its trigger',async()=>{
     const view=await safetyTrainingCatalogView({userId:1,role:'vendor',vendorId:7} as never,{familyId:'H19'});
     expect(view.total).toBe(1);

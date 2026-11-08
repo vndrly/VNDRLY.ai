@@ -889,7 +889,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         className={cn(
           "border-2 border-[color:var(--brand-primary)] sm:translate-x-0 sm:translate-y-0 sm:resize sm:overflow-hidden",
           embedded
-            ? "h-[min(72vh,760px)] w-full max-w-none rounded-xl bg-white text-gray-900 sm:resize-none"
+            ? "h-[min(72vh,760px)] w-full max-w-none rounded-xl bg-[#242426] text-gray-100 sm:resize-none"
             : "bg-[#3a3d42] text-gray-100 sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem]",
           !embedded && (minimized ? "h-16" : "h-[min(86vh,768px)]"),
         )}
@@ -1022,14 +1022,14 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         />
 
         {!minimized && open && !tokenMode && !signupMode && askVUserId != null && showSettings && (
-          <div className={cn("shrink-0 border-b", embedded ? "border-gray-200 bg-white text-gray-900" : "border-white/20")} data-testid="assistant-settings-panel">
+          <div className={cn("shrink-0 border-b", embedded ? "border-white/20 bg-[#242426] text-gray-100" : "border-white/20")} data-testid="assistant-settings-panel">
             <div className="flex items-center justify-between px-4 py-2 text-sm font-medium">
               <span>Ask V settings</span>
               <button
                 type="button"
                 onClick={() => writeAskVAcrossVndrly(askVUserId, !voiceSession.acrossVndrly)}
                 aria-label={voiceSession.acrossVndrly ? "Across VNDRLY is on: listen locally for AskV while the app is open" : "Enable AskV across VNDRLY: listen locally for AskV while the app is open"}
-                className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2", embedded ? "border-gray-300 text-gray-900 focus-visible:ring-[color:var(--brand-primary)]/40" : "border-white/25 text-white focus-visible:ring-white/40")}
+                className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2", embedded ? "border-white/25 text-gray-100 focus-visible:ring-[color:var(--brand-primary)]/40" : "border-white/25 text-white focus-visible:ring-white/40")}
                 data-testid="assistant-across-vndrly"
               >
                 <Sparkles className="h-3.5 w-3.5" />
@@ -1062,7 +1062,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         }} className={cn("relative z-10 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4", embedded ? "pt-1" : "pt-4", minimized && "hidden")}>
           {messages.length === 0 && (
             <div className="space-y-3">
-              <div className={cn("w-fit max-w-[90%] rounded-lg border px-4 py-3 text-sm", embedded ? "border-gray-300 bg-gray-200 text-gray-900" : "border-[#55555b] bg-[#2b2b2f] text-gray-100")} data-testid="assistant-greeting-card">
+              <div className={cn("w-fit max-w-[90%] rounded-lg border px-4 py-3 text-sm", embedded ? "border-white/15 bg-[#303236] text-gray-100" : "border-[#55555b] bg-[#2b2b2f] text-gray-100")} data-testid="assistant-greeting-card">
                 {greeting}
               </div>
               {!embedded && quickActions.length > 0 && (
@@ -1098,7 +1098,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                   m.role === "user"
                     ? "max-w-[85%] text-white"
                     : embedded
-                      ? "max-w-[90%] bg-gray-200 text-gray-900"
+                      ? "max-w-[90%] bg-[#303236] text-gray-100"
                       : "max-w-[90%] bg-white/10 text-gray-100",
                 )}
                 style={
@@ -1120,7 +1120,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                             data-testid={`assistant-msg-feedback-${m.serverId}`}
                           >
                             <HeaderIconButton
-                  lightSurface={embedded}
+                  lightSurface={false}
                               onClick={() => void handleFeedback(m.serverId!, "helpful")}
                               disabled={feedbackPendingId != null}
                               pressed={m.feedbackRating === "helpful"}
@@ -1130,7 +1130,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                               <ThumbsUp className="w-4 h-4" />
                             </HeaderIconButton>
                             <HeaderIconButton
-                  lightSurface={embedded}
+                  lightSurface={false}
                               onClick={() => void handleFeedback(m.serverId!, "unhelpful")}
                               disabled={feedbackPendingId != null}
                               pressed={m.feedbackRating === "unhelpful"}
@@ -1140,7 +1140,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                               <ThumbsDown className="w-4 h-4" />
                             </HeaderIconButton>
                             <HeaderIconButton
-                  lightSurface={embedded}
+                  lightSurface={false}
                               onClick={() => copyMessage(m)}
                               testId={`assistant-copy-${m.serverId}`}
                               title="Copy result"
@@ -1148,7 +1148,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                               <Copy className="w-4 h-4" />
                             </HeaderIconButton>
                             <HeaderIconButton
-                  lightSurface={embedded}
+                  lightSurface={false}
                               onClick={() => openSendToForMessage(messageIndex, m)}
                               testId={`assistant-send-to-${m.serverId}`}
                               title="Send to"
@@ -1203,7 +1203,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask anything about VNDRLY..."
-              className="resize-none min-h-[76px] max-h-40 rounded-2xl border-[color:var(--brand-primary)] bg-white text-gray-900 focus-visible:ring-0 focus-visible:shadow-none"
+              className={cn("resize-none min-h-[76px] max-h-40 rounded-2xl border-[color:var(--brand-primary)] focus-visible:ring-0 focus-visible:shadow-none", embedded ? "bg-[#303236] text-gray-100 placeholder:text-gray-300" : "bg-white text-gray-900")}
               rows={3}
               disabled={streaming || transcribing || voiceRecording}
               data-testid="assistant-input"

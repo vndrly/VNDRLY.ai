@@ -17,7 +17,6 @@ import {
   type GateDailyBillingResult,
 } from "@workspace/api-zod";
 import { changeOverTransaction } from "./gate-change-over";
-import { withVerifiedWorkdayClient } from "./workday";
 
 export class GateBillingError extends Error {
   constructor(
@@ -46,8 +45,15 @@ const ConfigSchema = GateDailyBillingConfigSchema.extend({
     })
     .nullable(),
 }).strict();
+const StoredConfigSchema = ConfigSchema.extend({
+  synthetic: z.literal(true).optional(),
+});
 type Config = z.infer<typeof ConfigSchema>;
 type BillingResult = GateDailyBillingResult;
+function storedConfig(value: unknown): Config {
+  const { synthetic: _synthetic, ...config } = StoredConfigSchema.parse(value);
+  return config;
+}
 function publicConfig(value: Config) {
   const { directionActor: _, ...safe } = value;
   return GateDailyBillingConfigSchema.parse(safe);
@@ -112,11 +118,16 @@ async function requireOffice(
     !session.vendorId
   )
     fail("office_required", 403);
-  await withVerifiedWorkdayClient(session, c, async () => {});
   const office = (
     await c.query(
-      "SELECT m.id FROM user_org_memberships m LEFT JOIN vendor_people p ON p.id=m.vendor_people_id AND p.vendor_id=m.vendor_id AND p.is_active=true AND p.deleted_at IS NULL WHERE m.id=$1 AND m.user_id=$2 AND m.vendor_id=$3 AND m.org_type='vendor' AND (m.role='admin' OR p.vendor_role='office')",
-      [session.activeMembershipId, session.userId, session.vendorId],
+      `SELECT m.id FROM user_org_memberships m
+       JOIN users u ON u.id=m.user_id AND u.session_version=$4
+         AND u.suspended_at IS NULL AND u.must_change_password IS DISTINCT FROM true
+       LEFT JOIN vendor_people p ON p.id=m.vendor_people_id AND p.user_id=m.user_id
+         AND p.vendor_id=m.vendor_id AND p.is_active=true AND p.deleted_at IS NULL
+       WHERE m.id=$1 AND m.user_id=$2 AND m.vendor_id=$3 AND m.org_type='vendor'
+         AND m.role=$5 AND (m.role='admin' OR p.vendor_role IN ('office','both'))`,
+      [session.activeMembershipId, session.userId, session.vendorId, session.sv, session.membershipRole],
     )
   ).rows[0];
   if (!office) fail("office_required", 403);
@@ -241,7 +252,7 @@ async function config(c: PoolClient, context: Context) {
     context.station.id,
   );
   if (!value) return null;
-  const saved = ConfigSchema.parse(value);
+  const saved = storedConfig(value);
   if (
     saved.vendorId !== context.vendorId ||
     saved.stationId !== context.station.id ||
@@ -306,6 +317,14 @@ async function preview(
       ],
     )
   ).rows;
+  return previewFromSessions(context, current, now, rows);
+}
+function previewFromSessions(
+  context: Context,
+  current: Config,
+  now: Date,
+  rows: { id: string; started_at: Date | string; ended_at: Date | string | null }[],
+) {
   const coverage = rows.map((row) => ({
     id: row.id,
     startedAt: new Date(row.started_at).toISOString(),
@@ -399,7 +418,7 @@ export function createGateDailyBillingService(
         WITH audit AS (
           SELECT DISTINCT ON (target_type,target_id) target_type,target_id,tool_output
           FROM assistant_action_audit WHERE vendor_id=$1 AND partner_id IS NULL
-            AND target_type IN ('gate-billing-config','gate-billing-ticket')
+            AND target_type IN ('gate-billing-config','gate-billing-ticket','gate-billing-estimate')
           ORDER BY target_type,target_id,id DESC
         ), periods AS (
           SELECT target_id AS station_id,tool_output AS config,
@@ -408,27 +427,68 @@ export function createGateDailyBillingService(
           UNION ALL
           SELECT tool_output->>'stationId',tool_output->'agreement',target_id,tool_output->'period'
           FROM audit WHERE target_type='gate-billing-ticket'
+        ), inventory AS (
+          SELECT t.id,t.status,t.created_at,p.station_id,p.config,p.period,g.name AS gate_name,s.name AS site_name,
+            COALESCE(t.closed_at,t.cancelled_at,submitted.created_at) AS closed_at,submitted.created_at AS submitted_at,
+            NULL::int AS job_id,t.work_type_id,w.name AS service_name,s.id AS site_id,s.partner_id,
+            s.gate_link_id,partner.name AS partner_name,s.afe
+          FROM periods p JOIN tickets t ON t.id::text=p.ticket_id AND t.vendor_id=$1
+          JOIN gate_stations g ON g.id::text=p.station_id JOIN site_locations s ON s.id=g.site_id
+          JOIN partners partner ON partner.id=s.partner_id
+          LEFT JOIN work_types w ON w.id=t.work_type_id
+          LEFT JOIN LATERAL (SELECT h.created_at FROM ticket_status_history h WHERE h.ticket_id=t.id
+            AND h.to_status='submitted' ORDER BY h.created_at DESC LIMIT 1) submitted ON true
+          WHERE EXISTS (SELECT 1 FROM site_work_assignments assignment
+            WHERE assignment.site_location_id=s.id AND assignment.vendor_id=$1 AND assignment.is_gate_contractor)
+          UNION ALL
+          SELECT t.id,t.status,t.created_at,g.id::text,NULL,NULL,g.name,s.name,NULL,NULL,j.id,t.work_type_id,w.name,
+            s.id,s.partner_id,s.gate_link_id,partner.name,s.afe
+          FROM tickets t JOIN job_offers j ON j.created_ticket_id=t.id AND j.status='accepted'
+          JOIN site_locations s ON s.id=t.site_location_id JOIN partners partner ON partner.id=s.partner_id
+          LEFT JOIN work_types w ON w.id=t.work_type_id
+          LEFT JOIN LATERAL (SELECT id,name FROM gate_stations WHERE site_id=s.id AND active ORDER BY id LIMIT 1) g ON true
+          WHERE t.vendor_id=$1 AND t.status='initiated' AND t.check_in_time IS NULL
+            AND EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=t.site_location_id
+              AND a.vendor_id=$1 AND a.work_type_id=t.work_type_id AND a.is_gate_contractor)
+            AND NOT EXISTS (SELECT 1 FROM audit a WHERE a.tool_output->>'jobOfferId'=j.id::text
+              OR a.tool_output->'agreement'->>'jobOfferId'=j.id::text)
         )
-        SELECT t.id,t.status,t.created_at,p.station_id,p.config,p.period,g.name AS gate_name,s.name AS site_name,
-          COALESCE(t.closed_at,t.cancelled_at,submitted.created_at) AS closed_at,submitted.created_at AS submitted_at,
-          NULL::int AS job_id,t.work_type_id,w.name AS service_name
-        FROM periods p JOIN tickets t ON t.id::text=p.ticket_id AND t.vendor_id=$1
-        JOIN gate_stations g ON g.id::text=p.station_id JOIN site_locations s ON s.id=g.site_id
-        LEFT JOIN work_types w ON w.id=t.work_type_id
-        LEFT JOIN LATERAL (SELECT h.created_at FROM ticket_status_history h WHERE h.ticket_id=t.id
-          AND h.to_status='submitted' ORDER BY h.created_at DESC LIMIT 1) submitted ON true
-        UNION ALL
-        SELECT t.id,t.status,t.created_at,g.id::text,NULL,NULL,g.name,s.name,NULL,NULL,j.id,t.work_type_id,w.name
-        FROM tickets t JOIN job_offers j ON j.created_ticket_id=t.id AND j.status='accepted'
-        JOIN site_locations s ON s.id=t.site_location_id
-        LEFT JOIN work_types w ON w.id=t.work_type_id
-        LEFT JOIN LATERAL (SELECT id,name FROM gate_stations WHERE site_id=s.id AND active ORDER BY id LIMIT 1) g ON true
-        WHERE t.vendor_id=$1 AND t.status='initiated' AND t.check_in_time IS NULL
-          AND EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=t.site_location_id
-            AND a.vendor_id=$1 AND a.work_type_id=t.work_type_id AND a.is_gate_contractor)
-          AND NOT EXISTS (SELECT 1 FROM audit a WHERE a.tool_output->>'jobOfferId'=j.id::text
-            OR a.tool_output->'agreement'->>'jobOfferId'=j.id::text)
-        ORDER BY id DESC`, [session.vendorId])).rows;
+        SELECT inventory.*,estimate.tool_output AS estimate,
+          CASE WHEN inventory.station_id IS NULL THEN ARRAY[]::uuid[] ELSE ARRAY(
+            SELECT linked_gate.id FROM gate_stations linked_gate
+            JOIN site_locations linked_site ON linked_site.id=linked_gate.site_id
+            WHERE EXISTS (SELECT 1 FROM site_work_assignments assignment
+              WHERE assignment.site_location_id=linked_site.id AND assignment.vendor_id=$1 AND assignment.is_gate_contractor)
+              AND ((inventory.gate_link_id IS NULL AND linked_gate.id::text=inventory.station_id)
+                OR (inventory.gate_link_id IS NOT NULL AND linked_site.gate_link_id=inventory.gate_link_id
+                  AND linked_site.partner_id=inventory.partner_id AND (linked_gate.active OR EXISTS (
+                    SELECT 1 FROM audit configured WHERE configured.target_type='gate-billing-config'
+                      AND configured.target_id=linked_gate.id::text))))
+            ORDER BY linked_gate.id
+          ) END AS coverage_station_ids
+        FROM inventory
+        LEFT JOIN audit estimate ON estimate.target_type='gate-billing-estimate' AND estimate.target_id=inventory.id::text
+        ORDER BY inventory.id DESC`, [session.vendorId])).rows;
+      const coverageStationIds = [...new Set(rows.flatMap(row => [
+        ...(Array.isArray(row.coverage_station_ids) && row.coverage_station_ids.length
+          ? row.coverage_station_ids
+          : row.station_id ? [row.station_id] : []),
+        ...(Array.isArray(row.period?.coverageStationIds) ? row.period.coverageStationIds : []),
+      ] as string[]))];
+      const startDays = rows.flatMap(row => {
+        const start = row.period?.periodStartDay ?? row.config?.periodStartDay;
+        return typeof start === "string" ? [start] : [];
+      });
+      const earliestStartDay = startDays.sort()[0];
+      const dutyRows = coverageStationIds.length && earliestStartDay ? (await c.query<{
+        id: string; station_id: string; user_id: number; work_hub_shift_id: string | null;
+        source_legacy_shift_id: string | null; started_at: Date; ended_at: Date | null; pay_day: string | null;
+      }>(`SELECT id,station_id,user_id,work_hub_shift_id,source_legacy_shift_id,started_at,ended_at,
+          to_char(ended_at AT TIME ZONE 'America/Chicago','YYYY-MM-DD') AS pay_day
+        FROM gate_duty_sessions
+        WHERE station_id=ANY($1::uuid[]) AND post_coverage->>'vendorId'=$2
+          AND started_at<$3 AND (ended_at IS NULL OR ended_at >= (($4::date-1)::timestamp AT TIME ZONE 'America/Chicago'))
+        ORDER BY ended_at DESC NULLS FIRST`, [coverageStationIds, String(session.vendorId), at, earliestStartDay])).rows : [];
       const result = [];
       const countedPayrollShifts = new Set<string>();
       const gateGoShiftPayCents = 15_000;
@@ -438,23 +498,26 @@ export function createGateDailyBillingService(
         let period = row.period;
         let stationIds: string[] = row.period?.coverageStationIds ?? (row.station_id ? [row.station_id] : []);
         if (group === "open") {
-          const current = ConfigSchema.parse(row.config);
-          const context = await authorize(c, session, row.station_id, true);
-          if (context.station.id !== row.station_id) continue;
-          period = (await preview(c, context, current, at)).period;
-          stationIds = context.coverageStationIds;
+          const current = storedConfig(row.config);
+          if (current.vendorId !== session.vendorId || current.stationId !== row.station_id ||
+              current.siteId !== row.site_id || current.partnerId !== row.partner_id) fail("context_changed");
+          stationIds = Array.isArray(row.coverage_station_ids) && row.coverage_station_ids.length
+            ? row.coverage_station_ids : [row.station_id];
+          const allowed = new Set(stationIds);
+          const context: Context = { station: { id: row.station_id, name: row.gate_name, site_id: row.site_id,
+            site_name: row.site_name, partner_id: row.partner_id, partner_name: row.partner_name, afe: row.afe,
+            gate_link_id: row.gate_link_id }, vendorId: session.vendorId!, userId: session.userId!, coverageStationIds: stationIds };
+          period = previewFromSessions(context, current, at, dutyRows.filter(shift => allowed.has(shift.station_id))).period;
         }
         const startDay = period?.periodStartDay ?? row.config?.periodStartDay;
         const payrollAvailable = session.vendorId === 1115 && Boolean(startDay && stationIds.length);
-        const payrollShifts = payrollAvailable ? (await c.query<{ id: string; pay_day: string }>(
-          `SELECT DISTINCT ON (shift_key) shift_key AS id, to_char(ended_at AT TIME ZONE 'America/Chicago','YYYY-MM-DD') AS pay_day
-           FROM (SELECT COALESCE(work_hub_shift_id,source_legacy_shift_id,id)::text || ':' || user_id::text AS shift_key,ended_at
-             FROM gate_duty_sessions WHERE station_id=ANY($1::uuid[]) AND post_coverage->>'vendorId'=$2
-               AND ended_at>started_at AND ended_at >= ($3::date::timestamp AT TIME ZONE 'America/Chicago')
-               AND ended_at <= $4::timestamptz AND ($5::timestamptz IS NULL OR ended_at < $5)) shifts
-           ORDER BY shift_key,ended_at DESC`,
-          [stationIds, String(session.vendorId), startDay, at, group === "closed" ? period?.cutoffExclusive ?? row.closed_at : null],
-        )).rows : [];
+        const stationSet = new Set(stationIds);
+        const cutoff = group === "closed" ? period?.cutoffExclusive ?? row.closed_at : null;
+        const payrollShifts = payrollAvailable ? [...new Map(dutyRows.filter(shift =>
+          stationSet.has(shift.station_id) && shift.ended_at && shift.ended_at > shift.started_at &&
+          shift.pay_day! >= startDay && shift.ended_at <= at && (!cutoff || shift.ended_at < new Date(cutoff)),
+        ).map(shift => [`${shift.work_hub_shift_id ?? shift.source_legacy_shift_id ?? shift.id}:${shift.user_id}`,
+          { id: `${shift.work_hub_shift_id ?? shift.source_legacy_shift_id ?? shift.id}:${shift.user_id}`, pay_day: shift.pay_day! }])).values()] : [];
         const newPayrollShifts = payrollShifts.filter(shift => {
           if (countedPayrollShifts.has(shift.id)) return false;
           countedPayrollShifts.add(shift.id);
@@ -472,7 +535,7 @@ export function createGateDailyBillingService(
           : elapsed >= 30 ? "red" : elapsed >= 14 ? "amber" : group === "open" ? "blue" : "white";
         result.push({ id: row.id, group, tone, status: row.status, invoiceCents,
           revenueByDay: charges,
-          estimate: group === "unstarted" ? null : await readRecord(c, session.vendorId!, "gate-billing-estimate", String(row.id)),
+          estimate: group === "unstarted" ? null : row.estimate ?? null,
           quarterCents: accruedSince(quarterStart), yearToDateCents: accruedSince(yearStart),
           payrollCents: payrollAvailable ? payrollShifts.length * gateGoShiftPayCents : null,
           quarterPayrollCents: newPayrollShifts.filter(shift => shift.pay_day >= quarterStart).length * gateGoShiftPayCents,
@@ -603,7 +666,7 @@ export function createGateDailyBillingService(
           });
         const result =
           record.kind === "configure"
-            ? publicConfig(ConfigSchema.parse(record.result))
+            ? publicConfig(storedConfig(record.result))
             : GateDailyBillingResultSchema.parse(record.result);
         return GateDailyBillingReceiptSchema.parse({
           state: "completed",
@@ -619,7 +682,7 @@ export function createGateDailyBillingService(
         const input = ConfigureSchema.parse(raw),
           fingerprint = digest({ stationId, input, actor: context.userId }),
           prior = await retry(c, context, input.operationId, fingerprint);
-        if (prior) return publicConfig(ConfigSchema.parse(prior.result));
+        if (prior) return publicConfig(storedConfig(prior.result));
         const previous = await config(c, context);
         if ((!previous || previous.jobOfferId) && !input.jobOfferId) fail("accepted_job_required");
         if ((previous?.version ?? 0) !== input.expectedVersion)

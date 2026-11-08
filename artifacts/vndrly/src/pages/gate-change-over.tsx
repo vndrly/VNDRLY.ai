@@ -206,8 +206,10 @@ export default function GateChangeOverPage({
     const id=navigator.geolocation.watchPosition(p=>setGpsPosition({latitude:p.coords.latitude,longitude:p.coords.longitude}),()=>setGpsPosition(null),{enableHighAccuracy:true,timeout:15000,maximumAge:10000});
     return ()=>navigator.geolocation.clearWatch(id);
   },[history]);
+  const gateScope = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
   const sites = useQuery({
-    queryKey: ["change-over-sites", user?.userId, history],
+    queryKey: ["change-over-sites", ...gateScope, history],
+    staleTime: 60_000,
     queryFn: () =>
       request<{ sites: { id: number; name: string; supervisor: boolean; latitude?:number|null;longitude?:number|null }[] }>(
         history ? "/sites?mode=history" : "/sites",
@@ -216,7 +218,8 @@ export default function GateChangeOverPage({
   });
   const siteId = selectedSite || String(sites.data?.sites[0]?.id ?? "");
   const stations = useQuery({
-    queryKey: ["change-over-stations", user?.userId, siteId, history],
+    queryKey: ["change-over-stations", ...gateScope, siteId, history],
+    staleTime: 60_000,
     queryFn: () =>
       request<{ stations: { id: string; name: string;latitude?:number|null;longitude?:number|null;geofenceRadiusM?:number|null }[] }>(
         `/stations?siteId=${siteId}${history ? "&mode=history" : ""}`,
@@ -431,6 +434,12 @@ export default function GateChangeOverPage({
       {(error || loadError) && (
         <p role="alert" className="text-destructive">
           {error || (loadError as Error).message}
+          {loadError && <button type="button" className="ml-2 underline" onClick={() => {
+            if (sites.isError) void sites.refetch();
+            else if (stations.isError) void stations.refetch();
+            else if (history) void log.refetch();
+            else void state.refetch();
+          }}>{t("common.retry", { defaultValue: "Retry" })}</button>}
         </p>
       )}
       {!loading && sites.data?.sites.length === 0 && (

@@ -136,7 +136,7 @@ router.get("/safety/readiness", requireSession, async (req, res): Promise<void> 
 });
 router.get('/safety/training-catalog',requireSession,async(req,res):Promise<void>=>{
  const session=readSession(req);if(!session.userId){sendApiError(res,401,'auth.unauthorized','Sign in required');return;}
- try{res.json({success:true,data:await safetyTrainingCatalogView({...session,userId:session.userId},{search:typeof req.query.search==='string'?req.query.search:'',familyId:typeof req.query.familyId==='string'?req.query.familyId:'',offset:typeof req.query.offset==='string'?Number(req.query.offset)||0:0})});}
+ try{res.json({success:true,data:await safetyTrainingCatalogView({...session,userId:session.userId},{allServices:req.query.allServices==='true',search:typeof req.query.search==='string'?req.query.search:'',familyId:typeof req.query.familyId==='string'?req.query.familyId:'',offset:typeof req.query.offset==='string'?Number(req.query.offset)||0:0})});}
  catch(error){const status=error&&typeof error==='object'&&'status'in error?Number(error.status):403;sendApiError(res,status===403?403:500,'safety.training_catalog_unavailable','Training service mapping is unavailable');}
 });
 

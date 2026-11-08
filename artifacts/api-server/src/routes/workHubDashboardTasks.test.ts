@@ -34,6 +34,23 @@ describe.skipIf(!isolated)("Dashboard personal and company task projection", () 
     expect(new Set(all.map(task => task.id)).size).toBe(105);
     expect(all.every(task => task.ownerOrgId === vendorId && ["Admin", "Worker"].includes(task.assigneeName))).toBe(true);
   });
+  it("returns exact dashboard counts without sending or paging the task history", async () => {
+    const result = await request(app).get("/work-hub/tasks?dashboard=summary").set("Cookie", adminCookie);
+    expect(result.status).toBe(200);
+    expect(result.body).toEqual({
+      scope: "company",
+      groups: {
+        new: { mine: 1, total: 105, unassigned: 0 },
+        unassigned: { mine: 0, total: 0, unassigned: 0 },
+        unstarted: { mine: 0, total: 0, unassigned: 0 },
+        progress: { mine: 0, total: 0, unassigned: 0 },
+        stale: { mine: 0, total: 0, unassigned: 0 },
+        completed: { mine: 0, total: 0, unassigned: 0 },
+      },
+    });
+    expect(result.body).not.toHaveProperty("tasks");
+    expect(result.body).not.toHaveProperty("nextCursor");
+  });
   it("keeps gatekeepers and gate supervisors personal, while office gets company totals", async () => {
     for (const vendorRole of ["gatekeeper", "gate_supervisor", "office"]) {
       const cookie = buildTestCookie({ userId: adminId, role: "vendor", vendorId, membershipRole: "member", vendorRole });

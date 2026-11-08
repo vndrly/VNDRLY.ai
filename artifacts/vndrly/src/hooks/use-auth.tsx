@@ -182,7 +182,8 @@ type AuthHmrData = {
 function readAuthHmrState(): { user: AuthUser | null; authChecked: boolean } {
   const data = import.meta.hot?.data as AuthHmrData | undefined;
   if (data?.authChecked) {
-    return { user: data.user ?? null, authChecked: true };
+    // A previous unresolved bootstrap must never become a durable signed-out result.
+    return { user: data.user ?? null, authChecked: Boolean(data.user) };
   }
   return { user: null, authChecked: false };
 }
@@ -204,11 +205,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     let checking = false;
+    let lastVerifiedAt = 0;
+    let retryDelay = 1000;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let activeController: AbortController | undefined;
     const checkSession = () => {
-      if (checking) return;
+      if (!active || checking) return;
+      clearTimeout(retryTimer);
       checking = true;
+      let retry = false;
       const generation=authGeneration.current;
       const controller = new AbortController();
+      activeController = controller;
       const timeout = setTimeout(() => controller.abort(), 8000);
       void fetch(`${BASE}/api/auth/me`, { credentials: "include", cache: "no-store", signal: controller.signal })
       .then(async (r) => {
@@ -219,33 +227,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((data) => {
         if(!active || authGeneration.current!==generation)return;
         const next = fromResponse(data);
+        lastVerifiedAt = Date.now();
+        retryDelay = 1000;
         setUser(next);
+        setIsLoading(false);
         applyLanguage(next.preferredLanguage);
       })
       .catch(async error=>{
         if(!active || authGeneration.current!==generation)return;
-        if(error instanceof AuthApiError&&error.status<500){deactivateWebFleetOffline();setUser(null);return;}
+        if(error instanceof AuthApiError&&(error.status===401||error.status===403)){
+          deactivateWebFleetOffline();setUser(null);setIsLoading(false);retryDelay=1000;return;
+        }
+        retry = true;
         const retained=/^\/fleet(?:\/|$)/.test(window.location.pathname)?await readWebFleetOfflineAuth():null;
         if(!active || authGeneration.current!==generation)return;
         setUser(current => retained ? {...fromResponse(retained),offlineOnly:true} : current);
+        if (retained) setIsLoading(false);
       })
       .finally(() => {
         clearTimeout(timeout);
         checking = false;
-        if(active && authGeneration.current===generation)setIsLoading(false);
+        if(active && authGeneration.current===generation && retry){
+          // An unavailable session service is neither an authenticated session nor a logout.
+          // Keep first-load permission checks unresolved and retry without trusting cached office roles.
+          retryTimer=setTimeout(checkSession,retryDelay);
+          retryDelay=Math.min(retryDelay*2,15000);
+        }
       });
     };
     // A late failed request must not sign out a newer valid session. Re-read
     // the canonical session before changing the authenticated UI.
     const checkVisibleSession = () => {
-      if (document.visibilityState === "visible") checkSession();
+      if (document.visibilityState === "visible" && Date.now() - lastVerifiedAt >= 15000) checkSession();
     };
     window.addEventListener("vndrly:authentication-required", checkSession);
     window.addEventListener("focus", checkVisibleSession);
     document.addEventListener("visibilitychange", checkVisibleSession);
-    if (!initialAuthRef.current.authChecked) checkSession();
+    checkSession();
     return () => {
       active = false;
+      clearTimeout(retryTimer);
+      activeController?.abort();
       window.removeEventListener("vndrly:authentication-required", checkSession);
       window.removeEventListener("focus", checkVisibleSession);
       document.removeEventListener("visibilitychange", checkVisibleSession);
@@ -267,6 +289,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await res.json();
     const next = fromResponse(data);
     setUser(next);
+    setIsLoading(false);
     applyLanguage(next.preferredLanguage);
     return next;
   }, []);
@@ -323,6 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await res.json();
     const next = fromResponse(data);
     setUser(next);
+    setIsLoading(false);
     applyLanguage(next.preferredLanguage);
   }, []);
 

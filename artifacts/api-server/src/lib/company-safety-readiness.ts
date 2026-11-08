@@ -1,15 +1,23 @@
 import { and, eq, inArray, isNull,sql } from "drizzle-orm";
 import { db, vendorsTable, vendorPeopleTable, employeeCertificationsTable, workHubFormTemplatesTable as templates, workHubFormInstancesTable as instances, safetyEventsTable as events, safetyCorrectiveActionsTable as actions } from "@workspace/db";
 import { FleetStateSchema } from "../services/fleet-repository";
-import { AssignmentMetadataSchema, LibraryMetadataSchema } from "@workspace/api-zod";
+import { AssignmentMetadataSchema, LibraryMetadataSchema, type WorkHubOwner } from "@workspace/api-zod";
 import { libraryAuthority, type LibraryActor } from "../work-hub/library-core";
 import { companyLibraryPeople } from "../work-hub/library-audience";
 import { computeSafetyMetrics } from "./safety-metrics";
 import { assessSafetyReadiness, currentCredential, currentFleetInspection, type ReadinessEvidence } from "./safety-readiness";
 import {companyRequiredTraining}from'./company-required-training';
+import { storedTrainingProjection } from '../work-hub/stored-training-projections';
 
 export async function companySafetyReadiness(actor: LibraryActor) {
   const { owner, member } = await libraryAuthority(db, actor);
+  const saved = await storedCompanySafetyReadiness(owner);
+  return { ...saved, canManage: member.role === "admin" };
+}
+
+/** Shared evidence excludes actor-specific management permissions. */
+export async function storedCompanySafetyReadiness(owner: WorkHubOwner) {
+ return storedTrainingProjection(`${owner.type}:${owner.id}:readiness`, async () => {
   const people = await companyLibraryPeople(db, owner);
   const userIds = people.map(p => p.userId);
   const [incident, published, assigned, requiredTraining] = await Promise.all([
@@ -75,5 +83,6 @@ export async function companySafetyReadiness(actor: LibraryActor) {
   const correctiveRows = await db.select({ status: actions.status, verifiedAt: actions.verifiedAt }).from(actions).innerJoin(events, eq(events.id, actions.eventId)).where(owner.type === "vendor" ? eq(events.vendorId, owner.id) : eq(events.partnerId, owner.id));
   const correctiveActions = { id: "correctiveActions", required: correctiveRows.length, completed: correctiveRows.filter(a => a.status === "verified" && a.verifiedAt).length, unknown: 0 };
   const assessment = assessSafetyReadiness(incident.safetyScore, [training, acknowledgements, credentials, drivers, inspections, correctiveActions]);
-  return { ...assessment, provisional:assessment.provisional||requiredTraining.provisional,categories:assessment.categories.map(category=>category.id==='training'?{...category,provisional:category.provisional||requiredTraining.provisional}:category),activePeople: people.length, canManage: member.role === "admin", incident, trainingBaseline:{catalogServices:963,services:requiredTraining.services,required:requiredTraining.required,completed:requiredTraining.completed,unavailable:requiredTraining.unavailable,provisional:requiredTraining.provisional,unmappedServiceIds:requiredTraining.unmappedServiceIds,unresolvedRoles:requiredTraining.unresolvedRoles,scopeIssues:requiredTraining.scopeIssues,conditionalCourseGaps:requiredTraining.conditionalCourseGaps.map(gap=>({...gap,trainingItemId:requiredTraining.items.get(gap.familyId)?.record.id??null,courseTitle:requiredTraining.items.get(gap.familyId)?.record.name??gap.familyId})),vendorExtrasCountTowardScore:false},asOf: new Date().toISOString() };
+  return { ...assessment, provisional:assessment.provisional||requiredTraining.provisional,categories:assessment.categories.map(category=>category.id==='training'?{...category,provisional:category.provisional||requiredTraining.provisional}:category),activePeople: people.length, incident, trainingBaseline:{catalogServices:963,services:requiredTraining.services,required:requiredTraining.required,completed:requiredTraining.completed,unavailable:requiredTraining.unavailable,provisional:requiredTraining.provisional,unmappedServiceIds:requiredTraining.unmappedServiceIds,unresolvedRoles:requiredTraining.unresolvedRoles,scopeIssues:requiredTraining.scopeIssues,conditionalCourseGaps:requiredTraining.conditionalCourseGaps.map(gap=>({...gap,trainingItemId:requiredTraining.items.get(gap.familyId)?.record.id??null,courseTitle:requiredTraining.items.get(gap.familyId)?.record.name??gap.familyId})),vendorExtrasCountTowardScore:false},asOf: new Date().toISOString() };
+ });
 }

@@ -1,6 +1,7 @@
 import { and, desc, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
 import { db, safetyEventsTable, siteLocationsTable } from "@workspace/db";
 import { calculateSafetyEventScore } from "./safety-score";
+import { storedTrainingProjection } from '../work-hub/stored-training-projections';
 
 const OPEN_STATUSES = ["submitted", "under_review", "resolved"] as const;
 
@@ -19,6 +20,10 @@ export async function computeSafetyMetrics(opts: {
   vendorId?: number;
   siteLocationId?: number;
 }): Promise<SafetyMetricsResult> {
+  const key = opts.siteLocationId != null ? `metrics:site:${opts.siteLocationId}`
+    : opts.partnerId != null ? `metrics:partner:${opts.partnerId}`
+    : opts.vendorId != null ? `metrics:vendor:${opts.vendorId}` : 'metrics:global';
+  return storedTrainingProjection(key, async () => {
   const now = new Date();
   const ninetyDaysAgo = new Date(now);
   ninetyDaysAgo.setUTCDate(ninetyDaysAgo.getUTCDate() - 90);
@@ -126,6 +131,7 @@ export async function computeSafetyMetrics(opts: {
     formulaExplanation:
       "Score starts at 100, −15 per open recordable (90d), −5 per open HiPo older than 7 days, −2 per stale open event (cap −10), +2 per near miss reported (30d, cap +10).",
   };
+  });
 }
 
 export async function loadSiteOperationalStatus(siteLocationId: number) {

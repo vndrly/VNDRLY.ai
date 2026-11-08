@@ -35,6 +35,7 @@ it("offers authorized operators with no current watch and excludes busy operator
   expect(result.operators.map(operator => operator.userId)).toEqual([2]);
   expect(result.operators[0]).not.toHaveProperty("session");
   expect(query).toHaveBeenCalledWith(expect.stringContaining("ended_at IS NULL AND operator_id=ANY"), [[2, 3]]);
+  expect(query).toHaveBeenCalledTimes(5);
 });
 
 it("rechecks availability before recovery and refuses an operator already on watch", async () => {

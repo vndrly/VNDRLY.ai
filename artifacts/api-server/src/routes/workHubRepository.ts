@@ -1,6 +1,6 @@
 import { meetingRepositoryAccess } from "../work-hub/repository-meeting-files";
 import { trainingExperimentMethod } from "../work-hub/training-performance";
-import { cachedTrainingProgress, invalidateTrainingProgress } from "../work-hub/training-progress-cache";
+import { invalidateTrainingProgress } from "../work-hub/training-progress-cache";
 import { currentDatabaseRealm, withDatabaseTimings, timeDatabaseStage } from "@workspace/db";
 import { companyTrainingProgress, teamTrainingAuthority, hasTeamTrainingAccess } from "../work-hub/team-training-progress";
 import { companySafetyScoreSummary } from "../lib/company-safety-maturity";
@@ -107,9 +107,9 @@ router.get("/work-hub/repository/progress", async (req, res) => {
     const key = `${currentDatabaseRealm()}:${owner.type}:${owner.id}:${actor.userId}:${member.id}`;
     // Local comparison variants must not share a cached result with one another.
     const experiment = trainingExperiment(req, member.role);
-    const compute = () => repositoryCertificationProgress(db, owner, actor.userId, { optimized: !experiment || experiment === "server" });
+    const compute = () => repositoryCertificationProgress(db, owner, actor.userId, { optimized: !experiment || experiment === "server", membershipId: member.id });
     const [progress, canViewTeamTraining] = await Promise.all([
-      experiment ? compute() : cachedTrainingProgress(key, compute),
+      compute(),
       hasTeamTrainingAccess(owner, member, actor.userId),
     ]);
     return { ...progress, canViewTeamTraining };
@@ -124,7 +124,7 @@ router.get("/work-hub/repository/team-progress", async (req, res) => {
     res.locals.trainingProfileAllowed = member.role === "admin";
     const key = `${currentDatabaseRealm()}:${owner.type}:${owner.id}:team:progress`;
     const compute = () => companyTrainingProgress(owner);
-    return trainingExperiment(req, member.role) ? compute() : cachedTrainingProgress(key, compute);
+    return compute();
     });
   } catch (error) { return fail(res, error); }
 });
@@ -136,7 +136,7 @@ router.get("/work-hub/repository/safety-summary", async (req, res) => {
     const key = `${currentDatabaseRealm()}:${owner.type}:${owner.id}:safety:summary`;
     const experiment = trainingExperiment(req, member.role);
     const compute = () => companySafetyScoreSummary(owner, { optimized: !experiment || experiment === "server" });
-    return experiment ? compute() : cachedTrainingProgress(key, compute);
+    return compute();
     });
   } catch (error) { return fail(res, error); }
 });
@@ -187,7 +187,7 @@ router.get("/work-hub/repository", async (req, res) => {
           .where(inArray(users.id, creatorIds))
       : [];
     return res.json({
-      ...(await repositoryCertificationProgress(db, ctx.owner, actor.userId)),
+      ...(await repositoryCertificationProgress(db, ctx.owner, actor.userId, { membershipId: ctx.member.id })),
       canAdmin: ctx.admin,
       canManageTraining: ctx.admin || ctx.office,
       canAssignTravel: ctx.canAssignTravel,

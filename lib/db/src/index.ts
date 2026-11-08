@@ -3,6 +3,7 @@ import { assertFreshLocalTestDatabaseEnvironment } from "../../../scripts/fresh-
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 import {createRealmDispatcher} from './database-realm';
+import { createTrainingWorkerDispatcher, trainingWorkerPoolConfig } from './training-worker-database';
 import {
   createResilientPostgresPool,
   type PostgresConnectionFailure,
@@ -36,6 +37,20 @@ const demoPool = process.env.DEMO_DATABASE_URL
     )
   : null;
 const demoDb = demoPool ? drizzle(demoPool,{schema}) : null;
+// Independent pools preserve request capacity even while projection SQL is busy.
+// Constructing a Pool does not open a connection; only explicit worker use does.
+const productionTrainingPool = createResilientPostgresPool(
+  trainingWorkerPoolConfig(process.env.DATABASE_URL),
+  reportConnectionFailure("production"),
+);
+const productionTrainingDb = drizzle(productionTrainingPool, { schema });
+const demoTrainingPool = process.env.DEMO_DATABASE_URL
+  ? createResilientPostgresPool(
+      trainingWorkerPoolConfig(process.env.DEMO_DATABASE_URL),
+      reportConnectionFailure("demo"),
+    )
+  : null;
+const demoTrainingDb = demoTrainingPool ? drizzle(demoTrainingPool, { schema }) : null;
 let demoReady=false;
 let demoInitialization:Promise<void>|undefined;
 
@@ -55,14 +70,25 @@ export async function initializeDemoDatabase():Promise<void>{
  return demoInitialization;
 }
 
-export const pool=createRealmDispatcher(productionPool,()=>{
+const requestPool=createRealmDispatcher(productionPool,()=>{
  if(!demoReady||!demoPool)throw Error('Demo database unavailable; production fallback prohibited');
  return demoPool;
 });
-export const db=createRealmDispatcher(productionDb,()=>{
+const requestDb=createRealmDispatcher(productionDb,()=>{
  if(!demoReady||!demoDb)throw Error('Demo database unavailable; production fallback prohibited');
  return demoDb;
 });
+const trainingPool=createRealmDispatcher(productionTrainingPool,()=>{
+ if(!demoReady||!demoTrainingPool)throw Error('Demo database unavailable; production fallback prohibited');
+ return demoTrainingPool;
+});
+const trainingDb=createRealmDispatcher(productionTrainingDb,()=>{
+ if(!demoReady||!demoTrainingDb)throw Error('Demo database unavailable; production fallback prohibited');
+ return demoTrainingDb;
+});
+export const pool=createTrainingWorkerDispatcher(requestPool,()=>trainingPool);
+export const db=createTrainingWorkerDispatcher(requestDb,()=>trainingDb);
+export {runWithTrainingWorkerDatabase} from './training-worker-database';
 export {currentDatabaseRealm,runInDatabaseRealm,assertExternalEffectsAllowed} from './database-realm';
 export { withDatabaseTimings, timeDatabaseStage, startDatabaseStage } from './query-timings';
 export type {DatabaseRealm} from './database-realm';

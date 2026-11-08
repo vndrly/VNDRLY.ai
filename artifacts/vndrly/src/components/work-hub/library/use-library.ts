@@ -1,6 +1,6 @@
 import { useCampaign } from "../form-campaigns/use-campaign";
-export function useLibrary<T>(path: string, parse: (value: unknown) => T) {
-  const api = useCampaign(path.replace(/^\/api\/work-hub/, ""), parse);
+export function useLibrary<T>(path: string, parse: (value: unknown) => T, enabled = true) {
+  const api = useCampaign(path.replace(/^\/api\/work-hub/, ""), parse, enabled);
   return {
     data: api.data ?? null,
     error: api.mutation.error?.message ?? api.query.error?.message ?? "",

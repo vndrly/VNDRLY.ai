@@ -8,7 +8,7 @@ vi.mock("@/lib/native-operations-client", () => ({ nativeOperationsRequest: stat
 beforeEach(() => {
   state.active = false; state.request.mockReset();
   state.request.mockImplementation(async (path, init) => {
-    if (path === "/on-call" || (path === "/pickup-shifts" && init?.method === "PUT")) state.active = JSON.parse(init.body).active;
+    if ((path === "/on-call" || path === "/pickup-shifts") && init?.method === "PUT") state.active = JSON.parse(init.body).active;
     return { active: state.active, onCallActive: state.active, policy: { enabled: true }, canWorkerOperate: true };
   });
 });
@@ -19,7 +19,7 @@ it("saves pickup willingness separately without declaring on-call or starting du
   fireEvent.click(control);
   await waitFor(() => expect(control.getAttribute("aria-checked")).toBe("true"));
   expect(state.request).toHaveBeenCalledWith("/pickup-shifts", expect.objectContaining({method:"PUT",body:JSON.stringify({active:true,consent:true})}));
-  expect(state.request.mock.calls.some(([path])=>path==="/on-call" || path.includes("duty"))).toBe(false);
+  expect(state.request.mock.calls.some(([path, init])=>(path==="/on-call" && init?.method === "PUT") || path.includes("duty"))).toBe(false);
 });
 it("toggles the actual on-call declaration independently from the shift clock", async () => {
   mount(); const off = screen.getByRole("switch", { name: "On Call" });
@@ -34,5 +34,5 @@ it("keeps unavailable on-call data disabled instead of guessing a state", async 
   expect(await screen.findByText("On-call unavailable")).toBeTruthy();
   const control = screen.getByRole("switch", { name: "On Call" });
   expect(control.hasAttribute("disabled")).toBe(true); fireEvent.click(control);
-  expect(state.request.mock.calls.some(([path]) => path === "/on-call")).toBe(false);
+  expect(state.request.mock.calls.some(([path, init]) => path === "/on-call" && init?.method === "PUT")).toBe(false);
 });

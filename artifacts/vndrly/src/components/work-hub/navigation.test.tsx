@@ -24,8 +24,8 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => k
 describe("Work Hub navigation", () => {
   beforeEach(() => {
     window.history.pushState({}, "", "/work-hub/chat");
+    mocks.user.role = "vendor";
     mocks.user.vendorRole = "office";
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ok:true,json:async()=>({ok:true})}));
     mocks.request.mockReset();
     mocks.request.mockResolvedValue({ pinned: ["activity", "chat", "channels"], order: [], favorites: [], muted: [], drafts: {} });
   });
@@ -43,6 +43,16 @@ describe("Work Hub navigation", () => {
     expect(admin.nextElementSibling?.textContent).toContain("More");
   });
 
+  it("returns office staff to Admin immediately without a PIN request", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    mount();
+    fireEvent.click(screen.getByTestId("nav-go-to-admin"));
+    await waitFor(() => expect(window.location.pathname).toBe("/"));
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("gateNav.enterPin")).toBeNull();
+  });
+
   it("uses canonical sidebar sizing and keeps compact white edit controls inside each row", async () => {
     mount();
     const navigation = screen.getByLabelText("Work Hub navigation");
@@ -56,11 +66,8 @@ describe("Work Hub navigation", () => {
     const more = screen.getByRole("button", { name: "More" });
     expect(more.getAttribute("aria-expanded")).toBe("false");
     fireEvent.click(more);
-    expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
-    const pin = screen.getByLabelText(/four|PIN|gateNav.enterPin/i);
-    fireEvent.change(pin, { target: { value: "1029" } });
-    fireEvent.submit(pin.closest("form")!);
     expect(await screen.findByRole("button", { name: "Done" })).toBeTruthy();
+    expect(screen.queryByLabelText("gateNav.enterPin")).toBeNull();
     const controls = await screen.findAllByRole("button", { name: /^(Pin|Unpin|Move)/ });
     await waitFor(() => expect(controls.length).toBeGreaterThan(2));
     for (const control of controls) {

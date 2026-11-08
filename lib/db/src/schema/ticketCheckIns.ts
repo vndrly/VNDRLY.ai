@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, timestamp, doublePrecision, text, numeric, uuid, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, timestamp, doublePrecision, text, numeric, uuid, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { ticketsTable } from "./tickets";
@@ -24,7 +24,10 @@ export const ticketCheckInsTable = pgTable("ticket_check_ins", {
   correctedById: integer("corrected_by_id"),
   correctedReason: text("corrected_reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => ({
+  ticketTimeIdx: index("ticket_check_ins_ticket_time_idx").on(t.ticketId, t.checkOutAt, t.checkInAt),
+  gateTimeIdx: index("ticket_check_ins_gate_time_idx").on(t.gateStationId, t.checkOutAt, t.checkInAt),
+}));
 
 export const insertTicketCheckInSchema = createInsertSchema(ticketCheckInsTable).omit({ id: true, createdAt: true, gateStationId: true, gateAssociationProvenance: true });
 export type InsertTicketCheckIn = z.infer<typeof insertTicketCheckInSchema>;

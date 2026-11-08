@@ -13,6 +13,7 @@ import {
   Heading,
 } from "./editor-controls";
 import { useLocation } from "wouter";
+import SafetyProgram from "./safety-program";
 import { z } from "zod/v4";
 import { AssignmentMetadataSchema } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
@@ -80,18 +81,20 @@ export default function LibraryWorkspace({
   const router = { push: (path: string) => navigate(path) };
   const { t } = useTranslation(),
     colors = useColors(),
-    [tab, setTab] = useState(canManage ? "library" : "toComplete"),
+    [selectedTab, setTab] = useState<string | null>(null),
     [myServices,setMyServices]=useState(false),
     [search, setSearch] = useState(""),
     [archived, setArchived] = useState(false),
     [create, setCreate] = useState(false),
     [notice, setNotice] = useState("");
+  const tab = selectedTab ?? "bundles";
   const list = useFormCampaigns(
-    `/api/work-hub/library?archived=${archived}&myServices=${tab==="training"&&myServices}`,
+    `/api/work-hub/library?archived=${archived}&myServices=${tab==="training"&&myServices}${tab === "bundles" ? "&kind=bundle" : ""}`,
     (v) => itemsSchema.parse(v),
+    tab === "training" || tab === "bundles",
   );
   const checklist = useFormCampaigns("/api/work-hub/library/to-complete", (v) =>
-    checklistSchema.parse(v),
+    checklistSchema.parse(v), tab === "toComplete",
   );
   const assignments = useFormCampaigns(
     canManage
@@ -99,6 +102,7 @@ export default function LibraryWorkspace({
       : "/api/work-hub/library/to-complete",
     (v) =>
       canManage ? assignmentsSchema.parse(v) : { items: [], anonymous: [] },
+    canManage && tab === "assignments",
   );
   const filesApi = useFormCampaigns(
     canManage
@@ -112,6 +116,7 @@ export default function LibraryWorkspace({
             })
             .parse(value)
         : { files: [] },
+    canManage && create,
   );
   const card = {
       backgroundColor: colors.card,
@@ -136,7 +141,7 @@ export default function LibraryWorkspace({
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8,paddingRight:36 }}>
           {(canManage
             ? ["library", "training", "bundles", "augmented", "assignments"]
-            : ["toComplete"]
+            : ["toComplete", "bundles"]
           ).map((value) => (
             <TogglePillButton
               key={value}
@@ -254,11 +259,29 @@ export default function LibraryWorkspace({
             </View>
           ))}
       {tab==="library"&&<WorkHubFiles defaultScope="company" trainingMaterials/>}
-      {["training", "bundles"].includes(tab) &&
+      {tab === "bundles" && !!list.data?.items.length && (
+        <View style={card}>
+          <details>
+            <summary className="cursor-pointer font-semibold">{t("workHubLibrary.trainingNeededByRole")}</summary>
+            <ul className="mt-3 divide-y divide-white/15">
+              {list.data.items.filter(item => item.kind === "bundle" && item.title.toLowerCase().includes(search.toLowerCase())).map(item => (
+                <li key={item.itemId} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                  <div>
+                    <p className="font-semibold">{formatTrainingTitle(item.title)}</p>
+                    <Text style={label}>{t(`workHubLibrary.state_${item.state}`)} · {t("workHubLibrary.version")} {item.contentVersion}</Text>
+                  </div>
+                  <TogglePillButton color="brand" onPress={() => router.push(`/work-hub/bundle/${item.itemId}`)}>{t("workHubLibrary.view")}</TogglePillButton>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </View>
+      )}
+      {tab === "training" &&
         list.data?.items
           .filter(
             (i) =>
-              (tab === "bundles" ? i.kind === "bundle" : tab === "training" ? i.kind === "training" && i.platformManaged : !["bundle", "training"].includes(i.kind)) &&
+              i.kind === "training" && i.platformManaged &&
               i.title.toLowerCase().includes(search.toLowerCase()),
           )
           .map((item) => (
@@ -269,18 +292,10 @@ export default function LibraryWorkspace({
                 {t(`workHubLibrary.state_${item.state}`)} ·{" "}
                 {t("workHubLibrary.version")} {item.contentVersion}
               </Text>
-              {item.kind==='training'?<TrainingActions itemId={item.itemId} canManage={canManage}/>:<TogglePillButton
-                color="brand"
-                onPress={() =>
-                  router.push(
-                    `/work-hub/${item.kind === "bundle" ? "bundle" : "library"}/${item.itemId}` as never,
-                  )
-                }
-              >
-                {t("workHubLibrary.view")}
-              </TogglePillButton>}
+              <TrainingActions itemId={item.itemId} canManage={canManage}/>
             </View>
           ))}
+      {tab === "bundles" && !list.loading && <SafetyProgram />}
       {tab === "assignments" &&
         assignments.data?.items
           .filter((i) =>

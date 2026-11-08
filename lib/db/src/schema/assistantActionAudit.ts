@@ -40,6 +40,7 @@ export const assistantActionAuditTable = pgTable(
     byUser: index("assistant_action_audit_user_idx").on(t.userId, t.createdAt),
     byTool: index("assistant_action_audit_tool_idx").on(t.toolName, t.createdAt),
     byTarget: index("assistant_action_audit_target_idx").on(t.targetType, t.targetId, t.createdAt),
+    byVendorTarget: index("assistant_action_audit_vendor_target_idx").on(t.vendorId, t.partnerId, t.targetType, t.targetId, t.id),
   }),
 );
 

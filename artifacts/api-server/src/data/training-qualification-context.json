@@ -1,0 +1,734 @@
+{
+  "G99": [
+    {
+      "programId": "OG01",
+      "title": "Energy Safety Core | Field Safety Orientation",
+      "benchmark": "PEC / Veriforce Basic Orientation 7.0, SafeLandUSA and SafeGulf topic benchmark",
+      "audience": "New and returning onshore field workers; offshore additions depend on deployment",
+      "requirement": "VNDRLY issues its own Energy Safety Core credential after its learning checks and separate examination. Veriforce cards and SafeLand/SafeGulf recognition require the recognized provider route. Record a partner acceptance decision separately for the exact VNDRLY version and site scope.",
+      "renewal": "VNDRLY refresher policy and site-specific induction on change; do not invent a universal PEC expiry.",
+      "sourceUrls": [
+        "https://veriforce.com/wp-content/uploads/2025/01/Basic-Version-7.0-Syllabus-01.08.2025.pdf"
+      ]
+    }
+  ],
+  "H13": [
+    {
+      "programId": "OG03",
+      "title": "Atmospheric Safety | Hydrogen Sulfide",
+      "benchmark": "H2S training / H2S Clear benchmark",
+      "audience": "People exposed to potential H2S, with specialist duties separately assigned",
+      "requirement": "Apply the actual employer H2S plan. Required respirator users need medical evaluation, fit testing where applicable and demonstrated respirator skills. A named H2S Clear credential requires its approved provider.",
+      "renewal": "Reassess on changed exposure, detector, respiratory equipment or deficient performance; use any required provider/site refresher.",
+      "sourceUrls": [
+        "https://veriforce.com/courses",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+      ]
+    }
+  ],
+  "C08": [
+    {
+      "programId": "OG06",
+      "title": "Emergency Care | First Aid, CPR and AED",
+      "benchmark": "Recognized workplace first aid / CPR / AED",
+      "audience": "Designated first aiders and emergency support personnel",
+      "requirement": "Use a recognized current first-aid curriculum with instructor-led psychomotor practice and assessment. An online-only knowledge record is not a Red Cross or AHA skills certificate.",
+      "renewal": "Track the actual provider certificate expiry and skills refresh schedule.",
+      "sourceUrls": [
+        "https://elearning.heart.org/static/courseformat",
+        "https://www.redcross.org/take-a-class/first-aid/first-aid-training/first-aid-online"
+      ]
+    }
+  ],
+  "H05": [
+    {
+      "programId": "OG07",
+      "title": "Confined Spaces | Entry Team",
+      "benchmark": "Permit-required confined-space duties",
+      "audience": "Entrants, attendants and entry supervisors, with rescue personnel separately qualified",
+      "requirement": "Employer training must establish proficiency for assigned duties. Rescue services need the applicable capability evaluation, practice and first-aid provisions. Construction uses Subpart AA rather than automatically applying 1910.146.",
+      "renewal": "Retrain before changed duties/hazards or when proficiency is deficient; covered employee rescue practice at least every 12 months subject to the standard exception.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
+        "https://www.osha.gov/confined-spaces/construction"
+      ]
+    }
+  ],
+  "G87": [
+    {
+      "programId": "OG07",
+      "title": "Confined Spaces | Entry Team",
+      "benchmark": "Permit-required confined-space duties",
+      "audience": "Entrants, attendants and entry supervisors, with rescue personnel separately qualified",
+      "requirement": "Employer training must establish proficiency for assigned duties. Rescue services need the applicable capability evaluation, practice and first-aid provisions. Construction uses Subpart AA rather than automatically applying 1910.146.",
+      "renewal": "Retrain before changed duties/hazards or when proficiency is deficient; covered employee rescue practice at least every 12 months subject to the standard exception.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
+        "https://www.osha.gov/confined-spaces/construction"
+      ]
+    }
+  ],
+  "H04": [
+    {
+      "programId": "OG08",
+      "title": "Energy Control | Authorized and Affected Employees",
+      "benchmark": "Lockout/tagout role training",
+      "audience": "Maintenance and operations workers within the applicable energy-control scope",
+      "requirement": "Train against the actual equipment procedure and certify employee name and training date. 1910.147 excludes oil and gas well drilling/servicing and other specified scopes; determine the applicable energy-control requirements before assigning this standard.",
+      "renewal": "Retrain for changes or deficiencies; periodic procedure inspection is a separate at-least-annual duty.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147"
+      ]
+    }
+  ],
+  "H08": [
+    {
+      "programId": "OG09",
+      "title": "Work at Height | Fall Prevention and Protection",
+      "benchmark": "Fall-protection user training",
+      "audience": "Employees exposed to falls and their supervisors",
+      "requirement": "Use the applicable general-industry or construction standard and equipment-specific instruction. Construction employer certification identifies trained workers, dates and trainer/employer signature. Rescue planning and competent-person responsibilities remain task specific.",
+      "renewal": "Retrain when changed equipment/workplace or demonstrated inadequacy requires it.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.503",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.30"
+      ]
+    },
+    {
+      "programId": "OG31",
+      "title": "Access Systems | Scaffold Safety",
+      "benchmark": "Scaffold user and erector training",
+      "audience": "Scaffold users, erectors and competent persons by assigned role",
+      "requirement": "Users are trained by a person qualified in the subject; erection/alteration duties require their specified competent-person instruction and supervision. Training is role specific.",
+      "renewal": "Retrain on changed hazards, new equipment or insufficient proficiency.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.454"
+      ]
+    }
+  ],
+  "G88": [
+    {
+      "programId": "OG09",
+      "title": "Work at Height | Fall Prevention and Protection",
+      "benchmark": "Fall-protection user training",
+      "audience": "Employees exposed to falls and their supervisors",
+      "requirement": "Use the applicable general-industry or construction standard and equipment-specific instruction. Construction employer certification identifies trained workers, dates and trainer/employer signature. Rescue planning and competent-person responsibilities remain task specific.",
+      "renewal": "Retrain when changed equipment/workplace or demonstrated inadequacy requires it.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.503",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.30"
+      ]
+    },
+    {
+      "programId": "OG31",
+      "title": "Access Systems | Scaffold Safety",
+      "benchmark": "Scaffold user and erector training",
+      "audience": "Scaffold users, erectors and competent persons by assigned role",
+      "requirement": "Users are trained by a person qualified in the subject; erection/alteration duties require their specified competent-person instruction and supervision. Training is role specific.",
+      "renewal": "Retrain on changed hazards, new equipment or insufficient proficiency.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.454"
+      ]
+    },
+    {
+      "programId": "OG43",
+      "title": "Rope Access | Technician Preparation",
+      "benchmark": "IRATA rope access",
+      "audience": "Rope-access technician candidates",
+      "requirement": "IRATA training and independent assessment, entry conditions and level progression apply. Practical skills and logged experience cannot be replaced by online completion.",
+      "renewal": "Track actual three-year certification and refresher/progression requirements.",
+      "sourceUrls": [
+        "https://irata.org/page/training-requirements",
+        "https://irata.org/page/technician-step-by-step-guide/"
+      ]
+    }
+  ],
+  "G02": [
+    {
+      "programId": "OG10",
+      "title": "Hazardous Operations | Waste and Emergency Response",
+      "benchmark": "HAZWOPER role pathways",
+      "audience": "Covered cleanup, treatment/storage/disposal or emergency-response workers",
+      "requirement": "Separate 1910.120(e) cleanup, (p) facility and (q) response pathways. General cleanup commonly requires 40 hours plus three supervised field days; limited-task pathways and response levels have different requirements. Record the exact paragraph and role.",
+      "renewal": "Use the applicable paragraph: covered cleanup refresher is eight hours annually; emergency response requires annual refresher or demonstrated competency.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
+      ]
+    }
+  ],
+  "G51": [
+    {
+      "programId": "OG10",
+      "title": "Hazardous Operations | Waste and Emergency Response",
+      "benchmark": "HAZWOPER role pathways",
+      "audience": "Covered cleanup, treatment/storage/disposal or emergency-response workers",
+      "requirement": "Separate 1910.120(e) cleanup, (p) facility and (q) response pathways. General cleanup commonly requires 40 hours plus three supervised field days; limited-task pathways and response levels have different requirements. Record the exact paragraph and role.",
+      "renewal": "Use the applicable paragraph: covered cleanup refresher is eight hours annually; emergency response requires annual refresher or demonstrated competency.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
+      ]
+    }
+  ],
+  "G84": [
+    {
+      "programId": "OG10",
+      "title": "Hazardous Operations | Waste and Emergency Response",
+      "benchmark": "HAZWOPER role pathways",
+      "audience": "Covered cleanup, treatment/storage/disposal or emergency-response workers",
+      "requirement": "Separate 1910.120(e) cleanup, (p) facility and (q) response pathways. General cleanup commonly requires 40 hours plus three supervised field days; limited-task pathways and response levels have different requirements. Record the exact paragraph and role.",
+      "renewal": "Use the applicable paragraph: covered cleanup refresher is eight hours annually; emergency response requires annual refresher or demonstrated competency.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
+      ]
+    }
+  ],
+  "C06": [
+    {
+      "programId": "OG11",
+      "title": "Powered Trucks | Forklift Operation",
+      "benchmark": "Employer powered-industrial-truck certification",
+      "audience": "Operators of covered truck types",
+      "requirement": "Formal instruction, practical training and workplace evaluation by a person with the required knowledge, training and experience are required. Employer certification records operator, training/evaluation dates and evaluator identity.",
+      "renewal": "Evaluate at least every three years and provide refresher training/evaluation for specified triggers.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178"
+      ]
+    },
+    {
+      "programId": "OG12",
+      "title": "Cranes | Mobile Crane Operator",
+      "benchmark": "CCO mobile crane certification",
+      "audience": "Assigned mobile-crane operators",
+      "requirement": "CCO certification involves its eligibility, written and practical examinations. Covered construction operation also requires the employer evaluation under 1926.1427, including equipment configuration and assigned activities.",
+      "renewal": "Track issuer expiry and employer retraining/evaluation triggers independently.",
+      "sourceUrls": [
+        "https://www.nccco.org/nccco/certifications/mobile-crane-operator/certification-overview",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427"
+      ]
+    },
+    {
+      "programId": "OG34",
+      "title": "Powered Access | MEWP Operation",
+      "benchmark": "MEWP operator training / IPAF PAL",
+      "audience": "Operators of mobile elevating work platforms",
+      "requirement": "Train and assess on the applicable machine category, then familiarize on the specific machine. IPAF PAL requires approved theory and practical assessment.",
+      "renewal": "Track issuer validity, equipment familiarization and site reassessment triggers.",
+      "sourceUrls": [
+        "https://www.ipaf.org/en-us/training-courses/mewp-operator-training"
+      ]
+    }
+  ],
+  "C05": [
+    {
+      "programId": "OG13",
+      "title": "Commercial Driving | CDL and Endorsements",
+      "benchmark": "State CDL / FMCSA ELDT",
+      "audience": "Drivers of vehicles requiring a CDL",
+      "requirement": "The state issues the CDL. Applicable ELDT must be delivered through a registered provider; endorsement, medical and security requirements are separate. VNDRLY coursework cannot issue a license or certify unregistered ELDT delivery.",
+      "renewal": "Track actual state license, medical certification and endorsement expirations individually.",
+      "sourceUrls": [
+        "https://www.fmcsa.dot.gov/registration/commercial-drivers-license/entry-level-driver-training-eldt"
+      ]
+    }
+  ],
+  "G95": [
+    {
+      "programId": "OG13",
+      "title": "Commercial Driving | CDL and Endorsements",
+      "benchmark": "State CDL / FMCSA ELDT",
+      "audience": "Drivers of vehicles requiring a CDL",
+      "requirement": "The state issues the CDL. Applicable ELDT must be delivered through a registered provider; endorsement, medical and security requirements are separate. VNDRLY coursework cannot issue a license or certify unregistered ELDT delivery.",
+      "renewal": "Track actual state license, medical certification and endorsement expirations individually.",
+      "sourceUrls": [
+        "https://www.fmcsa.dot.gov/registration/commercial-drivers-license/entry-level-driver-training-eldt"
+      ]
+    }
+  ],
+  "G79": [
+    {
+      "programId": "OG14",
+      "title": "Maritime Access | TWIC Readiness",
+      "benchmark": "TSA Transportation Worker Identification Credential",
+      "audience": "Personnel needing unescorted access within applicable maritime security areas",
+      "requirement": "TSA issues TWIC after its identity/security process. There is no VNDRLY training substitute. Record only necessary verification details; do not store background-check material as routine training evidence.",
+      "renewal": "Use actual card validity and current TSA status, plus facility access authorization.",
+      "sourceUrls": [
+        "https://www.tsa.gov/for-industry/twic"
+      ]
+    }
+  ],
+  "G92": [
+    {
+      "programId": "OG15",
+      "title": "Pipeline Safety | Operator Qualification",
+      "benchmark": "PHMSA pipeline OQ",
+      "audience": "People performing covered tasks on regulated pipeline facilities",
+      "requirement": "Qualification belongs to the operator written program for identified covered tasks. Training completion alone is insufficient. Evaluation must address the task and recognition/reaction to abnormal conditions; record evaluator, methods, task scope and validity.",
+      "renewal": "Use operator-specified reevaluation intervals and event-driven reevaluation, not a universal OQ expiry.",
+      "sourceUrls": [
+        "https://www.phmsa.dot.gov/pipeline/operator-qualifications/oq-frequently-asked-questions"
+      ]
+    }
+  ],
+  "G63": [
+    {
+      "programId": "OG16",
+      "title": "Well Control | Drilling and Well Servicing",
+      "benchmark": "IADC WellSharp",
+      "audience": "Personnel with role-specific well-control responsibilities",
+      "requirement": "Select the appropriate IADC discipline and level. Accredited delivery, controlled examinations and applicable simulator/practical assessment are required for WellSharp credentials.",
+      "renewal": "Use the selected course level and issuer validity rules.",
+      "sourceUrls": [
+        "https://iadc.org/accreditation/wellsharp/"
+      ]
+    },
+    {
+      "programId": "OG42",
+      "title": "Well Control | IWCF Preparation",
+      "benchmark": "IWCF drilling well control",
+      "audience": "Role-specific wellsite personnel, drillers and supervisors",
+      "requirement": "Choose the correct IWCF level and surface/subsea combination. Approved-center assessments and applicable prerequisites are required.",
+      "renewal": "Use current level-specific validity and progression rules.",
+      "sourceUrls": [
+        "https://www.iwcf.org/programmes/drilling-well-control-programme/"
+      ]
+    }
+  ],
+  "G61": [
+    {
+      "programId": "OG17",
+      "title": "Offshore Safety | Initial Survival",
+      "benchmark": "OPITO BOSIET",
+      "audience": "New or returning offshore personnel",
+      "requirement": "Select EBS/CA-EBS and regional product variant. Approved-center practical exercises, assessment and medical entry requirements remain necessary for OPITO certification.",
+      "renewal": "Use current product validity and FOET eligibility, verified for the selected variant.",
+      "sourceUrls": [
+        "https://opito.com/standards-and-qualifications",
+        "https://opito.com/standards-and-qualifications/industry-standards-library/basic-offshore-safety-induction-and-emergency-training-bosiet-with-emergency-breathing-system-ebs-digital-delivery"
+      ]
+    },
+    {
+      "programId": "OG19",
+      "title": "Offshore Safety | Survival Refresher",
+      "benchmark": "OPITO FOET",
+      "audience": "Personnel holding an eligible current offshore survival credential",
+      "requirement": "Confirm eligible prerequisite certificate and selected FOET variant before enrollment. Complete approved practical training and assessment.",
+      "renewal": "Use current variant-specific validity; expired prerequisites need provider review.",
+      "sourceUrls": [
+        "https://opito.com/standards-and-qualifications"
+      ]
+    },
+    {
+      "programId": "OG50",
+      "title": "Marine Safety | Basic Training",
+      "benchmark": "STCW Basic Training",
+      "audience": "Seafarers requiring STCW basic-training endorsement",
+      "requirement": "Use Coast Guard-approved training and the applicable mariner endorsement route. Offshore BOSIET is not automatically interchangeable with STCW Basic Training.",
+      "renewal": "Verify current five-year proficiency/approved refresher or revalidation route and sea-service conditions.",
+      "sourceUrls": [
+        "https://www.dco.uscg.mil/nmc/STCW/",
+        "https://www.dco.uscg.mil/Portals/9/NMC/pdfs/checklists/mcp_fm_nmc5_241_web.pdf"
+      ]
+    }
+  ],
+  "G69": [
+    {
+      "programId": "OG18",
+      "title": "Offshore Aviation | Helicopter Escape",
+      "benchmark": "OPITO HUET",
+      "audience": "Offshore helicopter passengers",
+      "requirement": "HUET is equipment/variant-specific practical training at an approved center with medical and supervised exercise requirements. Written learning does not demonstrate underwater escape capability.",
+      "renewal": "Track the actual selected product certificate and refresher requirements.",
+      "sourceUrls": [
+        "https://opito.com/standards-and-qualifications"
+      ]
+    }
+  ],
+  "G70": [
+    {
+      "programId": "OG20",
+      "title": "Asset Integrity | Pressure Vessel Inspection",
+      "benchmark": "API 510",
+      "audience": "Pressure-vessel inspection candidates",
+      "requirement": "API determines eligibility from education and relevant experience and administers its examination. Use the examination-window body of knowledge and code editions. VNDRLY cannot waive experience or issue API certification.",
+      "renewal": "Track API recertification, work requirements and continuing professional development.",
+      "sourceUrls": [
+        "https://www.api.org/products-and-services/individual-certification-programs/certifications/api510"
+      ]
+    },
+    {
+      "programId": "OG21",
+      "title": "Asset Integrity | Piping Inspection",
+      "benchmark": "API 570",
+      "audience": "In-service piping inspectors",
+      "requirement": "API eligibility and exam apply. Train against the current examination-window reference list and actual piping inspection scope.",
+      "renewal": "Maintain the actual API renewal, experience and CPD record.",
+      "sourceUrls": [
+        "https://www.api.org/products-and-services/individual-certification-programs/certifications/api570"
+      ]
+    },
+    {
+      "programId": "OG22",
+      "title": "Asset Integrity | Storage Tank Inspection",
+      "benchmark": "API 653",
+      "audience": "Aboveground storage-tank inspectors",
+      "requirement": "API eligibility and examination are separate from VNDRLY knowledge completion. Apply current BOK and referenced code editions.",
+      "renewal": "Track API renewal, relevant work and CPD.",
+      "sourceUrls": [
+        "https://www.api.org/products-and-services/individual-certification-programs/certifications/api653"
+      ]
+    },
+    {
+      "programId": "OG25",
+      "title": "Inspection Methods | NDT Level II Preparation",
+      "benchmark": "ASNT / employer-based NDT Level II, method-specific",
+      "audience": "NDT trainees and technicians",
+      "requirement": "Select method, sector and certification scheme. ASNT examinations and employer written-practice responsibilities differ from ISO 9712 certification. Training/experience hours and practical examinations are method-specific.",
+      "renewal": "Use the actual scheme, written practice and vision/renewal requirements.",
+      "sourceUrls": [
+        "https://certification.asnt.org/certification/asnt-ndt-level-ii",
+        "https://www.asnt.org/certification"
+      ]
+    }
+  ],
+  "G72": [
+    {
+      "programId": "OG24",
+      "title": "Welding Quality | Inspector Preparation",
+      "benchmark": "AWS Certified Welding Inspector",
+      "audience": "Welding inspection candidates",
+      "requirement": "AWS eligibility, visual acuity and applicable examination parts are required for CWI. The selected code examination and current program rules must be confirmed.",
+      "renewal": "AWS CWI renewal at years three and six and recertification at nine, subject to current requirements.",
+      "sourceUrls": [
+        "https://www.aws.org/certification-and-education/professional-certification/certified-welding-inspector/?step=1"
+      ]
+    },
+    {
+      "programId": "OG44",
+      "title": "Fabrication | Welder Qualification",
+      "benchmark": "Code-specific welder performance qualification",
+      "audience": "Welders assigned to specified procedures",
+      "requirement": "Qualification requires the applicable code/procedure performance test and acceptance. Record process, position, material and other qualification limits. AWS CWI and welder qualification are different credentials.",
+      "renewal": "Maintain continuity and requalification under the governing code.",
+      "sourceUrls": [
+        "https://www.aws.org/certification-and-education/professional-certification/certified-welder-program/"
+      ]
+    }
+  ],
+  "H14": [
+    {
+      "programId": "OG26",
+      "title": "Chemical Safety | Hazard Communication",
+      "benchmark": "HazCom employee training",
+      "audience": "Workers exposed to hazardous chemicals",
+      "requirement": "Employer training must address actual workplace hazards and the written HazCom program. SDS availability alone is not instruction.",
+      "renewal": "Train at initial assignment and introduction of a new chemical hazard.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200"
+      ]
+    }
+  ],
+  "H15": [
+    {
+      "programId": "OG27",
+      "title": "Respiratory Safety | Respirator Users",
+      "benchmark": "Employer respiratory protection program",
+      "audience": "Employees required to wear respirators",
+      "requirement": "Medical evaluation precedes required fit testing/use; tight-fitting models require applicable fit testing. Demonstrated knowledge and use skills support the employer program. Medical details stay with the appropriate clinician.",
+      "renewal": "Annual fit testing for tight-fitting respirators and annual training, with additional triggers.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+      ]
+    }
+  ],
+  "E04": [
+    {
+      "programId": "OG28",
+      "title": "Atmospheric Safety | Gas Testing",
+      "benchmark": "Authorized gas tester / employer gas-testing role",
+      "audience": "Assigned gas testers and permit teams",
+      "requirement": "Authorize the worker for actual detector models, sampling arrangements and permit criteria. If OPITO AGT is required, use that approved product and assessment.",
+      "renewal": "Reassess with instrument/procedure changes, deficient performance and applicable issuer/site expiry.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
+        "https://opito.com/standards-and-qualifications"
+      ]
+    }
+  ],
+  "H06": [
+    {
+      "programId": "OG29",
+      "title": "Fire Prevention | Hot Work and Fire Watch",
+      "benchmark": "Hot-work permit and fire-watch role training",
+      "audience": "Hot-work operators, fire watches and permit authorities",
+      "requirement": "Apply the actual hot-work standard and site permit. Fire-watch competence and emergency actions must match the work area; awareness completion is not a permit.",
+      "renewal": "Refresh when process, materials or emergency arrangements change; follow required post-work watch periods.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.252",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157"
+      ]
+    },
+    {
+      "programId": "OG38",
+      "title": "Fire Response | Extinguisher and Brigade Roles",
+      "benchmark": "Portable extinguisher education and fire-brigade training",
+      "audience": "Designated extinguisher users; brigade members separately scoped",
+      "requirement": "Separate employee extinguisher education from designated firefighting duties and fire-brigade qualification. Training depth and practice depend on assigned response capability.",
+      "renewal": "Applicable extinguisher education initially and annually; brigade training under 1910.156 has distinct frequencies.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.156"
+      ]
+    }
+  ],
+  "H09": [
+    {
+      "programId": "OG30",
+      "title": "Ground Disturbance | Excavation Competent Person",
+      "benchmark": "Excavation competent-person duties",
+      "audience": "Excavation supervisors and assigned competent persons",
+      "requirement": "A competent person must identify hazards and have authority to take prompt corrective action. Course completion alone does not grant that authority. Engineering design is required where the standard specifies it.",
+      "renewal": "Inspect at the required times and after hazard-increasing events; retrain for deficiencies.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.652"
+      ]
+    }
+  ],
+  "G86": [
+    {
+      "programId": "OG30",
+      "title": "Ground Disturbance | Excavation Competent Person",
+      "benchmark": "Excavation competent-person duties",
+      "audience": "Excavation supervisors and assigned competent persons",
+      "requirement": "A competent person must identify hazards and have authority to take prompt corrective action. Course completion alone does not grant that authority. Engineering design is required where the standard specifies it.",
+      "renewal": "Inspect at the required times and after hazard-increasing events; retrain for deficiencies.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.652"
+      ]
+    }
+  ],
+  "H07": [
+    {
+      "programId": "OG32",
+      "title": "Lifting Operations | Signal Person",
+      "benchmark": "Construction crane signal-person qualification",
+      "audience": "People signaling covered crane operations",
+      "requirement": "Demonstrate knowledge through oral/written and practical tests under 1926.1428. Employer-qualified evaluator documentation is not portable to another employer in the same way as qualified third-party evaluation.",
+      "renewal": "Reevaluate when performance or knowledge indicates deficiency.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1428"
+      ]
+    },
+    {
+      "programId": "OG33",
+      "title": "Lifting Operations | Qualified Rigger",
+      "benchmark": "Task-specific rigging qualification",
+      "audience": "Riggers handling loads for assigned lifts",
+      "requirement": "Qualification must match the actual load, rigging and lift. A generic rigger card does not establish competence for every lift; apply construction requirements where relevant.",
+      "renewal": "Review for different load/rigging conditions and observed deficiencies.",
+      "sourceUrls": [
+        "https://www.osha.gov/sites/default/files/publications/OSHA3529.pdf"
+      ]
+    }
+  ],
+  "G75": [
+    {
+      "programId": "OG12",
+      "title": "Cranes | Mobile Crane Operator",
+      "benchmark": "CCO mobile crane certification",
+      "audience": "Assigned mobile-crane operators",
+      "requirement": "CCO certification involves its eligibility, written and practical examinations. Covered construction operation also requires the employer evaluation under 1926.1427, including equipment configuration and assigned activities.",
+      "renewal": "Track issuer expiry and employer retraining/evaluation triggers independently.",
+      "sourceUrls": [
+        "https://www.nccco.org/nccco/certifications/mobile-crane-operator/certification-overview",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427"
+      ]
+    },
+    {
+      "programId": "OG32",
+      "title": "Lifting Operations | Signal Person",
+      "benchmark": "Construction crane signal-person qualification",
+      "audience": "People signaling covered crane operations",
+      "requirement": "Demonstrate knowledge through oral/written and practical tests under 1926.1428. Employer-qualified evaluator documentation is not portable to another employer in the same way as qualified third-party evaluation.",
+      "renewal": "Reevaluate when performance or knowledge indicates deficiency.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1428"
+      ]
+    },
+    {
+      "programId": "OG33",
+      "title": "Lifting Operations | Qualified Rigger",
+      "benchmark": "Task-specific rigging qualification",
+      "audience": "Riggers handling loads for assigned lifts",
+      "requirement": "Qualification must match the actual load, rigging and lift. A generic rigger card does not establish competence for every lift; apply construction requirements where relevant.",
+      "renewal": "Review for different load/rigging conditions and observed deficiencies.",
+      "sourceUrls": [
+        "https://www.osha.gov/sites/default/files/publications/OSHA3529.pdf"
+      ]
+    }
+  ],
+  "H12": [
+    {
+      "programId": "OG35",
+      "title": "Electrical Safety | Qualified Work Roles",
+      "benchmark": "Electrical safe-work practices / NFPA 70E benchmark",
+      "audience": "Electrical workers and others exposed to electrical hazards",
+      "requirement": "Apply the governing OSHA scope and employer electrical-safety program. A generic online course does not make someone a qualified person for all equipment or confer an electrical license.",
+      "renewal": "Review qualification and retraining under the applicable program and adopted standard edition.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.332",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333"
+      ]
+    }
+  ],
+  "G60": [
+    {
+      "programId": "OG35",
+      "title": "Electrical Safety | Qualified Work Roles",
+      "benchmark": "Electrical safe-work practices / NFPA 70E benchmark",
+      "audience": "Electrical workers and others exposed to electrical hazards",
+      "requirement": "Apply the governing OSHA scope and employer electrical-safety program. A generic online course does not make someone a qualified person for all equipment or confer an electrical license.",
+      "renewal": "Review qualification and retraining under the applicable program and adopted standard edition.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.332",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333"
+      ]
+    }
+  ],
+  "G67": [
+    {
+      "programId": "OG35",
+      "title": "Electrical Safety | Qualified Work Roles",
+      "benchmark": "Electrical safe-work practices / NFPA 70E benchmark",
+      "audience": "Electrical workers and others exposed to electrical hazards",
+      "requirement": "Apply the governing OSHA scope and employer electrical-safety program. A generic online course does not make someone a qualified person for all equipment or confer an electrical license.",
+      "renewal": "Review qualification and retraining under the applicable program and adopted standard edition.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.332",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333"
+      ]
+    }
+  ],
+  "G01": [
+    {
+      "programId": "OG36",
+      "title": "Dangerous Goods | Hazmat Employee",
+      "benchmark": "DOT hazmat employee training",
+      "audience": "Hazmat shippers, packers, loaders and drivers by function",
+      "requirement": "Employer provides applicable training, testing and certification records under 49 CFR 172.704. A CDL endorsement does not cover every shipping function.",
+      "renewal": "Recurrent training at least every three years under HMR; use more restrictive modal requirements where applicable.",
+      "sourceUrls": [
+        "https://www.phmsa.dot.gov/training/hazmat/training-requirements-industry"
+      ]
+    }
+  ],
+  "G50": [
+    {
+      "programId": "OG36",
+      "title": "Dangerous Goods | Hazmat Employee",
+      "benchmark": "DOT hazmat employee training",
+      "audience": "Hazmat shippers, packers, loaders and drivers by function",
+      "requirement": "Employer provides applicable training, testing and certification records under 49 CFR 172.704. A CDL endorsement does not cover every shipping function.",
+      "renewal": "Recurrent training at least every three years under HMR; use more restrictive modal requirements where applicable.",
+      "sourceUrls": [
+        "https://www.phmsa.dot.gov/training/hazmat/training-requirements-industry"
+      ]
+    }
+  ],
+  "G04": [
+    {
+      "programId": "OG37",
+      "title": "Exposure Prevention | Bloodborne Pathogens",
+      "benchmark": "Occupational bloodborne-pathogen training",
+      "audience": "Employees with reasonably anticipated occupational exposure",
+      "requirement": "Training must be appropriate to the job and allow interactive questions with a knowledgeable person. Keep medical records separate from routine course completion.",
+      "renewal": "Initial assignment, annual training and additional instruction for changed exposure tasks.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030"
+      ]
+    }
+  ],
+  "G53": [
+    {
+      "programId": "OG37",
+      "title": "Exposure Prevention | Bloodborne Pathogens",
+      "benchmark": "Occupational bloodborne-pathogen training",
+      "audience": "Employees with reasonably anticipated occupational exposure",
+      "requirement": "Training must be appropriate to the job and allow interactive questions with a knowledgeable person. Keep medical records separate from routine course completion.",
+      "renewal": "Initial assignment, annual training and additional instruction for changed exposure tasks.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030"
+      ]
+    }
+  ],
+  "G97": [
+    {
+      "programId": "OG38",
+      "title": "Fire Response | Extinguisher and Brigade Roles",
+      "benchmark": "Portable extinguisher education and fire-brigade training",
+      "audience": "Designated extinguisher users; brigade members separately scoped",
+      "requirement": "Separate employee extinguisher education from designated firefighting duties and fire-brigade qualification. Training depth and practice depend on assigned response capability.",
+      "renewal": "Applicable extinguisher education initially and annually; brigade training under 1910.156 has distinct frequencies.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.156"
+      ]
+    }
+  ],
+  "H17": [
+    {
+      "programId": "OG39",
+      "title": "Hearing Safety | Hearing Conservation",
+      "benchmark": "Hearing conservation employee training",
+      "audience": "Employees included in a hearing conservation program",
+      "requirement": "Training supports the employer hearing conservation program and does not substitute for exposure monitoring, audiometry or adequate protection.",
+      "renewal": "Annual training for employees in the hearing conservation program.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.95"
+      ]
+    }
+  ],
+  "H16": [
+    {
+      "programId": "OG40",
+      "title": "Dust Exposure | Respirable Crystalline Silica",
+      "benchmark": "Silica exposure-control training",
+      "audience": "Workers with occupational silica exposure",
+      "requirement": "Apply construction or general-industry silica requirements to the task. Construction Table 1 methods require the specified implementation; training alone is not exposure control.",
+      "renewal": "Demonstrate required knowledge and address changing tasks or deficient understanding.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1153",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1053"
+      ]
+    }
+  ],
+  "G73": [
+    {
+      "programId": "OG40",
+      "title": "Dust Exposure | Respirable Crystalline Silica",
+      "benchmark": "Silica exposure-control training",
+      "audience": "Workers with occupational silica exposure",
+      "requirement": "Apply construction or general-industry silica requirements to the task. Construction Table 1 methods require the specified implementation; training alone is not exposure control.",
+      "renewal": "Demonstrate required knowledge and address changing tasks or deficient understanding.",
+      "sourceUrls": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1153",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1053"
+      ]
+    }
+  ],
+  "H19": [
+    {
+      "programId": "OG41",
+      "title": "Road Safety | Defensive Driving and Journey Management",
+      "benchmark": "Employer defensive-driving qualification",
+      "audience": "Field drivers and journey supervisors",
+      "requirement": "Employer vehicle authorization, applicable license and vehicle-specific practical evaluation remain separate from the knowledge course. This is not a CDL substitute.",
+      "renewal": "Employer risk-based refresher and incident/deficiency reassessment.",
+      "sourceUrls": [
+        "https://www.cdc.gov/niosh/motor-vehicle/about/"
+      ]
+    }
+  ]
+}

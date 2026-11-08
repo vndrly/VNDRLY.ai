@@ -2,11 +2,13 @@ import {Link} from 'wouter';
 import {useQuery}from'@tanstack/react-query';
 import {CompanySafetyReadinessSchema}from'@workspace/api-zod';
 import {useAuth}from'@/hooks/use-auth';
+import {useSafetyMaturity}from'@/hooks/use-safety-maturity';
 import {useTranslation}from'react-i18next';
 import {useState}from'react';
 import TrainingServiceConnections from'./work-hub/library/training-service-connections';
 export default function CompanyTrainingBaseline(){
  const {user}=useAuth(),{t}=useTranslation();
+ const {data:score}=useSafetyMaturity();
  const [showTaskEvidence,setShowTaskEvidence]=useState(false);
  const query=useQuery({queryKey:['company-training-baseline',user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId],enabled:!!user,queryFn:async()=>{const response=await fetch(`${import.meta.env.BASE_URL.replace(/\/$/,'')}/api/safety/readiness`,{credentials:'include'});if(!response.ok)throw Error('Training compliance unavailable');return CompanySafetyReadinessSchema.parse((await response.json()).data);},refetchInterval:60000});
  if(query.isError)return <p role="alert">{t('trainingPolicy.baselineUnavailable')}</p>;
@@ -15,6 +17,7 @@ export default function CompanyTrainingBaseline(){
  const gaps=[...new Map(baseline.conditionalCourseGaps.map(g=>[`${g.serviceId}:${g.familyId}:${g.role}`,g])).values()];
  return <section className="space-y-3 rounded-xl border-2 border-[var(--brand-primary)] safety-program-card p-5 text-foreground" data-testid="company-training-baseline">
   <h2 className="text-xl font-bold">{t('trainingPolicy.baselineHeading')}</h2>
+  {score&&<p className="font-semibold">{t('trainingPolicy.safetyScoreBreakdown',{base:score.score,bonus:score.bonusScore})}</p>}
   <p className="font-semibold">{t('trainingPolicy.baselineCounts',{completed:baseline.completed,required:baseline.required})}</p>
   <p>{t('trainingPolicy.baselinePoints',{points:category.points.toFixed(2)})}</p><p>{t('trainingPolicy.baselinePart')}</p>
   {!!baseline.services.length&&<p>{t('trainingPolicy.selectedServices')}: {baseline.services.map(service=>service.name).join(', ')}</p>}

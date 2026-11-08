@@ -65,10 +65,10 @@ export const onboardingApi = {
     ojson<{ accepted: true }>("POST", "/api/onboarding/accept-lead-admin", { token, password }),
   inviteLeadAdmin: (orgType: "vendor" | "partner", details: { firstName: string; lastName: string; email: string; phone: string; makeOwner: boolean; confirmOwnership: boolean }) =>
     ojson<{ sent: true }>("POST", "/api/onboarding/lead-admin-invite", { orgType, ...details }),
-  startPartner: (body: { name: string; contactName: string; contactEmail: string; contactPhone: string; password: string; adminPin?: string; confirmPin?: string }) =>
+  startPartner: (body: { name: string; contactName: string; contactEmail: string; contactPhone: string; password: string }) =>
     ojson<OnboardingStartResp>("POST", "/api/onboarding/partner", body),
 
-  startVendor: (body: { name: string; contactName: string; contactEmail: string; contactPhone: string; password: string; adminPin?: string; confirmPin?: string }) =>
+  startVendor: (body: { name: string; contactName: string; contactEmail: string; contactPhone: string; password: string }) =>
     ojson<OnboardingStartResp>("POST", "/api/onboarding/vendor", body),
 
   getProgress: (orgType: "partner" | "vendor", orgId: number) =>

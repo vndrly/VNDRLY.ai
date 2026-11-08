@@ -32,13 +32,18 @@ const fail = (status: number, code: string, text: string): never => {
 type Queryable = Pick<PoolClient, "query">;
 export async function changeOverTransaction<T>(
   work: (client: PoolClient) => Promise<T>,
+  options: { repeatableRead?: boolean } = {},
 ): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     const client = await pool.connect();
     try {
-      await client.query("BEGIN");
-      await client.query("SET LOCAL lock_timeout = '5s'");
-      await client.query("SET LOCAL statement_timeout = '15s'");
+      if (options.repeatableRead) {
+        await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ; SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '15s'");
+      } else {
+        await client.query("BEGIN");
+        await client.query("SET LOCAL lock_timeout = '5s'");
+        await client.query("SET LOCAL statement_timeout = '15s'");
+      }
       const result = await work(client);
       await client.query("COMMIT");
       return result;
@@ -175,6 +180,22 @@ async function stationAccess(
   session: SessionPayload,
   stationId: string,
 ) {
+  if (session.role === "vendor" && session.membershipRole === "admin" &&
+      session.userId && session.vendorId && session.activeMembershipId) {
+    const direct = (await client.query(`SELECT row_to_json(station) AS station,
+        json_build_object('id',site.id,'name',site.name,'partner_id',site.partner_id) AS site,
+        json_build_object('id',account.id,'role',account.role,'session_version',account.session_version,
+          'suspended_at',account.suspended_at,'display_name',account.display_name) AS account
+      FROM gate_stations station
+      JOIN site_locations site ON site.id=station.site_id AND site.is_active IS DISTINCT FROM false AND site.hidden IS DISTINCT FROM true
+      JOIN users account ON account.id=$2 AND account.session_version=$3 AND account.suspended_at IS NULL
+      JOIN user_org_memberships membership ON membership.id=$4 AND membership.user_id=account.id
+        AND membership.org_type='vendor' AND membership.vendor_id=$5 AND membership.role='admin'
+      WHERE station.id=$1 AND EXISTS(SELECT 1 FROM site_work_assignments assignment
+        WHERE assignment.vendor_id=$5 AND assignment.site_location_id=site.id AND assignment.is_gate_contractor=true)`,
+      [stationId, session.userId, session.sv, session.activeMembershipId, session.vendorId])).rows[0];
+    if (direct) return { station: direct.station, site: direct.site, user: direct.account, supervisor: true };
+  }
   const station = (
     await client.query("SELECT * FROM gate_stations WHERE id=$1", [stationId])
   ).rows[0];
@@ -226,6 +247,50 @@ async function activeRoster(client: Queryable, stationId: string) {
       [stationId],
     )
   ).rows;
+}
+
+async function changeOverDashboardBundle(client: Queryable, stationId: string) {
+  const row = (await client.query(`WITH active_shift AS MATERIALIZED (
+      SELECT shift.*,account.display_name AS operator_name
+      FROM gate_shifts shift JOIN users account ON account.id=shift.operator_id
+      WHERE shift.station_id=$1 AND shift.ended_at IS NULL
+      ORDER BY shift.started_at DESC,shift.id DESC LIMIT 1
+    ), released_watch AS MATERIALIZED (
+      SELECT shift.*,coalesce(account.display_name,account.username) AS operator_name
+      FROM gate_shifts shift JOIN users account ON account.id=shift.operator_id
+      JOIN gate_preparations preparation ON preparation.id=shift.preparation_id
+      WHERE shift.station_id=$1 AND shift.ended_at IS NOT NULL
+        AND preparation.summary->>'watchReleased'='true'
+        AND NOT EXISTS(SELECT 1 FROM gate_handovers handoff JOIN gate_preparations prior ON prior.id=handoff.preparation_id
+          WHERE handoff.preparation_id=preparation.id OR prior.summary->>'originalPreparationId'=preparation.id::text)
+        AND NOT EXISTS(SELECT 1 FROM active_shift)
+      ORDER BY shift.ended_at DESC LIMIT 1
+    ), selected_watch AS MATERIALIZED (
+      SELECT id,started_at,preparation_id FROM active_shift
+      UNION ALL SELECT id,started_at,preparation_id FROM released_watch
+      LIMIT 1
+    )
+    SELECT (SELECT row_to_json(active_shift) FROM active_shift) AS shift,
+      (SELECT row_to_json(released_watch) FROM released_watch) AS released_watch,
+      EXISTS(SELECT 1 FROM workforce_coverage_records record JOIN work_hub_shifts scheduled ON scheduled.id=record.shift_id
+        JOIN active_shift active ON true WHERE scheduled.gate_station_id=$1 AND scheduled.starts_at<=now() AND scheduled.ends_at>now()
+          AND record.state='unconfirmed' AND record.updated_at>=active.started_at LIMIT 1) AS coverage_unconfirmed,
+      (SELECT row_to_json(preparation) FROM gate_preparations preparation
+        JOIN selected_watch selected ON selected.preparation_id=preparation.id) AS preparation,
+      COALESCE((SELECT json_agg(roster ORDER BY roster."startedAt",roster.id) FROM (
+        SELECT duty.id,duty.station_id AS "stationId",duty.user_id AS "userId",
+          duty.work_hub_shift_id AS "workHubShiftId",duty.work_session_id AS "workSessionId",
+          duty.started_at AS "startedAt",coalesce(account.display_name,account.username) AS "userName"
+        FROM gate_duty_sessions duty JOIN users account ON account.id=duty.user_id
+        WHERE duty.station_id=$1 AND duty.ended_at IS NULL
+      ) roster),'[]'::json) AS roster`, [stationId])).rows[0];
+  return {
+    shift: row?.shift ?? null,
+    releasedWatch: row?.released_watch ?? null,
+    coverageUnconfirmed: Boolean(row?.coverage_unconfirmed),
+    preparation: row?.preparation ?? null,
+    roster: Array.isArray(row?.roster) ? row.roster : [],
+  };
 }
 
 /** Names and gate assignments only, limited to the caller's authorized sites/company. */
@@ -402,7 +467,7 @@ async function currentItems(
     await client.query(
       `SELECT DISTINCT ON (item_id) item_id AS id, text, kind,
     CASE WHEN kind='resolve' THEN 'resolved' ELSE 'open' END AS status FROM gate_shift_actions
-    WHERE (station_id::text=$1 OR station_id IN (SELECT id FROM gate_stations WHERE site_id=ANY($2::int[]))) AND kind IN ('open','resolve','reopen') ORDER BY item_id, created_at DESC, id DESC`,
+    WHERE (station_id=$1::uuid OR station_id IN (SELECT id FROM gate_stations WHERE site_id=ANY($2::int[]))) AND kind IN ('open','resolve','reopen') ORDER BY item_id, created_at DESC, id DESC`,
       [stationId, linkedSiteIds ?? []],
     )
   ).rows;
@@ -416,8 +481,9 @@ export async function gateTrafficSnapshot(
   stationId: string,
   startedAt: Date | string,
   gateOnly = false,
+  sourceAlreadyAuthorized = false,
 ): Promise<ShiftSnapshot> {
-  const link = await linkedGateScope(client, session, siteId);
+  const link = await linkedGateScope(client, session, siteId, sourceAlreadyAuthorized);
   const sharedStart = link.groupId ? (await client.query(`SELECT min(w.started_at) AS started_at FROM gate_shifts w JOIN gate_stations g ON g.id=w.station_id WHERE g.site_id=ANY($1::int[]) AND w.ended_at IS NULL`,[link.siteIds])).rows[0]?.started_at : null;
   const windowStart = link.groupId ? sharedStart ?? new Date(Date.now()-86400000) : startedAt;
   // A shared parallel roster counts each retained visit once. Entry/exit evidence remains immutable.
@@ -470,31 +536,108 @@ export async function gateTrafficSnapshot(
 }
 export type GateDiscoveryMode = "operational" | "history";
 export async function listChangeOverSites(session: SessionPayload, mode: GateDiscoveryMode = "operational") {
-  const sites = (
-    await pool.query(
-      `SELECT s.id, s.name, s.latitude, s.longitude FROM site_locations s WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
-    AND ($1='admin' OR ($1='partner' AND s.partner_id=$2) OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3 AND a.is_gate_contractor=true))
-    ORDER BY s.name LIMIT 2000`,
-      [
-        session.role,
-        session.partnerId ?? null,
-        session.vendorId ?? null,
-      ],
-    )
-  ).rows;
-  const allowed: { id: number; name: string; latitude: number | null; longitude: number | null; supervisor: boolean }[] = [];
-  for (const site of sites) {
-    try {
-      const access = await requireChangeOverAccess(pool, session, site.id);
-      allowed.push({
-        ...site,
-        supervisor: access.supervisor,
-      } as (typeof allowed)[number]);
-    } catch (e) {
-      if (!(e instanceof ChangeOverError) || e.status === 401) throw e;
-    }
-  }
-  return allowed;
+  if (!session.userId)
+    return fail(403, "forbidden", "Assigned gate access required");
+  const result = await pool.query(
+    `WITH current_account AS MATERIALIZED (
+       SELECT id,role FROM users
+       WHERE id=$1 AND session_version=$2 AND suspended_at IS NULL
+     ), current_membership AS MATERIALIZED (
+       SELECT membership.id,membership.role,membership.vendor_people_id
+       FROM user_org_memberships membership
+       JOIN current_account account ON account.id=membership.user_id
+       WHERE ($6::int IS NULL OR membership.id=$6)
+         AND (($3::text='partner' AND membership.org_type='partner' AND membership.partner_id=$4 AND membership.role IN ('admin','member'))
+           OR ($3::text IN ('vendor','field_employee') AND membership.org_type='vendor' AND membership.vendor_id=$5))
+     ), candidate_sites AS MATERIALIZED (
+       SELECT site.id,site.name,site.latitude,site.longitude
+       FROM site_locations site
+       WHERE site.is_active IS DISTINCT FROM false AND site.hidden IS DISTINCT FROM true
+         AND ($3::text='admin'
+           OR ($3::text='partner' AND site.partner_id=$4)
+           OR ($3::text IN ('vendor','field_employee') AND EXISTS (
+             SELECT 1 FROM site_work_assignments assignment
+             WHERE assignment.site_location_id=site.id AND assignment.vendor_id=$5 AND assignment.is_gate_contractor=true
+           )))
+       ORDER BY site.name
+       LIMIT 2000
+     ), visible_sites AS (
+       SELECT site.id,site.name,site.latitude,site.longitude,
+         CASE
+           WHEN $3::text IN ('admin','partner') THEN true
+           WHEN $3::text='vendor' AND $7::text='admin'
+             AND EXISTS (SELECT 1 FROM current_membership membership WHERE membership.role='admin') THEN true
+           WHEN $8::boolean THEN EXISTS (
+             SELECT 1 FROM managed_subcontractor_worker_sponsorships sponsorship
+             JOIN managed_subcontractor_role_grants role_grant ON role_grant.sponsorship_id=sponsorship.id
+             WHERE sponsorship.worker_user_id=$1 AND sponsorship.sponsor_vendor_id=$5 AND sponsorship.status='active'
+               AND role_grant.site_id=site.id AND role_grant.status='active' AND role_grant.role='gate_supervisor'
+           )
+           WHEN EXISTS (
+             SELECT 1 FROM vendor_person_operational_roles role
+             JOIN vendor_person_site_access access ON access.vendor_people_id=role.vendor_people_id
+             WHERE role.vendor_people_id IN (SELECT membership.vendor_people_id FROM current_membership membership WHERE membership.vendor_people_id IS NOT NULL)
+               AND role.is_active=true AND role.role IN ('gatekeeper','gate_supervisor')
+               AND access.site_location_id=site.id AND access.is_active=true
+           ) THEN EXISTS (
+             SELECT 1 FROM vendor_person_operational_roles role
+             JOIN vendor_person_site_access access ON access.vendor_people_id=role.vendor_people_id
+             WHERE role.vendor_people_id IN (SELECT membership.vendor_people_id FROM current_membership membership WHERE membership.vendor_people_id IS NOT NULL)
+               AND role.is_active=true AND role.role='gate_supervisor'
+               AND access.site_location_id=site.id AND access.is_active=true
+           )
+           ELSE EXISTS (
+             SELECT 1 FROM vendor_people person
+             WHERE person.user_id=$1 AND person.vendor_id=$5 AND person.deleted_at IS NULL
+               AND person.is_active=true AND person.vendor_role='gate_supervisor'
+           )
+         END AS supervisor
+       FROM candidate_sites site
+       CROSS JOIN current_account account
+       WHERE ($3::text='admin' AND account.role='admin')
+         OR ($3::text='partner' AND EXISTS (SELECT 1 FROM current_membership))
+         OR ($3::text='vendor' AND $7::text='admin' AND EXISTS (SELECT 1 FROM current_membership membership WHERE membership.role='admin'))
+         OR ($3::text IN ('vendor','field_employee') AND EXISTS (SELECT 1 FROM current_membership) AND (
+           ($8::boolean AND EXISTS (
+             SELECT 1 FROM managed_subcontractor_worker_sponsorships sponsorship
+             JOIN managed_subcontractor_role_grants role_grant ON role_grant.sponsorship_id=sponsorship.id
+             WHERE sponsorship.worker_user_id=$1 AND sponsorship.sponsor_vendor_id=$5 AND sponsorship.status='active'
+               AND role_grant.site_id=site.id AND role_grant.status='active' AND role_grant.role IN ('gatekeeper','gate_supervisor')
+           )) OR (NOT $8::boolean AND (
+             EXISTS (
+               SELECT 1 FROM vendor_person_operational_roles role
+               JOIN vendor_person_site_access access ON access.vendor_people_id=role.vendor_people_id
+               WHERE role.vendor_people_id IN (SELECT membership.vendor_people_id FROM current_membership membership WHERE membership.vendor_people_id IS NOT NULL)
+                 AND role.is_active=true AND role.role IN ('gatekeeper','gate_supervisor')
+                 AND access.site_location_id=site.id AND access.is_active=true
+             ) OR EXISTS (
+               SELECT 1 FROM vendor_people person
+               WHERE person.user_id=$1 AND person.vendor_id=$5 AND person.deleted_at IS NULL
+                 AND person.is_active=true AND person.vendor_role IN ('gatekeeper','gate_supervisor')
+             )
+           ))
+         ))
+     )
+     SELECT account.id AS session_user_id,site.id,site.name,site.latitude,site.longitude,site.supervisor
+     FROM current_account account
+     LEFT JOIN visible_sites site ON true
+     ORDER BY site.name NULLS LAST`,
+    [
+      session.userId,
+      session.sv ?? null,
+      session.role ?? null,
+      session.partnerId ?? null,
+      session.vendorId ?? null,
+      session.activeMembershipId ?? null,
+      session.membershipRole ?? null,
+      Boolean(session.managedSubcontractor),
+    ],
+  );
+  if (!result.rowCount)
+    return fail(401, "session_changed", "Sign in again to continue");
+  return result.rows.flatMap(({ session_user_id: _sessionUserId, ...site }) =>
+    site.id == null ? [] : [site],
+  );
 }
 export async function listChangeOverStations(
   session: SessionPayload,
@@ -711,44 +854,46 @@ export async function getChangeOverState(
   session: SessionPayload,
   stationId: string,
 ) {
-  return changeOverTransaction(async (c) => {
-    await c.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
-    const access = await stationAccess(c, session, stationId);
-    const shift = await activeShift(c, stationId);
-    const released = !shift ? await releasedWatch(c,stationId) : null;
-    const coverageUnconfirmed = Boolean(shift && (await c.query(
-      `SELECT 1 FROM workforce_coverage_records r JOIN work_hub_shifts s ON s.id=r.shift_id
-       WHERE s.gate_station_id=$1 AND s.starts_at<=now() AND s.ends_at>now()
-         AND r.state='unconfirmed' AND r.updated_at >= $2 LIMIT 1`,
-      [stationId, shift.started_at],
-    )).rowCount);
-    const preparationId=shift?.preparation_id??released?.preparation_id;
-    const preparation = preparationId
-      ? (
-          await c.query("SELECT * FROM gate_preparations WHERE id=$1", [
-            preparationId,
-          ])
-        ).rows[0]
-      : null;
+  const started = performance.now();
+  const stages: Record<string, number> = {};
+  const measure = async <T>(name: string, read: () => Promise<T>) => {
+    const start = performance.now();
+    try { return await read(); } finally { stages[name] = Math.round(performance.now() - start); }
+  };
+  try { return await changeOverTransaction(async (c) => {
+    stages.transactionSetup = Math.round(performance.now() - started);
+    const access = await measure("access", () => stationAccess(c, session, stationId));
+    const bundle = await measure("dashboardBundle", () => changeOverDashboardBundle(c, stationId));
+    const shift = bundle.shift;
+    const released = bundle.releasedWatch;
+    const preparation = bundle.preparation;
     // Site activity and occupancy remain visible before anybody assumes a watch.
-    const current = await gateTrafficSnapshot(c, session, access.station.site_id, stationId,
-      shift?.started_at ?? released?.started_at ?? new Date(Date.now() - 24 * 60 * 60_000));
+    const trafficClient: Queryable = process.env.VNDRLY_GATE_READ_TIMINGS === "1" ? {
+      query: ((sql: string, ...args: unknown[]) => {
+        const relation = /\bFROM\s+([a-z_]+)/i.exec(sql)?.[1] ?? "query";
+        return measure(`traffic.${relation}.${Object.keys(stages).length}`, () => (c.query as any)(sql, ...args));
+      }) as Queryable["query"],
+    } : c;
+    const current = await measure("traffic", () => gateTrafficSnapshot(trafficClient, session, access.station.site_id, stationId,
+      shift?.started_at ?? released?.started_at ?? new Date(Date.now() - 24 * 60 * 60_000), false, true));
     return {
       station: access.station,
       site: access.site,
       supervisor: access.supervisor,
       shift,
       releasedWatch: released,
-      coverageUnconfirmed,
-      preparation: await projectGatePreparation(c, preparation, session.vendorId),
-      snapshot: await projectGateTaskItems(c, current, session.vendorId),
+      coverageUnconfirmed: bundle.coverageUnconfirmed,
+      preparation: await measure("preparationProjection", () => projectGatePreparation(c, preparation, session.vendorId)),
+      snapshot: current,
       // Elapsed time alone does not invalidate saved notes. The incoming
       // operation still checks the exact current facts revision transactionally.
       stale: Boolean(preparation && !released && preparation.snapshot.revision !== current?.revision),
-      items: await currentItems(c, stationId, session.vendorId, current.linkedScope?.groupId ? current.linkedScope.siteIds : undefined),
-      roster: await activeRoster(c, stationId),
+      items: current.taskItems,
+      roster: bundle.roster,
     };
-  });
+  }, { repeatableRead: true }); } finally {
+    if (process.env.VNDRLY_GATE_READ_TIMINGS === "1") console.info("[gate-read-timing]", JSON.stringify({ totalMs: Math.round(performance.now() - started), ...stages }));
+  }
 }
 export async function startGateShift(
   session: SessionPayload,
@@ -905,24 +1050,28 @@ async function recoveryOperators(client: Queryable, session: SessionPayload, sta
      WHERE m.org_type='vendor' AND u.suspended_at IS NULL AND u.must_change_password IS DISTINCT FROM true
        AND ($2::int IS NULL OR m.vendor_id=$2)
        AND EXISTS(SELECT 1 FROM site_work_assignments a WHERE a.vendor_id=m.vendor_id AND a.site_location_id=$1 AND a.is_gate_contractor=true)
-       AND (m.role='admin' OR EXISTS(SELECT 1 FROM vendor_people p WHERE p.id=m.vendor_people_id AND p.user_id=m.user_id AND p.vendor_id=m.vendor_id AND p.is_active=true AND p.deleted_at IS NULL))
+       AND (m.role='admin'
+         OR EXISTS(SELECT 1 FROM vendor_person_operational_roles r
+           JOIN vendor_person_site_access a ON a.vendor_people_id=r.vendor_people_id
+           WHERE r.vendor_people_id=m.vendor_people_id AND r.is_active=true
+             AND r.role IN ('gatekeeper','gate_supervisor')
+             AND a.site_location_id=$1 AND a.is_active=true)
+         OR EXISTS(SELECT 1 FROM vendor_people p WHERE p.id=m.vendor_people_id
+           AND p.user_id=m.user_id AND p.vendor_id=m.vendor_id
+           AND p.is_active=true AND p.deleted_at IS NULL
+           AND p.vendor_role IN ('gatekeeper','gate_supervisor')))
      ORDER BY name,m.id`, [access.station.site_id, session.vendorId ?? null],
   )).rows;
   const occupied = new Set<number>(rows.length ? (await client.query(
     "SELECT DISTINCT operator_id FROM gate_shifts WHERE ended_at IS NULL AND operator_id=ANY($1::int[])",
     [rows.map(row => row.user_id)],
   )).rows.map(row => row.operator_id) : []);
-  const eligible: RecoveryOperator[] = [];
-  for (const row of rows) {
-    if (occupied.has(row.user_id)) continue;
+  return rows.filter(row => !occupied.has(row.user_id)).map((row): RecoveryOperator => {
     const candidate: SessionPayload = { userId: row.user_id, vendorId: row.vendor_id, activeMembershipId: row.membership_id,
       membershipRole: row.role, role: row.role === "field_employee" ? "field_employee" : "vendor",
       vendorPeopleId: row.vendor_people_id, sv: row.session_version };
-    try { await requireChangeOverAccess(client, candidate, access.station.site_id); }
-    catch (error) { if (error instanceof ChangeOverError && error.status === 403) continue; throw error; }
-    eligible.push({ userId: row.user_id, membershipId: row.membership_id, name: row.name, companyName: row.company_name, session: candidate });
-  }
-  return eligible;
+    return { userId: row.user_id, membershipId: row.membership_id, name: row.name, companyName: row.company_name, session: candidate };
+  });
 }
 export async function listGateRecoveryOperators(session: SessionPayload, stationId: string) {
   return { operators: (await recoveryOperators(pool, session, stationId)).map(({ session: _session, ...operator }) => operator) };

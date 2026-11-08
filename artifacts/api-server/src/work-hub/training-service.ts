@@ -32,6 +32,7 @@ import { getObjectStore } from "../lib/objectStore";
 import { guidedResult } from './guided-training';
 import {certificationExamRead,certificationExamResult} from './certification-exam';
 import {isCanonicalEnergySafetyCourse} from './certification-issuer';
+import {trainingQualificationContext} from './training-qualification-context';
 const response = z.object({
   acknowledged: z.boolean().default(false),
   lessonIds: z.array(z.string()).max(50).default([]),
@@ -55,6 +56,7 @@ export async function getAssignedLibrary(actor: LibraryActor, id: string) {
   return {
     instanceId: id,
     title: own.record.name,
+    qualificationRequirements: trainingQualificationContext(own.metadata),
     metadata: safeLibraryContent(own.metadata, false),
     assignment: own.assignment,
     certificationExam:own.metadata.content?.training?certificationExamRead(own.metadata.content.training,own.assignment.progress.certificationExam):null,

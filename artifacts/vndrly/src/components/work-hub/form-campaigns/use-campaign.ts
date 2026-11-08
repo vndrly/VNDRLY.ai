@@ -8,7 +8,7 @@ import {
   commandEnvelope,
   type WorkHubOwner,
 } from "@/lib/work-hub-client";
-export function useCampaign<T>(path: string, parse: (value: unknown) => T) {
+export function useCampaign<T>(path: string, parse: (value: unknown) => T, enabled = true) {
   const queryClient = useQueryClient();
   const { user } = useAuth(),
     owner: WorkHubOwner | null = user?.partnerId
@@ -47,7 +47,7 @@ export function useCampaign<T>(path: string, parse: (value: unknown) => T) {
     // Observers may validate different projections of the same endpoint.
     // Cache the response intact; one view must not strip another view's fields.
     select: parse,
-    enabled: !!owner,
+    enabled: !!owner && enabled,
     refetchInterval: () =>
       document.visibilityState === "visible" ? 15000 : false,
     retry: false,

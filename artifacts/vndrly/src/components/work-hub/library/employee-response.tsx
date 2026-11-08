@@ -8,6 +8,7 @@ import TogglePillButton from "@/components/brand-pill-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import GuidedTraining from './guided-training';
+import QualificationRequirements from './qualification-requirements';
 const card =
   "rounded-xl border-2 border-[color:var(--brand-primary)] bg-card p-4 space-y-3";
 export default function EmployeeResponse({
@@ -110,6 +111,7 @@ export default function EmployeeResponse({
           {new Date(data.assignment.dueAt).toLocaleString()}
         </p>
         <p className="whitespace-pre-wrap">{content?.description}</p>
+        <QualificationRequirements items={data.qualificationRequirements}/>
         {data.attachments.map((file) => (
           <a
             key={file.fileId}

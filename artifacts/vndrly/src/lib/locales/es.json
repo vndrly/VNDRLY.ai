@@ -5407,14 +5407,6 @@
     "purposeFilter": "Motivo de la visita"
   },
   "gateNav": {
-    "createPin": "Crear PIN",
-    "confirmPin": "Confirmar PIN",
-    "pinIntro": "Elige cuatro dígitos para volver a administración.",
-    "pinMismatch": "Introduce dos PIN de cuatro dígitos iguales.",
-    "savePin": "Guardar PIN",
-    "checkingPin": "Comprobando cuenta…",
-    "pinLoadError": "No se pudo cargar la configuración del PIN. Reintenta.",
-    "retryPin": "Reintentar",
     "map": "Mapa de acceso",
     "voice": "Entrada por voz",
     "gate": "Portería",
@@ -5424,8 +5416,6 @@
     "goToWorkHub": "Ir a Work Hub",
     "more": "Más",
     "returnToGate": "Volver a acceso",
-    "enterPin": "Introduce el PIN de cuatro dígitos",
-    "incorrectPin": "PIN incorrecto. Inténtalo de nuevo.",
     "aria": "Navegación del portal de portería"
   },
   "plateStatePicker": {
@@ -6322,7 +6312,8 @@
     "publishReview": "¿Publicar esta versión exacta? Estará disponible para asignaciones. Esto no la asigna.",
     "archiveReview": "¿Archivar este elemento? Las asignaciones y respuestas existentes seguirán disponibles.",
     "versionHistory": "Historial de versiones",
-    "kind_bundle": "Paquete",
+    "kind_bundle": "Certificación",
+    "trainingNeededByRole": "Capacitación requerida por puesto",
     "titleRequired": "Ingresa un título.",
     "hours": "horas",
     "newHireOnboarding": "Incorporación de nuevos empleados",
@@ -6475,8 +6466,8 @@
     "serviceConnections": "Servicios vinculados con {{familyId}}",
     "searchServices": "Buscar en el catálogo maestro de servicios",
     "search": "Buscar servicios",
-    "mappingCount": "{{matched}} servicios coincidentes en el catálogo maestro de {{total}} servicios",
-    "mappingBoundary": "Los cursos corresponden a los puestos y tareas indicados. Un servicio relacionado no exige todos los cursos para todo el personal. Cualquier obligación legal adicional indica la normativa y la función a la que se aplica.",
+    "mappingCount": "{{matched}} servicios coincidentes",
+    "mappingBoundary": "La capacitación depende de las tareas asignadas.",
     "openQualifications": "Capacitación y cualificaciones especializadas adicionales",
     "scopeSource": "Fuente del alcance {{number}}",
     "previous": "Servicios anteriores",
@@ -6488,7 +6479,8 @@
     "applies": "Se aplica a las tareas del servicio indicadas",
     "doesNotApply": "No se aplica a las tareas del servicio indicadas",
     "applicabilityReason": "Base de esta decisión sobre el alcance",
-    "baselineHeading": "Capacitación obligatoria de VNDRLY",
+    "baselineHeading": "Puntuación de seguridad de VNDRLY",
+    "safetyScoreBreakdown": "Base: {{base}} / 100 · Bono del proveedor: {{bonus}} / 10",
     "baselineCounts": "{{completed}} de {{required}} requisitos aplicables de persona/curso completados",
     "baselinePoints": "Componente de capacitación: {{points}} / 10",
     "baselinePart": "La capacitación es una parte de la preparación de la empresa. Las cualificaciones prácticas, las pruebas del programa y otras medidas se evalúan por separado.",
@@ -6506,10 +6498,16 @@
     "exposureAudienceHelp": "Seleccione las personas o puestos cuyas tareas reales revisó. Esta decisión solo les corresponde a ellos. Los demás permanecen sin revisar; una asignación ordinaria no establece exposición.",
     "conditionalRule": "Condicionado a las tareas reales y al alcance del servicio",
     "taskGapsHeading": "Cursos específicos y requisitos legales aplicables",
-    "taskGapsHelp": "Busque un servicio para encontrar sus cursos y funciones. Las obligaciones adicionales indican la normativa y la función aplicable; no se exige una carga general de evidencias ni una evaluación práctica para completar el curso.",
+    "taskGapsHelp": "Busque un servicio para ver sus cursos y puestos.",
     "taskCourse": "Abrir curso específico de tarea {{courseId}}",
     "vendorEvidence": "Registros exigidos por la normativa citada",
     "practicalEvidence": "Requisitos legales para la función indicada",
-    "preservedExtensions": "Otros servicios respaldados por fuentes"
+    "preservedExtensions": "Servicios adicionales",
+    "servicesList": "Servicios",
+    "roleGuidance": "Guía por puesto"
+  },
+  "trainingQualifications": {
+    "heading": "Cualificaciones para la tarea y requisitos de credenciales",
+    "help": "Aplique estos requisitos solo a su función asignada. La finalización del curso, la evaluación práctica, las credenciales externas y la autorización de trabajo son registros separados."
   }
 }

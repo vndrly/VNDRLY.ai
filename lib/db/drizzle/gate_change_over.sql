@@ -40,6 +40,12 @@ CREATE TABLE IF NOT EXISTS gate_shift_actions (
  text text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS gate_shift_actions_item_idx ON gate_shift_actions(station_id, item_id, created_at);
+CREATE INDEX IF NOT EXISTS site_visits_site_checkin_idx ON site_visits(site_location_id, check_in_time);
+CREATE INDEX IF NOT EXISTS ticket_check_ins_ticket_time_idx ON ticket_check_ins(ticket_id, check_out_at, check_in_at);
+CREATE INDEX IF NOT EXISTS ticket_check_ins_gate_time_idx ON ticket_check_ins(gate_station_id, check_out_at, check_in_at);
+CREATE INDEX IF NOT EXISTS ticket_status_history_ticket_status_time_idx ON ticket_status_history(ticket_id, to_status, created_at);
+CREATE INDEX IF NOT EXISTS work_hub_task_events_task_type_time_idx ON work_hub_task_events(task_id, event_type, created_at);
+CREATE INDEX IF NOT EXISTS assistant_action_audit_vendor_target_idx ON assistant_action_audit(vendor_id, partner_id, target_type, target_id, id);
 ALTER TABLE gate_stations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE gate_shifts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE gate_preparations ENABLE ROW LEVEL SECURITY;

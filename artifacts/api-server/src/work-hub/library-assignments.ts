@@ -487,7 +487,7 @@ export async function ownerLibraryAssignments(actor: LibraryActor) {
   const { owner } = await libraryAuthority(db, actor, true);
   const people = await companyLibraryPeople(db, owner),
     rows = await db
-      .select({ instance: instances, template: templates })
+      .select({ instance: { id: instances.id, assigneeUserId: instances.assigneeUserId, assignmentMetadata: instances.assignmentMetadata }, template: { id: templates.id, name: templates.name, kind: sql<string | null>`${templates.libraryMetadata}->>'kind'`, anonymous: sql<boolean>`coalesce(${templates.libraryMetadata}->'content'->'poll'->'anonymous' = 'true'::jsonb,false)` } })
       .from(instances)
       .innerJoin(templates, eq(templates.id, instances.templateId))
       .where(
@@ -513,15 +513,12 @@ export async function ownerLibraryAssignments(actor: LibraryActor) {
   for (const r of rows) {
     if (!r.instance.assignmentMetadata) continue;
     const a = AssignmentMetadataSchema.parse(r.instance.assignmentMetadata),
-      m = r.template.libraryMetadata
-        ? LibraryMetadataSchema.parse(r.template.libraryMetadata)
-        : null,
       p = people.find(
         (p) =>
           p.userId === r.instance.assigneeUserId &&
           p.membershipId === a.membershipId,
       );
-    if (m?.kind === "poll" && m.content?.poll?.anonymous) {
+    if (r.template.kind === "poll" && r.template.anonymous) {
       let aggregate = anonymous.get(r.template.id);
       if (!aggregate) {
         aggregate = {
@@ -544,7 +541,7 @@ export async function ownerLibraryAssignments(actor: LibraryActor) {
       instanceId: r.instance.id,
       itemId: r.template.id,
       title: r.template.name,
-      kind: m?.kind ?? "form",
+      kind: r.template.kind ?? "form",
       assignmentId: a.assignmentId,
       bundleId: a.bundleId,
       name: p?.name ?? "Excluded employee",

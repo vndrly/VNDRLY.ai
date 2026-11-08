@@ -1,4 +1,6 @@
 import { expect, it, vi } from 'vitest';
+// These arithmetic tests exercise the worker callback; request-read separation is tested separately.
+vi.mock('../work-hub/stored-training-projections',()=>({storedTrainingProjection:(_key:string,compute:()=>Promise<unknown>)=>compute()}));
 const state=vi.hoisted(()=>({bonus:3,record:undefined as unknown}));
 vi.mock('@workspace/db',async original=>({...await original<any>(),db:{execute:async()=>({rows:state.record?[{record:state.record}]:[]})}}));
 vi.mock('../work-hub/repository-certifications',()=>({repositoryCertificationProgress:vi.fn(async()=>({bonusScore:state.bonus}))}));

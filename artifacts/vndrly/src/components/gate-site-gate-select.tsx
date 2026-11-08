@@ -1,5 +1,5 @@
 import { warwickGateLabel } from "@/lib/warwick-gate-label";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -29,6 +29,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   const { t, i18n } = useTranslation();
   const es = i18n?.language?.startsWith("es"), gradientId = useId();
   const reportConnection = /^\/gate(?:\/change-over)?\/?$/.test(window.location.pathname);
+  const [choicesRequested, setChoicesRequested] = useState(false);
   const link = useLinkedGates(siteId, gate?.id, reportConnection);
   const linked = Boolean(link.data?.groupId) && (link.data?.gates?.length ?? 0) > 1;
   const selectedConnection = linked && !link.isError ? link.data?.gates?.find(row => row.id === gate?.id)?.connection ?? "unknown" : "unknown";
@@ -43,7 +44,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
       const result = await changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${site.id}&mode=history`);
       return result.stations.map(gate => ({ ...gate, siteId: site.id }));
     }))).flat() } : changeOverRequest<{ gates: GateChoice[] }>("/map"),
-    enabled: gateOptions === undefined && sites.length > 0,
+    enabled: gateOptions === undefined && sites.length > 0 && (!reportConnection || choicesRequested),
     retry: false,
   });
   const gates = [...(gateOptions ?? options.data?.gates ?? [])];
@@ -60,6 +61,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
     return [row.name, ...peers.map(peer => peer.name)].join(" | ");
   };
   const selector = <BrandedSelect className="gate-dashboard-location-select" aria-label={label} data-testid={testId}
+          onFocus={() => setChoicesRequested(true)}
           value={gate ? gate.id : ""} onChange={event => {
             if (allOptionLabel && !event.target.value) { onChange(0, ""); return; }
             const selected = gates.find(row => row.id === event.target.value);

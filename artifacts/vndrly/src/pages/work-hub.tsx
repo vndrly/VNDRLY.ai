@@ -40,6 +40,7 @@ import GateCalendarScheduling from "@/components/work-hub/gate-calendar-scheduli
 import { canAdministerCalendar } from "@/lib/calendar-action-permissions";
 import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
 import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/finance";
+import "@/components/current-theme-page.css";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useSearch } from "wouter";
@@ -95,7 +96,7 @@ import {
   WorkHubCardTitle,
   WorkHubPageHeading,
   WorkHubSurface,
-  WORK_HUB_CARD_CLASS,
+
 } from "@/components/work-hub/chrome";
 
 const MODULES = {
@@ -2263,13 +2264,13 @@ function Home() {
 }
 export function AskVWorkspace() {
   return (
-    <section className="mx-auto max-w-7xl space-y-5 p-4 md:p-8">
+    <section className="current-theme-page mx-auto max-w-7xl space-y-5 p-4 md:p-8">
       <WorkHubPageHeading
         module="askv"
         title="AskV"
         description="Ask about your work by text or voice. AskV uses your current company permissions."
       />
-      <div data-work-hub-card className={`overflow-hidden ${WORK_HUB_CARD_CLASS}`}>
+      <div data-work-hub-card className="overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)] bg-[#242426]">
         <AssistantPanel open onOpenChange={() => undefined} embedded />
       </div>
     </section>

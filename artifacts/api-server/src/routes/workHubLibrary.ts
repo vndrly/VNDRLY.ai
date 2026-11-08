@@ -75,7 +75,7 @@ router.get('/work-hub/library/personal-energy-safety-credentials',handle((_r,a)=
 router.get(
   "/work-hub/library",
   handle((r, a) =>
-    listLibrary(a, r.query.archived === "true", r.query.published === "true", r.query.myServices === "true"),
+    listLibrary(a, r.query.archived === "true", r.query.published === "true", r.query.myServices === "true", r.query.kind === "bundle"),
   ),
 );
 router.get(

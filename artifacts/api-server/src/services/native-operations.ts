@@ -905,6 +905,15 @@ export const nativeOperationsService = {
       });
       return status(c, s);
     }),
+  onCallStatus: async (s: SessionPayload) => {
+    const c = await pool.connect();
+    try {
+      const a = await current(c, s);
+      const p = await policy(c, a.owner);
+      const own = a.owner.type === "vendor" ? await state(c, s.userId!, a.owner.id) : initialNativeState();
+      return { policy: { enabled: p.enabled }, onCallActive: own.onCallActive, onCallWindows: own.onCallWindows, canWorkerOperate: a.owner.type === "vendor" };
+    } finally { c.release(); }
+  },
   status: (s: SessionPayload) => transaction(s, (c) => status(c, s)),
   policy: (s: SessionPayload, input?: unknown) =>
     transaction(s, async (c) => {

@@ -7,7 +7,7 @@ import {
   usePalette as useColors,
   Heading,
 } from "./editor-controls";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { z } from "zod/v4";
 import {
   BundleDefinitionSchema,
@@ -118,13 +118,11 @@ export default function BundleDetail({ itemId }: { itemId: string }) {
             {t(`workHubLibrary.state_${data.metadata.state}`)} ·{" "}
             {t("workHubLibrary.version")} {data.metadata.contentVersion}
           </Text>
-          <Text style={label}>{data.bundle.description}</Text>
+          <Text style={{...label, whiteSpace: "pre-line"}}>{data.bundle.description}</Text>
           {data.bundle.entries.map((entry) => (
-            <Text key={data.entries.find(x=>x.itemId===entry.templateId)?.title??t("workHubLibrary.savedContent")} style={label}>
-              {data.entries.find(x=>x.itemId===entry.templateId)?.title??t("workHubLibrary.savedContent")} · {t("workHubLibrary.version")}{" "}
-              {entry.contentVersion} · {entry.dueHours}{" "}
-              {t("workHubLibrary.hours")}
-            </Text>
+            <Link key={entry.templateId} href={`/work-hub/library/${entry.templateId}?view=training`} className="block border-t border-white/10 py-3 text-inherit hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-current">
+              {formatTrainingTitle(data.entries.find(x=>x.itemId===entry.templateId)?.title??t("workHubLibrary.savedContent"))} · {t("workHubLibrary.version")} {entry.contentVersion}
+            </Link>
           ))}
           {data.canManage && (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>

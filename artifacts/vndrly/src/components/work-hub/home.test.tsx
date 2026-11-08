@@ -76,6 +76,30 @@ describe("Work Hub home", () => {
       expect(screen.queryByRole("region", { name: "Assigned task details" })).toBeNull();
     }
   });
+  it("shows exact task counts from one summary read and defers history paging until a group opens", async () => {
+    mocks.user = { ...mocks.user, role: "vendor", membershipRole: "admin", vendorRole: "office" };
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string) => {
+      if (path === "/tasks?dashboard=summary") return {
+        scope: "company",
+        groups: {
+          new: { mine: 1, total: 2, unassigned: 0 },
+          unassigned: { mine: 0, total: 0, unassigned: 0 },
+          unstarted: { mine: 0, total: 0, unassigned: 0 },
+          progress: { mine: 0, total: 0, unassigned: 0 },
+          stale: { mine: 0, total: 0, unassigned: 0 },
+          completed: { mine: 0, total: 0, unassigned: 0 },
+        },
+      };
+      return original(path);
+    });
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><DashboardTasks /></QueryClientProvider>);
+
+    expect(await screen.findByRole("button", { name: /New.*1 mine.*2 total/ })).toBeTruthy();
+    expect(mocks.request.mock.calls.some(([path]) => String(path).startsWith("/tasks?dashboard=1"))).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: /New.*1 mine.*2 total/ }));
+    await waitFor(() => expect(mocks.request.mock.calls.some(([path]) => String(path).startsWith("/tasks?dashboard=1"))).toBe(true));
+  });
   it("puts Unassigned above Unstarted, includes every page once and marks old unassigned tasks amber in both views", async () => {
     const original = mocks.request.getMockImplementation()!;
     const old = { id: "old-hopper", title: "Old lamp inspection", status: "open", assigneeUserId: null, createdAt: new Date(Date.now() - 31 * 86400000).toISOString(), gateHopper: {} };

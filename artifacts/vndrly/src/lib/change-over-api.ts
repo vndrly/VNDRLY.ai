@@ -17,12 +17,16 @@ export async function changeOverRequest<T>(
       signal,
     },
   );
-    const result = await response.json();
+    const result = await response.json().catch(error => {
+      if (signal.aborted) throw error;
+      return null;
+    });
     if (!response.ok)
       throw Object.assign(
-        new Error(result.message ?? "Unable to complete Change Over"),
-        { code: result.code, status: response.status },
+        new Error(result?.message ?? i18n.t(body === undefined ? "changeOver.failed" : "changeOver.writeUnconfirmed")),
+        { code: result?.code, status: response.status },
       );
+    if (result === null) throw new Error(i18n.t(body === undefined ? "changeOver.failed" : "changeOver.writeUnconfirmed"));
     return result as T;
   } catch (error) {
     if (signal.aborted)

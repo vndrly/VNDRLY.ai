@@ -23,15 +23,27 @@ export type RepositoryData = {
     standalone?: boolean;
     groupingOnly?: boolean;
     complete: boolean;
+    completedCount: number;
+    totalCount: number;
+    percent: number;
+    nextStepIndex: number;
     steps: {
       id: string;
       title: string;
       type: string;
       complete: boolean;
+      ordinal: number;
+      progressState: "completed" | "next" | "upcoming";
       href: string;
       expiresAt?: string | null;
     }[];
   }[];
+  completedCertifications: RepositoryData["certifications"];
+  displayGroups: { title: string; items: RepositoryData["certifications"] }[];
+  profileGroups: { title: string; items: RepositoryData["certifications"] }[];
+  overallPercent: number;
+  overallCompleted: number;
+  overallTotal: number;
   bonusScore: number;
   bonusCompleted: number;
   bonusRequired: number;
@@ -109,6 +121,7 @@ export function useRepository({ enabled = true }: { enabled?: boolean } = {}) {
     },
     onSuccess: async () => {
       await cache.invalidateQueries({ queryKey: key });
+      await cache.invalidateQueries({ queryKey: ["training-progress"] });
       await cache.invalidateQueries({ queryKey: ["work-hub-file-library"] });
     },
   });

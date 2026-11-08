@@ -9,7 +9,7 @@ export default function OnCallControl({ identity, pickup = false }: { identity: 
   const { i18n } = useTranslation(), es = (i18n?.language ?? "en").startsWith("es");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const lock = useRef(false);
-  const query = useQuery({ queryKey: ["shift-card-on-call", identity, pickup], queryFn: () => nativeOperationsRequest<Status>(pickup ? "/pickup-shifts" : "/status"), retry: false, throwOnError: false, refetchInterval: 30000 });
+  const query = useQuery({ queryKey: ["shift-card-on-call", identity, pickup], queryFn: () => nativeOperationsRequest<Status>(pickup ? "/pickup-shifts" : "/on-call"), retry: false, throwOnError: false, refetchInterval: 30000 });
   const status = query.data;
   const active = pickup ? status?.active === true : status?.onCallActive === true || status?.onCallWindows?.some(window => window.consent && Date.parse(window.startsAt) <= Date.now() && Date.parse(window.endsAt) > Date.now()) === true;
   async function toggle() {
