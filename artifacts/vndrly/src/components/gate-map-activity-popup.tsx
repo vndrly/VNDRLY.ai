@@ -5,7 +5,7 @@ import { changeOverRequest } from "@/lib/change-over-api";
 import { formatGateMapTime } from "./gate-map-time-control";
 import { GateMapDirections } from "./gate-map-directions";
 import { GateMapGateStatus } from "./gate-map-gate-status";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 export type GateMapActivity = {
   stationId: string; siteId: number; gateName: string; siteName: string;
@@ -13,10 +13,11 @@ export type GateMapActivity = {
   window: "current_shift" | "released_watch" | "24h";
   metrics: { checkIns: number; checkOuts: number; pendingAdmission: number; itemsToReview: number };
 };
-export function GateMapActivityPopup({ stationId, siteId, siteName, gateName, active, latitude, longitude, userId, membershipId, historical, visit = 0, es, onEnter, onLeave }: {
+export function GateMapActivityPopup({ stationId, siteId, siteName, gateName, active, latitude, longitude, userId, membershipId, historical, visit = 0, es, onEnter, onLeave, action }: {
   stationId: string; siteId: number; siteName: string; gateName: string; active?: boolean;
   latitude?: number | null; longitude?: number | null;
   userId: number; membershipId?: number | null; historical: boolean; visit?: number; es: boolean;
+  action?: ReactNode;
   onEnter: () => void; onLeave: () => void;
 }) {
   const c = (en: string, spanish: string) => es ? spanish : en;
@@ -39,6 +40,7 @@ export function GateMapActivityPopup({ stationId, siteId, siteName, gateName, ac
   return <section data-card-layout className="gate-map-activity-card" aria-label={c("Gate activity", "Actividad del acceso")}
     onMouseEnter={onEnter} onMouseLeave={onLeave} onFocusCapture={onEnter}
     onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) onLeave(); }}>
+    {action}
     <CardHeading as="h3">{c("Gate activity", "Actividad del acceso")}</CardHeading>
     <strong className="gate-map-activity-name">{siteName} · {gateName} · <GateMapGateStatus stationId={stationId} siteId={siteId} userId={userId} membershipId={membershipId} active={active} historical={historical} es={es} onConfirmingChange={setChangingStatus} /></strong>
     {!changingStatus&&<>

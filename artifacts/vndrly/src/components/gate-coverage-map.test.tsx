@@ -96,7 +96,7 @@ it("keeps inactive gates selectable but uses a grey marker and an inactive flyou
   expect(north.title).toContain("Inactive");
   expect(mocks.points.find(point => point.id === "gate:east").color).not.toBe("#9ca3af");
   act(() => north.onClick());
-  expect(mocks.mapProps.anchoredPopup.content.props.children[1].props.active).toBe(false);
+  expect(mocks.mapProps.anchoredPopup.content.props.active).toBe(false);
 });
 it("uses the viewing selector to focus one gate without creating or editing a gate", async () => {
   mocks.read.mockResolvedValue({ at: new Date().toISOString(), staff: [], gates: [
