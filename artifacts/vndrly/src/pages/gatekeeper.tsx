@@ -1,4 +1,4 @@
-import { GateAreaTraffic, useGateAreaTraffic } from '@/components/gate-area-traffic';
+import { GateAreaTraffic, useGateAreaTraffic, gateCheckInDestinationDefaults, parallelGateGroup } from '@/components/gate-area-traffic';
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import WorkdayControls from "@/components/workday-controls";
 import "@/components/gate-dashboard.css";
@@ -339,7 +339,7 @@ export default function GatekeeperPage() {
   });
   const [areaDestination,setAreaDestination]=useState('');
   const areaTraffic = useGateAreaTraffic(site.data?.site.id);
-  const hasSecureAreas = areaTraffic.data?.gates.some(g => g.topology?.area) ?? false;
+  const hasSecureAreas = areaTraffic.data?.gates.some(g => g.topology?.area||g.topology?.destinations?.length) ?? false;
   const linkedGates = useLinkedGates(site.data?.site.id);
   const sharedSiteIds = linkedGates.data?.siteIds ?? (site.data?.site.id ? [site.data.site.id] : []);
   const departures = useQuery({
@@ -364,6 +364,17 @@ export default function GatekeeperPage() {
   });
   const [gateLocationId, setGateLocationId] = useState("");
   const selectedGateLocation = gateLocations.data?.stations.find(gate => gate.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
+  useEffect(()=>setAreaDestination(''),[selectedGateLocation?.id]);
+  const selectedPhysicalGate = areaTraffic.data?.gates.find(g=>g.id===selectedGateLocation?.id);
+  const checkInDestinations = areaTraffic.data?.gates.filter(g=>g.active&&g.topology?.parentGateId===selectedGateLocation?.id) ?? [];
+  const namedDestinations = selectedPhysicalGate?.topology?.destinations ?? [];
+  const destinationDefaults = gateCheckInDestinationDefaults(areaTraffic.data?.gates??[],selectedGateLocation?.id);
+  const defaultNamedDestination = destinationDefaults.destinationId??'';
+  const defaultAreaDestination = destinationDefaults.destinationGateId??'';
+  const expectedAreaArrivals = (areaTraffic.data?.visits??[]).filter(v=>!v.checkOutTime&&v.presence.expectedGateId===selectedGateLocation?.id).length;
+  const selectedParallelGates=parallelGateGroup(areaTraffic.data?.gates??[],selectedGateLocation?.id);
+  const expectedAreaDepartures = !selectedPhysicalGate?.topology?.area ? (areaTraffic.data?.visits??[]).filter(v=>!v.checkOutTime&&v.presence.expectedSiteExit&&(!v.entryGateId||selectedParallelGates.has(v.entryGateId))).length : 0;
+
   const gateLocationOptionsRef = useRef(gateLocations.data?.stations ?? []);
   gateLocationOptionsRef.current = gateLocations.data?.stations ?? [];
   const preferredPlateStates = useQuery({
@@ -1131,7 +1142,8 @@ export default function GatekeeperPage() {
         latitude: origin?.latitude,
         longitude: origin?.longitude,
         gateStationId: selectedGateLocation?.id,
-        destinationGateId: areaDestination||undefined,
+        destinationId: namedDestinations.length ? areaDestination||defaultNamedDestination||undefined : undefined,
+        destinationGateId: !namedDestinations.length ? areaDestination||defaultAreaDestination||undefined : undefined,
       });
       resetEntry();
       setVoiceResponse({ messageKey: "gatekeeper.checkedInTitle" });
@@ -1527,7 +1539,7 @@ export default function GatekeeperPage() {
                 )}
               </p>
             ) : null}
-            {hasSecureAreas&&<label className="grid gap-1 text-sm">{i18n.language.startsWith('es')?'Destino previsto':'Expected destination'}<BrandedSelect value={areaDestination} onChange={e=>setAreaDestination(e.target.value)}><option value="">{i18n.language.startsWith('es')?'Sin destino especificado':'No destination specified'}</option>{areaTraffic.data?.gates.filter(g=>g.active&&g.topology?.area).map(g=><option key={g.id} value={g.id}>{g.topology?.area} · {g.name}</option>)}</BrandedSelect></label>}
+            {hasSecureAreas&&(namedDestinations.length||checkInDestinations.length)>1&&<label className="grid gap-1 text-sm">{i18n.language.startsWith('es')?'Destino previsto':'Expected destination'}<BrandedSelect value={areaDestination||defaultNamedDestination||defaultAreaDestination} onChange={e=>setAreaDestination(e.target.value)}><option value="">{i18n.language.startsWith('es')?'Sin destino especificado':'No destination specified'}</option>{namedDestinations.length?namedDestinations.map(d=><option key={d.id} value={d.id}>{d.name}</option>):checkInDestinations.map(g=><option key={g.id} value={g.id}>{g.topology?.area} · {g.name}</option>)}</BrandedSelect></label>}
             {site.isLoading && (
               <Loader2 className="animate-spin text-muted-foreground" />
             )}
@@ -1616,23 +1628,23 @@ export default function GatekeeperPage() {
         >
           <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">
             <CardTitle className="gate-presence-tabs" role="group" aria-label={t("gatekeeper.activityViews")}>
-              <button type="button" className={`gate-presence-tab${arrivals.newInboundIds.size ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "arrivals"} onClick={() => setPresenceView("arrivals")}>
-                {t("gatekeeper.arrivalsTab")}
+              <button type="button" className={`gate-presence-tab${((!hasSecureAreas&&arrivals.newInboundIds.size) || expectedAreaArrivals) ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "arrivals"} onClick={() => setPresenceView("arrivals")}>
+                {t("gatekeeper.arrivalsTab")}{expectedAreaArrivals>0&&` (${expectedAreaArrivals})`}
               </button>
               <span className="gate-presence-divider" aria-hidden="true">|</span>
               <button type="button" className="gate-presence-tab" aria-pressed={presenceView === "active"} onClick={() => setPresenceView("active")}>
                 {t("gatekeeper.onSiteTab")}
               </button>
               <span className="gate-presence-divider" aria-hidden="true">|</span>
-              <button type="button" className="gate-presence-tab" aria-pressed={presenceView === "departures"} onClick={() => setPresenceView("departures")}>
-                {t("gatekeeper.departuresTab")}
+              <button type="button" className={`gate-presence-tab${expectedAreaDepartures ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "departures"} onClick={() => setPresenceView("departures")}>
+                {t("gatekeeper.departuresTab")}{expectedAreaDepartures>0&&` (${expectedAreaDepartures})`}
               </button>
             </CardTitle>
             <div className="ml-auto flex items-center gap-2">
               <button
                 type="button"
                 className="gate-presence-refresh"
-                onClick={() => void (presenceView === "arrivals" ? Promise.all([arrivals.refetch(), visits.refetch()]) : presenceView === "departures" ? departures.refetch() : visits.refetch())}
+                onClick={() => { void areaTraffic.refetch(); void (presenceView === "arrivals" ? Promise.all([arrivals.refetch(), visits.refetch()]) : presenceView === "departures" ? departures.refetch() : visits.refetch()); }}
                 disabled={presenceView === "arrivals" ? arrivals.isFetching || visits.isFetching : presenceView === "departures" ? departures.isFetching : visits.isFetching}
                 data-testid="button-gate-refresh"
                 aria-label={t("common.refresh")}

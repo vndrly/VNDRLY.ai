@@ -24,6 +24,7 @@ import logoOverlay from "@assets/logo-overlay_1778217860263.png";
 import { useBrand, brandStyleVars } from "@/hooks/use-brand";
 import { cn } from "@/lib/utils";
 import { gateDashboardRouteFor, isGateGoUser } from "@/lib/gate-dashboard-route";
+import "./login.css";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -270,7 +271,7 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row" style={brandStyleVars(brand)}>
+    <div className="login-page min-h-screen flex flex-col lg:flex-row" style={brandStyleVars(brand)}>
       <div className="flex-1 flex items-center justify-center px-6 pt-28 pb-12 lg:px-16 relative overflow-hidden" style={{ backgroundColor: NAV_PANE_DARK_BG }}>
         <NavPaneHalftoneBackground enabled variant="auth" />
         <NavPaneHeaderBlur height={240} />

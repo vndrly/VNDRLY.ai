@@ -23,16 +23,18 @@ const when = (value: string, timezone: string) => { const date = new Date(value)
 const toggled = <T,>(items: T[], value: T) => items.includes(value) ? items.filter(item => item !== value) : [...items,value];
 
 export default function GateCalendarScheduling({ owner, canDefine = true }: { owner: WorkHubOwner; canDefine?: boolean }) {
-  const [open, setOpen] = useState<"define" | "event" | null>(null);
+  const linkedStation = new URLSearchParams(window.location.search).get("stationId");
+  const linkedShift = new URLSearchParams(window.location.search).get("shiftId");
+  const [open, setOpen] = useState<"define" | "event" | null>(() => canDefine && linkedStation && !linkedShift ? "define" : null);
   const [selected, setSelected] = useState("");
-  const [definition, setDefinition] = useState(initial);
+  const [definition, setDefinition] = useState(() => ({...initial(), stationIds: linkedStation && !linkedShift ? [linkedStation] : []}));
   const [event, setEvent] = useState({ title: "", startsAt: "", endsAt: "", notes: "", userIds: [] as number[], crewIds: [] as string[] });
   const brand = useBrand(), qc = useQueryClient();
   const options = useQuery<Options>({ queryKey: ["work-hub", "gate-shift-definitions", owner.id], queryFn: () => workHubRequest(`/gate-shift-definitions?vendorId=${owner.id}`), enabled: open === "define", refetchOnWindowFocus: false, retry: false });
   const people = useQuery<Row[]>({ queryKey: ["work-hub", "calendar-people", owner], queryFn: () => workHubRequest("/people"), enabled: !!open });
   const crews = useQuery<Row[]>({ queryKey: ["work-hub", "calendar-crews", owner], queryFn: () => workHubRequest("/crews"), enabled: !!open });
   const saved = options.data?.definitions.find(row => row.id === selected);
-  const refresh = () => { setOpen(null); for (const name of ["calendar", "gate-shift-definitions", "home", "staffing-sites"]) void qc.invalidateQueries({ queryKey: ["work-hub", name] }); void qc.invalidateQueries({ queryKey: ["site-shift-schedule"] }); };
+  const refresh = () => { void qc.invalidateQueries({queryKey:["account-next-steps"]}); setOpen(null); for (const name of ["calendar", "gate-shift-definitions", "home", "staffing-sites"]) void qc.invalidateQueries({ queryKey: ["work-hub", name] }); void qc.invalidateQueries({ queryKey: ["site-shift-schedule"] }); };
   const deletion = useMutation({ mutationFn: () => {
     if (!saved) throw new Error("Choose a saved shift first.");
     return workHubRequest("/gate-shift-definitions/retire", { method: "POST", body: JSON.stringify(commandEnvelope(owner, { id: saved.id, version: saved.version })) });

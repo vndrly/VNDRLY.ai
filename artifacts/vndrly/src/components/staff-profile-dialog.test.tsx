@@ -20,6 +20,18 @@ const access = { eligibleSites: [{ id: 3, name: "Main Gate" }], people: [{ vendo
 const response = (body: unknown, ok = true) => ({ ok, json: async () => body });
 beforeEach(() => { cleanup(); vi.clearAllMocks(); state.catalog = { version: 0, entries: [], canEdit: true }; vi.stubGlobal("confirm", () => true); });
 describe("shared staff profile", () => {
+  it("stages an authorized next-step site and writes access only after Save", async () => {
+    const siteAccess={...access,people:[{...access.people[0],siteLocationIds:[]}]};
+    const fetch=vi.fn(async(url:string,init:any)=>response(init.method==="PATCH"?{id:21}:url.includes("people-access")?siteAccess:url.includes("vendor-contacts")?[person]:[]));
+    vi.stubGlobal("fetch",fetch);
+    render(<StaffProfileDialog open onOpenChange={vi.fn()} vendorId={7} person={person} defaultSiteId={3}/>);
+    await screen.findByDisplayValue("Connie");
+    expect(screen.getByTestId("saved-access").textContent).toContain('"siteLocationIds":[3]');
+    expect(fetch.mock.calls.some(([,init])=>init.method==="PUT")).toBe(false);
+    fireEvent.click(screen.getByRole("button",{name:"Save Changes"}));
+    await waitFor(()=>expect(fetch.mock.calls.some(([,init])=>init.method==="PUT")).toBe(true));
+    expect(JSON.parse(fetch.mock.calls.find(([,init])=>init.method==="PUT")![1].body).siteLocationIds).toEqual([3]);
+  });
   it("loads one canonical employee, permissions, sites, and portal login", async () => {
     const fetch = vi.fn(async (url: string, _init?: any) => response(url.includes("people-access") ? access : url.includes("vendor-contacts") ? [person] : []));
     vi.stubGlobal("fetch", fetch);

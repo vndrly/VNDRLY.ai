@@ -12,7 +12,7 @@ import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-h
 import RemovePill from "@/components/remove-pill";
 import { canManageVendorSubcontractors } from "@/lib/vendor-detail-visibility";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeleteVendorContact, useDeleteFieldEmployee, useListFieldEmployees, getListFieldEmployeesQueryKey, useGetVendor, useGetPartner, useListPartnerContacts, useCreatePartnerContact, useUpdatePartnerContact, getGetPartnerQueryKey, getListPartnerContactsQueryKey } from "@workspace/api-client-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -184,6 +184,7 @@ export default function FieldEmployees() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [staffOpen, setStaffOpen] = useState(false);
+  const [staffNextSiteId,setStaffNextSiteId] = useState<number>();
   const [staffTarget, setStaffTarget] = useState<StaffProfilePerson | null>(null);
   const [staffCompanyId, setStaffCompanyId] = useState<number | null>(null);
   const [staffDefaultType, setStaffDefaultType] = useState<StaffType>("Office Staff");
@@ -402,6 +403,19 @@ export default function FieldEmployees() {
     return rows;
   };
   const allStaff = [...new Map([...(officeEmployees ?? []), ...(fieldEmployees ?? [])].map(person => [person.id, person])).values()] as PersonRow[];
+  const linkedSiteId = Number(new URLSearchParams(window.location.search).get("siteId"));
+  const openedNextStep = useRef("");
+  useEffect(() => {
+    const key = `${vendorId}:${linkedSiteId}`;
+    if (!isVendor || !vendorId || !linkedSiteId || !peopleAccess || !officeEmployees || !fieldEmployees || openedNextStep.current===key) return;
+    if (!peopleAccess.eligibleSites.some(site=>site.id===linkedSiteId)) return;
+    openedNextStep.current=key;
+    const candidate=allStaff.find(person=>person.isActive && (person.vendorRole==="gatekeeper" || person.vendorRole==="gate_supervisor" || accessByPersonId.get(person.id)?.operationalRoles.some(role=>role==="gatekeeper" || role==="gate_supervisor")));
+    if (candidate) openStaffProfile(candidate);
+    else addStaff("Gatekeeper","Gatekeeper");
+    setStaffNextSiteId(linkedSiteId);
+  }, [vendorId, linkedSiteId, peopleAccess, officeEmployees, fieldEmployees]);
+
   const sortedOffice = sortRows(filterByStatus(allStaff.filter(person => {
     const grants = accessByPersonId.get(person.id);
     return grants?.isAdmin || (grants?.operationalRoles.length ? grants.operationalRoles.includes("office") : ["office", "both", "admin"].includes(person.vendorRole ?? "office"));
@@ -864,7 +878,7 @@ export default function FieldEmployees() {
         </Dialog>
       )}
 
-      {staffCompanyId && <StaffProfileDialog open={staffOpen} onOpenChange={setStaffOpen} vendorId={staffCompanyId} person={staffTarget} defaultType={staffDefaultType} defaultRole={staffDefaultRole} operationCategories={companyOperations?.categories} canVerify={canVerifyCerts} />}
+      {staffCompanyId && <StaffProfileDialog open={staffOpen} onOpenChange={open=>{setStaffOpen(open);if(!open)setStaffNextSiteId(undefined);}} vendorId={staffCompanyId} person={staffTarget} defaultSiteId={staffNextSiteId} defaultType={staffDefaultType} defaultRole={staffDefaultRole} operationCategories={companyOperations?.categories} canVerify={canVerifyCerts} />}
     </div>
   );
 }

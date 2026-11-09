@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { uploadOnboardingLogo } from "@/lib/onboarding-logo-upload";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { isForemanPersona } from "@/lib/portal-base";
-import { trainingProgressOptions } from "@/lib/training-progress-query";
 import { isWorkHubAdmin, ownerForUser } from "@/lib/work-hub-client";
 import "./workday-controls.css";
 
@@ -47,24 +48,23 @@ async function read<T>(path: string): Promise<T> {
 
 export function AccountNextSteps({ surface }: { surface: "dashboard" | "work-hub" }) {
   const { user } = useAuth();
+  const cache=useQueryClient();
+  const [coiBusy,setCoiBusy]=useState(false),[coiError,setCoiError]=useState("");
   const owner = ownerForUser(user);
   const identity = [user?.userId, user?.activeMembershipId, owner?.type, owner?.id];
   const fieldEmployee = user?.role === "field_employee" && !user.managedSubcontractor;
   const vendorAdmin = owner?.type === "vendor" && user?.role === "vendor" && isWorkHubAdmin(user);
-  const options = trainingProgressOptions(user, owner);
-  const training = useQuery({ ...options, enabled: options.enabled && surface === "work-hub" });
-  const profile = useQuery({
-    queryKey: ["next-steps-profile", ...identity],
-    queryFn: () => read<{ employeeId: number | null; photoUrl?: string | null; profilePhotoPath?: string | null }>("/api/field/me"),
-    enabled: fieldEmployee && surface === "work-hub",
-    staleTime: 0,
+  const accountEnabled = owner?.type === "vendor" && (vendorAdmin || fieldEmployee);
+  const account = useQuery({
+    queryKey: ["account-next-steps", ...identity],
+    queryFn: () => read<{
+      setup: NextAction[]; credentials: NextAction[]; coiUploadNeeded?: boolean;
+      firstWatch: { complete: boolean; action: NextAction | null; message: string | null; context: {siteName: string; stationName: string} | null } | null;
+    }>("/api/account-next-steps"),
+    enabled: accountEnabled,
+    staleTime: 30_000,
     retry: false,
-  });
-  const operations = useQuery({
-    queryKey: ["work-hub-home-operations", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId],
-    queryFn: () => read<{ categories: string[] }>("/api/company-operations"),
-    enabled: vendorAdmin && surface === "dashboard",
-    retry: false,
+    refetchOnWindowFocus: true,
   });
 
   const vendorId = owner?.type === "vendor" ? owner.id : null;
@@ -89,51 +89,55 @@ export function AccountNextSteps({ surface }: { surface: "dashboard" | "work-hub
     }
   }
 
-  const setup: NextAction[] = [];
-  if (surface === "dashboard" && vendorAdmin && operations.data?.categories.includes("gate")) {
-    setup.push(
-      { title: "Add employees", href: "/field-employees" },
-      { title: "Set up gate sites", href: "/gate-locations" },
-      { title: "Create shifts", href: "/work-hub/calendar" },
-      { title: "Assign employees to shifts", href: "/work-hub/coverage" },
-      { title: "Assign training", href: "/work-hub/library" },
-    );
-  }
-  if (fieldEmployee && profile.data?.employeeId) {
-    const portal = isForemanPersona(user) ? "/foreman" : "/field";
-    if (!profile.data.photoUrl && !profile.data.profilePhotoPath) {
-      setup.push({ title: "Add a profile photo", href: `${portal}/profile/edit` });
-    }
-    setup.push({ title: "Add or update your certifications", href: `${portal}/compliance` });
-  }
-
-  const assignments = new Map<string, NextAction>();
-  for (const item of surface === "work-hub" ? training.data?.certifications ?? [] : []) {
-    if (item.userId !== user?.userId || item.complete) continue;
-    for (const step of item.steps) {
-      if (!step.complete && step.href.startsWith("/") && !step.href.startsWith("//")) {
-        assignments.set(step.href, { title: step.title, href: step.href });
-      }
-    }
-  }
-  const trainingUnavailable = surface === "work-hub" && training.isError;
-  if (!setup.length && !assignments.size && !compliance.length && !trainingUnavailable) return null;
+  const workerAction = (action: NextAction): NextAction => isForemanPersona(user)
+    ? { ...action, href: action.href.replace(/^\/field\//, "/foreman/") } : action;
+  const setup = (account.data?.setup ?? []).map(workerAction);
+  const credentials = (account.data?.credentials ?? []).map(workerAction);
+  const firstWatch = account.data?.firstWatch;
+  if (!accountEnabled && !compliance.length) return null;
+  if (!setup.length && !credentials.length && !compliance.length && !firstWatch && !account.data?.coiUploadNeeded && !account.isPending && !account.isError) return null;
 
   const content = (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid="account-next-steps" data-state={account.isFetching || relationships.isFetching ? "loading" : account.isError || relationships.isError ? "error" : "settled"}>
       {!!setup.length && <section>
         <h3 className="mb-1 text-sm font-semibold">Recommended setup</h3>
         <NextStepLinks actions={setup} />
+      </section>}
+      {vendorAdmin && account.data?.coiUploadNeeded && <section id="coi-upload">
+        <h3 className="mb-1 text-sm font-semibold">Certificate of Insurance (COI)</h3>
+        <p className="text-sm text-muted-foreground">Upload your COI for features that require insurance. You can continue other setup without it.</p>
+        <label className="block text-sm">Upload Certificate of Insurance (COI)
+          <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" disabled={coiBusy} onChange={async event=>{
+            const file=event.currentTarget.files?.[0];event.currentTarget.value='';if(!file)return;
+            setCoiBusy(true);setCoiError('');
+            try{
+              const uploaded=await uploadOnboardingLogo(file,'private');
+              const objectPath=uploaded.slice(uploaded.indexOf('/objects/'));
+              const response=await fetch('/api/account-next-steps/coi',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({objectPath,vendorId})});
+              if(!response.ok)throw new Error('COI could not be saved. Please try again.');
+              await cache.invalidateQueries({queryKey:['account-next-steps']});
+            }catch(error){setCoiError(error instanceof Error?error.message:'COI could not be saved.');}
+            finally{setCoiBusy(false);}
+          }}/>
+        </label>
+        {coiBusy&&<p role="status" className="text-sm">Saving COI…</p>}
+        {coiError&&<p role="alert" className="text-sm">{coiError}</p>}
       </section>}
       {!!compliance.length && <section>
         <h3 className="mb-1 text-sm font-semibold">Partner compliance</h3>
         <NextStepLinks actions={compliance} />
       </section>}
-      {!!assignments.size && <section>
-        <h3 className="mb-1 text-sm font-semibold">Assigned training</h3>
-        <NextStepLinks actions={[...assignments.values()]} />
+      {!!credentials.length && <section>
+        <h3 className="mb-1 text-sm font-semibold">Worker credentials</h3>
+        <NextStepLinks actions={credentials} />
       </section>}
-      {trainingUnavailable && <p className="text-sm text-muted-foreground">Assigned training could not be refreshed.</p>}
+      {firstWatch && !firstWatch.complete && <section aria-label="Start Your First Gate Watch">
+        <h3 className="mb-1 text-sm font-semibold">Start Your First Gate Watch</h3>
+        {firstWatch.context && <p className="text-sm text-muted-foreground">{firstWatch.context.siteName} · {firstWatch.context.stationName}</p>}
+        {firstWatch.action && <NextStepLinks actions={[firstWatch.action]} />}
+        {firstWatch.message && <p className="text-sm text-muted-foreground">{firstWatch.message}</p>}
+      </section>}
+      {account.isError && <p className="text-sm text-muted-foreground">Next Steps could not be refreshed.</p>}
     </div>
   );
   return surface === "dashboard" ? content : (

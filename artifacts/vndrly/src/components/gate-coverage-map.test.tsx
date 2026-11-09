@@ -122,7 +122,7 @@ it("uses the viewing selector to focus one gate without creating or editing a ga
   expect(mocks.mapProps.selectedPointId).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Center on Selection" }));
   expect(mocks.mapProps.fitPoints.map((point:any)=>point.id)).toEqual(["gate:a","gate:b","gate:c"]);
-  expect(mocks.read.mock.calls.every(call => call.length === 1 && (call[0] === "/coverage-map" || call[0] === "/station-management/sites" || /^\/linked-gates\?siteId=[12]$/.test(call[0])))).toBe(true);
+  expect(mocks.read.mock.calls.every(call => call.length === 1 && (call[0] === "/coverage-map" || call[0] === "/station-management/sites" || /^\/(linked-gates|movements)\?siteId=[12]$/.test(call[0])))).toBe(true);
 });
 it("centers on current GPS without replacing the chosen gate, then returns to that selection",async()=>{
  const geo=vi.fn((success:PositionCallback)=>success({coords:{latitude:30,longitude:-100}} as GeolocationPosition));

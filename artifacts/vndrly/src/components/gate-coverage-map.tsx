@@ -1,3 +1,4 @@
+import { GateMovementLocationSummary } from './gate-area-traffic';
 import { warwickGateLabel } from "@/lib/warwick-gate-label";
 import { EquipmentListResponseSchema, type EquipmentItem } from "@workspace/api-zod";
 import { equipmentRequest } from "./equipment/client";
@@ -300,6 +301,7 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
         <GateMapActivityPanel gates={gates} selectedGateId={focusedGateId} userId={user.userId} membershipId={user.activeMembershipId} />
       </div>
     </>}
+    {!instant&&selectionGate&&<GateMovementLocationSummary siteId={selectionGate.siteId} gateId={selectionGate.id} />}
     {draftPin && <GateMapPinFlyout {...draftPin} siteId={focusedGate?.siteId ?? sites[0]?.id ?? 0} sites={sites} es={Boolean(es)} onClose={()=>setDraftPin(null)} onSaved={pin=>{setDraftPin(null);setSelectedPinId(pin.id);void coverage.refetch();}} />}
     {gateDraft&&<Dialog.Root open onOpenChange={open=>{if(!open)setGateDraft(null);}}><VendorEditFlyout title={gateDraft.gateId?(es?'Administrar acceso':'Manage Gate'):(es?'Crear acceso aquí':'Create Gate Here')} logoSrc={brand.logoSquareUrl||brand.logoUrl||undefined} logoAlt={`${brand.name} logo`} onClose={()=>setGateDraft(null)}>
       {gateDraft.gateId&&<button className="gate-history-filter mb-3" onClick={()=>{setMovingGate(gateDraft.gateId!);setGateDraft(null);}}>{es?'Mover pin en el mapa':'Move pin on map'}</button>}

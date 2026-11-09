@@ -12,9 +12,16 @@ vi.mock("@/lib/work-hub-client", async () => ({ ...await vi.importActual("@/lib/
   if (path.startsWith("/gate-shift-definitions")) return { gates: [{ id: gate, siteName: "North Site", name: "Main Gate" }], definitions: [{ id, version: 3, stationId: gate, siteName: "North Site", gateName: "Main Gate", startsAtLocal: "18:00", endsAtLocal: "06:00", timezone: "America/Chicago", weekdays: [0,1,2,3,4,5,6], requiredCount: 1, notes: "Radio check", watches: [{ id: "watch", startsAt: "2026-10-30T23:00:00Z", people: [{ id: 7, name: "Bob" }] }] }] };
   return [];
 }) }));
-afterEach(() => { cleanup(); vi.mocked(workHubRequest).mockClear(); });
+afterEach(() => { cleanup(); vi.mocked(workHubRequest).mockClear(); window.history.replaceState({},"","/"); });
 function mount(canDefine = true) { render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateCalendarScheduling owner={{ type: "vendor", id: 1115 }} canDefine={canDefine} /></QueryClientProvider>); }
 describe("Gate calendar scheduling", () => {
+  it("opens the next-step station in shift setup without saving anything", async () => {
+    window.history.replaceState({},"",`/work-hub/calendar?siteId=1&stationId=${gate}`);
+    mount();
+    const form=await screen.findByRole("form",{name:"Add/Edit Shifts"});
+    await waitFor(()=>expect(within(form).getByRole("option",{name:/North Site/})).toBeTruthy());
+    expect(vi.mocked(workHubRequest).mock.calls.some(([,options])=>options?.method==="POST")).toBe(false);
+  });
   it("gives staff Add Event without access to shift definitions", () => {
     mount(false);
     expect(screen.queryByRole("button", { name: "Add/Edit Shifts" })).toBeNull();

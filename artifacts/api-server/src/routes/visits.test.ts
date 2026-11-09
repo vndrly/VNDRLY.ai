@@ -38,6 +38,7 @@ type Pred =
   | { kind: "stalePlus30"; col: ColRef; now: Date }
   | { kind: "tsRange"; col: ColRef; cmp: ">=" | "<="; val: Date }
   | { kind: "and"; preds: Pred[] }
+  | { kind: "jsonbEqual"; col: ColRef; val: any }
   | { kind: "true" };
 
 function requireIsolatedTestDatabaseUrl(env: {
@@ -83,7 +84,7 @@ function tableTag(name: string, cols: string[]) {
 }
 
 const tables = {
-  gateStations: tableTag("gateStations", ["id","siteId","name","latitude","longitude","geofenceRadiusM","active"]),
+  gateStations: tableTag("gateStations", ["id","siteId","name","latitude","longitude","geofenceRadiusM","active","topology"]),
   guestSessions: tableTag("guestSessions", [
     "id",
     "tokenJti",
@@ -123,6 +124,7 @@ const tables = {
     "hostType",
     "hostPartnerId",
     "hostVendorId",
+    "gateMovements",
     "checkInTime",
     "checkInLatitude",
     "checkInLongitude",
@@ -208,6 +210,7 @@ const fixtures: Record<string, Row[]> = {
 };
 
 const idCounters: Record<string, number> = {};
+let beforeVisitUpdate: (()=>void)|null=null;
 function nextId(t: string) {
   idCounters[t] = (idCounters[t] ?? 0) + 1;
   return idCounters[t];
@@ -216,6 +219,8 @@ function nextId(t: string) {
 function evalPred(pred: Pred | undefined, row: Row, now = new Date()): boolean {
   if (!pred) return true;
   switch (pred.kind) {
+    case "jsonbEqual":
+      return JSON.stringify(row[pred.col.__col]??[])===JSON.stringify(pred.val);
     case "true":
       return true;
     case "eq":
@@ -382,11 +387,12 @@ vi.mock("@workspace/db", () => {
     update: (t: any) => ({
       set: (s: Row) => {
         const apply = (pred?: Pred) => {
+          if(t.__name==="siteVisits"&&beforeVisitUpdate){const hook=beforeVisitUpdate;beforeVisitUpdate=null;hook();}
           const matching = (fixtures[t.__name] ?? []).filter((r) =>
             evalPred(pred, r),
           );
           for (const m of matching) for (const [key, value] of Object.entries(s)) {
-            m[key] = value?.kind === "jsonbPrepend" ? { ...value.facts, ...(m[value.col.__col] ?? {}) } : value;
+            m[key] = value?.kind === "jsonbAppend" ? [...(m[value.col.__col]??[]),...value.facts] : value?.kind === "jsonbPrepend" ? { ...value.facts, ...(m[value.col.__col] ?? {}) } : value;
           }
           return matching;
         };
@@ -448,6 +454,8 @@ vi.mock("drizzle-orm", () => {
   const sqlTag: any = (strings: any, ...values: any[]) => {
     if (Array.isArray(strings) && (strings as any).raw !== undefined) {
       const joined = (strings as string[]).join(" ");
+      if(values.length===2&&values[0]?.__col==='gateMovements'&&/ = .*::jsonb/.test(joined))return {kind:"jsonbEqual",col:values[0],val:JSON.parse(values[1])};
+      if(values.length===2&&values[0]?.__col==='gateMovements'&&/ \|\| .*::jsonb/.test(joined))return {kind:"jsonbAppend",col:values[0],facts:JSON.parse(values[1])};
       if (values.length === 1 && /->'entryClearanceAt'->>'value'/.test(joined)) return { kind: "entryClearance", col: values[0] };
       if (values.length === 2 && /::jsonb \|\| coalesce\(/.test(joined)) {
         return { kind: "jsonbPrepend", facts: JSON.parse(values[0]), col: values[1] };
@@ -591,6 +599,7 @@ beforeEach(async () => {
   for (const k of Object.keys(idCounters)) idCounters[k] = 0;
   for (const k of Object.keys(selectCounts)) delete selectCounts[k];
   lastInsert = null;
+  beforeVisitUpdate=null;
   notifyUsersMock.mockClear();
   publishVisitEventMock.mockClear();
   visitEventSubscriber = null;
@@ -2150,6 +2159,44 @@ describe("gatekeeper visit workflow", () => {
     fixtures.siteVisits.push({id:88,siteLocationId:site.id,firstName:"Pat",lastName:"Driver",company:"Hauling",vehiclePlate:"TRK88",plateState:"TX",admissionStatus:pending?"pending":"admitted",checkInTime:new Date("2026-10-28T12:00:00Z"),checkOutTime:null,gateStationId:entry.id,checkInGpsEvidence:{gateStationId:entry.id,gateName:entry.name},hostType:"partner",hostPartnerId:site.partnerId});
     return {site,other,entry,exit,cookie:staffCookie({role:"vendor",vendorId:vendor.id,vendorRole:"gatekeeper"})};
   }
+  function seriesMovements(f:ReturnType<typeof linkedVisitFixture>,entered=false){
+    f.exit.siteId=f.site.id;
+    (f.exit as any).topology={kind:'series',area:'Secure area',parentGateId:f.entry.id,parallelGateId:null};
+    const movement={operationId:crypto.randomUUID(),kind:'route',gateId:f.entry.id,gateName:f.entry.name,area:'',destinationGateId:f.exit.id,destination:f.exit.name,at:new Date().toISOString(),actorId:1};
+    fixtures.siteVisits[0].gateMovements=[movement,...(entered?[{...movement,operationId:crypto.randomUUID(),kind:'enter',gateId:f.exit.id,area:'Secure area',destinationGateId:null,destination:'remain'}]:[])];
+  }
+  it('defaults outer check-in to the sole inner gate and keeps the original clock on arrival and return',async()=>{
+    const f=linkedVisitFixture();seriesMovements(f);fixtures.siteVisits=[];
+    const body={siteLocationId:f.site.id,firstName:'Pat',lastName:'Driver',company:'Hauling',vehiclePlate:'TRK88',plateState:'TX'};
+    const arrival=await request(app).post('/api/visits/gate/check-in').set('Cookie',f.cookie).send({...body,gateStationId:f.entry.id});
+    expectStatus(arrival,201);expect(arrival.body.gateMovements.at(-1)).toMatchObject({kind:'route',destinationGateId:f.exit.id});
+    const originalTime=arrival.body.checkInTime,id=arrival.body.id;
+    const inner=await request(app).post('/api/visits/gate/check-in').set('Cookie',f.cookie).send({...body,gateStationId:f.exit.id});
+    expectStatus(inner,200);expect(inner.body.id).toBe(id);expect(inner.body.checkInTime).toBe(originalTime);expect(inner.body.gateMovements.at(-1).kind).toBe('enter');
+    fixtures.siteVisits[0].gateMovements.push({...inner.body.gateMovements.at(-1),operationId:crypto.randomUUID(),kind:'leave',destination:'site_exit'});
+    const returned=await request(app).post('/api/visits/gate/check-in').set('Cookie',f.cookie).send({...body,gateStationId:f.exit.id});
+    expectStatus(returned,200);expect(returned.body.id).toBe(id);expect(returned.body.checkInTime).toBe(originalTime);expect(returned.body.checkOutTime).toBeNull();expect(returned.body.gateMovements.at(-1)).toMatchObject({kind:'enter',destination:'remain'});
+    expect(fixtures.siteVisits).toHaveLength(1);
+  });
+  it('closes an early turnaround once and records cancellation of the pending inner arrival',async()=>{
+    const f=linkedVisitFixture();seriesMovements(f);
+    const response=await request(app).post('/api/visits/gate/88/check-out').set('Cookie',f.cookie).send({gateStationId:f.entry.id});
+    expectStatus(response,200);expect(response.body.checkOutTime).toBeTruthy();
+    expect(response.body.gateMovements.at(-1)).toMatchObject({kind:'site_exit',note:'Exited before inner arrival'});
+    expect(response.body.checkOutNotes).toContain('Exited before inner arrival');
+  });
+  it('preserves an arrival that wins the race with outer turnaround checkout',async()=>{
+    const f=linkedVisitFixture();seriesMovements(f);
+    beforeVisitUpdate=()=>seriesMovements(f,true);
+    const response=await request(app).post('/api/visits/gate/88/check-out').set('Cookie',f.cookie).send({gateStationId:f.entry.id});
+    expectStatus(response,409);expect(response.body.code).toBe('visit.movement_changed');
+    expect(fixtures.siteVisits[0].checkOutTime).toBeNull();expect(fixtures.siteVisits[0].gateMovements.at(-1).kind).toBe('enter');
+  });
+  it('requires a confirmed secure-area checkout before closing the property visit',async()=>{
+    const f=linkedVisitFixture();seriesMovements(f,true);
+    const response=await request(app).post('/api/visits/gate/88/check-out').set('Cookie',f.cookie).send({gateStationId:f.entry.id});
+    expectStatus(response,409);expect(response.body.code).toBe('visit.secure_area_checkout_required');expect(fixtures.siteVisits[0].checkOutTime).toBeNull();
+  });
   it("retains one visit when the same truck is checked in through another linked gate",async()=>{
     const f=linkedVisitFixture();
     const result=await request(app).post("/api/visits/gate/check-in").set("Cookie",f.cookie).send({siteLocationId:f.other.id,gateStationId:f.exit.id,firstName:"Pat",lastName:"Driver",company:"Hauling",vehiclePlate:"TRK88",plateState:"TX"});

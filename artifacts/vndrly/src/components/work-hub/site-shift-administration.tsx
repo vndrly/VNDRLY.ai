@@ -56,6 +56,8 @@ function SitePlanner({ owner, mode }: { owner: WorkHubOwner; mode: Administratio
   });
   const availableSites = scopedSites.data ?? [];
   const [siteId, setSiteId] = useState("");
+  const linkedSite = new URLSearchParams(window.location.search).get("siteId");
+  useEffect(() => { if (linkedSite && availableSites.some(site => String(site.id) === linkedSite)) setSiteId(linkedSite); }, [linkedSite, scopedSites.data]);
   if (mode === "gaps") return <CoverageGaps owner={owner} />;
   return <div className="hub-shift-admin">
     <section data-card-layout className="hub-shift-panel"><CardHeading as="h3"><MapPin aria-hidden="true" />Site</CardHeading>

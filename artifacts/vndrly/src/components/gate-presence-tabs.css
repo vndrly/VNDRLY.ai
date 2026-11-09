@@ -1,6 +1,6 @@
 .gate-presence-tabs { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: clamp(11px, 1.1vw, 14px); }
 button.gate-presence-tab { appearance: none; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; border: 0; border-radius: 0; background: none !important; background-image: none !important; box-shadow: none !important; color: #64748b; font: inherit; font-weight: 600 !important; white-space: nowrap; cursor: pointer; }
-button.gate-presence-tab[aria-pressed=true] { color: var(--brand-primary); }
+button.gate-presence-tab[aria-pressed=true] { color: #e5e7eb; }
 button.gate-presence-tab:hover { color: var(--brand-primary); }
 button.gate-presence-tab:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 3px; }
 .gate-presence-divider { color: var(--brand-primary); font-weight: 500; }
@@ -21,7 +21,7 @@ button.gate-record-inline { flex: 1; background: transparent !important; border-
 .gate-record-facts dd { text-align: right; overflow-wrap: anywhere; }
 .gate-arriving { color: #22c55e; font-size: 12px; font-weight: 600; }
 .gate-arriving.gate-arriving-awaiting { color: #fbbf24; }
-.gate-arriving.is-new, .gate-arrivals-alert { animation: gate-inbound-pulse 1s ease-in-out 5; }
+.gate-arriving.is-new, .gate-arrivals-alert { animation: gate-inbound-pulse 1s ease-in-out infinite; }
 .gate-arrival-approval-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
 .gate-arrival-approval-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 .gate-traffic-record { min-width: 0; border-radius: 8px; overflow: hidden; border: 1px solid #ffffff18; background: #303034; }
@@ -43,3 +43,10 @@ a.gate-log-text-link:hover { color: var(--brand-primary); }
 a.gate-log-text-link:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 3px; }
 @keyframes gate-inbound-pulse { 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .gate-arriving.is-new, .gate-arrivals-alert { animation: none; } }
+
+button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
+.gate-movement-pending { border-color: #4ade80; }
+.gate-pending-text { color: #4ade80; animation: gate-inbound-pulse 1s ease-in-out infinite; }
+.gate-movement-aged { border-color: #fbbf24; color: #fbbf24; }
+.gate-movement-overdue { border-color: #f87171; color: #f87171; }
+@media (prefers-reduced-motion: reduce) { .gate-pending-text { animation: none; } }

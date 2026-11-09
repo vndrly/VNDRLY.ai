@@ -1,0 +1,21 @@
+/* Login stays dark independently of the app's selected light/dark theme. */
+.login-page [data-testid="login-credentials-card"] {
+  background-color: #242426;
+}
+
+.login-page .language-status-slider > button[aria-pressed] {
+  color: #e5e7eb;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 3px;
+}
+
+.login-page .language-status-slider > button[aria-pressed="true"] {
+  color: #fff;
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+}
+
+.login-page .language-status-slider > button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}

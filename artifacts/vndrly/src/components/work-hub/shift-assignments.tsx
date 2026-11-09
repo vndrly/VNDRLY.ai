@@ -1,6 +1,6 @@
 import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Users } from "lucide-react";
 import { BrandedInput, BrandedSelect } from "./chrome";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -13,7 +13,10 @@ const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 function weekEnd() { const d = new Date(); d.setDate(d.getDate()+6); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 export function ShiftAssignments({ siteId, owner, mode }: { siteId: number; owner: WorkHubOwner; mode: "assign" | "gaps" }) {
-  const [from, setFrom] = useState(today), [through, setThrough] = useState(weekEnd), [employee, setEmployee] = useState("");
+  const cache = useQueryClient();
+  const linked = new URLSearchParams(window.location.search), linkedShift=linked.get("shiftId"), linkedDay=linked.get("day");
+  const validLinkedDay = linkedDay && /^\d{4}-\d{2}-\d{2}$/.test(linkedDay) ? linkedDay : null;
+  const [from, setFrom] = useState(()=>validLinkedDay??today()), [through, setThrough] = useState(()=>validLinkedDay??weekEnd()), [employee, setEmployee] = useState(()=>linked.get("employee")??"");
   const [cells, setCells] = useState<string[]>([]), [ids, setIds] = useState<string[]>([]), [review, setReview] = useState(false), [message, setMessage] = useState("");
   const [pending, setPending] = useState<ReturnType<typeof commandEnvelope> | null>(null), [saving, setSaving] = useState(false);
   const [removedCells, setRemovedCells] = useState<string[]>([]), [replacement, setReplacement] = useState("");
@@ -24,7 +27,7 @@ export function ShiftAssignments({ siteId, owner, mode }: { siteId: number; owne
   const query = useQuery({ queryKey: ["site-shift-schedule", owner.type, owner.id, siteId, from, through], enabled: validRange, retry: false, refetchOnWindowFocus: false,
     queryFn: () => workHubRequest<ScheduleData>(`/site-shift-plans/${siteId}/schedule?type=${owner.type}&id=${owner.id}&from=${from}&through=${through}`) });
   const data = query.data;
-  const available = data?.shifts ?? [];
+  const available = (data?.shifts ?? []).filter(shift=>!linkedShift || shift.id===linkedShift);
   const assignedCells = assignedWeekdayCells(available, Number(employee));
   const gaps = available.filter(s => s.assignees.length < s.required);
   const patterns = [...new Map(available.map(s => [patternKey(s), s])).values()];
@@ -58,7 +61,7 @@ export function ShiftAssignments({ siteId, owner, mode }: { siteId: number; owne
     setPending(request); setSaving(true);
     try {
       await workHubRequest(`/site-shift-plans/${siteId}/assign`, { method: "POST", body: JSON.stringify(request) });
-      setPending(null); clearDraft(); setMessage("Assignments saved."); await query.refetch();
+      setPending(null); clearDraft(); setMessage("Assignments saved."); void cache.invalidateQueries({queryKey:["account-next-steps"]}); await query.refetch();
     } catch(error) {
       setMessage(error instanceof Error ? error.message : "Assignment was not confirmed.");
       if ([400,403,409,422].includes((error as {status?:number}).status ?? 0)) { setPending(null); setReview(false); await query.refetch(); }

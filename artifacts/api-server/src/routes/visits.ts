@@ -1,4 +1,4 @@
-import { recordGateMovement } from '../services/gate-topology';
+import { recordGateMovement, resolveGateDestination, gateDestinations, confirmedSecureArea, type GateMovement } from '../services/gate-topology';
 import { linkedGateScope } from "../services/gate-links";
 import {offlineGateObservationService,OfflineGateError} from "../services/gate-offline-observation";
 import { gateVisitGpsEvidence } from "../lib/gate-visit-gps";
@@ -168,6 +168,13 @@ function validatePlateInput(
 
 function admissionStatusOf(value: string | null | undefined): "pending" | "admitted" {
   return value === "pending" ? "pending" : "admitted";
+}
+
+/** Gate-managed series visits close only through an explicit outer-gate checkout. */
+async function isSeriesGateVisit(visit:{siteLocationId:number;gateStationId?:string|null}) {
+  if(!visit.gateStationId)return false;
+  const result=await pool.query(`SELECT EXISTS(SELECT 1 FROM gate_stations WHERE site_id=$1 AND topology->>'kind'='series') AS configured`,[visit.siteLocationId]);
+  return result.rows[0]?.configured===true;
 }
 
 async function validateGateEvidencePath(
@@ -1152,15 +1159,15 @@ router.post("/visits/gate/observations", async (req, res): Promise<void> => {
       return;
     }
     if (visit) {
+      const seriesVisit=await isSeriesGateVisit(visit);
       const [updated] = await db.update(siteVisitsTable).set({
         observedDepartureAt: observation.observedDepartureAt,
         observedDirection: input.direction,
         observationSource: input.source,
         provisionalVehicleAssetId: vehicle?.id ?? visit.provisionalVehicleAssetId,
-        reconciliationState: visit.reconciliationState === "not_required" ? "observed" : visit.reconciliationState,
+        reconciliationState: seriesVisit?"needs_review":visit.reconciliationState === "not_required" ? "observed" : visit.reconciliationState,
         reconciliationFacts: { ...(visit.reconciliationFacts ?? {}), ...observation.facts },
-        checkOutTime: observation.observedDepartureAt,
-        autoCheckedOut: input.source === "geofence",
+        ...(!seriesVisit?{checkOutTime:observation.observedDepartureAt,autoCheckedOut:input.source === "geofence"}:{}),
       }).where(eq(siteVisitsTable.id, visit.id)).returning();
       res.status(201).json(updated);
       return;
@@ -1383,6 +1390,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     longitude?: number;
     gateStationId?: string;
     destinationGateId?: string;
+    destinationId?: string;
   };
   let entryCategory;
   try { entryCategory = parseVisitEntryCategory(b.entryCategory); }
@@ -1484,14 +1492,24 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
   }
 
   let destinationGate: typeof selectedGate = null;
-  if(b.destinationGateId){
-    if(!z.string().uuid().safeParse(b.destinationGateId).success){res.status(400).json({message:'Choose a destination gate at this site.'});return;}
-    [destinationGate]=await db.select().from(gateStationsTable).where(and(eq(gateStationsTable.id,b.destinationGateId),eq(gateStationsTable.siteId,site.id),eq(gateStationsTable.active,true)));
-    if(!destinationGate){res.status(400).json({message:'Destination gate unavailable at this site.'});return;}
+  let destinationName: string | null = null;
+  if(selectedGate){
+    const gates=await db.select().from(gateStationsTable).where(eq(gateStationsTable.siteId,site.id));
+    try {
+      const target=b.destinationGateId&&!b.destinationId&&!gateDestinations(gates as any,selectedGate.id).length?null:resolveGateDestination(gates as any,selectedGate.id,b.destinationId??b.destinationGateId);
+      if(b.destinationId&&!target)throw new Error('Choose a configured destination at this gate.');
+      if(target){destinationName=target.name;destinationGate=target.gateId?gates.find(g=>g.id===target.gateId)??null:null;}
+      // Retain explicit routing for independent/parallel installations with no destination list.
+      else if(b.destinationGateId){
+        destinationGate=gates.find(g=>g.id===b.destinationGateId&&g.active)??null;
+        if(!destinationGate)throw new Error('Destination gate unavailable at this site.');
+        destinationName=destinationGate.name;
+      }
+    } catch(error) {res.status(400).json({message:error instanceof Error?error.message:'Choose a configured destination.'});return;}
   }
   const selectedArea=(selectedGate?.topology as {area?:string}|null)?.area??'';
   const arrivalMovement=selectedGate?{operationId:crypto.randomUUID(),kind:'enter',gateId:selectedGate.id,gateName:selectedGate.name,area:selectedArea,destinationGateId:null,destination:'remain',at:new Date().toISOString(),actorId:session.userId}:null;
-  const routeMovement=selectedGate&&destinationGate?{...arrivalMovement,operationId:crypto.randomUUID(),kind:'route',destinationGateId:destinationGate.id,destination:destinationGate.name}:null;
+  const routeMovement=selectedGate&&destinationName?{...arrivalMovement,operationId:crypto.randomUUID(),kind:'route',destinationGateId:destinationGate?.id??null,destination:destinationName}:null;
   const initialMovements=[arrivalMovement,routeMovement].filter(Boolean);
   const linkedVisitScope = await linkedGateScope(pool, session, site.id);
   // Serialize this plate across parallel gates, retaining one active site visit.
@@ -1526,11 +1544,14 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
         return { visit: arrived ?? null, reused: false };
       }
       if(same && selectedArea && arrivalMovement){
+        const currentArea=confirmedSecureArea((active.gateMovements??[]) as GateMovement[]);
+        if(currentArea)return {visit:currentArea===selectedArea?active:null,reused:true};
         const [entered]=await tx.update(siteVisitsTable).set({gateMovements:sql`${siteVisitsTable.gateMovements} || ${JSON.stringify([arrivalMovement])}::jsonb`}).where(eq(siteVisitsTable.id,active.id)).returning();
         return {visit:entered,reused:true};
       }
       return { visit: same ? active : null, reused: true };
     }
+    if(selectedArea)return {visit:null,reused:true};
     const [created] = await tx
     .insert(siteVisitsTable)
     .values({
@@ -1682,22 +1703,30 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     await recordGateMovement(session,{siteId:visit.siteLocationId,gateId:selectedGate.id,visitId:id,operationId:crypto.randomUUID(),kind:'leave',destination:'site_exit'});
     const [current]=await db.select().from(siteVisitsTable).where(eq(siteVisitsTable.id,id));res.json(current);return;
   }
+  // The update below compares this saved history under the row lock. If an inner
+  // arrival wins the race, checkout must refresh rather than erase that arrival.
+  const savedMovements=(visit.gateMovements??[]) as GateMovement[];
+  if(confirmedSecureArea(savedMovements)){
+    res.status(409).json({message:'Inner arrival is confirmed. Record checkout from the secure area first.',code:'visit.secure_area_checkout_required'});return;
+  }
+  const earlyTurnaround=savedMovements.at(-1)?.destinationGateId!=null;
   const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
   const [updated] = await db
     .update(siteVisitsTable)
     .set({
       checkOutTime: new Date(),
-      ...(selectedGate ? {gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify([{operationId:crypto.randomUUID(),kind:"site_exit",gateId:selectedGate.id,gateName:selectedGate.name,area:"",destinationGateId:null,destination:"remain",at:new Date().toISOString(),actorId:session.userId}])}::jsonb`} : {}),
+      ...(selectedGate ? {gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify([{operationId:crypto.randomUUID(),kind:"site_exit",gateId:selectedGate.id,gateName:selectedGate.name,area:"",destinationGateId:null,destination:"remain",at:new Date().toISOString(),actorId:session.userId,...(earlyTurnaround?{note:"Exited before inner arrival"}:{})}])}::jsonb`} : {}),
       checkOutLatitude: gpsEvidence.latitude,
       checkOutLongitude: gpsEvidence.longitude,
       checkOutGpsEvidence: gpsEvidence,
-      checkOutNotes: trimVisitNotes(b.notes) ?? visit.checkOutNotes,
+      checkOutNotes: [trimVisitNotes(b.notes) ?? visit.checkOutNotes,earlyTurnaround?'Exited before inner arrival':null].filter(Boolean).join('\n') || null,
     })
-    .where(and(eq(siteVisitsTable.id, id), isNull(siteVisitsTable.checkOutTime)))
+    .where(and(eq(siteVisitsTable.id, id), isNull(siteVisitsTable.checkOutTime), sql`${siteVisitsTable.gateMovements} = ${JSON.stringify(savedMovements)}::jsonb`))
     .returning();
   if (!updated) {
     const [current] = await db.select().from(siteVisitsTable).where(eq(siteVisitsTable.id,id));
-    res.json(current); return;
+    if(current?.checkOutTime){res.json(current);return;}
+    res.status(409).json({message:"This visit changed. Refresh the saved state before checkout.",code:"visit.movement_changed"});return;
   }
 
   const [siteRow] = await db
@@ -1928,6 +1957,13 @@ router.post("/visits/check-in", async (req, res): Promise<void> => {
     return;
   }
 
+  const priorGuestVisits=await db.select().from(siteVisitsTable).where(and(eq(siteVisitsTable.guestSessionId,ctx.guest.id),isNull(siteVisitsTable.checkOutTime)));
+  for(const prior of priorGuestVisits){
+    if(await isSeriesGateVisit(prior)){
+      res.status(409).json({message:'Your property visit is still open. Ask the outer gatekeeper to record checkout.',code:'visit.outer_checkout_required'});return;
+    }
+  }
+
   // Auto-checkout any prior open visit for this guest.
   const autoClosed = await db
     .update(siteVisitsTable)
@@ -2099,6 +2135,9 @@ router.post("/visits/:id/check-out", async (req, res): Promise<void> => {
   if (visit.checkOutTime) {
     res.json({ ...visit, plateState: normalizePlateState(visit.plateState) });
     return;
+  }
+  if(await isSeriesGateVisit(visit)){
+    res.status(409).json({message:'Ask the outer gatekeeper to record checkout for this property visit.',code:'visit.outer_checkout_required'});return;
   }
   const [updated] = await db
     .update(siteVisitsTable)

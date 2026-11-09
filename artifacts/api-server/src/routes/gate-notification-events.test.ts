@@ -121,6 +121,10 @@ beforeEach(async () => {
     if (sql === "BEGIN") state.transactionOpen = true;
     else if (sql === "COMMIT" || sql === "ROLLBACK") state.transactionOpen = false;
     else if (sql.includes("SELECT id, role, session_version")) rows = [{ id: values[0], role: "vendor", session_version: 1, display_name: "Gate worker" }];
+    else if (sql.startsWith("SELECT d.id,d.post_coverage")) rows = [{id:"incoming-duty",watch_id:"80000000-0000-4000-8000-000000000001",started_at:new Date(),post_coverage:{vendorId:11,ticketId:99}}];
+    else if (sql.startsWith("SELECT s.id,s.ticket_number")) rows = [{id:"scheduled-post",ticket_number:"99",starts_at:new Date(),ends_at:new Date(Date.now()+3600000)}];
+    else if (sql.startsWith("SELECT r.status")) rows = [{status:"approved"}];
+    else if (sql.startsWith("SELECT t.id FROM tickets")) rows = [{id:99}];
     else if (sql.startsWith("SELECT id, name, partner_id")) rows = [{ id: 3, name: "Site", partner_id: 22 }];
     else if (sql.includes("FROM gate_stations") && !sql.includes("FROM gate_shift_actions")) rows = [{ id: stationId, site_id: 3 }];
     else if (sql.includes("FROM site_work_assignments") || sql.includes("FROM user_org_memberships")) rows = [{ id: 1 }];
@@ -149,7 +153,7 @@ describe("real Work Hub notification producers", () => {
     const input = { stationId, preparationId, operationId: handoffId, acknowledged: true, source: "ios" as const, reviewedRevision: assembleShiftSnapshot([], [], "2026-09-24T08:00:00.000Z").revision };
     const session = { userId: 2, role: "vendor", vendorId: 11, sv: 1 };
     const result = await assumeGateWatch(session, input);
-    expect(result).toMatchObject({ id: handoffId, incoming_user_id: 2, preparation_id: handoffId });
+    expect(result).toMatchObject({ id: handoffId, incoming_user_id: 2, preparation_id: handoffId, ticketId:99 });
     expect(recordGateWorkday).not.toHaveBeenCalled();
     expect(state.pg.mock.calls.some(([sql]) => sql.includes("UPDATE users") || sql.includes("session_version=session_version+1"))).toBe(false);
     await assumeGateWatch(session, input);

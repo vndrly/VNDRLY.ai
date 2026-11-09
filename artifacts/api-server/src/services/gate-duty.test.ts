@@ -46,6 +46,11 @@ async function fixture(policy: "on_site" | "paid_travel" = "on_site") {
     "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)",
     [site, workType, vendor],
   );
+  // Watch assumption now opens its ticket atomically; this fixture represents
+  // a vendor with an approved Gate catalog service, not missing commercial setup.
+  await pool.query("INSERT INTO partner_vendor_relationships(partner_id,vendor_id,status) VALUES($1,$2,'approved')",[partner,vendor]);
+  await pool.query("INSERT INTO vendor_work_types(vendor_id,work_type_id,unit_price,unit) VALUES($1,$2,50,'per_hour')",[vendor,workType]);
+  await pool.query("INSERT INTO partner_vendor_work_type_approvals(partner_id,vendor_id,work_type_id,approved_unit_price,approved_unit) VALUES($1,$2,$3,50,'per_hour')",[partner,vendor,workType]);
   const stationId = (
     await pool.query(
       "INSERT INTO gate_stations(site_id,name) VALUES($1,$2) RETURNING id",

@@ -9,6 +9,7 @@ import type { PoolClient } from "pg";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { notifyGateSiteEvent } from "./gate-notification-events";
+import { ensureGateWatchTicket } from "./gate-watch-ticket";
 import {
   assembleShiftSnapshot,
   type ShiftRecord,
@@ -390,6 +391,8 @@ export async function administerGateWatch(session:SessionPayload,input:AdminWatc
     await c.query("UPDATE gate_duty_sessions SET ended_at=$3,ended_by_user_id=$2,end_reason='Administrative watch transfer; paid shift unchanged' WHERE station_id=$1 AND user_id=$4 AND ended_at IS NULL",[input.stationId,session.userId,now,shift.operator_id]);
     const next=(await c.query("INSERT INTO gate_shifts(station_id,operator_id,started_at) VALUES($1,$2,$3) RETURNING id",[input.stationId,incoming.userId,now])).rows[0];
     await c.query("INSERT INTO gate_duty_sessions(station_id,user_id,work_hub_shift_id,source_legacy_shift_id,started_at,source,idempotency_key,post_coverage) VALUES($1,$2,$3,$4,$5,'web',$6,$7::jsonb)",[input.stationId,incoming.userId,scheduled?.id??null,next.id,now,input.operationId,JSON.stringify({...(incoming.vendorId?{vendorId:incoming.vendorId}:{partnerId:incoming.partnerId}),assignedBy:session.userId,assigneeAcknowledged:input.action==="assume",physicalAttendanceVerified:false})]);
+    const watchTicket = input.action === "assume" && incoming.vendorId ? await ensureGateWatchTicket(c, incoming, input.stationId, access.station.site_id) : null;
+    if (watchTicket?.ticketBlocker) throw new ChangeOverError(409, watchTicket.ticketBlocker, "The watch ticket could not be opened. Check the approved Gate service and scheduled ticket; no watch change was committed.");
     await c.query("INSERT INTO gate_handovers(id,preparation_id,incoming_shift_id,incoming_user_id,outgoing_name,incoming_name,acknowledged_at) VALUES($1,$1,$2,$3,$4,$5,$6)",[input.operationId,next.id,incoming.userId,shift.operator_name??"Gatekeeper",incomingName,now]);
     await c.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'admin_assignment',$4)",[input.stationId,session.userId,next.id,`Watch ${input.action==="assume"?"assumed":"assigned"} by administrator to ${incomingName}; paid shifts and sign-ins unchanged.`]);
     let notification=null;
@@ -399,7 +402,7 @@ export async function administerGateWatch(session:SessionPayload,input:AdminWatc
       const link=`/gate/change-over?siteId=${access.station.site_id}&stationId=${input.stationId}`;
       notification=(await c.query("INSERT INTO notifications(user_id,type,category,title,body,link,dedupe_key,urgent_delivery_pending) VALUES($1,'gate_watch_assigned','system',$2,$3,$4,$5,true) RETURNING id,user_id AS \"userId\",type,title,body,link,created_at AS \"createdAt\"",[incoming.userId,title,body,link,`gate-watch-assigned:${input.operationId}`])).rows[0];
     }
-    const result={operationId:input.operationId,actorVendorId:session.vendorId??null,actorPartnerId:session.partnerId??null,stationId:input.stationId,expectedShiftId:input.expectedShiftId,action:input.action,targetMembershipId:input.targetMembershipId??null,watchId:next.id,workerUserId:incoming.userId,workerName:incomingName,shiftId:scheduled?.id??null,notification,assignedAt:now.toISOString()};
+    const result={operationId:input.operationId,actorVendorId:session.vendorId??null,actorPartnerId:session.partnerId??null,stationId:input.stationId,expectedShiftId:input.expectedShiftId,action:input.action,targetMembershipId:input.targetMembershipId??null,watchId:next.id,workerUserId:incoming.userId,workerName:incomingName,shiftId:watchTicket?.shiftId??scheduled?.id??null,...(watchTicket?{ticketId:watchTicket.ticketId}:input.action==="assume"?{ticketId:null,ticketStatus:"unavailable",ticketBlocker:"gate_ticket.vendor_context_required"}:{}),notification,assignedAt:now.toISOString()};
     await c.query("INSERT INTO work_hub_client_operations(user_id,command_kind,operation_id,owner_org_type,owner_org_id,result_json,applied_at) VALUES($1,'gate.watch.admin',$2,$3,$4,$5::jsonb,$6)",[session.userId,input.operationId,session.vendorId?"vendor":"partner",session.vendorId??access.site.partner_id,JSON.stringify(result),now]);
     return result;
   });
@@ -1422,6 +1425,14 @@ export async function assumeGateWatch(session: SessionPayload, input: {
       if((await c.query("SELECT id FROM gate_shifts WHERE operator_id=$1 AND ended_at IS NULL AND station_id<>$2 LIMIT 1",[session.userId,input.stationId])).rowCount)return fail(409,"operator_on_watch","End your current watch before assuming another watch.");
     }
     const saveReceipt=async(result:Record<string,unknown>)=>{
+      if (session.vendorId) {
+        const ticket = await ensureGateWatchTicket(c, session, input.stationId, access.station.site_id);
+        if (ticket.ticketBlocker) throw new ChangeOverError(409, ticket.ticketBlocker, "The watch ticket could not be opened. Ask your company administrator to check the approved Gate service and scheduled ticket; no watch change was committed.");
+        result = { ...result, ticketId: ticket.ticketId, shiftId: ticket.shiftId };
+      } else {
+        // Partner/platform custody does not authorize a vendor billing ticket.
+        result = { ...result, ticketId: null, ticketStatus: "unavailable", ticketBlocker: "gate_ticket.vendor_context_required" };
+      }
       if(!explicitReview)return result;
       const saved={...result,stationId:input.stationId,vendorId:session.vendorId??null,partnerId:session.partnerId??null,command:JSON.stringify(input)};
       await c.query("INSERT INTO work_hub_client_operations(user_id,command_kind,operation_id,owner_org_type,owner_org_id,result_json,applied_at) VALUES($1,'gate.watch.assume',$2,$3,$4,$5::jsonb,now())",[session.userId,input.operationId,session.vendorId?"vendor":"partner",session.vendorId??access.site.partner_id,JSON.stringify(saved)]);

@@ -46,7 +46,7 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
   const changed=Boolean(adminWatchId&&current?.shift?.id!==adminWatchId);
   async function saved() {
     setPending(null);setError("");onOpenChange(false);
-    await Promise.all(["change-over-state","gate-entry-watch","gate-active-watches","gate-watch-timeline","gate-watch-own-duty","gate-watch-standers","work-hub-workforce"].map(key=>cache.invalidateQueries({queryKey:[key]})));
+    await Promise.all(["account-next-steps","change-over-state","gate-entry-watch","gate-active-watches","gate-watch-timeline","gate-watch-own-duty","gate-watch-standers","work-hub-workforce"].map(key=>cache.invalidateQueries({queryKey:[key]})));
     await onSaved?.();
   }
   async function send(command:Command) {

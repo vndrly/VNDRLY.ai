@@ -1,6 +1,6 @@
-import {fireEvent,render,screen,waitFor} from "@testing-library/react";
+import {cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
 import {QueryClient,QueryClientProvider} from "@tanstack/react-query";
-import {describe,it,expect,vi,beforeEach} from "vitest";
+import {describe,it,expect,vi,beforeEach,afterEach} from "vitest";
 import {ShiftAssignments} from "./shift-assignments";
 const state=vi.hoisted(()=>({request:vi.fn()}));
 vi.mock("@/lib/work-hub-client",async original=>({...await original<any>(),workHubRequest:state.request}));
@@ -8,8 +8,18 @@ vi.mock("@/components/png-pill-rollover",()=>({PngPillButton:({color,children,..
 vi.mock("@/hooks/use-brand",()=>({useBrand:()=>({name:"GateGo",primary:"#f1b637"})}));
 const shift={id:"one",version:1,title:"Day",pattern:"Main Gate Day",date:"2099-10-25",weekday:0,starts:"06:00",ends:"18:00",startsAt:"2099-10-25T11:00:00.000Z",endsAt:"2099-10-25T23:00:00.000Z",timezone:"America/Chicago",required:1,assignees:[]};
 beforeEach(()=>state.request.mockReset().mockResolvedValue({shifts:[shift],people:[{id:7,name:"Gatekeeper One"}],busy:[],readOnly:true}));
+afterEach(()=>{cleanup();window.history.replaceState({},"","/");});
 function mount(mode:"assign"|"gaps"){render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><ShiftAssignments owner={{type:"vendor",id:5}} siteId={9} mode={mode}/></QueryClientProvider>);}
 describe("assignment views",()=>{
+ it("opens the exact saved next-step shift and worker without making assignments",async()=>{
+  window.history.replaceState({},"","/work-hub/calendar?siteId=9&stationId=main&shiftId=one&day=2099-10-25&employee=7");
+  state.request.mockResolvedValue({shifts:[shift,{...shift,id:"other",pattern:"Other Gate"}],people:[{id:7,name:"Gatekeeper One"}],busy:[],readOnly:false});
+  mount("assign");await screen.findByLabelText("Main Gate Day Sun");
+  expect(screen.queryByLabelText("Other Gate Sun")).toBeNull();
+  expect((screen.getByLabelText("Assignment gatekeeper") as HTMLSelectElement).value).toBe("7");
+  expect(state.request.mock.calls[0][0]).toContain("from=2099-10-25&through=2099-10-25");
+  expect(state.request.mock.calls.every(call=>!call[1]?.method)).toBe(true);
+ });
  it("asks before taking an occupied day, cancels cleanly, and stages the reviewed transfer",async()=>{
   const data={shifts:[{...shift,assignees:[8]}],people:[{id:7,name:"Gatekeeper One"},{id:8,name:"Gatekeeper Two"}],busy:[],readOnly:false};
   state.request.mockImplementation(async(_path,options)=>options?.method ? {resource:{changed:1}} : data);

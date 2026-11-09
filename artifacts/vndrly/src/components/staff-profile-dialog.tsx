@@ -36,8 +36,8 @@ const jsonRequest = async (url: string, method = "GET", body?: unknown) => {
   return data;
 };
 
-export default function StaffProfileDialog({ open, onOpenChange, vendorId, person, defaultType = "Office Staff", defaultRole, operationCategories, canVerify = false }: {
-  open: boolean; onOpenChange: (open: boolean) => void; vendorId: number; person?: StaffProfilePerson | null; defaultType?: StaffType; defaultRole?: string; operationCategories?: readonly string[]; canVerify?: boolean;
+export default function StaffProfileDialog({ open, onOpenChange, vendorId, person, defaultSiteId, defaultType = "Office Staff", defaultRole, operationCategories, canVerify = false }: {
+  open: boolean; onOpenChange: (open: boolean) => void; vendorId: number; person?: StaffProfilePerson | null; defaultSiteId?: number; defaultType?: StaffType; defaultRole?: string; operationCategories?: readonly string[]; canVerify?: boolean;
 }) {
   const cache = useQueryClient(), { toast } = useToast();
   const { data: vendor } = useGetVendor(vendorId, { query: { enabled: open && !!vendorId, queryKey: getGetVendorQueryKey(vendorId) } });
@@ -54,7 +54,7 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
   const baseline = useRef(""), originalAccess = useRef<Access | null>(null);
   const dirty = !!form && baseline.current !== JSON.stringify({ form, access });
   useUnsavedChanges(open && dirty);
-  const invalidate = () => { void cache.invalidateQueries({ predicate: q => /field-employees|vendor-contacts|contacts|people-access|org-members|staff-enrollments/.test(JSON.stringify(q.queryKey)) }); };
+  const invalidate = () => { void cache.invalidateQueries({queryKey:["account-next-steps"]}); void cache.invalidateQueries({ predicate: q => /field-employees|vendor-contacts|contacts|people-access|org-members|staff-enrollments/.test(JSON.stringify(q.queryKey)) }); };
   const close = (value: boolean) => { if (!value && busy) return; if (!value && dirty && !window.confirm("Discard unsaved employee profile changes?")) return; onOpenChange(value); };
 
   useEffect(() => {
@@ -79,7 +79,9 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
         const initialRole = loadedRoles.some(role => role.label === requestedRole) ? requestedRole : defaultType === "Office Staff" ? "Office Staff" : loadedRoles.find(role => role.area !== "office")?.label ?? "Office Staff";
         const type = saved ? staffTypeFor(saved) : loadedDefinition(initialRole)?.type ?? defaultType;
         const stored = accessData.people.find((row: { vendorPeopleId: number }) => row.vendorPeopleId === saved?.id);
-        const nextAccess: Access = stored ?? { isAdmin: !!saved?.isCompanyAdmin || saved?.vendorRole === "admin", operationalRoles: saved ? legacyStaffAccess(saved.vendorRole) : loadedDefinition(initialRole)?.access ?? defaultStaffAccess(type), siteLocationIds: [] };
+        const nextAccess: Access = stored ? structuredClone(stored) : { isAdmin: !!saved?.isCompanyAdmin || saved?.vendorRole === "admin", operationalRoles: saved ? legacyStaffAccess(saved.vendorRole) : loadedDefinition(initialRole)?.access ?? defaultStaffAccess(type), siteLocationIds: [] };
+        const initialAccess = structuredClone(nextAccess);
+        if (defaultSiteId && accessData.eligibleSites.some((site: {id:number})=>site.id===defaultSiteId) && !nextAccess.siteLocationIds.includes(defaultSiteId)) nextAccess.siteLocationIds = [...nextAccess.siteLocationIds,defaultSiteId];
         const primaryRole = saved ? currentRoleLabel(jobTitleFor(staffPrimaryRole(saved, nextAccess.operationalRoles)), loadedCatalog) : initialRole;
         const primaryAccess = loadedDefinition(primaryRole)?.access ?? defaultStaffAccess(type);
         const duties = saved ? (saved.roles ?? []).map(role => currentRoleLabel(role, loadedCatalog)).filter(role => loadedRoles.some(value => value.label === role) && role !== primaryRole) : [];
@@ -88,12 +90,12 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
         }
         const nextForm: Form = { firstName: saved?.firstName ?? "", lastName: saved?.lastName ?? "", email: saved?.email ?? "", phone: saved?.phone ?? "", jobTitle: primaryRole, photoUrl: saved?.photoUrl ?? null, pecCertification: saved?.pecCertification ?? false, pecExpirationDate: saved?.pecExpirationDate ?? "", roles: saved?.roles ?? (defaultRole === "Team Member" ? ["Administrative Team"] : []), vendorRole: saved?.vendorRole ?? (type === "Office Staff" ? "office" : type === "Gatekeeper" ? "gatekeeper" : "field"), staffType: type, duties };
         if (!live) return;
-        setCatalog(loadedCatalog); setSites(accessData.eligibleSites); setAccess(nextAccess); originalAccess.current = nextAccess;
-        setForm(nextForm); baseline.current = JSON.stringify({ form: nextForm, access: nextAccess });
+        setCatalog(loadedCatalog); setSites(accessData.eligibleSites); setAccess(nextAccess); originalAccess.current = initialAccess;
+        setForm(nextForm); baseline.current = JSON.stringify({ form: nextForm, access: initialAccess });
       } catch (cause) { if (live) setError(cause instanceof Error ? cause.message : "Unable to load employee profile"); }
     })();
     return () => { live = false; };
-  }, [open, vendorId, person?.id, defaultType, defaultRole, isGateGo, operationCategories?.join(",")]);
+  }, [open, vendorId, person?.id, defaultSiteId, defaultType, defaultRole, isGateGo, operationCategories?.join(",")]);
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault(); if (!form || !access) return;

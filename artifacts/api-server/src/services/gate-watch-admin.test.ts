@@ -17,6 +17,10 @@ beforeEach(()=>{
   m.query.mockImplementation(async(sql:string,args:any[]=[])=>{
     let rows:any[]=[];
     if(sql.startsWith("SELECT row_to_json(station) AS station"))rows=[{station:{id:"gate",site_id:3,name:"Main Gate",active:true},site:{id:3,name:"Antelope Draw",partner_id:5},account:{id:args[1],role:"vendor",session_version:1,display_name:"Admin"}}];
+    else if(sql.startsWith("SELECT d.id,d.post_coverage"))rows=[{id:"own-duty",watch_id:currentId,started_at:new Date(),post_coverage:{vendorId:4,ticketId:99}}];
+    else if(sql.startsWith("SELECT s.id,s.ticket_number"))rows=[{id:"scheduled-post",ticket_number:"99",starts_at:new Date(),ends_at:new Date(Date.now()+3600000)}];
+    else if(sql.startsWith("SELECT r.status"))rows=[{status:"approved"}];
+    else if(sql.startsWith("SELECT t.id FROM tickets"))rows=[{id:99}];
     else if(sql.startsWith("SELECT * FROM gate_stations"))rows=[{id:"gate",site_id:3,name:"Main Gate",active:true}];
     else if(sql.startsWith("SELECT id, role, session_version"))rows=[{id:args[0],role:"vendor",session_version:1,display_name:"Admin"}];
     else if(sql.startsWith("SELECT id, name, partner_id"))rows=[{id:3,name:"Antelope Draw",partner_id:5}];
@@ -56,7 +60,7 @@ it("assigns the exact current watch and scheduled shift, commits the alert, then
   expect(m.query.mock.calls.some(([sql])=>/UPDATE users|UPDATE gate_work_sessions/.test(sql))).toBe(false);
 });
 it("assumes immediately as the signed-in administrator without requiring outgoing preparation",async()=>{
-  expect(await administerGateWatch(session,{...command,action:"assume",targetMembershipId:undefined})).toMatchObject({workerUserId:7,notification:null});
+  expect(await administerGateWatch(session,{...command,action:"assume",targetMembershipId:undefined})).toMatchObject({workerUserId:7,notification:null,ticketId:99});
   expect(m.deliver).not.toHaveBeenCalled();expect(m.clock).not.toHaveBeenCalled();
 });
 it.each(["not-admin","stale-watch","became-busy"])("rejects %s before making an assignment",async(reason)=>{
