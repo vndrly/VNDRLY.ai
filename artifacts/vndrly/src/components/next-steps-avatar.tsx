@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useId, useSyncExternalStore } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { BrandedSelect } from "@/components/work-hub/chrome";
@@ -12,6 +12,15 @@ const avatars = {
   Tally: "599 550 312 354",
   "Field Worker": "1047 544 356 360",
 } as const;
+const badgePositions: Record<keyof typeof avatars, [number, number, number]> = {
+  Rivet: [946, 289, 63],
+  V: [187, 304, 43],
+  Beacon: [541, 361, 52],
+  Scout: [1313, 133, 47],
+  Relay: [347, 791, 48],
+  Tally: [750, 786, 50],
+  "Field Worker": [1244, 794, 48],
+};
 const changeEvent = "vndrly:next-steps-avatar";
 function subscribe(callback: () => void) {
   window.addEventListener(changeEvent, callback);
@@ -50,10 +59,24 @@ export function NextStepsAvatarPreference() {
 export function NextStepsAvatar({ active = false }: { active?: boolean }) {
   const { avatar } = useAvatar();
   const brand = useBrand();
+  const tintId = useId();
+  const [x, y, size] = badgePositions[avatar];
   return <div className="next-steps-avatar" data-active={active} key={avatar}>
     <svg viewBox={avatars[avatar]} role="img" aria-label={avatar}>
-      <image href="/next-steps-avatars.png" width="1536" height="1024" />
+      {brand.isOrgBranded && <defs>
+        <filter id={tintId} x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
+          {/* Select warm accents by their red-to-blue difference, then retain their shading. */}
+          <feColorMatrix in="SourceGraphic" type="matrix"
+            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2 0 -2 0 -.22" result="accents" />
+          <feFlood floodColor={brand.primary} result="brandColor" />
+          <feBlend in="brandColor" in2="SourceGraphic" mode="color" result="tinted" />
+          <feComposite in="tinted" in2="accents" operator="in" />
+          <feComposite in2="SourceGraphic" operator="over" />
+        </filter>
+      </defs>}
+      <image href="/next-steps-avatars.png" width="1536" height="1024"
+        filter={brand.isOrgBranded ? `url(#${tintId})` : undefined} />
+      {brand.logoSquareUrl && <image href={brand.logoSquareUrl} x={x} y={y} width={size} height={size} />}
     </svg>
-    {brand.logoSquareUrl && <img className="next-steps-avatar-badge" src={brand.logoSquareUrl} alt="" />}
   </div>;
 }

@@ -35,7 +35,6 @@
 
 .next-steps-avatar{position:absolute;top:.75rem;right:calc(100% + .4rem);width:calc(var(--next-steps-avatar-gutter) - .8rem);pointer-events:none;transform-origin:bottom center;filter:drop-shadow(0 2px 4px var(--brand-primary))}
 .next-steps-avatar svg{display:block;width:100%;height:auto}
-.next-steps-avatar-badge{position:absolute;bottom:8%;right:8%;width:22%;aspect-ratio:1;object-fit:contain}
 .next-steps-avatar[data-active=true]{animation:next-steps-greet .55s ease-out}
 @keyframes next-steps-greet{35%{transform:translateY(-.3rem) rotate(-5deg)}65%{transform:rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){.next-steps-avatar[data-active=true]{animation:none}}
