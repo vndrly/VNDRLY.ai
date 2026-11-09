@@ -57,7 +57,7 @@ it("opens a branded nonmodal top-right panel with a real count and gentle attent
   fireEvent.click(button);
   const panel = screen.getByRole("complementary", { name: "Next Steps" });
   expect(panel.getAttribute("aria-modal")).toBeNull(); expect(screen.queryByRole("dialog")).toBeNull();
-  expect(screen.getByRole("img", { name: "Test Company logo" })).toBeTruthy();
+  expect(screen.getByRole("img", { name: "Rivet" }).querySelector("image")?.getAttribute("href")).toBe("/company.png");
   expect(button.getAttribute("data-attention")).toBe("none");
   expect(screen.getByRole("link", { name: "Other navigation" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Close Next Steps" }));

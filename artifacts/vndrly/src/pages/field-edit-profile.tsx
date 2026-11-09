@@ -1,3 +1,4 @@
+import { NextStepsAvatarPreference } from "@/components/next-steps-avatar";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -197,6 +198,7 @@ export default function FieldEditProfile() {
           />
         </label>
         <p className="text-xs text-muted-foreground mt-2">{t("editProfile.tapToChange")}</p>
+        <NextStepsAvatarPreference />
       </div>
 
       <section data-card-layout className="rounded-xl border border-border bg-card p-4 mb-4 space-y-3">

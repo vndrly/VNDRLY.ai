@@ -1,3 +1,4 @@
+import { NextStepsAvatarPreference } from "@/components/next-steps-avatar";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -94,7 +95,7 @@ export function AccountWorkspace({ categories = [] }: { categories?: readonly st
     if (isWorkHubScheduler(user)) actions.push({ label: c("Scheduling & coverage", "Programación y cobertura"), href: "/work-hub/coverage" });
     if (actions.length) cards.push({ title: c("Company workspace", "Espacio de la empresa"), subtitle: c("Tools for your company role", "Herramientas para su función en la empresa"), actions });
   }
-  return <>{cards.map(card => <section key={card.title} className="hub-home-card" aria-label={card.title}>
+  return <><section className="hub-home-card"><NextStepsAvatarPreference /></section>{cards.map(card => <section key={card.title} className="hub-home-card" aria-label={card.title}>
     <header data-card-header-row className="hub-card-heading"><span className="hub-card-icon"><BriefcaseBusiness aria-hidden="true" /></span><div><h2>{card.title}</h2><p>{card.subtitle}</p></div></header>
     <div className="hub-account-rows">{card.actions.map(action => <Link className="hub-home-row" href={action.href} key={action.href}><span className="hub-row-label">{action.label}</span><ChevronRight aria-hidden="true" className="hub-chevron" /></Link>)}</div>
   </section>)}</>;
