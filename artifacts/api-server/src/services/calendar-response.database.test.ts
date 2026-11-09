@@ -1,6 +1,7 @@
 import {randomUUID} from "node:crypto";
 import {describe,expect,it} from "vitest";
 import {assertFreshLocalTestDatabaseEnvironment} from "../../../../scripts/fresh-test-database.mjs";
+import {productionFixtureUserId} from "../test-utils/production-fixture-user-id";
 const isolated=process.env.VNDRLY_TEST_DB_MODE==="fresh-local"&&process.env.VNDRLY_ISOLATED_TEST_DB==="1";
 if(isolated)assertFreshLocalTestDatabaseEnvironment(process.env);
 describe.skipIf(!isolated)("canonical saved participant response persistence",()=>{
@@ -9,7 +10,7 @@ describe.skipIf(!isolated)("canonical saved participant response persistence",()
   const s=await import("@workspace/db"),{eq,and}=await import("drizzle-orm"),{calendarResponseForSession}=await import("./calendar-response-repository");
   const target=new URL(process.env.DATABASE_URL!);expect((await s.pool.query("SELECT current_database() AS database,host(inet_server_addr()) AS address,inet_server_port() AS port")).rows[0]).toEqual({database:process.env.VNDRLY_FRESH_TEST_DB_NAME,address:"127.0.0.1",port:Number(target.port)});
   const marker=randomUUID(),[vendor]=await s.db.insert(s.vendorsTable).values({name:`Synthetic RSVP ${marker}`,contactName:"Synthetic",contactEmail:`${marker}@example.invalid`}).returning();
-  const [user]=await s.db.insert(s.usersTable).values({username:`rsvp-${marker}`,passwordHash:"synthetic-unusable-login",role:"vendor",displayName:"Synthetic participant"}).returning();
+  const [user]=await s.db.insert(s.usersTable).values({id:await productionFixtureUserId(),username:`rsvp-${marker}`,passwordHash:"synthetic-unusable-login",role:"vendor",displayName:"Synthetic participant"}).returning();
   const [membership]=await s.db.insert(s.userOrgMembershipsTable).values({userId:user.id,orgType:"vendor",vendorId:vendor.id,role:"admin"}).returning();
   const [meeting]=await s.db.insert(s.workHubMeetingsTable).values({ownerOrgType:"vendor",ownerOrgId:vendor.id,title:"Synthetic RSVP meeting",timezone:"UTC",createdById:user.id}).returning();
   const start=new Date(Date.now()+86400000),[occurrence]=await s.db.insert(s.workHubMeetingOccurrencesTable).values({meetingId:meeting.id,startsAt:start,endsAt:new Date(start.getTime()+3600000)}).returning();

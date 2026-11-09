@@ -1925,6 +1925,7 @@
       "internal_error": "The trip request could not be completed."
     },
     "workforce": {
+      "context_changed": "Your account changed. Refresh the page and try again.",
       "login_required": "Sign in to view the workforce.",
       "vendor_scope_required": "Select a vendor to view its workforce.",
       "roster_access_denied": "You do not have permission to view this workforce.",

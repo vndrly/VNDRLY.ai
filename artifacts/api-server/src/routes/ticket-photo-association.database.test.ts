@@ -6,6 +6,7 @@ import request from "supertest";
 import { db, pool, vendorsTable, partnersTable, usersTable, userOrgMembershipsTable, siteLocationsTable, workTypesTable, ticketsTable } from "@workspace/db";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
 import { buildTestCookie } from "../test-utils/session";
+import { productionFixtureUserId } from "../test-utils/production-fixture-user-id";
 import { attachTestErrorMiddleware } from "../test-utils/route-app";
 const objects=vi.hoisted(()=>new Map<string,any>());
 vi.mock("../lib/objectStore",()=>({getObjectStore:()=>({getObject:async(path:string)=>objects.get(path)??null})}));
@@ -16,7 +17,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE==="fresh-local")("ticket photo as
   assertFreshLocalTestDatabaseEnvironment(process.env);const tag=randomUUID();
   const [vendor]=await db.insert(vendorsTable).values({name:"Synthetic photo "+tag,contactName:"Synthetic",contactEmail:tag+"@example.invalid"}).returning();
   const [partner]=await db.insert(partnersTable).values({name:"Synthetic photo owner "+tag,contactName:"Synthetic",contactEmail:tag+"@example.invalid"}).returning();
-  const [user]=await db.insert(usersTable).values({username:"photo-"+tag,passwordHash:"not-a-login-hash",role:"vendor",displayName:"Synthetic photo worker"}).returning();
+  const [user]=await db.insert(usersTable).values({id:await productionFixtureUserId(),username:"photo-"+tag,passwordHash:"not-a-login-hash",role:"vendor",displayName:"Synthetic photo worker"}).returning();
   await db.insert(userOrgMembershipsTable).values({userId:user.id,orgType:"vendor",vendorId:vendor.id,role:"admin"});
   const context=await resolveContext(user);const session={...context,userId:user.id,sv:user.sessionVersion};
   const [site]=await db.insert(siteLocationsTable).values({partnerId:partner.id,name:"Synthetic photo site",address:"Synthetic",latitude:0,longitude:0,siteCode:"PHOTO-"+tag}).returning();

@@ -1925,6 +1925,7 @@
       "internal_error": "No se pudo completar la solicitud del viaje."
     },
     "workforce": {
+      "context_changed": "Tu cuenta cambió. Actualiza la página e inténtalo de nuevo.",
       "login_required": "Inicia sesión para ver el personal.",
       "vendor_scope_required": "Selecciona un proveedor para ver su personal.",
       "roster_access_denied": "No tienes permiso para ver este personal.",

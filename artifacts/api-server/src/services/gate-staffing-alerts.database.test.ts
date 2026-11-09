@@ -485,7 +485,7 @@ describe("shared Gate staffing incident database guarantees", () => {
     expect(await staffingNotificationMayDeliver(rows[1].id)).toBe(true);
   });
 
-  it("resolves only after the saved Assume Watch transaction commits and leaves a failed watch unresolved", async () => {
+  it("resolves staffing when the watch commits even if its ticket is still unavailable", async () => {
     const f = await fixture(),
       alert = (await reconcileGateStaffingAlert(f.notice()))!;
     watchTicket.mockResolvedValueOnce({
@@ -499,27 +499,10 @@ describe("shared Gate staffing incident database guarantees", () => {
         operationId: randomUUID(),
         source: "web",
       }),
-    ).rejects.toMatchObject({ status: 409 });
-    expect(
-      (
-        await pool.query(
-          "SELECT id FROM gate_duty_sessions WHERE station_id=$1",
-          [f.station],
-        )
-      ).rowCount,
-    ).toBe(0);
-    expect(
-      (
-        await pool.query(
-          "SELECT status FROM gate_staffing_alerts WHERE id=$1",
-          [alert.id],
-        )
-      ).rows[0].status,
-    ).toBe("open");
-    await assumeGateWatch(f.sessions[0], {
-      stationId: f.station,
-      operationId: randomUUID(),
-      source: "ios",
+    ).resolves.toMatchObject({
+      ticketId: null,
+      ticketStatus: "unavailable",
+      ticketBlocker: "gate_ticket.fixture_blocked",
     });
     expect(
       (

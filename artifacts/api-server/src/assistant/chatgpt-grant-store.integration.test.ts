@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
 import { validateAssistantSession, withAssistantGrants } from "./chatgpt-grant-store";
+import { productionFixtureUserId } from "../test-utils/production-fixture-user-id";
 import { ASSISTANT_RESOURCE, CHATGPT_CLIENT_ID, assistantPkceChallenge, assistantTokenHash, issueAssistantCode, exchangeAssistantCode, refreshAssistantTokens } from "./chatgpt-oauth";
 
 // This test never provisions or alters a shared development/production database.
@@ -11,7 +12,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("durable assi
   it("validates authority with a one-connection pool, serializes codes and persists replay revocation", async () => {
     assertFreshLocalTestDatabaseEnvironment(process.env);
     await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS assistant_oauth_grants jsonb");
-    const [user] = await db.insert(usersTable).values({ username: `assistant-test-${randomUUID()}`, passwordHash: "unused-fixture-hash", displayName: "Isolated assistant fixture", role: "admin" }).returning();
+    const [user] = await db.insert(usersTable).values({ id: await productionFixtureUserId(), username: `assistant-test-${randomUUID()}`, passwordHash: "unused-fixture-hash", displayName: "Isolated assistant fixture", role: "admin" }).returning();
     const session = { userId: user.id, role: "admin", sv: user.sessionVersion };
     const verifier = "v".repeat(43);
     const authorization = { clientId: CHATGPT_CLIENT_ID, redirectUri: "https://chatgpt.com/connector_platform_oauth_redirect", resource: ASSISTANT_RESOURCE, challenge: assistantPkceChallenge(verifier), scopes: ["gate:read"] };

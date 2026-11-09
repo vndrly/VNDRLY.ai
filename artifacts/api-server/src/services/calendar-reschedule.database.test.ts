@@ -1,6 +1,7 @@
 import {randomUUID} from "node:crypto";
 import {describe,expect,it} from "vitest";
 import {assertFreshLocalTestDatabaseEnvironment} from "../../../../scripts/fresh-test-database.mjs";
+import {productionFixtureUserId} from "../test-utils/production-fixture-user-id";
 const isolated=process.env.VNDRLY_TEST_DB_MODE==="fresh-local"&&process.env.VNDRLY_ISOLATED_TEST_DB==="1";
 if(isolated)assertFreshLocalTestDatabaseEnvironment(process.env);
 describe.skipIf(!isolated)("canonical conditional calendar reschedule persistence",()=>{
@@ -9,7 +10,7 @@ describe.skipIf(!isolated)("canonical conditional calendar reschedule persistenc
   const s=await import("@workspace/db"),{eq,and}=await import("drizzle-orm"),{calendarRescheduleForSession}=await import("./calendar-reschedule-repository");
   const target=new URL(process.env.DATABASE_URL!);expect((await s.pool.query("SELECT current_database() AS database,host(inet_server_addr()) AS address,inet_server_port() AS port")).rows[0]).toEqual({database:process.env.VNDRLY_FRESH_TEST_DB_NAME,address:"127.0.0.1",port:Number(target.port)});
   const marker=randomUUID(),[vendor]=await s.db.insert(s.vendorsTable).values({name:`Synthetic calendar ${marker}`,contactName:"Synthetic",contactEmail:`${marker}@example.invalid`}).returning();
-  const [user]=await s.db.insert(s.usersTable).values({username:`calendar-${marker}`,passwordHash:"synthetic-unusable-login",role:"vendor",displayName:"Synthetic calendar host"}).returning();
+  const [user]=await s.db.insert(s.usersTable).values({id:await productionFixtureUserId(),username:`calendar-${marker}`,passwordHash:"synthetic-unusable-login",role:"vendor",displayName:"Synthetic calendar host"}).returning();
   const [membership]=await s.db.insert(s.userOrgMembershipsTable).values({userId:user.id,orgType:"vendor",vendorId:vendor.id,role:"admin"}).returning();
   const [meeting]=await s.db.insert(s.workHubMeetingsTable).values({ownerOrgType:"vendor",ownerOrgId:vendor.id,title:"Synthetic recorded meeting",timezone:"UTC",createdById:user.id}).returning();
   const start=new Date(Date.now()+86400000),end=new Date(start.getTime()+3600000);
