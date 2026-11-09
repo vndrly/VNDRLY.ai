@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import pg from "pg";
+import {applyGateOperationsMigration} from "../../../scripts/gate-operations-command-center-migration.mjs";
 
 const connectionString = process.env.DATABASE_URL?.trim();
 if (!connectionString) throw new Error("DATABASE_URL is required");
@@ -20,7 +21,8 @@ if (
 const client = new pg.Client({ connectionString });
 try {
   await client.connect();
-  await client.query(migration);
+  const result=await applyGateOperationsMigration(client,migration);
+  console.log(result);
   console.log("Gate operations additive migration passed");
 } finally {
   await client.end();

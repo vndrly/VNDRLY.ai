@@ -165,6 +165,22 @@ it("serializes legacy backfill with an in-flight station action instead of impor
   await pending; await migration.query("COMMIT"); migration.release();
   expect((await pool.query("SELECT id FROM work_hub_tasks WHERE id=$1", [id])).rows).toHaveLength(0);
 });
+it("replays without station locks when current and reconciles an old-client write in the post-restart pass",async()=>{
+  const f=await fixture(),id=randomUUID(),holder=await pool.connect(),migration=await pool.connect();
+  try {
+    await migration.query('BEGIN');await migrateGateTaskHopper(migration);await migration.query('COMMIT');
+    await holder.query('BEGIN');
+    await holder.query('SELECT id FROM gate_stations WHERE id=$1 FOR UPDATE',[f.gates[0]!.id]);
+    await holder.query("INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text) VALUES($1,$2,$3,'open','Legacy write committed during restart')",[f.gates[0]!.id,f.worker.userId,id]);
+    await migration.query('BEGIN');await migration.query("SET LOCAL statement_timeout='2s'");
+    expect((await migrateGateTaskHopper(migration)).imported).toBe(0);
+    await migration.query('COMMIT');await holder.query('COMMIT');
+    await migration.query('BEGIN');await migrateGateTaskHopper(migration);await migration.query('COMMIT');
+    expect((await pool.query('SELECT id FROM work_hub_tasks WHERE id=$1',[id])).rows).toHaveLength(1);
+    expect((await pool.query('SELECT id FROM work_hub_task_events WHERE task_id=$1',[id])).rows).toHaveLength(1);
+    await migration.query('BEGIN');expect((await migrateGateTaskHopper(migration)).imported).toBe(0);await migration.query('COMMIT');
+  }finally{await holder.query('ROLLBACK');await migration.query('ROLLBACK');holder.release();migration.release();}
+});
 it("puts a manager-completed assigned task on the completing employee's calendar rather than attributing it to the assignee", async () => {
   const f = await fixture(); await start(f.office); const made = await create(f);
   const assigned = await mutateGateTask(f.office, { operationId: randomUUID(), action: "assign", taskId: made.task.id, expectedVersion: made.task.version, assigneeUserId: f.relief.userId });

@@ -7,12 +7,29 @@ export const gateTaskHopperStatements = ["ALTER TABLE work_hub_tasks ADD COLUMN 
 /** Existing action IDs become task IDs; ambiguous vendor attribution remains in
  * the original action history and is reported instead of guessing an employer. */
 export async function migrateGateTaskHopper(c: Pick<pg.Client, "query">) {
-  // Caller owns the transaction. Freeze gate creation and serialize existing
-  // stations against the old API's action/handoff locks before reading history.
-  await c.query(guardAdditiveReplay("LOCK TABLE gate_stations IN SHARE MODE"));
-  await c.query(guardAdditiveReplay("SELECT id FROM gate_stations ORDER BY id FOR UPDATE"));
+  // A complete replay must not queue behind unrelated live station actions.
+  // Old-client writes committed during this preflight are reconciled by the
+  // established second pass after API restart. Pending importable rows still
+  // take the original locks and re-read history before any task is inserted.
   const existing = await c.query(guardAdditiveReplay("SELECT data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='work_hub_tasks' AND column_name='gate_hopper'"));
   if (existing.rows.length && existing.rows[0].data_type !== "jsonb") throw new Error("Existing gate_hopper column must be jsonb; no data was changed");
+  if (existing.rows.length) {
+    const pending=await c.query(guardAdditiveReplay(`WITH latest AS (
+      SELECT DISTINCT ON(item_id) item_id,station_id,kind FROM gate_shift_actions WHERE kind IN ('open','resolve','reopen') ORDER BY item_id,created_at DESC,id DESC
+    ), origins AS (
+      SELECT DISTINCT ON(a.item_id) a.* FROM gate_shift_actions a JOIN latest l ON l.item_id=a.item_id AND l.kind<>'resolve'
+      WHERE a.kind='open' ORDER BY a.item_id,a.created_at,a.id
+    ), candidates AS (
+      SELECT DISTINCT o.item_id,m.vendor_id FROM origins o JOIN gate_stations g ON g.id=o.station_id
+      JOIN user_org_memberships m ON m.user_id=o.actor_id AND m.org_type='vendor'
+      JOIN site_work_assignments a ON a.site_location_id=g.site_id AND a.vendor_id=m.vendor_id AND a.is_gate_contractor=true
+    ), owners AS (SELECT item_id,min(vendor_id) AS vendor_id FROM candidates GROUP BY item_id HAVING count(*)=1)
+    SELECT EXISTS(SELECT 1 FROM origins o JOIN owners v ON v.item_id=o.item_id WHERE NOT EXISTS(SELECT 1 FROM work_hub_tasks t WHERE t.id=o.item_id)) AS pending`));
+    if (!pending.rows[0]?.pending) return {imported:0,unresolved:await unresolvedLegacyCount(c)};
+  }
+  // Caller owns the transaction. Retain serialization for actual pending work.
+  await c.query(guardAdditiveReplay("LOCK TABLE gate_stations IN SHARE MODE"));
+  await c.query(guardAdditiveReplay("SELECT id FROM gate_stations ORDER BY id FOR UPDATE"));
   // Avoid an unnecessary AccessExclusive task-table lock during repeat runs.
   if (!existing.rows.length) for (const statement of gateTaskHopperStatements) await c.query(guardAdditiveReplay(statement));
   const result = await c.query(guardAdditiveReplay(`WITH latest AS (
@@ -30,11 +47,16 @@ export async function migrateGateTaskHopper(c: Pick<pg.Client, "query">) {
       jsonb_build_object('stationId',g.id,'siteId',g.site_id,'legacy',true)
     FROM origins o JOIN owners v ON v.item_id=o.item_id JOIN gate_stations g ON g.id=o.station_id ON CONFLICT(id) DO NOTHING RETURNING id,created_by_id
   ) INSERT INTO work_hub_task_events(task_id,actor_user_id,event_type,detail) SELECT id,created_by_id,'hopper.imported',jsonb_build_object('source','gate_shift_actions') FROM inserted RETURNING task_id`));
-  const unresolved = await c.query(guardAdditiveReplay(`SELECT count(DISTINCT a.item_id)::int AS count FROM gate_shift_actions a
+  return { imported: result.rowCount ?? 0, unresolved: await unresolvedLegacyCount(c) };
+
+}
+async function unresolvedLegacyCount(c:Pick<pg.Client,"query">):Promise<number> {
+  const unresolved=await c.query(guardAdditiveReplay(`SELECT count(DISTINCT a.item_id)::int AS count FROM gate_shift_actions a
     WHERE a.kind IN ('open','reopen') AND NOT EXISTS(SELECT 1 FROM work_hub_tasks t WHERE t.id=a.item_id)
     AND a.id=(SELECT id FROM gate_shift_actions b WHERE b.item_id=a.item_id AND b.kind IN ('open','resolve','reopen') ORDER BY b.created_at DESC,b.id DESC LIMIT 1)`));
-  return { imported: result.rowCount ?? 0, unresolved: unresolved.rows[0]?.count ?? 0 };
+  return unresolved.rows[0]?.count ?? 0;
 }
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
   const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
