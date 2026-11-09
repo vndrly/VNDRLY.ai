@@ -1,0 +1,32 @@
+name: Read retained API gate diagnostics
+on:
+  push:
+    branches: [codex/gate-release-diagnostics-38104cb3]
+    paths: ['.github/workflows/gate-ci-diagnostics.yml']
+permissions:
+  contents: read
+  actions: write
+jobs:
+  read-diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+      - name: Inspect retained failures without changing the published source
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          await (async function diagnoseFailedApiArtifact(){
+           const{execFileSync}=await import('node:child_process');const{readdir,readFile,mkdir}=await import('node:fs/promises');const path=await import('node:path');
+           const repo='vndrly/VNDRLY.ai',branch='codex/gate-release-diagnostics-38104cb3',headers={Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'};
+           const r=await fetch('https://api.github.com/repos/'+repo+'/actions/runs?branch='+encodeURIComponent(branch)+'&per_page=30',{headers});const runs=(await r.json()).workflow_runs;
+           for(const run of runs.filter(x=>x.name==='Verify release'&&x.head_branch===branch&&x.status!=='completed')){const c=await fetch('https://api.github.com/repos/'+repo+'/actions/runs/'+run.id+'/cancel',{method:'POST',headers});console.log('Cancelled redundant diagnostics CI only',run.id,c.status);}
+           const dir=path.join(process.env.RUNNER_TEMP,'failed-main-api');await mkdir(dir,{recursive:true});execFileSync('gh',['run','download','42588168978','--repo',repo,'--name','failed-api-gate-42588168978','--dir',dir],{stdio:'inherit',env:process.env});
+           async function walk(p){const result=[];for(const d of await readdir(p,{withFileTypes:true})){const n=path.join(p,d.name);result.push(...d.isDirectory()?await walk(n):[n]);}return result;}
+           for(const f of await walk(dir)){const text=(await readFile(f,'utf8')).replace(/\u001b\[[0-9;]*m/g,'').replace(/postgres(?:ql)?:\/\/\S+/g,'[DB_URL]');const lines=text.split('\n');const findings=[];for(let i=0;i<lines.length;i++)if(/^ FAIL|Failed Tests|Test Files|      Tests|Error:|AssertionError:| × |DatabaseError:/.test(lines[i]))findings.push(...lines.slice(Math.max(0,i-1),Math.min(lines.length,i+24)));console.log('FAILED_API_FILE',path.basename(f));console.log([...new Set(findings)].slice(-360).join('\n'));}
+          })();
+          NODE
