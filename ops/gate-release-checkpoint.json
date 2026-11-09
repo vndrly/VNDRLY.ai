@@ -1,0 +1,134 @@
+{
+  "authorization": {
+    "instruction": "Please resume unattended with full approval to make any all changes to continue and not stop at checkpoints but continue to next step until it results in a full ship minus the plugin\n\nPlease carry it out unattended with all approval the culminates in full ship and we are limited to about two hours so do not stop implementing, fix all as the pop up and create all the missing mecjanics on the appropriate pages at the bottom and I’ll sort them out later.",
+    "scope": [
+      "commit",
+      "push",
+      "web",
+      "api",
+      "supabase",
+      "ota",
+      "testflight",
+      "local_sync"
+    ],
+    "restrictions": [
+      "Gate helpers only; no general profile/company/catalog/payroll helper development",
+      "MidCon vendor1054 notifications remain indefinitely paused until John explicitly resumes",
+      "Preserve unrelated work; no destructive database resets, force pushes or credential rotation"
+    ],
+    "requestedAt": "2026-11-09T07:31:25+00:00",
+    "deadline": "2026-11-09T09:31:25+00:00",
+    "completionCriteria": [
+      "Gate roles can complete staffing recovery and day-to-day work through actual guided branded helpers",
+      "Shared first-admin acknowledgment stops reminders; saved watch resolves coverage; office navigation preserves watch",
+      "NextSteps max3 role-appropriate Gate workflows, separate persistent helper, controlguidance, AskV on-demand and independent mastery receipts",
+      "All eight non-plugin release tracks verified or genuinely external-blocked with evidence"
+    ]
+  },
+  "authorizationHistory": [
+    {
+      "instruction": "Please resume unattended with full approval to make any all changes to continue and not stop at checkpoints but continue to next step until it results in a full ship minus the plugin",
+      "note": "Exact standing instruction preserved; original plugin exclusion and07:31 deadline retained"
+    },
+    {
+      "instruction": "Please carry it out unattended with all approval the culminates in full ship and we are limited to about two hours so do not stop implementing, fix all as the pop up and create all the missing mecjanics on the appropriate pages at the bottom and I’ll sort them out later.",
+      "note": "Exact standing instruction preserved; original plugin exclusion and07:31 deadline retained"
+    }
+  ],
+  "excludedTracks": {
+    "plugin": {
+      "reason": "Explicit full ship minus plugin"
+    }
+  },
+  "releaseCommit": "38104cb3a35717232d8077b21275d897c6081d8e",
+  "sourceTree": "d60a65b36a3effbde00f090b154463b28cf97893",
+  "localCheckpoint": "9f23107f55bf7ed33c59c323a36ca90506e38cba",
+  "updatedAt": "2026-11-09T09:04:19Z",
+  "publicationStartedAt": "2026-11-09T08:44:45Z",
+  "sourceWorktree": "/workspace/VNDRLY-staffing-alerts",
+  "activeJobs": [],
+  "tracks": {
+    "commit": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Verify exact publication before handoff",
+      "evidence": []
+    },
+    "push": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Verify exact publication before handoff",
+      "evidence": []
+    },
+    "web": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Verify exact publication before handoff",
+      "evidence": []
+    },
+    "api": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Verify exact publication before handoff",
+      "evidence": []
+    },
+    "supabase": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Verify exact publication before handoff",
+      "evidence": []
+    },
+    "ota": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Verify exact publication before handoff",
+      "evidence": []
+    },
+    "testflight": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Verify exact publication before handoff",
+      "evidence": []
+    },
+    "local_sync": {
+      "status": "blocked",
+      "canProceed": false,
+      "nextAction": "Restore canonical JOVE connectivity, then synchronize and verify all local services at the exact shipped commit",
+      "blocker": {
+        "reason": "Canonical JOVE is offline and IT15 is not registered. Cloud execution also disconnected after exact source was committed and both cloud checkouts synchronized cleanly.",
+        "attempts": [
+          {
+            "source": "Remote DesktopCommander list_devices",
+            "observedAt": "2026-11-09T08:54:12Z",
+            "commit": "38104cb3a35717232d8077b21275d897c6081d8e",
+            "result": "Only JOVE device736be941-0c68-4c4f-b6a7-15571e68f5a1 registered; offline477h."
+          },
+          {
+            "source": "cloud_environment.environment_status",
+            "observedAt": "2026-11-09T09:03:06Z",
+            "commit": "38104cb3a35717232d8077b21275d897c6081d8e",
+            "result": "Cloud environment ccarenv_b64_Y2NhcmVudl85OTA4ZjcyYzg1NGM4MTkxYThiY2U2NjBkNTQzMmMxMw connectivity offline; exec transport recovery timed out; no desktop/browser execution tool available."
+          },
+          {
+            "source": "Cloud git source check",
+            "observedAt": "2026-11-09T08:48:09Z",
+            "commit": "38104cb3a35717232d8077b21275d897c6081d8e",
+            "result": "/workspace/VNDRLY.ai main and /workspace/VNDRLY-staffing-alerts shipped branch both38104cb3 with inspected clean status before outage. This cannot substitute for canonical Windows sync."
+          }
+        ],
+        "alternativesConsidered": [
+          "Canonical Remote DesktopCommander access: only JOVE registered and offline",
+          "Cloud checkouts updated cleanly, but cannot certify canonical Windows services and later became unavailable",
+          "Continue publication and verification using established GitHub release workflows and an authorized verification runner"
+        ],
+        "requiredExternalChange": "Bring JOVE online for C:\\Users\\john\\Dev\\VNDRLY.ai sync and process/artifact/browser verification of web5173, API8080, iOS8081 and proxy8099."
+      }
+    }
+  },
+  "validation": {
+    "web": "2390 broad web tests pass; final25 real Radix cases/webtypes0; actual390 Showme/trialclick/Stop/dirtyguard proof.",
+    "api": "926-file broad API run6554 initial passes; all20 failures resolved by32 current-source cases and successful501 activity stress rerun; final account57/sharedstate21/APItypes0.",
+    "mobile": "Types0/local109locale checks; productionOTA2217tests352files passed.",
+    "performance": "16 actual signed-in enabled/disabled cold/repeat probes; one112–188ms summary per enabled cold visit, no repeat reread; page usability and other projection delays separate in docs/gate-helper-performance.md."
+  }
+}

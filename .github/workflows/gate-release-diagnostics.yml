@@ -1,59 +1,40 @@
-name: Gate release diagnostics
+name: Gate online release verification
 on:
   push:
     branches: [codex/gate-release-diagnostics-38104cb3]
-    paths: ['.github/workflows/gate-release-diagnostics.yml']
+    paths: ['.github/workflows/gate-release-diagnostics.yml','ops/gate-online-verify.mjs','ops/gate-server-read-verification.mjs','ops/gate-release-checkpoint.json']
 permissions:
   contents: read
+  actions: write
 jobs:
-  diagnose:
+  verify-online:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 25
     env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_USER: ${{ secrets.VPS_USER }}
       VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       VPS_PORT: ${{ secrets.VPS_PORT }}
     steps:
-      - name: Install established SSH tools
-        run: sudo apt-get update -qq && sudo apt-get install --yes --no-install-recommends sshpass
-      - name: Diagnose and apply the unchanged guarded migration
-        shell: bash
-        run: |
-          set -euo pipefail
-          export SSHPASS="$VPS_PASSWORD"
-          sshpass -e ssh -p "$VPS_PORT" -o ConnectTimeout=20 -o PreferredAuthentications=password -o PubkeyAuthentication=no -o StrictHostKeyChecking=accept-new "$VPS_USER@$VPS_HOST" 'bash -s' <<'REMOTE'
-          set -euo pipefail
-          cd /var/www/vndrly
-          test "$(sudo -u vndrly git rev-parse HEAD)" = "38104cb3a35717232d8077b21275d897c6081d8e"
-          sudo -u vndrly env HOME=/home/vndrly node --env-file=/var/www/vndrly/.env.production --input-type=module <<'NODE'
-          import {createRequire} from 'node:module';
-          import {readFile} from 'node:fs/promises';
-          import {guardAdditiveReplay} from './scripts/guard-additive-replay.mjs';
-          const {Client}=createRequire(new URL('./artifacts/api-server/package.json',import.meta.url))('pg');
-          const c=new Client({connectionString:process.env.DATABASE_URL,application_name:'vndrly_gate_release_diagnostic'});
-          const observer=new Client({connectionString:process.env.DATABASE_URL,application_name:'vndrly_gate_release_observer'});
-          let timer;let releaseAttempted=false;
-          try {
-           await c.connect();await observer.connect();
-           const catalog=await c.query("SELECT table_name,column_name,data_type FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('users','site_locations','gate_stations','work_hub_shifts','notifications','gate_staffing_alerts','gate_staffing_alert_notifications') AND column_name IN ('id','notification_id') ORDER BY table_name,column_name");
-           console.log('GATE_MIGRATION_CATALOG',JSON.stringify(catalog.rows));
-           await c.query('BEGIN');await c.query("SET LOCAL lock_timeout='10s'");await c.query("SET LOCAL statement_timeout='45s'");
-           await c.query("SELECT pg_advisory_xact_lock(hashtext('gate-staffing-alerts-migration'))");
-           let observing=false;
-           timer=setInterval(async()=>{if(observing)return;observing=true;try{const result=await observer.query("SELECT a.state,a.wait_event_type,a.wait_event,round(extract(epoch FROM now()-a.xact_start))::int AS transaction_age_seconds,a.application_name,ARRAY(SELECT DISTINCT coalesce(cl.relname,'advisory') FROM pg_locks l LEFT JOIN pg_class cl ON cl.oid=l.relation WHERE l.pid=a.pid AND l.granted) AS locked_relations FROM pg_stat_activity a WHERE a.pid=ANY(pg_blocking_pids($1))",[c.processID]);if(result.rows.length)console.log('GATE_MIGRATION_BLOCKERS',JSON.stringify(result.rows));
-          if(!releaseAttempted&&result.rows.some(r=>r.application_name==='release-lock-readonly')){
-           releaseAttempted=true;
-           const released=await observer.query("WITH candidates AS MATERIALIZED (SELECT a.pid,a.application_name,round(extract(epoch FROM now()-a.xact_start))::int AS transaction_age_seconds FROM pg_stat_activity a WHERE a.pid=ANY(pg_blocking_pids($1)) AND a.pid<>pg_backend_pid() AND a.usename=current_user AND a.application_name='release-lock-readonly' AND a.backend_type='client backend' AND a.state='idle in transaction' AND a.backend_xid IS NULL AND a.xact_start<now()-interval '1 hour' AND a.query_start<now()-interval '1 hour') SELECT pid,application_name,transaction_age_seconds,pg_terminate_backend(pid) AS terminated FROM candidates WHERE (SELECT count(*) FROM candidates)=1",[c.processID]);
-           console.log('GATE_OWN_STALE_READONLY_RELEASE_SESSION',JSON.stringify(released.rows));
-          }}catch(e){console.log('GATE_MIGRATION_OBSERVER_ERROR',e.code??'unknown');}finally{observing=false;}},1500);
-           const sql=await readFile('./lib/db/drizzle/gate_staffing_alerts.sql','utf8');
-           await c.query(guardAdditiveReplay(sql));await c.query('COMMIT');
-           console.log('GATE_MIGRATION_COMMITTED',JSON.stringify({commit:'38104cb3a35717232d8077b21275d897c6081d8e',existingDataPreserved:true}));
-          } catch(e) {
-           await c.query('ROLLBACK').catch(()=>{});
-           console.log('GATE_MIGRATION_ERROR',JSON.stringify({code:e.code,name:e.name,message:String(e.message).replace(/postgres(?:ql)?:\/\/\S+/g,'[DB_URL]').slice(0,320),table:e.table,constraint:e.constraint,routine:e.routine}));
-           process.exitCode=1;
-          } finally {if(timer)clearInterval(timer);await c.end();await observer.end();}
-          NODE
-          REMOTE
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+      - run: pnpm install --frozen-lockfile
+      - run: sudo apt-get update -qq && sudo apt-get install --yes --no-install-recommends sshpass
+      - name: Verify publications, public UI, saved hold and unchanged handoff gate
+        run: node ops/gate-online-verify.mjs
+      - name: Preserve final release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-release-verification-38104cb3
+          path: ${{ runner.temp }}/gate-release-evidence
+          retention-days: 7
+          if-no-files-found: ignore
