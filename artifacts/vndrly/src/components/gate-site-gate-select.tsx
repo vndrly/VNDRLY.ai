@@ -51,7 +51,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   // Keep the current selection visible while the all-site choices are loading.
   if (gate && !gates.some(row => row.id === gate.id)) gates.push({ ...gate, siteId });
   const optionName = (siteName: string, row: GateChoice) => {
-    const warwickLabel = warwickGateLabel(row.siteId, row.name);
+    const warwickLabel = warwickGateLabel(row, gates);
     if (warwickLabel) return warwickLabel;
     if (!gateFirst) return `${siteName} | ${row.name}`;
     const references = (source: GateChoice, target: GateChoice) =>
