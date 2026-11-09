@@ -1,3 +1,4 @@
+import { isStaffingNotificationType } from "../lib/staffing-notification-policy";
 import { createHash } from "node:crypto";
 import { isE164Phone } from "../lib/twilio";
 import { buildCommunicationsHealth } from "../lib/communications-health";
@@ -5,7 +6,7 @@ import { resolveGateNotificationCategory } from "../lib/gate-notification-policy
 import { logger } from "../lib/logger";
 
 export type GateAlertChannel = "push" | "email" | "sms";
-export type GateAlert = { id: number; userId: number; type: string; title: string; body?: string | null; link: string | null; badge?: number };
+export type GateAlert = { id: number; userId: number; type: string; title: string; body?: string | null; link: string | null; badge?: number; staffingSmsCode?: string };
 export type GateAlertRecipient = {
   userId: number; gate: boolean; membershipId: number | null; vendorPeopleId: number | null;
   phone: string | null; email: string | null;
@@ -27,7 +28,7 @@ export interface GateAlertDependencies {
   finish(outcome: GateAlertOutcome): Promise<void>;
   push(notice: GateAlert, recipient: GateAlertRecipient): Promise<SendResult>;
   email(notice: GateAlert, recipient: GateAlertRecipient): Promise<SendResult>;
-  sms(input: { to: string; body: string; attemptToken: string }): Promise<SendResult>;
+  sms(input: { to: string; body: string; attemptToken: string; notificationId?: number }): Promise<SendResult>;
   revokeSms(userId: number, fingerprint: string | null, consentOptedInAt: Date | null): Promise<void>;
 }
 
@@ -87,7 +88,10 @@ export async function deliverGateAlert(notice: GateAlert, dependencies?: GateAle
       try {
         const result = channel === "push" ? await deps.push(notice, recipient) : channel === "email" ? await deps.email(notice, recipient) : await deps.sms({
           to: recipient.phone!, attemptToken: claim.attemptToken,
-          body: "VNDRLY urgent alert. Open the app to review. Reply STOP to opt out or HELP for help.",
+          ...(isStaffingNotificationType(notice.type) ? {notificationId:notice.id} : {}),
+          body: notice.staffingSmsCode
+            ? `VNDRLY staffing alert. Reply ACK ${notice.staffingSmsCode} to acknowledge for everyone, or review in the app. STOP to opt out; HELP for help.`
+            : "VNDRLY urgent alert. Open the app to review. Reply STOP to opt out or HELP for help.",
         });
         outcome.status = result.status ?? (result.accepted ? "accepted" : result.permanent ? "failed" : "retryable");
         outcome.providerMessageId = result.providerMessageId;

@@ -207,8 +207,9 @@ router.get("/gate-change-over/:stationId/map-activity", async (req, res) => {
   res.json(await readGateMapActivity(sessionFor(req), uuid.parse(req.params.stationId)));
 });
 router.get("/gate-change-over/:stationId/state", async (req, res) => {
+  const purpose=z.enum(["assume"]).optional().parse(req.query.purpose);
   res.json(
-    await getChangeOverState(sessionFor(req), uuid.parse(req.params.stationId)),
+    await getChangeOverState(sessionFor(req), uuid.parse(req.params.stationId),{forSelfAssume:purpose==="assume"}),
   );
 });
 router.get("/gate-change-over/:stationId/roster", async (req, res) => {

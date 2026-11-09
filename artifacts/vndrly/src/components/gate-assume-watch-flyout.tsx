@@ -10,14 +10,18 @@ import { useAuth } from "@/hooks/use-auth";
 import { changeOverRequest } from "@/lib/change-over-api";
 import { useGateAreaTraffic } from "./gate-area-traffic";
 import "./gate-assume-watch-flyout.css";
+import { useNextSteps } from "./next-steps";
+import { useGuidedTarget } from "./guided-target";
+import { gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers";
 
-type Props={stationId:string;open:boolean;onOpenChange:(open:boolean)=>void;adminWatchId?:string;onSaved?:()=>void|Promise<void>;onPendingChange?:(pending:boolean)=>void};
+export type GateWatchCalendarContext = { siteId: number; shiftId: string; date: string; startsAt: string; endsAt: string };
+type Props={stationId:string;open:boolean;onOpenChange:(open:boolean)=>void;adminWatchId?:string;onSaved?:()=>void|Promise<void>;onPendingChange?:(pending:boolean)=>void;calendarContext?:GateWatchCalendarContext};
 type Command={path:string;receiptPath:string;body:Record<string,unknown>};
 export default function GateAssumeWatchFlyout(props:Props) {
   const {user}=useAuth();
-  return <Review key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}:${props.stationId}:${props.adminWatchId??""}`} {...props}/>;
+  return <Review key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}:${props.stationId}:${props.adminWatchId??""}:${props.calendarContext?.shiftId??""}:${props.calendarContext?.date??""}`} {...props}/>;
 }
-function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChange}:Props) {
+function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChange,calendarContext}:Props) {
   const {user}=useAuth(),{i18n}=useTranslation(),cache=useQueryClient();
   const es=(i18n?.language??"en").startsWith("es"),c=(en:string,spanish:string)=>es?spanish:en;
   const [pending,setPending]=useState<Command|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState("");
@@ -25,7 +29,10 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
   const [report, setReport] = useState<{ operationId: string; expectedWatchId: string; text: string } | null>(null);
   const [reportSaved, setReportSaved] = useState(false);
   const lock=useRef(false);
-  const state=useQuery({queryKey:["gate-assume-review",user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId,stationId],queryFn:()=>changeOverRequest<ChangeOverState>(`/${stationId}/state`),enabled:open&&Boolean(stationId),staleTime:0,retry:false,refetchOnWindowFocus:false});
+  const helper = useNextSteps();
+  const alive = useRef(true);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  const state=useQuery({queryKey:["gate-assume-review",user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId,stationId],queryFn:()=>changeOverRequest<ChangeOverState>(`/${stationId}/state?purpose=assume`),enabled:open&&Boolean(stationId),staleTime:0,retry:false,refetchOnWindowFocus:false});
   useEffect(()=>{onPendingChange?.(Boolean(pending));},[Boolean(pending),onPendingChange]);
   const current=state.data,prep=current?.preparation,watch=current?.shift??current?.releasedWatch;
   const areaTraffic = useGateAreaTraffic(open ? current?.site?.id : undefined);
@@ -44,9 +51,25 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
   }
   const own=current?.shift?.operator_id===user?.userId;
   const changed=Boolean(adminWatchId&&current?.shift?.id!==adminWatchId);
+  const wrongCalendarGate = Boolean(calendarContext && current && (current.site.id !== calendarContext.siteId || current.station.id !== stationId));
+  const calendarNotCurrent = Boolean(calendarContext && !(Date.parse(calendarContext.startsAt) <= Date.now() && Date.now() < Date.parse(calendarContext.endsAt)));
+  const guideContext = { siteId: current?.site.id, stationId, shiftId: calendarContext?.shiftId, day: calendarContext?.date };
+  const scopeId = gateGuideScope("assume-review", guideContext);
+  const guided = gateGuideMatches(helper?.selected, "gate-staffing-recovery", guideContext) || gateGuideMatches(helper?.selected, "gate-watch-handoff", guideContext) || gateGuideMatches(helper?.selected, "first-watch", guideContext);
+  useGuidedTarget({ scopeId, targetId: pending ? "check-assumption" : "assume", prompt: pending ? "Check the original saved request before trying again. An uncertain response is not a completed watch." : "Review the saved handover, current gate activity and any open items, then select ASSUME to accept this watch explicitly." }, open && guided && !busy && !wrongCalendarGate && !calendarNotCurrent && !own, 100);
   async function saved() {
+    if (helper?.recordCompletion && alive.current) {
+      const verified = await state.refetch();
+      const savedWatch = verified.data?.shift;
+      if (alive.current && !verified.isError && savedWatch && savedWatch.operator_id === user?.userId && verified.data?.site.id) {
+        const proof = { recordType: "gate-watch" as const, recordId: savedWatch.id, siteId: verified.data.site.id };
+        void helper.recordCompletion("gate-staffing-recovery", proof);
+        void helper.recordCompletion("first-watch", proof);
+        if (watch) void helper.recordCompletion("gate-watch-handoff", proof);
+      }
+    }
     setPending(null);setError("");onOpenChange(false);
-    await Promise.all(["account-next-steps","change-over-state","gate-entry-watch","gate-active-watches","gate-watch-timeline","gate-watch-own-duty","gate-watch-standers","work-hub-workforce"].map(key=>cache.invalidateQueries({queryKey:[key]})));
+    await Promise.all(["account-next-steps","change-over-state","gate-entry-watch","gate-active-watches","gate-watch-timeline","gate-watch-own-duty","gate-watch-standers","work-hub-workforce","gate-staffing-alerts"].map(key=>cache.invalidateQueries({queryKey:[key]})));
     await onSaved?.();
   }
   async function send(command:Command) {
@@ -59,7 +82,7 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
     }
   }
   async function assume() {
-    if(lock.current||pending||report||discrepancy.trim()||!current||own||changed||state.isFetching||state.isError||!navigator.onLine)return;
+    if(lock.current||pending||report||discrepancy.trim()||!current||own||changed||wrongCalendarGate||calendarContext && !(Date.parse(calendarContext.startsAt) <= Date.now() && Date.now() < Date.parse(calendarContext.endsAt))||state.isFetching||state.isError||!navigator.onLine)return;
     lock.current=true;setBusy(true);setError("");
     const operationId=crypto.randomUUID(),review={preparationId:prep?.id??null,reviewedRevision:current.snapshot?.revision,acknowledged:true,allowUnprepared:!prep};
     const command:Command=adminWatchId?{path:`/${stationId}/watch/admin`,receiptPath:`/${stationId}/watch/admin-operations/${operationId}`,body:{operationId,expectedShiftId:adminWatchId,action:"assume",...review}}:{path:`/${stationId}/watch/assume`,receiptPath:`/${stationId}/watch/operations/${operationId}`,body:{operationId,source:"web",expectedWatchId:watch?.id??null,...review}};
@@ -100,11 +123,14 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
       setBusy(false);
     }
   }
-  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent bare hideClose className="gate-assume-flyout" accentHeaderStyle={{display:"none"}}>
+  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent data-guidance-scope={scopeId} bare hideClose className="gate-assume-flyout" accentHeaderStyle={{display:"none"}}>
     <AppModalHeader compact title={<DialogTitle>{c("Assume Watch","Asumir vigilancia")}</DialogTitle>} description={<DialogDescription>{c("Review the watch, then select ASSUME to take responsibility.","Revisa la guardia y selecciona ASUMIR para aceptar la responsabilidad.")}</DialogDescription>} closeControl={<button type="button" aria-label={c("Close watch summary","Cerrar resumen de guardia")} onClick={()=>onOpenChange(false)}><X aria-hidden="true"/></button>}/>
     <div className="gate-assume-summary">
       {state.isPending||state.isFetching?<p role="status">{c("Loading watch summary…","Cargando resumen de guardia…")}</p>:state.isError?<><p role="alert">{c("The watch summary could not be loaded.","No se pudo cargar el resumen de guardia.")}</p><button type="button" onClick={()=>void state.refetch()}>{c("Retry","Reintentar")}</button></>:current?<>
         <strong>{current.site.name} · {current.station.name}</strong>
+        {calendarContext && <p>{c("Calendar shift", "Guardia del calendario")}: {calendarContext.date}</p>}
+        {wrongCalendarGate && <p role="alert">{c("The calendar gate could not be verified. Return to the saved staffing calendar.", "No se pudo verificar el acceso del calendario. Regresa al calendario de personal guardado.")}</p>}
+        {calendarNotCurrent && <p role="status">{c("Assume Watch is available only while this scheduled watch is current.", "Asumir vigilancia solo está disponible durante esta guardia programada.")}</p>}
         {watch&&<p>{watch.operator_name} · {new Date(watch.started_at).toLocaleString()}</p>}
         {prep?<><CardHeading as="h3">{c("Saved handover","Relevo guardado")}</CardHeading><ul>{prep.summary.facts.map(f=><li key={f.id}>{f.text}</li>)}</ul>{prep.notes&&<p className="whitespace-pre-wrap">{prep.notes}</p>}{prep.snapshot.openItems.filter(item=>item.status==="open").map(item=><p key={item.id}>{item.text}</p>)}</>:<p className="gate-assume-no-handover">{c("No handover prepared","No hay relevo preparado")}</p>}
         {(!prep || current.stale) && <div>
@@ -134,6 +160,6 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
       {reportSaved && <p role="status">{c("Discrepancy added to the gate’s open items.", "Discrepancia añadida a los asuntos pendientes del acceso.")}</p>}
       {pending&&<p role="status">{c("Checking is required before another attempt. Closing this window keeps the original request available.","Debes comprobar el resultado antes de reintentar. Cerrar esta ventana conserva la solicitud original.")}</p>}
     </div>
-    <div className="gate-assume-footer">{pending?<button type="button" className="gate-watch-text-action" disabled={busy||!navigator.onLine} onClick={()=>void check()}>{c("Check assumption","Comprobar guardia")}</button>:<button type="button" className="gate-assume-confirm" disabled={busy||!current||state.isFetching||state.isError||own||changed||Boolean(report)||Boolean(discrepancy.trim())||!navigator.onLine} onClick={()=>void assume()}>{c("ASSUME","ASUMIR")}</button>}</div>
+    <div className="gate-assume-footer">{pending?<button data-guidance-id="check-assumption" type="button" className="gate-watch-text-action" disabled={busy||!navigator.onLine} onClick={()=>void check()}>{c("Check assumption","Comprobar guardia")}</button>:<button data-guidance-id="assume" type="button" className="gate-assume-confirm" disabled={busy||!current||state.isFetching||state.isError||own||changed||wrongCalendarGate||calendarNotCurrent||Boolean(report)||Boolean(discrepancy.trim())||!navigator.onLine} onClick={()=>void assume()}>{c("ASSUME","ASUMIR")}</button>}</div>
   </DialogContent></Dialog>;
 }

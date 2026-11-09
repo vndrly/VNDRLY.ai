@@ -1,3 +1,4 @@
+import { AskVGateHelperOffer } from "@/components/askv-gate-helper-offer";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Sparkles, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Copy, Minus, Maximize2 } from "lucide-react";
@@ -1177,6 +1178,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
               </div>
             </div>
           ))}
+
+          {!tokenMode && !signupMode && <AskVGateHelperOffer question={messages.filter(message => message.role === "user").at(-1)?.content ?? ""} onStarted={() => { if (!embedded) onOpenChange(false); }} />}
 
           {activeTool && (
             <div className="text-xs text-muted-foreground italic px-1">

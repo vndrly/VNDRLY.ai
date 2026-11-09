@@ -1,15 +1,16 @@
 // Actual changed local signed-in measurement. Existing isolated fixture only; never seeds or resets.
-// Non-read API calls blocked after login. Browser-only early-return disables helper hooks.
+// Non-read API calls blocked after authentication. Browser-only interception disables the summary subscription.
 import { chromium } from "../lib/e2e/node_modules/@playwright/test/index.mjs";
-import { mkdir, writeFile } from "node:fs/promises";
-const base = process.env.NEXT_STEPS_BENCH_URL ?? "http://127.0.0.1:15173";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+const savedFixture = process.env.NEXT_STEPS_BENCH_FIXTURE ? JSON.parse(await readFile(process.env.NEXT_STEPS_BENCH_FIXTURE, "utf8")) : null;
+const base = process.env.NEXT_STEPS_BENCH_URL ?? savedFixture?.baseUrl ?? "http://127.0.0.1:15173";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base))
   throw Error("Local loopback preview only");
 const fixture = {
   username: process.env.NEXT_STEPS_BENCH_USER,
   password: process.env.NEXT_STEPS_BENCH_PASSWORD,
 };
-if (!fixture.username || !fixture.password)
+if (!savedFixture?.admins?.[0]?.cookie && (!fixture.username || !fixture.password))
   throw Error(
     "Set existing isolated fixture credentials in NEXT_STEPS_BENCH_USER and NEXT_STEPS_BENCH_PASSWORD",
   );
@@ -27,24 +28,33 @@ try {
         : ["enabled", "disabled"]) {
         console.log("starting " + run + " " + surface + " " + mode);
         const c = await browser.newContext();
-        const login = await c.request.post(base + "/api/auth/login", {
-          data: { username: fixture.username, password: fixture.password },
-        });
-        if (!login.ok())
-          throw Error("Login " + login.status());
-        const user = await login.json();
+        let user;
+        if (savedFixture) {
+          const raw = String(savedFixture.admins[0].cookie);
+          const cookie = raw.startsWith("vndrly_session=") ? raw.slice("vndrly_session=".length).split(";")[0] : raw;
+          await c.addCookies([{ name: "vndrly_session", value: cookie, url: base }]);
+          const me = await c.request.get(base + "/api/auth/me");
+          if (!me.ok()) throw Error("Saved fixture authentication " + me.status());
+          user = await me.json();
+        } else {
+          const login = await c.request.post(base + "/api/auth/login", {
+            data: { username: fixture.username, password: fixture.password },
+          });
+          if (!login.ok()) throw Error("Login " + login.status());
+          user = await login.json();
+        }
         await c.route("**/api/**", (r) =>
           ["GET", "HEAD"].includes(r.request().method())
             ? r.continue()
             : r.abort(),
         );
-        await c.route("**/src/components/next-steps.tsx*", async (r) => {
+        await c.route("**/src/hooks/use-account-next-steps.ts*", async (r) => {
           const res = await r.fetch();
           let s = await res.text();
           if (mode === "disabled") {
-            const marker = "export function AccountNextSteps({ surface }) {";
+            const marker = "const queryEnabled = Boolean(";
             if (!s.includes(marker)) throw Error("Changed module marker");
-            s = s.replace(marker, marker + "return null;");
+            s = s.replace(marker, "const queryEnabled = false && Boolean(");
           }
           await r.fulfill({ response: res, body: s });
         });
@@ -77,9 +87,9 @@ try {
             });
           }
         });
-        page.on("requestfailed", (r) =>
-          failed.push({ path: new URL(r.url()).pathname, method: r.method() }),
-        );
+        page.on("requestfailed", (r) => {
+          if (r.url().includes("/api/")) failed.push({ path: new URL(r.url()).pathname, method: r.method() });
+        });
         const path = surface === "dashboard" ? "/" : "/work-hub";
         for (const phase of ["cold", "repeat"]) {
           if (phase === "repeat") {
@@ -118,7 +128,7 @@ try {
             // Both establish page-specific actionability without business-data writes.
             control =
               surface === "dashboard"
-                ? 'button[aria-label="View Site Locations details"]'
+                ? '[data-testid="dashboard-page"] button[aria-label^="View "][aria-label$=" details"]'
                 : 'a[href="/work-hub/tasks"]';
             const usable = (async () => {
               if (surface === "dashboard") {
@@ -140,17 +150,12 @@ try {
             })();
             const settled = (async () => {
               if (mode === "enabled") {
-                await page
-                  .locator(
-                    '[data-testid="account-next-steps"][data-state="settled"]',
-                  )
-                  .waitFor({ state: "visible", timeout: 15000 });
-                await page.waitForFunction(
-                  () =>
-                    !document.querySelector(
-                      '[data-testid="account-next-steps"][data-state="loading"]',
-                    ),
-                );
+                await page.waitForFunction(() => {
+                  const button = document.querySelector(".next-steps-nav");
+                  return button && !button.getAttribute("aria-label").includes("checking saved work");
+                }, undefined, { timeout: 15000 });
+                if ((await page.locator(".next-steps-nav").first().getAttribute("aria-label"))?.includes("unavailable"))
+                  throw Error("Next Steps saved summary unavailable");
               }
               await page.evaluate(
                 () =>
@@ -184,7 +189,7 @@ try {
             control,
             error,
             identity: {
-              user: user.id,
+              user: user.userId ?? user.id,
               vendor: user.vendorId,
               membership: user.activeMembershipId,
             },

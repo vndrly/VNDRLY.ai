@@ -9,6 +9,7 @@ import WorkHubPageTitle from "@/components/WorkHubPageTitle";
 import {useDailySummary} from "@/lib/daily-workspace";
 type DailyWorkHubSummary={calendarCount:number|null;myWorkCount:number|null;attentionCount:number|null;safetyCount:number|null};
 import NativeOperations from "@/components/work-hub/NativeOperations";
+import GateStaffingAlerts from "@/components/GateStaffingAlerts";
 import NativeJournal from "@/components/work-hub/NativeJournal";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
@@ -89,6 +90,7 @@ export default function WorkHubScreen() {
     Boolean(home?.capabilities?.canViewExports && home.capabilities.allowedExportDatasets.length > 0));
   return <ScreenSafeArea style={{ backgroundColor: colors.background }}><ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}><NativeRepository progressOnly/>
     <WorkHubPageTitle title="Work Hub" />
+    <GateStaffingAlerts />
     <NativeOperations compact />
     <NativeJournal />
     {!home && !error ? <ActivityIndicator color={colors.primary} accessibilityLabel="Loading Work Hub summaries" /> : null}

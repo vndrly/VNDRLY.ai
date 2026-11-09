@@ -104,7 +104,10 @@ async function jsonFetch<T>(input: string, init?: RequestInit): Promise<T> {
 }
 
 export const notificationsApi = {
-  list: () => jsonFetch<NotificationRow[]>("/api/notifications"),
+  list: async () => {
+    const result = await jsonFetch<NotificationRow[] | { items: NotificationRow[] }>("/api/notifications");
+    return Array.isArray(result) ? result : result.items;
+  },
   unreadCount: () => jsonFetch<{ count: number }>("/api/notifications/unread-count"),
   markRead: (id: number) => jsonFetch<void>(`/api/notifications/${id}/read`, { method: "POST" }),
   markUnread: (id: number) => jsonFetch<void>(`/api/notifications/${id}/unread`, { method: "POST" }),

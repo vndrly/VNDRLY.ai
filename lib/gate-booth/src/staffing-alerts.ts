@@ -1,0 +1,28 @@
+export type GateStaffingAlertKind = 'watch_radar' | 'uncovered' | 'understaffed' | 'unconfirmed';
+export type GateStaffingAlert = {
+  id: string;
+  code: string;
+  status: 'open' | 'acknowledged' | 'resolved';
+  severity: 'warning' | 'critical';
+  kind: GateStaffingAlertKind;
+  siteId: number;
+  stationId: string;
+  shiftId: string;
+  siteName: string;
+  gateName: string;
+  title: string;
+  startsAt: string;
+  endsAt: string;
+  timezone: string;
+  requiredCount: number;
+  actualCount: number;
+  acknowledgedAt: string | null;
+  acknowledgedBy: { userId: number; name: string } | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  escalatedAt: string | null;
+  href: string;
+  canAcknowledge: boolean;
+  notificationsPaused: boolean;
+};
+export type GateStaffingAlertsResponse = { alerts: GateStaffingAlert[]; notificationsPaused: boolean };

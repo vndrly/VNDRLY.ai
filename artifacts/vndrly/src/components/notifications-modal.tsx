@@ -61,6 +61,7 @@ import { useBrand } from "@/hooks/use-brand";
 import { portalDisplayLogo } from "@/lib/portal-branding";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { NOTIFICATIONS_MODAL_DARK, type NotificationsModalTheme } from "@/components/notifications-modal-tokens";
+import GateStaffingAlerts from "@/components/gate-staffing-alerts";
 
 function stripLinkQuery(href: string): string {
   const idx = href.indexOf("?");
@@ -332,6 +333,7 @@ export default function NotificationsModal({ open, onOpenChange, initialTab = "a
         accentHeaderStyle={{ display: "none" }}
         className={modalTheme.shellClassName}
         data-testid="modal-notifications"
+        aria-describedby={undefined}
       >
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           <AppModalHeader
@@ -374,6 +376,8 @@ export default function NotificationsModal({ open, onOpenChange, initialTab = "a
             }
             title={<DialogTitle className={modalTheme.titleClassName}>{t("notifications.heading")}</DialogTitle>}
           />
+
+          {open && <GateStaffingAlerts onNavigate={() => onOpenChange(false)} />}
 
           {rateLimited && (
             <div
@@ -463,7 +467,8 @@ export default function NotificationsModal({ open, onOpenChange, initialTab = "a
                     items.map((n) => {
                       const meta = typeMetaFor(n.type);
                       const Icon = meta.Icon;
-  const rowHref = n.link ? ["gate_watch_assigned","gate_watch_confirmed","gate_watch_conflict","gate_watch_conflict_urgent"].includes(n.type) ? n.link : stripLinkQuery(n.link) : null;
+                      const preserveCalendarContext = n.type === "gate_watch_radar" || n.type.startsWith("gate_coverage_") || ["gate_watch_assigned", "gate_watch_confirmed", "gate_watch_conflict", "gate_watch_conflict_urgent"].includes(n.type);
+                      const rowHref = n.link ? preserveCalendarContext ? n.link : stripLinkQuery(n.link) : null;
                       const siteLocation = n.link ? parseSiteLocationFromHref(n.link) : null;
                       const inner = (
                         <div

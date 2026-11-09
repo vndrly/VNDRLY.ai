@@ -12,6 +12,7 @@ type Readiness = Binding & { service?: { workTypeId: number; job?: Job }; shift?
 export async function gateWatchTicketReadiness(
   client: Pick<PoolClient, "query">, session: SessionPayload, stationId: string, siteId: number,
   savedTicketId?: number | null, lock = false,
+  expectedShiftId?: string | null,
 ): Promise<Readiness> {
   const blocked = (code: string, shiftId: string | null = null): Readiness => ({ ticketId: null, ticketBlocker: code, shiftId });
   if (!session.vendorId || !session.userId) return blocked("gate_ticket.vendor_context_required");
@@ -19,17 +20,20 @@ export async function gateWatchTicketReadiness(
     FROM work_hub_shifts s JOIN work_hub_shift_assignments a ON a.shift_id=s.id
     WHERE s.gate_station_id=$1 AND s.site_location_id=$2 AND s.owner_org_type='vendor' AND s.owner_org_id=$3
       AND a.user_id=$4 AND a.status IN ('assigned','accepted','claimed') AND s.milestone_status<>'cancelled'
+      AND ($5::uuid IS NULL OR s.id=$5::uuid)
       AND s.starts_at<=now() AND s.ends_at>now() ORDER BY s.starts_at DESC${lock ? " FOR UPDATE OF s,a" : ""}`,
-    [stationId, siteId, session.vendorId, session.userId])).rows;
+    [stationId, siteId, session.vendorId, session.userId,expectedShiftId??null])).rows;
   const shiftId = shifts.length === 1 ? shifts[0].id as string : null;
   if (shifts.length > 1) return blocked("gate_ticket.ambiguous_shift");
   if (!shifts.length) {
     const future = (await client.query(`SELECT s.id FROM work_hub_shifts s JOIN work_hub_shift_assignments a ON a.shift_id=s.id
       WHERE s.gate_station_id=$1 AND s.site_location_id=$2 AND s.owner_org_type='vendor' AND s.owner_org_id=$3
         AND a.user_id=$4 AND a.status IN ('assigned','accepted','claimed') AND s.milestone_status<>'cancelled'
+        AND ($5::uuid IS NULL OR s.id=$5::uuid)
         AND s.starts_at>now() ORDER BY s.starts_at LIMIT 1${lock ? " FOR SHARE OF s,a" : ""}`,
-      [stationId,siteId,session.vendorId,session.userId])).rows[0];
+      [stationId,siteId,session.vendorId,session.userId,expectedShiftId??null])).rows[0];
     if (future) return blocked("gate_ticket.shift_not_started",future.id);
+    if(expectedShiftId)return blocked("gate_ticket.selected_shift_unavailable",expectedShiftId);
   }
   const relationship = (await client.query(`SELECT r.status FROM partner_vendor_relationships r
     JOIN site_locations s ON s.partner_id=r.partner_id WHERE s.id=$1 AND r.vendor_id=$2${lock ? " FOR SHARE OF r" : ""}`, [siteId, session.vendorId])).rows[0];

@@ -1,4 +1,3 @@
-import { AccountNextSteps, NextStepLinks } from "@/components/next-steps";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import OnboardingStepper from "@/components/onboarding-stepper";
@@ -317,14 +316,12 @@ export function DashboardSetup({ orgType, orgId, section }: { orgType: "vendor" 
     label: step.key === "legal-consent" ? t("onboardingProgress.legalConsent") : step.label,
   }));
   const completed = orgProgress?.completedSteps ?? [];
-  const outstanding = orgProgress
-    ? steps.filter((step) => !completed.includes(step.key))
-    : [];
   const currentIndex = steps.findIndex((step) => step.key === orgProgress?.currentStep);
 
+  if (section === "next-steps") return null;
   return (
     <section className={`min-w-0 space-y-4 ${section === "stepper" ? "mb-4" : ""} ${orgType === "vendor" ? "vendor-workspace-page" : ""}`} aria-label="Company setup">
-      {section !== "next-steps" && <Card className="min-w-0">
+      <Card className="min-w-0">
         <CardHeader><CardTitle>{orgType === "vendor" ? "Vendor Onboarding" : "Partner Onboarding"}</CardTitle></CardHeader>
         <CardContent>
           {orgProgress ? (
@@ -339,19 +336,7 @@ export function DashboardSetup({ orgType, orgId, section }: { orgType: "vendor" 
               />
           ) : <p className="text-sm text-muted-foreground">{loading ? "Loading setup progress…" : "Setup progress is unavailable."}</p>}
         </CardContent>
-      </Card>}
-      {section !== "stepper" && <Card className="min-w-0">
-        <CardHeader><CardTitle>Next Steps</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {outstanding.length ? (
-            <NextStepLinks actions={outstanding.map(step => ({
-              title: (orgType === "vendor" ? VENDOR_STEPS : PARTNER_STEPS)[step.key]?.label ?? step.label,
-              href: onboardingStepHref(orgType, step.key),
-            }))} />
-          ) : <p className="text-sm text-muted-foreground">{orgProgress ? "Your onboarding steps are complete." : loading ? "Loading next steps…" : "Next steps are unavailable."}</p>}
-          <AccountNextSteps surface="dashboard" />
-        </CardContent>
-      </Card>}
+      </Card>
     </section>
   );
 }

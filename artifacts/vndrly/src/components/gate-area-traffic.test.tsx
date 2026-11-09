@@ -1,14 +1,17 @@
 import React from 'react';
 import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
 import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
-import {afterEach,expect,it,vi} from 'vitest';
-const mocks=vi.hoisted(()=>({request:vi.fn(),checkout:vi.fn(),data:{} as any}));
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+const mocks=vi.hoisted(()=>({request:vi.fn(),checkout:vi.fn(),data:{} as any,helper:null as any}));
+vi.mock('@/components/next-steps',()=>({useNextSteps:()=>mocks.helper}));
 vi.mock('@/hooks/use-auth',()=>({useAuth:()=>({user:{userId:1}})}));
 vi.mock('react-i18next',()=>({useTranslation:()=>({i18n:{language:'en'}})}));
 vi.mock('@/lib/change-over-api',()=>({changeOverRequest:(path:string,body?:any)=>body?mocks.request(path,body):Promise.resolve(mocks.data)}));
 vi.mock('@/lib/visits-api',()=>({visitsApi:{gateCheckOut:mocks.checkout}}));
 vi.mock('./work-hub/chrome',()=>({BrandedSelect:(props:any)=><select {...props}/>}));
 import {GateAreaTraffic,GateMovementLocationSummary,gateCheckInDestinationDefaults,parallelGateGroup} from './gate-area-traffic';
+import { GuidedTargetProvider, GuidanceTargetStatus } from './guided-target';
+beforeEach(()=>{mocks.helper=null;Object.defineProperty(navigator,'onLine',{value:true,configurable:true});});
 afterEach(()=>{cleanup();vi.clearAllMocks();});
 const gates=[{id:'main',name:'Main',active:true,topology:null},{id:'one',name:'Well 1',active:true,topology:{area:'Area 1'}},{id:'two',name:'Well 2',active:true,topology:{area:'Area 2'}}];
 const visit=(id:number,current:string,expected:string|null=null,exit=false)=>({id,firstName:'Visitor'+id,lastName:'Test',movements:[],checkOutTime:null,presence:{currentGateId:current,expectedGateId:expected,expectedSiteExit:exit,label:'On site'}});
@@ -82,4 +85,48 @@ it('shares outer visits across an undirected parallel gate group in both directi
 it('resolves parallel gate groups transitively and excludes unrelated roots',()=>{
  const chain=[{id:'a',topology:null},{id:'b',topology:{parallelGateId:'a'}},{id:'c',topology:{parallelGateId:'b'}},{id:'other',topology:null}] as any;
  expect([...parallelGateGroup(chain,'a')].sort()).toEqual(['a','b','c']);expect([...parallelGateGroup(chain,'c')].sort()).toEqual(['a','b','c']);
+});
+
+function guide(key:string,vehicleId:number,stationId='one') {
+ mocks.helper={enabled:true,selected:{id:key,context:{siteId:1,stationId,vehicleId}},recordCompletion:vi.fn().mockResolvedValue(true),updateHelperStep:vi.fn(),startHelper:vi.fn()};
+}
+function guidedShow(gateId:string,view:any) {
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GuidedTargetProvider scope="company:1" active><GateAreaTraffic siteId={1} gateId={gateId} view={view}/><GuidanceTargetStatus/></GuidedTargetProvider></QueryClientProvider>);
+}
+it('targets only the selected saved inner arrival and records completion only after its movement saves',async()=>{
+ guide('gate-inner-arrival',71);mocks.data={gates,canManage:true,visits:[visit(71,'main','one'),visit(72,'main','one')]};
+ let saved!:(value:any)=>void;mocks.request.mockImplementationOnce(()=>new Promise(resolve=>{saved=resolve;}));guidedShow('one','arrivals');
+ const row=(await screen.findByText('Visitor71 Test')).closest('article')!;
+ expect(row.getAttribute('data-guidance-scope')).toBe('gate-guide:movement:1:one:71');
+ expect(row.querySelector('[data-guidance-id="enter"]')).toBeTruthy();
+ await screen.findByText(/Confirm this selected vehicle has physically arrived/);
+ fireEvent.click(row.querySelector('[data-guidance-id="enter"]')!);
+ expect(mocks.helper.recordCompletion).not.toHaveBeenCalled();
+ saved({});await waitFor(()=>expect(mocks.helper.recordCompletion).toHaveBeenCalledWith('gate-inner-arrival',{recordType:'gate-visit',recordId:71,siteId:1}));
+});
+it('keeps failed and offline movements from advancing the helper',async()=>{
+ guide('gate-inner-arrival',73);mocks.data={gates,canManage:true,visits:[visit(73,'main','one')]};mocks.request.mockRejectedValueOnce(new Error('Save failed'));guidedShow('one','arrivals');
+ fireEvent.click(await screen.findByRole('button',{name:'Confirm arrival'}));await screen.findByText('Save failed');expect(mocks.helper.recordCompletion).not.toHaveBeenCalled();
+ Object.defineProperty(navigator,'onLine',{value:false,configurable:true});fireEvent.click(screen.getByRole('button',{name:'Confirm arrival'}));expect(mocks.request).toHaveBeenCalledTimes(1);expect(mocks.helper.recordCompletion).not.toHaveBeenCalled();
+});
+it.each([['gate-early-turnaround',true],['gate-vehicle-check-out',false]] as const)('uses the actual saved outer checkout finishline for %s',async(key,early)=>{
+ guide(key,74,'main');mocks.data={gates,canManage:true,visits:[visit(74,'main',early?'one':null,!early)]};mocks.checkout.mockResolvedValueOnce({id:74,checkOutTime:new Date().toISOString()});guidedShow('main',early?'on_site':'departures');
+ fireEvent.click(await screen.findByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.helper.recordCompletion).toHaveBeenCalledWith(key,{recordType:'gate-visit',recordId:74,siteId:1}));
+});
+it('requires an explicit finder selection and saved re-entry before completing a return to inner',async()=>{
+ guide('gate-return-to-inner',75);const returning=visit(75,'main',null,true);returning.movements=[{operationId:'first-enter',kind:'enter',gateId:'one',gateName:'Well 1',area:'Area 1',destination:'remain',at:'2026-11-09T06:00:00Z'},{operationId:'left-inner',kind:'leave',gateId:'one',gateName:'Well 1',area:'Area 1',destination:'site_exit',at:'2026-11-09T07:00:00Z'}] as any;
+ mocks.data={gates,canManage:true,visits:[returning]};mocks.request.mockResolvedValueOnce({});guidedShow('one','on_site');
+ await screen.findByText(/Open the existing on-site vehicle list/);expect(screen.queryByText('Visitor75 Test')).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:/Find someone already/}));const row=(await screen.findByText('Visitor75 Test')).closest('article')!;
+ expect(mocks.helper.recordCompletion).not.toHaveBeenCalled();fireEvent.click(row.querySelector('[data-guidance-id="enter"]')!);
+ await waitFor(()=>expect(mocks.helper.recordCompletion).toHaveBeenCalledWith('gate-return-to-inner',{recordType:'gate-visit',recordId:75,siteId:1}));
+});
+it('waits for the outer colleague after saved inner departure without claiming final checkout or changing gate',async()=>{
+ guide('gate-vehicle-check-out',76);const exiting={...visit(76,'one'),entryGateId:'main'};mocks.data={gates,canManage:true,visits:[exiting]};mocks.request.mockResolvedValueOnce({});guidedShow('one','on_site');
+ fireEvent.click(await screen.findByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.helper.updateHelperStep).toHaveBeenCalledWith('gate-vehicle-check-out',expect.objectContaining({action:null,message:expect.stringContaining('Keep your current watch')})));
+ expect(mocks.helper.recordCompletion).not.toHaveBeenCalled();
+});
+it('does not guide a revoked reader or a different selected gate',async()=>{
+ guide('gate-inner-arrival',77,'two');mocks.data={gates,canManage:false,visits:[visit(77,'main','one')]};guidedShow('one','arrivals');await screen.findByText('Visitor77 Test');
+ expect(screen.queryByText(/Confirm this selected vehicle has physically arrived/)).toBeNull();
 });

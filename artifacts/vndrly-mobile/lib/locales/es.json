@@ -959,6 +959,22 @@
     "cameraUnavailablePickSite": "La cámara no está disponible en esta versión. Elija un sitio por nombre."
   },
   "errors": {
+    "staffing_alert": {
+      "invalid_request": "Revisa la alerta de personal e inténtalo de nuevo.",
+      "sign_in_required": "Inicia sesión para revisar el personal del acceso.",
+      "session_changed": "Tu sesión cambió. Inicia sesión de nuevo.",
+      "company_changed": "Regresa a tu empresa actual e inténtalo de nuevo.",
+      "membership_required": "Se requiere una membresía vigente de la empresa.",
+      "not_found": "Esta alerta de personal ya no está disponible.",
+      "read_only": "El acceso de demostración es de solo lectura.",
+      "invalid_channel": "Elige un método de reconocimiento compatible.",
+      "admin_required": "Un administrador actual de la empresa responsable debe reconocer esta alerta."
+    },
+    "workflow_helper": {
+      "forbidden": "Se requiere acceso vigente a esta empresa y al sitio del acceso.",
+      "invalid_completion": "Elige el registro real guardado de este flujo de Gate.",
+      "saved_completion_required": "Completa y guarda este flujo de Gate antes de registrar el progreso de la guía."
+    },
     "coi": {
       "forbidden": "Se requiere acceso de administrador de la empresa actual para guardar un certificado de seguro.",
       "invalid_upload": "Elija su archivo PDF o imagen privado cuya carga haya finalizado (hasta 25 MB)."

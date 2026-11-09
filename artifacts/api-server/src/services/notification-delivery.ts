@@ -1,3 +1,4 @@
+import { staffingDeliveryAllowed } from "../lib/staffing-notification-policy";
 import { and, eq, isNull, lte } from "drizzle-orm";
 import { db, notificationsTable } from "@workspace/db";
 
@@ -122,6 +123,7 @@ export async function runReliableNotificationDelivery(): Promise<number> {
   const results = await retryDueNotifications({
     repository: databaseNotificationDeliveryRepository,
     sender: async (notice) => {
+      if (!await staffingDeliveryAllowed(notice)) return {delivered:false,retryable:false,detail:"staffing_alert_silenced"};
       if(notice.type==="work_hub_library_summary"&&notice.link){const {librarySummaryPushAllowed}=await import("../work-hub/onboarding-worker");if(!await librarySummaryPushAllowed(notice.userId,notice.link))return {delivered:false,retryable:false,detail:"recipient_unavailable"};}
       if(notice.type==="work_hub_library_assignment"&&notice.link){const {libraryPushAllowed}=await import("../work-hub/onboarding-worker");if(!await libraryPushAllowed(notice.userId,notice.link))return {delivered:false,retryable:false,detail:"recipient_unavailable"};}
       if(notice.type==="work_hub_form_campaign" && notice.link){const {formCampaignPushAllowed}=await import("../work-hub/form-campaign-worker");if(!await formCampaignPushAllowed(notice.userId,notice.link))return {delivered:false,retryable:false,detail:"recipient_unavailable"};}

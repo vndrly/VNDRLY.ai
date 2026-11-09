@@ -33,6 +33,8 @@ import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch, apiFetchRaw } from "@/lib/api";
+import { isOfficeMobileViewer } from "@/lib/mobile-viewer";
+import { captureAuthScope } from "@/lib/auth";
 
 import {
   changeOverRequest as request,
@@ -116,7 +118,9 @@ export default function GateChangeOver({
     stationId?: string;
     workHubShiftId?: string;
     gateMode?: string;
+    purpose?: string;
   }>();
+  const assumeReview = !history && params.purpose === "assume";
   const [selectedSite, setSite] = useState<number | null>(
     params.siteId ? Number(params.siteId) : null,
   );
@@ -159,6 +163,7 @@ export default function GateChangeOver({
         history ? "/sites?mode=history" : "/sites",
       ),
     retry: false,
+    enabled: !assumeReview,
     networkMode: "always",
   });
   const siteId = selectedSite ?? sites.data?.sites[0]?.id;
@@ -168,7 +173,7 @@ export default function GateChangeOver({
       request<{ stations: { id: string; name: string }[] }>(
         `/stations?siteId=${siteId}${history ? "&mode=history" : ""}`,
       ),
-    enabled: Boolean(siteId),
+    enabled: Boolean(siteId) && !assumeReview,
     retry: false,
     networkMode: "always",
   });
@@ -190,9 +195,13 @@ export default function GateChangeOver({
     });
   }, [reportRecipients.data, user?.id]);
   const state = useQuery({
-    queryKey: ["change-over-state", user?.id, stationId],
-    queryFn: () => request<ChangeOverState>(`/${stationId}/state`),
-    enabled: Boolean(stationId) && !history,
+    queryKey: assumeReview ? ["change-over-assume-review", user?.id, user?.activeMembershipId, user?.vendorId, user?.partnerId, captureAuthScope().generation, siteId, stationId] : ["change-over-state", user?.id, stationId],
+    queryFn: async () => {
+      const value = await request<ChangeOverState>(`/${stationId}/state${assumeReview ? "?purpose=assume" : ""}`);
+      if (assumeReview && (value.station.id !== stationId || String(value.site.id) !== params.siteId)) throw new Error("This watch review is no longer available for this site and gate.");
+      return value;
+    },
+    enabled: Boolean(stationId) && !history && (!assumeReview || Boolean(params.siteId && params.stationId)),
     retry: false,
     networkMode: "always",
     refetchInterval: 15000,
@@ -232,14 +241,14 @@ export default function GateChangeOver({
   const replacements = useQuery({
     queryKey: ["gate-recovery-operators", user?.id, user?.activeMembershipId, stationId],
     queryFn: () => request<{ operators: { userId: number; membershipId: number; name: string; companyName: string }[] }>(`/${stationId}/recovery-operators`),
-    enabled: Boolean(!history && current?.supervisor && current.shift && current.shift.operator_id !== user?.id),
+    enabled: Boolean(!history && !assumeReview && current?.supervisor && current.shift && current.shift.operator_id !== user?.id),
     retry: false,
   });
   const prep = current?.preparation;
   const revision = current?.snapshot?.revision ?? "";
   const ownShift = current?.shift?.operator_id === user?.id;
   const loadError =
-    sites.error || stations.error || (history ? log.error : state.error);
+    (!assumeReview && (sites.error || stations.error)) || (history ? log.error : state.error);
   const online = !loadError;
   useEffect(() => {
 
@@ -409,6 +418,21 @@ export default function GateChangeOver({
     if(pendingWatch){const result=await request<{receipt:unknown}>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`);if(result.receipt){setPendingWatch(null);setAssumeOpen(false);await state.refetch();return;}if(result.receipt!==null)throw Error("The watch change could not be confirmed.");}
     await assumeWatch();
   });
+  if (assumeReview) return <ScreenSafeArea>
+    {assumeOpen && <GateAssumeWatchFlyout open current={current} busy={busy} blocked={!online || state.isError || state.isFetching || !current || ownShift} pending={Boolean(pendingWatch)} error={error} onClose={() => setAssumeOpen(false)} onAssume={confirmAssume} />}
+    <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+      <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />
+      <Text accessibilityRole="header" style={{ color: colors.foreground, fontSize: 20, fontWeight: "700" }}>{t("watch.assume")}</Text>
+      <TogglePillButton compactOnTablet onPress={() => router.replace("/work-hub" as never)}>{t("workHub.title", { defaultValue: "Work Hub" })}</TogglePillButton>
+      {current ? <Text style={{ color: colors.foreground }}>{current.site.name} · {current.station.name}</Text> : null}
+      {Boolean(loadError || error) ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error || (loadError as Error).message}</Text> : null}
+      {button(t("changeOver.refresh"), async () => { await state.refetch(); }, false, true)}
+      {current && ownShift ? <>
+        <Text style={{ color: colors.foreground }}>{t("watch.ready")}</Text>
+        <TogglePillButton compactOnTablet onPress={() => router.replace(`/(tabs)/change-over?siteId=${siteId}&stationId=${stationId}${params.workHubShiftId ? `&workHubShiftId=${params.workHubShiftId}` : ""}&gateMode=1` as never)}>{t("changeOver.title")}</TogglePillButton>
+      </> : <TogglePillButton compactOnTablet disabled={busy || !online || !current || state.isError || state.isFetching} onPress={() => setAssumeOpen(true)}>{t("watch.assume")}</TogglePillButton>}
+    </ScrollView>
+  </ScreenSafeArea>;
   return (
     <ScreenSafeArea>
       {!history&&assumeOpen&&<GateAssumeWatchFlyout open={assumeOpen} current={current} busy={busy} blocked={!online||state.isError||state.isFetching||!current||ownShift} pending={Boolean(pendingWatch)} error={error} onClose={()=>setAssumeOpen(false)} onAssume={confirmAssume}/>}
@@ -435,10 +459,15 @@ export default function GateChangeOver({
         </View>
         {!history && <WorkdayControls watchControl={<WatchPassControl active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError} onPress={() => { if (ownShift&&!pendingWatch) void act(() => mutate("prepare", { notes })); else setAssumeOpen(true); }} />} />}
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
-        {params.gateMode === "1" && (
-          <TogglePillButton compactOnTablet onPress={() => router.replace("/(tabs)" as never)}>
-            {t("gateDuty.returnToAdmin")}
-          </TogglePillButton>
+        {(params.gateMode === "1" || isOfficeMobileViewer(user)) && (
+          <View style={{ gap: 8 }}>
+            <TogglePillButton compactOnTablet onPress={() => router.replace("/(tabs)" as never)}>
+              {t("gateDuty.returnToAdmin")}
+            </TogglePillButton>
+            <TogglePillButton compactOnTablet onPress={() => router.replace("/work-hub" as never)}>
+              {t("workHub.title", { defaultValue: "Work Hub" })}
+            </TogglePillButton>
+          </View>
         )}
         {!history ? <View testID="dashboard-blank-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
           <GateSiteGateSelect sites={sites.data?.sites ?? []} siteId={siteId} gate={stations.data?.stations.find(row => row.id === stationId)}

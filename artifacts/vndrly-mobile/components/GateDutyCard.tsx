@@ -27,6 +27,8 @@ export default function GateDutyCard({
   const { t } = useTranslation();
   const colors = useColors();
   const { user } = useAuth();
+  const membership = user?.availableMemberships?.find(item => item.id === user.activeMembershipId);
+  const staffingPaused = membership ? membership.orgType === "vendor" && membership.orgId === 1054 : user?.vendorId === 1054;
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -52,8 +54,8 @@ export default function GateDutyCard({
   return <View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 12, borderWidth: 2, gap: 10, padding: 16 }}>
     <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{t("gateDuty.title")}</Text>
     {(roster.data?.roster ?? []).length === 0
-      ? <View accessibilityRole="alert" style={{ backgroundColor: `${colors.destructive}18`, borderColor: colors.destructive, borderRadius: 8, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 }}>
-          <Text accessibilityLiveRegion="polite" style={{ color: colors.destructive, fontWeight: "700" }}>{t("gateDuty.unstaffed")}</Text>
+      ? <View accessibilityRole={staffingPaused ? undefined : "alert"} style={{ backgroundColor: staffingPaused ? colors.background : `${colors.destructive}18`, borderColor: staffingPaused ? colors.border : colors.destructive, borderRadius: 8, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 }}>
+          <Text accessibilityLiveRegion={staffingPaused ? undefined : "polite"} style={{ color: staffingPaused ? colors.mutedForeground : colors.destructive, fontWeight: "700" }}>{t("gateDuty.unstaffed")}</Text>
         </View>
       : roster.data?.roster.map((entry) => <Text key={entry.id} style={{ color: colors.foreground }}>{entry.userName} · {new Date(entry.startedAt).toLocaleTimeString()}</Text>)}
     {error ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text> : null}

@@ -8,6 +8,7 @@ vi.mock("@/lib/use-unified-work-calendar",()=>({useUnifiedWorkCalendar:()=>state
 vi.mock("@/lib/api",()=>({apiFetch:(path:string)=>state.fetch(path)}));
 vi.mock("@/hooks/use-auth",()=>({useAuth:()=>({user:{id:1,vendorId:7},activeMembershipId:1})}));
 vi.mock("@/hooks/useColors",()=>({useColors:()=>({primary:"cyan",foreground:"white",card:"black",mutedForeground:"grey",border:"grey"})}));
+vi.mock("react-i18next",()=>({useTranslation:()=>({i18n:{language:"en"},t:(key:string)=>key})}));
 vi.mock("./TogglePillButton",()=>({default:({children,onPress,disabled,accessibilityLabel}:{children:React.ReactNode;onPress:()=>void;disabled?:boolean;accessibilityLabel?:string})=><button aria-label={accessibilityLabel} onClick={onPress} disabled={disabled}>{children}</button>}));
 vi.mock("./ForemanScheduleTicketsModal",()=>({default:()=> <div>Existing field scheduling</div>}));
 vi.mock("./ShiftScheduling",()=>({default:()=> <div>Existing shift scheduling</div>}));
@@ -22,4 +23,12 @@ it("does not offer scheduling without current capabilities and reports partial s
 it("identifies an immediate dispatch, assigned driver and canonical ticket without claiming shift hours",()=>{
  state.result.data.items=normalizeUnifiedCalendar({fleet:{runs:[{id:"activity",title:"Crude haul",status:"dispatched",driverUserId:27,linkedTicketId:601,labels:{driverName:"Bob Villa"},schedule:null,events:[{type:"dispatch",recordedAt:start}]}]}});render(<UnifiedWorkCalendar initialDate={day}/>);
  expect(screen.getByText("Dispatch recorded · no planned time")).toBeTruthy();expect(screen.getByText("Bob Villa")).toBeTruthy();expect(screen.getByText("Ticket #601")).toBeTruthy();fireEvent.click(screen.getByText("Crude haul"));expect(state.push).toHaveBeenCalledWith("/fleet-run/activity");
+});
+it("selects the staffing shift-local date instead of today and retains the exact gate context",async()=>{
+ const context={siteId:"399",stationId:"22222222-2222-4222-8222-222222222222",shiftId:"33333333-3333-4333-8333-333333333333",date:"2026-11-09"};
+ state.fetch.mockResolvedValue({item:{id:context.shiftId,title:"Exact target watch",siteLocationId:399,gateStationId:context.stationId,startsAt:"2026-11-09T12:00:00Z",endsAt:"2026-11-10T00:00:00Z",timezone:"America/Chicago"}});
+ render(<UnifiedWorkCalendar initialDate={day} staffingContext={context}/>);
+ expect(screen.getByText(/Monday, November 9/)).toBeTruthy();
+ expect(await screen.findByText("Exact target watch")).toBeTruthy();
+ expect(state.fetch).toHaveBeenCalledWith(`/api/work-hub/calendar/items/shift/${context.shiftId}`);
 });

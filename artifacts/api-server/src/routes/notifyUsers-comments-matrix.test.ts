@@ -112,6 +112,12 @@ vi.mock("@workspace/db", () => {
   }
 
   return {
+    pool: { query: vi.fn(async (sql:string, values:unknown[]) => {
+      // These fixtures have no MidCon memberships. Exercise the real hold
+      // guard with that saved lookup result; fail on unrelated SQL.
+      if (sql.includes("SELECT DISTINCT recipient.user_id FROM (") && Array.isArray(values[1]) && values[1].includes(1054)) return {rows:[]};
+      throw new Error("Unexpected comments-matrix pool query");
+    }) },
     db: {
       select: () => buildSelectChain(),
       insert: (_table: { __tag: string }) => ({

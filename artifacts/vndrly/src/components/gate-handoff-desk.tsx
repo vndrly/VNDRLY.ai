@@ -10,6 +10,9 @@ import GateTaskHopper from "@/components/gate-task-hopper";
 import { Dialog } from "@/components/ui/dialog";
 import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 import "./gate-handoff-desk.css";
+import { useNextSteps } from "./next-steps";
+import { useGuidedTarget } from "./guided-target";
+import { gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers";
 
 export interface GateHandoffDeskProps {
   stationId?: string;
@@ -68,6 +71,12 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
   const mayAssume = Boolean(!ownWatch && !blocked);
   const pillSrc = brandImagePillSrc(brand.primary, brand.name);
   const selectedItems = current.items.filter((item) => item.status === itemView);
+  const helper = useNextSteps();
+  const guideContext = { siteId: current.site.id, stationId, siteName: current.site.name, stationName: current.station.name };
+  const scopeId = gateGuideScope("handoff", guideContext);
+  const guided = gateGuideMatches(helper?.selected, "gate-watch-handoff", guideContext);
+  const targetId = !ownWatch ? "review-watch" : signature && !editingSigned ? "saved-handoff" : notes.trim() ? "sign-handoff" : "handoff-notes";
+  useGuidedTarget({ scopeId, targetId, prompt: !ownWatch ? "Review the saved outgoing briefing and current activity, then explicitly review and Assume Watch from your own account." : signature && !editingSigned ? "The signed handoff is saved. Review its notes; the incoming operator must explicitly accept the watch. Your navigation does not release custody." : notes.trim() ? "Review open items and your notes, then sign and save the handoff. Signing alone does not release your watch." : "Add any handoff notes the incoming operator needs, or review the existing facts before signing. Only saved handoff notes are shared." }, guided && !blocked && !signing, 35);
   const signHandoff=async()=>{
     if(!current.shift||!props.onSignHandoff)return;
     const command=signCommand??{operationId:crypto.randomUUID(),expectedWatchId:current.shift.id,expectedPreparationId:preparation?.id??null,notes};
@@ -140,7 +149,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
         </div>
       </details>
       <details className="handoff-review-branch" aria-label={t("handoffDesk.savedNotes")} open={notesExpanded} onToggle={event=>setNotesExpanded(event.currentTarget.open)}>
-        <summary><NotebookPen aria-hidden="true" /><h3>{t("handoffDesk.savedNotes")}</h3></summary>
+        <summary data-guidance-id="saved-handoff"><NotebookPen aria-hidden="true" /><h3>{t("handoffDesk.savedNotes")}</h3></summary>
         <div className="handoff-review-content">
         <p className="handoff-preserve">{preparation.notes || t("changeOver.none")}</p>
         </div>
@@ -148,7 +157,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
     </div>
   </div>;
 
-  return <section id="gate-turnover" className="gate-handoff-desk" aria-label={t("handoffDesk.title")}>
+  return <section data-guidance-scope={scopeId} id="gate-turnover" className="gate-handoff-desk" aria-label={t("handoffDesk.title")}>
     <header className="handoff-heading">
       <span className="hub-card-icon"><ClipboardCheck aria-hidden="true" /></span>
       <div><h2>{t("handoffDesk.title")}</h2><p>{t(ownWatch ? "handoffDesk.outgoingIntro" : "handoffDesk.incomingIntro")}</p></div>
@@ -159,7 +168,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       {current.shift&&ownWatch&&props.onSignHandoff?(
         signature&&!editingSigned
           ? <button type="button" className="handoff-edit-mini-card" disabled={blocked||signing} onClick={()=>setEditingSigned(true)}>{t("handoffDesk.edit")}</button>
-          : <button type="button" className="handoff-edit-mini-card" disabled={blocked||signing} onClick={()=>void signHandoff()}>{t("handoffDesk.signHandoff")}</button>
+          : <button data-guidance-id="sign-handoff" type="button" className="handoff-edit-mini-card" disabled={blocked||signing} onClick={()=>void signHandoff()}>{t("handoffDesk.signHandoff")}</button>
       ):current.shift&&current.supervisor&&props.onEditSave&&<button type="button" className="handoff-edit-mini-card" disabled={blocked} onClick={()=>{setEditNotes(preparation?.notes??notes);setEditError("");setEditing(true);}}>{t("handoffDesk.editShift")}</button>}
     </header>
     {signError&&<p role="alert">{signError}</p>}
@@ -184,11 +193,11 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
         </section>
         <section data-card-layout className="handoff-panel" aria-label={t("changeOver.outgoingNotes")}>
           <CardHeading as="h3"><NotebookPen aria-hidden="true" />{t("changeOver.outgoingNotes")}</CardHeading>
-          <textarea aria-label={t("changeOver.outgoingNotes")} placeholder={t("handoffDesk.notesHint")}
+          <textarea data-guidance-id="handoff-notes" aria-label={t("changeOver.outgoingNotes")} placeholder={t("handoffDesk.notesHint")}
             rows={4} maxLength={8000} value={notes} disabled={blocked}
             onChange={(event) => onNotesChange(event.target.value)} />
           {!props.onSignHandoff&&<div className="handoff-save-row">
-            <PngPillButton type="button" color="brand" activeSrc={pillSrc}
+            <PngPillButton data-guidance-id="sign-handoff" type="button" color="brand" activeSrc={pillSrc}
               disabled={blocked || !current.shift || !revision || ready} onClick={onSave}>
               {t("handoffDesk.save")}
             </PngPillButton>
@@ -235,6 +244,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
         try{await props.onAddNote!(command);setNewNote("");setNoteCommand(null);setNotesExpanded(true);setReviewExpanded(true);}catch(error){const status=(error as {status?:number}).status;if(status&&status>=400&&status<500)setNoteCommand(null);setNoteError(error instanceof Error?error.message:t("changeOver.failed"));}finally{setNoteBusy(false);}
       })()}>{t("handoffDesk.addNote")}</PngPillButton></div>
     </details>}
-    {!ownWatch&&<div className="handoff-assume" id="watch-review"><p>{t("handoffDesk.reviewExplanation")}</p><WatchPassControl active={false} label={t("handoffDesk.assume")} disabled={!mayAssume} onClick={onAssumeReviewed}/></div>}
+    {!ownWatch&&<div className="handoff-assume" id="watch-review"><p>{t("handoffDesk.reviewExplanation")}</p><WatchPassControl guidanceId="review-watch" active={false} label={t("handoffDesk.assume")} disabled={!mayAssume} onClick={onAssumeReviewed}/></div>}
+    {helper?.enabled && stationId && <button type="button" className="gate-watch-text-action" onClick={() => helper.startHelper("gate-watch-handoff", guideContext)}>{es ? "Guiar este relevo" : "Guide this watch handoff"}</button>}
   </section>;
 }

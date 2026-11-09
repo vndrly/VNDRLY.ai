@@ -56,6 +56,23 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
     await pool.query("INSERT INTO vendor_work_types(vendor_id,work_type_id,unit_price,unit) VALUES($1,$2,50,'per_hour')",[f.vendor,f.work]);
     await pool.query("INSERT INTO partner_vendor_work_type_approvals(partner_id,vendor_id,work_type_id,approved_unit_price,approved_unit) VALUES($1,$2,$3,50,'per_hour')",[f.partner,f.vendor,f.work]);
   }
+  async function managedFixture() {
+    const f=await fixture(),key=randomUUID();
+    const managedUser=(await pool.query("INSERT INTO users(username,password_hash,role,display_name) VALUES($1,'unusable-synthetic','field_employee','Synthetic contractor') RETURNING id",[`managed-${key}`])).rows[0].id;
+    const membership=(await pool.query("INSERT INTO user_org_memberships(user_id,org_type,vendor_id,role) VALUES($1,'vendor',$2,'field_employee') RETURNING id",[managedUser,f.vendor])).rows[0].id;
+    const organization=(await pool.query("INSERT INTO managed_subcontractor_organizations(name,canonical_name,created_by_vendor_id,created_by_user_id) VALUES($1,$1,$2,$3) RETURNING id",[key,f.vendor,f.office])).rows[0].id;
+    const sponsor=(await pool.query("INSERT INTO managed_subcontractor_sponsors(managed_organization_id,sponsor_vendor_id,created_by_user_id) VALUES($1,$2,$3) RETURNING id",[organization,f.vendor,f.office])).rows[0].id;
+    const sponsorship=(await pool.query("INSERT INTO managed_subcontractor_worker_sponsorships(worker_user_id,sponsor_vendor_id,managed_organization_id,invited_by_user_id) VALUES($1,$2,$3,$4) RETURNING id",[managedUser,f.vendor,organization,f.office])).rows[0].id;
+    const managedSession:SessionPayload={userId:managedUser,role:"field_employee",vendorId:f.vendor,activeMembershipId:membership,membershipRole:"field_employee",sv:1,managedSubcontractor:{siteGrants:[{siteId:f.site,role:"gatekeeper"}]}};
+    return {...f,managedUser,organization,sponsor,sponsorship,membership,managedSession};
+  }
+  async function managedStage(f:Awaited<ReturnType<typeof managedFixture>>) {
+    const station=await stationFor(f,"Synthetic subcontractor gate");
+    const grant=(await pool.query("INSERT INTO managed_subcontractor_role_grants(sponsorship_id,role,site_id,granted_by_user_id) VALUES($1,'gatekeeper',$2,$3) RETURNING id",[f.sponsorship,f.site,f.office])).rows[0].id;
+    const shift=(await pool.query("INSERT INTO work_hub_shifts(owner_org_type,owner_org_id,title,starts_at,ends_at,timezone,created_by_id,site_location_id,gate_station_id) VALUES('vendor',$1,'Synthetic subcontractor watch',now()-interval '1 hour',now()+interval '8 hours','America/Chicago',$2,$3,$4) RETURNING id",[f.vendor,f.office,f.site,station])).rows[0].id;
+    await pool.query("INSERT INTO work_hub_shift_assignments(shift_id,user_id) VALUES($1,$2)",[shift,f.managedUser]);
+    return {station,grant,shift};
+  }
   it("offers only the next missing saved step in one site/station/shift chain",async()=>{
     const f=await fixture();
     const station=await stationFor(f,"Synthetic setup gate");
@@ -85,11 +102,11 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
   it("advances from saved setup to one watch and one real automatic ticket, including replay", async () => {
     const f=await fixture();
     const initialStations=(await pool.query("SELECT id FROM gate_stations WHERE site_id=$1",[f.site])).rows;
-    expect((await summary(f.officeSession)).firstWatch?.action?.title).toBe(initialStations.length ? "Give an eligible gate employee access to this site" : "Set up a gate site and station");
+    expect((await summary(f.officeSession)).firstWatch?.action?.title).toBe(initialStations.length ? "Give an eligible gate employee access to this site" : "Add a gate station at this site");
     const {station,shift}=await stage(f);
     await approve(f);
     const waiting=await summary(f.officeSession);
-    expect(waiting).toMatchObject({coiUploadNeeded:false,firstWatch:{complete:false,action:null,context:{siteId:f.site,stationId:station,shiftId:shift,assignedUserId:f.worker}}});
+    expect(waiting).toMatchObject({coiUploadNeeded:false,firstWatch:{complete:false,action:null,context:{siteId:f.site,stationId:station,shiftId:shift,assignedUserId:f.worker,employeeId:f.person,employeeKind:"direct",managedOrganizationId:null,managedWorkerId:null}}});
     expect(waiting.firstWatch?.message).toContain("Waiting on the assigned gatekeeper");
     const ready=await summary(f.workerSession);
     expect(ready.firstWatch?.action?.title).toBe("Assume Watch");
@@ -107,6 +124,13 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
     expect((await pool.query("SELECT work_hub_shift_id,source_legacy_shift_id,post_coverage FROM gate_duty_sessions WHERE station_id=$1",[station])).rows[0]).toMatchObject({work_hub_shift_id:shift,source_legacy_shift_id:completed.firstWatch!.context!.watchId,post_coverage:{vendorId:f.vendor,ticketId}});
     await pool.query("UPDATE vendor_person_site_access SET is_active=false WHERE vendor_people_id=$1 AND site_location_id=$2",[f.person,f.site]);
     expect((await summary(f.officeSession)).firstWatch?.complete).toBe(false);
+  });
+  it("offers gate creation only for an actually authorized saved site without an active station",async()=>{
+    const f=await fixture();
+    await pool.query("UPDATE gate_stations SET active=false WHERE site_id=$1",[f.site]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:{title:"Add a gate station at this site",href:`/gate-locations?siteId=${f.site}`},context:{siteId:f.site,stationId:null,stationName:null}});
+    await pool.query("UPDATE partner_vendor_relationships SET status='revoked' WHERE vendor_id=$1 AND partner_id=$2",[f.vendor,f.partner]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:null,message:expect.stringContaining("Gate service authorization"),context:null});
   });
   it("rolls back a watch when no approved automatic-ticket service exists",async()=>{
     const f=await fixture(),{station}=await stage(f);
@@ -134,5 +158,92 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
     expect((await summary(f.workerSession)).firstWatch?.message).toContain("do not assume");
     await pool.query("UPDATE users SET suspended_at=now() WHERE id=$1",[f.worker]);
     await expect(summary(f.workerSession)).rejects.toMatchObject({status:403});
+  });
+  it("advances a saved managed Gate worker from site access through the same shift and completed watch",async()=>{
+    const f=await managedFixture(),station=await stationFor(f,"Synthetic managed setup gate");
+    expect((await summary(f.officeSession)).firstWatch?.action?.title).toBe("Give an eligible gate employee access to this site");
+    await pool.query("INSERT INTO managed_subcontractor_role_grants(sponsorship_id,role,site_id,granted_by_user_id) VALUES($1,'gatekeeper',$2,$3)",[f.sponsorship,f.site,f.office]);
+    const eligible=await summary(f.officeSession);
+    expect(eligible.firstWatch).toMatchObject({complete:false,action:{title:"Create a shift for this gate station",href:expect.stringContaining(`siteId=${f.site}&stationId=${station}&employee=${f.managedUser}`)},context:{siteId:f.site,stationId:station,employeeId:null,eligibleUserId:f.managedUser,employeeKind:"managed",managedOrganizationId:f.organization,managedWorkerId:f.sponsorship}});
+    expect((await pool.query("SELECT id FROM vendor_people WHERE user_id=$1",[f.managedUser])).rows).toEqual([]);
+    const shift=(await pool.query("INSERT INTO work_hub_shifts(owner_org_type,owner_org_id,title,starts_at,ends_at,timezone,created_by_id,site_location_id,gate_station_id) VALUES('vendor',$1,'Synthetic managed setup shift',now()-interval '1 hour',now()+interval '8 hours','America/Chicago',$2,$3,$4) RETURNING id",[f.vendor,f.office,f.site,station])).rows[0].id;
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:{title:"Assign an eligible gate employee to this shift"},context:{shiftId:shift,eligibleUserId:f.managedUser,employeeId:null}});
+    await pool.query("INSERT INTO work_hub_shift_assignments(shift_id,user_id) VALUES($1,$2)",[shift,f.managedUser]);
+    await approve(f);
+    const waiting=await summary(f.officeSession);
+    expect(waiting.firstWatch).toMatchObject({action:null,message:expect.stringContaining("Waiting on the assigned gatekeeper"),context:{shiftId:shift,assignedUserId:f.managedUser,employeeId:null}});
+    expect((await summary(f.managedSession)).firstWatch?.action?.title).toBe("Assume Watch");
+    const command={stationId:station,operationId:randomUUID(),source:"web" as const,expectedWatchId:null,preparationId:null,acknowledged:true,allowUnprepared:true};
+    await assume(f.managedSession,command);
+    await assume(f.managedSession,command);
+    const completed=await summary(f.officeSession);
+    expect(completed.firstWatch).toMatchObject({complete:true,action:null,context:{siteId:f.site,stationId:station,shiftId:shift,employeeId:null,eligibleUserId:f.managedUser,assignedUserId:f.managedUser,employeeKind:"managed",managedWorkerId:f.sponsorship}});
+    const tickets=(await pool.query("SELECT id,field_employee_id,status,lifecycle_state FROM tickets WHERE vendor_id=$1",[f.vendor])).rows;
+    expect(tickets).toEqual([{id:completed.firstWatch!.context!.ticketId,field_employee_id:null,status:"initiated",lifecycle_state:"pending_arrival"}]);
+    expect((await pool.query("SELECT count(*)::int AS n FROM gate_shifts WHERE station_id=$1",[station])).rows[0].n).toBe(1);
+    expect((await summary(f.managedSession)).firstWatch).toMatchObject({complete:true,action:null});
+    expect((await summary(f.managedSession)).credentials).toEqual([]);
+  });
+  it.each(["terminated sponsorship","ended sponsorship","paused sponsorship","revoked grant","ended grant","inactive sponsor","ended sponsor","missing membership","suspended worker","archived company"] as const)("does not offer a managed worker with %s as saved eligibility",async(reason)=>{
+    const f=await managedFixture(),{grant}=await managedStage(f);
+    if(reason==="terminated sponsorship")await pool.query("UPDATE managed_subcontractor_worker_sponsorships SET status='terminated',ended_at=now() WHERE id=$1",[f.sponsorship]);
+    if(reason==="ended sponsorship")await pool.query("UPDATE managed_subcontractor_worker_sponsorships SET ended_at=now() WHERE id=$1",[f.sponsorship]);
+    if(reason==="paused sponsorship")await pool.query("UPDATE managed_subcontractor_worker_sponsorships SET status='paused' WHERE id=$1",[f.sponsorship]);
+    if(reason==="revoked grant")await pool.query("UPDATE managed_subcontractor_role_grants SET status='inactive',ended_at=now() WHERE id=$1",[grant]);
+    if(reason==="ended grant")await pool.query("UPDATE managed_subcontractor_role_grants SET ended_at=now() WHERE id=$1",[grant]);
+    if(reason==="inactive sponsor")await pool.query("UPDATE managed_subcontractor_sponsors SET status='inactive',ended_at=now() WHERE id=$1",[f.sponsor]);
+    if(reason==="ended sponsor")await pool.query("UPDATE managed_subcontractor_sponsors SET ended_at=now() WHERE id=$1",[f.sponsor]);
+    if(reason==="missing membership")await pool.query("DELETE FROM user_org_memberships WHERE id=$1 AND user_id=$2 AND vendor_id=$3",[f.membership,f.managedUser,f.vendor]);
+    if(reason==="suspended worker")await pool.query("UPDATE users SET suspended_at=now() WHERE id=$1",[f.managedUser]);
+    if(reason==="archived company")await pool.query("UPDATE managed_subcontractor_organizations SET status='archived' WHERE id=$1",[f.organization]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({complete:false,action:{title:"Give an eligible gate employee access to this site"},context:{employeeId:null,eligibleUserId:null,assignedUserId:null}});
+  });
+  it("requires the managed worker's grant and sponsorship to belong to the same company and site",async()=>{
+    const f=await managedFixture(),other=await fixture(),{grant}=await managedStage(f);
+    await pool.query("UPDATE managed_subcontractor_role_grants SET site_id=$2 WHERE id=$1",[grant,other.site]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:{title:"Give an eligible gate employee access to this site"},context:{siteId:f.site,eligibleUserId:null}});
+    await pool.query("UPDATE managed_subcontractor_role_grants SET site_id=$2 WHERE id=$1",[grant,f.site]);
+    await pool.query("UPDATE managed_subcontractor_worker_sponsorships SET sponsor_vendor_id=$2 WHERE id=$1",[f.sponsorship,other.vendor]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:{title:"Give an eligible gate employee access to this site"},context:{siteId:f.site,eligibleUserId:null}});
+  });
+  it("does not borrow a revoked sponsorship's Gate grant for a different active sponsorship",async()=>{
+    const f=await managedFixture();
+    await managedStage(f);
+    await pool.query("UPDATE managed_subcontractor_worker_sponsorships SET status='terminated',ended_at=now() WHERE id=$1",[f.sponsorship]);
+    const key=randomUUID(),organization=(await pool.query("INSERT INTO managed_subcontractor_organizations(name,canonical_name,created_by_vendor_id,created_by_user_id) VALUES($1,$1,$2,$3) RETURNING id",[key,f.vendor,f.office])).rows[0].id;
+    await pool.query("INSERT INTO managed_subcontractor_sponsors(managed_organization_id,sponsor_vendor_id,created_by_user_id) VALUES($1,$2,$3)",[organization,f.vendor,f.office]);
+    await pool.query("INSERT INTO managed_subcontractor_worker_sponsorships(worker_user_id,sponsor_vendor_id,managed_organization_id,invited_by_user_id) VALUES($1,$2,$3,$4)",[f.managedUser,f.vendor,organization,f.office]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({complete:false,action:{title:"Give an eligible gate employee access to this site"},context:{eligibleUserId:null,managedWorkerId:null}});
+  });
+  it("keeps a real direct employee identity when the same user also has managed Gate access",async()=>{
+    const f=await managedFixture();
+    await managedStage(f);
+    await approve(f);
+    const person=(await pool.query("INSERT INTO vendor_people(vendor_id,user_id,vendor_role,first_name,last_name,email,phone) VALUES($1,$2,'gatekeeper','Synthetic','Direct worker','synthetic@example.invalid','5555555555') RETURNING id",[f.vendor,f.managedUser])).rows[0].id;
+    await pool.query("UPDATE user_org_memberships SET vendor_people_id=$2 WHERE id=$1",[f.membership,person]);
+    await pool.query("INSERT INTO vendor_person_site_access(vendor_people_id,site_location_id) VALUES($1,$2)",[person,f.site]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({complete:false,action:null,context:{employeeId:person,eligibleUserId:f.managedUser,employeeKind:"direct",managedOrganizationId:null,managedWorkerId:null}});
+  });
+  it("never repeats Assume for a managed worker's saved watch awaiting its automatic ticket",async()=>{
+    const f=await managedFixture(),{station,shift}=await managedStage(f);
+    const watch=(await pool.query("INSERT INTO gate_shifts(station_id,operator_id) VALUES($1,$2) RETURNING id",[station,f.managedUser])).rows[0].id;
+    await pool.query("INSERT INTO gate_duty_sessions(station_id,user_id,work_hub_shift_id,source_legacy_shift_id,source,idempotency_key,post_coverage) VALUES($1,$2,$3,$4,'web',$5,$6::jsonb)",[station,f.managedUser,shift,watch,randomUUID(),JSON.stringify({vendorId:f.vendor})]);
+    expect((await summary(f.managedSession)).firstWatch).toMatchObject({complete:false,action:null,message:expect.stringContaining("do not assume"),context:{employeeId:null,eligibleUserId:f.managedUser,shiftId:shift,watchId:watch,ticketId:null}});
+    expect((await summary(f.officeSession)).firstWatch?.action).toBeNull();
+  });
+  it("checks the selected shift when the managed worker has two assignments at one gate",async()=>{
+    const f=await managedFixture(),{station,shift}=await managedStage(f);
+    await approve(f);
+    const sibling=(await pool.query("INSERT INTO work_hub_shifts(owner_org_type,owner_org_id,title,starts_at,ends_at,timezone,created_by_id,site_location_id,gate_station_id) VALUES('vendor',$1,'Synthetic sibling watch',now()-interval '30 minutes',now()+interval '9 hours','America/Chicago',$2,$3,$4) RETURNING id",[f.vendor,f.office,f.site,station])).rows[0].id;
+    await pool.query("INSERT INTO work_hub_shift_assignments(shift_id,user_id) VALUES($1,$2)",[sibling,f.managedUser]);
+    await pool.query("UPDATE work_hub_shifts SET ticket_number='999999999' WHERE id=$1",[shift]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:{title:"Review gate service setup"},context:{siteId:f.site,stationId:station,shiftId:shift,eligibleUserId:f.managedUser,ticketBlocker:"gate_ticket.scheduled_ticket_unavailable"}});
+    await pool.query("UPDATE work_hub_shifts SET ticket_number=NULL WHERE id=$1",[shift]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:null,message:expect.stringContaining("Waiting on the assigned gatekeeper"),context:{shiftId:shift,ticketBlocker:null}});
+    expect((await summary(f.managedSession)).firstWatch).toMatchObject({action:{title:"Assume Watch"},context:{shiftId:shift,ticketBlocker:null}});
+    const ticket=(await pool.query("INSERT INTO tickets(site_location_id,vendor_id,work_type_id,status) VALUES($1,$2,$3,'initiated') RETURNING id",[f.site,f.vendor,f.work])).rows[0].id;
+    const watch=(await pool.query("INSERT INTO gate_shifts(station_id,operator_id) VALUES($1,$2) RETURNING id",[station,f.managedUser])).rows[0].id;
+    await pool.query("INSERT INTO gate_duty_sessions(station_id,user_id,work_hub_shift_id,source_legacy_shift_id,source,idempotency_key,post_coverage) VALUES($1,$2,$3,$4,'web',$5,$6::jsonb)",[station,f.managedUser,sibling,watch,randomUUID(),JSON.stringify({vendorId:f.vendor,ticketId:ticket})]);
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({complete:true,action:null,context:{shiftId:sibling,watchId:watch,ticketId:ticket,eligibleUserId:f.managedUser,employeeId:null}});
   });
 });

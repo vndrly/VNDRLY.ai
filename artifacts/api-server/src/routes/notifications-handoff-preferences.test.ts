@@ -2,7 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({ enabled: true, stored: [] as any[] }));
 vi.mock("@workspace/db", async () => {
   const schema = await import("../../../../lib/db/src/schema");
-  return { ...schema, db: {
+  return { ...schema, pool: { query: vi.fn(async (sql: string) => { if (sql.includes("SELECT DISTINCT recipient.user_id")) return { rows: [] }; throw Error("Unexpected handoff fixture query"); }) }, db: {
     select: () => ({ from: () => ({ where: async () => [{ userId: 7, systemEnabled: false, gateHandoffsEnabled: state.enabled, pushEnabled: false, systemEmailEnabled: false }] }) }),
     insert: () => ({ values: (rows: any[]) => ({ onConflictDoNothing: () => ({ returning: async () => { state.stored.push(...rows); return rows.map((r, i) => ({ ...r, id: i + 1, createdAt: new Date() })); } }) }) }),
   } };

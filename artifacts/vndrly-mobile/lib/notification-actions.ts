@@ -1,4 +1,5 @@
 import type { Href } from "expo-router";
+import type { GateStaffingAlert } from "@workspace/gate-booth";
 import { apiFetch } from "./api";
 import { captureAuthScope, isAuthScopeCurrent } from "./auth";
 import { notificationIdFromPushData } from "./pushDeepLinks";
@@ -51,8 +52,15 @@ export async function handleNotificationAction(action: string, data: unknown, ro
       if ([NOTIFICATION_ACTIONS.accept, NOTIFICATION_ACTIONS.decline].some(value => value === action) && !["shift", "task"].includes(target.kind)) return "unavailable";
       if (action === NOTIFICATION_ACTIONS.reply && target.kind !== "channel") return "unavailable";
       if (action === NOTIFICATION_ACTIONS.acknowledge) {
-        await apiFetch(`/api/notifications/${id}/acknowledge`, { method: "POST" }, scope);
+        const result = await apiFetch<{ alert?: GateStaffingAlert } | null>(`/api/notifications/${id}/acknowledge`, { method: "POST", body: JSON.stringify({ channel: "push" }) }, scope);
         if (!isAuthScopeCurrent(scope)) return "unavailable";
+        if (target.kind === "staffing") {
+          const alert = result?.alert;
+          if (!alert || alert.shiftId !== target.id || String(alert.siteId) !== target.siteId || alert.stationId !== target.stationId ||
+              (alert.status !== "resolved" && (alert.status !== "acknowledged" || !alert.acknowledgedAt || !alert.acknowledgedBy))) return "unavailable";
+          await router.push("/notifications");
+          if (!isAuthScopeCurrent(scope)) return "unavailable";
+        }
       } else if (action === NOTIFICATION_ACTIONS.read) {
         // Setting read is intrinsically idempotent for this exact owned notification.
         await apiFetch(`/api/notifications/${id}/read`, { method: "POST" }, scope);

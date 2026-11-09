@@ -15,6 +15,7 @@ import {
 } from "react-native";
 
 import NotificationActionModal from "@/components/NotificationActionModal";
+import GateStaffingAlerts from "@/components/GateStaffingAlerts";
 import NotificationSendToModal from "@/components/NotificationSendToModal";
 import PortalPageHeader from "@/components/PortalPageHeader";
 import NotificationCategoryCarousel from "@/components/NotificationCategoryCarousel";
@@ -231,6 +232,7 @@ export default function NotificationsScreen() {
           data={filteredItems}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ padding: 16 }}
+          ListHeaderComponent={<GateStaffingAlerts />}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

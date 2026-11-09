@@ -166,6 +166,9 @@ export default function NotificationDestinationScreen() {
               </Text>
             ))}
             {record.kind === "shift" && loaded?.target.kind === "shift" ? <NativeShiftResponse key={`${generation}.${loaded.target.id}`} shiftId={loaded.target.id} /> : null}
+            {record.kind === "staffing" && loaded?.target.kind === "staffing" ? <TogglePillButton onPress={() => {
+              if (loaded.target.kind === "staffing" && loaded.generation === captureAuthScope().generation) router.push(loaded.target.href as never);
+            }}>Open staffing calendar</TogglePillButton> : null}
             {record.kind==="fleet"&&<TogglePillButton onPress={()=>router.push({pathname:"/fleet-run/[id]",params:{id:record.subjectId}} as never)}>{fleetCopy("Open exact Fleet run")}</TogglePillButton>}
             {record.kind==="ticket"&&<TogglePillButton compactOnTablet onPress={()=>router.push({pathname:"/ticket/[id]",params:{id:record.subjectId}})}>Open ticket</TogglePillButton>}
             {record.kind==="safety"&&<TogglePillButton compactOnTablet onPress={()=>router.push({pathname:"/safety-event/[id]",params:{id:record.subjectId}})}>Open safety report</TogglePillButton>}

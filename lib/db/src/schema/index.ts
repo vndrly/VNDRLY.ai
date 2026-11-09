@@ -135,6 +135,7 @@ export * from "./workerSubscriptions";
 export * from "./operationsDisplays";
 export * from "./gateChangeOver";
 export * from "./gateOperations";
+export * from "./gateStaffingAlerts";
 export * from "./coverageResolutions";
 export * from "./safetyMaturity";
 export * from "./leadAdminInvitations";

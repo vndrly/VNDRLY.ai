@@ -12,6 +12,10 @@ import Picker from "./calendar-assignee-picker";
 import { FormattedDateTimeInput, parseTaskDateTime } from "./formatted-date-time-input";
 import { commandEnvelope, workHubRequest, type WorkHubOwner } from "@/lib/work-hub-client";
 import "./calendar-create-cards.css";
+import { useNextSteps } from "@/components/next-steps";
+import { useGuidedTarget } from "@/components/guided-target";
+import { gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers";
+import { calendarDayFromSearch } from "@/lib/calendar-day-link";
 
 type Row = Record<string, any>;
 type Definition = { id: string; version: number; stationId: string; siteName: string; gateName: string; startsAtLocal: string; endsAtLocal: string; timezone: string; weekdays: number[]; requiredCount: number; notes: string; watches: { id: string; startsAt: string; endsAt: string; people: { id: number; name: string }[] }[] };
@@ -30,7 +34,16 @@ export default function GateCalendarScheduling({ owner, canDefine = true }: { ow
   const [definition, setDefinition] = useState(() => ({...initial(), stationIds: linkedStation && !linkedShift ? [linkedStation] : []}));
   const [event, setEvent] = useState({ title: "", startsAt: "", endsAt: "", notes: "", userIds: [] as number[], crewIds: [] as string[] });
   const brand = useBrand(), qc = useQueryClient();
+  const helper = useNextSteps();
+  const linkedSite = Number(new URLSearchParams(window.location.search).get("siteId"));
+  const guideContext = { siteId: linkedSite > 0 ? linkedSite : undefined, stationId: linkedStation ?? undefined, shiftId: linkedShift, day: calendarDayFromSearch(window.location.search) ?? undefined };
+  const guideScope = gateGuideScope("shift-definition", guideContext);
+  const guided = canDefine && (gateGuideMatches(helper?.selected, "gate-shift-scheduling", guideContext) || gateGuideMatches(helper?.selected, "first-watch", guideContext));
+  useGuidedTarget({ scopeId: `${guideScope}:launcher`, targetId: "open-shifts", prompt: "Open Add/Edit Shifts to review the saved gate's schedule. Scheduling does not start a watch." }, guided && !open, 20);
   const options = useQuery<Options>({ queryKey: ["work-hub", "gate-shift-definitions", owner.id], queryFn: () => workHubRequest(`/gate-shift-definitions?vendorId=${owner.id}`), enabled: open === "define", refetchOnWindowFocus: false, retry: false });
+  const requestedGate = linkedStation ?? helper?.selected?.context?.stationId;
+  const guidanceGate = requestedGate ? options.data?.gates.find(gate => gate.id === requestedGate) : options.data?.gates.length === 1 ? options.data.gates[0] : undefined;
+  useGuidedTarget({ scopeId: guideScope, targetId: definition.stationIds.length ? "save-shift" : guidanceGate ? `gate-${guidanceGate.id}` : "choose-gate-group", prompt: definition.stationIds.length ? "Review the selected gate, start/end times, timezone, repeat days and required staffing, then save this definition. Next, assign an eligible person to a saved scheduled watch." : guidanceGate ? `Select ${guidanceGate.siteName} · ${guidanceGate.name}. This is the authorized gate carried from your current workflow; selecting it does not save a shift.` : "Choose the actual authorized site and gate in the Gates list. This guide will not choose a different station or save for you." }, guided && open === "define" && options.isSuccess, 100);
   const people = useQuery<Row[]>({ queryKey: ["work-hub", "calendar-people", owner], queryFn: () => workHubRequest("/people"), enabled: !!open });
   const crews = useQuery<Row[]>({ queryKey: ["work-hub", "calendar-crews", owner], queryFn: () => workHubRequest("/crews"), enabled: !!open });
   const saved = options.data?.definitions.find(row => row.id === selected);
@@ -57,19 +70,19 @@ export default function GateCalendarScheduling({ owner, canDefine = true }: { ow
   const busy = mutation.isPending || deletion.isPending;
   const close = () => { if (!busy) { setOpen(null); mutation.reset(); deletion.reset(); } };
   const launch = (mode: "define" | "event") => { setSelected(""); setDefinition(initial()); setEvent({ title: "", startsAt: "", endsAt: "", notes: "", userIds: [], crewIds: [] }); mutation.reset(); deletion.reset(); setOpen(mode); };
-  const submit = <button className="vendor-mini-card-button" type="submit" disabled={busy || open === "define" && (options.isPending || options.isError || !definition.stationIds.length || !definition.weekdays.length)}>{mutation.isPending ? "Saving…" : open === "define" ? saved ? "Save Shift" : "Create Shift" : "Add Event"}</button>;
+  const submit = <button data-guidance-id="save-shift" className="vendor-mini-card-button" type="submit" disabled={busy || open === "define" && (options.isPending || options.isError || !definition.stationIds.length || !definition.weekdays.length)}>{mutation.isPending ? "Saving…" : open === "define" ? saved ? "Save Shift" : "Create Shift" : "Add Event"}</button>;
   const formClass = "hub-schedule-form hub-task-flyout-form grid gap-3";
   return <>
-    {canDefine && <button type="button" className="hub-task-mini-card" onClick={() => launch("define")}><CalendarDays size={16} aria-hidden="true" />Add/Edit Shifts</button>}
+    {canDefine && <span data-guidance-scope={`${guideScope}:launcher`}><button data-guidance-id="open-shifts" type="button" className="hub-task-mini-card" onClick={() => launch("define")}><CalendarDays size={16} aria-hidden="true" />Add/Edit Shifts</button></span>}
     <button type="button" className="hub-task-mini-card" onClick={() => launch("event")}><CalendarPlus size={16} aria-hidden="true" />Add Event</button>
     <Dialog open={!!open} onOpenChange={value => { if (!value) close(); }}><VendorEditFlyout title={open === "define" ? "Add/Edit Shifts" : "Add Event"} logoSrc={brand.logoSquareUrl || brand.logoUrl || undefined} logoAlt={`${brand.name} logo`} onClose={close}>
-      <form aria-label={open === "define" ? "Add/Edit Shifts" : "Add Event"} className={formClass} onSubmit={e => { e.preventDefault(); mutation.mutate(); }}>
+      <form data-guidance-scope={guideScope} aria-label={open === "define" ? "Add/Edit Shifts" : "Add Event"} className={formClass} onSubmit={e => { e.preventDefault(); mutation.mutate(); }}>
       <fieldset disabled={busy} className="grid gap-3">
         {open === "define" ? <>
-          <label className="grid gap-1">Shift<BrandedSelect value={selected} onChange={e => choose(e.target.value)} disabled={options.isPending || options.isError}><option value="">Create New Shift</option>{options.data?.definitions.map(item => <option key={item.id} value={item.id}>{item.siteName} | {item.gateName} · {clockLabel(item.startsAtLocal)}–{clockLabel(item.endsAtLocal)}</option>)}</BrandedSelect></label>
+          <label className="grid gap-1">Shift<BrandedSelect data-guidance-id="choose-shift" value={selected} onChange={e => choose(e.target.value)} disabled={options.isPending || options.isError}><option value="">Create New Shift</option>{options.data?.definitions.map(item => <option key={item.id} value={item.id}>{item.siteName} | {item.gateName} · {clockLabel(item.startsAtLocal)}–{clockLabel(item.endsAtLocal)}</option>)}</BrandedSelect></label>
           {options.isPending && <p role="status">Loading defined shifts…</p>}
           {options.isError && <p role="alert">Shift definitions could not load. <button type="button" onClick={() => void options.refetch()}>Retry</button></p>}
-          <fieldset className="hub-schedule-section"><legend>Gates</legend><div className="gate-definition-gates">{options.data?.gates.map(gate => <label key={gate.id}><BrandedCheckbox checked={definition.stationIds.includes(gate.id)} disabled={!!saved} onCheckedChange={() => setDefinition({ ...definition, stationIds: toggled(definition.stationIds, gate.id) })} />{gate.siteName} | {gate.name}</label>)}</div></fieldset>
+          <fieldset data-guidance-id="choose-gate-group" className="hub-schedule-section"><legend>Gates</legend><div className="gate-definition-gates">{options.data?.gates.map(gate => <label key={gate.id}><BrandedCheckbox data-guidance-id={`gate-${gate.id}`} checked={definition.stationIds.includes(gate.id)} disabled={!!saved} onCheckedChange={() => setDefinition({ ...definition, stationIds: toggled(definition.stationIds, gate.id) })} />{gate.siteName} | {gate.name}</label>)}</div></fieldset>
           <div className="hub-schedule-fields"><label className="grid gap-1">Starts<BrandedSelect value={definition.startsAtLocal} onChange={e => setDefinition({ ...definition, startsAtLocal: e.target.value })}>{Array.from({ length: 96 }, (_, index) => { const time = `${String(Math.floor(index/4)).padStart(2,"0")}:${String(index%4*15).padStart(2,"0")}`; return <option key={time} value={time}>{clockLabel(time)}</option>; })}</BrandedSelect></label><label className="grid gap-1">Ends<BrandedSelect value={definition.endsAtLocal} onChange={e => setDefinition({ ...definition, endsAtLocal: e.target.value })}>{Array.from({ length: 96 }, (_, index) => { const time = `${String(Math.floor(index/4)).padStart(2,"0")}:${String(index%4*15).padStart(2,"0")}`; return <option key={time} value={time}>{clockLabel(time)}</option>; })}</BrandedSelect></label></div>
           <p className="hub-task-flyout-hint">{definition.endsAtLocal <= definition.startsAtLocal ? "Ends the following day. " : ""}Times use {definition.timezone}.</p>
           <fieldset className="hub-schedule-section"><legend>Repeats weekly</legend><div className="gate-definition-days">{days.map((day,index) => <label key={day}><BrandedCheckbox checked={definition.weekdays.includes(index)} onCheckedChange={() => setDefinition({ ...definition, weekdays: toggled(definition.weekdays,index) })} />{day}</label>)}</div></fieldset>
@@ -96,5 +109,6 @@ export default function GateCalendarScheduling({ owner, canDefine = true }: { ow
       </div>
       </form>
     </VendorEditFlyout></Dialog>
+    {canDefine && helper?.enabled && <button type="button" className="gate-watch-text-action" onClick={() => helper.startHelper("gate-shift-scheduling", guideContext)}>Guide gate shift scheduling</button>}
   </>;
 }

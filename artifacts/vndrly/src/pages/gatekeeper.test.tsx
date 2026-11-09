@@ -25,6 +25,8 @@ const liveMonitor = vi.hoisted(() => ({
   flash: null as Record<string, unknown> | null,
 }));
 const locale = vi.hoisted(() => ({ spanish: false }));
+const coaching = vi.hoisted(() => ({ value: null as any }));
+vi.mock("@/components/next-steps", () => ({ useNextSteps: () => coaching.value }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -193,6 +195,7 @@ async function selectState(name: string) {
 }
 
 beforeEach(() => {
+  coaching.value = null;
   vi.clearAllMocks();
   window.localStorage.setItem(ASKV_NATURAL_VOICE_FLAG, "0");
   liveMonitor.flash = null;
@@ -214,7 +217,7 @@ beforeEach(() => {
     plateConfidence: null,
     stateConfidence: null,
   });
-  api.gateCheckIn.mockResolvedValue({ id: 88 });
+  api.gateCheckIn.mockReset().mockResolvedValue({ id: 88 });
   geolocationMock = vi.fn(
     (
       success: (position: {
@@ -297,6 +300,21 @@ describe("GatekeeperPage plate state", () => {
     await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(1));
     expect(api.gateCheckIn.mock.calls[0][0].latitude).toBeUndefined();
     expect(api.gateCheckIn.mock.calls[0][0].longitude).toBeUndefined();
+  });
+  it("uses the gatekeeper's real check-in controls and records only the returned saved visit proof", async () => {
+    coaching.value={enabled:true,selected:{id:"gate-vehicle-check-in",context:{siteId:42}},startHelper:vi.fn(),recordCompletion:vi.fn().mockResolvedValue(true)};
+    let complete!:(value:any)=>void;api.gateCheckIn.mockImplementationOnce(()=>new Promise(resolve=>{complete=resolve;}));
+    renderPage();await screen.findByTestId("input-gate-plate");
+    expect(screen.getByTestId("input-gate-plate").getAttribute("data-guidance-id")).toBe("plate");
+    fireEvent.change(screen.getByTestId("input-gate-first-name"),{target:{value:"Jordan"}});fireEvent.change(screen.getByTestId("input-gate-last-name"),{target:{value:"Hale"}});fireEvent.change(screen.getByTestId("input-gate-plate"),{target:{value:"4412"}});
+    await waitFor(()=>expect((screen.getByTestId("button-gate-check-in") as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByTestId("button-gate-check-in"));await waitFor(()=>expect(api.gateCheckIn).toHaveBeenCalledTimes(1));expect(coaching.value.recordCompletion).not.toHaveBeenCalled();
+    complete({id:88,siteLocationId:42});await waitFor(()=>expect(coaching.value.recordCompletion).toHaveBeenCalledWith("gate-vehicle-check-in",{recordType:"gate-visit",recordId:88,siteId:42}));
+  });
+  it("keeps a failed check-in from completing its guide", async () => {
+    coaching.value={enabled:true,selected:{id:"gate-vehicle-check-in",context:{siteId:42}},startHelper:vi.fn(),recordCompletion:vi.fn()};api.gateCheckIn.mockRejectedValueOnce(new Error("Visit was not saved"));
+    renderPage();await screen.findByTestId("input-gate-plate");fireEvent.change(screen.getByTestId("input-gate-first-name"),{target:{value:"Jordan"}});fireEvent.change(screen.getByTestId("input-gate-last-name"),{target:{value:"Hale"}});fireEvent.change(screen.getByTestId("input-gate-plate"),{target:{value:"4412"}});await waitFor(()=>expect((screen.getByTestId("button-gate-check-in") as HTMLButtonElement).disabled).toBe(false));fireEvent.click(screen.getByTestId("button-gate-check-in"));
+    await screen.findByText("Visit was not saved");expect(coaching.value.recordCompletion).not.toHaveBeenCalled();
   });
   it("locks the GPS-determined company and localizes the current-location selector", async () => {
     locale.spanish = true;

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const env = vi.hoisted(() => ({ api: vi.fn(), user: { id: 1 } }));
+const env = vi.hoisted(() => ({ api: vi.fn(), user: { id: 1 } as Partial<StoredUser> }));
 vi.mock("@/lib/api", () => ({ apiFetch: env.api }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user }) }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ foreground: "black", mutedForeground: "gray", background: "white", card: "white", border: "gray", destructive: "red" }) }));
@@ -11,10 +11,21 @@ vi.mock("@/components/TogglePillButton", () => ({ default: ({ askVInactiveStyle,
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("expo-crypto", () => ({ randomUUID: () => "operation-1" }));
 import GateDutyCard from "./GateDutyCard";
+import type { StoredUser } from "@/lib/auth";
 
 const mount = (shift = "shift-1") => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateDutyCard stationId="station-1" workHubShiftId={shift} /></QueryClientProvider>);
 afterEach(cleanup);
-beforeEach(() => { vi.clearAllMocks(); env.api.mockImplementation(async (path: string) => path.endsWith("/roster") ? { roster: [] } : { ok: true }); });
+beforeEach(() => { vi.clearAllMocks(); env.user = { id: 1 }; env.api.mockImplementation(async (path: string) => path.endsWith("/roster") ? { roster: [] } : { ok: true }); });
+
+it("keeps held MidCon roster facts neutral while allowing an explicit saved watch", async () => {
+  env.user = { id: 1, vendorId: 1054, role: "vendor", vendorRole: "office" };
+  mount();
+  expect(await screen.findByText("gateDuty.unstaffed")).toBeTruthy();
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(getComputedStyle(screen.getByText("gateDuty.unstaffed")).color).toBe("rgb(128, 128, 128)");
+  fireEvent.click(screen.getByRole("button", { name: "gateDuty.assume" }));
+  await waitFor(() => expect(env.api).toHaveBeenCalledWith(expect.stringMatching(/duty\/assume$/), expect.objectContaining({ method: "POST" })));
+});
 
 it("supports assume shift and paid-travel start without replacing another worker", async () => {
   mount();

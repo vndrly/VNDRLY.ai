@@ -1,6 +1,7 @@
 /** Calendar days are local dates, not midnight UTC timestamps. */
 export function calendarDayFromSearch(search: string): string | null {
-  const day = new URLSearchParams(search).get("day");
+  const params = new URLSearchParams(search);
+  const day = params.get("date") ?? params.get("day");
   if (!day || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
   const date = new Date(`${day}T12:00:00`);
   return Number.isFinite(date.getTime()) && localCalendarDay(date) === day ? day : null;

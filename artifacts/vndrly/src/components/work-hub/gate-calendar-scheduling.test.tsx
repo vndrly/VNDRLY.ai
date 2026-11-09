@@ -4,6 +4,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import GateCalendarScheduling from "./gate-calendar-scheduling";
 import { workHubRequest } from "@/lib/work-hub-client";
 const gate = "11111111-1111-4111-a111-111111111111", id = "22222222-2222-4222-a222-222222222222";
+const coaching = vi.hoisted(() => ({ selected: null as any }));
+vi.mock("@/components/next-steps", () => ({ useNextSteps: () => coaching.selected ? { selected: coaching.selected, enabled: true, startHelper: vi.fn() } : null }));
+import { findGuidanceTarget, GuidedTargetProvider } from "../guided-target";
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#eabf38", name: "GateGo", logoSquareUrl: "/logo.png" }) }));
 vi.mock("@/components/ui/dialog", async () => ({ Dialog: (await import("@radix-ui/react-dialog")).Root }));
 vi.mock("@/components/branded-checkbox", () => ({ BrandedCheckbox: ({ checked, onCheckedChange, ...props }: any) => <input type="checkbox" checked={checked} onChange={event => onCheckedChange?.(event.target.checked)} {...props} /> }));
@@ -12,9 +15,28 @@ vi.mock("@/lib/work-hub-client", async () => ({ ...await vi.importActual("@/lib/
   if (path.startsWith("/gate-shift-definitions")) return { gates: [{ id: gate, siteName: "North Site", name: "Main Gate" }], definitions: [{ id, version: 3, stationId: gate, siteName: "North Site", gateName: "Main Gate", startsAtLocal: "18:00", endsAtLocal: "06:00", timezone: "America/Chicago", weekdays: [0,1,2,3,4,5,6], requiredCount: 1, notes: "Radio check", watches: [{ id: "watch", startsAt: "2026-10-30T23:00:00Z", people: [{ id: 7, name: "Bob" }] }] }] };
   return [];
 }) }));
-afterEach(() => { cleanup(); vi.mocked(workHubRequest).mockClear(); window.history.replaceState({},"","/"); });
+afterEach(() => { cleanup(); coaching.selected = null; vi.restoreAllMocks(); vi.mocked(workHubRequest).mockClear(); window.history.replaceState({},"","/"); });
 function mount(canDefine = true) { render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateCalendarScheduling owner={{ type: "vendor", id: 1115 }} canDefine={canDefine} /></QueryClientProvider>); }
 describe("Gate calendar scheduling", () => {
+  it("points first-watch creation at the actual authorized gate checkbox before Save without auto-selecting or writing", async () => {
+    window.history.replaceState({},"","/work-hub/calendar?siteId=1");
+    coaching.selected={id:"first-watch",context:{siteId:1}};
+    const rectangle={left:20,top:80,right:220,bottom:120,width:200,height:40,x:20,y:80,toJSON(){}};
+    vi.spyOn(HTMLElement.prototype,"getClientRects").mockReturnValue([rectangle] as unknown as DOMRectList);
+    vi.spyOn(HTMLElement.prototype,"getBoundingClientRect").mockReturnValue(rectangle);
+    render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GuidedTargetProvider scope="company:1115" active><GateCalendarScheduling owner={{type:"vendor",id:1115}} canDefine /></GuidedTargetProvider></QueryClientProvider>);
+    fireEvent.click(screen.getByRole("button",{name:"Add/Edit Shifts"}));
+    const checkbox=await screen.findByRole("checkbox",{name:"North Site | Main Gate"});
+    const form=screen.getByRole("form",{name:"Add/Edit Shifts"});const scopeId=form.getAttribute("data-guidance-scope")!;
+    await screen.findByTestId("guidance-target-ring");
+    expect(findGuidanceTarget({scopeId,targetId:`gate-${gate}`,prompt:""})).toBe(checkbox);
+    expect((checkbox as HTMLInputElement).checked).toBe(false);
+    expect(vi.mocked(workHubRequest).mock.calls.some(([,options])=>options?.method==="POST")).toBe(false);
+    fireEvent.click(checkbox);
+    const save=screen.getByRole("button",{name:"Create Shift"});
+    await waitFor(()=>expect(findGuidanceTarget({scopeId,targetId:"save-shift",prompt:""})).toBe(save));
+    expect(vi.mocked(workHubRequest).mock.calls.some(([,options])=>options?.method==="POST")).toBe(false);
+  });
   it("opens the next-step station in shift setup without saving anything", async () => {
     window.history.replaceState({},"",`/work-hub/calendar?siteId=1&stationId=${gate}`);
     mount();

@@ -2,14 +2,17 @@ import { render, screen, fireEvent, cleanup, waitFor, within } from "@testing-li
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import GateWatchSummary from "./gate-watch-summary";
+import type { GateStaffingAlert } from "@workspace/gate-booth";
 const m = vi.hoisted(() => ({ request: vi.fn() }));
 vi.mock("@/lib/change-over-api", () => ({ changeOverRequest: m.request }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, vendorId: 4, activeMembershipId: 2 } }) }));
-beforeEach(() => { m.request.mockReset(); });
-afterEach(cleanup);
+let staffingAlerts: GateStaffingAlert[] = [];
+beforeEach(() => { m.request.mockReset(); staffingAlerts = []; vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ alerts: staffingAlerts, notificationsPaused: false })))); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 function mount(current: any) { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateWatchSummary stationId="gate-1" current={current} /></QueryClientProvider>); }
 it("expands the last completed watch and its notes at each site, plus the next scheduled watch", async () => {
   const startedAt = new Date(Date.now() - 90 * 60000).toISOString(), endedAt = new Date().toISOString();
+  staffingAlerts = [{ id: "radar", code: "GA-RADAR", status: "open", severity: "warning", kind: "watch_radar", shiftId: "shift-radar", siteId: 21, siteName: "West site", stationId: "gate-2", gateName: "West Gate", title: "Night watch", startsAt: endedAt, endsAt: endedAt, timezone: "America/Chicago", requiredCount: 1, actualCount: 0, acknowledgedAt: null, acknowledgedBy: null, resolvedAt: null, createdAt: endedAt, escalatedAt: null, href: "/work-hub/calendar?siteId=21&stationId=gate-2&shiftId=shift-radar&date=2026-11-09", canAcknowledge: false, notificationsPaused: false }];
   m.request.mockImplementation(async (path: string) => path === "/watch-timeline" ? { radar: [
     { shiftId: "shift-radar", siteId: 21, siteName: "West site", stationId: "gate-2", gateName: "West Gate", title: "Night watch", startsAt: endedAt, endsAt: endedAt, timezone: "America/Chicago" },
   ], sites: [
@@ -71,7 +74,7 @@ it("separates turnover preparation from releasing the watch",async()=>{
 
 const activeWatches=[{userId:8,name:"Tasha Greene",stationId:"gate-1",siteName:"Antelope Draw",gateName:"Main Gate",watchId:"watch-1",canManage:true},{userId:9,name:"Nadia Farouk",stationId:"gate-2",siteName:"Coyote Ridge",gateName:"East Gate",watchId:"watch-2",canManage:true}];
 function adminSource(path:string) {
-  if(path.endsWith("/state"))return {site:{id:1,name:"Coyote Ridge"},station:{id:"gate-2",name:"East Gate"},shift:{id:"watch-2",operator_id:9,operator_name:"Nadia Farouk",started_at:new Date().toISOString()},preparation:null,snapshot:{revision:"a"},stale:false};
+  if(path.split("?")[0].endsWith("/state"))return {site:{id:1,name:"Coyote Ridge"},station:{id:"gate-2",name:"East Gate"},shift:{id:"watch-2",operator_id:9,operator_name:"Nadia Farouk",started_at:new Date().toISOString()},preparation:null,snapshot:{revision:"a"},stale:false};
   if(path==="/watches")return {watches:activeWatches};
   if(path.endsWith("/standers"))return {operators:[{userId:10,membershipId:20,name:"Connie Marsh",companyName:"GateGo"}]};
   if(path.endsWith("/roster"))return {roster:[]};return {rows:[]};

@@ -34,6 +34,9 @@ import { GateMapDirections } from "./gate-map-directions";
 import { sortGateMapStaff, type StaffSort } from "@/lib/gate-map-staff-sort";
 import GateSiteGateSelect from "./gate-site-gate-select";
 import { GateMapRevealStaff, hasMapLocation, type RevealStaffPerson } from "./gate-map-reveal-staff";
+import { useNextSteps } from "./next-steps";
+import { useGuidedTarget } from "./guided-target";
+import { gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers";
 
 type Coverage = {
   at: string; pins?: GateMapPin[];
@@ -223,8 +226,13 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
   const allPoints = [...points, ...equipmentPoints, ...vehiclePoints, ...pinPoints,...(myPoint?[myPoint]:[])];
   const selectedPointId = selectedEquipment ? `equipment:${selectedEquipment.id}` : myPoint ? myPoint.id : selectedPin ? `pin:${selectedPin.id}` : focusedStaffId != null ? `staff:${focusedStaffId}` : selected ? `gate:${selected.id}` : null;
   const focusedPoint = (selectedEquipment ? equipmentPoints.find(point=>point.id===`equipment:${selectedEquipment.id}`):undefined) ?? myPoint ?? allPoints.find(point => point.id === (selectedPin ? `pin:${selectedPin.id}` : focusedStaffId != null ? `staff:${focusedStaffId}` : `gate:${focusedGateId}`));
+  const helper = useNextSteps();
+  const guideContext = { siteId: selectionGate?.siteId ?? helper?.selected?.context?.siteId, stationId: selectionGate?.id ?? helper?.selected?.context?.stationId, siteName: selectionGate?.siteName, stationName: selectionGate?.name };
+  const scopeId = gateGuideScope("map", guideContext);
+  const guided = gateGuideMatches(helper?.selected, "gate-map-and-log", guideContext);
+  useGuidedTarget({ scopeId, targetId: selectionGate ? "open-log" : "choose-gate", prompt: selectionGate ? "Read the last gate-confirmed location separately from intended destination, then open this gate's recorded log. Map positions are not live vehicle GPS." : "Choose the actual authorized gate to inspect its saved locations and movements." }, guided && !coverage.isError && coverage.isSuccess, 25);
   if (!user?.vendorId) return null;
-  return <section data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+  return <section data-guidance-scope={scopeId} data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
     <div className="gate-map-selector-row">
     <CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de accesos" : "Gate Map"}</CardHeading>
     {showGateSelector && coverage.isSuccess && <GateSiteGateSelect sites={sites} siteId={selectionGate?.siteId ?? 0}
@@ -302,6 +310,10 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
       </div>
     </>}
     {!instant&&selectionGate&&<GateMovementLocationSummary siteId={selectionGate.siteId} gateId={selectionGate.id} />}
+    <div className="flex flex-wrap items-center gap-4 text-sm">
+      {selectionGate && <a data-guidance-id="open-log" className="gate-log-text-link" href={`/gate/history?${new URLSearchParams({ siteId: String(selectionGate.siteId), stationId: selectionGate.id, recordType: "all" })}`}>{es ? "Abrir registro de este acceso" : "Open this gate’s recorded log"}</a>}
+      {helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-map-and-log", guideContext)}>{es ? "Guiar mapa y registro" : "Guide map and log"}</button>}
+    </div>
     {draftPin && <GateMapPinFlyout {...draftPin} siteId={focusedGate?.siteId ?? sites[0]?.id ?? 0} sites={sites} es={Boolean(es)} onClose={()=>setDraftPin(null)} onSaved={pin=>{setDraftPin(null);setSelectedPinId(pin.id);void coverage.refetch();}} />}
     {gateDraft&&<Dialog.Root open onOpenChange={open=>{if(!open)setGateDraft(null);}}><VendorEditFlyout title={gateDraft.gateId?(es?'Administrar acceso':'Manage Gate'):(es?'Crear acceso aquí':'Create Gate Here')} logoSrc={brand.logoSquareUrl||brand.logoUrl||undefined} logoAlt={`${brand.name} logo`} onClose={()=>setGateDraft(null)}>
       {gateDraft.gateId&&<button className="gate-history-filter mb-3" onClick={()=>{setMovingGate(gateDraft.gateId!);setGateDraft(null);}}>{es?'Mover pin en el mapa':'Move pin on map'}</button>}

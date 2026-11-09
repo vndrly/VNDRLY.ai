@@ -3,6 +3,7 @@ import { linkedGateScope } from "../services/gate-links";
 import {offlineGateObservationService,OfflineGateError} from "../services/gate-offline-observation";
 import { gateVisitGpsEvidence } from "../lib/gate-visit-gps";
 import { listChangeOverStations } from "../services/gate-change-over";
+import { loadTemporaryOfficeGateWatches } from "../services/gate-temporary-office-coverage";
 import { managedWorkerSessionIsCurrent } from "../lib/managed-worker-session";
 import { hasGateSupervisorAuthority } from "../lib/gate-supervisor-authority";
 import { managedWorkerSiteIds, managedWorkerSiteRole } from "../lib/managed-worker-access";
@@ -313,6 +314,8 @@ type Session = {
   vendorRole?: string | null;
   membershipRole?: string | null;
   vendorPeopleId?: number | null;
+  activeMembershipId?: number | null;
+  temporaryGateStationIds?: string[];
   gateAccessSiteIds?: number[];
   gateSupervisorAccess?: boolean;
   managedSubcontractor?: import("../lib/session").SessionPayload["managedSubcontractor"];
@@ -344,6 +347,13 @@ function gateSiteAssignmentScope(session: Session) {
   return siteIds == null
     ? undefined
     : inArray(siteWorkAssignmentsTable.siteLocationId, siteIds.length > 0 ? siteIds : [-1]);
+}
+
+function temporaryGateVisitAllowed(session:Session,visit:{gateStationId?:string|null;checkInGpsEvidence?:unknown}) {
+  if(!session.temporaryGateStationIds)return true;
+  const evidence=visit.checkInGpsEvidence as {gateStationId?:unknown}|null;
+  const gate=visit.gateStationId??evidence?.gateStationId;
+  return typeof gate==="string" && session.temporaryGateStationIds.includes(gate);
 }
 
 async function requireGatekeeperSession(
@@ -399,6 +409,13 @@ async function requireGatekeeperSession(
       !access.operationalRoles.some((role) =>
         role === "gatekeeper" || role === "gate_supervisor"))
   ) {
+    const temporary=await loadTemporaryOfficeGateWatches(pool,session);
+    if(temporary.length) {
+      session.gateAccessSiteIds=[...new Set(temporary.map(watch=>watch.siteId))];
+      session.temporaryGateStationIds=temporary.map(watch=>watch.stationId);
+      session.gateSupervisorAccess=false;
+      return session;
+    }
     res
       .status(403)
       .json({ message: "Gatekeeper access required", code: VISIT_NO_ACCESS });
@@ -1093,9 +1110,13 @@ router.post("/visits/gate/observations", async (req, res): Promise<void> => {
       direction: z.enum(["entry", "exit"]),
       source: z.enum(["camera", "gatekeeper", "geofence", "driver"]),
       observedAt: z.iso.datetime(),
+      gateStationId:z.uuid().optional(),
       plate: z.string().trim().min(1).max(32).optional(),
       plateState: z.string().trim().min(2).max(8).optional(),
     }).parse(req.body);
+    if(session.temporaryGateStationIds && (!input.gateStationId || !session.temporaryGateStationIds.includes(input.gateStationId))) {
+      res.status(403).json({message:"Use the Gate where your saved personal watch is active",code:VISIT_NO_ACCESS});return;
+    }
     const [site] = await db.select().from(siteLocationsTable).where(eq(siteLocationsTable.id, input.siteLocationId)).limit(1);
     if (!site) {
       res.status(404).json({ message: "Site not found", code: SITE_NOT_FOUND });
@@ -1111,6 +1132,9 @@ router.post("/visits/gate/observations", async (req, res): Promise<void> => {
     if (!assignment) {
       res.status(403).json({ message: "Gate staff is not assigned to this site", code: VISIT_NO_ACCESS });
       return;
+    }
+    if(input.gateStationId && !(await listChangeOverStations(session,site.id)).some(gate=>gate.id===input.gateStationId)) {
+      res.status(403).json({message:"Gate location is not available to this operator",code:VISIT_NO_ACCESS});return;
     }
 
     const observation = observeGateCrossing({
@@ -1135,6 +1159,7 @@ router.post("/visits/gate/observations", async (req, res): Promise<void> => {
         isNull(siteVisitsTable.checkOutTime),
       )).orderBy(desc(siteVisitsTable.checkInTime)).limit(100);
       const matching = candidates.filter((candidate) =>
+        temporaryGateVisitAllowed(session,candidate) &&
         (candidate.vehiclePlate ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "") === normalized &&
         (!input.plateState || !candidate.plateState || normalizePlateState(candidate.plateState) === normalizePlateState(input.plateState))
       );
@@ -1175,6 +1200,7 @@ router.post("/visits/gate/observations", async (req, res): Promise<void> => {
 
     const [created] = await db.insert(siteVisitsTable).values({
       siteLocationId: site.id,
+      gateStationId:input.gateStationId??null,
       firstName: "Unknown",
       lastName: "Visitor",
       company: null,
@@ -1307,6 +1333,7 @@ router.post("/visits/gate/:id/reconcile", async (req, res): Promise<void> => {
       res.status(404).json({ message: "Visit not found", code: VISIT_NOT_FOUND });
       return;
     }
+    if(!temporaryGateVisitAllowed(session,visit)) {res.status(404).json({message:"Visit not found",code:VISIT_NOT_FOUND});return;}
     const [assignment] = await db.select({ id: siteWorkAssignmentsTable.id })
       .from(siteWorkAssignmentsTable)
       .where(and(
@@ -1416,6 +1443,9 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
         code: VISIT_INVALID_INPUT,
       });
     return;
+  }
+  if(session.temporaryGateStationIds && (!b.gateStationId || !session.temporaryGateStationIds.includes(b.gateStationId))) {
+    res.status(403).json({message:"Use the Gate where your saved personal watch is active",code:VISIT_NO_ACCESS});return;
   }
   const plate = validatePlateInput(b.vehiclePlate, b.plateState);
   if (!plate.ok) {
@@ -1690,6 +1720,9 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     return;
   }
   const gateId = b.gateStationId ?? (typeof visit.checkInGpsEvidence?.gateStationId === "string" ? visit.checkInGpsEvidence.gateStationId : undefined);
+  if(session.temporaryGateStationIds && (!gateId || !session.temporaryGateStationIds.includes(gateId))) {
+    res.status(403).json({message:"Use the Gate where your saved personal watch is active",code:VISIT_NO_ACCESS});return;
+  }
   let selectedGate = null;
   if (gateId) {
     if (!z.string().uuid().safeParse(gateId).success) { res.status(400).json({ message: "Invalid gate location", code: VISIT_INVALID_INPUT }); return; }
@@ -1777,6 +1810,7 @@ router.post("/visits/gate/:id/admit", async (req, res): Promise<void> => {
     res.status(404).json({ message: "Visit not found", code: VISIT_NOT_FOUND });
     return;
   }
+  if(!temporaryGateVisitAllowed(session,visit)) {res.status(404).json({message:"Visit not found",code:VISIT_NOT_FOUND});return;}
   const [gateAssignment] = await db
     .select({ id: siteWorkAssignmentsTable.id })
     .from(siteWorkAssignmentsTable)

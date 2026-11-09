@@ -37,6 +37,7 @@ import ProjectTimeline from "@/components/work-hub/project-timeline";
 import CalendarCreateCards from "@/components/work-hub/calendar-create-cards";
 import CalendarTaskFlyout from "@/components/work-hub/calendar-task-flyout";
 import GateCalendarScheduling from "@/components/work-hub/gate-calendar-scheduling";
+import GateCalendarStaffingWatch from "@/components/gate-calendar-staffing-watch";
 import { canAdministerCalendar } from "@/lib/calendar-action-permissions";
 import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
 import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/finance";
@@ -715,6 +716,7 @@ function CalendarModule() {
     <Shell module="calendar">
       <div className="hub-calendar-page" data-testid="work-hub-calendar-layout">
         {!employeeView && <WorkdayControls />}
+        {!employeeView && <GateCalendarStaffingWatch search={search} />}
         {user?.vendorId && <CoverageAcknowledgments owner={{type:"vendor",id:user.vendorId}} userId={user.userId} />}
         {employeeView && <p role={employeeContext.isError || !employeeLink.userId ? "alert" : "status"}>{employeeContext.isError || !employeeLink.userId ? "Employee calendar is unavailable or your access has changed." : employeeContext.data ? `${employeeContext.data.employee.name} — employee calendar` : "Loading employee calendar…"}</p>}
         {!employeeView && <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />}

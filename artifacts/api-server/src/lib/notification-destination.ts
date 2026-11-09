@@ -76,6 +76,21 @@ export async function resolveNotificationDestination(
   if (new Set(keys).size !== keys.length) return null;
   const path = url.pathname.replace(/^\/\(tabs\)/, "").replace(/^\/gate\/change-over$/, "/gate-change-over");
   const params = url.searchParams;
+  if (path === "/work-hub/calendar" && params.has("shiftId")) {
+    if (keys.length !== 4 || keys.some(key => !["shiftId","siteId","stationId","date"].includes(key)) || !uuid.test(params.get("shiftId")??"") || !uuid.test(params.get("stationId")??"") || !positiveId(params.get("siteId")) || !/^\d{4}-\d{2}-\d{2}$/.test(params.get("date")??"")) return null;
+    try {
+      const {validateAssistantSession} = await import("../assistant/chatgpt-grant-store");
+      await validateAssistantSession(session);
+      const [shift] = await db.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id,params.get("shiftId")!)).limit(1);
+      if (!shift || !sessionCanSeeOwner(session,shift.ownerOrgType,shift.ownerOrgId) || shift.siteLocationId !== Number(params.get("siteId")) || shift.gateStationId !== params.get("stationId")) return null;
+      const date = new Intl.DateTimeFormat("en-CA",{timeZone:shift.timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(shift.startsAt));
+      if (date !== params.get("date")) return null;
+      const {requireChangeOverAccess}=await import("../services/gate-change-over");
+      try { await requireChangeOverAccess(pool,session,shift.siteLocationId); }
+      catch { const {requireGateStationManagementAccess}=await import("../services/gate-change-over"); await requireGateStationManagementAccess(pool,session,shift.siteLocationId); }
+      return link;
+    } catch { return null; }
+  }
   const libraryPath=path.match(/^\/work-hub\/(training|checklist|library|bundle)\/([0-9a-f-]{36})$/i);
   if(libraryPath){if(keys.length||!uuid.test(libraryPath[2]))return null;try{if(["training","checklist"].includes(libraryPath[1])){const service=await import("../work-hub/training-service");await service.getAssignedLibrary({...session,userId:session.userId!},libraryPath[2]);}else{const service=await import("../work-hub/library-service");await service.getLibrary({...session,userId:session.userId!},libraryPath[2]);}return path;}catch{return null;}}
   if(path==="/gate/map"&&uuid.test(params.get("pinId")??"")&&keys.every(key=>["pinId","siteId"].includes(key))){

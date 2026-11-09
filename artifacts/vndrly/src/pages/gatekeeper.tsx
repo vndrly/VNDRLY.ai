@@ -62,6 +62,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
+import { useNextSteps } from "@/components/next-steps";
+import { useGuidedTarget } from "@/components/guided-target";
+import { gateCheckInTarget, gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers";
 import { useGateLiveMonitor } from "@/hooks/use-gate-live-monitor";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import {
@@ -366,6 +369,16 @@ export default function GatekeeperPage() {
   const selectedGateLocation = gateLocations.data?.stations.find(gate => gate.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
   useEffect(()=>setAreaDestination(''),[selectedGateLocation?.id]);
   const selectedPhysicalGate = areaTraffic.data?.gates.find(g=>g.id===selectedGateLocation?.id);
+  const helper = useNextSteps();
+  const guideContext = { siteId: site.data?.site.id, stationId: selectedGateLocation?.id, siteName: site.data?.site.name, stationName: selectedGateLocation?.name };
+  const entryScope = gateGuideScope("entry", guideContext);
+  const entryTarget = gateCheckInTarget({ firstName, lastName, plate: vehiclePlate, gateReady: Boolean(site.data && selectedGateLocation), online: navigator.onLine, busy });
+  const entryGuide = gateGuideMatches(helper?.selected, "gate-vehicle-check-in", guideContext);
+  const movementHelper = (["gate-inner-arrival", "gate-vehicle-check-out", "gate-early-turnaround", "gate-return-to-inner"] as const).find(key => gateGuideMatches(helper?.selected, key, guideContext));
+  const nextView = movementHelper === "gate-inner-arrival" ? "arrivals" : movementHelper === "gate-vehicle-check-out" && !selectedPhysicalGate?.topology?.area && hasSecureAreas ? "departures" : "active";
+  useGuidedTarget(entryTarget && { ...entryTarget, scopeId: entryScope }, entryGuide, 25);
+  useGuidedTarget({ scopeId: entryScope, targetId: `tab-${nextView}`, prompt: `Open ${nextView === "active" ? "On Site" : nextView === "arrivals" ? "Arrivals" : "Departures"} at this saved gate, then choose the actual vehicle record to guide.` }, Boolean(movementHelper && presenceView !== nextView && navigator.onLine), 20);
+  useGuidedTarget({ scopeId: entryScope, targetId: "open-log", prompt: "Open the saved Gate Log to inspect the selected site's actual recorded arrivals, departures and movements." }, gateGuideMatches(helper?.selected, "gate-map-and-log", guideContext), 20);
   const checkInDestinations = areaTraffic.data?.gates.filter(g=>g.active&&g.topology?.parentGateId===selectedGateLocation?.id) ?? [];
   const namedDestinations = selectedPhysicalGate?.topology?.destinations ?? [];
   const destinationDefaults = gateCheckInDestinationDefaults(areaTraffic.data?.gates??[],selectedGateLocation?.id);
@@ -1103,7 +1116,7 @@ export default function GatekeeperPage() {
   };
 
   const checkIn = async () => {
-    if (gateSaveInFlightRef.current) return;
+    if (gateSaveInFlightRef.current || !navigator.onLine) return;
     const { firstName, lastName, company, vehiclePlate, plateState, purpose, notes, expectedDuration: duration } = entryDraftRef.current;
     const context = site.data;
     if (
@@ -1125,7 +1138,7 @@ export default function GatekeeperPage() {
     setError(null);
     try {
       const minutes = Number.parseInt(duration, 10);
-      await visitsApi.gateCheckIn({
+      const savedVisit = await visitsApi.gateCheckIn({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         company: company.trim() || undefined,
@@ -1152,6 +1165,7 @@ export default function GatekeeperPage() {
       await queryClient.invalidateQueries({
         queryKey: ["gatekeeper-recent-visits"],
       });
+      if (savedVisit?.id && helper?.recordCompletion) void helper.recordCompletion("gate-vehicle-check-in", { recordType: "gate-visit", recordId: savedVisit.id, siteId: context.site.id });
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -1166,7 +1180,7 @@ export default function GatekeeperPage() {
   submitVoiceDraftRef.current = checkIn;
 
   const checkOut = async (id: number) => {
-    if (gateSaveInFlightRef.current) return;
+    if (gateSaveInFlightRef.current || !navigator.onLine) return;
     gateSaveInFlightRef.current = true;
     setBusy(true);
     setError(null);
@@ -1178,7 +1192,7 @@ export default function GatekeeperPage() {
         await queryClient.invalidateQueries({queryKey:['gate-area-traffic']});
         return;
       }
-      await visitsApi.gateCheckOut(
+      const savedVisit = await visitsApi.gateCheckOut(
         id,
         coords?.latitude,
         coords?.longitude,
@@ -1191,6 +1205,7 @@ export default function GatekeeperPage() {
       await queryClient.invalidateQueries({
         queryKey: ["gatekeeper-recent-visits"],
       });
+      if (savedVisit?.id && site.data?.site.id && helper?.recordCompletion) void helper.recordCompletion("gate-vehicle-check-out", { recordType: "gate-visit", recordId: savedVisit.id, siteId: site.data.site.id });
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -1220,7 +1235,7 @@ export default function GatekeeperPage() {
   };
 
   return (
-    <div className={FIELD_OPS_PAGE_CLASS} data-testid="gatekeeper-page">
+    <div className={FIELD_OPS_PAGE_CLASS} data-guidance-scope={entryScope} data-testid="gatekeeper-page">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("nav.dashboard")} testId="button-back" />
@@ -1401,6 +1416,7 @@ export default function GatekeeperPage() {
                 }
                 onFocus={() => setActiveMemoryField("vehiclePlate")}
                 data-testid="input-gate-plate"
+                data-guidance-id="plate"
                 className={`${WORK_HUB_BRANDED_FIELD_CLASS} font-bold tracking-widest`}
               />
               <PlateStatePicker
@@ -1439,6 +1455,7 @@ export default function GatekeeperPage() {
                   }
                   onFocus={() => setActiveMemoryField("firstName")}
                   data-testid="input-gate-first-name"
+                  data-guidance-id="first-name"
                   className={WORK_HUB_BRANDED_FIELD_CLASS}
                 />
               </div>
@@ -1461,6 +1478,7 @@ export default function GatekeeperPage() {
                   }
                   onFocus={() => setActiveMemoryField("lastName")}
                   data-testid="input-gate-last-name"
+                  data-guidance-id="last-name"
                   className={WORK_HUB_BRANDED_FIELD_CLASS}
                 />
               </div>
@@ -1611,9 +1629,11 @@ export default function GatekeeperPage() {
               onClick={() => void checkIn()}
               disabled={busy || !site.data}
               data-testid="button-gate-check-in"
+              data-guidance-id="save-check-in"
             >
               {busy ? t("gatekeeper.working") : t("gatekeeper.checkInVisitor")}
             </button>
+            {helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}
           </CardContent>
         </Card>
         <div className="min-w-0 space-y-3">
@@ -1628,15 +1648,15 @@ export default function GatekeeperPage() {
         >
           <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">
             <CardTitle className="gate-presence-tabs" role="group" aria-label={t("gatekeeper.activityViews")}>
-              <button type="button" className={`gate-presence-tab${((!hasSecureAreas&&arrivals.newInboundIds.size) || expectedAreaArrivals) ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "arrivals"} onClick={() => setPresenceView("arrivals")}>
+              <button data-guidance-id="tab-arrivals" type="button" className={`gate-presence-tab${((!hasSecureAreas&&arrivals.newInboundIds.size) || expectedAreaArrivals) ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "arrivals"} onClick={() => setPresenceView("arrivals")}>
                 {t("gatekeeper.arrivalsTab")}{expectedAreaArrivals>0&&` (${expectedAreaArrivals})`}
               </button>
               <span className="gate-presence-divider" aria-hidden="true">|</span>
-              <button type="button" className="gate-presence-tab" aria-pressed={presenceView === "active"} onClick={() => setPresenceView("active")}>
+              <button data-guidance-id="tab-active" type="button" className="gate-presence-tab" aria-pressed={presenceView === "active"} onClick={() => setPresenceView("active")}>
                 {t("gatekeeper.onSiteTab")}
               </button>
               <span className="gate-presence-divider" aria-hidden="true">|</span>
-              <button type="button" className={`gate-presence-tab${expectedAreaDepartures ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "departures"} onClick={() => setPresenceView("departures")}>
+              <button data-guidance-id="tab-departures" type="button" className={`gate-presence-tab${expectedAreaDepartures ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "departures"} onClick={() => setPresenceView("departures")}>
                 {t("gatekeeper.departuresTab")}{expectedAreaDepartures>0&&` (${expectedAreaDepartures})`}
               </button>
             </CardTitle>
@@ -1734,6 +1754,7 @@ export default function GatekeeperPage() {
             </div>
             {site.data ? <div className="flex shrink-0 justify-end pt-1">
               <Link className="gate-log-text-link"
+                data-guidance-id="open-log"
                 href={`/gate/history?siteLocationId=${site.data.site.id}`}
                 data-testid="button-gate-full-history"
               >

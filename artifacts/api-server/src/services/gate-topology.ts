@@ -100,7 +100,7 @@ export const movementSchema=z.object({siteId:z.number().int().positive(),gateId:
 export async function recordGateMovement(session:SessionPayload,input:z.infer<typeof movementSchema>) {
   if(session.publicDemo||session.realm==='demo')fail(403,'This session is read only.');
   return changeOverTransaction(async c=>{
-    await requireChangeOverAccess(c,session,input.siteId);
+    await requireChangeOverAccess(c,session,input.siteId,{stationId:input.gateId});
     const gate=(await c.query('SELECT id,name,topology FROM gate_stations WHERE id=$1 AND site_id=$2 AND active=true',[input.gateId,input.siteId])).rows[0];
     if(!gate)fail(404,'Gate unavailable at this site.');
     const visit=(await c.query('SELECT id,gate_station_id,gate_movements,check_out_time FROM site_visits WHERE id=$1 AND site_location_id=$2 FOR UPDATE',[input.visitId,input.siteId])).rows[0];

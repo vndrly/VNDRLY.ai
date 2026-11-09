@@ -4,6 +4,7 @@ const io = vi.hoisted(() => ({ where: vi.fn() }));
 vi.mock("@workspace/db", async () => ({
   ...await import("../../../../lib/db/src/schema/index"),
   db: { select: () => ({ from: () => ({ where: io.where }) }) },
+  pool: { query: vi.fn(async (sql: string) => { if (sql.includes("SELECT DISTINCT recipient.user_id")) return { rows: [] }; throw Error("Unexpected push fixture query"); }) },
 }));
 import { sendPushToUser } from "./expo-push";
 afterEach(() => vi.unstubAllGlobals());

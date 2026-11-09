@@ -2,15 +2,36 @@ import {cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
 import {QueryClient,QueryClientProvider} from "@tanstack/react-query";
 import {describe,it,expect,vi,beforeEach,afterEach} from "vitest";
 import {ShiftAssignments} from "./shift-assignments";
-const state=vi.hoisted(()=>({request:vi.fn()}));
+const state=vi.hoisted(()=>({request:vi.fn(),helper:null as any}));
+vi.mock("@/components/next-steps",()=>({useNextSteps:()=>state.helper}));
 vi.mock("@/lib/work-hub-client",async original=>({...await original<any>(),workHubRequest:state.request}));
 vi.mock("@/components/png-pill-rollover",()=>({PngPillButton:({color,children,...props}:any)=><button {...props}>{children}</button>}));
 vi.mock("@/hooks/use-brand",()=>({useBrand:()=>({name:"GateGo",primary:"#f1b637"})}));
 const shift={id:"one",version:1,title:"Day",pattern:"Main Gate Day",date:"2099-10-25",weekday:0,starts:"06:00",ends:"18:00",startsAt:"2099-10-25T11:00:00.000Z",endsAt:"2099-10-25T23:00:00.000Z",timezone:"America/Chicago",required:1,assignees:[]};
-beforeEach(()=>state.request.mockReset().mockResolvedValue({shifts:[shift],people:[{id:7,name:"Gatekeeper One"}],busy:[],readOnly:true}));
+beforeEach(()=>{state.helper=null;state.request.mockReset().mockResolvedValue({shifts:[shift],people:[{id:7,name:"Gatekeeper One"}],busy:[],readOnly:true});});
 afterEach(()=>{cleanup();window.history.replaceState({},"","/");});
 function mount(mode:"assign"|"gaps"){render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><ShiftAssignments owner={{type:"vendor",id:5}} siteId={9} mode={mode}/></QueryClientProvider>);}
 describe("assignment views",()=>{
+ it("completes scheduling only after the selected shift reloads with its saved assignment",async()=>{
+  window.history.replaceState({},"","/work-hub/calendar?siteId=9&stationId=main&shiftId=one&date=2099-10-25&employee=7");
+  state.helper={enabled:true,selected:{id:"gate-shift-scheduling",context:{siteId:9,stationId:"main",shiftId:"one"}},recordCompletion:vi.fn().mockResolvedValue(true),startHelper:vi.fn()};
+  let saved=false;state.request.mockImplementation(async(_path,options)=>{if(options?.method){saved=true;return {resource:{changed:1}};}return {shifts:[{...shift,assignees:saved?[7]:[]}],people:[{id:7,name:"Gatekeeper One"}],busy:[],readOnly:false};});
+  mount("assign");const checkbox=await screen.findByLabelText("Main Gate Day Sun");expect(checkbox.getAttribute("data-guidance-id")).toBe("shift-one");
+  expect(state.helper.recordCompletion).not.toHaveBeenCalled();fireEvent.click(checkbox);fireEvent.click(screen.getByText("Review assignments"));expect(state.helper.recordCompletion).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByText("Save assignments"));await waitFor(()=>expect(state.helper.recordCompletion).toHaveBeenCalledWith("gate-shift-scheduling",{recordType:"gate-scheduled-shift",recordId:"one",siteId:9}));
+ });
+ it("uses the staffing alert's exact saved date and shift for reassignment",async()=>{
+  window.history.replaceState({},"","/work-hub/calendar?siteId=9&stationId=main&shiftId=one&date=2099-10-25&employee=7");
+  state.request.mockResolvedValue({shifts:[{...shift,assignees:[8]},{...shift,id:"other",pattern:"Other Gate",assignees:[]}],people:[{id:7,name:"Gatekeeper One"},{id:8,name:"Gatekeeper Two"}],busy:[],readOnly:false});
+  mount("assign");await screen.findByLabelText("Main Gate Day Sun");
+  expect((screen.getByLabelText("Schedule from") as HTMLInputElement).value).toBe("2099-10-25");
+  expect((screen.getByLabelText("Schedule through") as HTMLInputElement).value).toBe("2099-10-25");
+  expect(screen.queryByLabelText("Other Gate Sun")).toBeNull();
+  fireEvent.click(screen.getByLabelText("Main Gate Day Sun"));fireEvent.click(screen.getByText("Yes Reassign Shift"));
+  fireEvent.click(screen.getByText("Review assignments"));fireEvent.click(screen.getByText("Save assignments"));
+  await screen.findByText("Assignments saved.");
+  expect(JSON.parse(state.request.mock.calls.find(call=>call[1]?.method==="POST")![1].body).payload.changes).toEqual([{id:"one",version:1,addUserId:7,removeUserId:8}]);
+ });
  it("opens the exact saved next-step shift and worker without making assignments",async()=>{
   window.history.replaceState({},"","/work-hub/calendar?siteId=9&stationId=main&shiftId=one&day=2099-10-25&employee=7");
   state.request.mockResolvedValue({shifts:[shift,{...shift,id:"other",pattern:"Other Gate"}],people:[{id:7,name:"Gatekeeper One"}],busy:[],readOnly:false});

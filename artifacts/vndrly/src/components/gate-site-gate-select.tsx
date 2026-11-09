@@ -60,7 +60,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
       (references(row, other) || references(other, row)));
     return [row.name, ...peers.map(peer => peer.name)].join(" | ");
   };
-  const selector = <BrandedSelect className="gate-dashboard-location-select" aria-label={label} data-testid={testId}
+  const selector = <BrandedSelect data-guidance-id="choose-gate" className="gate-dashboard-location-select" aria-label={label} data-testid={testId}
           onFocus={() => setChoicesRequested(true)}
           value={gate ? gate.id : ""} onChange={event => {
             if (allOptionLabel && !event.target.value) { onChange(0, ""); return; }

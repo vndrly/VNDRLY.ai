@@ -1,3 +1,4 @@
+import { NextStepsProvider } from "@/components/next-steps";
 import TrainingCachePrefetch from "@/components/work-hub/training-cache-prefetch";
 import { trainingProgressMethod } from "@/lib/training-progress-experiment";
 import { Redirect, Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
@@ -499,11 +500,13 @@ function App() {
           <TrainingCachePrefetch />
           <BrandProvider>
             <ThemeProvider>
-              <NotificationsModalProvider>
-                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                  <AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary>
-                </WouterRouter>
-              </NotificationsModalProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <NextStepsProvider>
+                  <NotificationsModalProvider>
+                    <AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary>
+                  </NotificationsModalProvider>
+                </NextStepsProvider>
+              </WouterRouter>
               <Toaster />
             </ThemeProvider>
           </BrandProvider>

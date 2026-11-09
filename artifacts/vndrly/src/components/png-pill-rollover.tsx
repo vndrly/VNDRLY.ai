@@ -306,6 +306,7 @@ interface PngPillButtonProps {
   "aria-pressed"?: boolean;
   "aria-selected"?: boolean;
   "data-testid"?: string;
+  "data-guidance-id"?: string;
 }
 
 /** Interactive pill — two PNG layers: idle crossfades to hover. */
@@ -363,6 +364,7 @@ export function PngPillButton({
       )}
       style={exactPillHeight(height)}
       data-testid={props["data-testid"]}
+      data-guidance-id={props["data-guidance-id"]}
       role={props.role}
       data-modal-pill-action={hasVisiblePillLabel(children) || undefined}
       aria-label={props["aria-label"]}

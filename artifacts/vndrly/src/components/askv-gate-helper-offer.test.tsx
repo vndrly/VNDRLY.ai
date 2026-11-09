@@ -1,0 +1,20 @@
+import {beforeEach,describe,it,expect,vi} from 'vitest';
+import {render,screen,fireEvent,cleanup} from '@testing-library/react';
+const state=vi.hoisted(()=>({user:{userId:7,role:'vendor',vendorRole:'office',vendorId:3,activeMembershipId:8}as any,next:{enabled:true,scope:'company3-user7',count:0,selected:null as any,startHelper:vi.fn(()=>true)}}));
+vi.mock('@/hooks/use-auth',()=>({useAuth:()=>({user:state.user})}));
+vi.mock('./next-steps',()=>({useNextSteps:()=>state.next}));
+vi.mock('wouter',()=>({useLocation:()=>['/gate',vi.fn()]}));
+vi.mock('react-i18next',()=>({useTranslation:()=>({i18n:{language:'en'}})}));
+import {AskVGateHelperOffer,gateHelperForInstruction} from './askv-gate-helper-offer';
+import {registerGateHelper,type GateHelperDefinition} from '@/lib/gate-helper-registry';
+const checkIn:GateHelperDefinition={key:'gate-vehicle-check-in',title:'Check in a vehicle',description:'Guide the actual saved visit',access:'gate',keywords:['check in vehicle','check in a vehicle'],create:()=>null};
+registerGateHelper(checkIn);
+beforeEach(()=>{cleanup();state.next.enabled=true;state.next.scope='company3-user7';state.next.selected=null;state.next.startHelper.mockReset().mockReturnValue(true);state.user={userId:7,role:'vendor',vendorRole:'office',vendorId:3,activeMembershipId:8};window.history.replaceState({},'', '/gate?siteId=411&stationId=12345678-1234-1234-1234-123456789012');});
+describe('Ask V offers the existing Gate helper without performing business operations',()=>{
+ it('offers how-to guidance after automatic mastery suggestions are gone, starts only on explicit click',()=>{const started=vi.fn();render(<AskVGateHelperOffer question="How do I check in a vehicle?" onStarted={started}/>);expect(state.next.count).toBe(0);expect(state.next.startHelper).not.toHaveBeenCalled();fireEvent.click(screen.getByRole('button',{name:'Start guided helper'}));expect(state.next.startHelper).toHaveBeenCalledWith('gate-vehicle-check-in',expect.objectContaining({siteId:411,stationId:'12345678-1234-1234-1234-123456789012'}));expect(started).toHaveBeenCalledOnce();});
+ it('does not hijack ordinary Gate commands or offer nonexistent payroll guidance',()=>{const view=render(<AskVGateHelperOffer question="Check in a vehicle for Bob"/>);expect(screen.queryByTestId('askv-gate-helper-offer')).toBeNull();view.rerender(<AskVGateHelperOffer question="How do I run payroll?"/>);expect(screen.queryByTestId('askv-gate-helper-offer')).toBeNull();});
+ it('does not offer office-only employee setup to a gatekeeper',()=>{state.user.role='field_employee';state.user.vendorRole='gatekeeper';render(<AskVGateHelperOffer question="How do I add an employee?"/>);expect(screen.queryByTestId('askv-gate-helper-offer')).toBeNull();});
+ it('keeps the current helper rather than silently replacing it',()=>{state.next.selected={id:'gate-watch-handoff'};render(<AskVGateHelperOffer question="How do I check in a vehicle?"/>);expect(screen.getByRole('button',{name:'Start guided helper'})).toHaveProperty('disabled',true);expect(state.next.startHelper).not.toHaveBeenCalled();});
+ it('resets success on company scope switch and reports unavailable launch without claiming success',()=>{const view=render(<AskVGateHelperOffer question="How do I check in a vehicle?"/>);fireEvent.click(screen.getByRole('button',{name:'Start guided helper'}));expect(screen.getByText('Helper started')).toBeTruthy();state.next.scope='company4-user7';state.next.startHelper.mockReturnValue(false);view.rerender(<AskVGateHelperOffer question="How do I check in a vehicle?"/>);fireEvent.click(screen.getByRole('button',{name:'Start guided helper'}));expect(screen.getByRole('status').textContent).toMatch(/unavailable/);});
+ it('prefers the most specific supported workflow phrase',()=>{const generic={...checkIn,keywords:['check in']};const early={...checkIn,key:'gate-early-turnaround' as const,keywords:['exit before inner arrival']};expect(gateHelperForInstruction('How do I check in or exit before inner arrival?',[generic,early],true)?.key).toBe('gate-early-turnaround');});
+});

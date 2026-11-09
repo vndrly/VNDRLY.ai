@@ -11,13 +11,15 @@ import {useAuth} from "@/hooks/use-auth";
 import {apiFetch} from "@/lib/api";
 import {calendarDayItems,calendarMonthRange,type UnifiedCalendarItem} from "@/lib/unified-work-calendar";
 import {useUnifiedWorkCalendar} from "@/lib/use-unified-work-calendar";
+import GateStaffingCalendarShift from "./GateStaffingCalendarShift";
+import {gateStaffingCalendarDay,type GateStaffingCalendarContext} from "@/lib/gate-staffing-calendar";
 export {useUnifiedWorkCalendar} from "@/lib/use-unified-work-calendar";
 function recordTime(value:string,timezone:string|null){try{return new Date(value).toLocaleString([],timezone?{timeZone:timezone}:undefined);}catch{return new Date(value).toLocaleString();}}
 
-export default function UnifiedWorkCalendar({initialDate=new Date()}:{initialDate?:Date}){
- const {user,activeMembershipId}=useAuth();return <Calendar key={`${user?.id}:${activeMembershipId}`} initialDate={initialDate}/>;
+export default function UnifiedWorkCalendar({initialDate=new Date(),staffingContext}:{initialDate?:Date;staffingContext?:GateStaffingCalendarContext|null}){
+ const {user,activeMembershipId}=useAuth();return <Calendar key={`${user?.id}:${activeMembershipId}:${staffingContext?.shiftId??""}:${staffingContext?.date??""}`} initialDate={staffingContext?gateStaffingCalendarDay(staffingContext.date):initialDate} staffingContext={staffingContext}/>;
 }
-function Calendar({initialDate}:{initialDate:Date}){
+function Calendar({initialDate,staffingContext}:{initialDate:Date;staffingContext?:GateStaffingCalendarContext|null}){
  const colors=useColors(),router=useRouter(),{user}=useAuth();
  const [day,setDay]=useState(initialDate),[menu,setMenu]=useState(false),[form,setForm]=useState<"field"|"shift"|"meeting"|null>(null),[opened,setOpened]=useState<{title:string;status?:string;startsAt?:string;endsAt?:string}|null>(null),[notice,setNotice]=useState("");
  const range=calendarMonthRange(day),query=useUnifiedWorkCalendar(range),items=query.data?.items??[],cap=query.data?.capabilities;
@@ -30,6 +32,7 @@ function Calendar({initialDate}:{initialDate:Date}){
  return <View style={{borderWidth:2,borderColor:colors.primary,borderRadius:16,padding:14,gap:12,backgroundColor:colors.card}}>
   <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><Text style={{...text,fontFamily:"Inter_700Bold",fontWeight:"700",fontSize:20}}>Work calendar</Text>{canSchedule&&<TogglePillButton compactOnTablet accessibilityState={{expanded:menu}} onPress={()=>setMenu(!menu)}>Schedule</TogglePillButton>}</View>
   <Text style={muted}>Daily company work across shifts, meetings, field tickets, and Fleet runs. Scheduling reserves planned time; it does not start work.</Text>
+  {staffingContext&&<GateStaffingCalendarShift context={staffingContext}/>}
   {menu&&<View style={{gap:8}}>{cap?.fieldTicket&&<TogglePillButton compactOnTablet onPress={()=>{setForm("field");setMenu(false);}}>Field ticket</TogglePillButton>}{cap?.fleetRun&&<TogglePillButton compactOnTablet onPress={()=>{setMenu(false);router.push("/fleet" as never);}}>Fleet run</TogglePillButton>}{cap?.shift&&<TogglePillButton compactOnTablet onPress={()=>{setForm("shift");setMenu(false);}}>Gate / other shift</TogglePillButton>}{cap?.meeting&&<TogglePillButton compactOnTablet onPress={()=>{setForm("meeting");setMenu(false);}}>Meeting</TogglePillButton>}</View>}
   {form&&form!=="field"&&<View style={{gap:10}}><TogglePillButton compactOnTablet onPress={()=>setForm(null)}>Close scheduling</TogglePillButton>{form==="shift"?<ShiftScheduling onSaved={saved}/>:<MeetingScheduling onSaved={saved}/>}</View>}
   {form==="field"&&user?.vendorId&&<ForemanScheduleTicketsModal visible vendorId={user.vendorId} onClose={()=>setForm(null)} onScheduled={()=>void saved()}/>}

@@ -7,7 +7,7 @@ import { logger } from './logger';
 export const NOTIFICATION_COMPANY_HOLDS = [{ vendorId: 1054, company: 'MidCon Solutions', reason: 'Paused until John explicitly instructs resume', expiresAt: null }] as const;
 type QueryClient = { query(sql: string, values: any[]): Promise<{ rows: any[] }> };
 
-export async function pausedNotificationUserIds(userIds: number[], client?: QueryClient): Promise<Set<number>> {
+export async function pausedNotificationUserIds(userIds: number[], client?: QueryClient, options: { throwOnLookupError?: boolean } = {}): Promise<Set<number>> {
   if (!userIds.length) return new Set();
   try {
     const { rows } = await (client ?? pool).query(`SELECT DISTINCT recipient.user_id FROM (
@@ -19,6 +19,9 @@ export async function pausedNotificationUserIds(userIds: number[], client?: Quer
   } catch (error) {
     // A failed lookup must not turn a held recipient's notifications back on.
     logger.warn({ error: error instanceof Error ? error.name : 'lookup_failed' }, 'Notification company hold lookup unavailable; delivery withheld');
+    // Durable queue decisions must distinguish a confirmed hold from a lookup
+    // outage. Provider guards retain the default fail-closed result below.
+    if (options.throwOnLookupError) throw error;
     return new Set(userIds);
   }
 }

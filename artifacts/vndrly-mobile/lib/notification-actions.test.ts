@@ -60,4 +60,23 @@ describe("authorized notification actions", () => {
   await handleNotificationAction(NOTIFICATION_ACTIONS.read,{notificationId:47},router);
   expect(state.api.mock.calls.filter(call=>call[0].endsWith("/read")).map(call=>call[0])).toEqual(["/api/notifications/47/read","/api/notifications/47/read"]);
  });
+ it("acknowledges a shared staffing notice through the owned push action without writing read state",async()=>{
+  state.api.mockResolvedValueOnce({href:`/work-hub/calendar?siteId=399&stationId=22222222-2222-4222-8222-222222222222&shiftId=${meeting}&date=2026-11-09`}).mockResolvedValueOnce({alert:{id:"incident",shiftId:meeting,siteId:399,stationId:"22222222-2222-4222-8222-222222222222",status:"acknowledged",acknowledgedAt:"2026-11-09T12:00:00Z",acknowledgedBy:{userId:22,name:"Other admin"}}});
+  const router={push:vi.fn()};
+  expect(await handleNotificationAction(NOTIFICATION_ACTIONS.acknowledge,{notificationId:51},router)).toBe("handled");
+  expect(state.api.mock.calls.map(call=>call[0])).toEqual(["/api/notifications/51/resolve","/api/notifications/51/acknowledge"]);
+  expect(state.api.mock.calls[1][1]).toEqual({method:"POST",body:JSON.stringify({channel:"push"})});
+  expect(router.push).toHaveBeenCalledExactlyOnceWith("/notifications");
+ });
+ it("does not acknowledge staffing when context changes during canonical resolution",async()=>{
+  state.api.mockImplementationOnce(async()=>{state.generation++;return {href:`/work-hub/calendar?siteId=399&stationId=22222222-2222-4222-8222-222222222222&shiftId=${meeting}&date=2026-11-09`};});
+  expect(await handleNotificationAction(NOTIFICATION_ACTIONS.acknowledge,{notificationId:52},{push:vi.fn()})).toBe("unavailable");
+  expect(state.api).toHaveBeenCalledTimes(1);
+ });
+ it("does not claim staffing acknowledgment when the returned saved result belongs to another shift",async()=>{
+  state.api.mockResolvedValueOnce({href:`/work-hub/calendar?siteId=399&stationId=22222222-2222-4222-8222-222222222222&shiftId=${meeting}&date=2026-11-09`}).mockResolvedValueOnce({alert:{shiftId:"other",siteId:399,stationId:"22222222-2222-4222-8222-222222222222",status:"acknowledged"}});
+  const router={push:vi.fn()};
+  expect(await handleNotificationAction(NOTIFICATION_ACTIONS.acknowledge,{notificationId:53},router)).toBe("unavailable");
+  expect(router.push).not.toHaveBeenCalled();
+ });
 });

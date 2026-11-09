@@ -97,7 +97,7 @@ async function stationWithAccess(
     )
   ).rows[0];
   if (!station) fail(404, "not_found", "Gate not found");
-  const access = await requireChangeOverAccess(client, session, station.site_id);
+  const access = await requireChangeOverAccess(client, session, station.site_id,{stationId});
   if (requireActive && station.active === false)
     fail(409, "station_inactive", "This gate is inactive");
   return { station, access };

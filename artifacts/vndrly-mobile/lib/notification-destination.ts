@@ -1,5 +1,6 @@
 import { apiFetch } from "./api";
 import { FleetRunSchema } from "@workspace/api-zod";
+import { parseGateStaffingCalendarParams } from "./gate-staffing-calendar";
 
 type WorkKind =
   | "shift"
@@ -15,6 +16,7 @@ export type NotificationTarget =
   | { kind: WorkKind; id: string; messageId?: string }
   | { kind: "credential"; id: string }
   | { kind: "safety"; id: string }
+  | { kind: "staffing"; id: string; siteId: string; stationId: string; date: string; href: string }
   | { kind: "handoff"; id: string; stationId: string; siteId?: string }
   | { kind: "gate"; id: string; stationId?: string; siteId?: string };
 const uuid =
@@ -44,6 +46,11 @@ export function parseNotificationTarget(
     const params = url.searchParams;
     const keys = [...params.keys()];
     if (new Set(keys).size !== keys.length) return null;
+    if (path === "/work-hub/calendar" && params.has("shiftId")) {
+      if (keys.some(key => !["siteId", "stationId", "shiftId", "date"].includes(key))) return null;
+      const context = parseGateStaffingCalendarParams(Object.fromEntries(params));
+      return context ? { kind: "staffing", id: context.shiftId, siteId: context.siteId, stationId: context.stationId, date: context.date, href } : null;
+    }
     const ticketId=path.match(/^\/tickets?\/([1-9]\d*)$/)?.[1];
     if(ticketId)return !keys.length&&positiveId(ticketId)?{kind:"ticket",id:ticketId}:null;
     const fleetId=path.match(/^\/fleet\/runs\/([^/]+)$/)?.[1];
@@ -199,6 +206,12 @@ function content(
 export async function loadNotificationDestination(
   target: NotificationTarget,
 ): Promise<NotificationDestinationContent> {
+  if (target.kind === "staffing") {
+    const data = await apiFetch<{ item: RecordData }>(`/api/work-hub/calendar/items/shift/${target.id}`);
+    if (String(data.item?.siteLocationId) !== target.siteId || data.item?.gateStationId !== target.stationId)
+      throw new Error("notification.unavailable");
+    return content(target, data.item);
+  }
   if(target.kind==="ticket"){
     const ticket=await apiFetch<RecordData>(`/api/tickets/${target.id}`);
     if(!ticket)throw new Error("notification.unavailable");

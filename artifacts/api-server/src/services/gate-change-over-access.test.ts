@@ -21,6 +21,7 @@ it("keeps an inactive stop-work site readable only while its gate assignment rem
         return gateRoleCurrent
           ? { rows: [{ vendor_role: "gatekeeper" }], rowCount: 1 }
           : { rows: [], rowCount: 0 };
+      if (sql.startsWith("SELECT DISTINCT d.station_id")) return {rows:[],rowCount:0};
       throw new Error(`Unexpected query: ${sql}`);
     },
   };

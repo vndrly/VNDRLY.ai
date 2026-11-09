@@ -4184,6 +4184,22 @@
     "mismatch": "Passwords do not match."
   },
   "errors": {
+    "staffing_alert": {
+      "invalid_request": "Review the staffing alert and try again.",
+      "sign_in_required": "Sign in to review Gate staffing.",
+      "session_changed": "Your session changed. Sign in again.",
+      "company_changed": "Return to your current company and try again.",
+      "membership_required": "Current company membership is required.",
+      "not_found": "This staffing alert is no longer available.",
+      "read_only": "Demo access is read only.",
+      "invalid_channel": "Choose a supported acknowledgment method.",
+      "admin_required": "A current administrator of the owning company must acknowledge this alert."
+    },
+    "workflow_helper": {
+      "forbidden": "Current access to this company and Gate site is required.",
+      "invalid_completion": "Choose this Gate workflow’s actual saved record.",
+      "saved_completion_required": "Complete and save this Gate workflow before recording helper progress."
+    },
     "coi": {
       "forbidden": "Current company administrator access is required to save a certificate of insurance.",
       "invalid_upload": "Choose your finalized private PDF or image upload (up to 25 MB)."

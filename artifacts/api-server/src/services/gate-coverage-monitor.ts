@@ -107,6 +107,10 @@ export async function setGateCoverageStatus(
         ],
       )
     ).rows[0];
+    if(input.mode!=="active") {
+      const {stopGateStaffingAlertsForCoveragePause}=await import("./gate-staffing-alerts");
+      await stopGateStaffingAlertsForCoveragePause(client,input.stationId);
+    }
     if (input.mode === "closed" && previous?.mode !== "closed") closureSiteId = Number(station.site_id);
     return {
       stationId: row.station_id,
@@ -253,37 +257,8 @@ async function saveRecord(
 }
 
 async function deliver(notice: GateCoverageNotice) {
-  if (!notice.recipientUserIds.length) return;
-  const { notifyUsers } = await import("../routes/notifications");
-  if (notice.kind === "watch_radar") {
-    await notifyUsers(notice.recipientUserIds, {
-      type: "gate_watch_radar",
-      category: "crew",
-      title: `${notice.candidate.stationName} watch needs staffing`,
-      body: `${notice.candidate.title} starts within 24 hours and has nobody assigned.`,
-      link: "/work-hub/workforce-coverage",
-      dedupeKey: `gate-watch-radar:${notice.candidate.shiftId}`,
-      forceImmediateDelivery: true,
-    });
-    return;
-  }
-  const gap = notice.candidate.requiredCount - notice.candidate.actualCount;
-  const restored = notice.kind === "restored";
-  await notifyUsers(notice.recipientUserIds, {
-    type: restored ? "gate_coverage_restored" : `gate_coverage_${notice.kind}`,
-    category: "crew",
-    title: restored
-      ? `${notice.candidate.stationName} coverage restored`
-      : `${notice.candidate.stationName} is ${notice.kind}`,
-    body: restored
-      ? `${notice.candidate.actualCount} of ${notice.candidate.requiredCount} required gatekeepers are now on duty.`
-      : notice.kind === "unconfirmed"
-        ? "Relief has not assumed the watch and the previous watch is still open. Confirm who is at the gate or arrange backup."
-        : `${gap} required Gate position${gap === 1 ? " is" : "s are"} still open. Assume the Gate or share your ETA now.`,
-    link: "/work-hub/workforce-coverage",
-    dedupeKey: `gate-coverage:${notice.candidate.shiftId}:${notice.kind}:${Math.floor(notice.at.getTime() / TEN_MINUTES)}`,
-    forceImmediateDelivery: true,
-  });
+  const { reconcileGateStaffingAlert } = await import("./gate-staffing-alerts");
+  await reconcileGateStaffingAlert(notice);
 }
 
 export const databaseGateCoverageDependencies: GateCoverageDependencies = {
@@ -301,12 +276,27 @@ export async function evaluateGateCoverage(
   const results: Array<{ shiftId: string; state: string }> = [];
   for (const candidate of await dependencies.loadCandidates(at)) {
     const prior = await dependencies.getRecord(candidate.shiftId);
+    if (paused(candidate, at)) {
+      await dependencies.saveRecord({
+        shiftId: candidate.shiftId,
+        stationId: candidate.stationId,
+        state: "resolved",
+        lastReminderAt: prior?.lastReminderAt ?? null,
+        requiredCount: candidate.requiredCount,
+        actualCount: candidate.actualCount,
+        at,
+      });
+      results.push({ shiftId: candidate.shiftId, state: "paused" });
+      continue;
+    }
     if (candidate.startsAt.getTime() > at.getTime()) {
       const startsWithinRadarWindow = candidate.startsAt.getTime() - at.getTime() <= TWENTY_FOUR_HOURS;
       const needsStaffing = startsWithinRadarWindow && candidate.assignedUserIds.length === 0;
       if (needsStaffing) {
         const firstAlert = prior?.state !== "watch_radar";
-        if (firstAlert) await dependencies.deliver({
+        // Reconcile the current saved context on every radar evaluation. The
+        // shared episode owns notification deduplication, including Gate moves.
+        await dependencies.deliver({
           kind: "watch_radar",
           candidate,
           recipientUserIds: candidate.recipientUserIds,
@@ -336,32 +326,19 @@ export async function evaluateGateCoverage(
       }
       continue;
     }
-    if (paused(candidate, at)) {
-      await dependencies.saveRecord({
-        shiftId: candidate.shiftId,
-        stationId: candidate.stationId,
-        state: "resolved",
-        lastReminderAt: prior?.lastReminderAt ?? null,
-        requiredCount: candidate.requiredCount,
-        actualCount: candidate.actualCount,
-        at,
-      });
-      results.push({ shiftId: candidate.shiftId, state: "paused" });
-      continue;
-    }
     const covered = candidate.actualCount >= candidate.requiredCount;
     if (covered) {
       const shouldRestore = Boolean(
         prior && ["uncovered", "understaffed", "unconfirmed", "escalated"].includes(prior.state),
       );
-      if (shouldRestore) {
-        await dependencies.deliver({
-          kind: "restored",
-          candidate,
-          recipientUserIds: candidate.recipientUserIds,
-          at,
-        });
-      }
+      // The incident may predate the monitor record (or an assigned radar
+      // warning). Recheck saved coverage even when no legacy restoration is due.
+      await dependencies.deliver({
+        kind: "restored",
+        candidate,
+        recipientUserIds: candidate.recipientUserIds,
+        at,
+      });
       await dependencies.saveRecord({
         shiftId: candidate.shiftId,
         stationId: candidate.stationId,

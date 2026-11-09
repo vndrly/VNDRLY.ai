@@ -1,3 +1,4 @@
+import { staffingDeliveryAllowed, staffingSmsCode, isStaffingNotificationType } from "../lib/staffing-notification-policy";
 import { notificationCompanyHoldApplies } from "../lib/notification-company-hold";
 import { randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
@@ -55,6 +56,14 @@ export async function loadGateAlertRecipient(userId: number): Promise<Recipient 
 const revokeSql = `UPDATE notification_preferences SET alerts_sms_enabled = false,
   alerts_sms_opted_in_at = NULL, alerts_sms_consent_fingerprint = NULL, updated_at = now()
   WHERE user_id = $1 AND alerts_sms_consent_fingerprint = $2 AND alerts_sms_opted_in_at = $3`;
+
+/** Persistence needs a definite denial; provider guards may instead fail closed. */
+async function staffingWorkMayProceed(notice: { id: number; type?: string }): Promise<boolean> {
+  if (!isStaffingNotificationType(notice.type)) return true;
+  const { staffingNotificationMayDeliver } = await import("./gate-staffing-alerts");
+  return staffingNotificationMayDeliver(notice.id, { strictHoldLookup: true });
+}
+
 export const gateAlertDependencies: GateAlertDependencies = {
   loadRecipient: loadGateAlertRecipient,
   authorized: async (notice, recipient) => {
@@ -74,6 +83,7 @@ export const gateAlertDependencies: GateAlertDependencies = {
         AND d.channel = ANY($3::text[]) AND d.status = 'retryable'`, [notice.id, notice.userId, channels, reason]);
   },
   async claim(notice, channel, consentFingerprint, consentOptedInAt) {
+    if (!await staffingWorkMayProceed(notice)) { await gateAlertDependencies.cancelRetryable(notice,["push","email","sms"],"staffing_alert_silenced"); return null; }
     const { rows } = await pool.query(`INSERT INTO notification_channel_deliveries
       (notification_id,channel,attempt_token,consent_fingerprint,consent_opted_in_at)
       SELECT n.id,$3,$4,$5,$6 FROM notifications n WHERE n.id = $1 AND n.user_id = $2
@@ -97,6 +107,7 @@ export const gateAlertDependencies: GateAlertDependencies = {
     [result.notificationId, result.channel, result.attemptToken, result.status, result.errorCode, result.providerMessageId ?? null]);
   },
   async push(notice, recipient) {
+    if (!await staffingDeliveryAllowed(notice)) return {accepted:false,status:"skipped",errorCode:"staffing_alert_silenced"};
     const { sendGateAlertPush } = await import("./gate-alert-push");
     const { countGateUnreadNotifications } = await import("../routes/notifications");
     let badge: number;
@@ -105,6 +116,7 @@ export const gateAlertDependencies: GateAlertDependencies = {
     return sendGateAlertPush(notice, badge);
   },
   async email(notice, recipient) {
+    if (!await staffingDeliveryAllowed(notice)) return {accepted:false,status:"skipped",errorCode:"staffing_alert_silenced"};
     const { sendNotificationAlertEmail, SendGridMailError } = await import("../lib/sendgrid");
     try {
       const receipt = await sendNotificationAlertEmail({ to: recipient.email!, title: notice.title, body: notice.body,
@@ -116,6 +128,10 @@ export const gateAlertDependencies: GateAlertDependencies = {
     }
   },
   async sms(input) {
+    if (input.notificationId) {
+      const notice = (await pool.query("SELECT id,type FROM notifications WHERE id=$1",[input.notificationId])).rows[0];
+      if (!notice || !await staffingDeliveryAllowed(notice)) return {accepted:false,status:"skipped",errorCode:"staffing_alert_silenced"};
+    }
     try {
       const result = await sendTransactionalSms({ to: input.to, body: input.body,
         statusCallbackUrl: `${process.env.TWILIO_STATUS_CALLBACK_URL}?attempt=${input.attemptToken}` });
@@ -168,6 +184,25 @@ export async function retryGateAlertChannels(): Promise<number> {
 
 /** Durable notification marker precedes recipient lookup; expiring CAS lease permits crash recovery. */
 export async function processPendingGateAlert(notice: GateAlert): Promise<void> {
+  // An unavailable lookup throws and keeps legitimate work pending for retry.
+  if (!await staffingWorkMayProceed(notice)) {
+    // The parent row lock makes the lease check and channel cancellation one
+    // boundary. A different worker's live lease and all accepted, ambiguous,
+    // or sending provider records remain untouched.
+    await pool.query(`WITH stopped AS (
+      UPDATE notifications SET urgent_delivery_pending = false,
+        urgent_delivery_lease = NULL, urgent_delivery_leased_until = NULL,
+        next_delivery_attempt_at = NULL, acknowledgement_due_at = NULL,
+        delivery_status = CASE WHEN delivery_status IN ('pending','retrying','retryable') THEN 'cancelled' ELSE delivery_status END
+      WHERE id = $1 AND user_id = $2
+        AND (urgent_delivery_leased_until IS NULL OR urgent_delivery_leased_until <= now())
+      RETURNING id
+    ) UPDATE notification_channel_deliveries d SET status = 'cancelled',
+      next_attempt_at = NULL, last_error_code = 'staffing_alert_silenced', updated_at = now()
+      FROM stopped WHERE d.notification_id = stopped.id AND d.status = 'retryable'`, [notice.id, notice.userId]);
+    return;
+  }
+  if (isStaffingNotificationType(notice.type) && process.env.TWILIO_STAFFING_REPLY_ENABLED === "true") notice = {...notice,staffingSmsCode: await staffingSmsCode(notice)};
   const lease = randomUUID();
   const claim = await pool.query(`UPDATE notifications SET urgent_delivery_lease = $3,
     urgent_delivery_leased_until = now() + interval '5 minutes'

@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const storage = vi.hoisted(() => ({ query: vi.fn(), connect: vi.fn(), release: vi.fn() }));
 const providers = vi.hoisted(() => ({ sms: vi.fn(), email: vi.fn(), push: vi.fn(async () => ({ delivered: true })), count: vi.fn(async () => 7) }));
-vi.mock("@workspace/db", () => ({ pool: storage }));
+vi.mock("@workspace/db", () => ({ pool: {
+  ...storage,
+  query: (sql: string, ...args: unknown[]) => {
+    // These fixtures belong to unheld companies. Keep the separate hold read
+    // from consuming the queued recipient/provider query result.
+    if (sql.includes("SELECT DISTINCT recipient.user_id")) return Promise.resolve({ rows: [] });
+    return storage.query(sql, ...args);
+  },
+} }));
 vi.mock("../lib/twilio", async original => ({ ...await original<any>(), sendTransactionalSms: providers.sms }));
 vi.mock("../lib/sendgrid", async original => ({ ...await original<any>(), sendNotificationAlertEmail: providers.email }));
 vi.mock("./gate-alert-push", () => ({ sendGateAlertPush: providers.push }));

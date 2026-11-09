@@ -63,6 +63,16 @@ afterEach(() => {
 });
 
 describe("NotificationsModal list states", () => {
+  it("preserves the exact staffing calendar destination on a mapped notification row", async () => {
+    const href = "/work-hub/calendar?siteId=21&stationId=west&shiftId=night-1&date=2026-11-09";
+    vi.spyOn(notificationsApi, "list").mockResolvedValue([{
+      id: 8, userId: 42, type: "gate_coverage_uncovered", category: "system", dedupeKey: "staffing:one",
+      title: "Staffing gap", body: "West Gate needs coverage", link: href, isRead: false, createdAt: new Date().toISOString(),
+    }]);
+    renderModal();
+    const row = await screen.findByTestId("modal-notification-8");
+    expect(row.closest("a")?.getAttribute("href")).toBe(href);
+  });
   it("shows a retry affordance instead of infinite loading when the list fetch fails", async () => {
     vi.spyOn(notificationsApi, "list").mockRejectedValue(
       Object.assign(new Error("Server error"), {

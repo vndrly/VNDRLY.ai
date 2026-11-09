@@ -8,7 +8,7 @@ import {
 const at = (time: string) => new Date(`2026-09-22T${time}:00.000Z`);
 
 describe("Gate coverage monitoring", () => {
-  it("alerts supervisors and admins once when a shift inside 24 hours has nobody assigned", async () => {
+  it("reconciles future unassigned watches on every evaluation and preserves the first reminder time", async () => {
     let record: GateCoverageRecord | null = null;
     const delivered: Array<{ kind: string; recipients: number[] }> = [];
     const candidate = {
@@ -37,18 +37,39 @@ describe("Gate coverage monitoring", () => {
         };
       }),
       createAttendanceException: vi.fn(async () => undefined),
-      deliver: vi.fn(async (notice) => { delivered.push({ kind: notice.kind, recipients: notice.recipientUserIds }); }),
+      deliver: vi.fn(async (notice) => {
+        delivered.push({
+          kind: notice.kind,
+          recipients: notice.recipientUserIds,
+        });
+      }),
     };
 
     await evaluateGateCoverage(at("08:00"), deps);
     await evaluateGateCoverage(at("08:01"), deps);
-    expect(delivered).toEqual([{ kind: "watch_radar", recipients: [20, 30] }]);
+    expect(delivered).toEqual([
+      { kind: "watch_radar", recipients: [20, 30] },
+      { kind: "watch_radar", recipients: [20, 30] },
+    ]);
     expect((record as GateCoverageRecord | null)?.state).toBe("watch_radar");
+    expect((record as GateCoverageRecord | null)?.lastReminderAt).toEqual(
+      at("08:00"),
+    );
 
-    deps.loadCandidates = vi.fn(async () => [{ ...candidate, shiftId: "shift-staffed", assignedUserIds: [10] }]);
+    deps.loadCandidates = vi.fn(async () => [
+      { ...candidate, shiftId: "shift-staffed", assignedUserIds: [10] },
+    ]);
     record = null;
     await evaluateGateCoverage(at("08:00"), deps);
-    expect(delivered).toHaveLength(1);
+    expect(delivered).toHaveLength(2);
+
+    deps.loadCandidates = vi.fn(async () => [
+      { ...candidate, coverageMode: "closed" as const },
+    ]);
+    const closed = await evaluateGateCoverage(at("08:02"), deps);
+    expect(closed).toEqual([{ shiftId: candidate.shiftId, state: "paused" }]);
+    expect(delivered).toHaveLength(2);
+    expect((record as GateCoverageRecord | null)?.state).toBe("resolved");
   });
 
   it("alerts relief first, escalates to the supervisor and scheduler, then sends restoration", async () => {
@@ -56,20 +77,22 @@ describe("Gate coverage monitoring", () => {
     let state: GateCoverageRecord | null = null;
     const delivered: Array<{ kind: string; recipients: number[] }> = [];
     const deps: GateCoverageDependencies = {
-      loadCandidates: vi.fn(async () => [{
-        shiftId: "shift-1",
-        stationId: "gate-1",
-        stationName: "Main gate",
-        title: "Day shift",
-        startsAt: at("08:00"),
-        endsAt: at("20:00"),
-        requiredCount: 1,
-        actualCount,
-        assignedUserIds: [10],
-        recipientUserIds: [10, 20, 30],
-        leadershipUserIds: [20, 30],
-        coverageMode: "active" as const,
-      }]),
+      loadCandidates: vi.fn(async () => [
+        {
+          shiftId: "shift-1",
+          stationId: "gate-1",
+          stationName: "Main gate",
+          title: "Day shift",
+          startsAt: at("08:00"),
+          endsAt: at("20:00"),
+          requiredCount: 1,
+          actualCount,
+          assignedUserIds: [10],
+          recipientUserIds: [10, 20, 30],
+          leadershipUserIds: [20, 30],
+          coverageMode: "active" as const,
+        },
+      ]),
       getRecord: vi.fn(async () => state),
       saveRecord: vi.fn(async (next) => {
         state = {
@@ -81,7 +104,12 @@ describe("Gate coverage monitoring", () => {
         };
       }),
       createAttendanceException: vi.fn(async () => undefined),
-      deliver: vi.fn(async (notice) => { delivered.push({ kind: notice.kind, recipients: notice.recipientUserIds }); }),
+      deliver: vi.fn(async (notice) => {
+        delivered.push({
+          kind: notice.kind,
+          recipients: notice.recipientUserIds,
+        });
+      }),
     };
 
     await evaluateGateCoverage(at("08:09"), deps);
@@ -91,7 +119,10 @@ describe("Gate coverage monitoring", () => {
     await evaluateGateCoverage(at("08:19"), deps);
     expect(delivered).toHaveLength(1);
     await evaluateGateCoverage(at("08:20"), deps);
-    expect(delivered[1]).toEqual({ kind: "uncovered", recipients: [10, 20, 30] });
+    expect(delivered[1]).toEqual({
+      kind: "uncovered",
+      recipients: [10, 20, 30],
+    });
     actualCount = 1;
     await evaluateGateCoverage(at("08:21"), deps);
     expect(delivered.at(-1)?.kind).toBe("restored");
@@ -117,11 +148,15 @@ describe("Gate coverage monitoring", () => {
       getRecord: vi.fn(async () => null),
       saveRecord: vi.fn(async () => undefined),
       createAttendanceException: vi.fn(async () => undefined),
-      deliver: vi.fn(async (notice) => { delivered.push(notice.kind); }),
+      deliver: vi.fn(async (notice) => {
+        delivered.push(notice.kind);
+      }),
     };
     await evaluateGateCoverage(at("08:10"), deps);
     expect(delivered).toEqual(["understaffed"]);
-    deps.loadCandidates = vi.fn(async () => [{ ...base, coverageMode: "paused_indefinitely" as const }]);
+    deps.loadCandidates = vi.fn(async () => [
+      { ...base, coverageMode: "paused_indefinitely" as const },
+    ]);
     await evaluateGateCoverage(at("08:20"), deps);
     expect(delivered).toEqual(["understaffed"]);
   });
@@ -157,7 +192,9 @@ describe("Gate coverage monitoring", () => {
         };
       }),
       createAttendanceException: vi.fn(async () => undefined),
-      deliver: vi.fn(async (notice) => { delivered.push(notice.kind); }),
+      deliver: vi.fn(async (notice) => {
+        delivered.push(notice.kind);
+      }),
     };
 
     await evaluateGateCoverage(at("08:14"), deps);
@@ -172,20 +209,22 @@ describe("Gate coverage monitoring", () => {
     let record: GateCoverageRecord | null = null;
     const createException = vi.fn(async () => undefined);
     const deps: GateCoverageDependencies = {
-      loadCandidates: vi.fn(async () => [{
-        shiftId: "shift-4",
-        stationId: "gate-4",
-        stationName: "North gate",
-        title: "Day shift",
-        startsAt: at("08:00"),
-        endsAt: at("20:00"),
-        requiredCount: 1,
-        actualCount,
-        activeUserIds: actualCount ? [99] : [],
-        assignedUserIds: [14],
-        recipientUserIds: [14, 20],
-        coverageMode: "active" as const,
-      }]),
+      loadCandidates: vi.fn(async () => [
+        {
+          shiftId: "shift-4",
+          stationId: "gate-4",
+          stationName: "North gate",
+          title: "Day shift",
+          startsAt: at("08:00"),
+          endsAt: at("20:00"),
+          requiredCount: 1,
+          actualCount,
+          activeUserIds: actualCount ? [99] : [],
+          assignedUserIds: [14],
+          recipientUserIds: [14, 20],
+          coverageMode: "active" as const,
+        },
+      ]),
       getRecord: vi.fn(async () => record),
       saveRecord: vi.fn(async (next) => {
         record = {
@@ -208,7 +247,15 @@ describe("Gate coverage monitoring", () => {
 });
 
 // Exercise the real PostgreSQL parameter binding; injected unit stores cannot catch this.
-it.skipIf(!process.env.DATABASE_URL)("loads an empty distant coverage window with timestamp parameters", async () => {
-  const { databaseGateCoverageDependencies } = await import("./gate-coverage-monitor");
-  expect(await databaseGateCoverageDependencies.loadCandidates(new Date("9998-01-01T00:00:00Z"))).toEqual([]);
-});
+it.skipIf(!process.env.DATABASE_URL)(
+  "loads an empty distant coverage window with timestamp parameters",
+  async () => {
+    const { databaseGateCoverageDependencies } =
+      await import("./gate-coverage-monitor");
+    expect(
+      await databaseGateCoverageDependencies.loadCandidates(
+        new Date("9998-01-01T00:00:00Z"),
+      ),
+    ).toEqual([]);
+  },
+);

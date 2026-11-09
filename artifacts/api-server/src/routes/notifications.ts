@@ -1,3 +1,4 @@
+import { isStaffingNotificationType, staffingDeliveryAllowed, STAFFING_NOTIFICATION_TYPES } from "../lib/staffing-notification-policy";
 import { notificationCompanyHoldApplies, pausedNotificationUserIds, NOTIFICATION_COMPANY_HOLDS } from "../lib/notification-company-hold";
 import { Router, type IRouter } from "express";
 import { eq, and, or, desc, sql, inArray, lt, type SQL } from "drizzle-orm";
@@ -407,6 +408,7 @@ export async function countUnreadForUser(
   const conds = [
     eq(notificationsTable.userId, userId),
     eq(notificationsTable.isRead, false),
+    sql`(${notificationsTable.type} <> ALL(${STAFFING_NOTIFICATION_TYPES}::text[]) OR ${notificationsTable.acknowledgedAt} IS NULL)`,
   ];
   if (!commentsEnabled) {
     conds.push(sql`${notificationsTable.category} <> 'comments'`);
@@ -659,6 +661,7 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
 
 /** Recovery path for canonical urgent records whose current membership is not a gate role. */
 export async function deliverUrgentOfficeNotification(notice: import("../services/gate-alert-delivery").GateAlert): Promise<boolean> {
+  if (!await staffingDeliveryAllowed(notice)) return true;
   const { gateAlertDependencies: deps, loadGateAlertRecipient } = await import("../services/gate-alert-repository");
   const recipient = await loadGateAlertRecipient(notice.userId);
   if (!recipient || recipient.gate || !recipient.membershipId || !(await deps.authorized(notice, recipient))) {
@@ -672,7 +675,7 @@ export async function deliverUrgentOfficeNotification(notice: import("../service
     await deps.cancelRetryable(notice, ["push", "email", "sms"], "category_disabled");
     return true;
   }
-  if (["gate_watch_confirmed", "gate_watch_conflict", "gate_watch_conflict_urgent"].includes(notice.type)) {
+  if (isStaffingNotificationType(notice.type) || ["gate_watch_confirmed", "gate_watch_conflict", "gate_watch_conflict_urgent"].includes(notice.type)) {
     // Scheduling responses use all configured channels for office recipients as well.
     // Existing consent still binds SMS to this active membership and linked employee phone.
     return (await import("../services/gate-alert-delivery")).deliverGateAlert(notice, {
@@ -1072,7 +1075,7 @@ async function* visibleNotificationBatches(
 /** Shared by the inbox badge endpoint and urgent push payloads. */
 export async function countGateUnreadNotifications(session: SessionPayload & { userId: number }): Promise<number> {
   let count = 0;
-  for await (const rows of visibleNotificationBatches(session as Session, { conditions: [eq(notificationsTable.isRead, false)] })) count += rows.length;
+  for await (const rows of visibleNotificationBatches(session as Session, { conditions: [eq(notificationsTable.isRead, false)] })) count += rows.filter(row => !isStaffingNotificationType(row.type) || !row.acknowledgedAt).length;
   return count;
 }
 
@@ -1179,6 +1182,14 @@ router.post("/notifications/:id/acknowledge", async (req, res) => {
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
   const notificationId = Number(req.params.id);
   if (!Number.isSafeInteger(notificationId) || notificationId <= 0) return sendApiError(res, 400, "validation.invalid_id", "Invalid id");
+  const { staffingAlertForNotification, acknowledgeGateStaffingAlert } = await import("../services/gate-staffing-alerts");
+  const shared = await staffingAlertForNotification(notificationId, session.userId);
+  if (shared) {
+    const channel = req.body?.channel ?? "web";
+    if (!["web", "ios", "push"].includes(channel)) return sendApiError(res, 400, "validation.invalid_id", "Invalid acknowledgment channel");
+    try { const alert = await acknowledgeGateStaffingAlert(session, shared.id, channel); return res.json({alert}); }
+    catch(error) { const status = (error as {status?:number}).status ?? 503; return res.status(status).json({message: status===403 ? "Current company administrator access required." : "The staffing alert could not be acknowledged. Refresh and try again."}); }
+  }
   const result = await acknowledgeNotification(
     { notificationId, userId: session.userId },
     { repository: databaseNotificationDeliveryRepository, sender: async () => ({ delivered: false }), now: () => new Date() },

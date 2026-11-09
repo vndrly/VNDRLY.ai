@@ -1,3 +1,4 @@
+import { staffingDeliveryAllowed } from "./staffing-notification-policy";
 import { notificationCompanyHoldApplies } from "./notification-company-hold";
 import { EventEmitter } from "events";
 import pg from "pg";
@@ -42,7 +43,7 @@ export type NotificationStateChangedEvent = {
   type: "notification.state_changed";
   userId: number;
   notificationId: number | null;
-  state: "read" | "unread" | "deleted" | "all_read";
+  state: "read" | "unread" | "deleted" | "all_read" | "acknowledged" | "resolved";
   changedAt: string;
 };
 
@@ -270,8 +271,8 @@ export function publishNotificationStateChanged(input: {
 
 function publishNotificationEvent(ev: NotificationEvent): void {
   if(currentDatabaseRealm()==='demo')return;
-  void notificationCompanyHoldApplies(ev.userId).then(paused => {
-    if (paused) return;
+  void notificationCompanyHoldApplies(ev.userId).then(async paused => {
+    if (paused || (ev.type==="notification.created" && !await staffingDeliveryAllowed({id:ev.notificationId,type:ev.notifType}))) return;
     return publishViaPool(ev).catch((err) => {
     if (!(err instanceof PoolUnavailableError)) {
       logger.error(

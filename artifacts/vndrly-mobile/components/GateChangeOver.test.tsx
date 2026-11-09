@@ -19,13 +19,14 @@ const env = vi.hoisted(() => ({
   back: vi.fn(),
   canGoBack: vi.fn(() => true),
   replace: vi.fn(),
-  params: {} as { siteId?: string; stationId?: string },
+  user: { id: 1 } as { id: number; role?: string; vendorRole?: string },
+  params: {} as { siteId?: string; stationId?: string; purpose?: string; gateMode?: string; workHubShiftId?: string },
 }));
 vi.mock("@/lib/change-over-api", () => ({
   changeOverRequest: env.api,
   acceptChangeOverSession: env.accept,
 }));
-vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 1 } }) }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user }) }));
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({
     foreground: "black",
@@ -101,6 +102,8 @@ const state = () => ({
 });
 beforeEach(() => {
   vi.clearAllMocks();
+  env.user = { id: 1 };
+  env.params = {};
   env.fetch.mockResolvedValue({ recipients: [] });
   env.api.mockImplementation(async (path: string) =>
     path.startsWith("/sites")
@@ -115,6 +118,41 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("uses an isolated exact Assume Watch preview without ordinary Gate discovery or cached Gate state", async () => {
+  env.user = { id: 1, role: "vendor", vendorRole: "office" };
+  env.params = { siteId: "1", stationId: "gate", purpose: "assume", gateMode: "1", workHubShiftId: "scheduled-shift" };
+  env.api.mockImplementation(async (path: string, body?: unknown) => {
+    if (path === "/gate/state?purpose=assume") return { ...state(), shift: { ...state().shift, operator_id: 2 } };
+    if (path === "/gate/watch/assume" && body) return {};
+    throw new Error(`Ordinary Gate access is unavailable before assumption: ${path}`);
+  });
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  cache.setQueryData(["change-over-state", 1, "gate"], { ...state(), station: { id: "gate", name: "Stale ordinary Gate" } });
+  render(<QueryClientProvider client={cache}><GateChangeOver /></QueryClientProvider>);
+  const assume = await screen.findByRole("button", { name: "watch.assume" });
+  await waitFor(() => expect(assume.hasAttribute("disabled")).toBe(false));
+  expect(screen.queryByText("Stale ordinary Gate")).toBeNull();
+  expect(env.api.mock.calls.map(call => call[0])).toEqual(["/gate/state?purpose=assume"]);
+  fireEvent.click(assume);
+  fireEvent.click(await screen.findByRole("button", { name: "ASSUME" }));
+  await waitFor(() => expect(env.api).toHaveBeenCalledWith("/gate/watch/assume", expect.objectContaining({ source: "ios", acknowledged: true })));
+  expect(env.accept).not.toHaveBeenCalled();
+});
+it.each(["admin", "office"])("lets a covering %s return to Admin and Work Hub without ending the saved watch", async (role) => {
+  env.user = { id: 1, role: "vendor", vendorRole: role };
+  const identity = { ...env.user };
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(<QueryClientProvider client={cache}><GateChangeOver /></QueryClientProvider>);
+  await screen.findByText("watch.ready");
+  fireEvent.click(screen.getByRole("button", { name: "gateDuty.returnToAdmin" }));
+  expect(env.replace).toHaveBeenLastCalledWith("/(tabs)");
+  fireEvent.click(screen.getByRole("button", { name: "workHub.title" }));
+  expect(env.replace).toHaveBeenLastCalledWith("/work-hub");
+  view.unmount();
+  expect(env.user).toEqual(identity);
+  expect(env.accept).not.toHaveBeenCalled();
+  expect(env.api.mock.calls.every(call => call[1] === undefined)).toBe(true);
+});
 it("assigns supervisor recovery to a permitted replacement and retains the original request after response loss", async () => {
   const base = env.api.getMockImplementation()!;
   let recoveries = 0;

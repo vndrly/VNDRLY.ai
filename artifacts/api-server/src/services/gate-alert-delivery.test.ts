@@ -122,3 +122,9 @@ describe("gate alert consent and readiness", () => {
     expect(buildGateAlertConsentPatch(true, f.recipient).alertsSmsOptedInAt).toEqual(original);
   });
 });
+
+it("keeps shared staffing identity through SMS when reply instructions are disabled", async () => {
+  const f = fixture();
+  await deliverGateAlert({...notice,type:"gate_coverage_uncovered"}, f.dependencies);
+  expect(f.dependencies.sms).toHaveBeenCalledWith(expect.objectContaining({notificationId:notice.id,body:expect.not.stringContaining("Reply ACK")}));
+});

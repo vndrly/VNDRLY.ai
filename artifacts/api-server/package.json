@@ -23,6 +23,7 @@
     "migrate:gate-task-hopper": "tsx scripts/migrate-gate-task-hopper.ts",
     "migrate:gate-locations": "tsx scripts/migrate-gate-locations.ts",
     "migrate:gate-alert-channels": "tsx scripts/migrate-gate-alert-channels.ts",
+    "migrate:gate-staffing-alerts": "tsx scripts/migrate-gate-staffing-alerts.ts",
     "migrate:public-sms-consent": "tsx scripts/migrate-public-sms-consent.ts",
     "migrate:push-token-retirement": "tsx scripts/migrate-push-token-retirement.ts",
     "dev": "pnpm run dev:local",

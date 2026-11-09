@@ -1,6 +1,6 @@
 name: Dispatch mobile release
 
-# Full-ship dispatch trigger: 2026-11-09T05:41Z (full ship minus plugin; migration repair)
+# Full-ship dispatch trigger: 2026-11-09T08:10Z (Gate helpers and shared staffing acknowledgment; minus plugin)
 
 # The cloud-agent GitHub token cannot call workflow_dispatch. This
 # workflow runs only when this file changes and starts the iOS OTA and

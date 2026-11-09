@@ -1,30 +1,38 @@
 import { pool } from "@workspace/db";
+import { ACTIVE_APPROVAL_STATUSES } from "@workspace/db/schema";
 import type { SessionPayload } from "../lib/session";
 import { ChangeOverError, listChangeOverSites } from "./gate-change-over";
 import { gateWatchTicketReadiness } from "./gate-watch-ticket";
+import { readWorkflowHelperProgress } from "./workflow-helper-progress";
 
 type Action = { title: string; href: string };
-export type FirstWatchRecord = { siteId: number; stationId: string; siteName: string; stationName: string; employeeId: number | null; shiftId: string | null; assignedUserId: number | null; watchId: string | null; ticketId: number | null; ticketBlocker?: string | null; startsAt?: string | null; eligibleUserId?: number | null; stationCreatedAt?: string | null; day?: string | null };
+export type FirstWatchRecord = { siteId: number; stationId: string | null; siteName: string; stationName: string | null; employeeId: number | null; shiftId: string | null; assignedUserId: number | null; watchId: string | null; ticketId: number | null; ticketBlocker?: string | null; startsAt?: string | null; eligibleUserId?: number | null; employeeKind?: "direct" | "managed" | null; managedOrganizationId?: string | null; managedWorkerId?: string | null; stationCreatedAt?: string | null; day?: string | null };
 
 /** Each row is one company/site/station/shift/worker chain, never pooled counts. */
-export function firstWatchStep(records: FirstWatchRecord[], userId: number, office: boolean) {
-  const score = (r: FirstWatchRecord) => r.watchId ? r.ticketId ? 6 : 5 : r.assignedUserId ? 4 : r.shiftId ? 3 : r.employeeId ? 2 : 1;
+export function firstWatchStep(records: FirstWatchRecord[], userId: number, office: boolean, setupSites: { id: number; name: string }[] = []) {
+  const eligibleWorker = (record: FirstWatchRecord) => Boolean(record.employeeId || record.eligibleUserId);
+  const score = (r: FirstWatchRecord) => r.watchId ? r.ticketId ? 6 : 5 : r.assignedUserId ? 4 : r.shiftId ? 3 : eligibleWorker(r) ? 2 : 1;
   const completed = records.find(record => record.watchId && record.ticketId);
   const visible = office ? records : records.filter(record=>record.assignedUserId===userId || record.watchId);
-  const ordered = [...visible].sort((a,b) => a.siteId-b.siteId || String(a.stationCreatedAt??"").localeCompare(String(b.stationCreatedAt??"")) || a.stationId.localeCompare(b.stationId) || String(a.startsAt??"").localeCompare(String(b.startsAt??"")) || String(a.shiftId??"").localeCompare(String(b.shiftId??"")));
+  const ordered = [...visible].sort((a,b) => a.siteId-b.siteId || String(a.stationCreatedAt??"").localeCompare(String(b.stationCreatedAt??"")) || String(a.stationId??"").localeCompare(String(b.stationId??"")) || String(a.startsAt??"").localeCompare(String(b.startsAt??"")) || String(a.shiftId??"").localeCompare(String(b.shiftId??"")));
   const first = ordered[0];
   const row = completed ?? (first ? ordered.filter(record => record.siteId===first.siteId && record.stationId===first.stationId && record.shiftId===first.shiftId).sort((a,b)=>score(b)-score(a))[0] : undefined);
   if (row?.watchId && row.ticketId) return { complete: true, action: null, message: null, context: row };
   if (!row && !office) return {complete:false,action:null,message:"Waiting for your company to schedule and assign your first gate watch.",context:null};
-  if (!row) return { complete: false, action: { title: "Set up a gate site and station", href: "/gate-locations" }, message: null, context: null };
-  const query = new URLSearchParams({ siteId: String(row.siteId), stationId: row.stationId, ...(row.shiftId ? { shiftId: row.shiftId } : {}), ...(row.day ? { day: row.day } : {}), ...(row.eligibleUserId ? { employee: String(row.eligibleUserId) } : {}) }).toString();
+  if (!row) {
+    const site = setupSites[0];
+    if (!site) return {complete:false,action:null,message:"Waiting for an existing site and your company's Gate service authorization before a station can be added.",context:null};
+    const context:FirstWatchRecord={siteId:site.id,siteName:site.name,stationId:null,stationName:null,employeeId:null,eligibleUserId:null,shiftId:null,assignedUserId:null,watchId:null,ticketId:null};
+    return {complete:false,action:{title:"Add a gate station at this site",href:`/gate-locations?siteId=${site.id}`},message:null,context};
+  }
+  const query = new URLSearchParams({ siteId: String(row.siteId), ...(row.stationId ? {stationId:row.stationId}:{}), ...(row.shiftId ? { shiftId: row.shiftId } : {}), ...(row.day ? { day: row.day } : {}), ...(row.eligibleUserId ? { employee: String(row.eligibleUserId) } : {}) }).toString();
   let action: Action | null = null, message: string | null = null;
-  if (!office && !row.watchId && (!row.employeeId || !row.shiftId || !row.assignedUserId)) message = "Waiting for your company to schedule and assign your first gate watch.";
+  if (!office && !row.watchId && (!eligibleWorker(row) || !row.shiftId || !row.assignedUserId)) message = "Waiting for your company to schedule and assign your first gate watch.";
   else if (row.watchId) {
     message = row.ticketBlocker ? "Watch saved. Company service setup needs attention before its automatic ticket can be confirmed." : "Watch saved. Waiting for its automatic ticket to be confirmed; do not assume this watch again.";
     if (row.ticketBlocker && office) action = { title: "Review gate service setup", href: `/vendor-catalog?${query}` };
   }
-  else if (!row.employeeId) action = { title: "Give an eligible gate employee access to this site", href: `/field-employees?${query}` };
+  else if (!eligibleWorker(row)) action = { title: "Give an eligible gate employee access to this site", href: `/field-employees?${query}` };
   else if (!row.shiftId) action = { title: "Create a shift for this gate station", href: `/work-hub/calendar?${query}` };
   else if (!row.assignedUserId) action = { title: "Assign an eligible gate employee to this shift", href: `/work-hub/calendar?${query}` };
   else if ((row.startsAt && new Date(row.startsAt).getTime()>Date.now()) || row.ticketBlocker==="gate_ticket.shift_not_started") message = "Waiting for this scheduled shift to begin. The assigned gatekeeper can then Assume Watch and their ticket starts automatically.";
@@ -61,17 +69,36 @@ export async function readAccountNextSteps(session: SessionPayload) {
       for (const record of missing) credentials.push({title:`Update ${record.name}`,href:"/field/compliance"});
     }
   }
-  if (!vendor?.operations_categories?.includes("gate")) return { setup, credentials, firstWatch: null, ...(office?{coiUploadNeeded:!vendor?.coi_document_url?.trim()}:{}) };
+  const helperProgress = await readWorkflowHelperProgress(session);
+  if (!vendor?.operations_categories?.includes("gate")) return { setup, credentials, firstWatch: null, helperProgress, ...(office?{coiUploadNeeded:!vendor?.coi_document_url?.trim()}:{}) };
   const sites = await listChangeOverSites(session);
+  // Managed roster evidence follows gate-staffing-candidates: a current company
+  // membership, sponsor, worker sponsorship and explicit Gate grant at this site.
+  // Ended evidence is never promoted back to readiness by a stale active status.
   const records = (await pool.query(`SELECT l.id AS "siteId",g.id AS "stationId",l.name AS "siteName",g.name AS "stationName",g.created_at AS "stationCreatedAt",
-    p.id AS "employeeId",p.user_id AS "eligibleUserId",s.starts_at AS "startsAt",to_char(s.starts_at AT TIME ZONE s.timezone,'YYYY-MM-DD') AS day,s.id AS "shiftId",a.user_id AS "assignedUserId",w.id AS "watchId",t.id AS "ticketId",d.post_coverage->>'ticketBlocker' AS "ticketBlocker"
+    p.id AS "employeeId",p.user_id AS "eligibleUserId",p.employee_kind AS "employeeKind",p.managed_organization_id AS "managedOrganizationId",p.managed_worker_id AS "managedWorkerId",
+    s.starts_at AS "startsAt",to_char(s.starts_at AT TIME ZONE s.timezone,'YYYY-MM-DD') AS day,s.id AS "shiftId",a.user_id AS "assignedUserId",w.id AS "watchId",t.id AS "ticketId",d.post_coverage->>'ticketBlocker' AS "ticketBlocker"
     FROM gate_stations g JOIN site_locations l ON l.id=g.site_id
-    LEFT JOIN LATERAL (SELECT p.id,p.user_id FROM vendor_people p JOIN users u ON u.id=p.user_id AND u.suspended_at IS NULL
+    LEFT JOIN LATERAL (SELECT DISTINCT ON (user_id) * FROM (
+      SELECT p.id,p.user_id,'direct'::text AS employee_kind,NULL::uuid AS managed_organization_id,NULL::uuid AS managed_worker_id
+      FROM vendor_people p JOIN users u ON u.id=p.user_id AND u.suspended_at IS NULL
       JOIN user_org_memberships m ON m.vendor_people_id=p.id AND m.user_id=p.user_id AND m.vendor_id=p.vendor_id AND m.org_type='vendor'
       WHERE p.vendor_id=$1 AND p.is_active=true AND p.deleted_at IS NULL
       AND EXISTS(SELECT 1 FROM vendor_person_site_access x WHERE x.vendor_people_id=p.id AND x.site_location_id=l.id AND x.is_active=true)
       AND (p.vendor_role IN ('gatekeeper','gate_supervisor') OR EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id AND r.is_active=true AND r.role IN ('gatekeeper','gate_supervisor')))
-      AND ($3::boolean OR p.user_id=$4)) p ON true
+      AND ($3::boolean OR p.user_id=$4)
+      UNION ALL
+      SELECT NULL::int AS id,w.worker_user_id AS user_id,'managed'::text AS employee_kind,w.managed_organization_id,w.id AS managed_worker_id
+      FROM managed_subcontractor_worker_sponsorships w JOIN users u ON u.id=w.worker_user_id AND u.suspended_at IS NULL
+      JOIN managed_subcontractor_organizations o ON o.id=w.managed_organization_id AND o.status<>'archived'
+      JOIN managed_subcontractor_sponsors sponsor ON sponsor.managed_organization_id=w.managed_organization_id
+        AND sponsor.sponsor_vendor_id=w.sponsor_vendor_id AND sponsor.status='active' AND sponsor.ended_at IS NULL
+      WHERE w.sponsor_vendor_id=$1 AND w.status='active' AND w.ended_at IS NULL
+      AND EXISTS(SELECT 1 FROM user_org_memberships m WHERE m.user_id=w.worker_user_id AND m.vendor_id=w.sponsor_vendor_id AND m.org_type='vendor')
+      AND EXISTS(SELECT 1 FROM managed_subcontractor_role_grants r WHERE r.sponsorship_id=w.id AND r.site_id=l.id
+        AND r.status='active' AND r.ended_at IS NULL AND r.role IN ('gatekeeper','gate_supervisor'))
+      AND ($3::boolean OR w.worker_user_id=$4)
+      ) roster ORDER BY user_id,id NULLS LAST,managed_worker_id) p ON true
     LEFT JOIN work_hub_shifts s ON s.gate_station_id=g.id AND s.site_location_id=l.id AND s.owner_org_type='vendor' AND s.owner_org_id=$1 AND s.milestone_status<>'cancelled'
       AND (s.ends_at>now() OR EXISTS(SELECT 1 FROM gate_duty_sessions history WHERE history.work_hub_shift_id=s.id AND history.station_id=g.id AND history.source_legacy_shift_id IS NOT NULL))
     LEFT JOIN work_hub_shift_assignments a ON a.shift_id=s.id AND a.user_id=p.user_id AND a.status IN ('assigned','accepted','claimed')
@@ -83,12 +110,20 @@ export async function readAccountNextSteps(session: SessionPayload) {
     if (record.startsAt) record.startsAt = new Date(record.startsAt).toISOString();
     if (record.stationCreatedAt) record.stationCreatedAt = new Date(record.stationCreatedAt).toISOString();
   }
-  const selected = firstWatchStep(records,session.userId,office).context;
-  if (selected?.assignedUserId && !selected.watchId) {
-    const readiness = await gateWatchTicketReadiness(pool,{...session,userId:selected.assignedUserId},selected.stationId,selected.siteId);
+  // Gate Locations' existing serviced-site policy also covers authorized sites
+  // that do not have a station yet; operational discovery alone cannot do that.
+  const setupSites = office && !records.length ? (await pool.query(`SELECT s.id,s.name FROM site_locations s
+    WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
+      AND EXISTS(SELECT 1 FROM site_work_assignments a WHERE a.vendor_id=$1 AND a.site_location_id=s.id)
+      AND EXISTS(SELECT 1 FROM partner_vendor_relationships r WHERE r.vendor_id=$1 AND r.partner_id=s.partner_id AND r.status=ANY($2::text[]))
+      AND NOT EXISTS(SELECT 1 FROM gate_stations g WHERE g.site_id=s.id AND g.active=true)
+    ORDER BY s.name,s.id`,[session.vendorId,ACTIVE_APPROVAL_STATUSES])).rows as {id:number;name:string}[] : [];
+  const selected = firstWatchStep(records,session.userId,office,setupSites).context;
+  if (selected?.assignedUserId && selected.stationId && !selected.watchId) {
+    const readiness = await gateWatchTicketReadiness(pool,{...session,userId:selected.assignedUserId},selected.stationId,selected.siteId,undefined,false,selected.shiftId);
     selected.ticketBlocker = readiness.ticketBlocker;
   }
-  return { setup, credentials, firstWatch: firstWatchStep(records,session.userId,office), ...(office?{coiUploadNeeded:!vendor?.coi_document_url?.trim()}:{}) };
+  return { setup, credentials, firstWatch: firstWatchStep(records,session.userId,office,setupSites), helperProgress, ...(office?{coiUploadNeeded:!vendor?.coi_document_url?.trim()}:{}) };
 }
 
 /** Upload completion is independent of any partner approval or expiry review. */

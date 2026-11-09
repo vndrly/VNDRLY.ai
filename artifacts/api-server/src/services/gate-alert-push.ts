@@ -1,3 +1,4 @@
+import { staffingDeliveryAllowed } from "../lib/staffing-notification-policy";
 import { notificationCompanyHoldApplies } from "../lib/notification-company-hold";
 import { createHash, randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
@@ -31,6 +32,7 @@ export async function retryGateAlertPushCleanup(): Promise<void> {
 
 /** Audit stores hashes, never device tokens. Claims persist before contacting Expo. */
 export async function sendGateAlertPush(notice: GateAlert, badge: number): Promise<SendResult> {
+  if (!await staffingDeliveryAllowed(notice)) return {accepted:false,status:"skipped",errorCode:"staffing_alert_silenced"};
   if (await notificationCompanyHoldApplies(notice.userId)) return {accepted:false,status:"skipped",errorCode:"company_notification_hold"};
   try { return await sendDestinations(notice, badge); }
   catch {

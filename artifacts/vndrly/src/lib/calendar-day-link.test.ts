@@ -7,6 +7,10 @@ it("opens the shift's local calendar day, including a different month or year", 
 it.each(["", "?day=2026-02-30", "?day=bad", "?day=2026-13-01"])("ignores invalid calendar day links %s", search => {
   expect(calendarDayFromSearch(search)).toBeNull();
 });
+it("opens the saved shift timezone date from a staffing calendar link", () => {
+  expect(calendarDayFromSearch("?siteId=21&stationId=west&shiftId=night-1&date=2026-11-09")).toBe("2026-11-09");
+  expect(calendarDayFromSearch("?date=2026-02-30")).toBeNull();
+});
 it("preserves the chosen worker and local day without switching the signed-in user", () => {
   const href = recordedShiftCalendarHref({ id: "clock-2", startedAt: new Date(2026, 0, 4, 23, 30).toISOString() }, 28);
   expect(href).toBe("/work-hub/calendar?day=2026-01-04&workday=clock-2&worker=28");

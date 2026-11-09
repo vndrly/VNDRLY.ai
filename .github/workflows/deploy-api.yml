@@ -196,6 +196,7 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:camera-registry
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-notification-preferences
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-alert-channels
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-staffing-alerts
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:public-sms-consent
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:push-token-retirement
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-connection
@@ -228,6 +229,25 @@ jobs:
           if ! sudo grep -q '^ASSISTANT_PLAN_EXECUTION_ENABLED=' .env.production; then
             printf '%s\n' 'ASSISTANT_PLAN_EXECUTION_ENABLED=1' | sudo tee -a .env.production >/dev/null
           fi
+          # Signed staffing replies use the existing provider identity and never send
+          # a smoke SMS. Existing webhooks, opt-out settings and explicit disable win.
+          if staffing_sms_readiness="$(sudo -u vndrly env HOME=/home/vndrly node --env-file=/var/www/vndrly/.env.production scripts/provision-twilio-staffing-inbound.mjs --configure)"; then
+            if ! sudo grep -q '^TWILIO_STAFFING_INBOUND_URL=' .env.production; then
+              printf '%s\n' 'TWILIO_STAFFING_INBOUND_URL=https://vndrly.ai/api/twilio/staffing-alert-reply' | sudo tee -a .env.production >/dev/null
+            fi
+            if ! sudo grep -q '^TWILIO_STAFFING_REPLY_ENABLED=' .env.production; then
+              printf '%s\n' 'TWILIO_STAFFING_REPLY_ENABLED=true' | sudo tee -a .env.production >/dev/null
+            fi
+          else
+            staffing_sms_status=$?
+            if [ "$staffing_sms_status" -ne 2 ]; then
+              echo "Staffing SMS readiness check failed unexpectedly" >&2
+              exit "$staffing_sms_status"
+            fi
+            echo "Staffing SMS replies remain provider-blocked; web/iOS acknowledgment is available"
+          fi
+          printf '%s\n' "$staffing_sms_readiness" | sudo tee .local/staffing-sms-readiness.json
+          unset staffing_sms_readiness staffing_sms_status
           unset openai_key assemblyai_key
           sudo systemctl daemon-reload
           sudo systemctl enable vndrly-api 2>/dev/null || true

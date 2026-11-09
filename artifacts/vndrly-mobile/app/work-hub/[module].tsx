@@ -7,6 +7,7 @@ import * as Crypto from "expo-crypto";
 import { mobileCommandEnvelope } from "@/lib/work-hub-mobile";
 import DailyWorkPanel from "@/components/DailyWorkPanel";
 import UnifiedWorkCalendar from "@/components/UnifiedWorkCalendar";
+import { parseGateStaffingCalendarParams } from "@/lib/gate-staffing-calendar";
 import WorkHubAvailability from "@/components/WorkHubAvailability";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -96,7 +97,9 @@ function WorkHubModuleContent() {
   const colors = useColors();
   const { user } = useAuth();
   const meetingCompanion = useMeetingCompanion();
-  const { module: raw, assetId: selectedAssetId, q: searchQuery, start: searchStart, end: searchEnd, type: searchType } = useLocalSearchParams<{ module: string; assetId?: string; q?: string; start?: string; end?: string; type?: string }>();
+  const routeParams = useLocalSearchParams<{ module: string; assetId?: string; q?: string; start?: string; end?: string; type?: string; siteId?: string; stationId?: string; shiftId?: string; date?: string }>();
+  const { module: raw, assetId: selectedAssetId, q: searchQuery, start: searchStart, end: searchEnd, type: searchType } = routeParams;
+  const staffingContext = parseGateStaffingCalendarParams(routeParams);
   const module = raw === "inventory" ? "files-notes" : String(raw ?? "channels");
   const owner = mobileOwner(user);
   const activeMembership = user?.availableMemberships?.find(
@@ -323,7 +326,7 @@ function WorkHubModuleContent() {
       setMeetingFileBusy(false);
     }
   };
-  if (["attention","safety","my-work","calendar"].includes(module)) return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:20,gap:14}}><WorkHubPageTitle title={module==="attention"?"Needs Attention":module==="safety"?"Safety":module==="my-work"?"My Work":"Calendar"}/>{module==="safety" && <SafetyDashboardCard/>}{module==="calendar"?<UnifiedWorkCalendar/>:<DailyWorkPanel mode={module as "attention"|"safety"|"my-work"}/>}</ScrollView></ScreenSafeArea>;
+  if (["attention","safety","my-work","calendar"].includes(module)) return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:20,gap:14}}><WorkHubPageTitle title={module==="attention"?"Needs Attention":module==="safety"?"Safety":module==="my-work"?"My Work":"Calendar"}/>{module==="safety" && <SafetyDashboardCard/>}{module==="calendar"?<UnifiedWorkCalendar staffingContext={staffingContext}/>:<DailyWorkPanel mode={module as "attention"|"safety"|"my-work"}/>}</ScrollView></ScreenSafeArea>;
   if (["managed-crews", "workforce-coverage", "site-presence", "safety-response", "implementation-exports", "operations-health"].includes(module))
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>

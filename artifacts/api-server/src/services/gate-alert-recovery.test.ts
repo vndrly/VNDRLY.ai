@@ -10,6 +10,9 @@ beforeEach(() => {
   now = 0; failLookup = true; notices.clear(); retries.clear();
   for (const id of [1, 2]) notices.set(id, { id, userId: id, type: "gate_closed", title: "private", link: "/gate", pending: true, lease: null, until: 0 });
   io.query.mockReset().mockImplementation(async (sql: string, values: any[]) => {
+    // Recovery fixtures are unheld; recipient lookup failures below remain
+    // independent from the company's notification-hold read.
+    if (sql.includes("SELECT DISTINCT recipient.user_id")) return { rows: [] };
     if (sql.startsWith("SELECT d.notification_id")) return { rows: [] };
     if (sql.startsWith("UPDATE notifications SET urgent_delivery_lease")) {
       const n = notices.get(values[0]);

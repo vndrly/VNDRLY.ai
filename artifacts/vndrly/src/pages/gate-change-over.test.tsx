@@ -112,7 +112,7 @@ beforeEach(() => {
         ? { stations: [{ id: "gate", name: "Main gate" }] }
         : path.includes("/notes?")
           ? { rows: [], actions: [] }
-        : path.endsWith("/state")
+        : path.split("?")[0].endsWith("/state")
           ? state()
           : path.endsWith("/authenticate")
             ? { proof: "signed", incoming: { id: 2, displayName: "Incoming" } }
@@ -194,7 +194,7 @@ it("shows the standard back control and branded Dashboard icon", () => {
 });
 it("keeps Save handoff gray at rest and branded on hover without requiring notes", async () => {
   const base = api.getMockImplementation()!;
-  api.mockImplementation((path, body) => path.endsWith("/state")
+  api.mockImplementation((path, body) => path.split("?")[0].endsWith("/state")
     ? { ...state(), preparation: null }
     : base(path, body));
   mount();
@@ -273,11 +273,11 @@ it("limits Shift Notes to one year and uses branded compact fields", async () =>
 function incomingState() { return { ...state(), shift: { ...state().shift, operator_id: 2 } }; }
 function useIncoming() {
   const base = api.getMockImplementation()!;
-  api.mockImplementation((path, body) => path.endsWith('/state') ? incomingState() : base(path, body));
+  api.mockImplementation((path, body) => path.split('?')[0].endsWith('/state') ? incomingState() : base(path, body));
 }
 it('saves a concise handoff without assuming a watch or ending a paid shift', async () => {
   const base = api.getMockImplementation()!;
-  api.mockImplementation((path, body) => path.endsWith('/state') ? { ...state(), preparation: null } : base(path, body));
+  api.mockImplementation((path, body) => path.split('?')[0].endsWith('/state') ? { ...state(), preparation: null } : base(path, body));
   mount();
   fireEvent.change(await screen.findByRole('textbox', { name: 'changeOver.outgoingNotes' }), { target: { value: 'Barrier inspection due before the next delivery.' } });
   fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.signHandoff' }));
@@ -349,7 +349,7 @@ it('does not duplicate the original watch command while canonical recovery is pe
   const base=api.getMockImplementation()!;
   let current=incomingState(), attempts=0;
   api.mockImplementation(async (path,body) => {
-    if(path.endsWith('/state')) return current;
+    if(path.split('?')[0].endsWith('/state')) return current;
     if(path.includes('/watch/operations/')) return {receipt:null};
     if(path.endsWith('/watch/assume')) { attempts++; if(attempts===1) { current={...incomingState(),preparation:{...state().preparation,id:'later-prep'},snapshot:{...snapshot,revision:'later'}}; throw new Error('Lost response'); } return {id:'original'}; }
     return base(path,body);
@@ -369,7 +369,7 @@ it('retries the immutable original watch command only after an explicit null-rec
   let current = incomingState();
   let attempts = 0;
   api.mockImplementation(async (path, body) => {
-    if (path.endsWith('/state')) return current;
+    if (path.split('?')[0].endsWith('/state')) return current;
     if (path.includes('/watch/operations/')) return { receipt: null };
     if (path.endsWith('/watch/assume')) {
       attempts++;
@@ -400,7 +400,7 @@ it('retries the immutable original watch command only after an explicit null-rec
 it('does not resend an uncertain watch command when canonical readback fails', async () => {
   const base = api.getMockImplementation()!;
   api.mockImplementation(async (path, body) => {
-    if (path.endsWith('/state')) return incomingState();
+    if (path.split('?')[0].endsWith('/state')) return incomingState();
     if (path.includes('/watch/operations/')) throw new Error('Cannot read watch receipt');
     if (path.endsWith('/watch/assume')) throw new Error('Lost response');
     return base(path, body);
@@ -421,7 +421,7 @@ it('does not resend an uncertain watch command when canonical readback fails', a
 it('keeps initial no-watch assumption disabled after a lost response and failed receipt readback', async () => {
   const base = api.getMockImplementation()!;
   api.mockImplementation(async (path, body) => {
-    if (path.endsWith('/state')) return { ...state(), shift: null, preparation: null, snapshot: null };
+    if (path.split('?')[0].endsWith('/state')) return { ...state(), shift: null, preparation: null, snapshot: null };
     if (path.includes('/watch/operations/')) throw new Error('Cannot verify initial watch request');
     if (path.endsWith('/watch/assume')) throw new Error('Lost initial watch response');
     return base(path, body);
@@ -451,7 +451,7 @@ it('accepts an existing canonical receipt without resending the watch command', 
   const base = api.getMockImplementation()!;
   let receipt: { id: string } | null = null;
   api.mockImplementation(async (path, body) => {
-    if (path.endsWith('/state')) return incomingState();
+    if (path.split('?')[0].endsWith('/state')) return incomingState();
     if (path.includes('/watch/operations/')) return { receipt };
     if (path.endsWith('/watch/assume')) throw new Error('Lost response');
     return base(path, body);
@@ -473,7 +473,7 @@ it.each(["self", "22"])("uses the single Recover Shift action for dropdown choic
   const base = api.getMockImplementation()!;
   const current = { ...state(), supervisor: true, shift: { ...state().shift, operator_id: 9 } };
   api.mockImplementation(async (path, body) => {
-    if (path.endsWith("/state")) return current;
+    if (path.split("?")[0].endsWith("/state")) return current;
     if (path.endsWith("/recovery-operators")) return { operators: [
       { userId: 9, membershipId: 99, name: "Outgoing", companyName: "Company" },
       { userId: 1, membershipId: 11, name: "Me", companyName: "Company" },
@@ -500,7 +500,7 @@ it.each(["self", "22"])("uses the single Recover Shift action for dropdown choic
 
 it("keeps the same Dashboard panels before a company has an active watch", async () => {
   const base = api.getMockImplementation()!;
-  api.mockImplementation((path, body) => path.endsWith("/state")
+  api.mockImplementation((path, body) => path.split("?")[0].endsWith("/state")
     ? { ...state(), shift: null, preparation: null }
     : base(path, body));
   mount();
@@ -515,7 +515,7 @@ it("keeps the same Dashboard panels before a company has an active watch", async
 
 it("preserves the Dashboard panels while site snapshot data is unavailable without inventing zeros", async () => {
   const base = api.getMockImplementation()!;
-  api.mockImplementation((path, body) => path.endsWith("/state")
+  api.mockImplementation((path, body) => path.split("?")[0].endsWith("/state")
     ? { ...state(), shift: null, preparation: null, snapshot: null }
     : base(path, body));
   mount();

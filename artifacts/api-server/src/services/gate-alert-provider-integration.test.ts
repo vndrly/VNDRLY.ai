@@ -8,18 +8,19 @@ import { loadGateAlertRecipient, gateAlertDependencies, applyTwilioStatus } from
 import { requireChangeOverAccess } from "./gate-change-over";
 import { isPermanentSmsError, createTwilioStatusRouter } from "../routes/twilioStatus";
 const notice = { id: 2, userId: 7, type: "safety_stop_work", title: "Private", link: "/work-hub" };
-beforeEach(() => { vi.resetAllMocks(); vi.stubEnv("SENDGRID_API_KEY", "test"); vi.stubEnv("SENDGRID_FROM_EMAIL", "test@example.invalid"); });
+beforeEach(() => { vi.resetAllMocks(); storage.query.mockResolvedValue({ rows: [], rowCount: 0 }); vi.stubEnv("SENDGRID_API_KEY", "test"); vi.stubEnv("SENDGRID_FROM_EMAIL", "test@example.invalid"); });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 it("passes the real current-session guard and rejects a subsequently revoked session", async () => {
   let version = 4;
   storage.query.mockImplementation(async (sql: string) => {
+    if (sql.includes("SELECT DISTINCT recipient.user_id")) return { rows: [] };
     if (sql.includes('u.id AS "userId"')) return { rows: [{ userId: 7, sessionVersion: 4, orgType: "vendor", membershipId: 8, vendorId: 3, vendorPeopleId: 9, vendorRole: "gatekeeper", membershipRole: "field_employee" }] };
     if (sql.includes("session_version")) return { rows: [{ id: 7, session_version: version }] };
     return { rows: [{ id: 1, vendor_role: "gatekeeper" }], rowCount: 1 };
   });
   const recipient = await loadGateAlertRecipient(7);
   await expect(requireChangeOverAccess(storage as any, recipient!.session, 1)).resolves.toMatchObject({ supervisor: false });
-  expect(storage.query.mock.calls[0][0]).toContain('u.session_version AS "sessionVersion"');
+  expect(storage.query.mock.calls.find(([sql]) => sql.includes('u.id AS "userId"'))?.[0]).toContain('u.session_version AS "sessionVersion"');
   version++;
   await expect(requireChangeOverAccess(storage as any, recipient!.session, 1)).rejects.toMatchObject({ status: 401 });
 });

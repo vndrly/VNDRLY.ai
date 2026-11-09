@@ -10,6 +10,8 @@ import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { notifyGateSiteEvent } from "./gate-notification-events";
 import { ensureGateWatchTicket } from "./gate-watch-ticket";
+import { logger } from "../lib/logger";
+import { loadTemporaryOfficeGateWatches } from "./gate-temporary-office-coverage";
 import {
   assembleShiftSnapshot,
   type ShiftRecord,
@@ -31,6 +33,7 @@ const fail = (status: number, code: string, text: string): never => {
   throw new ChangeOverError(status, `change_over.${code}`, text);
 };
 type Queryable = Pick<PoolClient, "query">;
+type ChangeOverAccess = { supervisor:boolean;site:any;user:any;temporaryStationIds?:string[];temporaryOfficeCoverage?:boolean };
 export async function changeOverTransaction<T>(
   work: (client: PoolClient) => Promise<T>,
   options: { repeatableRead?: boolean } = {},
@@ -73,8 +76,8 @@ export async function requireChangeOverAccess(
   client: Queryable,
   session: SessionPayload,
   siteId: number,
-  options: { allowInactiveSite?: boolean } = {},
-) {
+  options: { allowInactiveSite?: boolean;stationId?:string } = {},
+):Promise<ChangeOverAccess> {
   if (!session.userId || !Number.isSafeInteger(siteId) || siteId < 1)
     return fail(403, "forbidden", "Assigned gate access required");
   const user = (
@@ -168,6 +171,8 @@ export async function requireChangeOverAccess(
         site,
         user,
       };
+    const temporary=(await loadTemporaryOfficeGateWatches(client,session)).filter(watch=>watch.siteId===siteId && (!options.stationId || watch.stationId===options.stationId));
+    if (temporary.length) return {supervisor:false,site,user,temporaryStationIds:temporary.map(watch=>watch.stationId)};
   }
   return fail(
     403,
@@ -180,7 +185,7 @@ async function stationAccess(
   client: Queryable,
   session: SessionPayload,
   stationId: string,
-) {
+):Promise<ChangeOverAccess & {station:any}> {
   if (session.role === "vendor" && session.membershipRole === "admin" &&
       session.userId && session.vendorId && session.activeMembershipId) {
     const direct = (await client.query(`SELECT row_to_json(station) AS station,
@@ -203,8 +208,33 @@ async function stationAccess(
   if (!station) return fail(404, "not_found", "Gate not found");
   return {
     station,
-    ...(await requireChangeOverAccess(client, session, station.site_id)),
+    ...(await requireChangeOverAccess(client, session, station.site_id,{stationId})),
   };
+}
+
+/** Read-only handover preview and explicit self-assumption use current office authority. */
+async function stationForOfficeSelfAssume(client:Queryable,session:SessionPayload,stationId:string):Promise<ChangeOverAccess & {station:any}> {
+  try { return await stationAccess(client,session,stationId); }
+  catch(error) { if(!(error instanceof ChangeOverError)||error.status!==403)throw error; }
+  if(session.managedSubcontractor||!session.userId||!session.vendorId||!session.activeMembershipId)
+    return fail(403,"forbidden","Current office access is required to cover this Gate");
+  const row=(await client.query(`SELECT row_to_json(g) AS station,
+      json_build_object('id',site.id,'name',site.name,'partner_id',site.partner_id) AS site,
+      json_build_object('id',u.id,'role',u.role,'session_version',u.session_version,'display_name',u.display_name) AS account
+    FROM gate_stations g JOIN site_locations site ON site.id=g.site_id
+    JOIN users u ON u.id=$2 AND u.session_version=$3 AND u.suspended_at IS NULL
+    JOIN user_org_memberships m ON m.id=u.active_membership_id AND m.user_id=u.id AND m.id=$4
+      AND m.org_type='vendor' AND m.vendor_id=$5
+    JOIN vendor_people p ON p.id=m.vendor_people_id AND p.user_id=u.id AND p.vendor_id=m.vendor_id
+      AND p.is_active=true AND p.deleted_at IS NULL
+    WHERE g.id=$1 AND g.active=true AND site.is_active IS DISTINCT FROM false AND site.hidden IS DISTINCT FROM true
+      AND (p.vendor_role IN ('office','both') OR EXISTS(SELECT 1 FROM vendor_person_operational_roles r
+        WHERE r.vendor_people_id=p.id AND r.is_active=true AND r.role='office'))
+      AND EXISTS(SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=site.id AND a.vendor_id=m.vendor_id AND a.is_gate_contractor=true)`,
+    [stationId,session.userId,session.sv,session.activeMembershipId,session.vendorId])).rows[0];
+  if(!row)return fail(403,"forbidden","Current office access is required to cover this Gate");
+  await requireGateStationManagementAccess(client,session,Number(row.site.id));
+  return {station:row.station,site:row.site,user:row.account,supervisor:false,temporaryOfficeCoverage:true};
 }
 async function lockStation(client: PoolClient, stationId: string) {
   await client.query("SELECT id FROM gate_stations WHERE id=$1 FOR UPDATE", [
@@ -415,6 +445,7 @@ export async function administerGateWatch(session:SessionPayload,input:AdminWatc
       const {processPendingGateAlert}=await import("./gate-alert-repository");await processPendingGateAlert(n);
     }catch { /* Delivery stays pending in the existing retry worker. */ }
   }
+  if (input.action === "assume") await resolveStaffingAfterWatchCommit(input.stationId);
   return receipt;
 }
 
@@ -543,7 +574,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
     return fail(403, "forbidden", "Assigned gate access required");
   const result = await pool.query(
     `WITH current_account AS MATERIALIZED (
-       SELECT id,role FROM users
+       SELECT id,role,active_membership_id FROM users
        WHERE id=$1 AND session_version=$2 AND suspended_at IS NULL
      ), current_membership AS MATERIALIZED (
        SELECT membership.id,membership.role,membership.vendor_people_id
@@ -600,6 +631,20 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
        WHERE ($3::text='admin' AND account.role='admin')
          OR ($3::text='partner' AND EXISTS (SELECT 1 FROM current_membership))
          OR ($3::text='vendor' AND $7::text='admin' AND EXISTS (SELECT 1 FROM current_membership membership WHERE membership.role='admin'))
+         OR ($3::text IN ('vendor','field_employee') AND NOT $8::boolean AND EXISTS (
+           SELECT 1 FROM current_membership membership
+           JOIN vendor_people person ON person.id=membership.vendor_people_id AND person.user_id=$1 AND person.vendor_id=$5
+             AND person.is_active=true AND person.deleted_at IS NULL
+           JOIN gate_duty_sessions duty ON duty.user_id=$1 AND duty.ended_at IS NULL
+             AND duty.post_coverage->>'vendorId'=$5::text
+             AND duty.post_coverage->>'temporaryOfficeCoverage'='true'
+             AND duty.post_coverage->>'assigneeAcknowledged' IS DISTINCT FROM 'false'
+           JOIN gate_stations station ON station.id=duty.station_id AND station.site_id=site.id
+           JOIN gate_shifts watch ON watch.station_id=station.id AND watch.operator_id=$1 AND watch.ended_at IS NULL
+           WHERE membership.id=account.active_membership_id
+             AND (person.vendor_role IN ('office','both') OR EXISTS(SELECT 1 FROM vendor_person_operational_roles office_role
+               WHERE office_role.vendor_people_id=person.id AND office_role.is_active=true AND office_role.role='office'))
+         ))
          OR ($3::text IN ('vendor','field_employee') AND EXISTS (SELECT 1 FROM current_membership) AND (
            ($8::boolean AND EXISTS (
              SELECT 1 FROM managed_subcontractor_worker_sponsorships sponsorship
@@ -647,18 +692,18 @@ export async function listChangeOverStations(
   siteId: number,
   mode: GateDiscoveryMode = "operational",
 ) {
-  await requireChangeOverAccess(pool, session, siteId);
+  const access=await requireChangeOverAccess(pool, session, siteId);
   // History navigation uses the same current site authorization as notes/reports,
   // without requiring an active gate or a future scheduled shift.
   if (mode === "history") return (await pool.query(
-    "SELECT id,name,site_id,latitude,longitude,active,topology FROM gate_stations WHERE site_id=$1 ORDER BY created_at,id",
-    [siteId],
+      "SELECT id,name,site_id,latitude,longitude,active,topology FROM gate_stations WHERE site_id=$1 AND ($2::uuid[] IS NULL OR id=ANY($2::uuid[])) ORDER BY created_at,id",
+      [siteId,access.temporaryStationIds??null],
   )).rows;
   return (
     await pool.query(
       `SELECT station.id, station.name, station.site_id, station.latitude, station.longitude, station.geofence_radius_m AS "geofenceRadiusM", station.active
        FROM gate_stations station
-       WHERE station.site_id=$1
+       WHERE station.site_id=$1 AND ($3::uuid[] IS NULL OR station.id=ANY($3::uuid[]))
          AND (station.active=true
            OR EXISTS (SELECT 1 FROM gate_shifts finishing WHERE finishing.station_id=station.id AND finishing.operator_id=$2 AND finishing.ended_at IS NULL)
            OR EXISTS (SELECT 1 FROM gate_duty_sessions finishing WHERE finishing.station_id=station.id AND finishing.user_id=$2 AND finishing.ended_at IS NULL)
@@ -667,6 +712,7 @@ export async function listChangeOverStations(
       [
         siteId,
         session.userId ?? null,
+        access.temporaryStationIds??null,
       ],
     )
   ).rows;
@@ -696,7 +742,8 @@ export async function requireGateStationManagementAccess(client: Queryable, sess
        JOIN site_locations s ON s.id=a.site_location_id
        WHERE u.id=$1 AND u.session_version=$4 AND u.suspended_at IS NULL
          AND ($5::int IS NULL OR m.id=$5)
-         AND p.deleted_at IS NULL AND p.is_active=true AND p.vendor_role IN ('office','both')
+         AND p.deleted_at IS NULL AND p.is_active=true AND (p.vendor_role IN ('office','both') OR EXISTS(
+           SELECT 1 FROM vendor_person_operational_roles office_role WHERE office_role.vendor_people_id=p.id AND office_role.is_active=true AND office_role.role='office'))
          AND s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true LIMIT 1`,
       [session.userId, session.vendorId, siteId, session.sv, session.activeMembershipId ?? null],
     );
@@ -856,6 +903,7 @@ export async function readGateMapActivity(session: SessionPayload, stationId: st
 export async function getChangeOverState(
   session: SessionPayload,
   stationId: string,
+  options:{forSelfAssume?:boolean}={},
 ) {
   const started = performance.now();
   const stages: Record<string, number> = {};
@@ -865,7 +913,7 @@ export async function getChangeOverState(
   };
   try { return await changeOverTransaction(async (c) => {
     stages.transactionSetup = Math.round(performance.now() - started);
-    const access = await measure("access", () => stationAccess(c, session, stationId));
+    const access = await measure("access", () => options.forSelfAssume?stationForOfficeSelfAssume(c,session,stationId):stationAccess(c, session, stationId));
     const bundle = await measure("dashboardBundle", () => changeOverDashboardBundle(c, stationId));
     const shift = bundle.shift;
     const released = bundle.releasedWatch;
@@ -1388,6 +1436,17 @@ export async function getGateWatchOperation(session: SessionPayload, stationId: 
   return { receipt: await watchReceipt(pool, session, stationId, operationId) };
 }
 
+async function resolveStaffingAfterWatchCommit(stationId: string) {
+  try {
+    const { resolveCoveredGateStaffingAlerts } = await import("./gate-staffing-alerts");
+    await resolveCoveredGateStaffingAlerts(stationId);
+  } catch {
+    // Custody and its automatic ticket have committed. A transient incident
+    // lookup must never turn that saved success into a failed watch response.
+    logger.warn({stationId},"Saved watch staffing reconciliation will retry in the coverage monitor");
+  }
+}
+
 /** A worker explicitly reviews and assumes a watch from their own signed-in device.
  * Authentication, paid shifts, and watch custody are separate boundaries. */
 export async function assumeGateWatch(session: SessionPayload, input: {
@@ -1395,9 +1454,11 @@ export async function assumeGateWatch(session: SessionPayload, input: {
   preparationId?: string | null; reviewedRevision?: string; acknowledged?: boolean;
   expectedWatchId?:string|null;allowUnprepared?:boolean;
 }) {
-  return changeOverTransaction(async c => {
+  const result = await changeOverTransaction(async c => {
     await c.query("LOCK TABLE site_visits, ticket_check_ins, tickets, vendor_people, users, user_org_memberships, site_work_assignments, managed_subcontractor_worker_sponsorships, managed_subcontractor_role_grants IN SHARE ROW EXCLUSIVE MODE");
-    const access = await stationAccess(c, session, input.stationId);
+    const access = input.expectedWatchId!==undefined && input.acknowledged===true
+      ? await stationForOfficeSelfAssume(c,session,input.stationId)
+      : await stationAccess(c, session, input.stationId);
     await lockStation(c, input.stationId);
     if (access.station.active === false) return fail(409, "station_inactive", "This gate is inactive");
     // Check receipts before the current watch: a retry must not assume a later watch.
@@ -1425,6 +1486,7 @@ export async function assumeGateWatch(session: SessionPayload, input: {
       if((await c.query("SELECT id FROM gate_shifts WHERE operator_id=$1 AND ended_at IS NULL AND station_id<>$2 LIMIT 1",[session.userId,input.stationId])).rowCount)return fail(409,"operator_on_watch","End your current watch before assuming another watch.");
     }
     const saveReceipt=async(result:Record<string,unknown>)=>{
+      await c.query("UPDATE gate_duty_sessions SET post_coverage=post_coverage || $3::jsonb WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL",[input.stationId,session.userId,JSON.stringify({assigneeAcknowledged:true,...(access.temporaryOfficeCoverage?{temporaryOfficeCoverage:true}:{})})]);
       if (session.vendorId) {
         const ticket = await ensureGateWatchTicket(c, session, input.stationId, access.station.site_id);
         if (ticket.ticketBlocker) throw new ChangeOverError(409, ticket.ticketBlocker, "The watch ticket could not be opened. Ask your company administrator to check the approved Gate service and scheduled ticket; no watch change was committed.");
@@ -1466,10 +1528,17 @@ export async function assumeGateWatch(session: SessionPayload, input: {
       if (session.userId && (session.vendorId || session.partnerId)) await assertRequiredWorkClear(c, session.userId, session.partnerId ? { type: "partner", id: session.partnerId } : { type: "vendor", id: session.vendorId! });
       await c.query("INSERT INTO gate_shifts(station_id,operator_id,started_at) VALUES($1,$2,$3) RETURNING id", [input.stationId, session.userId, new Date()]);
     }
-    if (own) return saveReceipt(own);
+    if (own) {
+      // An administrative assignment did not establish physical coverage. This
+      // explicit saved assumption is the assignee's attendance confirmation.
+      const confirmed=(await c.query("UPDATE gate_duty_sessions SET post_coverage=post_coverage || '{\"assigneeAcknowledged\":true}'::jsonb WHERE id=$1 RETURNING *",[own.id])).rows[0];
+      return saveReceipt(confirmed);
+    }
     return saveReceipt((await c.query(`INSERT INTO gate_duty_sessions(station_id,user_id,started_at,source,idempotency_key,post_coverage)
       VALUES($1,$2,$3,$4,$5,$6::jsonb) RETURNING *`, [input.stationId, session.userId, new Date(), input.source, input.operationId, JSON.stringify({... (session.vendorId ? { vendorId: session.vendorId } : {}),handoverPrepared:Boolean(shift?.preparation_id)})])).rows[0]);
   });
+  await resolveStaffingAfterWatchCommit(input.stationId);
+  return result;
 }
 
 export async function getShiftNotes(

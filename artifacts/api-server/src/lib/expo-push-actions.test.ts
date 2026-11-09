@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-vi.mock("@workspace/db", async () => ({...await import("../../../../lib/db/src/schema/index"),db:{select:()=>({from:()=>({where:async()=>[{token:"ExponentPushToken[synthetic]"}]})})}}));
+vi.mock("@workspace/db", async () => ({...await import("../../../../lib/db/src/schema/index"),db:{select:()=>({from:()=>({where:async()=>[{token:"ExponentPushToken[synthetic]"}]})})},pool:{query:vi.fn(async(sql:string)=>{if(sql.includes("SELECT DISTINCT recipient.user_id"))return {rows:[]};throw Error("Unexpected push fixture query");})}}));
 import { resolvePushCategory, sendPushToUser } from "./expo-push";
 afterEach(()=>vi.unstubAllGlobals());
 it("adds registered actions only to saved notifications and exact meeting invitation type",async()=>{

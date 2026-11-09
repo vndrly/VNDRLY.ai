@@ -1,3 +1,4 @@
+import { staffingDeliveryAllowed } from "./staffing-notification-policy";
 import { notificationCompanyHoldApplies, notificationTokenHoldApplies } from "./notification-company-hold";
 import { db, fieldPushTokensTable, vendorPeopleTable } from "@workspace/db";
 import {assertExternalEffectsAllowed} from '@workspace/db/realm';
@@ -64,7 +65,7 @@ function resolveInterruptionLevel(msg: ExpoPushMessage): ExpoPushMessage["interr
 
 async function sendExpoPushBatch(tokens: string[], msg: ExpoPushMessage) {
   assertExternalEffectsAllowed();
-  if (tokens.length === 0) return false;
+  if (tokens.length === 0 || !await staffingDeliveryAllowed({id:Number(msg.data?.notificationId),type:resolvePushType(msg)})) return false;
   const interruptionLevel = resolveInterruptionLevel(msg);
   const type = resolvePushType(msg);
   const messages = tokens.map((to) => ({
@@ -110,6 +111,7 @@ export async function sendExpoPushDestination(token: string, msg: ExpoPushMessag
   status: "accepted" | "retryable" | "failed" | "unknown"; providerMessageId?: string; errorCode?: string;
 }> {
   assertExternalEffectsAllowed();
+  if (!await staffingDeliveryAllowed({id:Number(msg.data?.notificationId),type:resolvePushType(msg)})) return {status:"failed",errorCode:"staffing_alert_silenced"};
   if (await notificationTokenHoldApplies(token)) return {status:"failed",errorCode:"company_notification_hold"};
   try {
     const res = await fetch(EXPO_PUSH_URL, {
@@ -129,6 +131,7 @@ export async function sendExpoPushDestination(token: string, msg: ExpoPushMessag
 }
 
 export async function sendPushToUser(userId: number, msg: ExpoPushMessage) {
+  if (!await staffingDeliveryAllowed({id:Number(msg.data?.notificationId),type:resolvePushType(msg)})) return {delivered:false,recipientCount:0};
   if (await notificationCompanyHoldApplies(userId)) return {delivered:false,recipientCount:0};
   const rows = await db
     .select({ token: fieldPushTokensTable.expoToken })

@@ -45,6 +45,8 @@ import BulkLoginUploadDialog from "@/components/bulk-login-upload-dialog";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
 import ManagedSubcontractorEmployeesCard from "@/components/managed-subcontractor-employees-card";
 import { type EmployeeOperationalRole } from "@/components/employee-access-editor";
+import NextStepsEmployeeHelper from "@/components/next-steps-employee-helper";
+import { useNextSteps, type SavedNextStepsWorker } from "@/components/next-steps";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -185,6 +187,12 @@ export default function FieldEmployees() {
   const queryClient = useQueryClient();
   const [staffOpen, setStaffOpen] = useState(false);
   const [staffNextSiteId,setStaffNextSiteId] = useState<number>();
+  const nextSteps = useNextSteps();
+  const [guidedStaff, setGuidedStaff] = useState(false);
+  const [savedHelperWorker, setSavedHelperWorker] = useState<SavedNextStepsWorker>();
+  const staffScope = `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}`;
+  const staffScopeRef = useRef(staffScope); staffScopeRef.current = staffScope;
+  useEffect(() => { setStaffOpen(false); setStaffTarget(null); setStaffNextSiteId(undefined); setGuidedStaff(false); setSavedHelperWorker(undefined); }, [staffScope]);
   const [staffTarget, setStaffTarget] = useState<StaffProfilePerson | null>(null);
   const [staffCompanyId, setStaffCompanyId] = useState<number | null>(null);
   const [staffDefaultType, setStaffDefaultType] = useState<StaffType>("Office Staff");
@@ -274,7 +282,7 @@ export default function FieldEmployees() {
     queryFn: async () => { const response = await fetch(`/api/company-operations?vendorId=${vendorId}`, { credentials: "include" }); if (!response.ok) throw new Error("Unable to load company operations"); return response.json(); },
   });
   const accessQueryKey = ["vendor-people-access", vendorId] as const;
-  const { data: peopleAccess } = useQuery<PeopleAccessResponse>({
+  const { data: peopleAccess, isLoading: isLoadingPeopleAccess } = useQuery<PeopleAccessResponse>({
     queryKey: accessQueryKey,
     enabled: !!vendorId && !isPartner,
     queryFn: async () => {
@@ -403,18 +411,22 @@ export default function FieldEmployees() {
     return rows;
   };
   const allStaff = [...new Map([...(officeEmployees ?? []), ...(fieldEmployees ?? [])].map(person => [person.id, person])).values()] as PersonRow[];
-  const linkedSiteId = Number(new URLSearchParams(window.location.search).get("siteId"));
-  const openedNextStep = useRef("");
-  useEffect(() => {
-    const key = `${vendorId}:${linkedSiteId}`;
-    if (!isVendor || !vendorId || !linkedSiteId || !peopleAccess || !officeEmployees || !fieldEmployees || openedNextStep.current===key) return;
-    if (!peopleAccess.eligibleSites.some(site=>site.id===linkedSiteId)) return;
-    openedNextStep.current=key;
-    const candidate=allStaff.find(person=>person.isActive && (person.vendorRole==="gatekeeper" || person.vendorRole==="gate_supervisor" || accessByPersonId.get(person.id)?.operationalRoles.some(role=>role==="gatekeeper" || role==="gate_supervisor")));
-    if (candidate) openStaffProfile(candidate);
-    else addStaff("Gatekeeper","Gatekeeper");
+  const helperQuery = new URLSearchParams(window.location.search);
+  const linkedSiteId = Number(helperQuery.get("siteId"));
+  const guidedEmployeeRequested = helperQuery.get("nextSteps") === "first-watch" || Boolean(linkedSiteId && helperQuery.get("stationId"));
+  const helperSite = peopleAccess?.eligibleSites.find(site => site.id === linkedSiteId);
+  const helperContext = nextSteps?.selected?.context;
+  const helperStationName = helperContext?.siteId === linkedSiteId ? helperContext.stationName : undefined;
+  const startGuidedStaff = (personId?: number) => {
+    if (!isVendorAdmin || !helperSite) return;
+    if (personId !== undefined) {
+      const person = allStaff.find(person => person.id === personId && person.vendorId === vendorId && person.isActive !== false);
+      if (!person) return;
+      openStaffProfile(person);
+    } else addStaff("Gatekeeper", "Gatekeeper");
     setStaffNextSiteId(linkedSiteId);
-  }, [vendorId, linkedSiteId, peopleAccess, officeEmployees, fieldEmployees]);
+    setGuidedStaff(true);
+  };
 
   const sortedOffice = sortRows(filterByStatus(allStaff.filter(person => {
     const grants = accessByPersonId.get(person.id);
@@ -588,6 +600,12 @@ export default function FieldEmployees() {
         </div>
       </div>
 
+      {isVendor && vendorId && guidedEmployeeRequested && <NextStepsEmployeeHelper key={`${staffScope}:${linkedSiteId}:${helperQuery.get("stationId")}:${helperQuery.get("shiftId")}`} vendorId={vendorId} siteId={linkedSiteId} siteName={helperSite?.name} stationName={helperStationName ?? undefined} canManage={!!isVendorAdmin} loading={isLoadingPeopleAccess || isLoadingOffice || isLoadingField} people={allStaff} savedWorker={savedHelperWorker} onAddDirect={() => startGuidedStaff()} onEditDirect={startGuidedStaff} onManagedSaved={(worker, companyId) => {
+        if (staffScopeRef.current !== staffScope) return;
+        const saved: SavedNextStepsWorker = { kind: "managed", managedWorkerId: worker.id, managedOrganizationId: companyId, userId: worker.userId, name: worker.name };
+        setSavedHelperWorker(saved); nextSteps?.workerSaved(saved);
+      }} />}
+
       {vendorId && <DefineStaffRoles vendorId={vendorId} operations={companyOperations?.categories ?? []} logoSrc={vendorData?.logoSquareUrl || vendorData?.logoUrl || undefined} companyName={vendorData?.name} />}
 
       {isPartner ? (
@@ -748,7 +766,7 @@ export default function FieldEmployees() {
           }))} />
         </CardContent>}
       </section>)}
-      {canManageSubcontractors && <ManagedSubcontractorEmployeesCard vendorId={vendorId} embedded />}
+      {canManageSubcontractors && !guidedEmployeeRequested && <ManagedSubcontractorEmployeesCard vendorId={vendorId} embedded />}
       </div>
       </Card>}
       {canManageSubcontractors && Boolean(hoursCompanies.data?.items.length) && <ManagedSubcontractorHoursPanel key={vendorId} vendorId={vendorId} companies={hoursCompanies.data!.items} start={hoursRange.start} end={hoursRange.end} />}
@@ -785,7 +803,7 @@ export default function FieldEmployees() {
               {group.people.length ? <Table>{renderHeader(group.category === "gate" ? officeCols : fieldCols, group.category === "gate" ? gateSort : fieldSort, group.category === "gate" ? setGateSort : setFieldSort)}<TableBody>{group.people.map(person => renderRow(person, group.category))}</TableBody></Table> : <p className="p-6 text-sm text-muted-foreground">No {group.title.toLowerCase()} yet</p>}
             </CardContent>
           </Card>)}
-          {isVendorAdmin && vendorId && <ManagedSubcontractorEmployeesCard vendorId={vendorId} />}
+          {isVendorAdmin && vendorId && !guidedEmployeeRequested && <ManagedSubcontractorEmployeesCard vendorId={vendorId} />}
 
           {isAdmin && (
             <Card data-testid="removed-employees-section">
@@ -878,7 +896,11 @@ export default function FieldEmployees() {
         </Dialog>
       )}
 
-      {staffCompanyId && <StaffProfileDialog open={staffOpen} onOpenChange={open=>{setStaffOpen(open);if(!open)setStaffNextSiteId(undefined);}} vendorId={staffCompanyId} person={staffTarget} defaultSiteId={staffNextSiteId} defaultType={staffDefaultType} defaultRole={staffDefaultRole} operationCategories={companyOperations?.categories} canVerify={canVerifyCerts} />}
+      {staffCompanyId && <StaffProfileDialog key={staffScope} open={staffOpen && (!isVendor || staffCompanyId === vendorId)} onOpenChange={open=>{setStaffOpen(open);if(!open){setStaffNextSiteId(undefined);setGuidedStaff(false);}}} vendorId={staffCompanyId} person={staffTarget} defaultSiteId={staffNextSiteId} defaultType={staffDefaultType} defaultRole={staffDefaultRole} operationCategories={companyOperations?.categories} canVerify={canVerifyCerts} nextSteps={guidedStaff && helperSite && nextSteps?.selected?.id === "first-watch" && nextSteps.selected.action?.href.startsWith("/field-employees") ? { siteName: helperSite.name, onReturn: () => nextSteps?.show() } : undefined} onSaved={profile => {
+        if (!guidedStaff || staffScopeRef.current !== staffScope) return;
+        const saved: SavedNextStepsWorker = { kind: "direct", vendorPeopleId: profile.id, userId: profile.userId, name: `${profile.firstName} ${profile.lastName}` };
+        setSavedHelperWorker(saved); nextSteps?.workerSaved(saved);
+      }} />}
     </div>
   );
 }

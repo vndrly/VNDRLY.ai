@@ -72,7 +72,7 @@ it('does not count a skipped mandatory legal step as completion', () => {
 });
 
 
-it("links skipped and unvisited steps from the dashboard and opens the selected step", () => {
+it("preserves the onboarding stepper without a duplicate fixed Next Steps card", () => {
   useProgress.mockReturnValueOnce({
     progress: {
       ...completedVendorProgress,
@@ -81,8 +81,13 @@ it("links skipped and unvisited steps from the dashboard and opens the selected 
     },
   });
   render(<QueryClientProvider client={new QueryClient()}><DashboardSetup orgType="vendor" orgId={1} /></QueryClientProvider>);
-  expect(screen.getByRole("link", { name: "Add your vendor logo and brand color" }).getAttribute("href")).toBe("/onboarding/vendor?step=branding");
-  expect(screen.getByRole("link", { name: "Set service area and work types" }).getAttribute("href")).toBe("/onboarding/vendor?step=work-types");
+  expect(screen.queryByRole("heading", { name: "Next Steps" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Add your vendor logo and brand color" })).toBeNull();
   fireEvent.click(screen.getAllByRole("button", { name: "Go to Tax IDs" })[0]);
   expect(navigate).toHaveBeenCalledWith("/onboarding/vendor?step=tax-ids");
+});
+
+ it("removes the old dashboard Next Steps surface", () => {
+  const { container } = render(<QueryClientProvider client={new QueryClient()}><DashboardSetup orgType="vendor" orgId={1} section="next-steps" /></QueryClientProvider>);
+  expect(container.textContent).toBe("");
 });

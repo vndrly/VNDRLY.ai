@@ -1,3 +1,4 @@
+import { NextStepsNavButton, useNextSteps } from "@/components/next-steps";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -15,10 +16,20 @@ import { useBrowserNotifications } from "@/hooks/use-browser-notifications";
 import { useNotificationsModal } from "@/components/notifications-modal-context";
 import { useMessageSound } from "@/hooks/use-message-sound";
 import { subscribeNotificationStream } from "@/lib/shared-notification-stream";
+import { useGateStaffingAlerts } from "@/hooks/use-gate-staffing-alerts";
 
 export default function NotificationsBell() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const staffing = useGateStaffingAlerts();
+  const setWorkflowOffers = useNextSteps()?.setWorkflowOffers;
+  useEffect(() => {
+    if (!setWorkflowOffers || staffing.data?.notificationsPaused || staffing.isError) return;
+    const blocker = staffing.data?.alerts.find(alert => alert.status !== "resolved" && alert.severity === "critical" && alert.canAcknowledge && !alert.notificationsPaused);
+    return setWorkflowOffers("gate-staffing-alerts", blocker ? [{ id: "gate-staffing-recovery", kind: "gate-operation", title: "Restore gate staffing", description: "Review the saved gap and arrange actual watch coverage.", priority: 1, action: { title: "Open saved staffing calendar", href: blocker.href }, context: { siteId: blocker.siteId, stationId: blocker.stationId, shiftId: blocker.shiftId, alertId: blocker.id, siteName: blocker.siteName, stationName: blocker.gateName, day: new URL(blocker.href, "https://vndrly.ai").searchParams.get("date") ?? undefined } }] : []);
+  }, [setWorkflowOffers, staffing.data, staffing.isError]);
+  const staffingRef = useRef(staffing.data);
+  staffingRef.current = staffing.data;
   useMessageSound(user?.userId);
   const qc = useQueryClient();
   const [, navigate] = useLocation();
@@ -63,6 +74,7 @@ export default function NotificationsBell() {
     try {
       const apiBase = import.meta.env.BASE_URL.replace(/\/$/, "");
       const refreshBell = () => {
+        void qc.invalidateQueries({ queryKey: ["gate-staffing-alerts", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId] });
         qc.invalidateQueries({
           queryKey: ["notifications", "count", user?.userId],
         });
@@ -76,12 +88,15 @@ export default function NotificationsBell() {
             msg.data,
           ) as NotificationCreatedBrowserDetail;
           if (parsed.type !== "notification.created") return;
+          refreshBell();
+          // Staffing surfaces consult saved shared state; stale recipient events cannot
+          // re-alarm an acknowledged incident or bypass a company's notification hold.
+          if (staffingRef.current?.notificationsPaused === true || parsed.notifType === "gate_watch_radar" || parsed.notifType?.startsWith("gate_coverage_")) return;
           window.dispatchEvent(
             new CustomEvent(NOTIFICATION_CREATED_BROWSER_EVENT, {
               detail: parsed,
             }),
           );
-          refreshBell();
           if (parsed.title) {
             const link = parsed.link ?? null;
             showRef.current({
@@ -132,15 +147,20 @@ export default function NotificationsBell() {
 
   if (!user) return null;
   const count = countData?.count ?? 0;
+  const currentGaps = (staffing.data?.alerts ?? []).filter(alert => alert.status !== "resolved" && alert.severity === "critical" && !alert.notificationsPaused);
+  const alarm = !staffing.data?.notificationsPaused && currentGaps.length > 0;
+  const pulse = alarm && currentGaps.some(alert => alert.status === "open");
 
   return (
+    <div className="flex items-center gap-1">
     <button
       type="button"
       className={`relative rounded-md p-2 transition-colors hover:bg-white/10 ${
-        count > 0 ? "text-white hover:text-white" : "text-gray-400 hover:text-white"
-      }`}
+        alarm ? "bg-red-700 text-white hover:text-white" : count > 0 ? "text-white hover:text-white" : "text-gray-400 hover:text-white"
+      } ${pulse ? "motion-safe:animate-pulse" : ""}`}
       data-testid="button-notifications-bell"
-      aria-label={t("notifications.bellLabel")}
+      data-staffing-pulse={pulse}
+      aria-label={`${t("notifications.bellLabel")}${alarm ? pulse ? " · Critical staffing gap needs acknowledgment" : " · Acknowledged staffing gap remains unresolved" : ""}`}
       onClick={() => notificationsModal?.openNotifications()}
     >
       <Bell className="h-5 w-5" />
@@ -153,5 +173,7 @@ export default function NotificationsBell() {
         </Badge>
       )}
     </button>
+    <NextStepsNavButton />
+    </div>
   );
 }
