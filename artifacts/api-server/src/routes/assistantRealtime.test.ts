@@ -613,6 +613,16 @@ describe("AskV Realtime safety regressions", () => {
       .expect(200);
     expect(dashboard.body.context.entityId).toBeNull();
   });
+  it("carries the same scoped workflow step and current control into voice, then clears it", async () => {
+    const guidance = { companyId: 22, state: "ready", active: { key: "first-watch", title: "First watch", action: { title: "Assign the saved shift", href: "/work-hub/calendar?siteId=14" }, context: { siteId: 14 } }, available: [], control: { targetId: "save-assignment", prompt: "Review this shift before saving" } };
+    const result = await request(app()).post("/assistant/realtime/context").send({ sessionId: "guide-context", path: "/work-hub/meetings", gateGuidance: guidance }).expect(200);
+    expect(result.body.context.gateGuidance).toMatchObject(guidance);
+    expect(result.body.tools.some((tool: { name: string }) => tool.name === "query_gate_setup_progress")).toBe(true);
+    const cleared = await request(app()).post("/assistant/realtime/context").send({ sessionId: "guide-context", path: "/work-hub/meetings", gateGuidance: { ...guidance, companyId: 99 } }).expect(200);
+    expect(cleared.body.context.gateGuidance).toBeNull();
+    expect(cleared.body.tools.some((tool: { name: string }) => tool.name === "query_gate_setup_progress")).toBe(false);
+    expect(mocks.runTool).not.toHaveBeenCalled();
+  });
   it("enforces server rollout flags even when a client posts Realtime requests directly", async () => {
     vi.stubEnv("ASKV_NATURAL_VOICE_ENABLED", "0");
     try {

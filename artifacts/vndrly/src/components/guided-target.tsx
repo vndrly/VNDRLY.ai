@@ -83,6 +83,11 @@ export function useGuidedTarget(target: GuidanceTarget | null, active = true, pr
   }, [register, owner, active, target?.scopeId, target?.targetId, target?.prompt, priority]);
 }
 
+/** askV reads the same registered next control that Next Steps highlights. */
+export function useCurrentGuidanceTarget(): GuidanceTarget | null {
+  return useContext(Context)?.target ?? null;
+}
+
 export function GuidanceTargetStatus() {
   const registry = useContext(Context);
   if (!registry?.target) return null;

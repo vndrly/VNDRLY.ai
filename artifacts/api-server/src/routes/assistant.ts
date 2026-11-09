@@ -49,6 +49,8 @@ import {
 import { buildDeepLink } from "../assistant/deep-links";
 import { ensureDeepLinksInAssistantReply } from "../assistant/deep-link-markdown";
 import { parsePageContext } from "../assistant/page-context";
+import { parseGateSetupProgressHint, parseGateWorkflowOffer } from "@workspace/gate-booth";
+import { offerGateWorkflow } from "../assistant/gate-workflow-tools";
 import {
   deviceActorFromSession,
   publishAskVDeviceEvent,
@@ -847,6 +849,7 @@ export async function runTool(
     });
   }
   if (isMarketplaceTool(name)) return JSON.stringify(await runMarketplaceTool(name, input, session, workHubMutationAuthorizedByServer));
+  if (name === "offer_gate_workflow") return JSON.stringify(offerGateWorkflow(input, session.vendorId));
   const workHubRequest = resolveExecutableWorkHubToolRequest(
     name,
     bindWorkHubToolScope(input, session, name),
@@ -1414,7 +1417,7 @@ async function handleConversationMessage(
   const onboardingActive = !!(onboardingProgressRow && !onboardingProgressRow.completedAt);
 
   const preferredLanguage = (user?.preferredLanguage as "en" | "es" | null) ?? null;
-  let pageContext = parsePageContext(req.body?.pageContext);
+  let pageContext = parsePageContext(req.body?.pageContext, session.vendorId ?? null);
   const rawDeviceContext = req.body?.deviceContext;
   if (rawDeviceContext && typeof rawDeviceContext === "object") {
     const actor = deviceActorFromSession(session);
@@ -1466,6 +1469,12 @@ async function handleConversationMessage(
         input_schema: tool.inputSchema,
       }))
     : TOOLS;
+  for (const name of ["query_gate_setup_progress", "offer_gate_workflow"]) {
+    const guidanceTool = findAskVTool(name);
+    if (guidanceTool?.roles.includes(session.role as never) && !assistantTools.some(tool => tool.name === guidanceTool.name)) {
+      assistantTools = [...assistantTools, { name: guidanceTool.name, description: guidanceTool.description, input_schema: guidanceTool.inputSchema }];
+    }
+  }
   if (privatePersonalTurn) assistantTools = assistantTools.filter(tool => findAskVTool(tool.name)?.mutating !== true);
   if (selectedConnection) assistantTools = [...assistantTools, SELECTED_EXTERNAL_CALENDAR_TOOL];
   const typedConfirmationContext = JSON.stringify(pageContext ?? {});
@@ -1646,6 +1655,12 @@ async function handleConversationMessage(
           classifyToolResult(out, findAskVTool(tu.name)?.mutating === true) === "success", false);
         if (mutation) send("mutation", { mutation });
         send("tool", { name: tu.name, status: "end" });
+        if (tu.name === "query_gate_setup_progress") {
+          try { const hint = parseGateSetupProgressHint(JSON.parse(out)); if (hint) send("gate_guidance", hint); } catch { /* Failed reads never become workflow offers. */ }
+        }
+        if (tu.name === "offer_gate_workflow") {
+          try { const offer = parseGateWorkflowOffer(JSON.parse(out), session.vendorId); if (offer) send("gate_workflow_offer", offer); } catch { /* Only registered structured offers reach the client. */ }
+        }
         // Only structured capability results may request client-side work.
         // Text/model prose never becomes a navigation or device command.
         try {

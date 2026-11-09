@@ -7,6 +7,10 @@ router.get("/account-next-steps", async (req,res,next) => {
   res.setHeader("Cache-Control","private, no-store");
   const session=getSessionFromRequest(req);
   if (!session?.userId) { res.status(401).json({message:"Sign in required"}); return; }
+  const expected = [req.get("X-VNDRLY-Actor-User"), req.get("X-VNDRLY-Vendor"), req.get("X-VNDRLY-Membership")];
+  if (expected.some(value => value !== undefined) && expected.some((value, index) => value !== String([session.userId, session.vendorId, session.activeMembershipId][index]))) {
+    res.status(409).json({message:"Your account changed. Refresh Next Steps in the current company.", code:"workforce.context_changed"}); return;
+  }
   try { res.json(await readAccountNextSteps(session)); }
   catch(error) { if(error instanceof ChangeOverError) res.status(error.status).json({message:error.message,code:error.code}); else next(error); }
 });

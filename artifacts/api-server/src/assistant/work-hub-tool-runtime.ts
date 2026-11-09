@@ -66,6 +66,21 @@ export function inferWorkHubAuditTargetId(rawInput: unknown, rawOutput?: unknown
 }
 
 export function describeWorkHubToolResult(name: string, rawInput: unknown, result: Record<string, unknown> | unknown[]) {
+  if (name === "query_gate_setup_progress") {
+    if (Array.isArray(result) || result.ok === false || result.error) return result;
+    const saved = record(result.firstWatch);
+    const context = record(saved.context);
+    const complete = saved.complete === true && Boolean(context.watchId && context.ticketId);
+    const waitingForTicket = Boolean(context.watchId) && !context.ticketId;
+    return {
+      kind: "gate_setup_progress", workflowKey: "first-watch", checkedAt: new Date().toISOString(),
+      state: result.firstWatch == null ? "unavailable" : complete ? "complete" : waitingForTicket || !saved.action ? "waiting" : "actionable",
+      complete,
+      action: complete || waitingForTicket ? null : saved.action ?? null,
+      message: waitingForTicket ? "Watch saved. Its automatic ticket is not yet confirmed. Do not assume this watch again." : saved.message ?? null,
+      context: saved.context ?? null,
+    };
+  }
   if (name === "search_work_hub_meeting") {
     if (!Array.isArray(result) && (result.ok === false || result.error)) return result;
     return searchSavedMeetingProjection(rawInput,result);
@@ -508,6 +523,8 @@ export function resolveWorkHubToolRequest(
   rawInput: unknown,
 ): WorkHubToolRequest | null {
   const input = record(rawInput);
+  if (name === "query_gate_setup_progress") return Object.keys(input).length === 0
+    ? request("GET", "/account-next-steps") : { error: "Gate setup progress uses only your signed-in company; no user, company or record override is accepted." };
   const payload = record(input.payload);
   const native = nativeOperationsToolRequest(name, input);
   if (native) return native;
@@ -1254,7 +1271,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  [...GATE_DAILY_BILLING_NAMES,"manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  [...GATE_DAILY_BILLING_NAMES,"query_gate_setup_progress","manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,
@@ -1262,6 +1279,7 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
+  if (toolName === "query_gate_setup_progress") return input;
   if((GATE_DAILY_BILLING_NAMES as readonly string[]).includes(toolName??""))return input;
   if (FLEET_COMMERCIAL_TOOLS.some(row=>row.name===toolName)||FLEET_COMMERCIAL_READ_TOOLS.some(row=>row.name===toolName))return input;
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;

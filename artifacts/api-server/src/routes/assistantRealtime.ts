@@ -1,4 +1,5 @@
 import { isMarketplaceTool } from "../assistant/marketplace-tool-catalog";
+import { parseAskVGateGuidance } from "@workspace/gate-booth";
 import {
   Router,
   text,
@@ -736,11 +737,12 @@ router.post("/assistant/realtime/context", async (req, res): Promise<void> => {
     role: session.role,
     membershipRole: session.membershipRole,
     ...context,
+    gateGuidance: Boolean(parseAskVGateGuidance(req.body?.gateGuidance, session.vendorId ?? null)),
   });
   res.json({
     tools: toRealtimeTools(selected),
     toolMetadata: toRealtimeToolMetadata(selected),
-    context: { ...compactVoiceContext(session, context), gateDraft: parseGateDraft(req.body?.gateDraft) ?? null },
+    context: { ...compactVoiceContext(session, context), gateDraft: parseGateDraft(req.body?.gateDraft) ?? null, gateGuidance: parseAskVGateGuidance(req.body?.gateGuidance, session.vendorId ?? null) ?? null },
   });
 });
 router.post("/assistant/realtime/end", async (req, res): Promise<void> => {

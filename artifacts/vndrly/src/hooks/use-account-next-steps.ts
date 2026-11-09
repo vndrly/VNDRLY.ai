@@ -20,7 +20,7 @@ export function useAccountNextSteps() {
   const query = useQuery({
     queryKey,
     queryFn: async ({ signal }): Promise<AccountNextStepsSummary> => {
-      const response = await fetch("/api/account-next-steps", { credentials: "include", signal });
+      const response = await fetch("/api/account-next-steps", { credentials: "include", signal, headers: { "X-VNDRLY-Actor-User": String(user?.userId), "X-VNDRLY-Vendor": String(owner?.id), "X-VNDRLY-Membership": String(user?.activeMembershipId) } });
       if (!response.ok) throw new Error("Next Steps could not be refreshed.");
       return response.json();
     },

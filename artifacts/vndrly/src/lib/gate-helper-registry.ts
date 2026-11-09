@@ -1,10 +1,7 @@
 import type { FirstWatchContext, NextStepWorkflow, GateWorkflowContext } from "./next-steps-model";
+import type { GateGuidedWorkflowKey } from "@workspace/gate-booth";
 
-export type GateHelperKey =
-  | "first-watch" | "gate-staffing-recovery" | "gate-watch-handoff"
-  | "gate-vehicle-check-in" | "gate-inner-arrival" | "gate-vehicle-check-out"
-  | "gate-early-turnaround" | "gate-return-to-inner" | "gate-map-and-log"
-  | "gate-shift-scheduling";
+export type GateHelperKey = GateGuidedWorkflowKey;
 export type GateHelperContext = GateWorkflowContext;
 export type GateCompletionProof = { recordType: "gate-watch" | "gate-visit" | "gate-scheduled-shift"; recordId: number | string; siteId: number };
 export type GateHelperStep = Partial<Pick<NextStepWorkflow, "action" | "message" | "context" | "description">>;

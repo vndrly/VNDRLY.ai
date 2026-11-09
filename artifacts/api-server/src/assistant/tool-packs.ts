@@ -38,6 +38,8 @@ const CORE_TOOLS = new Set([
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
+  "offer_gate_workflow",
+  "query_gate_setup_progress",
   "query_gate_daily_billing", "configure_gate_daily_billing", "invoice_gate_post",
   "query_gate_stations",
   "query_gate_arrivals",
@@ -219,6 +221,7 @@ export function toolsForRealtime(args: {
   path?: string | null;
   entityId?: number | null;
   workflow?: VoiceWorkflow;
+  gateGuidance?: boolean;
 }): AskVToolDefinition[] {
   const role = normalizeAskVRole(args.role);
   const path = args.path ?? "";
@@ -230,6 +233,8 @@ export function toolsForRealtime(args: {
       : voiceWorkflowForPath(path);
   if (workflow !== "auto")
     for (const name of WORKFLOW_TOOLS[workflow]) allowed.add(name);
+  if (args.gateGuidance || /^\/(?:(?:mobile|native)\/)?(?:dashboard|work-hub(?:\/askv)?)\/?(?:[?#].*)?$/.test(path)) allowed.add("query_gate_setup_progress");
+  if (args.gateGuidance || /\/work-hub\/askv(?:[/?#]|$)/.test(path)) allowed.add("offer_gate_workflow");
   if (/\/(fleet(?:-map|-log)?|gate-map|company-operations)(?:\/|$)/i.test(path)) {
     for(const tool of ASK_V_TOOL_REGISTRY) if([...FLEET_COMMERCIAL_TOOLS,...FLEET_AUXILIARY_TOOLS].some(row=>row.name===tool.name)||tool.name.startsWith("query_fleet_") || ["create_fleet_inventory_asset","enroll_fleet_inventory_asset","edit_fleet_inventory_asset","recommend_fleet_destinations","save_fleet_ticket_plan","save_fleet_destination","finalize_fleet_ticket"].includes(tool.name) || tool.name === "query_gate_coverage_map" || tool.name === "query_company_operations" || tool.name === "set_company_operations") allowed.add(tool.name);
   }

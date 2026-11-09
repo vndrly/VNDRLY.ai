@@ -6,6 +6,7 @@ import { ASKV_IDLE_MS, type AskVVoiceState } from '@/lib/askv-voice-state';
 import { addAskVToolLocation } from '@/lib/askv-tool-location';
 import { createAskVVoiceMetrics } from '@/lib/askv-voice-metrics';
 import { readGateVoiceDraft, notifyGateVoiceSaved, subscribeGateVoiceDraft } from '@workspace/gate-booth';
+import { parseGateSetupProgressHint, parseGateWorkflowOffer, type GateWorkflowOffer, type GateSetupProgressHint } from '@workspace/gate-booth';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 const GATE_SUBMISSION_TOOLS = new Set(['confirm_visitor_check_in', 'confirm_visitor_check_out']);
 export type AskVRealtimeState = AskVVoiceState;
@@ -16,6 +17,8 @@ export function useAskVRealtime(args?: {
   onTranscript?: (message: VoiceTranscript, conversationId: number, sessionId: string) => void;
   flushTranscripts?: () => Promise<void>;
   onMutation?: (mutation: { name: string; refresh: string[] }) => void;
+  onGateSetupProgress?: (hint: GateSetupProgressHint) => void;
+  onGateWorkflowOffer?: (offer: GateWorkflowOffer) => void;
 }) {
   const latest = useRef(args); latest.current = args;
   const [state, setState] = useState<AskVVoiceState>('stopped');
@@ -131,6 +134,14 @@ export function useAskVRealtime(args?: {
           const output = body.output ?? (body.requiresConfirmation ? body : body.message ?? body.error ?? '');
           let parsed: Record<string, unknown> | undefined;
           try { parsed = typeof output === 'string' ? JSON.parse(output) : output; } catch { /* ordinary tool text */ }
+          if (valid() && result.ok && call.name === 'query_gate_setup_progress') {
+            const hint = parseGateSetupProgressHint(parsed);
+            if (hint) latest.current?.onGateSetupProgress?.(hint);
+          }
+          if (valid() && result.ok && call.name === 'offer_gate_workflow') {
+            const offer = parseGateWorkflowOffer(parsed);
+            if (offer) latest.current?.onGateWorkflowOffer?.(offer);
+          }
           if (parsed?.ok === true && parsed.action === 'visitor_checked_in') notifyGateVoiceSaved(domain);
           if (parsed?.requiresConfirmation && typeof parsed.idempotencyKey === 'string') pendingConfirmations.set(call.name, { key: parsed.idempotencyKey, arguments: parsed.arguments, afterEventId: lastUserTranscript?.eventId });
           else if (result.ok) pendingConfirmations.delete(call.name);

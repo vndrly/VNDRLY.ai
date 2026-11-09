@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useAssistant } from '@/hooks/use-assistant';
+import { useAskVGateGuidance } from '@/hooks/use-askv-gate-guidance';
+import type { GateWorkflowOffer, GateSetupProgressHint } from '@workspace/gate-booth';
 import { useAskVRealtime } from '@/hooks/use-askv-realtime';
 import { useAskVWakeListener } from '@/hooks/use-askv-wake-listener';
 import { readAskVAcrossVndrly, readAskVMuted, writeAskVMuted } from '@/lib/askv-voice-preferences';
@@ -38,6 +40,8 @@ export function AskVVoiceBoundary({ children }: { children: ReactNode }) {
 }
 
 export function AskVVoiceProvider({ children }: { children: ReactNode }) {
+  const gateGuidance = useAskVGateGuidance();
+  const guidanceFingerprint = JSON.stringify(gateGuidance ?? null);
   const queryClient = useQueryClient();
   const { user } = useAuth(); const [location] = useLocation();
   const userId = typeof user?.userId === 'number' ? user.userId : null;
@@ -67,9 +71,13 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [microphoneOwner, setMicrophoneOwner] = useState(askVMicrophone.owner);
   const assistant = useAssistant({ pageContext: { path: location }, liveUpdates: panelOpen });
+  const pendingGateGuidance = useRef<GateSetupProgressHint | undefined>(undefined);
+  const pendingWorkflowOffer = useRef<GateWorkflowOffer | undefined>(undefined);
   const latestAssistant = useRef(assistant); latestAssistant.current = assistant;
   const saveQueue = useRef(new AskVTranscriptQueue()); const mounted = useRef(true);
   const voice = useAskVRealtime({ acrossVndrly,
+    onGateSetupProgress: hint => { pendingGateGuidance.current = hint; },
+    onGateWorkflowOffer: offer => { pendingWorkflowOffer.current = offer; },
     // Canonical Gate and ticket mutations affect multiple lists, history and maps.
     onMutation: mutation => { window.dispatchEvent(new CustomEvent('askv:data-changed', { detail: mutation })); },
     flushTranscripts: () => saveQueue.current.flush(),
@@ -78,7 +86,11 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
       return latestAssistant.current.prepareVoiceConversation(signal);
     },
     onTranscript: (message, conversationId, sessionId) => {
-      latestAssistant.current.appendVoiceTranscript(message);
+      const hint = message.role === 'assistant' ? pendingGateGuidance.current : undefined;
+      const offer = message.role === 'assistant' ? pendingWorkflowOffer.current : undefined;
+      pendingGateGuidance.current = undefined;
+      pendingWorkflowOffer.current = undefined;
+      latestAssistant.current.appendVoiceTranscript({ ...message, ...(hint ? { gateSetupProgress: hint } : {}), ...(offer ? { gateWorkflowOffer: offer } : {}) });
       saveQueue.current.add(async () => {
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
@@ -95,6 +107,9 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
         .catch(cause => { if (mounted.current) setHistoryError(cause instanceof Error ? cause.message : 'Transcript could not be saved.'); });
     },
   });
+  useEffect(() => {
+    if (["stopped", "error", "muted", "wake-idle"].includes(voice.state)) { pendingGateGuidance.current = undefined; pendingWorkflowOffer.current = undefined; }
+  }, [voice.state]);
   const stop = useCallback(() => { startAttempt.current++; voice.stop(); }, [voice.stop]);
   const latest = useRef({ muted, foreground, userId, location, voice, acrossVndrly });
   latest.current = { muted, foreground, userId, location, voice, acrossVndrly };
@@ -151,7 +166,7 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
     document.addEventListener('visibilitychange', visibility); window.addEventListener('pagehide', pause);
     return () => { document.removeEventListener('visibilitychange', visibility); window.removeEventListener('pagehide', pause); };
   }, [stop]);
-  useEffect(() => { voice.updateContext({ path: location }); }, [location, voice.updateContext]);
+  useEffect(() => { voice.updateContext({ path: location, gateGuidance: gateGuidance ?? null }); }, [location, guidanceFingerprint, voice.updateContext]);
   const clientAvailability: AskVVoiceAvailability = !enabled
     ? { status: 'disabled_client', message: 'Natural voice is disabled in this browser.' }
     : browserAvailability.status !== 'available' ? browserAvailability

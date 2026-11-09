@@ -1,5 +1,6 @@
 export { interpretGateSpeech, normalizeSpokenPlate, recoverGateSpeechFields, type GateSpeechFields } from "./voice-command";
 export { registerGateVoiceForm, readGateVoiceDraft, notifyGateVoiceSaved, gateDraftMatches, notifyGateVoiceDraftChanged, subscribeGateVoiceDraft } from "./voice-draft";
+export { GATE_GUIDED_WORKFLOW_KEYS, isGateGuidedWorkflowKey, parseAskVGateGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateWorkflowOffer, type GateSetupProgressHint, type GateGuidedWorkflowKey, type AskVGateWorkflow, type AskVGateGuidance } from "./guided-workflows";
 import {
   formatMetersAsMiles,
   haversineMeters,

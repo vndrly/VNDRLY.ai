@@ -10,6 +10,7 @@ import { actionableNextSteps, guidedEmployeeHref, nextStepGroups, groupGateWorkf
 import { gateHelperDefinition, gateHelpersRevision, subscribeGateHelpers, type GateHelperKey, type GateHelperContext, type GateHelperStep, type GateCompletionProof } from "@/lib/gate-helper-registry";
 import { GuidedTargetProvider, GuidedHelperPortal, GuidanceTargetStatus, useGuidedTarget } from "./guided-target";
 import "./next-steps.css";
+import { parseAskVGateGuidance, type AskVGateGuidance } from "@workspace/gate-booth";
 
 export type SavedNextStepsWorker =
   | { kind: "direct"; vendorPeopleId: number; userId?: number | null; name: string }
@@ -19,11 +20,13 @@ type Plan = { scope: string; open: boolean; selectedId: string | null; visited: 
 type NextStepsContextValue = {
   scope: string; open: boolean; enabled: boolean; count: number; attention: boolean; canManageStaff: boolean;
   isPending: boolean; isError: boolean; selected: NextStepWorkflow | null;
+  assistantContext?: AskVGateGuidance;
   savedWorker?: SavedNextStepsWorker;
   triggerRef: RefObject<HTMLButtonElement | null>;
   show: () => void; close: () => void; stopHelper: () => void; refresh: () => Promise<unknown>;
   select: (workflow: NextStepWorkflow) => void;
   startHelper: (key: GateHelperKey, context?: GateHelperContext) => boolean;
+  resumeHelper: (key: GateHelperKey) => Promise<"started" | "complete" | "unavailable" | "busy">;
   updateHelperStep: (key: GateHelperKey, step: GateHelperStep) => void;
   setWorkflowOffers: (sourceId: string, workflows: NextStepWorkflow[]) => () => void;
   recordCompletion: (key: GateHelperKey, proof: GateCompletionProof) => Promise<boolean>;
@@ -62,6 +65,13 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   // Ignore the previous company's UI immediately, before effects run.
   const plan = storedPlan.scope === account.scope ? storedPlan : emptyPlan();
   const selected = plan.onDemand ?? workflows.find(item => item.id === plan.selectedId) ?? null;
+  const assistantWorkflow = (workflow: NextStepWorkflow) => ({ key: workflow.id, title: workflow.title, action: workflow.action, message: workflow.message, context: workflow.context });
+  const assistantContext = account.enabled && account.vendorId ? parseAskVGateGuidance({
+    companyId: account.vendorId,
+    state: account.query.isError ? "unavailable" : account.query.isPending ? "checking" : "ready",
+    active: selected ? assistantWorkflow(selected) : null,
+    available: available.map(assistantWorkflow),
+  }) : undefined;
   const selectionRef = useRef(selected); selectionRef.current = selected;
   useEffect(() => { setPlan(current => current.scope === account.scope ? current : emptyPlan()); }, [account.scope]);
   const refresh = useCallback(() => cache.invalidateQueries({ queryKey: account.queryKey, exact: true }, { cancelRefetch: false }), [cache, account.scope]);
@@ -115,7 +125,7 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
     scope: account.scope, enabled: account.enabled, open: plan.open, count, canManageStaff: account.vendorAdmin,
     attention: account.enabled && count > 0 && !plan.open && !selected && plan.seen !== fingerprint,
     isPending: account.query.isPending, isError: account.query.isError,
-    selected, savedWorker: plan.worker, triggerRef,
+    selected, assistantContext, savedWorker: plan.worker, triggerRef,
     show: () => {
       setPlan({ ...plan, open: true, seen: fingerprint, visited: false });
       // A return from a form rereads its saved outcome; normal navigation and initial opens reuse the cache.
@@ -130,18 +140,46 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
     setWorkflowOffers,
     startHelper: (key, context) => {
       if (!account.enabled || selected && selected.id !== key) return false;
+      // Reopening this same workflow from askV must retain its current form and step.
+      if (selected?.id === key) {
+        const chosen = selected.context;
+        if (context?.siteId && chosen?.siteId !== context.siteId || context?.stationId && chosen?.stationId !== context.stationId || context?.shiftId && chosen?.shiftId !== context.shiftId || context?.vehicleId && String(chosen?.vehicleId) !== String(context.vehicleId)) return false;
+        setPlan({ ...plan, open: false });
+        return true;
+      }
       const definition = gateHelperDefinition(key);
       if (!definition || definition.access === "office" && !account.vendorAdmin && account.user?.vendorRole !== "office" && account.user?.vendorRole !== "gate_supervisor") return false;
       const candidate = workflows.find(item => item.id === key);
       const sameContext = (!context?.siteId || candidate?.context?.siteId === context.siteId) && (!context?.stationId || candidate?.context?.stationId === context.stationId) && (!context?.shiftId || candidate?.context?.shiftId === context.shiftId);
       const current = sameContext ? candidate : undefined;
-      if (key === "first-watch" && !current?.action && !account.vendorAdmin) return false;
       const savedContext = account.query.data?.firstWatch?.context;
-      const onDemand = current?.action ? undefined : definition.create({ ...savedContext, ...context });
+      // A saved wait (especially a watch awaiting its ticket) is a step, not a missing plan.
+      const savedWaiting = key === "first-watch" && sameContext && candidate;
+      const onDemand = current?.action || savedWaiting ? undefined : definition.create({ ...savedContext, ...context });
+      if (savedWaiting) {
+        guidedKeys.current.add(key);
+        setPlan({ ...plan, selectedId: key, onDemand: undefined, open: false, seen: fingerprint });
+        return true;
+      }
+      if (key === "first-watch" && !current?.action && !account.vendorAdmin) return false;
       if (!current?.action && !onDemand) return false;
       guidedKeys.current.add(key);
       setPlan({ ...plan, selectedId: key, onDemand: onDemand ?? undefined, open: false, seen: fingerprint });
       return true;
+    },
+    resumeHelper: async key => {
+      if (!account.enabled || scopeRef.current !== account.scope) return "unavailable";
+      if (selectionRef.current) return selectionRef.current.id === key && value.startHelper(key) ? "started" : "busy";
+      if (key !== "first-watch") return value.startHelper(key) ? "started" : "unavailable";
+      // Resume from current saved records, rather than a stale conversation link.
+      const result = await account.query.refetch({ cancelRefetch: false });
+      if (scopeRef.current !== account.scope || result.isError || !result.data?.firstWatch) return "unavailable";
+      const currentSelection = selectionRef.current as NextStepWorkflow | null;
+      if (currentSelection) return currentSelection.id === key ? "started" : "busy";
+      if (result.data.firstWatch.complete) return "complete";
+      guidedKeys.current.add(key);
+      setPlan(current => ({ ...(current.scope === account.scope ? current : emptyPlan()), selectedId: key, onDemand: undefined, open: false, seen: fingerprint }));
+      return "started";
     },
     continueWorkflow: workflow => {
       if (!workflow.action) return;
@@ -202,6 +240,7 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
     </header>
     <div className="next-steps-panel-body">
       {state.isError && <p role="status">Next Steps could not be refreshed. <button type="button" className="underline" onClick={() => void state.refresh()}>Retry</button></p>}
+      <p className="mb-3 text-sm">Workflows with askV. Continue from your saved work, and ask V questions as you go.</p>
       {!state.isPending && !state.isError && groups.length === 0 && <p>No guided steps need your action right now.</p>}
       {state.selected && <p className="mb-3 text-sm">Your current helper stays open as you work. Stop it with its own X before starting another.</p>}
       {groups.map(group => <section key={group.id} className="next-steps-function" aria-label={group.title}>
@@ -219,7 +258,7 @@ function ActiveWorkflowHelper(props: Parameters<typeof WorkflowHelper>[0]) {
   const state = useNextSteps()!;
   const brand = useBrand();
   return <GuidedHelperPortal>{inModal => <aside style={inModal ? { position: "relative", top: "auto", right: "auto", bottom: "auto", width: "100%", maxWidth: "100%", maxHeight: "min(40dvh, 24rem)", flexShrink: 0, pointerEvents: "auto" } : undefined} onPointerDown={inModal ? event => event.stopPropagation() : undefined} onFocus={inModal ? event => event.stopPropagation() : undefined} className="next-steps-panel next-steps-active-helper" aria-label="Active Next Steps helper" data-testid="next-steps-active-helper">
-    <header className="next-steps-panel-header"><div className="flex items-start gap-2">{(brand.logoSquareUrl || brand.logoUrl) && <img className="next-steps-brand-logo" src={brand.logoSquareUrl || brand.logoUrl || undefined} alt={`${brand.name ?? "Company"} logo`} />}<div><h2>Gate guided helper</h2><p>{brand.name ?? "Your company"} · Keep working in your current page.</p></div></div><button type="button" className="next-steps-icon-button" aria-label="Stop current helper" onClick={state.stopHelper}><X aria-hidden="true" /></button></header>
+    <header className="next-steps-panel-header"><div className="flex items-start gap-2">{(brand.logoSquareUrl || brand.logoUrl) && <img className="next-steps-brand-logo" src={brand.logoSquareUrl || brand.logoUrl || undefined} alt={`${brand.name ?? "Company"} logo`} />}<div><h2>askV · Gate guidance</h2><p>{brand.name ?? "Your company"} · Your current Next Step.</p></div></div><button type="button" className="next-steps-icon-button" aria-label="Stop current helper" onClick={state.stopHelper}><X aria-hidden="true" /></button></header>
     <div className="next-steps-panel-body"><WorkflowHelper {...props} inModal={inModal} /></div>
   </aside>}</GuidedHelperPortal>;
 }
@@ -232,15 +271,15 @@ function WorkflowHelper({ workflow, inModal = false }: { workflow: NextStepWorkf
     <h3 id={`next-steps-workflow-${workflow.id}`}>{workflow.title}</h3>
     {workflow.context && <p>{workflow.context.siteName} · {workflow.context.stationName}</p>}
     {workflow.kind === "first-watch" ? <>
-      <p>{state.canManageStaff ? "Use the saved site and station through employee access, shift setup, assignment, and Assume Watch. Your ticket starts automatically with the saved watch." : "Review your assigned site, gate and saved shift. When it begins, review the handoff and explicitly Assume Watch. Your ticket starts automatically with the saved watch."}</p>
+      {workflow.action && <p><strong>Current saved step:</strong> {workflow.action.title}</p>}
+      <p>{state.canManageStaff ? "Continue with this saved site, gate and shift. The gatekeeper’s ticket starts automatically with their saved watch." : "Continue with your saved site, gate and shift. Your ticket starts automatically with the saved watch."}</p>
       {state.savedWorker && <p className="next-steps-saved-worker">Saved {state.savedWorker.kind === "managed" ? "contracted employee" : "employee"}: {state.savedWorker.name}. Their existing profile and enrollment controls remain available on Employees.</p>}
       <details><summary className="cursor-pointer text-sm">{state.canManageStaff ? "Gate setup workflow" : "Your watch workflow"}</summary><ol className="next-steps-roadmap">{state.canManageStaff && <li>Choose a direct or contracted employee; save Gatekeeper access for an authorized site.</li>}{state.canManageStaff && <li>Create and save the station’s shift, then assign the employee.</li>}<li>The assigned gatekeeper uses Assume Watch when the shift begins.</li></ol></details>
-      {workflow.action && <p><strong>Current saved step:</strong> {workflow.action.title}</p>}
     </> : <p>{workflow.description ?? "Follow the guidance for this saved Gate workflow. Use the page’s existing controls and save your changes explicitly."}</p>}
     {workflow.message && <p role="status">{workflow.message}</p>}
     <GuidanceTargetStatus />
     {workflow.action && <TogglePillButton data-guidance-id="continue" color="brand" disabled={inModal} title={inModal ? "Finish or close this form before opening the next page." : undefined} onClick={() => state.continueWorkflow(workflow)}>{workflow.action.href.startsWith("/field-employees") ? "Choose or add employee" : workflow.action.title}<ArrowRight aria-hidden="true" className="h-4 w-4" /></TogglePillButton>}
     <button type="button" className="underline text-left" onClick={() => void state.refresh()}>Check saved progress</button>
-    <p className="next-steps-helper-note">Keep this helper open while you save. It advances from saved records. Stopping the helper keeps your saved work.</p>
+    <p className="next-steps-helper-note">Ask V about this step while you work. Guidance advances from saved records. Closing askV or the Next Steps list keeps this workflow active; stopping guidance keeps your saved work.</p>
   </section>;
 }

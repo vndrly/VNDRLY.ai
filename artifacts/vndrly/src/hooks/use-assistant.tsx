@@ -6,6 +6,8 @@ import {
 } from "@/lib/assistant-location-context";
 import { createWorkHubOperationId } from "@/lib/work-hub-client";
 import { shouldOfferAskVVisualResult } from "@workspace/api-client-react/askv-visual-results";
+import { useAskVGateGuidance } from "./use-askv-gate-guidance";
+import { parseGateSetupProgressHint, parseGateWorkflowOffer, type GateWorkflowOffer, type GateSetupProgressHint } from "@workspace/gate-booth";
 
 export type SignupAssistantLang = "en" | "es";
 
@@ -39,6 +41,8 @@ export interface AssistantMessage {
   pending?: boolean;
   recovery?: { completed: string[]; remaining: string[]; needed: string; taskId?: string | null };
   usageAlert?: string;
+  gateSetupProgress?: GateSetupProgressHint;
+  gateWorkflowOffer?: GateWorkflowOffer;
 }
 export type VConnectionSelection = { connectionId: string; scope: "company" | "personal"; personalPermission: boolean; savePersonalContentToCompany: boolean };
 
@@ -125,6 +129,8 @@ export interface ConversationSummary {
 }
 
 type StreamEvent =
+  | { type: "gate_guidance"; progress: GateSetupProgressHint }
+  | { type: "gate_workflow_offer"; offer: GateWorkflowOffer }
   | { type: "token"; delta: string }
   | { type: "tool"; name: string; status: "start" | "end" }
   | { type: "client_intent"; intent: AskVClientIntent }
@@ -177,6 +183,9 @@ export interface AssistantOptions {
  * lifecycle so the panel component can stay focused on rendering.
  */
 export function useAssistant(opts: AssistantOptions = {}) {
+  const gateGuidance = useAskVGateGuidance();
+  const gateGuidanceRef = useRef(gateGuidance);
+  gateGuidanceRef.current = gateGuidance;
   const tokenMode = opts.tokenMode ?? null;
   const signupMode = opts.signupMode ?? null;
   const onAssistantReplyRef = useRef(opts.onAssistantReply);
@@ -405,11 +414,12 @@ export function useAssistant(opts: AssistantOptions = {}) {
                 ...(selectedConnection.current ? { selectedConnection: selectedConnection.current } : {}),
                 ...(savedTaskId.current ? { taskId: savedTaskId.current } : {}),
                 deviceContext: { sourceDeviceId: browserWorkHubDeviceId() },
-                ...(pageContext || currentLocation
+                ...(pageContext || currentLocation || gateGuidanceRef.current
                   ? {
                       pageContext: {
                         ...(pageContext ?? { path: "/web/askv" }),
                         ...(currentLocation ? { currentLocation } : {}),
+                        ...(gateGuidanceRef.current ? { gateGuidance: gateGuidanceRef.current } : {}),
                       },
                     }
                   : {}),
@@ -436,6 +446,10 @@ export function useAssistant(opts: AssistantOptions = {}) {
             );
           } else if (evt.type === "tool") {
             setActiveTool(evt.status === "start" ? evt.name : null);
+          } else if (evt.type === "gate_guidance") {
+            setMessages(prev => prev.map(message => message.id === assistantId ? { ...message, gateSetupProgress: evt.progress } : message));
+          } else if (evt.type === "gate_workflow_offer") {
+            setMessages(prev => prev.map(message => message.id === assistantId ? { ...message, gateWorkflowOffer: evt.offer } : message));
           } else if (evt.type === "client_intent") {
             clientResults.push(applyAskVClientIntent(evt.intent));
           } else if (evt.type === "recovery") {
@@ -666,11 +680,11 @@ export function useAssistant(opts: AssistantOptions = {}) {
     return result;
   }, [conversationId]);
 
-  const appendVoiceTranscript = useCallback((message: { eventId: string; role: "user" | "assistant"; content: string }, serverId?: number) => {
+  const appendVoiceTranscript = useCallback((message: { eventId: string; role: "user" | "assistant"; content: string; gateSetupProgress?: GateSetupProgressHint; gateWorkflowOffer?: GateWorkflowOffer }, serverId?: number) => {
     setMessages(previous => {
       const existing = previous.find(item => item.id === message.eventId);
       if (existing) return previous.map(item => item.id === message.eventId ? { ...item, serverId: serverId ?? item.serverId } : item);
-      return [...previous, { id: message.eventId, role: message.role, content: message.content, serverId }];
+      return [...previous, { id: message.eventId, role: message.role, content: message.content, serverId, ...(message.gateSetupProgress ? { gateSetupProgress: message.gateSetupProgress } : {}), ...(message.gateWorkflowOffer ? { gateWorkflowOffer: message.gateWorkflowOffer } : {}) }];
     });
   }, []);
 
@@ -739,6 +753,8 @@ async function consumeSse(
         const intent = (parsed as { intent?: AskVClientIntent }).intent;
         if (intent?.name) onEvent({ type: "client_intent", intent });
       }
+      else if (eventName === "gate_guidance") { const progress = parseGateSetupProgressHint(parsed); if (progress) onEvent({ type: "gate_guidance", progress }); }
+      else if (eventName === "gate_workflow_offer") { const offer = parseGateWorkflowOffer(parsed); if (offer) onEvent({ type: "gate_workflow_offer", offer }); }
       else if (eventName === "token") onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
       else if (eventName === "tool") onEvent({ type: "tool", ...(parsed as { name: string; status: "start" | "end" }) });
       else if (eventName === "recovery" && parsed && typeof parsed === "object") {

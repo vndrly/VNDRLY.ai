@@ -1,4 +1,5 @@
 import { observeAskVAudio, observeAskVPcm } from "./askv-audio-waveform";
+import type { AskVGateGuidance } from "@workspace/gate-booth";
 import { askVMicrophone, encodePcm16Base64, PcmResampler, type WakeAudioSource } from '@workspace/askv-wake';
 import { captureAskVMicrophone, meterAskVMicrophone } from './askv-microphone';
 import { realtimeConnectionMessage } from './askv-voice-availability';
@@ -9,7 +10,7 @@ export interface AskVRealtimeClient {
   connect(): Promise<void>; close(): void; interrupt(): void; sendText(text: string): void;
   setMicEnabled(enabled: boolean): void;
   applyToolContext(payload: { tools?: unknown[]; context?: unknown }): void;
-  updateContext(context: { path?: string; entityId?: number | null; org?: string | null; location?: string | null; gateDraft?: Record<string, unknown> | null }): void;
+  updateContext(context: { path?: string; entityId?: number | null; org?: string | null; location?: string | null; gateDraft?: Record<string, unknown> | null; gateGuidance?: AskVGateGuidance | null }): void;
 }
 export interface RealtimeClientOptions {
   seedMessage?: string; path?: string; entityId?: number | null;

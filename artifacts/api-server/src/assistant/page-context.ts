@@ -1,8 +1,11 @@
+import { parseAskVGateGuidance, type AskVGateGuidance } from "@workspace/gate-booth";
+
 /** Browser path the client sends so askV can tailor answers to "this page". */
 export type AssistantPageContext = {
   path: string;
   entityId?: number | null;
   gateDraft?: Record<string, unknown>;
+  gateGuidance?: AskVGateGuidance;
   currentLocation?: {
     latitude: number;
     longitude: number;
@@ -58,6 +61,7 @@ function parseCurrentLocation(raw: unknown): AssistantPageContext["currentLocati
 /** Parse optional pageContext from the assistant chat POST body. */
 export function parsePageContext(
   raw: unknown,
+  companyId?: number | null,
 ): AssistantPageContext | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const path = typeof (raw as { path?: unknown }).path === "string"
@@ -70,10 +74,12 @@ export function parsePageContext(
       ? Math.floor(entityIdRaw)
       : undefined;
   const currentLocation = parseCurrentLocation((raw as { currentLocation?: unknown }).currentLocation);
+  const gateGuidance = parseAskVGateGuidance((raw as { gateGuidance?: unknown }).gateGuidance, companyId);
   return {
     path,
     ...(entityId != null ? { entityId } : {}),
     ...(currentLocation ? { currentLocation } : {}),
+    ...(gateGuidance ? { gateGuidance } : {}),
     ...(parseGateDraft((raw as AssistantPageContext).gateDraft) ? { gateDraft: parseGateDraft((raw as AssistantPageContext).gateDraft) } : {}),
   };
 }

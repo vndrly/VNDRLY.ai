@@ -883,6 +883,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
       <DialogContent
         bare
         hideOverlay
+        style={{ zIndex: 80 }}
         inline={embedded}
         accentHeaderStyle={{ display: "none" }}
         onPointerDownOutside={(event) => { if ((event.target as Element)?.closest?.('[data-testid="assistant-launcher"]')) event.preventDefault(); }}
@@ -1179,7 +1180,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
             </div>
           ))}
 
-          {!tokenMode && !signupMode && <AskVGateHelperOffer question={messages.filter(message => message.role === "user").at(-1)?.content ?? ""} onStarted={() => { if (!embedded) onOpenChange(false); }} />}
+          {!tokenMode && !signupMode && <AskVGateHelperOffer question={messages.filter(message => message.role === "user").at(-1)?.content ?? ""} workflowOffer={messages.at(-1)?.gateWorkflowOffer} setupProgress={messages.at(-1)?.gateSetupProgress} onStarted={() => { if (!embedded) onOpenChange(false); }} />}
 
           {activeTool && (
             <div className="text-xs text-muted-foreground italic px-1">

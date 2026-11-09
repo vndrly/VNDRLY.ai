@@ -29,6 +29,9 @@ function ContextProbe({ offers = noOffers }: { offers?: NextStepWorkflow[] }) {
   const publish = state?.setWorkflowOffers;
   useEffect(() => publish?.("actual-saved-blockers", offers), [publish, offers]);
   return <>
+    <output data-testid="shared-askv-workflow" data-context={JSON.stringify(state?.assistantContext)} />
+    <button onClick={() => void state?.resumeHelper("first-watch")}>Resume setup with askV</button>
+    <button onClick={() => state?.updateHelperStep("first-watch", { message: "Review this current form before saving.", action: { title: "Current form step", href: "/work-hub/calendar?siteId=11" } })}>Publish current form step</button>
     <button onClick={() => state?.startHelper("first-watch")}>Start requested gate helper</button>
     <button onClick={() => state?.workerSaved({ kind: "managed", managedWorkerId: "worker-42", managedOrganizationId: "employer-8", userId: 42, name: "Pat Contractor" })}>Save actual worker result</button>
     <button onClick={() => void state?.recordCompletion("gate-watch-handoff", { recordType: "gate-watch", recordId: "saved-watch-2", siteId: 11 })}>Report saved handoff</button>
@@ -194,4 +197,38 @@ it("hides Gate guidance for a confirmed non-Gate admin company while keeping com
  await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
  await waitFor(() => expect(screen.queryByRole("button",{name:/^Next Steps,/})).toBeNull());
  expect(screen.queryByTestId("next-steps-active-helper")).toBeNull();
+});
+
+it("shares the active step with askV and preserves it when guidance is reopened from chat", async () => {
+  mocks.summary.firstWatch = watch; mount(); await open();
+  fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Publish current form step" }));
+  expect(JSON.parse(screen.getByTestId("shared-askv-workflow").getAttribute("data-context")!).active).toMatchObject({ key: "first-watch", context: { siteId: 11 }, action: { title: "Current form step" } });
+  fireEvent.click(screen.getByRole("button", { name: "Start requested gate helper" }));
+  expect(screen.getByText("Review this current form before saving.")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Current form step" })).toBeTruthy();
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+it("resumes from freshly saved assignment progress on another page instead of repeating employee setup", async () => {
+  mocks.summary.firstWatch = watch; mocks.location = "/dashboard"; mount(); await open();
+  mocks.summary.firstWatch = { ...watch, action: { title: "Assign the already-created station shift", href: "/work-hub/calendar?siteId=11&stationId=main&shiftId=s-1" } };
+  fireEvent.click(screen.getByRole("button", { name: "Close Next Steps" }));
+  fireEvent.click(screen.getByRole("button", { name: "Resume setup with askV" }));
+  expect(await screen.findByRole("button", { name: "Assign the already-created station shift" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Choose or add employee" })).toBeNull();
+  expect(fetch).toHaveBeenCalledTimes(2);
+  fireEvent.click(screen.getByRole("button", { name: "Assign the already-created station shift" }));
+  expect(mocks.navigate).toHaveBeenCalledWith("/work-hub/calendar?siteId=11&stationId=main&shiftId=s-1");
+  expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
+});
+
+it("resumes a saved waiting state without manufacturing another watch action", async () => {
+  mocks.summary.firstWatch = watch; mount(); await open();
+  mocks.summary.firstWatch = { ...watch, action: null, message: "Watch saved; waiting for its automatic ticket.", context: { ...watch.context, watchId: "actual-watch" } };
+  fireEvent.click(screen.getByRole("button", { name: "Resume setup with askV" }));
+  expect(await screen.findByText("Watch saved; waiting for its automatic ticket.")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Choose or add employee" })).toBeNull();
+  expect(JSON.parse(screen.getByTestId("shared-askv-workflow").getAttribute("data-context")!).active.action).toBeNull();
+  expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
 });
