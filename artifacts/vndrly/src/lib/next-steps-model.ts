@@ -1,13 +1,25 @@
+import { gateLocationLabel, partnerSiteLabel } from "./warwick-gate-label";
+
 export type NextStepAction = { title: string; href: string; recordType?: string; recordId?: number | string };
 
 export type FirstWatchContext = {
   siteName: string; stationName: string | null;
+  partnerName?: string | null;
+  gateLabelStations?: Parameters<typeof gateLocationLabel>[2];
   siteId?: number; stationId?: string | null; shiftId?: string | null;
   employeeId?: number | null; eligibleUserId?: number | null;
   assignedUserId?: number | null; watchId?: string | null; ticketId?: number | null;
   startsAt?: string | null; day?: string | null;
   employeeKind?: "direct" | "managed" | null; managedOrganizationId?: string | null; managedWorkerId?: string | null;
 };
+
+export function firstWatchLocationLabel(context: FirstWatchContext): string {
+  const site = { name: context.siteName, partnerName: context.partnerName };
+  const stations = context.gateLabelStations ?? [];
+  const station = stations.find(row => row.id === context.stationId);
+  if (station) return gateLocationLabel(site, station, stations);
+  return context.stationName ? `${context.siteName} · ${context.stationName}` : partnerSiteLabel(site);
+}
 
 export type AccountNextStepsSummary = {
   setup: NextStepAction[];

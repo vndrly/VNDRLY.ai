@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, ListTodo, X } from "lucide-react";
 import { PngPillButton as TogglePillButton } from "@/components/png-pill-rollover";
 import { useBrand } from "@/hooks/use-brand";
 import { useAccountNextSteps } from "@/hooks/use-account-next-steps";
-import { actionableNextSteps, guidedEmployeeHref, nextStepGroups, groupGateWorkflows, type NextStepWorkflow } from "@/lib/next-steps-model";
+import { actionableNextSteps, firstWatchLocationLabel, guidedEmployeeHref, nextStepGroups, groupGateWorkflows, type NextStepWorkflow } from "@/lib/next-steps-model";
 import { gateHelperDefinition, gateHelpersRevision, subscribeGateHelpers, type GateHelperKey, type GateHelperContext, type GateHelperStep, type GateCompletionProof } from "@/lib/gate-helper-registry";
 import { GuidedTargetProvider, GuidedHelperPortal, GuidanceTargetStatus, useGuidedTarget } from "./guided-target";
 import "./next-steps.css";
@@ -247,7 +247,7 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
         <h3>{group.title}</h3>
         <ul>{group.workflows.map(workflow => <li key={workflow.id}>
           <button type="button" className="next-steps-workflow" disabled={!!state.selected && state.selected.id !== workflow.id} onClick={() => state.select(workflow)}><span>{workflow.title}<small>{state.selected?.id === workflow.id ? "Current helper" : "Start guided helper"}</small></span><ArrowRight aria-hidden="true" /></button>
-          {workflow.context && <p className="next-steps-context">{workflow.context.siteName} · {workflow.context.stationName}</p>}
+          {workflow.context && <p className="next-steps-context">{firstWatchLocationLabel(workflow.context)}</p>}
         </li>)}</ul>
       </section>)}
     </div>
@@ -269,7 +269,7 @@ function WorkflowHelper({ workflow, inModal = false }: { workflow: NextStepWorkf
   return <section data-guidance-scope="next-steps-current-helper" aria-labelledby={`next-steps-workflow-${workflow.id}`} className="next-steps-helper">
     <button type="button" className="next-steps-back" disabled={inModal} title={inModal ? "Close this form before choosing another helper." : undefined} onClick={state.show}><ArrowLeft aria-hidden="true" />All Next Steps</button>
     <h3 id={`next-steps-workflow-${workflow.id}`}>{workflow.title}</h3>
-    {workflow.context && <p>{workflow.context.siteName} · {workflow.context.stationName}</p>}
+    {workflow.context && <p>{firstWatchLocationLabel(workflow.context)}</p>}
     {workflow.kind === "first-watch" ? <>
       {workflow.action && <p><strong>Current saved step:</strong> {workflow.action.title}</p>}
       <p>{state.canManageStaff ? "Continue with this saved site, gate and shift. The gatekeeper’s ticket starts automatically with their saved watch." : "Continue with your saved site, gate and shift. Your ticket starts automatically with the saved watch."}</p>

@@ -6,7 +6,7 @@ import { gateWatchTicketReadiness } from "./gate-watch-ticket";
 import { readWorkflowHelperProgress } from "./workflow-helper-progress";
 
 type Action = { title: string; href: string };
-export type FirstWatchRecord = { siteId: number; stationId: string | null; siteName: string; stationName: string | null; employeeId: number | null; shiftId: string | null; assignedUserId: number | null; watchId: string | null; ticketId: number | null; ticketBlocker?: string | null; startsAt?: string | null; eligibleUserId?: number | null; employeeKind?: "direct" | "managed" | null; managedOrganizationId?: string | null; managedWorkerId?: string | null; stationCreatedAt?: string | null; day?: string | null };
+export type FirstWatchRecord = { siteId: number; stationId: string | null; siteName: string; stationName: string | null; partnerName?: string | null; gateLabelStations?: { id: string; siteId: number; name: string; active: boolean; topology: { parentGateId?: string | null } | null }[]; employeeId: number | null; shiftId: string | null; assignedUserId: number | null; watchId: string | null; ticketId: number | null; ticketBlocker?: string | null; startsAt?: string | null; eligibleUserId?: number | null; employeeKind?: "direct" | "managed" | null; managedOrganizationId?: string | null; managedWorkerId?: string | null; stationCreatedAt?: string | null; day?: string | null };
 
 /** Each row is one company/site/station/shift/worker chain, never pooled counts. */
 export function firstWatchStep(records: FirstWatchRecord[], userId: number, office: boolean, setupSites: { id: number; name: string }[] = []) {
@@ -76,6 +76,10 @@ export async function readAccountNextSteps(session: SessionPayload) {
   // membership, sponsor, worker sponsorship and explicit Gate grant at this site.
   // Ended evidence is never promoted back to readiness by a stale active status.
   const records = (await pool.query(`SELECT l.id AS "siteId",g.id AS "stationId",l.name AS "siteName",g.name AS "stationName",g.created_at AS "stationCreatedAt",
+    (SELECT name FROM partners WHERE id=l.partner_id) AS "partnerName",
+    (SELECT jsonb_agg(jsonb_build_object('id',peer.id,'siteId',peer.site_id,'name',peer.name,'active',peer.active,
+      'topology',jsonb_build_object('parentGateId',peer.topology->>'parentGateId')) ORDER BY peer.name,peer.id)
+      FROM gate_stations peer WHERE peer.site_id=l.id) AS "gateLabelStations",
     p.id AS "employeeId",p.user_id AS "eligibleUserId",p.employee_kind AS "employeeKind",p.managed_organization_id AS "managedOrganizationId",p.managed_worker_id AS "managedWorkerId",
     s.starts_at AS "startsAt",to_char(s.starts_at AT TIME ZONE s.timezone,'YYYY-MM-DD') AS day,s.id AS "shiftId",a.user_id AS "assignedUserId",w.id AS "watchId",t.id AS "ticketId",d.post_coverage->>'ticketBlocker' AS "ticketBlocker"
     FROM gate_stations g JOIN site_locations l ON l.id=g.site_id
