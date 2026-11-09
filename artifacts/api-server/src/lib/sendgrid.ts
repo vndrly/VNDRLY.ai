@@ -1,3 +1,4 @@
+import { notificationEmailHoldApplies } from "./notification-company-hold";
 // Most outbound email call sites remain staged for paid-tier rollout.
 // Password reset email is live when SENDGRID_* env vars are configured.
 import { type PushWarning } from "@workspace/api-zod";
@@ -92,6 +93,7 @@ export async function sendGateReportAttachmentEmail(input: {
   contentType: string;
   body: Buffer;
 }): Promise<{ messageId: string | undefined }> {
+  if (await notificationEmailHoldApplies(input.to)) throw new Error("company_notification_hold");
   const name = input.recipientName?.trim() || "there";
   const text = `Hi ${name},\n\nYour requested VNDRLY report is attached.`;
   const html = `<p>Hi ${escapeHtml(name)},</p><p>Your requested VNDRLY report is attached.</p>`;
@@ -1304,6 +1306,7 @@ export interface SendNotificationAlertEmailInput {
 export async function sendNotificationAlertEmail(
   input: SendNotificationAlertEmailInput,
 ): Promise<{ messageId: string | undefined }> {
+  if (await notificationEmailHoldApplies(input.to)) throw new Error("company_notification_hold");
   const name = input.recipientName?.trim() || "there";
   const category = notificationCategoryLabel(input.category);
   const deepLink = buildNotificationDeepLink(input.link);

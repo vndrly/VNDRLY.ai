@@ -1,3 +1,4 @@
+import { notificationCompanyHoldApplies } from "../lib/notification-company-hold";
 import { createHash, randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
 import { sendExpoPushDestination } from "../lib/expo-push";
@@ -30,6 +31,7 @@ export async function retryGateAlertPushCleanup(): Promise<void> {
 
 /** Audit stores hashes, never device tokens. Claims persist before contacting Expo. */
 export async function sendGateAlertPush(notice: GateAlert, badge: number): Promise<SendResult> {
+  if (await notificationCompanyHoldApplies(notice.userId)) return {accepted:false,status:"skipped",errorCode:"company_notification_hold"};
   try { return await sendDestinations(notice, badge); }
   catch {
     // Database reads/audits can be retried: accepted or uncertain destination claims are never reclaimed.

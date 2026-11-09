@@ -1,3 +1,5 @@
+// These fixtures exercise unheld recipients; the operational hold has real-database coverage.
+vi.mock("./notification-company-hold", () => ({ notificationCompanyHoldApplies: async () => false, pausedNotificationUserIds: async () => new Set(), notificationTokenHoldApplies: async () => false, notificationEmailHoldApplies: async () => false, NOTIFICATION_COMPANY_HOLDS: [] }));
 // Stub-based unit tests for the daily notification email digest worker
 // (Task #47). We mock @workspace/db so the SQL pipeline is exercised
 // purely from the worker's perspective; the goal is to lock in the

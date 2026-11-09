@@ -1,3 +1,5 @@
+// These fixtures exercise unheld recipients; the operational hold has real-database coverage.
+vi.mock("../lib/notification-company-hold", () => ({ notificationCompanyHoldApplies: async () => false, pausedNotificationUserIds: async () => new Set(), notificationTokenHoldApplies: async () => false, notificationEmailHoldApplies: async () => false, NOTIFICATION_COMPANY_HOLDS: [] }));
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const io = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock("@workspace/db", () => ({ pool: io }));

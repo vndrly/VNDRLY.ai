@@ -1,3 +1,4 @@
+import { notificationCompanyHoldApplies, notificationTokenHoldApplies } from "./notification-company-hold";
 import { db, fieldPushTokensTable, vendorPeopleTable } from "@workspace/db";
 import {assertExternalEffectsAllowed} from '@workspace/db/realm';
 import { and, eq } from "drizzle-orm";
@@ -109,6 +110,7 @@ export async function sendExpoPushDestination(token: string, msg: ExpoPushMessag
   status: "accepted" | "retryable" | "failed" | "unknown"; providerMessageId?: string; errorCode?: string;
 }> {
   assertExternalEffectsAllowed();
+  if (await notificationTokenHoldApplies(token)) return {status:"failed",errorCode:"company_notification_hold"};
   try {
     const res = await fetch(EXPO_PUSH_URL, {
       method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -127,6 +129,7 @@ export async function sendExpoPushDestination(token: string, msg: ExpoPushMessag
 }
 
 export async function sendPushToUser(userId: number, msg: ExpoPushMessage) {
+  if (await notificationCompanyHoldApplies(userId)) return {delivered:false,recipientCount:0};
   const rows = await db
     .select({ token: fieldPushTokensTable.expoToken })
     .from(fieldPushTokensTable)

@@ -101,6 +101,10 @@ VNDRLY is a full-stack web application designed to streamline oil & gas field op
 ## User Preferences
 I prefer clear, concise explanations and an iterative development approach. Please ask before making any major architectural changes or introducing new external dependencies. I value well-documented code and a focus on maintainability.
 
+### MIDCON NOTIFICATION HOLD — John, 2026-11-09
+
+MidCon Solutions (vendor1054) notifications remain paused until John explicitly instructs resume. Account setup, staffing, testing, deployments, restarts, changed preferences and going live are not authorization to resume. Preserve the operational hold in `artifacts/api-server/src/lib/notification-company-hold.ts` through future changes and verify `/api/notifications/company-holds` after API releases. No automatic expiry or resume is authorized. See `docs/midcon-notification-hold.md`.
+
 ### STANDING RULE — FULL SHIP UPDATES EVERYTHING ONLINE AND LOCALLY
 **"full ship"** (also **"commit, push, deploy, and ship"**) means
 **update everything online and locally to the same shipped commit**. Do not ask whether a track is included.

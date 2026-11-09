@@ -1,3 +1,4 @@
+import { notificationCompanyHoldApplies } from "./notification-company-hold";
 // Task #47 — Daily notification email digest
 //
 // When a user opts into `emailDigestEnabled`, the live `notifyUsers`
@@ -146,6 +147,7 @@ export async function runNotificationEmailDigest(
   const dayLabel = formatDayLabel(now);
 
   for (const userId of userIds) {
+    if (await notificationCompanyHoldApplies(userId)) continue;
     const prefs = prefsById.get(userId);
     const user = usersById.get(userId);
     if (!prefs || !user) continue;

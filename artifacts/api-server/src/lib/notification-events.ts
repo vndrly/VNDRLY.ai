@@ -1,3 +1,4 @@
+import { notificationCompanyHoldApplies } from "./notification-company-hold";
 import { EventEmitter } from "events";
 import pg from "pg";
 import { logger } from "./logger";
@@ -269,7 +270,9 @@ export function publishNotificationStateChanged(input: {
 
 function publishNotificationEvent(ev: NotificationEvent): void {
   if(currentDatabaseRealm()==='demo')return;
-  void publishViaPool(ev).catch((err) => {
+  void notificationCompanyHoldApplies(ev.userId).then(paused => {
+    if (paused) return;
+    return publishViaPool(ev).catch((err) => {
     if (!(err instanceof PoolUnavailableError)) {
       logger.error(
         { err, type: ev.type, userId: ev.userId, notificationId: ev.notificationId },
@@ -280,6 +283,7 @@ function publishNotificationEvent(ev: NotificationEvent): void {
     // the event even when Postgres is unreachable.
     const seq = ++localSeqCounter;
     localBus.emit("notification", { ...ev, seq } satisfies PublishedNotificationEvent);
+    });
   });
 }
 

@@ -1,3 +1,4 @@
+import { notificationCompanyHoldApplies, pausedNotificationUserIds, NOTIFICATION_COMPANY_HOLDS } from "../lib/notification-company-hold";
 import { Router, type IRouter } from "express";
 import { eq, and, or, desc, sql, inArray, lt, type SQL } from "drizzle-orm";
 import {
@@ -402,6 +403,7 @@ export async function countUnreadForUser(
   commentsEnabled = true,
   preferences?: Partial<typeof DEFAULT_PREFS>,
 ): Promise<number> {
+  if (await notificationCompanyHoldApplies(userId)) return 0;
   const conds = [
     eq(notificationsTable.userId, userId),
     eq(notificationsTable.isRead, false),
@@ -491,6 +493,9 @@ export async function fanOutPushToUser(
 
 // Insert notifications honoring preferences and fan out push.
 export async function notifyUsers(userIds: number[], notif: NotifyInput): Promise<number> {
+  if (!userIds.length) return 0;
+  const paused = await pausedNotificationUserIds(userIds);
+  userIds = userIds.filter(id => !paused.has(id));
   if (!userIds.length) return 0;
   const category = notif.category ?? categoryForType(notif.type);
   const urgent = resolveGateNotificationCategory(notif) === "alerts";
@@ -1043,6 +1048,7 @@ async function* visibleNotificationBatches(
   session: Session,
   options: { conditions?: SQL[]; cursor?: NotificationCursor; batchSize?: number } = {},
 ) {
+  if (await notificationCompanyHoldApplies(session.userId)) return;
   const visible = await notificationVisibility(session);
   let cursor = options.cursor;
   const batchSize = options.batchSize ?? 100;
@@ -1069,6 +1075,22 @@ export async function countGateUnreadNotifications(session: SessionPayload & { u
   for await (const rows of visibleNotificationBatches(session as Session, { conditions: [eq(notificationsTable.isRead, false)] })) count += rows.length;
   return count;
 }
+
+router.get("/notifications/company-holds", async (req, res) => {
+  const session = getSession(req);
+  if (!session || session.role !== "admin" || session.vendorId || session.partnerId) return sendApiError(res, 403, "auth.forbidden", "Platform administrator required");
+  const { pool } = await import("@workspace/db");
+  const current = await pool.query("SELECT id FROM users WHERE id=$1 AND role='admin' AND session_version=$2 AND suspended_at IS NULL", [session.userId,session.sv]);
+  if (!current.rows.length) return sendApiError(res, 403, "auth.forbidden", "Current platform administrator required");
+  const result = await pool.query(`SELECT v.id,v.name,ARRAY(SELECT DISTINCT x.user_id FROM (SELECT user_id FROM user_org_memberships WHERE vendor_id=v.id AND org_type='vendor' UNION SELECT user_id FROM vendor_people WHERE vendor_id=v.id AND user_id IS NOT NULL AND deleted_at IS NULL UNION SELECT worker_user_id FROM managed_subcontractor_worker_sponsorships WHERE sponsor_vendor_id=v.id AND status='active' AND ended_at IS NULL) x ORDER BY x.user_id) AS user_ids FROM vendors v WHERE v.id=ANY($1::int[])`, [NOTIFICATION_COMPANY_HOLDS.map(h=>h.vendorId)]);
+  const holds = [];
+  for (const company of result.rows) {
+    const paused = await pausedNotificationUserIds(company.user_ids);
+    holds.push({ ...NOTIFICATION_COMPANY_HOLDS.find(h=>h.vendorId===company.id), savedCompanyName:company.name, recipientCount:company.user_ids.length, allRecipientsPaused:company.user_ids.every((id:number)=>paused.has(id)), channels:["in_app","push","email","sms"], automaticResume:false });
+  }
+  res.setHeader("Cache-Control", "private, no-store");
+  return res.json({ holds });
+});
 
 router.get("/notifications", async (req, res) => {
   const session = getSession(req);
@@ -1297,7 +1319,7 @@ router.get("/notifications/events", (req, res): void => {
     // Serialize authorization so sequence order is retained. Resolve from the
     // stored row on every event, including streams opened before revocation.
     delivery = delivery.then(async () => {
-      if (closed) return;
+      if (closed || await notificationCompanyHoldApplies(session.userId)) return;
       const { loadGateAlertRecipient } = await import("../services/gate-alert-repository");
       const current = (await loadGateAlertRecipient(session.userId))?.session;
       if (!current || typeof session.sv !== "number" || current.sv !== session.sv ||
