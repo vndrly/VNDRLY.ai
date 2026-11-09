@@ -19,7 +19,8 @@ describe("shared askV Gate guidance context", () => {
   });
   it("caps the queue and excludes a form control without an active workflow", () => {
     const context = parseAskVGateGuidance({ ...input, active: null, available: Array(20).fill(active) })!;
-    expect(context.available).toHaveLength(3);
+    expect(context.available).toHaveLength(5);
     expect(context.control).toBeUndefined();
   });
 });
+
