@@ -38,8 +38,14 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
     const workerSession:SessionPayload={userId:worker,role:"field_employee",vendorId:vendor,activeMembershipId:workerMembership,membershipRole:"field_employee",vendorRole:"gatekeeper",sv:1};
     return {partner,vendor,office,worker,person,work,site,officeSession,workerSession};
   }
+  async function stationFor(f:Awaited<ReturnType<typeof fixture>>,name:string) {
+    // Earlier additive-migration suites may have installed the real default-gate
+    // trigger. Reuse its saved gate instead of introducing a second earlier chain.
+    const existing=(await pool.query("SELECT id FROM gate_stations WHERE site_id=$1 ORDER BY created_at,id LIMIT 1",[f.site])).rows[0];
+    return existing?.id ?? (await pool.query("INSERT INTO gate_stations(site_id,name) VALUES($1,$2) RETURNING id",[f.site,name])).rows[0].id;
+  }
   async function stage(f:Awaited<ReturnType<typeof fixture>>) {
-    const station=(await pool.query("INSERT INTO gate_stations(site_id,name) VALUES($1,'Synthetic Main Gate') RETURNING id",[f.site])).rows[0].id;
+    const station=await stationFor(f,"Synthetic Main Gate");
     await pool.query("INSERT INTO vendor_person_operational_roles(vendor_people_id,role) VALUES($1,'gatekeeper')",[f.person]);
     await pool.query("INSERT INTO vendor_person_site_access(vendor_people_id,site_location_id) VALUES($1,$2)",[f.person,f.site]);
     const shift=(await pool.query("INSERT INTO work_hub_shifts(owner_org_type,owner_org_id,title,starts_at,ends_at,timezone,created_by_id,site_location_id,gate_station_id) VALUES('vendor',$1,'Synthetic watch',now()-interval '1 hour',now()+interval '8 hours','America/Chicago',$2,$3,$4) RETURNING id",[f.vendor,f.office,f.site,station])).rows[0].id;
@@ -52,7 +58,7 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
   }
   it("offers only the next missing saved step in one site/station/shift chain",async()=>{
     const f=await fixture();
-    const station=(await pool.query("INSERT INTO gate_stations(site_id,name) VALUES($1,'Synthetic setup gate') RETURNING id",[f.site])).rows[0].id;
+    const station=await stationFor(f,"Synthetic setup gate");
     expect((await summary(f.officeSession)).firstWatch?.action?.title).toContain("access to this site");
     await pool.query("INSERT INTO vendor_person_operational_roles(vendor_people_id,role) VALUES($1,'gatekeeper')",[f.person]);
     expect((await summary(f.officeSession)).firstWatch?.action?.title).toContain("access to this site");
@@ -78,7 +84,8 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
   });
   it("advances from saved setup to one watch and one real automatic ticket, including replay", async () => {
     const f=await fixture();
-    expect((await summary(f.officeSession)).firstWatch?.action?.title).toBe("Set up a gate site and station");
+    const initialStations=(await pool.query("SELECT id FROM gate_stations WHERE site_id=$1",[f.site])).rows;
+    expect((await summary(f.officeSession)).firstWatch?.action?.title).toBe(initialStations.length ? "Give an eligible gate employee access to this site" : "Set up a gate site and station");
     const {station,shift}=await stage(f);
     await approve(f);
     const waiting=await summary(f.officeSession);

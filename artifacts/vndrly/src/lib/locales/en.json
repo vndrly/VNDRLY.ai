@@ -4184,6 +4184,21 @@
     "mismatch": "Passwords do not match."
   },
   "errors": {
+    "coi": {
+      "forbidden": "Current company administrator access is required to save a certificate of insurance.",
+      "invalid_upload": "Choose your finalized private PDF or image upload (up to 25 MB)."
+    },
+    "gate_ticket": {
+      "vendor_context_required": "Choose your vendor company before opening a watch ticket.",
+      "active_watch_required": "An active watch is required to open its ticket.",
+      "employer_changed": "Return to the company where this watch began before opening its ticket.",
+      "ambiguous_shift": "More than one assigned shift matches this watch. Ask your company administrator to review the schedule.",
+      "shift_not_started": "This scheduled shift has not started yet. Assume Watch when the shift begins.",
+      "commercial_authority_revoked": "The company relationship does not currently authorize this work. Ask your company administrator to review it.",
+      "scheduled_ticket_unavailable": "The scheduled watch ticket is unavailable for this company and site. Ask your company administrator to review it.",
+      "ambiguous_service": "More than one approved Gate service matches this watch. Ask your company administrator to review the service setup.",
+      "approved_service_required": "An approved Gate service is required before the watch ticket can be opened."
+    },
     "lead_admin": {
       "sign_in": "Sign in with the invited email, then return here to accept.",
       "invalid_invitation": "Enter a valid invitation and password.",
@@ -4862,7 +4877,10 @@
       "invalid_id": "That visit isn't valid.",
       "not_found": "We couldn't find that visit.",
       "no_access": "You don't have access to this visit.",
-      "plate_ocr_unavailable": "Plate reading is not available right now. Type the tag and previous visits will still fill in."
+      "plate_ocr_unavailable": "Plate reading is not available right now. Type the tag and previous visits will still fill in.",
+      "movement_changed": "This visit changed. Refresh the saved state before checkout.",
+      "secure_area_checkout_required": "Arrival in the secure area is confirmed. Record checkout from the secure area first.",
+      "outer_checkout_required": "Your property visit is still open. Ask the outer gatekeeper to record checkout."
     },
     "field_ticket": {
       "site_not_found": "We couldn't find that site.",

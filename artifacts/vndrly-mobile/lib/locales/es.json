@@ -959,6 +959,21 @@
     "cameraUnavailablePickSite": "La cámara no está disponible en esta versión. Elija un sitio por nombre."
   },
   "errors": {
+    "coi": {
+      "forbidden": "Se requiere acceso de administrador de la empresa actual para guardar un certificado de seguro.",
+      "invalid_upload": "Elija su archivo PDF o imagen privado cuya carga haya finalizado (hasta 25 MB)."
+    },
+    "gate_ticket": {
+      "vendor_context_required": "Seleccione su empresa proveedora antes de abrir un ticket de guardia.",
+      "active_watch_required": "Se requiere una guardia activa para abrir su ticket.",
+      "employer_changed": "Vuelva a la empresa donde comenzó esta guardia antes de abrir su ticket.",
+      "ambiguous_shift": "Más de un turno asignado coincide con esta guardia. Pida al administrador de su empresa que revise el horario.",
+      "shift_not_started": "Este turno programado aún no ha comenzado. Asuma la guardia cuando comience el turno.",
+      "commercial_authority_revoked": "La relación con la empresa no autoriza actualmente este trabajo. Pida al administrador de su empresa que la revise.",
+      "scheduled_ticket_unavailable": "El ticket de guardia programado no está disponible para esta empresa y este sitio. Pida al administrador de su empresa que lo revise.",
+      "ambiguous_service": "Más de un servicio de control de acceso aprobado coincide con esta guardia. Pida al administrador de su empresa que revise la configuración del servicio.",
+      "approved_service_required": "Se requiere un servicio de control de acceso aprobado para abrir el ticket de guardia."
+    },
     "lead_admin": {
       "sign_in": "Inicia sesión con el correo invitado y vuelve aquí para aceptar.",
       "invalid_invitation": "Ingresa una invitación y una contraseña válidas.",
@@ -1343,7 +1358,10 @@
       "host_vendor_required": "Selecciona un proveedor anfitrión.",
       "vendor_not_assigned": "Ese proveedor no está asignado a este sitio. Elige otro.",
       "location_required": "Necesitamos tu ubicación para registrar tu entrada. Activa la ubicación e inténtalo de nuevo.",
-      "plate_ocr_unavailable": "No se puede leer la placa ahora. Escribe la placa y las visitas anteriores seguirán completando el formulario."
+      "plate_ocr_unavailable": "No se puede leer la placa ahora. Escribe la placa y las visitas anteriores seguirán completando el formulario.",
+      "movement_changed": "Esta visita cambió. Actualice el estado guardado antes de registrar la salida.",
+      "secure_area_checkout_required": "La llegada al área segura está confirmada. Registre primero la salida del área segura.",
+      "outer_checkout_required": "Su visita a la propiedad sigue abierta. Pida al encargado de la puerta exterior que registre la salida."
     },
     "invalid_ticket_id": "El ID del ticket no es válido.",
     "ticket_not_found": "No se encontró el ticket.",

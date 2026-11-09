@@ -55,6 +55,9 @@ test("gate watch survives sign-out and transfers only after the incoming account
         "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)",
         [site.id, work, actor.vendorId],
       );
+      await pool.query("INSERT INTO partner_vendor_relationships(partner_id,vendor_id,status) VALUES($1,$2,'approved')", [partner.id, actor.vendorId]);
+      await pool.query("INSERT INTO vendor_work_types(vendor_id,work_type_id,unit_price,unit) VALUES($1,$2,50,'per_hour')", [actor.vendorId, work]);
+      await pool.query("INSERT INTO partner_vendor_work_type_approvals(partner_id,vendor_id,work_type_id,approved_unit_price,approved_unit) VALUES($1,$2,$3,50,'per_hour')", [partner.id, actor.vendorId, work]);
     }
     const gate = (
       await pool.query(

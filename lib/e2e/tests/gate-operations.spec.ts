@@ -18,6 +18,10 @@ test("Gate Dashboard opens an exact current-shift History query", async ({ page 
     const personId = (await pool.query("INSERT INTO vendor_people(vendor_id,user_id,vendor_role,first_name,email) VALUES($1,$2,'gate_supervisor','Gate',$3) RETURNING id", [operator.vendorId, operator.userId, operator.username])).rows[0].id;
     await pool.query("UPDATE user_org_memberships SET vendor_people_id=$1 WHERE user_id=$2", [personId, operator.userId]);
     await pool.query("INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)", [site.id, workTypeId, operator.vendorId]);
+    // An operational watch requires an approved, priced Gate catalog service.
+    await pool.query("INSERT INTO partner_vendor_relationships(partner_id,vendor_id,status) VALUES($1,$2,'approved')", [partner.id, operator.vendorId]);
+    await pool.query("INSERT INTO vendor_work_types(vendor_id,work_type_id,unit_price,unit) VALUES($1,$2,50,'per_hour')", [operator.vendorId, workTypeId]);
+    await pool.query("INSERT INTO partner_vendor_work_type_approvals(partner_id,vendor_id,work_type_id,approved_unit_price,approved_unit) VALUES($1,$2,$3,50,'per_hour')", [partner.id, operator.vendorId, workTypeId]);
     const stationId = (await pool.query("INSERT INTO gate_stations(site_id,name) VALUES($1,$2) RETURNING id", [site.id, `Operations gate ${stamp}`])).rows[0].id;
 
     await loginAsVendor(page, operator);

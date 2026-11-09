@@ -1,0 +1,790 @@
+{
+  "tables": [
+    {
+      "name": "gate_handovers",
+      "rls": true,
+      "kind": "r"
+    },
+    {
+      "name": "gate_preparations",
+      "rls": true,
+      "kind": "r"
+    },
+    {
+      "name": "gate_shift_actions",
+      "rls": true,
+      "kind": "r"
+    },
+    {
+      "name": "gate_shifts",
+      "rls": true,
+      "kind": "r"
+    },
+    {
+      "name": "gate_stations",
+      "rls": true,
+      "kind": "r"
+    }
+  ],
+  "columns": [
+    {
+      "table_name": "gate_handovers",
+      "name": "id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_handovers",
+      "name": "preparation_id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_handovers",
+      "name": "incoming_shift_id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_handovers",
+      "name": "incoming_user_id",
+      "type": "int4",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_handovers",
+      "name": "outgoing_name",
+      "type": "text",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_handovers",
+      "name": "incoming_name",
+      "type": "text",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_handovers",
+      "name": "acknowledged_at",
+      "type": "timestamptz",
+      "not_null": true,
+      "default_value": "now()"
+    },
+    {
+      "table_name": "gate_preparations",
+      "name": "id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": "gen_random_uuid()"
+    },
+    {
+      "table_name": "gate_preparations",
+      "name": "shift_id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_preparations",
+      "name": "prepared_by",
+      "type": "int4",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_preparations",
+      "name": "snapshot",
+      "type": "jsonb",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_preparations",
+      "name": "notes",
+      "type": "text",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_preparations",
+      "name": "summary",
+      "type": "jsonb",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_preparations",
+      "name": "created_at",
+      "type": "timestamptz",
+      "not_null": true,
+      "default_value": "now()"
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "name": "id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": "gen_random_uuid()"
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "name": "station_id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "name": "actor_id",
+      "type": "int4",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "name": "item_id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "name": "kind",
+      "type": "text",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "name": "text",
+      "type": "text",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "name": "created_at",
+      "type": "timestamptz",
+      "not_null": true,
+      "default_value": "now()"
+    },
+    {
+      "table_name": "gate_shifts",
+      "name": "id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": "gen_random_uuid()"
+    },
+    {
+      "table_name": "gate_shifts",
+      "name": "station_id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_shifts",
+      "name": "operator_id",
+      "type": "int4",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_shifts",
+      "name": "started_at",
+      "type": "timestamptz",
+      "not_null": true,
+      "default_value": "now()"
+    },
+    {
+      "table_name": "gate_shifts",
+      "name": "ended_at",
+      "type": "timestamptz",
+      "not_null": false,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_shifts",
+      "name": "preparation_id",
+      "type": "uuid",
+      "not_null": false,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "id",
+      "type": "uuid",
+      "not_null": true,
+      "default_value": "gen_random_uuid()"
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "site_id",
+      "type": "int4",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "name",
+      "type": "text",
+      "not_null": true,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "latitude",
+      "type": "float8",
+      "not_null": false,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "longitude",
+      "type": "float8",
+      "not_null": false,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "geofence_radius_m",
+      "type": "int4",
+      "not_null": true,
+      "default_value": "500"
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "active",
+      "type": "bool",
+      "not_null": true,
+      "default_value": "true"
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "version",
+      "type": "int4",
+      "not_null": true,
+      "default_value": "1"
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "connection",
+      "type": "jsonb",
+      "not_null": false,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "topology",
+      "type": "jsonb",
+      "not_null": false,
+      "default_value": null
+    },
+    {
+      "table_name": "gate_stations",
+      "name": "created_at",
+      "type": "timestamptz",
+      "not_null": true,
+      "default_value": "now()"
+    }
+  ],
+  "constraints": [
+    {
+      "table_name": "gate_handovers",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "incoming_shift_id"
+      ],
+      "target_table": "gate_shifts",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "a",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_handovers",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "incoming_user_id"
+      ],
+      "target_table": "users",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "a",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_handovers",
+      "type": "p",
+      "validated": true,
+      "columns": [
+        "id"
+      ],
+      "target_table": null,
+      "target_schema": null,
+      "update_action": " ",
+      "target_columns": [],
+      "delete_action": " ",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_handovers",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "preparation_id"
+      ],
+      "target_table": "gate_preparations",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "a",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_handovers",
+      "type": "u",
+      "validated": true,
+      "columns": [
+        "preparation_id"
+      ],
+      "target_table": null,
+      "target_schema": null,
+      "update_action": " ",
+      "target_columns": [],
+      "delete_action": " ",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_handovers",
+      "type": "c",
+      "validated": false,
+      "columns": [
+        "id"
+      ],
+      "target_table": null,
+      "target_schema": null,
+      "update_action": " ",
+      "target_columns": [],
+      "delete_action": " ",
+      "index_valid": null,
+      "index_ready": null
+    },
+    {
+      "table_name": "gate_preparations",
+      "type": "p",
+      "validated": true,
+      "columns": [
+        "id"
+      ],
+      "target_table": null,
+      "target_schema": null,
+      "update_action": " ",
+      "target_columns": [],
+      "delete_action": " ",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_preparations",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "prepared_by"
+      ],
+      "target_table": "users",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "a",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_preparations",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "shift_id"
+      ],
+      "target_table": "gate_shifts",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "a",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "actor_id"
+      ],
+      "target_table": "users",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "a",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "type": "p",
+      "validated": true,
+      "columns": [
+        "id"
+      ],
+      "target_table": null,
+      "target_schema": null,
+      "update_action": " ",
+      "target_columns": [],
+      "delete_action": " ",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_shift_actions",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "station_id"
+      ],
+      "target_table": "gate_stations",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "a",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_shifts",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "operator_id"
+      ],
+      "target_table": "users",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "a",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_shifts",
+      "type": "p",
+      "validated": true,
+      "columns": [
+        "id"
+      ],
+      "target_table": null,
+      "target_schema": null,
+      "update_action": " ",
+      "target_columns": [],
+      "delete_action": " ",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_shifts",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "station_id"
+      ],
+      "target_table": "gate_stations",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "a",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_stations",
+      "type": "p",
+      "validated": true,
+      "columns": [
+        "id"
+      ],
+      "target_table": null,
+      "target_schema": null,
+      "update_action": " ",
+      "target_columns": [],
+      "delete_action": " ",
+      "index_valid": true,
+      "index_ready": true
+    },
+    {
+      "table_name": "gate_stations",
+      "type": "f",
+      "validated": true,
+      "columns": [
+        "site_id"
+      ],
+      "target_table": "site_locations",
+      "target_schema": "public",
+      "update_action": "a",
+      "target_columns": [
+        "id"
+      ],
+      "delete_action": "c",
+      "index_valid": true,
+      "index_ready": true
+    }
+  ],
+  "indexes": [
+    {
+      "name": "assistant_action_audit_vendor_target_idx",
+      "table_name": "assistant_action_audit",
+      "valid": true,
+      "ready": true,
+      "unique_index": false,
+      "method": "btree",
+      "columns": [
+        "vendor_id",
+        "partner_id",
+        "target_type",
+        "target_id",
+        "id"
+      ],
+      "predicate": null
+    },
+    {
+      "name": "gate_handovers_recent_idx",
+      "table_name": "gate_handovers",
+      "valid": true,
+      "ready": true,
+      "unique_index": false,
+      "method": "btree",
+      "columns": [
+        "acknowledged_at",
+        "id"
+      ],
+      "predicate": null
+    },
+    {
+      "name": "gate_preparations_shift_idx",
+      "table_name": "gate_preparations",
+      "valid": true,
+      "ready": true,
+      "unique_index": false,
+      "method": "btree",
+      "columns": [
+        "shift_id",
+        "created_at"
+      ],
+      "predicate": null
+    },
+    {
+      "name": "gate_shift_actions_item_idx",
+      "table_name": "gate_shift_actions",
+      "valid": true,
+      "ready": true,
+      "unique_index": false,
+      "method": "btree",
+      "columns": [
+        "station_id",
+        "item_id",
+        "created_at"
+      ],
+      "predicate": null
+    },
+    {
+      "name": "gate_shifts_active_unique",
+      "table_name": "gate_shifts",
+      "valid": true,
+      "ready": true,
+      "unique_index": true,
+      "method": "btree",
+      "columns": [
+        "station_id"
+      ],
+      "predicate": "(ended_at IS NULL)"
+    },
+    {
+      "name": "gate_stations_site_name_unique",
+      "table_name": "gate_stations",
+      "valid": true,
+      "ready": true,
+      "unique_index": true,
+      "method": "btree",
+      "columns": [
+        "site_id",
+        "name"
+      ],
+      "predicate": null
+    },
+    {
+      "name": "site_visits_site_checkin_idx",
+      "table_name": "site_visits",
+      "valid": true,
+      "ready": true,
+      "unique_index": false,
+      "method": "btree",
+      "columns": [
+        "site_location_id",
+        "check_in_time"
+      ],
+      "predicate": null
+    },
+    {
+      "name": "ticket_check_ins_ticket_time_idx",
+      "table_name": "ticket_check_ins",
+      "valid": true,
+      "ready": true,
+      "unique_index": false,
+      "method": "btree",
+      "columns": [
+        "ticket_id",
+        "check_out_at",
+        "check_in_at"
+      ],
+      "predicate": null
+    },
+    {
+      "name": "ticket_check_ins_gate_time_idx",
+      "table_name": "ticket_check_ins",
+      "valid": true,
+      "ready": true,
+      "unique_index": false,
+      "method": "btree",
+      "columns": [
+        "gate_station_id",
+        "check_out_at",
+        "check_in_at"
+      ],
+      "predicate": null
+    },
+    {
+      "name": "ticket_status_history_ticket_status_time_idx",
+      "table_name": "ticket_status_history",
+      "valid": true,
+      "ready": true,
+      "unique_index": false,
+      "method": "btree",
+      "columns": [
+        "ticket_id",
+        "to_status",
+        "created_at"
+      ],
+      "predicate": null
+    },
+    {
+      "name": "work_hub_task_events_task_type_time_idx",
+      "table_name": "work_hub_task_events",
+      "valid": true,
+      "ready": true,
+      "unique_index": false,
+      "method": "btree",
+      "columns": [
+        "task_id",
+        "event_type",
+        "created_at"
+      ],
+      "predicate": null
+    }
+  ],
+  "triggers": [
+    {
+      "name": "gate_change_over_default_station",
+      "table_name": "site_locations",
+      "enabled": "O",
+      "type": 5,
+      "function_name": "gate_change_over_provision_station",
+      "function_schema": "public",
+      "unconditional": true,
+      "argument_count": 0,
+      "all_columns": true
+    },
+    {
+      "name": "gate_preparations_immutable",
+      "table_name": "gate_preparations",
+      "enabled": "O",
+      "type": 27,
+      "function_name": "gate_change_over_immutable",
+      "function_schema": "public",
+      "unconditional": true,
+      "argument_count": 0,
+      "all_columns": true
+    },
+    {
+      "name": "gate_handovers_immutable",
+      "table_name": "gate_handovers",
+      "enabled": "O",
+      "type": 27,
+      "function_name": "gate_change_over_immutable",
+      "function_schema": "public",
+      "unconditional": true,
+      "argument_count": 0,
+      "all_columns": true
+    },
+    {
+      "name": "gate_shift_actions_immutable",
+      "table_name": "gate_shift_actions",
+      "enabled": "O",
+      "type": 27,
+      "function_name": "gate_change_over_immutable",
+      "function_schema": "public",
+      "unconditional": true,
+      "argument_count": 0,
+      "all_columns": true
+    }
+  ],
+  "functions": [
+    {
+      "name": "gate_change_over_immutable",
+      "body": "\nBEGIN\n RAISE EXCEPTION 'Gate handoff history is immutable';\nEND;\n",
+      "security_definer": false,
+      "language": "plpgsql",
+      "returns": "trigger",
+      "arguments": 0
+    },
+    {
+      "name": "gate_change_over_provision_station",
+      "body": "\nBEGIN\n INSERT INTO gate_stations(site_id,name) VALUES(NEW.id,'Main gate') ON CONFLICT DO NOTHING;\n RETURN NEW;\nEND;\n",
+      "security_definer": false,
+      "language": "plpgsql",
+      "returns": "trigger",
+      "arguments": 0
+    }
+  ]
+}
