@@ -1,0 +1,40 @@
+name: Gate online release verification
+on:
+  push:
+    branches: [codex/askv-workflow-verification-bc750349]
+    paths: ['.github/workflows/gate-release-diagnostics.yml','ops/gate-online-verify.mjs','ops/gate-server-read-verification.mjs','ops/gate-release-checkpoint.json']
+permissions:
+  contents: read
+  actions: write
+jobs:
+  verify-online:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      VPS_PORT: ${{ secrets.VPS_PORT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+      - run: pnpm install --frozen-lockfile
+      - run: sudo apt-get update -qq && sudo apt-get install --yes --no-install-recommends sshpass
+      - name: Verify publications, public UI, saved hold and unchanged handoff gate
+        run: node ops/gate-online-verify.mjs
+      - name: Preserve final release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: askv-workflow-verification-bc750349
+          path: ${{ runner.temp }}/gate-release-evidence
+          retention-days: 7
+          if-no-files-found: ignore

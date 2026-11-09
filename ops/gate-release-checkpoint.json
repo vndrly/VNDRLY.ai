@@ -1,0 +1,198 @@
+{
+  "authorization": {
+    "instruction": "Please resume unattended with full approval to make any all changes to continue and not stop at checkpoints but continue to next step until it results in a full ship minus the plugin\n\nPlease carry it out unattended with all approval the culminates in full ship and we are limited to about two hours so do not stop implementing, fix all as the pop up and create all the missing mecjanics on the appropriate pages at the bottom and I’ll sort them out later.",
+    "scope": [
+      "commit",
+      "push",
+      "web",
+      "api",
+      "supabase",
+      "ota",
+      "testflight",
+      "local_sync"
+    ],
+    "restrictions": [
+      "Gate helpers only; no general profile/company/catalog/payroll helper development",
+      "MidCon vendor1054 notifications remain indefinitely paused until John explicitly resumes",
+      "Preserve unrelated work; no destructive database resets, force pushes or credential rotation"
+    ],
+    "requestedAt": "2026-11-09T07:31:25+00:00",
+    "deadline": "2026-11-09T09:31:25+00:00",
+    "completionCriteria": [
+      "Gate roles can complete staffing recovery and day-to-day work through actual guided branded helpers",
+      "Shared first-admin acknowledgment stops reminders; saved watch resolves coverage; office navigation preserves watch",
+      "NextSteps max3 role-appropriate Gate workflows, separate persistent helper, controlguidance, AskV on-demand and independent mastery receipts",
+      "All eight non-plugin release tracks verified or genuinely external-blocked with evidence"
+    ]
+  },
+  "authorizationHistory": [
+    {
+      "instruction": "Please resume unattended with full approval to make any all changes to continue and not stop at checkpoints but continue to next step until it results in a full ship minus the plugin",
+      "note": "Exact standing instruction preserved; original plugin exclusion and07:31 deadline retained"
+    },
+    {
+      "instruction": "Please carry it out unattended with all approval the culminates in full ship and we are limited to about two hours so do not stop implementing, fix all as the pop up and create all the missing mecjanics on the appropriate pages at the bottom and I’ll sort them out later.",
+      "note": "Exact standing instruction preserved; original plugin exclusion and07:31 deadline retained"
+    },
+    {
+      "instruction": "I don’t consider Next Steps a separate help system from askV as much as these are all workflows in askV’s toolbox that she can initiate and be available to answer questions about that workflow  and put them on the right paths using Next Steps to help users learn to use site. Does that make sense. That’s the way I want the connection and hierarchy between askV and next steps to be. They assist/work together to help the user as one. Is that reasonable. Not just tools for V but tools to help V assist the user as a workflow within Next Steps. Does that make sense? If a user asked a question you might even be able to forward them to the place in the workflow they are at and finish with next steps from that point. Is that something you could make work?",
+      "recordedAt": "2026-11-09T10:29:05Z",
+      "note": "Follow-up product correction after the prior release handoff. Original full-ship authorization, plugin exclusion and original deadline preserved; no new user deadline supplied."
+    }
+  ],
+  "excludedTracks": {
+    "plugin": {
+      "reason": "Explicit full ship minus plugin"
+    }
+  },
+  "releaseCommit": "bc750349f3e4c029d5a7da73ca0b93368c8c9bf2",
+  "sourceTree": "3e8ea07ab9126009771b8350d3566650f4057669",
+  "localCheckpoint": {
+    "commit": "24cd102399187206bb138d841c50222f79ba4fe8",
+    "tree": "3e8ea07ab9126009771b8350d3566650f4057669",
+    "branch": "codex/askv-next-steps-shared-context"
+  },
+  "updatedAt": "2026-11-09T10:39:42Z",
+  "publicationStartedAt": "2026-11-09T10:30:56Z",
+  "sourceWorktree": "/workspace/VNDRLY.ai",
+  "activeJobs": [],
+  "tracks": {
+    "commit": {
+      "status": "verified",
+      "canProceed": false,
+      "nextAction": "Complete: immutable tested source tree committed.",
+      "evidence": [
+        {
+          "source": "https://github.com/vndrly/VNDRLY.ai/commit/bc750349f3e4c029d5a7da73ca0b93368c8c9bf2",
+          "observedAt": "2026-11-09T10:30:56Z",
+          "commit": "bc750349f3e4c029d5a7da73ca0b93368c8c9bf2",
+          "result": "GitHub tree exactly matches tested local tree 3e8ea07ab9126009771b8350d3566650f4057669; source checkpoint preserved at 24cd102399187206bb138d841c50222f79ba4fe8."
+        }
+      ]
+    },
+    "push": {
+      "status": "verified",
+      "canProceed": false,
+      "nextAction": "Complete: branch and main published without force.",
+      "evidence": [
+        {
+          "source": "https://github.com/vndrly/VNDRLY.ai/tree/main",
+          "observedAt": "2026-11-09T10:39:42Z",
+          "commit": "bc750349f3e4c029d5a7da73ca0b93368c8c9bf2",
+          "result": "Expected-parent non-force update succeeded; clean cloud main fast-forwarded to this exact commit/tree, prior source checkpoint retained."
+        }
+      ]
+    },
+    "web": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Publish and verify the exact follow-up release commit.",
+      "evidence": []
+    },
+    "api": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Publish and verify the exact follow-up release commit.",
+      "evidence": []
+    },
+    "supabase": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Publish and verify the exact follow-up release commit.",
+      "evidence": []
+    },
+    "ota": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Publish and verify the exact follow-up release commit.",
+      "evidence": []
+    },
+    "testflight": {
+      "status": "pending",
+      "canProceed": true,
+      "nextAction": "Publish and verify the exact follow-up release commit.",
+      "evidence": []
+    },
+    "local_sync": {
+      "status": "blocked",
+      "canProceed": false,
+      "nextAction": "Canonical JOVE must reconnect before its checkout and5173/8080/8081/8099 services can be synchronized.",
+      "evidence": [
+        {
+          "source": "Desktop Commander list_devices",
+          "observedAt": "2026-11-09T10:27:12Z",
+          "commit": "bc750349f3e4c029d5a7da73ca0b93368c8c9bf2",
+          "result": "Only registered JOVE device remains offline, last seen479h; no canonical checkout or service access. Cloud main is synchronized but is a separate machine."
+        }
+      ],
+      "blocker": {
+        "reason": "Canonical JOVE is offline",
+        "attempts": [
+          {
+            "source": "Desktop Commander list_devices",
+            "observedAt": "2026-11-09T10:27:12Z",
+            "commit": "bc750349f3e4c029d5a7da73ca0b93368c8c9bf2",
+            "result": "Only registered JOVE device remains offline, last seen479h; no canonical checkout or service access. Cloud main is synchronized but is a separate machine."
+          }
+        ],
+        "alternativesConsidered": [
+          "Current cloud checkout was fast-forwarded cleanly to release; it cannot substitute for canonical JOVE.",
+          "Only JOVE is registered; IT15 is unavailable. Offline device cannot execute the prepared safe synchronization script."
+        ],
+        "requiredExternalChange": "JOVE Desktop Commander Remote reconnects."
+      }
+    }
+  },
+  "validation": {
+    "webBroad": {
+      "passed": 2417,
+      "files": 439,
+      "log": "/tmp/askv-guidance-web-full.log",
+      "note": "Broad run before final generic-offer wiring; affected files covered by current-source focused67-case run plus22-case final visual/state rerun."
+    },
+    "webFocused": {
+      "passed": 67,
+      "files": 10,
+      "log": "/tmp/askv-guidance-web-final.log"
+    },
+    "webFinalVisual": {
+      "passed": 22,
+      "files": 2,
+      "log": "/tmp/askv-guidance-visual-final.log"
+    },
+    "apiFocused": {
+      "passed": 145,
+      "files": 7,
+      "log": "/tmp/askv-guidance-api-final.log"
+    },
+    "shared": {
+      "passed": 33,
+      "files": 4,
+      "log": "/tmp/askv-guidance-shared-final.log"
+    },
+    "typechecks": [
+      "web",
+      "api",
+      "mobile"
+    ],
+    "locales": "en/es parity passed for web and mobile",
+    "browser": {
+      "source": ".local/askv-workflow/browser-evidence.json",
+      "desktop": 1440,
+      "narrow": 390,
+      "assistant": "Deterministic assistant stream; real current signed-in isolated API saved records and real page controls",
+      "writes": 0,
+      "notificationsSent": 0
+    },
+    "baseline": {
+      "commit": "38104cb3a35717232d8077b21275d897c6081d8e",
+      "note": "Existing MidCon series, custody, account setup, API database and native checks reused for unchanged business logic. No migration/schema/storage/notification-hold/plugin changes."
+    }
+  },
+  "previousRelease": {
+    "commit": "38104cb3a35717232d8077b21275d897c6081d8e",
+    "verificationRun": "https://github.com/vndrly/VNDRLY.ai/actions/runs/42593259188",
+    "note": "All seven online tracks verified before this follow-up; JOVE synchronization remained externally blocked."
+  },
+  "followUpRequest": "I don’t consider Next Steps a separate help system from askV as much as these are all workflows in askV’s toolbox that she can initiate and be available to answer questions about that workflow  and put them on the right paths using Next Steps to help users learn to use site. Does that make sense. That’s the way I want the connection and hierarchy between askV and next steps to be. They assist/work together to help the user as one. Is that reasonable. Not just tools for V but tools to help V assist the user as a workflow within Next Steps. Does that make sense? If a user asked a question you might even be able to forward them to the place in the workflow they are at and finish with next steps from that point. Is that something you could make work?"
+}
