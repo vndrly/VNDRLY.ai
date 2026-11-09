@@ -1,3 +1,4 @@
+import "./site-locations.css";
 import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 import GateLinkFields, { emptyGateLink, gateLinkPayload } from "@/components/gate-link-fields";
@@ -408,7 +409,7 @@ export default function SiteLocations() {
   );
 
   return (
-    <div className="space-y-6" data-testid="site-locations-page">
+    <div className="site-locations-page space-y-6" data-testid="site-locations-page">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <PageHistoryLink href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
@@ -432,7 +433,7 @@ export default function SiteLocations() {
           <DialogTrigger asChild>
             <PngPillButton color="brand" className="px-2" data-testid="button-add-site"><Plus className="w-4 h-4" />{t("siteLocations.addSite")}</PngPillButton>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="site-locations-dialog max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{t("siteLocations.addSiteLocation")}</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -448,7 +449,7 @@ export default function SiteLocations() {
                 ) : (
                   <Select value={form.partnerId} onValueChange={(v) => setForm({ ...form, partnerId: v })}>
                     <SelectTrigger data-testid="select-partner"><SelectValue placeholder={t("siteLocations.selectPartner")} /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="site-locations-select">
                       {partners?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -623,7 +624,7 @@ export default function SiteLocations() {
               <SelectTrigger className="w-[200px] rounded-full border-2 bg-white shadow-sm focus:ring-0 focus:shadow-none" style={{ borderColor: "var(--brand-primary)" }} data-testid="select-filter-partner">
                 <SelectValue placeholder={t("siteLocations.filterPartnerPlaceholder")} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="site-locations-select">
                 <SelectItem value="all">{t("siteLocations.filterAllPartners")}</SelectItem>
                 {availablePartners.map((p) => (
                   <SelectItem key={p.id} value={String(p.id)}>{p.name || `#${p.id}`}</SelectItem>
@@ -635,7 +636,7 @@ export default function SiteLocations() {
             <SelectTrigger className="w-[180px] rounded-full border-2 bg-white shadow-sm focus:ring-0 focus:shadow-none" style={{ borderColor: "var(--brand-primary)" }} data-testid="select-filter-status">
               <SelectValue placeholder={t("siteLocations.filterStatusPlaceholder")} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="site-locations-select">
               <SelectItem value="all">{t("siteLocations.filterAllStatuses")}</SelectItem>
               {statusOptions.map((s) => (
                 <SelectItem key={s} value={s} data-testid={`select-filter-status-option-${s}`}>
@@ -664,7 +665,7 @@ export default function SiteLocations() {
         </div>
       )}
 
-      <Card>
+      <Card className="site-locations-card">
         <ContentCardHeader title="Site locations" spanish="Ubicaciones de sitios" />
         <CardContent className="p-0">
           {isLoading ? (
@@ -786,7 +787,7 @@ export default function SiteLocations() {
           if (!o) closeRadiusDialog();
         }}
       >
-        <DialogContent data-testid="dialog-edit-radius">
+        <DialogContent className="site-locations-dialog" data-testid="dialog-edit-radius">
           <DialogHeader>
             <DialogTitle>
               {radiusEditingSite

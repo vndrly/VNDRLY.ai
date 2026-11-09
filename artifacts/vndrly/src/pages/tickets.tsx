@@ -1712,7 +1712,7 @@ export default function Tickets() {
   );
 
   return (
-    <div className={`space-y-6 ${user?.role === "vendor" ? "vendor-workspace-page" : ""}`} data-testid="tickets-page">
+    <div className={`current-theme-page current-theme-legacy space-y-6 ${user?.role === "vendor" ? "vendor-workspace-page" : ""}`} data-testid="tickets-page">
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
         <div className="flex items-start gap-3">
           <ContentPaneBackLink href="/" className="mt-0.5" />

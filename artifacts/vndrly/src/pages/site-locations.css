@@ -1,0 +1,41 @@
+.site-locations-card {
+  overflow: hidden;
+}
+
+.site-locations-page [data-testid="site-locations-filters"] :is(input, [role="combobox"]),
+.site-locations-dialog :is(input:not([type="checkbox"]):not([type="radio"]), [role="combobox"]) {
+  background: #303236;
+  color: #ececec;
+  border: 1px solid var(--brand-primary);
+  border-radius: 999px;
+  box-shadow: none;
+  max-width: 100%;
+}
+
+.site-locations-page input::placeholder,
+.site-locations-dialog input::placeholder {
+  color: #b3b3b3;
+}
+
+.site-locations-page [data-testid="site-locations-filters"] :is(input, [role="combobox"]):focus-visible,
+.site-locations-dialog :is(input, [role="combobox"]):focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.app-select-menu.site-locations-select[role="listbox"] {
+  background: #242426;
+  color: #ececec;
+  border: 1px solid var(--brand-primary);
+  border-radius: 12px;
+}
+
+.site-locations-select [role="option"] {
+  border-radius: 7px;
+}
+
+.site-locations-select [role="option"][data-state="checked"],
+.app-select-menu.site-locations-select [role="option"][data-highlighted] {
+  background: color-mix(in srgb, var(--brand-primary) 18%, #242426);
+  color: #ececec;
+}

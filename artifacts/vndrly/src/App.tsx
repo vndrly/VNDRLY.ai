@@ -18,6 +18,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import { NotificationsModalProvider } from "@/components/notifications-modal-context";
 import Layout from "@/components/layout";
+import "@/components/current-theme-page.css";
 import DemoGuide from "@/components/demo-guide";
 import ContextPickerModal from "@/components/context-picker-modal";
 import ChangePasswordModal from "@/components/change-password-modal";
@@ -176,52 +177,52 @@ function AdminRoutes() {
       <Suspense fallback={<RouteFallback />}>
         <Switch>
         <Route path="/" component={Dashboard} />
-        <Route path="/partners" component={Partners} />
-        <Route path="/partners/:id">{(params) => <PartnerDetail id={parseInt(params.id)} />}</Route>
-        <Route path="/vendors" component={Vendors} />
+        <Route path="/partners"><div className="current-theme-page current-theme-legacy"><Partners /></div></Route>
+        <Route path="/partners/:id">{(params) => <div className="current-theme-page current-theme-legacy"><PartnerDetail id={parseInt(params.id)} /></div>}</Route>
+        <Route path="/vendors"><div className="current-theme-page current-theme-legacy"><Vendors /></div></Route>
         <Route path="/vendors/:id">{(params) => <VendorDetail id={parseInt(params.id)} />}</Route>
         <Route path="/field-employees" component={FieldEmployees} />
-        <Route path="/field-employees/:id">{(params) => <FieldEmployeeDetail id={parseInt(params.id)} />}</Route>
-        <Route path="/gate-locations" component={GateLocations} />
-        <Route path="/site-locations" component={SiteLocations} />
+        <Route path="/field-employees/:id">{(params) => <div className="current-theme-page current-theme-legacy"><FieldEmployeeDetail id={parseInt(params.id)} /></div>}</Route>
+        <Route path="/gate-locations"><div className="current-theme-page current-theme-legacy"><GateLocations /></div></Route>
+        <Route path="/site-locations"><div className="current-theme-page current-theme-legacy"><SiteLocations /></div></Route>
         <Route path="/site-locations/:id/cameras">{(params) => <CameraCenterPage siteId={parseInt(params.id)} />}</Route>
         <Route path="/site-locations/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
         <Route path="/tickets" component={Tickets} />
-        <Route path="/flagged" component={FlaggedTicketsPage} />
+        <Route path="/flagged"><div className="current-theme-page current-theme-legacy"><FlaggedTicketsPage /></div></Route>
         <Route path="/safety-score">{() => <Redirect to="/work-hub/library?tab=certifications" replace />}</Route>
-        <Route path="/safety" component={SafetyInboxPage} />
-        <Route path="/safety-report" component={SafetyReportPage} />
-        <Route path="/safety-training" component={SafetyTrainingPage} />
+        <Route path="/safety"><div className="current-theme-page current-theme-legacy"><SafetyInboxPage /></div></Route>
+        <Route path="/safety-report"><div className="current-theme-page current-theme-legacy"><SafetyReportPage /></div></Route>
+        <Route path="/safety-training"><div className="current-theme-page current-theme-legacy"><SafetyTrainingPage /></div></Route>
         <Route path="/safety/:id" component={SafetyEventDetailPage} />
-        <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
-        <Route path="/crew-map">{() => <CrewMapPage />}</Route>
-        <Route path="/crew-map/:id">{(params) => <CrewReplayPage employeeId={parseInt(params.id)} />}</Route>
-        <Route path="/site-map" component={SiteMapPage} />
-        <Route path="/gate-log" component={GateLogPage} />
-        <Route path="/payroll" component={PayrollPage} />
-        <Route path="/catalog" component={Catalog} />
-        <Route path="/catalog-health" component={CatalogHealth} />
-        <Route path="/partner-catalog" component={PartnerCatalog} />
-        <Route path="/vendor-catalog" component={VendorCatalog} />
-        <Route path="/analytics/vendor/:id">{(params) => <VendorAnalytics vendorId={parseInt(params.id)} />}</Route>
-        <Route path="/analytics/partner/:id">{(params) => <PartnerAnalytics partnerId={parseInt(params.id)} />}</Route>
-        <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
-        <Route path="/notifications" component={NotificationsInboxPage} />
-        <Route path="/invoices" component={ACCOUNTING_ENABLED ? InvoicesPage : NotFound} />
-        <Route path="/invoices/:id">{(params) => ACCOUNTING_ENABLED ? <InvoiceDetailPage id={parseInt(params.id)} /> : <NotFound />}</Route>
-        <Route path="/billing-settings/:vendorId/:partnerId">{(params) => ACCOUNTING_ENABLED ? <BillingSettingsPage vendorId={parseInt(params.vendorId)} partnerId={parseInt(params.partnerId)} /> : <NotFound />}</Route>
-        <Route path="/bills-to-pay" component={ACCOUNTING_ENABLED ? BillsToPayPage : NotFound} />
-        <Route path="/statement" component={ACCOUNTING_ENABLED ? StatementPage : NotFound} />
-        <Route path="/reports" component={ReportsPage} />
-        <Route path="/visitors"><VisitorsPage /></Route>
-        <Route path="/visits/:id">{(params) => <VisitDetailPage id={params.id} />}</Route>
-        <Route path="/admin/vndrly" component={AdminVndrly} />
-        <Route path="/admin/rate-limits" component={AdminRateLimits} />
-        <Route path="/admin/removed-comments" component={AdminRemovedComments} />
-        <Route path="/admin/askv-audit" component={AdminAskVAudit} />
-        <Route path="/admin/communications-health" component={AdminCommunicationsHealth} />
-        <Route path="/admin/service-mappings" component={AdminServiceMappings} />
-        <Route path="/admin/1099-transmitter" component={TAX_REPORTING_ENABLED ? Admin1099Transmitter : NotFound} />
+        <Route path="/tickets/:id">{(params) => <div className="current-theme-page current-theme-legacy"><TicketDetail id={parseInt(params.id)} /></div>}</Route>
+        <Route path="/crew-map">{() => <div className="current-theme-page current-theme-legacy"><CrewMapPage /></div>}</Route>
+        <Route path="/crew-map/:id">{(params) => <div className="current-theme-page current-theme-legacy"><CrewReplayPage employeeId={parseInt(params.id)} /></div>}</Route>
+        <Route path="/site-map"><div className="current-theme-page current-theme-legacy"><SiteMapPage /></div></Route>
+        <Route path="/gate-log"><div className="current-theme-page current-theme-legacy"><GateLogPage /></div></Route>
+        <Route path="/payroll"><div className="current-theme-page current-theme-legacy"><PayrollPage /></div></Route>
+        <Route path="/catalog"><div className="current-theme-page current-theme-legacy"><Catalog /></div></Route>
+        <Route path="/catalog-health"><div className="current-theme-page current-theme-legacy"><CatalogHealth /></div></Route>
+        <Route path="/partner-catalog"><div className="current-theme-page current-theme-legacy"><PartnerCatalog /></div></Route>
+        <Route path="/vendor-catalog"><div className="current-theme-page current-theme-legacy"><VendorCatalog /></div></Route>
+        <Route path="/analytics/vendor/:id">{(params) => <div className="current-theme-page current-theme-legacy"><VendorAnalytics vendorId={parseInt(params.id)} /></div>}</Route>
+        <Route path="/analytics/partner/:id">{(params) => <div className="current-theme-page current-theme-legacy"><PartnerAnalytics partnerId={parseInt(params.id)} /></div>}</Route>
+        <Route path="/notifications/preferences"><div className="current-theme-page current-theme-legacy"><NotificationPreferencesPage /></div></Route>
+        <Route path="/notifications"><div className="current-theme-page current-theme-legacy"><NotificationsInboxPage /></div></Route>
+        <Route path="/invoices">{() => ACCOUNTING_ENABLED ? <div className="current-theme-page current-theme-legacy"><InvoicesPage /></div> : <NotFound />}</Route>
+        <Route path="/invoices/:id">{(params) => ACCOUNTING_ENABLED ? <div className="current-theme-page current-theme-legacy"><InvoiceDetailPage id={parseInt(params.id)} /></div> : <NotFound />}</Route>
+        <Route path="/billing-settings/:vendorId/:partnerId">{(params) => ACCOUNTING_ENABLED ? <div className="current-theme-page current-theme-legacy"><BillingSettingsPage vendorId={parseInt(params.vendorId)} partnerId={parseInt(params.partnerId)} /></div> : <NotFound />}</Route>
+        <Route path="/bills-to-pay">{() => ACCOUNTING_ENABLED ? <div className="current-theme-page current-theme-legacy"><BillsToPayPage /></div> : <NotFound />}</Route>
+        <Route path="/statement">{() => ACCOUNTING_ENABLED ? <div className="current-theme-page current-theme-legacy"><StatementPage /></div> : <NotFound />}</Route>
+        <Route path="/reports"><div className="current-theme-page current-theme-legacy"><ReportsPage /></div></Route>
+        <Route path="/visitors"><div className="current-theme-page current-theme-legacy"><VisitorsPage /></div></Route>
+        <Route path="/visits/:id">{(params) => <div className="current-theme-page current-theme-legacy"><VisitDetailPage id={params.id} /></div>}</Route>
+        <Route path="/admin/vndrly"><div className="current-theme-page current-theme-legacy"><AdminVndrly /></div></Route>
+        <Route path="/admin/rate-limits"><div className="current-theme-page current-theme-legacy"><AdminRateLimits /></div></Route>
+        <Route path="/admin/removed-comments"><div className="current-theme-page current-theme-legacy"><AdminRemovedComments /></div></Route>
+        <Route path="/admin/askv-audit"><div className="current-theme-page current-theme-legacy"><AdminAskVAudit /></div></Route>
+        <Route path="/admin/communications-health"><div className="current-theme-page current-theme-legacy"><AdminCommunicationsHealth /></div></Route>
+        <Route path="/admin/service-mappings"><div className="current-theme-page current-theme-legacy"><AdminServiceMappings /></div></Route>
+        <Route path="/admin/1099-transmitter">{() => TAX_REPORTING_ENABLED ? <div className="current-theme-page current-theme-legacy"><Admin1099Transmitter /></div> : <NotFound />}</Route>
         <Route component={NotFound} />
         </Switch>
       </Suspense>
@@ -268,7 +269,7 @@ function AuthenticatedRouter() {
         <Route path="/operations-display/:displayId/:monitorId">{params => <OperationsDisplayViewer displayId={params.displayId} monitorId={params.monitorId} />}</Route>
         <Route path="/operations-display" component={OperationsDisplayDirectory} />
         <Route path="/organization-subscription" component={OrganizationSubscription} />
-        {user && <Route path="/work-hub/administration/displays" component={OperationsDisplayDirectory} />}
+        {user && <Route path="/work-hub/administration/displays"><Layout><OperationsDisplayDirectory embedded /></Layout></Route>}
         {user && <Route path="/work-hub/form/:instanceId" component={FormCampaignLinkRedirect}/>}
         {user && <Route path="/work-hub/campaign/:campaignId" component={FormCampaignLinkRedirect}/>}
         {user && <Route path="/work-hub/meeting/:occurrenceId" component={MeetingLinkRedirect}/>}
@@ -354,7 +355,7 @@ function AuthenticatedRouter() {
               <Route path="/account/location" component={AccountLocation} />
               <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
               <Route path="/notifications" component={NotificationsInboxPage} />
-              <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
+              <Route path="/tickets/:id">{(params) => <div className="current-theme-page current-theme-legacy"><TicketDetail id={parseInt(params.id)} /></div>}</Route>
               <Route path="/">
                 <ForemanRootRedirect />
               </Route>
@@ -380,7 +381,7 @@ function AuthenticatedRouter() {
               <Route path="/account/location" component={AccountLocation} />
               <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
               <Route path="/notifications" component={NotificationsInboxPage} />
-              <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
+              <Route path="/tickets/:id">{(params) => <div className="current-theme-page current-theme-legacy"><TicketDetail id={parseInt(params.id)} /></div>}</Route>
               <Route path="/*splat">{() => <Redirect to="/field" replace />}</Route>
             </Switch>
           </FieldPortalLayout>

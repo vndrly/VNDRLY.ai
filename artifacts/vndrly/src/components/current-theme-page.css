@@ -1,5 +1,9 @@
-/* Opt-in page treatment: Inventory and Safety Score only. */
-main:has(.current-theme-page) { background:#3a3d42 !important; color:#ececec; }
+/* Opt-in page treatment. Each route owns its background. */
+main:has(.current-theme-page),
+html.dark main:has(.current-theme-page) {
+  background:#3a3d42 !important;
+  color:#ececec;
+}
 .current-theme-page {
   min-width:0;
   color:#ececec;
@@ -15,6 +19,51 @@ main:has(.current-theme-page) { background:#3a3d42 !important; color:#ececec; }
 .current-theme-page h1 { color:#ececec; }
 .current-theme-page :is(.text-muted-foreground,.text-gray-500,.text-gray-600) { color:#b3b3b3; }
 .current-theme-page [data-slot=card] { background:#242426; color:#ececec; box-shadow:none; }
+.current-theme-legacy :is(.bg-white,.bg-gray-50,.bg-slate-50) {
+  background-color:#303236;
+}
+.current-theme-legacy :is(.text-black,.text-gray-900,.text-gray-800,.text-gray-700) {
+  color:#ececec;
+}
+html main .current-theme-legacy :is([data-slot=card],[data-work-hub-card],article[data-card-layout],section[data-card-layout]) {
+  background:#242426 !important;
+  border:1px solid var(--brand-primary) !important;
+  color:#ececec;
+  border-radius:14px;
+}
+.current-theme-legacy :is(input:not([type=checkbox]):not([type=radio]):not([type=file]), textarea, select, [role=combobox]) {
+  background:#303236;
+  color:#ececec;
+  border-color:var(--brand-primary);
+  color-scheme:dark;
+  border-radius:12px;
+}
+.current-theme-legacy :is(input:not([type=checkbox]):not([type=radio]):not([type=file]), select, [role=combobox]) {
+  border-radius:999px;
+}
+.current-theme-legacy :is(input, textarea, select, [role=combobox]):focus-visible {
+  outline:2px solid var(--brand-primary);
+  outline-offset:2px;
+}
+.current-theme-legacy :is(input, textarea)::placeholder {
+  color:#b3b3b3;
+}
+body:has(main :is(.current-theme-legacy,.site-location-detail,.hub-calendar-page,.hub-chat-page,.library-page)) .app-select-menu[role=listbox] {
+  background:#242426;
+  color:#ececec;
+  border:1px solid var(--brand-primary);
+  border-radius:12px;
+}
+body:has(main :is(.current-theme-legacy,.site-location-detail,.hub-calendar-page,.hub-chat-page,.library-page)) .app-select-menu [role=option] {
+  border-radius:7px;
+}
+body:has(main :is(.current-theme-legacy,.site-location-detail,.hub-calendar-page,.hub-chat-page,.library-page)) .app-select-menu [role=option]:is([data-state=checked],[data-highlighted]) {
+  background:color-mix(in srgb,var(--brand-primary) 18%,#242426);
+  color:#ececec;
+}
+.current-theme-legacy :is(.hover\:bg-gray-50,.hover\:bg-gray-100,.hover\:bg-slate-50):hover {
+  background-color:#38383d;
+}
 .current-theme-page .current-theme-mini,
 .inventory-page [data-modal-pill-action] {
   display:inline-flex; align-items:center; justify-content:center; gap:6px;

@@ -2320,10 +2320,18 @@ function WorkHubContent() {
   return pages[module] ?? <Home />;
 }
 
+const legacyHubModules = new Set([
+  "channels", "files", "tasks", "meetings", "search", "settings", "calls", "finance",
+  "administration", "askv", "managed-crews", "coverage", "site-presence",
+  "safety-response", "subscriptions", "operations-health", "implementation-exports", "native-work",
+]);
+
 export default function WorkHubPage() {
   const { user } = useAuth();
+  const [location] = useLocation();
+  const legacyTheme = legacyHubModules.has(location.split("/")[2]);
   return (
-    <WorkHubSurface>
+    <WorkHubSurface legacyTheme={legacyTheme}>
       <WorkHubContent key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`} />
     </WorkHubSurface>
   );

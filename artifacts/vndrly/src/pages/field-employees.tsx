@@ -566,7 +566,7 @@ export default function FieldEmployees() {
   };
 
   return (
-    <div className="employees-page space-y-6" data-testid="field-employees-page">
+    <div className="employees-page current-theme-legacy space-y-6" data-testid="field-employees-page">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ContentPaneBackLink href="/" />

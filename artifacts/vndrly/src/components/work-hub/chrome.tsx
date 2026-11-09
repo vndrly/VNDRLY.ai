@@ -14,9 +14,9 @@ export const WORK_HUB_CARD_CLASS =
 export const WORK_HUB_SUBCARD_CLASS =
   "rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black";
 
-export function WorkHubSurface({ children }: { children: ReactNode }) {
+export function WorkHubSurface({ children, legacyTheme = false }: { children: ReactNode; legacyTheme?: boolean }) {
   return (
-    <div className="work-hub-surface [&_svg]:!filter-none [&_[data-slot=card]]:!border-[color:var(--brand-primary)] [&_[data-work-hub-card]]:!border-[color:var(--brand-primary)] [&_[data-slot=card-title]]:font-bold [&_[data-slot=card-title]]:text-black [&_[data-slot=card-title]_svg]:text-[var(--brand-primary)]">
+    <div className={cn("work-hub-surface [&_svg]:!filter-none [&_[data-slot=card]]:!border-[color:var(--brand-primary)] [&_[data-work-hub-card]]:!border-[color:var(--brand-primary)] [&_[data-slot=card-title]]:font-bold [&_[data-slot=card-title]]:text-black [&_[data-slot=card-title]_svg]:text-[var(--brand-primary)]", legacyTheme && "current-theme-page current-theme-legacy")}>
       {children}
     </div>
   );
