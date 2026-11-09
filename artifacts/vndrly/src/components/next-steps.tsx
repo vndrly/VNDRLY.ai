@@ -235,7 +235,7 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
     return () => { document.removeEventListener("keydown", escape); document.removeEventListener("pointerdown", outside); };
   }, [state.close]);
   return <aside ref={panelRef} id="next-steps-panel" className="next-steps-panel" aria-labelledby="next-steps-heading" data-testid="next-steps-panel" data-state={state.isPending ? "loading" : state.isError ? "error" : "settled"}>
-    <header className="next-steps-panel-header"><div className="flex items-start gap-2"><NextStepsAvatar active /><div><h2 id="next-steps-heading" tabIndex={-1} ref={heading}>Next Steps</h2><p role="status" aria-live="polite">{state.isPending ? "Checking saved work…" : `${state.count} available ${state.count === 1 ? "action" : "actions"}`}</p></div></div>
+    <NextStepsAvatar active /><header className="next-steps-panel-header"><div className="flex items-start gap-2"><div><h2 id="next-steps-heading" tabIndex={-1} ref={heading}>Next Steps</h2><p role="status" aria-live="polite">{state.isPending ? "Checking saved work…" : `${state.count} available ${state.count === 1 ? "action" : "actions"}`}</p></div></div>
       <button type="button" className="next-steps-icon-button" aria-label="Close Next Steps" onClick={state.close}><X aria-hidden="true" /></button>
     </header>
     <div className="next-steps-panel-body">
@@ -257,8 +257,8 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
 function ActiveWorkflowHelper(props: Parameters<typeof WorkflowHelper>[0]) {
   const state = useNextSteps()!;
   const brand = useBrand();
-  return <GuidedHelperPortal>{inModal => <aside style={inModal ? { position: "relative", top: "auto", right: "auto", bottom: "auto", width: "100%", maxWidth: "100%", maxHeight: "min(40dvh, 24rem)", flexShrink: 0, pointerEvents: "auto" } : undefined} onPointerDown={inModal ? event => event.stopPropagation() : undefined} onFocus={inModal ? event => event.stopPropagation() : undefined} className="next-steps-panel next-steps-active-helper" aria-label="Active Next Steps helper" data-testid="next-steps-active-helper">
-    <header className="next-steps-panel-header"><div className="flex items-start gap-2"><NextStepsAvatar active /><div><h2>askV · Gate guidance</h2><p>{brand.name ?? "Your company"} · Your current Next Step.</p></div></div><button type="button" className="next-steps-icon-button" aria-label="Stop current helper" onClick={state.stopHelper}><X aria-hidden="true" /></button></header>
+  return <GuidedHelperPortal>{inModal => <aside style={inModal ? { position: "relative", top: "auto", right: "auto", bottom: "auto", width: "calc(100% - var(--next-steps-avatar-gutter))", marginLeft: "var(--next-steps-avatar-gutter)", maxHeight: "min(40dvh, 24rem)", flexShrink: 0, pointerEvents: "auto" } : undefined} onPointerDown={inModal ? event => event.stopPropagation() : undefined} onFocus={inModal ? event => event.stopPropagation() : undefined} className="next-steps-panel next-steps-active-helper" aria-label="Active Next Steps helper" data-testid="next-steps-active-helper">
+    <NextStepsAvatar active /><header className="next-steps-panel-header"><div className="flex items-start gap-2"><div><h2>askV · Gate guidance</h2><p>{brand.name ?? "Your company"} · Your current Next Step.</p></div></div><button type="button" className="next-steps-icon-button" aria-label="Stop current helper" onClick={state.stopHelper}><X aria-hidden="true" /></button></header>
     <div className="next-steps-panel-body"><WorkflowHelper {...props} inModal={inModal} /></div>
   </aside>}</GuidedHelperPortal>;
 }

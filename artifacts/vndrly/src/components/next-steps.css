@@ -5,7 +5,7 @@
 .next-steps-nav[data-attention=gentle] .next-steps-nav-icon{animation:next-steps-gentle 4.8s ease-in-out infinite}
 @keyframes next-steps-gentle{0%,65%,100%{opacity:1}82%{opacity:.6}}
 .next-steps-nav:focus-visible,.next-steps-panel button:focus-visible{outline:2px solid var(--brand-primary);outline-offset:3px}
-.next-steps-panel{position:fixed;z-index:70;right:1rem;top:4.5rem;width:min(27rem,calc(100vw - 2rem));max-height:calc(100dvh - 5.5rem);display:flex;flex-direction:column;border:2px solid var(--brand-primary);border-radius:.75rem;background:#232323;color:#f2f2f2;box-shadow:0 12px 38px #0006;isolation:isolate}
+.next-steps-panel{position:fixed;z-index:70;right:1rem;top:4.5rem;--next-steps-avatar-gutter:clamp(3rem,18vw,7rem);width:min(27rem,calc(100vw - 2rem - var(--next-steps-avatar-gutter)));max-height:calc(100dvh - 5.5rem);display:flex;flex-direction:column;border:2px solid var(--brand-primary);border-radius:.75rem;background:#232323;color:#f2f2f2;box-shadow:0 12px 38px #0006;isolation:isolate}
 .next-steps-panel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;padding:1rem;border-bottom:1px solid #ffffff26}
 .next-steps-panel h2{font-size:1.125rem;font-weight:700;outline:none}
 .next-steps-panel h3{font-size:.95rem;font-weight:650}
@@ -33,4 +33,9 @@
 .next-steps-brand-logo{width:2.5rem;height:2.5rem;object-fit:contain;flex-shrink:0}
 @media(max-width:640px){.next-steps-active-helper{max-height:40dvh}}
 
-.next-steps-avatar{width:3rem;height:3rem;flex:none}.next-steps-avatar[data-active=true]{animation:next-steps-nod .45s ease-out}@keyframes next-steps-nod{50%{transform:rotate(-8deg)}}@media(prefers-reduced-motion:reduce){.next-steps-avatar[data-active=true]{animation:none}}
+.next-steps-avatar{position:absolute;top:.75rem;right:calc(100% + .4rem);width:calc(var(--next-steps-avatar-gutter) - .8rem);pointer-events:none;transform-origin:bottom center;filter:drop-shadow(0 2px 4px var(--brand-primary))}
+.next-steps-avatar svg{display:block;width:100%;height:auto}
+.next-steps-avatar-badge{position:absolute;bottom:8%;right:8%;width:22%;aspect-ratio:1;object-fit:contain}
+.next-steps-avatar[data-active=true]{animation:next-steps-greet .55s ease-out}
+@keyframes next-steps-greet{35%{transform:translateY(-.3rem) rotate(-5deg)}65%{transform:rotate(3deg)}}
+@media(prefers-reduced-motion:reduce){.next-steps-avatar[data-active=true]{animation:none}}
