@@ -82,11 +82,11 @@ it("keeps the five highest-priority saved actions and excludes waiting records",
     setup: [], credentials: [], firstWatch: null,
     workflows: [
       ...Array.from({length:5}, (_, index) => ({
-        id:`work:${index}`, kind:"account", title:`Assigned action ${index}`,
+        id:`work:${index}`, kind:"account" as const, title:`Assigned action ${index}`,
         action:{title:"Open task",href:"/work-hub/tasks"}, priority:20+index,
       })),
-      {id:"safety:1",kind:"account",title:"Review work stoppage",action:{title:"Review",href:"/safety/1"},priority:-30},
-      {id:"work:waiting",kind:"account",title:"Waiting for review",action:null,priority:-40},
+      {id:"safety:1",kind:"account" as const,title:"Review work stoppage",action:{title:"Review",href:"/safety/1"},priority:-30},
+      {id:"work:waiting",kind:"account" as const,title:"Waiting for review",action:null,priority:-40},
     ],
   };
   mount();
@@ -278,3 +278,4 @@ it("resumes a saved waiting state without manufacturing another watch action", a
   expect(JSON.parse(screen.getByTestId("shared-askv-workflow").getAttribute("data-context")!).active.action).toBeNull();
   expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
 });
+

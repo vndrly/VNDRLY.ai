@@ -343,7 +343,7 @@ describe("office-only temporary Gate self-coverage", () => {
     ).toBe(1);
   });
 
-  it("denies another company, stale active membership, and unapproved ticket setup without saving temporary custody", async () => {
+  it("denies another company and stale membership while preserving authorized temporary custody without a ticket", async () => {
     const f = await fixture(false),
       other = await fixture();
     expect(
@@ -362,9 +362,10 @@ describe("office-only temporary Gate self-coverage", () => {
         acknowledged: true,
         allowUnprepared: true,
       }),
-    ).rejects.toMatchObject({
-      status: 409,
-      code: "gate_ticket.approved_service_required",
+    ).resolves.toMatchObject({
+      ticketId: null,
+      ticketStatus: "unavailable",
+      ticketBlocker: "gate_ticket.approved_service_required",
     });
     expect(
       (
@@ -372,14 +373,15 @@ describe("office-only temporary Gate self-coverage", () => {
           f.user,
         ])
       ).rowCount,
-    ).toBe(0);
+    ).toBe(1);
     expect(
       (
         await pool.query("SELECT id FROM gate_shifts WHERE operator_id=$1", [
           f.user,
         ])
       ).rowCount,
-    ).toBe(0);
+    ).toBe(1);
+    expect((await pool.query("SELECT id FROM tickets WHERE created_by_id=$1",[f.user])).rowCount).toBe(0);
     await pool.query("UPDATE users SET active_membership_id=NULL WHERE id=$1", [
       f.user,
     ]);
@@ -460,3 +462,4 @@ describe("office-only temporary Gate self-coverage", () => {
     });
   });
 });
+

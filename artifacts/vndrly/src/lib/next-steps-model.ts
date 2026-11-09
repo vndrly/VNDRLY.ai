@@ -13,12 +13,12 @@ export type FirstWatchContext = {
   employeeKind?: "direct" | "managed" | null; managedOrganizationId?: string | null; managedWorkerId?: string | null;
 };
 
-export function firstWatchLocationLabel(context: FirstWatchContext): string {
-  const site = { name: context.siteName, partnerName: context.partnerName };
+export function firstWatchLocationLabel(context: Partial<FirstWatchContext>): string {
+  const site = { name: context.siteName ?? "", partnerName: context.partnerName };
   const stations = context.gateLabelStations ?? [];
   const station = stations.find(row => row.id === context.stationId);
   if (station) return gateLocationLabel(site, station, stations);
-  return context.stationName ? `${context.siteName} · ${context.stationName}` : partnerSiteLabel(site);
+  return context.stationName ? [context.siteName,context.stationName].filter(Boolean).join(" · ") : partnerSiteLabel(site).trim();
 }
 
 export type AccountNextStepsSummary = {
@@ -117,3 +117,4 @@ export function guidedEmployeeHref(action: NextStepAction) {
   url.searchParams.set("nextSteps", "first-watch");
   return `${url.pathname}${url.search}${url.hash}`;
 }
+
