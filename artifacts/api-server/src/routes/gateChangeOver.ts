@@ -152,7 +152,7 @@ router.get("/gate-change-over/map", async (req, res) => {
   const gates = [];
   for (const site of sites) {
     const stations = await listChangeOverStations(session, site.id);
-    gates.push(...stations.map(station => ({ ...station, siteId: site.id, siteName: site.name, siteLatitude: site.latitude, siteLongitude: site.longitude })));
+    gates.push(...stations.map(station => ({ ...station, siteId: site.id, siteName: site.name, partnerName: site.partnerName, siteLatitude: site.latitude, siteLongitude: site.longitude })));
   }
   res.json({ gates });
 });

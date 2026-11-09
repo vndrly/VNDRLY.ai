@@ -1,3 +1,4 @@
+import { partnerSiteLabel } from "@/lib/warwick-gate-label";
 import { companyRoleOptions, currentRoleLabel, loadStaffRoleCatalog, type CompanyStaffRoleCatalog } from "@/lib/staff-role-catalog";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,8 +87,17 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
         const type = saved ? staffTypeFor(saved) : loadedDefinition(initialRole)?.type ?? defaultType;
         const stored = accessData.people.find((row: { vendorPeopleId: number }) => row.vendorPeopleId === saved?.id);
         const nextAccess: Access = stored ? structuredClone(stored) : { isAdmin: !!saved?.isCompanyAdmin || saved?.vendorRole === "admin", operationalRoles: saved ? legacyStaffAccess(saved.vendorRole) : loadedDefinition(initialRole)?.access ?? defaultStaffAccess(type), siteLocationIds: [] };
+        const eligibleSites: Array<{ id: number; name: string; partnerName?: string | null }> = accessData.eligibleSites;
+        const profileSites = vendorId === 1054
+          ? eligibleSites
+              .filter(site => site.id === 411 || /^(?:Warwick )?(?:Cactus 152|Precision 550)$/.test(site.name) || site.name === "Flywheel Energy Spur")
+              .map(site => ({
+                ...site,
+                name: site.id === 411 ? "Warwick San Roman Completions" : /^(Cactus 152|Precision 550)$/.test(site.name) ? `Warwick ${site.name}` : site.name,
+              }))
+          : eligibleSites.map(site => ({ ...site, name: partnerSiteLabel(site) }));
         const initialAccess = structuredClone(nextAccess);
-        if (defaultSiteId && accessData.eligibleSites.some((site: {id:number})=>site.id===defaultSiteId) && !nextAccess.siteLocationIds.includes(defaultSiteId)) nextAccess.siteLocationIds = [...nextAccess.siteLocationIds,defaultSiteId];
+        if (defaultSiteId && profileSites.some(site => site.id === defaultSiteId) && !nextAccess.siteLocationIds.includes(defaultSiteId)) nextAccess.siteLocationIds = [...nextAccess.siteLocationIds,defaultSiteId];
         const primaryRole = saved ? currentRoleLabel(jobTitleFor(staffPrimaryRole(saved, nextAccess.operationalRoles)), loadedCatalog) : initialRole;
         const primaryAccess = loadedDefinition(primaryRole)?.access ?? defaultStaffAccess(type);
         const duties = saved ? (saved.roles ?? []).map(role => currentRoleLabel(role, loadedCatalog)).filter(role => loadedRoles.some(value => value.label === role) && role !== primaryRole) : [];
@@ -96,7 +106,7 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
         }
         const nextForm: Form = { firstName: saved?.firstName ?? "", lastName: saved?.lastName ?? "", email: saved?.email ?? "", phone: saved?.phone ?? "", jobTitle: primaryRole, photoUrl: saved?.photoUrl ?? null, pecCertification: saved?.pecCertification ?? false, pecExpirationDate: saved?.pecExpirationDate ?? "", roles: saved?.roles ?? (defaultRole === "Team Member" ? ["Administrative Team"] : []), vendorRole: saved?.vendorRole ?? (type === "Office Staff" ? "office" : type === "Gatekeeper" ? "gatekeeper" : "field"), staffType: type, duties };
         if (!live) return;
-        setCatalog(loadedCatalog); setSites(accessData.eligibleSites); setAccess(nextAccess); originalAccess.current = initialAccess;
+        setCatalog(loadedCatalog); setSites(profileSites); setAccess(nextAccess); originalAccess.current = initialAccess;
         setForm(nextForm); baseline.current = JSON.stringify({ form: nextForm, access: initialAccess });
       } catch (cause) { if (live) setError(cause instanceof Error ? cause.message : "Unable to load employee profile"); }
     })();

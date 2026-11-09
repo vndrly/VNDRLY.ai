@@ -1,5 +1,5 @@
 import { GateMovementLocationSummary } from './gate-area-traffic';
-import { warwickGateLabel } from "@/lib/warwick-gate-label";
+import { gateLocationLabel } from "@/lib/warwick-gate-label";
 import { EquipmentListResponseSchema, type EquipmentItem } from "@workspace/api-zod";
 import { equipmentRequest } from "./equipment/client";
 import { GateMapRevealEquipment, EquipmentMapDetails } from "./gate-map-reveal-equipment";
@@ -40,7 +40,7 @@ import { gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers
 
 type Coverage = {
   at: string; pins?: GateMapPin[];
-  gates: { id: string; name: string; siteId: number; siteName: string; linkGroupId?:string|null; topology?:{kind:string;area:string;parentGateId:string|null;parallelGateId:string|null}|null; active?: boolean; latitude?: number | null; longitude?: number | null; siteLatitude?: number | null; siteLongitude?: number | null }[];
+  gates: { id: string; name: string; siteId: number; siteName: string; partnerName?: string | null; linkGroupId?:string|null; topology?:{kind:string;area:string;parentGateId:string|null;parallelGateId:string|null}|null; active?: boolean; latitude?: number | null; longitude?: number | null; siteLatitude?: number | null; siteLongitude?: number | null }[];
   staff: (RevealStaffPerson & { email?: string | null; phone?: string | null; onShift?: boolean; onCallStartedAt?: string | null; assignment: string; onWatch?: boolean; onCall?: boolean; locationReason: string })[];
   vehicles?: GateMapVehicle[]; vehicleFeedUnavailable?: boolean; vehiclesTruncated?: boolean;
   duties: { id: string; userId?: number; stationId: string; name: string; startedAt: string; coverage: { status?: string } }[];
@@ -140,7 +140,7 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
   const physicalLines=gates.flatMap(g=>{const parent=gates.find(p=>p.id===g.topology?.parentGateId);return parent&&g.latitude!=null&&g.longitude!=null&&parent.latitude!=null&&parent.longitude!=null?[{id:`physical:${g.id}`,coordinates:[[parent.latitude,parent.longitude],[g.latitude,g.longitude]] as Array<[number,number]>,color:brand.primary,width:3}]:[];});
   const linkedLines=useMemo(()=>gateMapLinkLines(coverage.data?.gates??[],brand.primary),[coverage.data?.gates,brand.primary]);
   const coverageCircles=useMemo(()=>gateMapCoverageCircles(coverage.data?.gates??[],brand.primary),[coverage.data?.gates,brand.primary]);
-  const sites = [...new Map(gates.map(gate => [gate.siteId, { id: gate.siteId, name: gate.siteName }])).values()];
+  const sites = [...new Map(gates.map(gate => [gate.siteId, { id: gate.siteId, name: gate.siteName, partnerName: gate.partnerName }])).values()];
   const focusedGate = gates.find(gate => gate.id === focusedGateId);
   const selectionGate = gates.find(gate => gate.id === selectionGateId);
   const duties = coverage.data?.duties ?? [];
@@ -212,7 +212,7 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
     ...shownGates.flatMap(gate => {
       const latitude = gate.latitude ?? gate.siteLatitude, longitude = gate.longitude ?? gate.siteLongitude;
       const staffed = duties.some(duty => duty.stationId === gate.id);
-      return typeof latitude === "number" && typeof longitude === "number" ? [{ id: `gate:${gate.id}`, latitude, longitude, title: `${warwickGateLabel(gate, gates) ?? `${gate.siteName} · ${gate.name}`} · ${gate.active === false ? es ? "Inactivo" : "Inactive" : staffed ? c.staffed : c.unstaffed}`, label: "G", fullLabel: warwickGateLabel(gate, gates) ?? `${gate.siteName} | ${gate.name}`, fullLabelMinZoom: 9.9, color: gate.active === false ? "#9ca3af" : brand.primary, onHover: () => openActivity(gate.id, false), onLeave: leaveActivity, onClick: () => { openActivity(gate.id, true); setSelectedEquipmentId(null);setEquipmentIds(null);setSelectedGate(gate.id); setSelectionGateId(gate.id); setFocusedGateId(gate.id); setFocusedStaffId(null); } }] : [];
+      return typeof latitude === "number" && typeof longitude === "number" ? [{ id: `gate:${gate.id}`, latitude, longitude, title: `${gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates)} · ${gate.active === false ? es ? "Inactivo" : "Inactive" : staffed ? c.staffed : c.unstaffed}`, label: "G", fullLabel: gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates), fullLabelMinZoom: 9.9, color: gate.active === false ? "#9ca3af" : brand.primary, onHover: () => openActivity(gate.id, false), onLeave: leaveActivity, onClick: () => { openActivity(gate.id, true); setSelectedEquipmentId(null);setEquipmentIds(null);setSelectedGate(gate.id); setSelectionGateId(gate.id); setFocusedGateId(gate.id); setFocusedStaffId(null); } }] : [];
     }),
     ...(coverage.data?.staff ?? []).flatMap(person => staffVisible && hasMapLocation(person) && (revealedStaffIds===null||revealedStaffIds.includes(person.userId)) ? [{ id: `staff:${person.userId}`, latitude:person.location!.latitude, longitude:person.location!.longitude, title: `${person.name}${person.demonstration ? " · Sample location" : ""}`, label: "●", fullLabel: person.name, fullLabelMinZoom: 9.9, color: person.onShift ? "#22c55e" : brand.primary, onClick: () => focusStaff(person) }] : []),
   ];

@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ request: vi.fn(), geocode: vi.fn(), gps: vi.fn() }));
@@ -48,7 +48,7 @@ it("prefills an existing gate and saves its location with its current version", 
   const modes = screen.getByRole("combobox", { name: "Administrative function" });
   expect([...modes.querySelectorAll("option")].map(option => option.textContent)).toEqual(["Create Gate", "Move a Gate", "Edit a Gate"]);
   fireEvent.change(modes, { target: { value: "edit" } });
-  await screen.findByRole("option", { name: "West gate" });
+  await within(screen.getByLabelText("Site")).findByRole("option", { name: "Site A" });
   fireEvent.change(screen.getByLabelText("Choose a gate"), { target: { value: "gate-west" } });
   expect((screen.getByLabelText("Gate name") as HTMLInputElement).value).toBe("West gate");
   expect((screen.getByLabelText("Latitude") as HTMLInputElement).value).toBe("35.1");
@@ -65,7 +65,7 @@ it("uses Move a Gate for location changes with the existing gate name read-only"
   mocks.request.mockImplementation(async path => path === "/station-management/sites" ? { sites: [{ id: 10, name: "Site A" }] } : { stations: [{ id: "gate-west", siteId: 10, name: "West gate", latitude: 35.1, longitude: -97.2, version: 4 }] });
   await mount();
   fireEvent.change(screen.getByLabelText("Administrative function"), { target: { value: "move" } });
-  await screen.findByRole("option", { name: "West gate" });
+  await within(screen.getByLabelText("Site")).findByRole("option", { name: "Site A" });
   fireEvent.change(screen.getByLabelText("Choose a gate"), { target: { value: "gate-west" } });
   expect((screen.getByLabelText("Gate name") as HTMLInputElement).readOnly).toBe(true);
   expect(screen.getByRole("button", { name: "Save Moved Gate Locations" })).toBeTruthy();
@@ -80,7 +80,7 @@ it("removes an existing gate without requiring invented coordinates", async () =
   });
   await mount();
   fireEvent.change(screen.getByLabelText("Administrative function"), { target: { value: "edit" } });
-  await screen.findByRole("option", { name: "West gate" });
+  await within(screen.getByLabelText("Site")).findByRole("option", { name: "Site A" });
   fireEvent.change(screen.getByLabelText("Choose a gate"), { target: { value: "gate-west" } });
   fireEvent.click(screen.getByRole("button", { name: "Remove Gate" }));
   await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/stations/gate-west/retire", { siteId: 10, expectedVersion: 4, operationId: expect.any(String) }));

@@ -1,4 +1,4 @@
-import { warwickGateLabel } from "@/lib/warwick-gate-label";
+import { gateLocationLabel, partnerSiteLabel } from "@/lib/warwick-gate-label";
 import GateLinkFields, { emptyGateLink, gateLinkPayload, type LinkSite } from "./gate-link-fields";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -42,8 +42,8 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   const isMidCon = user?.vendorId === 1054;
   const available = (sites.data?.sites ?? []).filter(site => !isMidCon || site.id === 411 ||
     /^(?:Warwick )?(?:Cactus 152|Precision 550)$/.test(site.name));
-  const siteLabel = (site: LinkSite) => !isMidCon ? site.name : site.id === 411
-    ? "Warwick San Roman Completions 1 > Warwick San Roman Completions 2"
+  const siteLabel = (site: LinkSite) => !isMidCon ? partnerSiteLabel(site) : site.id === 411
+    ? "Warwick San Roman Completions"
     : site.name.startsWith("Warwick ") ? site.name : `Warwick ${site.name}`;
   const canManage = sites.isSuccess && available.length > 0;
   const siteId = available.find(site => String(site.id) === selectedSite)?.id ?? available[0]?.id;
@@ -54,7 +54,7 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   });
   const stations = (editableGates.data?.stations ?? []).filter(gate => !isMidCon ||
     /^Warwick (?:San Roman Completions [12]|Precision 550|Cactus 152)$/.test(gate.name));
-  const gateLabel = (gate: EditableGate) => warwickGateLabel({ ...gate, siteId: siteId! },
+  const gateLabel = (gate: EditableGate) => gateLocationLabel(available.find(site => site.id === siteId) ?? { name: "" }, { ...gate, siteId: siteId! },
     stations.map(station => ({ ...station, siteId: siteId! }))) ?? gate.name;
   useEffect(()=>{if(initialGateId&&editableGates.data&&!editingGate)loadGate(initialGateId);else if(initialLocation&&!initialGateId){setMethod('coordinates');setLatitude(String(initialLocation.latitude));setLongitude(String(initialLocation.longitude));}},[initialGateId,editableGates.data,initialLocation?.latitude,initialLocation?.longitude]);
   const lat = Number(latitude), lng = Number(longitude);

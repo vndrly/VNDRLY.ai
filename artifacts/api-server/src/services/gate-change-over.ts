@@ -666,7 +666,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
            ))
          ))
      )
-     SELECT account.id AS session_user_id,site.id,site.name,site.latitude,site.longitude,site.supervisor
+     SELECT account.id AS session_user_id,site.id,site.name,site.latitude,site.longitude,site.supervisor,(SELECT p.name FROM partners p JOIN site_locations sl ON sl.partner_id=p.id WHERE sl.id=site.id) AS "partnerName"
      FROM current_account account
      LEFT JOIN visible_sites site ON true
      ORDER BY site.name NULLS LAST`,
@@ -701,7 +701,7 @@ export async function listChangeOverStations(
   )).rows;
   return (
     await pool.query(
-      `SELECT station.id, station.name, station.site_id, station.latitude, station.longitude, station.geofence_radius_m AS "geofenceRadiusM", station.active
+      `SELECT station.id, station.name, station.site_id, station.latitude, station.longitude, station.geofence_radius_m AS "geofenceRadiusM", station.active, station.topology
        FROM gate_stations station
        WHERE station.site_id=$1 AND ($3::uuid[] IS NULL OR station.id=ANY($3::uuid[]))
          AND (station.active=true
@@ -754,7 +754,7 @@ export async function requireGateStationManagementAccess(client: Queryable, sess
 
 export async function listGateStationManagementSites(session: SessionPayload) {
   const candidates = (await pool.query(
-    `SELECT s.id,s.name,s.partner_id AS "partnerId",s.gate_link_id AS "gateLinkId",s.gate_link_name AS "gateLinkName" FROM site_locations s
+    `SELECT s.id,s.name,(SELECT p.name FROM partners p WHERE p.id=s.partner_id) AS "partnerName",s.partner_id AS "partnerId",s.gate_link_id AS "gateLinkId",s.gate_link_name AS "gateLinkName" FROM site_locations s
      WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
        AND ($1='admin' OR ($1='partner' AND s.partner_id=$2)
          OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3 AND a.is_gate_contractor=true))

@@ -1,4 +1,4 @@
-import { warwickGateLabel } from "@/lib/warwick-gate-label";
+import { gateLocationLabel } from "@/lib/warwick-gate-label";
 import { useId, useState } from "react";
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import { useQuery } from "@tanstack/react-query";
@@ -9,9 +9,9 @@ import { BrandedSelect } from "@/components/work-hub/chrome";
 import GateGpsSelector from "./gate-gps-selector";
 import "./gate-dashboard.css";
 
-type GateChoice = { id: string; name: string; siteId: number; active?: boolean; topology?: { parentGateId?: string | null; parallelGateId?: string | null } | null };
-export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsStatus = "unavailable", gpsLabel = "", gpsDetail, testId, history = false, showGps = true, gateOptions, allOptionLabel, gateFirst = false }: {
-  sites: { id: number; name: string }[];
+type GateChoice = { id: string; name: string; siteId: number; partnerName?: string | null; active?: boolean; topology?: { parentGateId?: string | null; parallelGateId?: string | null } | null };
+export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsStatus = "unavailable", gpsLabel = "", gpsDetail, testId, history = false, showGps = true, gateOptions, allOptionLabel }: {
+  sites: { id: number; name: string; partnerName?: string | null }[];
   siteId: number;
   gate?: { id: string; name: string };
   onChange: (siteId: number, gateId: string) => void;
@@ -23,7 +23,6 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   showGps?: boolean;
   gateOptions?: GateChoice[];
   allOptionLabel?: string;
-  gateFirst?: boolean;
 }) {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
@@ -50,16 +49,6 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   const gates: GateChoice[] = [...(gateOptions ?? options.data?.gates ?? [])];
   // Keep the current selection visible while the all-site choices are loading.
   if (gate && !gates.some(row => row.id === gate.id)) gates.push({ ...gate, siteId });
-  const optionName = (siteName: string, row: GateChoice) => {
-    const warwickLabel = warwickGateLabel(row, gates);
-    if (warwickLabel) return warwickLabel;
-    if (!gateFirst) return `${siteName} | ${row.name}`;
-    const references = (source: GateChoice, target: GateChoice) =>
-      source.topology?.parentGateId === target.id || source.topology?.parallelGateId === target.id;
-    const peers = gates.filter(other => other.id !== row.id && other.active !== false &&
-      (references(row, other) || references(other, row)));
-    return [row.name, ...peers.map(peer => peer.name)].join(" | ");
-  };
   const selector = <BrandedSelect data-guidance-id="choose-gate" className="gate-dashboard-location-select" aria-label={label} data-testid={testId}
           onFocus={() => setChoicesRequested(true)}
           value={gate ? gate.id : ""} onChange={event => {
@@ -69,7 +58,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
           }}>
           <option value="" disabled={!allOptionLabel}>{allOptionLabel ?? t("changeOver.choose")}</option>
           {sites.flatMap(site => gates.filter(row => row.siteId === site.id).map(row =>
-            <option key={row.id} value={row.id}>{optionName(site.name, row)}{linked && link.data?.gates?.some(g => g.id === row.id && g.connection === "online") ? (es ? " · Conectado" : " · Online") : ""}</option>))}
+            <option key={row.id} value={row.id}>{gateLocationLabel({ ...site, partnerName: site.partnerName ?? row.partnerName }, row, gates)}{linked && link.data?.gates?.some(g => g.id === row.id && g.connection === "online") ? (es ? " · Conectado" : " · Online") : ""}</option>))}
         </BrandedSelect>;
   return <div className="gate-dashboard-location-selectors gate-site-gate-select">
     <label className="space-y-1 text-sm font-medium">

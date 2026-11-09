@@ -1,3 +1,4 @@
+import { gateLocationLabel } from "@/lib/warwick-gate-label";
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -18,9 +19,9 @@ it("lists each site and gate together and changes both IDs in one selection", as
     <GateSiteGateSelect sites={[{id:1,name:"Site A"},{id:2,name:"Site B"}]} siteId={1} gate={{id:"a1",name:"Gate 1"}}
       onChange={change} gpsStatus="mismatch" gpsLabel="Outside selected location" />
   </QueryClientProvider>);
-  await screen.findByRole("option", { name: "Site B | North" });
+  await screen.findByRole("option", { name: "Site B" });
   const select = screen.getByRole("combobox", { name: "Site | Gate" });
-  expect(within(select).getAllByRole("option").map(row => row.textContent)).toEqual(["Choose","Site A | Gate 1","Site A | Gate 2","Site B | North"]);
+  expect(within(select).getAllByRole("option").map(row => row.textContent)).toEqual(["Choose","Site A | Gate 1","Site A | Gate 2","Site B"]);
   expect(screen.getByTestId("gate-gps-indicator").contains(select)).toBe(true);
   expect(screen.getByTestId("gate-gps-indicator").getAttribute("data-gps-status")).toBe("mismatch");
   expect(change).not.toHaveBeenCalled();
@@ -28,4 +29,12 @@ it("lists each site and gate together and changes both IDs in one selection", as
   expect(change).toHaveBeenLastCalledWith(1, "a2");
   fireEvent.change(select, { target: { value: "b1" } });
   expect(change).toHaveBeenLastCalledWith(2, "b1");
+});
+
+it("shows both directions of the San Roman series without repeating the site", () => {
+  const outer = { id: "outer", siteId: 411, name: "Warwick San Roman Completions 1" };
+  const inner = { id: "inner", siteId: 411, name: "Warwick San Roman Completions 2", topology: { parentGateId: outer.id } };
+  const site = { name: "San Roman Completions" };
+  expect(gateLocationLabel(site, outer, [outer, inner])).toBe("Warwick San Roman Completions 1>2");
+  expect(gateLocationLabel(site, inner, [outer, inner])).toBe("Warwick San Roman Completions 2>1");
 });

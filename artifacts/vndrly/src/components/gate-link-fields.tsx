@@ -1,7 +1,7 @@
 import { BrandedInput, BrandedSelect } from "./work-hub/chrome";
 import { useTranslation } from "react-i18next";
 
-export type LinkSite = { id: number; name: string; partnerId?: number; gateLinkId?: string | null; gateLinkName?: string | null };
+export type LinkSite = { partnerName?: string | null; id: number; name: string; partnerId?: number; gateLinkId?: string | null; gateLinkName?: string | null };
 export type GateLinkDraft = { mode: "none" | "new" | "existing"; name: string; targetSiteId: string };
 export const emptyGateLink: GateLinkDraft = { mode: "none", name: "", targetSiteId: "" };
 export function gateLinkPayload(value: GateLinkDraft) {

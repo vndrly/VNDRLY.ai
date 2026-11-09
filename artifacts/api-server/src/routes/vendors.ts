@@ -12,6 +12,7 @@ import {
   usersTable,
   userOrgMembershipsTable,
   siteLocationsTable,
+  partnersTable,
   vendorPersonOperationalRolesTable,
   vendorPersonSiteAccessTable,
 } from "@workspace/db";
@@ -705,8 +706,9 @@ router.get("/vendors/:vendorId/people-access", async (req, res): Promise<void> =
   );
   const eligibleSites = authorizedSiteIds.length
     ? await db
-        .select({ id: siteLocationsTable.id, name: siteLocationsTable.name })
+        .select({ id: siteLocationsTable.id, name: siteLocationsTable.name, partnerName: partnersTable.name })
         .from(siteLocationsTable)
+        .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
         .where(inArray(siteLocationsTable.id, authorizedSiteIds))
         .orderBy(siteLocationsTable.name)
     : [];
