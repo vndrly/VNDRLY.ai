@@ -3,7 +3,7 @@ export const GATE_GUIDED_WORKFLOW_KEYS = [
   "first-watch", "gate-staffing-recovery", "gate-watch-handoff",
   "gate-vehicle-check-in", "gate-inner-arrival", "gate-vehicle-check-out",
   "gate-early-turnaround", "gate-return-to-inner", "gate-map-and-log",
-  "gate-shift-scheduling",
+  "gate-shift-scheduling", "gate-station-management", "gate-staff-visibility",
 ] as const;
 export type GateGuidedWorkflowKey = typeof GATE_GUIDED_WORKFLOW_KEYS[number];
 export type GateSetupProgressHint = { kind: "gate_setup_progress"; workflowKey: "first-watch"; state: "actionable" | "waiting" | "complete" | "unavailable" };
@@ -61,7 +61,7 @@ export function parseAskVGateGuidance(value: unknown, companyId?: number | null)
   const raw = record(value);
   if (!positive(raw.companyId) || companyId !== undefined && raw.companyId !== companyId || !["checking", "unavailable", "ready"].includes(String(raw.state))) return undefined;
   const active = workflow(raw.active);
-  const available = Array.isArray(raw.available) ? raw.available.slice(0, 3).map(workflow).filter((item): item is AskVGateWorkflow => Boolean(item)) : [];
+  const available = Array.isArray(raw.available) ? raw.available.slice(0, 5).map(workflow).filter((item): item is AskVGateWorkflow => Boolean(item)) : [];
   const control = record(raw.control);
   return {
     companyId: raw.companyId, state: raw.state as AskVGateGuidance["state"], active, available,

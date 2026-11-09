@@ -398,6 +398,7 @@ export default function VendorCatalog() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey });
+      void qc.invalidateQueries({ queryKey: ["account-next-steps"] });
       toast({ title: t("vendorCatalog.savedToast") });
     },
     onError: (e: Error) =>

@@ -1489,8 +1489,12 @@ export async function assumeGateWatch(session: SessionPayload, input: {
       await c.query("UPDATE gate_duty_sessions SET post_coverage=post_coverage || $3::jsonb WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL",[input.stationId,session.userId,JSON.stringify({assigneeAcknowledged:true,...(access.temporaryOfficeCoverage?{temporaryOfficeCoverage:true}:{})})]);
       if (session.vendorId) {
         const ticket = await ensureGateWatchTicket(c, session, input.stationId, access.station.site_id);
-        if (ticket.ticketBlocker) throw new ChangeOverError(409, ticket.ticketBlocker, "The watch ticket could not be opened. Ask your company administrator to check the approved Gate service and scheduled ticket; no watch change was committed.");
-        result = { ...result, ticketId: ticket.ticketId, shiftId: ticket.shiftId };
+        result = {
+          ...result,
+          ticketId: ticket.ticketId,
+          shiftId: ticket.shiftId,
+          ...(ticket.ticketBlocker ? { ticketStatus: "unavailable", ticketBlocker: ticket.ticketBlocker } : {}),
+        };
       } else {
         // Partner/platform custody does not authorize a vendor billing ticket.
         result = { ...result, ticketId: null, ticketStatus: "unavailable", ticketBlocker: "gate_ticket.vendor_context_required" };

@@ -8,7 +8,7 @@ export type GateHelperStep = Partial<Pick<NextStepWorkflow, "action" | "message"
 export type GateHelperDefinition = {
   key: GateHelperKey; title: string; description: string;
   keywords: readonly string[];
-  access: "gate" | "office";
+  access: "gate" | "office" | "admin";
   /** Resolve only existing records/context and existing page actions. Null means unavailable. */
   create: (context: GateHelperContext) => NextStepWorkflow | null;
 };

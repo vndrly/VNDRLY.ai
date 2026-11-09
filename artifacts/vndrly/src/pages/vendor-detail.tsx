@@ -395,6 +395,7 @@ export default function VendorDetail({ id }: { id: number }) {
           queryClient.invalidateQueries({ queryKey: getGetVendorQueryKey(id) });
           queryClient.invalidateQueries({ queryKey: getListVendorsQueryKey() });
           initialEditFormRef.current = editForm;
+          void queryClient.invalidateQueries({ queryKey: ["account-next-steps"] });
           setEditOpen(false);
           toast({ title: t("vendors.updateSuccess") });
         },

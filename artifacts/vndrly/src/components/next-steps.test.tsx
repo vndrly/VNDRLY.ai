@@ -65,7 +65,7 @@ it("opens a branded nonmodal top-right panel with a real count and gentle attent
   expect(button.getAttribute("data-attention")).toBe("none"); expect(document.activeElement).toBe(button);
 });
 
-it("groups only real Gate blockers by function and caps deterministic priority at three workflows", async () => {
+it("groups real Gate blockers and merges a staffing alert with scheduling for the same shift", async () => {
   mocks.summary = { setup: [{ title: "Payroll", href: "/payroll" }, { title: "Company profile", href: "/vendors/4" }], credentials: [{ title: "Update Safety certificate", href: "/field/compliance" }], coiUploadNeeded: true, firstWatch: watch };
   const offers = [offered("gate-shift-scheduling", "Saved station shift needs an assignee", 30), offered("gate-staffing-recovery", "Saved staffing alert needs coverage", -10), offered("gate-inner-arrival", "Saved vehicle needs inner arrival", 20)];
   mount(offers); const panel = await open();
@@ -75,6 +75,51 @@ it("groups only real Gate blockers by function and caps deterministic priority a
   expect(screen.queryByText("Payroll")).toBeNull(); expect(screen.queryByText("Company profile")).toBeNull();
   expect(screen.queryByText("Saved station shift needs an assignee")).toBeNull();
   expect(vi.mocked(fetch).mock.calls.map(c => c[0])).toEqual(["/api/account-next-steps"]);
+});
+
+it("keeps the five highest-priority saved actions and excludes waiting records", async () => {
+  mocks.summary = {
+    setup: [], credentials: [], firstWatch: null,
+    workflows: [
+      ...Array.from({length:5}, (_, index) => ({
+        id:`work:${index}`, kind:"account", title:`Assigned action ${index}`,
+        action:{title:"Open task",href:"/work-hub/tasks"}, priority:20+index,
+      })),
+      {id:"safety:1",kind:"account",title:"Review work stoppage",action:{title:"Review",href:"/safety/1"},priority:-30},
+      {id:"work:waiting",kind:"account",title:"Waiting for review",action:null,priority:-40},
+    ],
+  };
+  mount();
+  const panel = await open();
+  expect(within(panel).getAllByRole("button", {name:/Start guided helper/})).toHaveLength(5);
+  expect(within(panel).getByText("Review work stoppage")).toBeTruthy();
+  expect(within(panel).queryByText("Assigned action 4")).toBeNull();
+  expect(within(panel).queryByText("Waiting for review")).toBeNull();
+});
+
+it("saves a selected company document and removes the action after the saved read confirms it", async () => {
+  const objectId = "11111111-1111-4111-8111-111111111111";
+  const objectPath = `/objects/uploads/${objectId}`;
+  const uploadURL = `/api/storage/upload/${objectId}`;
+  mocks.summary = {setup:[{title:"Add certificate",href:"/vendors/4",recordType:"company-coi",recordId:4}],credentials:[],firstWatch:null};
+  vi.mocked(fetch).mockImplementation(async path => {
+    if (path === "/api/storage/uploads/request-url") return response({objectPath,uploadURL});
+    if (path === "/api/storage/uploads/finalize") return response({objectPath});
+    if (path === "/api/account-next-steps/coi") {
+      mocks.summary.setup = [];
+      return response({uploaded:true});
+    }
+    if (String(path).endsWith(uploadURL)) return response({});
+    return response(mocks.summary);
+  });
+  mount();
+  const panel = await open();
+  fireEvent.click(within(panel).getByRole("button", {name:/Add certificate/}));
+  fireEvent.change(screen.getByLabelText("Certificate of insurance"), {target:{files:[new File(["test"],"coi.pdf",{type:"application/pdf"})]}});
+  fireEvent.click(screen.getByRole("button",{name:"Save certificate"}));
+  await waitFor(() => expect(screen.queryByRole("button",{name:"Save certificate"})).toBeNull());
+  const save = vi.mocked(fetch).mock.calls.find(([url]) => url === "/api/account-next-steps/coi");
+  expect(JSON.parse(String(save?.[1]?.body))).toEqual({vendorId:4,objectPath});
 });
 
 it("starts the actual helper and preserves site, station, saved shift, day, and exact worker in navigation", async () => {
@@ -176,9 +221,10 @@ it("reports a real independent saved outcome once and never counts starts or cli
   expect(JSON.parse(String(receipts[0][1]?.body)).mode).toBe("independent");
 });
 
-it("does not request Gate account guidance for a non-Gate field membership", () => {
+it("checks saved profile actions for a non-Gate field membership without offering Gate setup", async () => {
   mocks.user = { ...mocks.user, role: "field_employee", vendorRole: "foreman", availableMemberships: [{ id: 2, role: "field_employee" }] }; mount();
-  expect(screen.queryByRole("button", { name: /Next Steps,/ })).toBeNull(); expect(fetch).not.toHaveBeenCalled();
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(screen.queryByRole("button", { name: /Next Steps,/ })).toBeNull());
 });
 
  it("binds the completion receipt to the mounted account and keeps the helper when a cookie context swap is rejected", async () => {

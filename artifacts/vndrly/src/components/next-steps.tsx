@@ -7,11 +7,13 @@ import { PngPillButton as TogglePillButton } from "@/components/png-pill-rollove
 import { NextStepsAvatar } from "./next-steps-avatar";
 import { useBrand } from "@/hooks/use-brand";
 import { useAccountNextSteps } from "@/hooks/use-account-next-steps";
-import { actionableNextSteps, firstWatchLocationLabel, guidedEmployeeHref, nextStepGroups, groupGateWorkflows, type NextStepWorkflow } from "@/lib/next-steps-model";
+import { useAuth } from "@/hooks/use-auth";
+import { actionableNextSteps, compareNextSteps, firstWatchLocationLabel, guidedEmployeeHref, nextStepGroups, groupGateWorkflows, type AccountNextStepsSummary, type NextStepWorkflow } from "@/lib/next-steps-model";
 import { gateHelperDefinition, gateHelpersRevision, subscribeGateHelpers, type GateHelperKey, type GateHelperContext, type GateHelperStep, type GateCompletionProof } from "@/lib/gate-helper-registry";
 import { GuidedTargetProvider, GuidedHelperPortal, GuidanceTargetStatus, useGuidedTarget } from "./guided-target";
 import "./next-steps.css";
 import { parseAskVGateGuidance, type AskVGateGuidance } from "@workspace/gate-booth";
+import { uploadFleetEvidence, type FleetEvidenceUpload } from "@/lib/fleet-evidence-upload";
 
 export type SavedNextStepsWorker =
   | { kind: "direct"; vendorPeopleId: number; userId?: number | null; name: string }
@@ -21,6 +23,8 @@ type Plan = { scope: string; open: boolean; selectedId: string | null; visited: 
 type NextStepsContextValue = {
   scope: string; open: boolean; enabled: boolean; count: number; attention: boolean; canManageStaff: boolean;
   isPending: boolean; isError: boolean; selected: NextStepWorkflow | null;
+  partnerSettings?: AccountNextStepsSummary["partnerSettings"];
+  waiting?: string | null;
   assistantContext?: AskVGateGuidance;
   savedWorker?: SavedNextStepsWorker;
   triggerRef: RefObject<HTMLButtonElement | null>;
@@ -56,7 +60,11 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   const allGroups = groupGateWorkflows(workflows);
   // The menu is a small queue of workflows with an action the user can take now.
   const mastery = account.query.data?.helperProgress;
-  const available = workflows.filter(item => item.action && (mastery?.independentCompletions[item.id] ?? 0) < (mastery?.independentThreshold ?? 3)).sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id)).slice(0, 3);
+  const savedIds = new Set(account.query.data?.workflows?.map(item => item.id));
+  const staffingShift = workflows.find(item => item.id === "gate-staffing-recovery" && item.action)?.context?.shiftId;
+  const available = workflows.filter(item => item.action && (savedIds.has(item.id) || (mastery?.independentCompletions[item.id] ?? 0) < (mastery?.independentThreshold ?? 3)))
+    .filter(item => !staffingShift || item.id !== "gate-shift-scheduling" || item.context?.shiftId !== staffingShift)
+    .sort(compareNextSteps).slice(0, 5);
   const availableIds = new Set(available.map(item => item.id));
   const groups = allGroups.map(group => ({ ...group, workflows: group.workflows.filter(item => availableIds.has(item.id)) })).filter(group => group.workflows.length);
   const count = actionableNextSteps(groups);
@@ -124,6 +132,9 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   const close = () => { setPlan(current => ({ ...(current.scope === account.scope ? current : emptyPlan()), open: false, seen: fingerprint })); triggerRef.current?.focus(); };
   const value: NextStepsContextValue = {
     scope: account.scope, enabled: account.enabled, open: plan.open, count, canManageStaff: account.vendorAdmin,
+    partnerSettings: account.query.data?.partnerSettings,
+    waiting: account.query.data?.firstWatch?.complete === false && !account.query.data.firstWatch.action
+      ? account.query.data.firstWatch.message : null,
     attention: account.enabled && count > 0 && !plan.open && !selected && plan.seen !== fingerprint,
     isPending: account.query.isPending, isError: account.query.isError,
     selected, assistantContext, savedWorker: plan.worker, triggerRef,
@@ -149,7 +160,8 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
         return true;
       }
       const definition = gateHelperDefinition(key);
-      if (!definition || definition.access === "office" && !account.vendorAdmin && account.user?.vendorRole !== "office" && account.user?.vendorRole !== "gate_supervisor") return false;
+      if (!definition || definition.access === "admin" && !account.vendorAdmin
+        || definition.access === "office" && !account.vendorAdmin && account.user?.vendorRole !== "office" && account.user?.vendorRole !== "gate_supervisor") return false;
       const candidate = workflows.find(item => item.id === key);
       const sameContext = (!context?.siteId || candidate?.context?.siteId === context.siteId) && (!context?.stationId || candidate?.context?.stationId === context.stationId) && (!context?.shiftId || candidate?.context?.shiftId === context.shiftId);
       const current = sameContext ? candidate : undefined;
@@ -222,6 +234,45 @@ export function NextStepsNavButton({ className = "" }: { className?: string }) {
   </button>;
 }
 
+function PartnerOrderSettings({ settings }: { settings: NonNullable<AccountNextStepsSummary["partnerSettings"]> }) {
+  const state = useNextSteps()!;
+  const { user } = useAuth();
+  const [ranks, setRanks] = useState<Record<number,string>>(() => Object.fromEntries(settings.order.map((id,index) => [id,String(index+1)])));
+  const [busy,setBusy] = useState(false);
+  const [message,setMessage] = useState("");
+  async function save() {
+    const ranked = settings.options.filter(partner => ranks[partner.id]).map(partner => ({id:partner.id, rank:Number(ranks[partner.id])}));
+    if (ranked.some(partner => !Number.isSafeInteger(partner.rank) || partner.rank < 1 || partner.rank > 100)
+      || new Set(ranked.map(partner => partner.rank)).size !== ranked.length) {
+      setMessage("Use distinct priorities from 1 to 100.");
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/account-next-steps/partner-order", {
+        method:"PUT",credentials:"include",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({vendorId:settings.companyId,membershipId:user?.activeMembershipId,userId:user?.userId,order:ranked.sort((a,b) => a.rank-b.rank).map(partner => partner.id)}),
+      });
+      if (!response.ok) throw new Error("Partner priority could not be saved. Refresh Next Steps and try again.");
+      await state.refresh();
+      setMessage("Partner priority saved.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Partner priority could not be saved.");
+    } finally { setBusy(false); }
+  }
+  return <details className="mt-4">
+    <summary className="cursor-pointer">Company partner priority</summary>
+    <p className="text-sm">Use 1 for the highest priority. Leave a partner blank to use the normal order.</p>
+    {settings.options.map(partner => <label className="my-2 flex items-center justify-between gap-2" key={partner.id}>
+      <span>{partner.name}</span>
+      <input className="w-16 rounded border bg-transparent px-2" type="number" min={1} max={100} step={1} value={ranks[partner.id] ?? ""} disabled={busy} onChange={event => setRanks(current => ({...current,[partner.id]:event.target.value}))} />
+    </label>)}
+    <TogglePillButton color="brand" disabled={busy} onClick={() => void save()}>{busy ? "Saving…" : "Save partner priority"}</TogglePillButton>
+    {message && <p role="status">{message}</p>}
+  </details>;
+}
+
 function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> }) {
   const state = useNextSteps()!;
   const heading = useRef<HTMLHeadingElement>(null);
@@ -241,7 +292,8 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
     <div className="next-steps-panel-body">
       {state.isError && <p role="status">Next Steps could not be refreshed. <button type="button" className="underline" onClick={() => void state.refresh()}>Retry</button></p>}
       <p className="mb-3 text-sm">Workflows with askV. Continue from your saved work, and ask V questions as you go.</p>
-      {!state.isPending && !state.isError && groups.length === 0 && <p>No guided steps need your action right now.</p>}
+      {!state.isPending && !state.isError && groups.length === 0 && !state.waiting && <p>No guided steps need your action right now.</p>}
+      {state.waiting && <p role="status" className="mb-3 text-sm">{state.waiting}</p>}
       {state.selected && <p className="mb-3 text-sm">Your current helper stays open as you work. Stop it with its own X before starting another.</p>}
       {groups.map(group => <section key={group.id} className="next-steps-function" aria-label={group.title}>
         <h3>{group.title}</h3>
@@ -250,6 +302,7 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
           {workflow.context && <p className="next-steps-context">{firstWatchLocationLabel(workflow.context)}</p>}
         </li>)}</ul>
       </section>)}
+      {state.canManageStaff && state.partnerSettings?.options.length ? <PartnerOrderSettings key={state.scope} settings={state.partnerSettings} /> : null}
     </div>
   </aside>;
 }
@@ -263,9 +316,79 @@ function ActiveWorkflowHelper(props: Parameters<typeof WorkflowHelper>[0]) {
   </aside>}</GuidedHelperPortal>;
 }
 
+function CompanyCoiHelper({ vendorId }: { vendorId: number }) {
+  const state = useNextSteps()!;
+  const upload = useRef<FleetEvidenceUpload | undefined>(undefined);
+  const mounted = useRef(false);
+  const [file, setFile] = useState<File>();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  async function save() {
+    if (!file || busy) return;
+    const stage = upload.current?.file === file ? upload.current : {file};
+    upload.current = stage;
+    setBusy(true);
+    setMessage("");
+    try {
+      const objectPath = await uploadFleetEvidence(stage, () => mounted.current, 25 * 1024 * 1024);
+      if (!mounted.current) return;
+      const response = await fetch("/api/account-next-steps/coi", {
+        method:"POST", credentials:"include", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({vendorId,objectPath}),
+      });
+      if (!response.ok) throw new Error("The certificate could not be saved. Check the file and your current company, then retry.");
+      if (mounted.current) await state.refresh();
+    } catch (error) {
+      if (mounted.current) setMessage(error instanceof Error ? error.message : "The certificate could not be saved.");
+    } finally {
+      if (mounted.current) setBusy(false);
+    }
+  }
+  return <div className="space-y-2">
+    <label className="block">Certificate of insurance
+      <input className="block w-full" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" disabled={busy} onChange={event => setFile(event.target.files?.[0])} />
+    </label>
+    {message && <p role="alert">{message}</p>}
+    <TogglePillButton color="brand" disabled={busy || !file} onClick={() => void save()}>{busy ? "Saving…" : "Save certificate"}</TogglePillButton>
+  </div>;
+}
+
+function WatchTicketConfirmation({ watchId, shiftId }: { watchId: string; shiftId: string }) {
+  const { user } = useAuth();
+  const state = useNextSteps()!;
+  const [busy,setBusy] = useState(false);
+  const [message,setMessage] = useState("");
+  async function confirm() {
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/account-next-steps/watch-ticket", {
+        method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({vendorId:user?.vendorId,membershipId:user?.activeMembershipId,userId:user?.userId,watchId,shiftId}),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message ?? "Ticket confirmation could not be checked.");
+      if (!result.ticketId) setMessage("Your watch is saved. Its ticket is still awaiting confirmation.");
+      await state.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Ticket confirmation could not be checked.");
+    } finally { setBusy(false); }
+  }
+  return <div className="space-y-2">
+    <TogglePillButton color="brand" disabled={busy} onClick={() => void confirm()}>{busy ? "Checking…" : "Confirm saved watch ticket"}</TogglePillButton>
+    {message && <p role="status">{message}</p>}
+  </div>;
+}
+
 function WorkflowHelper({ workflow, inModal = false }: { workflow: NextStepWorkflow; inModal?: boolean }) {
   const state = useNextSteps()!;
-  useGuidedTarget({ scopeId: "next-steps-current-helper", targetId: "continue", prompt: workflow.action?.href.startsWith("/field-employees") ? "Open Employees to choose a direct or contracted employee for this saved site." : "Open the saved Gate workflow page to continue." }, Boolean(workflow.action), 1);
+  const companyDocument = workflow.action?.recordType === "company-coi" && typeof workflow.action.recordId === "number" ? workflow.action.recordId : null;
+  const watchTicket = workflow.action?.recordType === "watch-ticket" && typeof workflow.action.recordId === "string" ? workflow.action.recordId : null;
+  useGuidedTarget({ scopeId: "next-steps-current-helper", targetId: "continue", prompt: workflow.action?.href.startsWith("/field-employees") ? "Open Employees to choose a direct or contracted employee for this saved site." : "Open the saved record to continue." }, Boolean(workflow.action) && !companyDocument && !watchTicket, 1);
   return <section data-guidance-scope="next-steps-current-helper" aria-labelledby={`next-steps-workflow-${workflow.id}`} className="next-steps-helper">
     <button type="button" className="next-steps-back" disabled={inModal} title={inModal ? "Close this form before choosing another helper." : undefined} onClick={state.show}><ArrowLeft aria-hidden="true" />All Next Steps</button>
     <h3 id={`next-steps-workflow-${workflow.id}`}>{workflow.title}</h3>
@@ -275,10 +398,13 @@ function WorkflowHelper({ workflow, inModal = false }: { workflow: NextStepWorkf
       <p>{state.canManageStaff ? "Continue with this saved site, gate and shift. The gatekeeper’s ticket starts automatically with their saved watch." : "Continue with your saved site, gate and shift. Your ticket starts automatically with the saved watch."}</p>
       {state.savedWorker && <p className="next-steps-saved-worker">Saved {state.savedWorker.kind === "managed" ? "contracted employee" : "employee"}: {state.savedWorker.name}. Their existing profile and enrollment controls remain available on Employees.</p>}
       <details><summary className="cursor-pointer text-sm">{state.canManageStaff ? "Gate setup workflow" : "Your watch workflow"}</summary><ol className="next-steps-roadmap">{state.canManageStaff && <li>Choose a direct or contracted employee; save Gatekeeper access for an authorized site.</li>}{state.canManageStaff && <li>Create and save the station’s shift, then assign the employee.</li>}<li>The assigned gatekeeper uses Assume Watch when the shift begins.</li></ol></details>
-    </> : <p>{workflow.description ?? "Follow the guidance for this saved Gate workflow. Use the page’s existing controls and save your changes explicitly."}</p>}
+    </> : workflow.steps ? <ol className="next-steps-roadmap">{workflow.steps.map(step => <li key={step}>{step}</li>)}</ol>
+      : <p>{workflow.description ?? "Follow the guidance for this saved Gate workflow. Use the page’s existing controls and save your changes explicitly."}</p>}
     {workflow.message && <p role="status">{workflow.message}</p>}
     <GuidanceTargetStatus />
-    {workflow.action && <TogglePillButton data-guidance-id="continue" color="brand" disabled={inModal} title={inModal ? "Finish or close this form before opening the next page." : undefined} onClick={() => state.continueWorkflow(workflow)}>{workflow.action.href.startsWith("/field-employees") ? "Choose or add employee" : workflow.action.title}<ArrowRight aria-hidden="true" className="h-4 w-4" /></TogglePillButton>}
+    {companyDocument ? <CompanyCoiHelper vendorId={companyDocument} />
+      : watchTicket && workflow.context?.shiftId ? <WatchTicketConfirmation watchId={watchTicket} shiftId={workflow.context.shiftId} />
+      : workflow.action && <TogglePillButton data-guidance-id="continue" color="brand" disabled={inModal} title={inModal ? "Finish or close this form before opening the next page." : undefined} onClick={() => state.continueWorkflow(workflow)}>{workflow.action.href.startsWith("/field-employees") ? "Choose or add employee" : workflow.action.title}<ArrowRight aria-hidden="true" className="h-4 w-4" /></TogglePillButton>}
     <button type="button" className="underline text-left" onClick={() => void state.refresh()}>Check saved progress</button>
     <p className="next-steps-helper-note">Ask V about this step while you work. Guidance advances from saved records. Closing askV or the Next Steps list keeps this workflow active; stopping guidance keeps your saved work.</p>
   </section>;

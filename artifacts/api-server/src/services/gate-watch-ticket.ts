@@ -88,6 +88,7 @@ export async function ensureGateWatchTicket(
   session: SessionPayload,
   stationId: string,
   siteId: number,
+  expectedShiftId?: string,
 ): Promise<Binding> {
   const blocked = (code: string, shiftId: string | null = null): Binding => ({ ticketId: null, ticketBlocker: code, shiftId });
   if (!session.vendorId || !session.userId) return blocked("gate_ticket.vendor_context_required");
@@ -98,13 +99,14 @@ export async function ensureGateWatchTicket(
   if (!duty) return blocked("gate_ticket.active_watch_required");
   if (duty.post_coverage?.vendorId !== session.vendorId) return blocked("gate_ticket.employer_changed");
 
-  const readiness = await gateWatchTicketReadiness(client, session, stationId, siteId, duty.post_coverage?.ticketId, true);
+  const readiness = await gateWatchTicketReadiness(client, session, stationId, siteId, duty.post_coverage?.ticketId, true, expectedShiftId);
   const save = async (result: Binding) => {
     await client.query(`UPDATE gate_duty_sessions SET work_hub_shift_id=$2,source_legacy_shift_id=$3,
       post_coverage=coalesce(post_coverage,'{}'::jsonb)||$4::jsonb WHERE id=$1`,
       [duty.id, result.shiftId, duty.watch_id, JSON.stringify({ ticketId: result.ticketId, ticketBlocker: result.ticketBlocker })]);
     return result;
   };
+  if (expectedShiftId && readiness.ticketBlocker) return readiness;
   if (readiness.ticketBlocker || readiness.ticketId) return save(readiness);
   const { service, shift, shiftId } = readiness;
   const job = service!.job;

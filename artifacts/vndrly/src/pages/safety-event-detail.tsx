@@ -65,6 +65,7 @@ export default function SafetyEventDetailPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["safety-event", id] });
       qc.invalidateQueries({ queryKey: ["safety-events"] });
+      void qc.invalidateQueries({ queryKey: ["account-next-steps"] });
       toast({ title: t("safety.eventClosed") });
     },
     onError: (e: Error) => {

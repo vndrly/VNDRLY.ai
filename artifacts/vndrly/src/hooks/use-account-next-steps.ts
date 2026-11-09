@@ -15,7 +15,7 @@ export function useAccountNextSteps() {
   const gateRole = user?.vendorRole === "gatekeeper" || user?.vendorRole === "gate_supervisor" || Boolean(user?.managedSubcontractor?.siteGrants.length);
   const officeRole = user?.role === "vendor" && user.vendorRole === "office";
   const queryEnabled = Boolean(user?.userId && user.activeMembershipId && owner?.type === "vendor" &&
-    (vendorAdmin || officeRole || gateRole));
+    (vendorAdmin || officeRole || gateRole || user.role === "field_employee"));
   const queryKey = accountNextStepsKey(user?.userId, user?.activeMembershipId, owner?.type, owner?.id);
   const query = useQuery({
     queryKey,
@@ -30,6 +30,9 @@ export function useAccountNextSteps() {
     retry: false,
     refetchOnWindowFocus: true,
   });
-  const enabled = queryEnabled && (!query.isSuccess || query.data.firstWatch !== null || gateRole);
+  const enabled = queryEnabled && (!query.isSuccess || query.data.firstWatch !== null || gateRole
+    || Boolean(query.data.workflows?.length)
+    || Boolean(query.data.partnerSettings?.options.length)
+    || [...query.data.setup, ...query.data.credentials].some(action => action.recordType));
   return { query, queryKey, enabled, vendorAdmin, vendorId: owner?.type === "vendor" ? owner.id : null, scope: JSON.stringify(queryKey), user };
 }

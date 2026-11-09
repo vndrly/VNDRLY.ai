@@ -13,9 +13,9 @@ function gateHref(path: string, context: GateHelperContext, calendar = false) {
   });
   return `${path}${query.size ? `?${query}` : ""}`;
 }
-function definition(key: GateHelperKey, title: string, description: string, keywords: string[], access: "gate" | "office", path: string, actionTitle: string): GateHelperDefinition {
+function definition(key: GateHelperKey, title: string, description: string, keywords: string[], access: GateHelperDefinition["access"], path: string, actionTitle: string, steps?: readonly string[]): GateHelperDefinition {
   return { key, title, description, keywords, access, create: context => ({
-    id: key, kind: "gate-operation", title, description, priority: key === "gate-staffing-recovery" ? 1 : 30,
+    id: key, kind: "gate-operation", title, description, steps, priority: key === "gate-staffing-recovery" ? 1 : 30,
     context: { siteName: context.siteName ?? "", stationName: context.stationName ?? "", ...context },
     action: { title: actionTitle, href: gateHref(path, context, path === "/work-hub/calendar") },
     message: !validSite(context) || !context.stationId ? "Choose an authorized site and gate before continuing. This guide uses your existing controls and never saves for you." : undefined,
@@ -33,6 +33,16 @@ export const gateOperationalHelpers: readonly GateHelperDefinition[] = [
   definition("gate-return-to-inner", "Confirm a return to the inner gate", "Find the actual vehicle already on site and confirm its return at this inner gate. The saved arrival clears an obsolete pending outer departure.", ["return to inner", "return-to-inner", "unexpected arrival", "returned inside", "regreso al acceso interior"], "gate", "/gate", "Find the saved vehicle"),
   definition("gate-map-and-log", "Read the Gate map and log", "Compare the last gate-confirmed location with the intended destination, then inspect the saved Gate Log. These are recorded facts, not live vehicle GPS.", ["gate map and log", "gate map", "gate log", "last confirmed location", "mapa y registro"], "gate", "/gate/map", "Open the Gate map"),
   definition("gate-shift-scheduling", "Schedule and assign a gate shift", "Open the exact site, gate and date, define a shift if needed, then review and save eligible assignments. Scheduling never starts a watch.", ["shift scheduling", "schedule a gate shift", "assign a gatekeeper", "reassign a gate shift", "programar guardia"], "office", "/work-hub/calendar", "Open Gate shift scheduling"),
+  definition("gate-station-management", "Manage a gate station", "Review the station configuration for an authorized site.", ["manage a gate station", "move a gate", "edit a gate", "gate links"], "admin", "/gate-locations", "Open Gate Locations", [
+    "Choose the authorized site and existing station, or use Add Gate Location for a new station.",
+    "Edit the station name, position, boundary, links or active state as needed.",
+    "Review the change and use Confirm & Save. Check the saved station before leaving.",
+  ]),
+  definition("gate-staff-visibility", "Reveal staff on the Gate Map", "View staff locations available to your current account.", ["reveal staff", "show staff", "staff visibility"], "gate", "/gate/map", "Open Gate Map", [
+    "Choose the site on the Gate Map.",
+    "Open Reveal Staff and choose a group or an individual.",
+    "Select Show if staff locations are hidden. If a position is unavailable, wait for a current location.",
+  ]),
 ];
 for (const helper of gateOperationalHelpers) registerGateHelper(helper);
 

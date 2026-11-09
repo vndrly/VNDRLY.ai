@@ -100,7 +100,10 @@ export default function CertificationsSection({
   const [addCertNumber, setAddCertNumber] = useState("");
   const [addExpiration, setAddExpiration] = useState("");
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: getListEmployeeCertificationsQueryKey(employeeId) });
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ["account-next-steps"] });
+    return qc.invalidateQueries({ queryKey: getListEmployeeCertificationsQueryKey(employeeId) });
+  };
 
   const existingNames = useMemo(() => new Set((certs ?? []).map((c) => c.name)), [certs]);
   const availableNames = useMemo(

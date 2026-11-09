@@ -12,6 +12,7 @@ export const vendorsTable = pgTable("vendors", {
   operationsCategories: text("operations_categories").array(),
   staffRoleCatalog: jsonb("staff_role_catalog").$type<{ version: number; entries: Array<{ id: string; label: string; group: string; aliases?: string[] }> }>(),
   nativeOperationsPolicy: jsonb("native_operations_policy").$type<Record<string, unknown>>().notNull().default({}),
+  nextStepsPartnerOrder: jsonb("next_steps_partner_order").$type<number[]>().notNull().default([]),
   fleetCommercialSettings: jsonb("fleet_commercial_settings"),
   fleetOpsState: jsonb("fleet_ops_state"),
   fleetResources: jsonb("fleet_resources"),

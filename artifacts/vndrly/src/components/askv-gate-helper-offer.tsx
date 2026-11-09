@@ -12,7 +12,7 @@ const normalized = (text: string) => text.normalize("NFKD").replace(/[\u0300-\u0
 export function gateHelperForInstruction(question: string, definitions: GateHelperDefinition[], office: boolean) {
   const text = normalized(question);
   if (!/\b(?:how (?:do|can|should|to)|help me|show me|guide me|teach me|where (?:do|can|is|are)|como|ayudame|guiame|muestrame)\b/.test(text)) return null;
-  const matches = definitions.filter(d => (office || d.access !== "office") && (office || d.key !== "first-watch")).map(d => ({ definition: d, score: Math.max(0, ...d.keywords.map(word => text.includes(normalized(word)) ? normalized(word).length : 0)) })).filter(item => item.score > 0);
+  const matches = definitions.filter(d => office || d.access === "gate" && d.key !== "first-watch").map(d => ({ definition: d, score: Math.max(0, ...d.keywords.map(word => text.includes(normalized(word)) ? normalized(word).length : 0)) })).filter(item => item.score > 0);
   matches.sort((a, b) => b.score - a.score || a.definition.key.localeCompare(b.definition.key));
   return matches[0]?.definition ?? null;
 }
@@ -47,14 +47,14 @@ export function AskVGateHelperOffer({ question, workflowOffer, setupProgress, to
   const currentStepQuestion = /\b(?:this (?:step|button|control|form)|what does (?:this|that) mean|why (?:can t|cant|is|won t)|este (?:paso|boton|formulario))\b/.test(text);
   const progress = parseGateSetupProgressHint(setupProgress) ?? savedSetupProgress(toolCalls);
   const offer = parseGateWorkflowOffer(workflowOffer, user.vendorId ?? null);
-  const specific = gateHelperForInstruction(question, registeredGateHelpers(), office);
+  const specific = gateHelperForInstruction(question, registeredGateHelpers().filter(item => item.access !== "admin" || next.canManageStaff), office);
   const unrelated = !specific && !offer && /\b(?:payroll|invoice|taxes|certifications?|fleet|profile|nomina|factura)\b/.test(text);
   if (unrelated) return null;
   const contextualKey = next.selected && (resumeQuestion || currentStepQuestion || !question.trim()) ? next.selected.id
     : resumeQuestion ? next.assistantContext?.available[0]?.key : null;
   const fromTool = progress && ["actionable", "waiting"].includes(progress.state) ? "first-watch" : null;
   const definition = offer ? gateHelperDefinition(offer.workflowKey) : specific ?? gateHelperDefinition((contextualKey ?? fromTool) as GateHelperKey);
-  if (!definition || definition.access === "office" && !office) return null;
+  if (!definition || definition.access === "office" && !office || definition.access === "admin" && !next.canManageStaff) return null;
   if (definition.key === "first-watch" && progress && ["complete", "unavailable"].includes(progress.state) && next.selected?.id !== definition.key) return null;
   const active = next.selected?.id === definition.key ? next.selected : null;
   const saved = active ?? next.assistantContext?.available.find(item => item.key === definition.key);

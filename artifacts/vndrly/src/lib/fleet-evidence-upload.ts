@@ -5,13 +5,13 @@ export type FleetEvidenceUpload = {
   uploaded?: boolean;
   finalizedPath?: string;
 };
-export function validateFleetEvidenceFile(file: File) {
+export function validateFleetEvidenceFile(file: File, maxBytes = 10 * 1024 * 1024) {
   if (
     !["image/jpeg", "image/png", "image/webp", "application/pdf"].includes(
       file.type,
     ) ||
     file.size < 1 ||
-    file.size > 10 * 1024 * 1024
+    file.size > maxBytes
   )
     throw new Error("Unsupported Fleet file");
 }
@@ -37,12 +37,13 @@ async function checked(response: Response) {
 export async function uploadFleetEvidence(
   stage: FleetEvidenceUpload,
   current: () => boolean,
+  maxBytes?: number,
 ): Promise<string> {
   const check = () => {
     if (!current()) throw new Error("Fleet account changed");
   };
   check();
-  validateFleetEvidenceFile(stage.file);
+  validateFleetEvidenceFile(stage.file, maxBytes);
   if (!stage.descriptor) {
     const response = await checked(
       await fetch("/api/storage/uploads/request-url", {

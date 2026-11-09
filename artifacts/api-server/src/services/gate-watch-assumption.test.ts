@@ -28,7 +28,7 @@ function fixture(receipt: unknown = null) {
 const session = { userId: 8, vendorId: 7, role: "vendor", membershipRole: "admin", activeMembershipId: 4, sv: 1 };
 const input = { stationId: "gate", operationId: "op", source: "web" as const };
 
-it("commits Assume Watch only after its automatic ticket has been bound", async () => {
+it("returns the automatic ticket when Assume Watch confirms it", async () => {
   const client = fixture();
   const result = await assumeGateWatch(session, input);
   expect(result).toMatchObject({ ticketId: 99, shiftId: "scheduled" });
@@ -36,12 +36,11 @@ it("commits Assume Watch only after its automatic ticket has been bound", async 
   expect(client.query).toHaveBeenLastCalledWith("COMMIT");
 });
 
-it("rolls back the watch and handoff if ticket prerequisites prevent creation", async () => {
+it("saves the watch and its ticket blocker if ticket prerequisites prevent creation", async () => {
   const client = fixture();
   mocks.ensure.mockResolvedValue({ ticketId: null, shiftId: "scheduled", ticketBlocker: "gate_ticket.approved_service_required" });
-  await expect(assumeGateWatch(session, input)).rejects.toMatchObject({ status: 409, code: "gate_ticket.approved_service_required" });
-  expect(client.query).toHaveBeenLastCalledWith("ROLLBACK");
-  expect(client.query.mock.calls.some(([sql]) => sql === "COMMIT")).toBe(false);
+  await expect(assumeGateWatch(session, input)).resolves.toMatchObject({ id: "duty", ticketId: null, ticketStatus: "unavailable", ticketBlocker: "gate_ticket.approved_service_required" });
+  expect(client.query).toHaveBeenLastCalledWith("COMMIT");
 });
 
 it("returns the durable receipt on a retry without opening another ticket", async () => {

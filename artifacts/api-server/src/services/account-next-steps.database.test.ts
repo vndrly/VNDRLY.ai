@@ -132,22 +132,32 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
     await pool.query("UPDATE partner_vendor_relationships SET status='revoked' WHERE vendor_id=$1 AND partner_id=$2",[f.vendor,f.partner]);
     expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:null,message:expect.stringContaining("Gate service authorization"),context:null});
   });
-  it("rolls back a watch when no approved automatic-ticket service exists",async()=>{
-    const f=await fixture(),{station}=await stage(f);
+  it("keeps the saved watch when automatic ticket confirmation has no approved service",async()=>{
+    const f=await fixture(),{station,shift}=await stage(f);
     expect((await summary(f.officeSession)).firstWatch?.action?.title).toBe("Review gate service setup");
-    await expect(assume(f.workerSession,{stationId:station,operationId:randomUUID(),source:"web",expectedWatchId:null,preparationId:null,acknowledged:true,allowUnprepared:true})).rejects.toMatchObject({status:409});
-    expect((await pool.query("SELECT count(*)::int AS n FROM gate_shifts WHERE station_id=$1",[station])).rows[0].n).toBe(0);
+    await expect(assume(f.workerSession,{stationId:station,operationId:randomUUID(),source:"web",expectedWatchId:null,preparationId:null,acknowledged:true,allowUnprepared:true})).resolves.toMatchObject({ticketId:null,ticketStatus:"unavailable"});
+    const pending = (await summary(f.workerSession)).firstWatch;
+    expect(pending).toMatchObject({complete:false,action:null,context:{watchId:expect.any(String),ticketId:null}});
     expect((await pool.query("SELECT count(*)::int AS n FROM tickets WHERE vendor_id=$1",[f.vendor])).rows[0].n).toBe(0);
+    await approve(f);
+    const watchId = pending!.context!.watchId!;
+    expect((await summary(f.workerSession)).firstWatch?.action).toMatchObject({recordType:"watch-ticket",recordId:watchId});
+    const {confirmAccountWatchTicket} = await import("./account-next-steps");
+    const result = await confirmAccountWatchTicket(f.workerSession,watchId,shift);
+    expect(result.ticketId).toEqual(expect.any(Number));
+    expect((await confirmAccountWatchTicket(f.workerSession,watchId,shift)).ticketId).toBe(result.ticketId);
+    expect((await summary(f.workerSession)).firstWatch).toMatchObject({complete:true,action:null,context:{watchId,ticketId:result.ticketId}});
+    expect((await pool.query("SELECT count(*)::int AS n FROM gate_shifts WHERE station_id=$1",[station])).rows[0].n).toBe(1);
   });
-  it("does not start a future assigned shift or create an unbound watch and ticket",async()=>{
+  it("waits for a future shift and preserves manually assumed coverage without starting its ticket",async()=>{
     const f=await fixture(),{station,shift}=await stage(f);
     await approve(f);
     await pool.query("UPDATE work_hub_shifts SET starts_at=now()+interval '1 day',ends_at=now()+interval '2 days' WHERE id=$1",[shift]);
     const waiting=await summary(f.workerSession);
     expect(waiting.firstWatch).toMatchObject({complete:false,action:null,context:{shiftId:shift}});
     expect(waiting.firstWatch?.message).toContain("scheduled shift to begin");
-    await expect(assume(f.workerSession,{stationId:station,operationId:randomUUID(),source:"web",expectedWatchId:null,preparationId:null,acknowledged:true,allowUnprepared:true})).rejects.toMatchObject({status:409});
-    expect((await pool.query("SELECT count(*)::int AS n FROM gate_shifts WHERE station_id=$1",[station])).rows[0].n).toBe(0);
+    await expect(assume(f.workerSession,{stationId:station,operationId:randomUUID(),source:"web",expectedWatchId:null,preparationId:null,acknowledged:true,allowUnprepared:true})).resolves.toMatchObject({ticketId:null,ticketBlocker:"gate_ticket.shift_not_started"});
+    expect((await summary(f.workerSession)).firstWatch).toMatchObject({complete:false,action:null,context:{watchId:expect.any(String),ticketId:null}});
     expect((await pool.query("SELECT count(*)::int AS n FROM tickets WHERE vendor_id=$1",[f.vendor])).rows[0].n).toBe(0);
   });
   it("never presents another Assume for a saved watch without a ticket and rejects a suspended current account",async()=>{
@@ -158,6 +168,23 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
     expect((await summary(f.workerSession)).firstWatch?.message).toContain("do not assume");
     await pool.query("UPDATE users SET suspended_at=now() WHERE id=$1",[f.worker]);
     await expect(summary(f.workerSession)).rejects.toMatchObject({status:403});
+  });
+  it("keeps a saved partner order company-scoped and ranks equally urgent safety records", async () => {
+    const f = await fixture(), other = await fixture();
+    const {saveNextStepsPartnerOrder} = await import("./account-next-steps");
+    await expect(saveNextStepsPartnerOrder(f.officeSession,[other.partner])).rejects.toMatchObject({status:403});
+    await expect(saveNextStepsPartnerOrder(f.workerSession,[f.partner])).rejects.toMatchObject({status:403});
+    await pool.query("INSERT INTO partner_vendor_relationships(partner_id,vendor_id,status) VALUES($1,$2,'approved')",[other.partner,f.vendor]);
+    await expect(saveNextStepsPartnerOrder(f.officeSession,[other.partner,f.partner])).resolves.toEqual({order:[other.partner,f.partner]});
+    for (const source of [f,other]) {
+      await pool.query("INSERT INTO safety_events(event_number,event_type,title,site_location_id,partner_id,vendor_id,reported_by_user_id,is_stop_work) VALUES($1,'near_miss',$2,$3,$4,$5,$6,true)",[randomUUID(),`Stop work at ${source.site}`,source.site,source.partner,f.vendor,f.office]);
+    }
+    const admin = await summary(f.officeSession);
+    expect(admin.partnerSettings?.order).toEqual([other.partner,f.partner]);
+    expect(admin.workflows?.filter(flow=>flow.id.startsWith("safety:")).map(flow=>flow.title)).toEqual([
+      `Review work stoppage · Stop work at ${other.site}`,`Review work stoppage · Stop work at ${f.site}`,
+    ]);
+    expect((await summary(f.workerSession)).workflows?.some(flow=>flow.id.startsWith("safety:"))).toBe(false);
   });
   it("advances a saved managed Gate worker from site access through the same shift and completed watch",async()=>{
     const f=await managedFixture(),station=await stationFor(f,"Synthetic managed setup gate");

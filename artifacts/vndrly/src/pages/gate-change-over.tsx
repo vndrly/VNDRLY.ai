@@ -537,7 +537,7 @@ export default function GateChangeOverPage({
               })}
               onSave={() => void act(() => mutate("prepare", { notes }))}
               onEditSave={async text=>{await mutate("prepare",{notes:text});await cache.invalidateQueries({queryKey:["gate-watch-timeline"]});}}
-              onSignHandoff={async input=>{await request(`/${stationId}/handoff/sign`,input);await state.refetch({throwOnError:true});}}
+              onSignHandoff={async input=>{await request(`/${stationId}/handoff/sign`,input);void cache.invalidateQueries({queryKey:["account-next-steps"]});await state.refetch({throwOnError:true});}}
               onAddNote={async input=>{await request(`/${stationId}/notes/add`,input);await state.refetch({throwOnError:true});await cache.invalidateQueries({queryKey:["gate-watch-timeline"]});}}
               onAssumeReviewed={openWatch}
               pendingWatch={Boolean(pendingWatch)} onRecoverWatch={openWatch}

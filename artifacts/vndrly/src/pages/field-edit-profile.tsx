@@ -1,6 +1,7 @@
 import { NextStepsAvatarPreference } from "@/components/next-steps-avatar";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { User as UserIcon } from "lucide-react";
@@ -37,6 +38,7 @@ export default function FieldEditProfile() {
   const [, navigate] = useLocation();
   const portalBase = usePortalBase();
   const { toast } = useToast();
+  const cache = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
@@ -86,6 +88,7 @@ export default function FieldEditProfile() {
         body: JSON.stringify({ profilePhotoPath: objectPath }),
       });
       if (!saved.ok) throw new Error("save_failed");
+      void cache.invalidateQueries({ queryKey: ["account-next-steps"] });
       const json = (await saved.json()) as FieldMeFull;
       setPhotoPath(json.profilePhotoPath);
       setDirectPhotoUrl(null);
@@ -125,6 +128,7 @@ export default function FieldEditProfile() {
         }),
       });
       if (!r.ok) throw new Error(String(r.status));
+      void cache.invalidateQueries({ queryKey: ["account-next-steps"] });
       toast({ title: t("editProfile.savedTitle"), description: t("editProfile.savedBody") });
       navigate(`${portalBase}/profile`);
     } catch {

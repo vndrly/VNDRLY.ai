@@ -12,6 +12,11 @@ import { gateWatchTicketReadiness } from "./gate-watch-ticket";
 const storage=vi.hoisted(()=>({get:vi.fn()}));
 vi.mock('../lib/objectStorage',()=>({ObjectStorageService:class{getStoredObject=storage.get;}}));
 const row: FirstWatchRecord={siteId:1,stationId:"main",siteName:"Lease A",stationName:"Main",employeeId:null,shiftId:null,assignedUserId:null,watchId:null,ticketId:null};
+it("keeps a saved watch awaiting its ticket ahead of an earlier unstarted station", () => {
+  const saved = {...row, siteId:2, stationId:"south", employeeId:3, shiftId:"shift", assignedUserId:7, watchId:"watch"};
+  expect(firstWatchStep([row, saved], 7, true)).toMatchObject({action:null, context:{watchId:"watch"}});
+  expect(firstWatchStep([{...saved, ticketId:100}], 8, false)).toMatchObject({complete:false, action:null, context:null});
+});
 describe("saved first watch workflow",()=>{
   it("omits completed worker setup and does not invent missing credential records",async()=>{
     vi.mocked(pool.query).mockClear();
@@ -60,6 +65,7 @@ describe("saved first watch workflow",()=>{
     vi.mocked(pool.query).mockResolvedValueOnce({rows:[{role:"admin"}]} as never).mockResolvedValueOnce({rows:[{operations_categories:["gate"],coi_document_url:"/saved.pdf"}]} as never).mockResolvedValueOnce({rows:[managed]} as never);
     vi.mocked(listChangeOverSites).mockResolvedValueOnce([{id:1}] as never);
     vi.mocked(gateWatchTicketReadiness).mockResolvedValueOnce({ticketId:null,ticketBlocker:"gate_ticket.scheduled_ticket_unavailable",shiftId:"selected"});
+    vi.mocked(pool.query).mockResolvedValueOnce({rows:[]} as never);
     expect((await readAccountNextSteps(session)).firstWatch).toMatchObject({action:{title:"Review gate service setup"},context:{shiftId:"selected",eligibleUserId:7,employeeId:null,ticketBlocker:"gate_ticket.scheduled_ticket_unavailable"}});
     expect(gateWatchTicketReadiness).toHaveBeenLastCalledWith(pool,{...session,userId:7},"main",1,undefined,false,"selected");
     vi.mocked(pool.query).mockReset();
