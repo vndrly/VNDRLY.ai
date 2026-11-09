@@ -33,7 +33,7 @@ jobs:
           const {Client}=createRequire(new URL('./artifacts/api-server/package.json',import.meta.url))('pg');
           const c=new Client({connectionString:process.env.DATABASE_URL,application_name:'vndrly_gate_release_diagnostic'});
           const observer=new Client({connectionString:process.env.DATABASE_URL,application_name:'vndrly_gate_release_observer'});
-          let timer;
+          let timer;let releaseAttempted=false;
           try {
            await c.connect();await observer.connect();
            const catalog=await c.query("SELECT table_name,column_name,data_type FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('users','site_locations','gate_stations','work_hub_shifts','notifications','gate_staffing_alerts','gate_staffing_alert_notifications') AND column_name IN ('id','notification_id') ORDER BY table_name,column_name");
@@ -41,7 +41,12 @@ jobs:
            await c.query('BEGIN');await c.query("SET LOCAL lock_timeout='10s'");await c.query("SET LOCAL statement_timeout='45s'");
            await c.query("SELECT pg_advisory_xact_lock(hashtext('gate-staffing-alerts-migration'))");
            let observing=false;
-           timer=setInterval(async()=>{if(observing)return;observing=true;try{const result=await observer.query("SELECT a.state,a.wait_event_type,a.wait_event,round(extract(epoch FROM now()-a.xact_start))::int AS transaction_age_seconds,a.application_name,ARRAY(SELECT DISTINCT coalesce(cl.relname,'advisory') FROM pg_locks l LEFT JOIN pg_class cl ON cl.oid=l.relation WHERE l.pid=a.pid AND l.granted) AS locked_relations FROM pg_stat_activity a WHERE a.pid=ANY(pg_blocking_pids($1))",[c.processID]);if(result.rows.length)console.log('GATE_MIGRATION_BLOCKERS',JSON.stringify(result.rows));}catch(e){console.log('GATE_MIGRATION_OBSERVER_ERROR',e.code??'unknown');}finally{observing=false;}},1500);
+           timer=setInterval(async()=>{if(observing)return;observing=true;try{const result=await observer.query("SELECT a.state,a.wait_event_type,a.wait_event,round(extract(epoch FROM now()-a.xact_start))::int AS transaction_age_seconds,a.application_name,ARRAY(SELECT DISTINCT coalesce(cl.relname,'advisory') FROM pg_locks l LEFT JOIN pg_class cl ON cl.oid=l.relation WHERE l.pid=a.pid AND l.granted) AS locked_relations FROM pg_stat_activity a WHERE a.pid=ANY(pg_blocking_pids($1))",[c.processID]);if(result.rows.length)console.log('GATE_MIGRATION_BLOCKERS',JSON.stringify(result.rows));
+          if(!releaseAttempted&&result.rows.some(r=>r.application_name==='release-lock-readonly')){
+           releaseAttempted=true;
+           const released=await observer.query("WITH candidates AS MATERIALIZED (SELECT a.pid,a.application_name,round(extract(epoch FROM now()-a.xact_start))::int AS transaction_age_seconds FROM pg_stat_activity a WHERE a.pid=ANY(pg_blocking_pids($1)) AND a.pid<>pg_backend_pid() AND a.usename=current_user AND a.application_name='release-lock-readonly' AND a.backend_type='client backend' AND a.state='idle in transaction' AND a.backend_xid IS NULL AND a.xact_start<now()-interval '1 hour' AND a.query_start<now()-interval '1 hour') SELECT pid,application_name,transaction_age_seconds,pg_terminate_backend(pid) AS terminated FROM candidates WHERE (SELECT count(*) FROM candidates)=1",[c.processID]);
+           console.log('GATE_OWN_STALE_READONLY_RELEASE_SESSION',JSON.stringify(released.rows));
+          }}catch(e){console.log('GATE_MIGRATION_OBSERVER_ERROR',e.code??'unknown');}finally{observing=false;}},1500);
            const sql=await readFile('./lib/db/drizzle/gate_staffing_alerts.sql','utf8');
            await c.query(guardAdditiveReplay(sql));await c.query('COMMIT');
            console.log('GATE_MIGRATION_COMMITTED',JSON.stringify({commit:'38104cb3a35717232d8077b21275d897c6081d8e',existingDataPreserved:true}));
