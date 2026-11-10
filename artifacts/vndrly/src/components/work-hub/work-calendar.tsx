@@ -22,7 +22,7 @@ function recordTime(item: Row) {
 }
 
 /** The iOS month/day layout, using the web calendar's existing authorized records. */
-export default function WorkCalendar({ month, selectedDay, items, onSelectDay, onOpenDay, onSchedule, scheduling, loading, unavailable, filters, personalShifts, taskControl, scheduleControl }: {
+export default function WorkCalendar({ month, selectedDay, items, onSelectDay, onOpenDay, onSchedule, scheduling, loading, unavailable, filters, personalShifts, taskControl, scheduleControl, showInlineDay = true }: {
   month: Date; selectedDay: string; items: Row[];
   onSelectDay: (day: string) => void; onOpenDay: () => void;
   onSchedule?: () => void; scheduling: boolean; loading: boolean; unavailable: boolean;
@@ -30,6 +30,7 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
   personalShifts?: ReactNode;
   taskControl?: ReactNode;
   scheduleControl?: ReactNode;
+  showInlineDay?: boolean;
 }) {
   const selected = items.filter(item => dayKey(item.startsAt) === selectedDay);
   const move = (offset: number) => onSelectDay(localDateKey(new Date(month.getFullYear(), month.getMonth() + offset, 1)));
@@ -60,7 +61,7 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
     </div>
     <details className="hub-calendar-filters"><summary>Filter schedules</summary>{filters}</details>
   </section>
-  <div className="hub-calendar-selected-day" aria-live="polite">
+  {showInlineDay && <div className="hub-calendar-selected-day" aria-live="polite">
     <WorkspacePanel title={`${new Date(`${selectedDay}T12:00:00`).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} · ${selected.length} scheduled records${unavailable ? " available" : ""}`} subtitle="Selected day" icon={CalendarDays}>
     <p className="hub-calendar-muted">Calendar days use your device timezone ({Intl.DateTimeFormat().resolvedOptions().timeZone}). Original schedule timezones appear on records.</p>
     {loading && <p role="status" className="hub-calendar-muted">Loading schedules…</p>}
@@ -79,5 +80,5 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
     </article>)}</div>
     </details>)}</div>
     </WorkspacePanel>
-  </div></>;
+  </div>}</>;
 }

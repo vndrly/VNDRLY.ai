@@ -1,9 +1,9 @@
-import { CalendarDays } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 
 import BrandPillButton from "@/components/brand-pill-button";
-import MiniCardDialogContent from "@/components/mini-card-dialog-content";
+import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
+import { useBrand } from "@/hooks/use-brand";
 import { Dialog } from "@/components/ui/dialog";
 import { recordedShiftCalendarHref } from "@/lib/calendar-day-link";
 import { formatRecordedHours } from "@/lib/dashboard-shift-hours";
@@ -11,11 +11,12 @@ import { workHubRequest, type WorkHubOwner } from "@/lib/work-hub-client";
 import CalendarFillShift, { calendarStaffingQuery } from "./calendar-fill-shift";
 
 type Row = Record<string, any>;
-const AGENDA_KINDS = ["Meeting", "Shift", "Task", "Event"] as const;
+const AGENDA_KINDS = ["Meeting", "Shift", "Task", "Event", "Field Ticket", "Fleet Run"] as const;
 type AgendaKind = (typeof AGENDA_KINDS)[number];
 
 export function calendarItemHref(item: Row) {
   if (item.recordedShift) return recordedShiftCalendarHref({ id: item.workdayId, startedAt: item.startsAt }, item.workerUserId);
+  if (item.route) return item.route;
   if (item.kind === "Meeting") return `/work-hub/meetings/${item.id}`;
   if (item.kind === "Task") return `/work-hub/tasks/${item.id}`;
   return `/work-hub/calendar?shift=${item.id}`;
@@ -34,6 +35,7 @@ export default function DayAgendaDialog({
   items: Row[];
   staffingOwner?: WorkHubOwner;
 }) {
+  const brand = useBrand();
   const [enabledKinds, setEnabledKinds] = useState<Set<AgendaKind>>(() => new Set(AGENDA_KINDS));
   const [fillId, setFillId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -78,7 +80,7 @@ export default function DayAgendaDialog({
               })}
               className="h-4 w-4 rounded border-white accent-[var(--brand-primary)]"
             />
-            {kind === "Meeting" ? "Meetings" : kind === "Shift" ? "Shifts" : kind === "Task" ? "Tasks" : "Events"}
+            {kind}s
           </label>
         ))}
       </div>
@@ -86,9 +88,11 @@ export default function DayAgendaDialog({
   );
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <MiniCardDialogContent icon={CalendarDays} label="Day Agenda" definition={label} iconColor="var(--brand-primary)" settings={settings} className="max-h-[86vh] sm:max-w-2xl">
+      <VendorEditFlyout title="Day Agenda" logoSrc={brand.logoSquareUrl || brand.logoUrl || undefined} logoAlt={`${brand.name} logo`} onClose={() => onOpenChange(false)}>
         <div className="grid gap-3">
-          <div data-testid="day-agenda-content" className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-[#303236] p-3 text-[#ececec]">
+          <p className="font-semibold">{label}</p>
+          <details><summary className="cursor-pointer">Filter agenda</summary>{settings}</details>
+          <div data-testid="day-agenda-content" className="grid gap-3">
           {staffingOwner && gateOptions.isPending && <p role="status">Loading active gates…</p>}
           {staffingOwner && gateOptions.isError && <p role="alert">Active gates could not load. <button type="button" onClick={() => void gateOptions.refetch()}>Retry</button></p>}
           {staffing.some(query => query.isPending) && <p role="status">Checking shift assignments…</p>}
@@ -114,7 +118,7 @@ export default function DayAgendaDialog({
           </div>
           <BrandPillButton tone="brand" onClick={() => onOpenChange(false)}>Close</BrandPillButton>
         </div>
-      </MiniCardDialogContent>
+      </VendorEditFlyout>
     </Dialog>
   );
 }

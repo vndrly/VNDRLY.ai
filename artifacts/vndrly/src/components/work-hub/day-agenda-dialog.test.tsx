@@ -40,24 +40,23 @@ describe("DayAgendaDialog", () => {
     const [, options] = vi.mocked(workHubRequest).mock.calls.find(([path]) => path.endsWith("/assign"))!;
     expect(JSON.parse(String(options?.body)).payload.changes).toEqual([{ id: "am", version: 3, addUserId: 7 }]);
   });
-  it("renders the agenda body as a charcoal rounded brand-bordered card", () => {
-    render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2099-09-09" items={[]} />);
+  it("opens a dismissible Day Agenda flyout", () => {
+    const onOpenChange = vi.fn();
+    render(<DayAgendaDialog open onOpenChange={onOpenChange} day="2099-09-09" items={[]} />);
 
-    const body = screen.getByTestId("day-agenda-content");
-    expect(body.className).toContain("bg-[#303236]");
-    expect(body.className).toContain("rounded-xl");
-    expect(body.className).toContain("border-[color:var(--brand-primary)]");
-    expect(body.textContent).toContain("Nothing is scheduled for this day.");
+    const flyout = screen.getByRole("dialog", { name: "Day Agenda" });
+    expect(flyout.classList.contains("vendor-edit-flyout")).toBe(true);
+    expect(flyout.textContent).toContain("Nothing is scheduled for this day.");
+    fireEvent.click(screen.getByRole("button", { name: "Close day agenda" }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
-  it("uses flyout-only type settings and keeps controls in the shared header", () => {
+  it("filters items within the flyout", () => {
     render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2099-09-09" items={[
       { id: "m1", kind: "Meeting", title: "Admin meeting", startsAt: "2099-09-09T15:00:00.000Z" },
       { id: "t1", kind: "Task", title: "Inspect gate", startsAt: "2099-09-09T16:00:00.000Z" },
     ]} />);
 
-    const controls = screen.getByTestId("mini-card-dialog-controls");
-    expect(screen.getByTestId("mini-card-dialog-header").contains(controls)).toBe(true);
-    fireEvent.click(screen.getByTestId("mini-card-dialog-settings"));
+    fireEvent.click(screen.getByText("Filter agenda"));
     fireEvent.click(screen.getByRole("checkbox", { name: "Tasks" }));
 
     expect(screen.getByText("Admin meeting")).toBeTruthy();
