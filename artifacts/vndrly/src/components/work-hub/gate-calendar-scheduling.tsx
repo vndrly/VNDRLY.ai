@@ -32,7 +32,7 @@ function calendarGateLabel(gate: CalendarGate, gates: readonly CalendarGate[]) {
     (gate.topology?.parentGateId === other.id || other.topology?.parentGateId === gate.id));
   const peerNumber = peer && gateNumber(peer.name);
   return peerNumber && peerNumber !== number
-    ? `San Roman Completions ${number} → San Roman Completions ${peerNumber}`
+    ? `San Roman Completions ${number}>${peerNumber}`
     : `San Roman Completions — Gate ${number}`;
 }
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

@@ -28,8 +28,8 @@ describe("Gate calendar scheduling", () => {
       mount();
       fireEvent.click(screen.getByRole("button", { name: "Add/Edit Shifts" }));
       if (linked) {
-        expect(await screen.findByRole("checkbox", { name: "San Roman Completions 1 → San Roman Completions 2" })).toBeTruthy();
-        expect(screen.getByRole("checkbox", { name: "San Roman Completions 2 → San Roman Completions 1" })).toBeTruthy();
+        expect(await screen.findByRole("checkbox", { name: "San Roman Completions 1>2" })).toBeTruthy();
+        expect(screen.getByRole("checkbox", { name: "San Roman Completions 2>1" })).toBeTruthy();
       } else {
         expect(await screen.findByRole("checkbox", { name: "San Roman Completions — Gate 2" })).toBeTruthy();
       }
