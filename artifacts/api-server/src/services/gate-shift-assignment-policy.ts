@@ -21,7 +21,7 @@ export function assertGateShiftAssignmentPolicy(
       && requirement.currentRecorded && requirement.vendorVerified))) {
       throw Error("gate_assignment.qualification_required");
     }
-    if (candidate.availability !== "recorded_available") throw Error("gate_assignment.availability_required");
+    if (candidate.availability === "recorded_conflict") throw Error("work_hub.assignment_conflict");
     if (!candidate.eligibility.allowed || candidate.eligibility.overrideRequired) throw Error("gate_assignment.policy_denied");
   }
 }

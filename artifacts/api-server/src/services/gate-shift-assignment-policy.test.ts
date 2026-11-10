@@ -22,10 +22,13 @@ describe("saved Gate assignment evidence", () => {
     }
     expect(() => assertGateShiftAssignmentPolicy(["Other training"], [18], [candidate])).toThrow("qualification_required");
   });
-  it("refuses unknown, recurring and conflicting availability and policy overrides", () => {
-    for (const availability of ["unknown_no_window", "unknown_recurrence", "recorded_conflict"]) {
-      expect(() => assertGateShiftAssignmentPolicy([], [18], [{ ...candidate, availability }])).toThrow("availability_required");
+  it("allows assignments without recorded availability", () => {
+    for (const availability of ["unknown_no_window", "unknown_recurrence"]) {
+      expect(() => assertGateShiftAssignmentPolicy([], [18], [{ ...candidate, availability }])).not.toThrow();
     }
+  });
+  it("refuses recorded conflicts and policy overrides", () => {
+    expect(() => assertGateShiftAssignmentPolicy([], [18], [{ ...candidate, availability: "recorded_conflict" }])).toThrow("work_hub.assignment_conflict");
     expect(() => assertGateShiftAssignmentPolicy([], [18], [{ ...candidate, eligibility: { allowed: true, overrideRequired: true } }])).toThrow("policy_denied");
   });
   it("does not let a same-name or foreign user replace exact eligible membership", () => {
