@@ -1,18 +1,50 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { fireEvent, render as renderComponent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import DayAgendaDialog from "./day-agenda-dialog";
+import { workHubRequest } from "@/lib/work-hub-client";
+
+vi.mock("@/lib/work-hub-client", async importOriginal => ({
+  ...await importOriginal<typeof import("@/lib/work-hub-client")>(),
+  workHubRequest: vi.fn(),
+}));
 
 vi.mock("@/hooks/use-brand", () => ({
   useBrand: () => ({ name: "Winchester", primary: "#c9a84c", logoSquareUrl: "/square-logo.png" }),
 }));
 
+function render(component: React.ReactNode) {
+  return renderComponent(<QueryClientProvider client={new QueryClient()}>{component}</QueryClientProvider>);
+}
+
 describe("DayAgendaDialog", () => {
-  it("renders the agenda body as a white rounded brand-bordered card", () => {
+  it("hides the inactive gate and fills only the selected vacant shift", async () => {
+    const shift = { id: "am", version: 3, gateStationId: "gate2", date: "2099-09-09", weekday: 3, starts: "06:00", ends: "18:00", timezone: "America/Chicago", required: 1, assignees: [] };
+    vi.mocked(workHubRequest).mockImplementation(async (path, options) => {
+      if (path.startsWith("/gate-shift-definitions")) return { gates: [{ id: "gate2" }] };
+      if (options?.method === "POST") return {};
+      return { shifts: [shift, { ...shift, id: "pm", assignees: [8] }], people: [{ id: 7, name: "Xavier Hunter" }], busy: [], readOnly: false };
+    });
+    render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2099-09-09" staffingOwner={{ type: "vendor", id: 1054 }} items={[
+      { id: "closed", kind: "Shift", title: "Gate 1 AM", gateStationId: "gate1", siteLocationId: 411, startsAt: "2099-09-09T11:00:00Z" },
+      { id: "am", kind: "Shift", title: "Gate 2 AM", gateStationId: "gate2", siteLocationId: 411, startsAt: "2099-09-09T11:00:00Z" },
+      { id: "pm", kind: "Shift", title: "Gate 2 PM", gateStationId: "gate2", siteLocationId: 411, startsAt: "2099-09-09T23:00:00Z" },
+    ]} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Fill", exact: true }));
+    expect(screen.queryByText("Gate 1 AM")).toBeNull();
+    expect(screen.getByText("Gate 2 PM")).toBeTruthy();
+    fireEvent.change(await screen.findByLabelText("Gatekeeper"), { target: { value: "7" } });
+    fireEvent.click(screen.getByRole("button", { name: "Assign 1 shift" }));
+    await waitFor(() => expect(screen.getByText("Assignment saved.")).toBeTruthy());
+    const [, options] = vi.mocked(workHubRequest).mock.calls.find(([path]) => path.endsWith("/assign"))!;
+    expect(JSON.parse(String(options?.body)).payload.changes).toEqual([{ id: "am", version: 3, addUserId: 7 }]);
+  });
+  it("renders the agenda body as a charcoal rounded brand-bordered card", () => {
     render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2099-09-09" items={[]} />);
 
     const body = screen.getByTestId("day-agenda-content");
-    expect(body.className).toContain("bg-white");
+    expect(body.className).toContain("bg-[#303236]");
     expect(body.className).toContain("rounded-xl");
     expect(body.className).toContain("border-[color:var(--brand-primary)]");
     expect(body.textContent).toContain("Nothing is scheduled for this day.");

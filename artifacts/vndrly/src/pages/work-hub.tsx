@@ -958,7 +958,8 @@ function CalendarModule() {
           )}
           {scheduling && canManage && !gateCompany && <CalendarCreateCards owner={owner} />}
         </div>
-        <DayAgendaDialog open={agendaOpen} onOpenChange={setAgendaOpen} day={selectedDay} items={selectedItems} />
+        <DayAgendaDialog open={agendaOpen} onOpenChange={setAgendaOpen} day={selectedDay} items={selectedItems}
+          staffingOwner={canDefineGateShifts && !employeeView && clockOwner?.type === "vendor" ? clockOwner : undefined} />
         {!employeeView && <ProjectTimeline unavailable={calendar.isError || calendar.isPending} items={filteredItems} canManage={canManage} onCreate={() => { setScheduling(true); setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />}
         {!employeeView && <div className="hub-calendar-extras">
           <WorkHubAvailability />

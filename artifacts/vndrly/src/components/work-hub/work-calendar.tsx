@@ -53,7 +53,7 @@ export default function WorkCalendar({ month, selectedDay, items, onSelectDay, o
         const key = localDateKey(date), count = items.filter(item => dayKey(item.startsAt) === key).length;
         return <button key={key} type="button" className="hub-month-day" data-outside={date.getMonth() !== month.getMonth()} aria-pressed={key === selectedDay}
           aria-label={`${date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}, ${count} scheduled records`}
-          onClick={() => onSelectDay(key)}>
+          onClick={() => { onSelectDay(key); onOpenDay(); }}>
           <span>{date.getDate()}</span><strong aria-hidden="true">{count ? `${count} •` : ""}</strong>
         </button>;
       })}

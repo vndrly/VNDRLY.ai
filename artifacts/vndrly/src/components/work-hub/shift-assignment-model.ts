@@ -1,4 +1,4 @@
-export type ScheduleShift = { id: string; version: number; title: string; pattern: string; date: string; weekday: number; starts: string; ends: string; startsAt: string; endsAt: string; timezone: string; required: number; assignees: number[]; recurringAssignees?:number[]; assigneeNames?: Record<string,string> };
+export type ScheduleShift = { id: string; version: number; title: string; gateStationId?: string; pattern: string; date: string; weekday: number; starts: string; ends: string; startsAt: string; endsAt: string; timezone: string; required: number; assignees: number[]; recurringAssignees?:number[]; assigneeNames?: Record<string,string> };
 export type ScheduleData = { shifts: ScheduleShift[]; people: { id: number; name: string }[]; busy: { userId: number; shiftId: string; startsAt: string; endsAt: string }[]; readOnly: boolean };
 export const shiftCell = (s: ScheduleShift) => `${s.pattern}|${s.starts}|${s.ends}|${s.weekday}`;
 export const patternKey = (s: ScheduleShift) => `${s.pattern}|${s.starts}|${s.ends}`;

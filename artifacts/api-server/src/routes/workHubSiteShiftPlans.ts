@@ -108,7 +108,7 @@ router.get("/work-hub/site-shift-plans/:siteId/schedule", async (req,res) => {
       WHERE w.sponsor_vendor_id=$1 AND w.status='active' AND u.suspended_at IS NULL
       AND EXISTS(SELECT 1 FROM user_org_memberships m WHERE m.user_id=u.id AND m.org_type='vendor' AND m.vendor_id=$1)
       AND EXISTS(SELECT 1 FROM managed_subcontractor_role_grants g WHERE g.sponsorship_id=w.id AND g.site_id=$2 AND g.status='active' AND g.role IN ('gatekeeper','gate_supervisor')) ORDER BY name`,[owner.id,siteId]);
-    const scheduled = await pool.query(`SELECT s.id,s.version,s.title,s.starts_at AS "startsAt",s.ends_at AS "endsAt",s.timezone,
+    const scheduled = await pool.query(`SELECT s.id,s.version,s.title,s.gate_station_id AS "gateStationId",s.starts_at AS "startsAt",s.ends_at AS "endsAt",s.timezone,
       to_char(s.starts_at AT TIME ZONE s.timezone,'YYYY-MM-DD') AS date, extract(dow FROM s.starts_at AT TIME ZONE s.timezone)::int AS weekday,
       to_char(s.starts_at AT TIME ZONE s.timezone,'HH24:MI') AS starts,to_char(s.ends_at AT TIME ZONE s.timezone,'HH24:MI') AS ends,
       coalesce(s.required_staff_count,1) AS required,

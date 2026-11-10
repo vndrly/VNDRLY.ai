@@ -17,7 +17,7 @@ describe("iOS-style web work calendar", () => {
     expect(days[0]).toBe("2026-12-27");
     expect(days[41]).toBe("2027-02-06");
   });
-  it("navigates months and selects adjacent days inline without opening a modal", () => {
+  it("navigates months inline and opens the agenda when a day is clicked", () => {
     function Harness() {
       const [day, setDay] = useState("2026-10-22");
       const date = new Date(`${day}T12:00:00`);
@@ -29,7 +29,7 @@ describe("iOS-style web work calendar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
     fireEvent.click(screen.getByRole("button", { name: /Friday, October 23, 2026/ }));
     expect(screen.getByRole("heading", { name: /Friday, October 23 · 0/ })).toBeTruthy();
-    expect(props.onOpenDay).not.toHaveBeenCalled();
+    expect(props.onOpenDay).toHaveBeenCalledTimes(1);
   });
   it("opens canonical scheduled records and keeps dispatch time distinct from work", () => {
     render(<WorkCalendar {...props} items={[{ id: "r1", kind: "Fleet Run", title: "Test haul", startsAt: new Date(2026, 9, 22, 9).toISOString(), endsAt: null, route: "/fleet/runs/r1", timeBasis: "dispatch_recorded", employeeName: "Test driver", linkedTicketId: 8 }]} />);
