@@ -18,6 +18,25 @@ vi.mock("@/lib/work-hub-client", async () => ({ ...await vi.importActual("@/lib/
 afterEach(() => { cleanup(); coaching.selected = null; vi.restoreAllMocks(); vi.mocked(workHubRequest).mockClear(); window.history.replaceState({},"","/"); });
 function mount(canDefine = true) { render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateCalendarScheduling owner={{ type: "vendor", id: 1115 }} canDefine={canDefine} /></QueryClientProvider>); }
 describe("Gate calendar scheduling", () => {
+  it.each([true, false])("labels the San Roman gate options from active topology (linked: %s)", async linked => {
+    const gate2 = { id, siteId: 3, siteName: "San Roman Completions 2", name: "Warwick San Roman Completions 2", topology: { parentGateId: gate } };
+    const gate1 = { id: gate, siteId: 3, siteName: gate2.siteName, name: "Warwick San Roman Completions 1" };
+    vi.mocked(workHubRequest).mockImplementation(async path => path.startsWith("/gate-shift-definitions")
+      ? { gates: linked ? [gate1, gate2] : [gate2], definitions: [] }
+      : []);
+    try {
+      mount();
+      fireEvent.click(screen.getByRole("button", { name: "Add/Edit Shifts" }));
+      if (linked) {
+        expect(await screen.findByRole("checkbox", { name: "San Roman Completions 1 → San Roman Completions 2" })).toBeTruthy();
+        expect(screen.getByRole("checkbox", { name: "San Roman Completions 2 → San Roman Completions 1" })).toBeTruthy();
+      } else {
+        expect(await screen.findByRole("checkbox", { name: "San Roman Completions — Gate 2" })).toBeTruthy();
+      }
+    } finally {
+      vi.mocked(workHubRequest).mockReset();
+    }
+  });
   it("points first-watch creation at the actual authorized gate checkbox before Save without auto-selecting or writing", async () => {
     window.history.replaceState({},"","/work-hub/calendar?siteId=1");
     coaching.selected={id:"first-watch",context:{siteId:1}};

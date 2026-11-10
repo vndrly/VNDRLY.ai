@@ -18,9 +18,9 @@ export async function gateDefinitionManager(saved: SessionPayload, vendorId: num
   return session;
 }
 export async function definitionGates(c: Client, vendorId: number) {
-  return (await c.query(`SELECT DISTINCT g.id,g.name,s.id AS "siteId",s.name AS "siteName" FROM gate_stations g
+  return (await c.query(`SELECT DISTINCT g.id,g.name,g.topology,s.id AS "siteId",s.name AS "siteName" FROM gate_stations g
     JOIN site_locations s ON s.id=g.site_id JOIN site_work_assignments a ON a.site_location_id=s.id
-    WHERE a.vendor_id=$1 AND a.is_gate_contractor=true AND g.active=true AND s.is_active=true AND s.hidden IS DISTINCT FROM true ORDER BY s.name,g.name,g.id`, [vendorId])).rows as { id: string; name: string; siteId: number; siteName: string }[];
+    WHERE a.vendor_id=$1 AND a.is_gate_contractor=true AND g.active=true AND s.is_active=true AND s.hidden IS DISTINCT FROM true ORDER BY s.name,g.name,g.id`, [vendorId])).rows as { id: string; name: string; siteId: number; siteName: string; topology: { parentGateId?: string | null } | null }[];
 }
 export async function readGateDefinitions(c: Client, vendorId: number): Promise<Definition[]> {
   const rows = (await c.query(`SELECT r.*,g.name AS gate_name,s.name AS site_name FROM workforce_staffing_requirements r

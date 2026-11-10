@@ -20,7 +20,21 @@ import { fleetInstantToWallTime, fleetWallTimeToInstant } from "@workspace/api-z
 
 type Row = Record<string, any>;
 type Definition = { id: string; version: number; stationId: string; siteName: string; gateName: string; startsAtLocal: string; endsAtLocal: string; timezone: string; weekdays: number[]; requiredCount: number; notes: string; watches: { id: string; startsAt: string; endsAt: string; people: { id: number; name: string }[] }[] };
-type Options = { gates: { id: string; name: string; siteId: number; siteName: string }[]; definitions: Definition[] };
+type CalendarGate = { id: string; name: string; siteId: number; siteName: string; topology?: { parentGateId?: string | null } | null };
+type Options = { gates: CalendarGate[]; definitions: Definition[] };
+
+function calendarGateLabel(gate: CalendarGate, gates: readonly CalendarGate[]) {
+  if (!/^San Roman Completions(?: [12])?$/i.test(gate.siteName.trim())) return `${gate.siteName} | ${gate.name}`;
+  const gateNumber = (name: string) => name.trim().match(/^(?:(?:Warwick )?San Roman Completions |Gate )?([12])$/i)?.[1];
+  const number = gateNumber(gate.name);
+  if (!number) return `San Roman Completions | ${gate.name}`;
+  const peer = gates.find(other => other.id !== gate.id && other.siteId === gate.siteId &&
+    (gate.topology?.parentGateId === other.id || other.topology?.parentGateId === gate.id));
+  const peerNumber = peer && gateNumber(peer.name);
+  return peerNumber && peerNumber !== number
+    ? `San Roman Completions ${number} → San Roman Completions ${peerNumber}`
+    : `San Roman Completions — Gate ${number}`;
+}
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const initial = () => ({ stationIds: [] as string[], startsAtLocal: "06:00", endsAtLocal: "18:00", weekdays: [0,1,2,3,4,5,6], timezone: "America/Chicago", requiredCount: 1, notes: "", userIds: [] as number[], crewIds: [] as string[] });
 const clockLabel = (clock: string) => { const [h,m] = clock.split(":").map(Number); return `${String(h % 12 || 12).padStart(2,"0")}:${String(m).padStart(2,"0")} ${h >= 12 ? "PM" : "AM"}`; };
@@ -50,6 +64,8 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
   const people = useQuery<Row[]>({ queryKey: ["work-hub", "calendar-people", owner], queryFn: () => workHubRequest("/people"), enabled: !!open });
   const crews = useQuery<Row[]>({ queryKey: ["work-hub", "calendar-crews", owner], queryFn: () => workHubRequest("/crews"), enabled: !!open });
   const saved = options.data?.definitions.find(row => row.id === selected);
+  const gates = options.data?.gates ?? [];
+  const gateLabels = new Map(gates.map(gate => [gate.id, calendarGateLabel(gate, gates)]));
   const refresh = () => { void qc.invalidateQueries({queryKey:["account-next-steps"]}); setOpen(null); for (const name of ["calendar", "gate-shift-definitions", "home", "staffing-sites"]) void qc.invalidateQueries({ queryKey: ["work-hub", name] }); void qc.invalidateQueries({ queryKey: ["site-shift-schedule"] }); };
   const deletion = useMutation({ mutationFn: () => {
     if (!saved) throw new Error("Choose a saved shift first.");
@@ -73,7 +89,7 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
       const members = await Promise.all(definition.crewIds.map(id => workHubRequest(`/crews/${id}/members`) as Promise<Row[]>));
       const assigneeUserIds = [...new Set([...definition.userIds, ...members.flat().map(member => Number(member.userId)).filter(Boolean)])];
       return workHubRequest("/shifts", { method: "POST", body: JSON.stringify(commandEnvelope(owner, {
-        title: `${gate.siteName} | ${gate.name} — ${clockLabel(definition.startsAtLocal)}–${clockLabel(definition.endsAtLocal)}`,
+        title: `${calendarGateLabel(gate, gates)} — ${clockLabel(definition.startsAtLocal)}–${clockLabel(definition.endsAtLocal)}`,
         startsAt: start.instant, endsAt: end.instant, timezone: definition.timezone,
         siteLocationId: gate.siteId, gateStationId: gate.id, requiredStaffCount: definition.requiredCount,
         workStartPolicy: "on_site", instructions: definition.notes, assigneeUserIds,
@@ -100,10 +116,10 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
       <form data-guidance-scope={guideScope} aria-label={open === "define" ? "Add/Edit Shifts" : "Add Event"} className={formClass} onSubmit={e => { e.preventDefault(); mutation.mutate(); }}>
       <fieldset disabled={busy} className="grid gap-3">
         {open === "define" ? <>
-          <label className="grid gap-1">Shift<BrandedSelect data-guidance-id="choose-shift" value={selected} onChange={e => choose(e.target.value)} disabled={options.isPending || options.isError}><option value="">Create New Shift</option>{options.data?.definitions.map(item => <option key={item.id} value={item.id}>{item.siteName} | {item.gateName} · {clockLabel(item.startsAtLocal)}–{clockLabel(item.endsAtLocal)}</option>)}</BrandedSelect></label>
+          <label className="grid gap-1">Shift<BrandedSelect data-guidance-id="choose-shift" value={selected} onChange={e => choose(e.target.value)} disabled={options.isPending || options.isError}><option value="">Create New Shift</option>{options.data?.definitions.map(item => <option key={item.id} value={item.id}>{gateLabels.get(item.stationId) ?? (item.siteName + " | " + item.gateName)} · {clockLabel(item.startsAtLocal)}–{clockLabel(item.endsAtLocal)}</option>)}</BrandedSelect></label>
           {options.isPending && <p role="status">Loading defined shifts…</p>}
           {options.isError && <p role="alert">Shift definitions could not load. <button type="button" onClick={() => void options.refetch()}>Retry</button></p>}
-          <fieldset data-guidance-id="choose-gate-group" className="hub-schedule-section"><legend>Gates</legend><div className="gate-definition-gates">{options.data?.gates.map(gate => <label key={gate.id}><BrandedCheckbox data-guidance-id={`gate-${gate.id}`} checked={definition.stationIds.includes(gate.id)} disabled={!!saved} onCheckedChange={() => setDefinition({ ...definition, stationIds: toggled(definition.stationIds, gate.id) })} />{gate.siteName} | {gate.name}</label>)}</div></fieldset>
+          <fieldset data-guidance-id="choose-gate-group" className="hub-schedule-section"><legend>Gates</legend><div className="gate-definition-gates">{options.data?.gates.map(gate => <label key={gate.id}><BrandedCheckbox data-guidance-id={`gate-${gate.id}`} checked={definition.stationIds.includes(gate.id)} disabled={!!saved} onCheckedChange={() => setDefinition({ ...definition, stationIds: toggled(definition.stationIds, gate.id) })} />{gateLabels.get(gate.id)}</label>)}</div></fieldset>
           <div className="hub-schedule-fields"><label className="grid gap-1">Starts<BrandedSelect value={definition.startsAtLocal} onChange={e => setDefinition({ ...definition, startsAtLocal: e.target.value })}>{Array.from({ length: 96 }, (_, index) => { const time = `${String(Math.floor(index/4)).padStart(2,"0")}:${String(index%4*15).padStart(2,"0")}`; return <option key={time} value={time}>{clockLabel(time)}</option>; })}</BrandedSelect></label><label className="grid gap-1">Ends<BrandedSelect value={definition.endsAtLocal} onChange={e => setDefinition({ ...definition, endsAtLocal: e.target.value })}>{Array.from({ length: 96 }, (_, index) => { const time = `${String(Math.floor(index/4)).padStart(2,"0")}:${String(index%4*15).padStart(2,"0")}`; return <option key={time} value={time}>{clockLabel(time)}</option>; })}</BrandedSelect></label></div>
           <p className="hub-task-flyout-hint">{definition.endsAtLocal <= definition.startsAtLocal ? "Ends the following day. " : ""}Times use {definition.timezone}.</p>
           {!saved && <label className="flex items-center gap-2"><BrandedCheckbox checked={singleShift} onCheckedChange={checked => {
