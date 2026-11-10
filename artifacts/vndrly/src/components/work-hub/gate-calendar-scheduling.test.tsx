@@ -12,7 +12,7 @@ vi.mock("@/components/ui/dialog", async () => ({ Dialog: (await import("@radix-u
 vi.mock("@/components/branded-checkbox", () => ({ BrandedCheckbox: ({ checked, onCheckedChange, ...props }: any) => <input type="checkbox" checked={checked} onChange={event => onCheckedChange?.(event.target.checked)} {...props} /> }));
 vi.mock("@/lib/work-hub-client", async () => ({ ...await vi.importActual("@/lib/work-hub-client"), workHubRequest: vi.fn(async (path: string, options?: { method?: string }) => {
   if (options?.method === "POST") return {};
-  if (path.startsWith("/gate-shift-definitions")) return { gates: [{ id: gate, siteName: "North Site", name: "Main Gate" }], definitions: [{ id, version: 3, stationId: gate, siteName: "North Site", gateName: "Main Gate", startsAtLocal: "18:00", endsAtLocal: "06:00", timezone: "America/Chicago", weekdays: [0,1,2,3,4,5,6], requiredCount: 1, notes: "Radio check", watches: [{ id: "watch", startsAt: "2026-10-30T23:00:00Z", people: [{ id: 7, name: "Bob" }] }] }] };
+  if (path.startsWith("/gate-shift-definitions")) return { gates: [{ id: gate, siteId: 3, siteName: "North Site", name: "Main Gate" }], definitions: [{ id, version: 3, stationId: gate, siteName: "North Site", gateName: "Main Gate", startsAtLocal: "18:00", endsAtLocal: "06:00", timezone: "America/Chicago", weekdays: [0,1,2,3,4,5,6], requiredCount: 1, notes: "Radio check", watches: [{ id: "watch", startsAt: "2026-10-30T23:00:00Z", people: [{ id: 7, name: "Bob" }] }] }] };
   return [];
 }) }));
 afterEach(() => { cleanup(); coaching.selected = null; vi.restoreAllMocks(); vi.mocked(workHubRequest).mockClear(); window.history.replaceState({},"","/"); });
@@ -66,6 +66,21 @@ describe("Gate calendar scheduling", () => {
     const [path, options] = vi.mocked(workHubRequest).mock.calls.find(([,options]) => options?.method === "POST")!;
     expect(path).toBe("/gate-shift-definitions");
     expect(JSON.parse(options!.body as string).payload).toMatchObject({ stationIds: [gate], startsAtLocal: "06:00", endsAtLocal: "18:00", weekdays: [0,1,2,3,4,5,6], userIds: [], crewIds: [] });
+  });
+  it("creates one dated Gate shift without a weekly definition", async () => {
+    mount();
+    fireEvent.click(screen.getByRole("button", { name: "Add/Edit Shifts" }));
+    const form = within(await screen.findByRole("form", { name: "Add/Edit Shifts" }));
+    fireEvent.click(await form.findByRole("checkbox", { name: "North Site | Main Gate" }));
+    fireEvent.click(form.getByRole("checkbox", { name: "Single shift (one-time assignment)" }));
+    fireEvent.change(form.getByLabelText("Shift date"), { target: { value: "2026-11-10" } });
+    expect(form.queryByText("Repeats weekly")).toBeNull();
+    fireEvent.click(form.getByRole("button", { name: "Create Single Shift" }));
+    await waitFor(() => expect(workHubRequest).toHaveBeenCalledWith("/shifts", expect.objectContaining({ method: "POST" })));
+    const [, options] = vi.mocked(workHubRequest).mock.calls.find(([path]) => path === "/shifts")!;
+    const { payload } = JSON.parse(options!.body as string);
+    expect(payload).toMatchObject({ gateStationId: gate, siteLocationId: 3, startsAt: "2026-11-10T12:00:00.000Z", endsAt: "2026-11-11T00:00:00.000Z" });
+    expect(payload).not.toHaveProperty("recurrence");
   });
   it("prefills an existing night shift and retains its id/version for edits", async () => {
     mount(); fireEvent.click(screen.getByRole("button", { name: "Add/Edit Shifts" }));
