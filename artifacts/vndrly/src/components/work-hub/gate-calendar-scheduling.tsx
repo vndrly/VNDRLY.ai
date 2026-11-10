@@ -33,7 +33,7 @@ function calendarGateLabel(gate: CalendarGate, gates: readonly CalendarGate[]) {
   const peerNumber = peer && gateNumber(peer.name);
   return peerNumber && peerNumber !== number
     ? `San Roman Completions ${number}>${peerNumber}`
-    : `San Roman Completions — Gate ${number}`;
+    : `San Roman Completions ${number}`;
 }
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const initial = () => ({ stationIds: [] as string[], startsAtLocal: "06:00", endsAtLocal: "18:00", weekdays: [0,1,2,3,4,5,6], timezone: "America/Chicago", requiredCount: 1, notes: "", userIds: [] as number[], crewIds: [] as string[] });
@@ -57,7 +57,7 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
   const guideScope = gateGuideScope("shift-definition", guideContext);
   const guided = canDefine && (gateGuideMatches(helper?.selected, "gate-shift-scheduling", guideContext) || gateGuideMatches(helper?.selected, "first-watch", guideContext));
   useGuidedTarget({ scopeId: `${guideScope}:launcher`, targetId: "open-shifts", prompt: "Open Add/Edit Shifts to review the saved gate's schedule. Scheduling does not start a watch." }, guided && !open, 20);
-  const options = useQuery<Options>({ queryKey: ["work-hub", "gate-shift-definitions", owner.id], queryFn: () => workHubRequest(`/gate-shift-definitions?vendorId=${owner.id}`), enabled: open === "define", refetchOnWindowFocus: false, retry: false });
+  const options = useQuery<Options>({ queryKey: ["work-hub", "gate-shift-definitions", owner.id], queryFn: () => workHubRequest(`/gate-shift-definitions?vendorId=${owner.id}`), enabled: open === "define", refetchInterval: open === "define" ? 15_000 : false, retry: false });
   const requestedGate = linkedStation ?? helper?.selected?.context?.stationId;
   const guidanceGate = requestedGate ? options.data?.gates.find(gate => gate.id === requestedGate) : options.data?.gates.length === 1 ? options.data.gates[0] : undefined;
   useGuidedTarget({ scopeId: guideScope, targetId: definition.stationIds.length ? "save-shift" : guidanceGate ? `gate-${guidanceGate.id}` : "choose-gate-group", prompt: definition.stationIds.length ? "Review the selected gate, start/end times, timezone, repeat days and required staffing, then save this definition. Next, assign an eligible person to a saved scheduled watch." : guidanceGate ? `Select ${guidanceGate.siteName} · ${guidanceGate.name}. This is the authorized gate carried from your current workflow; selecting it does not save a shift.` : "Choose the actual authorized site and gate in the Gates list. This guide will not choose a different station or save for you." }, guided && open === "define" && options.isSuccess, 100);

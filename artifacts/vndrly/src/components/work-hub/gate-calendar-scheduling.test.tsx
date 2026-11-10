@@ -31,7 +31,8 @@ describe("Gate calendar scheduling", () => {
         expect(await screen.findByRole("checkbox", { name: "San Roman Completions 1>2" })).toBeTruthy();
         expect(screen.getByRole("checkbox", { name: "San Roman Completions 2>1" })).toBeTruthy();
       } else {
-        expect(await screen.findByRole("checkbox", { name: "San Roman Completions — Gate 2" })).toBeTruthy();
+        expect(await screen.findByRole("checkbox", { name: "San Roman Completions 2", exact: true })).toBeTruthy();
+        expect(screen.queryByRole("checkbox", { name: /San Roman Completions [12]>/ })).toBeNull();
       }
     } finally {
       vi.mocked(workHubRequest).mockReset();
