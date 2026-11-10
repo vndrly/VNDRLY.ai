@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { fleetWallTimeToInstant } from "@workspace/api-zod";
 
 import BrandPillButton from "@/components/brand-pill-button";
 import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
@@ -9,6 +10,8 @@ import { recordedShiftCalendarHref } from "@/lib/calendar-day-link";
 import { formatRecordedHours } from "@/lib/dashboard-shift-hours";
 import { workHubRequest, type WorkHubOwner } from "@/lib/work-hub-client";
 import CalendarFillShift, { calendarStaffingQuery } from "./calendar-fill-shift";
+import { calendarGateLabel, type GateCalendarOptions } from "./gate-calendar-scheduling";
+import type { ScheduleShift } from "./shift-assignment-model";
 
 type Row = Record<string, any>;
 const AGENDA_KINDS = ["Meeting", "Shift", "Task", "Event", "Field Ticket", "Fleet Run"] as const;
@@ -41,7 +44,7 @@ export default function DayAgendaDialog({
   const [saved, setSaved] = useState(false);
   const gateOptions = useQuery({
     queryKey: ["work-hub", "gate-shift-definitions", staffingOwner?.id],
-    queryFn: () => workHubRequest<{ gates: { id: string }[] }>(`/gate-shift-definitions?vendorId=${staffingOwner!.id}`),
+    queryFn: () => workHubRequest<GateCalendarOptions>(`/gate-shift-definitions?vendorId=${staffingOwner!.id}`),
     enabled: open && !!staffingOwner,
     refetchInterval: open && staffingOwner ? 15_000 : false,
     retry: false,
@@ -53,10 +56,38 @@ export default function DayAgendaDialog({
   const activeGateIds = gateOptions.data && new Set(gateOptions.data.gates.map(gate => gate.id));
   const visibleItems = items.filter(item => enabledKinds.has(item.kind as AgendaKind) &&
     (!staffingOwner || !item.gateStationId || activeGateIds?.has(item.gateStationId) && !["cancelled", "completed"].includes(item.milestoneStatus)));
-  const siteIds = [...new Set(visibleItems.filter(item => item.gateStationId && item.siteLocationId).map(item => Number(item.siteLocationId)))];
+  const gates = gateOptions.data?.gates ?? [];
+  const siteIds = [...new Set(gates.map(gate => gate.siteId).filter(Boolean))];
   const staffing = useQueries({ queries: open && staffingOwner
     ? siteIds.map(siteId => calendarStaffingQuery(staffingOwner, siteId, day, day))
     : [] });
+  const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
+  const extraShifts = enabledKinds.has("Shift") ? gates.flatMap(gate => {
+    const schedule = staffing[siteIds.indexOf(gate.siteId)]?.data;
+    if (!schedule) return [];
+    const existing = schedule.shifts.filter(shift => shift.gateStationId === gate.id);
+    const definitions = (gateOptions.data?.definitions ?? []).filter(definition => definition.stationId === gate.id);
+    const patterns = definitions.length ? definitions.filter(definition => definition.weekdays.includes(weekday)) : [
+      { startsAtLocal: "06:00", endsAtLocal: "18:00", timezone: "America/Chicago", requiredCount: 1 },
+      { startsAtLocal: "18:00", endsAtLocal: "06:00", timezone: "America/Chicago", requiredCount: 1 },
+    ];
+    const gateName = calendarGateLabel(gate, gates);
+    const nextDay = new Date(`${day}T12:00:00Z`);
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+    const slots = schedule.readOnly ? [] : patterns.flatMap(pattern => {
+      const { startsAtLocal: starts, endsAtLocal: ends, timezone, requiredCount } = pattern;
+      const start = fleetWallTimeToInstant(`${day}T${starts}`, timezone);
+      const endDay = ends <= starts ? nextDay.toISOString().slice(0, 10) : day;
+      const end = fleetWallTimeToInstant(`${endDay}T${ends}`, timezone);
+      if (start.status !== "resolved" || end.status !== "resolved" ||
+        existing.some(shift => Date.parse(shift.startsAt) < Date.parse(end.instant) && Date.parse(shift.endsAt) > Date.parse(start.instant))) return [];
+      const shift: ScheduleShift = { id: `slot-${gate.id}-${starts}-${ends}`, version: 0, title: gateName, gateStationId: gate.id,
+        pattern: gateName, date: day, weekday, starts, ends, startsAt: start.instant, endsAt: end.instant,
+        timezone, required: requiredCount, assignees: [] };
+      return [{ shift, siteId: gate.siteId, unscheduled: true }];
+    });
+    return [...existing.filter(shift => !visibleItems.some(item => item.id === shift.id)).map(shift => ({ shift, siteId: gate.siteId, unscheduled: false })), ...slots];
+  }) : [];
   const label = new Date(`${day}T12:00:00`).toLocaleDateString(undefined, {
     weekday: "long",
     month: "long",
@@ -114,7 +145,16 @@ export default function DayAgendaDialog({
               {fillId === item.id && shift && staffingOwner && <CalendarFillShift key={item.id} owner={staffingOwner} siteId={siteId} shift={{ ...shift, gateStationId: item.gateStationId }} onSaved={() => { setFillId(null); setSaved(true); }} />}
             </article>;
           })}
-          {!visibleItems.length && <p className="rounded-xl p-6 text-center text-muted-foreground">Nothing is scheduled for this day.</p>}
+          {extraShifts.map(({ shift, siteId, unscheduled }) => (
+            <article key={shift.id} className="grid gap-2 rounded-xl border border-[color:var(--brand-primary)] p-4">
+              <div className="flex justify-between gap-3"><strong>{shift.title}</strong><time>{shift.starts}–{shift.ends}</time></div>
+              <p>{shift.assignees.length ? shift.assignees.map(id => shift.assigneeNames?.[id] ?? `Gatekeeper ${id}`).join(", ") : "Open shift"}</p>
+              {staffingOwner && !staffing[siteIds.indexOf(siteId)]?.data?.readOnly && shift.assignees.length < shift.required &&
+                <button type="button" className="hub-task-mini-card justify-self-start" aria-expanded={fillId === shift.id} onClick={() => { setSaved(false); setFillId(fillId === shift.id ? null : shift.id); }}>Fill</button>}
+              {fillId === shift.id && staffingOwner && <CalendarFillShift key={shift.id} owner={staffingOwner} siteId={siteId} shift={shift} unscheduled={unscheduled} onSaved={() => { setFillId(null); setSaved(true); }} />}
+            </article>
+          ))}
+          {!visibleItems.length && !extraShifts.length && !gateOptions.isLoading && !staffing.some(query => query.isPending) && <p className="rounded-xl p-6 text-center text-muted-foreground">Nothing is scheduled for this day.</p>}
           </div>
           <BrandPillButton tone="brand" onClick={() => onOpenChange(false)}>Close</BrandPillButton>
         </div>

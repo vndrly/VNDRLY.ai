@@ -21,9 +21,9 @@ import { fleetInstantToWallTime, fleetWallTimeToInstant } from "@workspace/api-z
 type Row = Record<string, any>;
 type Definition = { id: string; version: number; stationId: string; siteName: string; gateName: string; startsAtLocal: string; endsAtLocal: string; timezone: string; weekdays: number[]; requiredCount: number; notes: string; watches: { id: string; startsAt: string; endsAt: string; people: { id: number; name: string }[] }[] };
 type CalendarGate = { id: string; name: string; siteId: number; siteName: string; topology?: { parentGateId?: string | null } | null };
-type Options = { gates: CalendarGate[]; definitions: Definition[] };
+export type GateCalendarOptions = { gates: CalendarGate[]; definitions: Definition[] };
 
-function calendarGateLabel(gate: CalendarGate, gates: readonly CalendarGate[]) {
+export function calendarGateLabel(gate: CalendarGate, gates: readonly CalendarGate[]) {
   if (!/^San Roman Completions(?: [12])?$/i.test(gate.siteName.trim())) return `${gate.siteName} | ${gate.name}`;
   const gateNumber = (name: string) => name.trim().match(/^(?:(?:Warwick )?San Roman Completions |Gate )?([12])$/i)?.[1];
   const number = gateNumber(gate.name);
@@ -57,7 +57,7 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
   const guideScope = gateGuideScope("shift-definition", guideContext);
   const guided = canDefine && (gateGuideMatches(helper?.selected, "gate-shift-scheduling", guideContext) || gateGuideMatches(helper?.selected, "first-watch", guideContext));
   useGuidedTarget({ scopeId: `${guideScope}:launcher`, targetId: "open-shifts", prompt: "Open Add/Edit Shifts to review the saved gate's schedule. Scheduling does not start a watch." }, guided && !open, 20);
-  const options = useQuery<Options>({ queryKey: ["work-hub", "gate-shift-definitions", owner.id], queryFn: () => workHubRequest(`/gate-shift-definitions?vendorId=${owner.id}`), enabled: open === "define", refetchInterval: open === "define" ? 15_000 : false, retry: false });
+  const options = useQuery<GateCalendarOptions>({ queryKey: ["work-hub", "gate-shift-definitions", owner.id], queryFn: () => workHubRequest(`/gate-shift-definitions?vendorId=${owner.id}`), enabled: open === "define", refetchInterval: open === "define" ? 15_000 : false, retry: false });
   const requestedGate = linkedStation ?? helper?.selected?.context?.stationId;
   const guidanceGate = requestedGate ? options.data?.gates.find(gate => gate.id === requestedGate) : options.data?.gates.length === 1 ? options.data.gates[0] : undefined;
   useGuidedTarget({ scopeId: guideScope, targetId: definition.stationIds.length ? "save-shift" : guidanceGate ? `gate-${guidanceGate.id}` : "choose-gate-group", prompt: definition.stationIds.length ? "Review the selected gate, start/end times, timezone, repeat days and required staffing, then save this definition. Next, assign an eligible person to a saved scheduled watch." : guidanceGate ? `Select ${guidanceGate.siteName} · ${guidanceGate.name}. This is the authorized gate carried from your current workflow; selecting it does not save a shift.` : "Choose the actual authorized site and gate in the Gates list. This guide will not choose a different station or save for you." }, guided && open === "define" && options.isSuccess, 100);

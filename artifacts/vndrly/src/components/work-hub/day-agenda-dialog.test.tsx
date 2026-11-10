@@ -20,11 +20,11 @@ function render(component: React.ReactNode) {
 
 describe("DayAgendaDialog", () => {
   it("hides the inactive gate and fills only the selected vacant shift", async () => {
-    const shift = { id: "am", version: 3, gateStationId: "gate2", date: "2099-09-09", weekday: 3, starts: "06:00", ends: "18:00", timezone: "America/Chicago", required: 1, assignees: [] };
+    const shift = { id: "am", version: 3, gateStationId: "gate2", date: "2099-09-09", weekday: 3, starts: "06:00", ends: "18:00", startsAt: "2099-09-09T11:00:00Z", endsAt: "2099-09-09T23:00:00Z", timezone: "America/Chicago", required: 1, assignees: [] };
     vi.mocked(workHubRequest).mockImplementation(async (path, options) => {
-      if (path.startsWith("/gate-shift-definitions")) return { gates: [{ id: "gate2" }] };
+      if (path.startsWith("/gate-shift-definitions")) return { gates: [{ id: "gate2", siteId: 411, siteName: "San Roman Completions", name: "2" }], definitions: [] };
       if (options?.method === "POST") return {};
-      return { shifts: [shift, { ...shift, id: "pm", assignees: [8] }], people: [{ id: 7, name: "Xavier Hunter" }], busy: [], readOnly: false };
+      return { shifts: [shift, { ...shift, id: "pm", starts: "18:00", ends: "06:00", startsAt: shift.endsAt, endsAt: "2099-09-10T11:00:00Z", assignees: [8] }], people: [{ id: 7, name: "Xavier Hunter" }], busy: [], readOnly: false };
     });
     render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2099-09-09" staffingOwner={{ type: "vendor", id: 1054 }} items={[
       { id: "closed", kind: "Shift", title: "Gate 1 AM", gateStationId: "gate1", siteLocationId: 411, startsAt: "2099-09-09T11:00:00Z" },
@@ -39,6 +39,23 @@ describe("DayAgendaDialog", () => {
     await waitFor(() => expect(screen.getByText("Assignment saved.")).toBeTruthy());
     const [, options] = vi.mocked(workHubRequest).mock.calls.find(([path]) => path.endsWith("/assign"))!;
     expect(JSON.parse(String(options?.body)).payload.changes).toEqual([{ id: "am", version: 3, addUserId: 7 }]);
+  });
+  it("offers AM and PM on an empty day and creates only the selected watch", async () => {
+    vi.mocked(workHubRequest).mockImplementation(async path => {
+      if (path.startsWith("/gate-shift-definitions")) return { gates: [{ id: "gate2", siteId: 411, siteName: "San Roman Completions", name: "2" }], definitions: [] };
+      return { shifts: [], people: [{ id: 7, name: "Xavier Hunter" }], busy: [], readOnly: false };
+    });
+    render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2099-12-09" staffingOwner={{ type: "vendor", id: 1054 }} items={[]} />);
+    const buttons = await screen.findAllByRole("button", { name: "Fill", exact: true });
+    expect(buttons).toHaveLength(2);
+    fireEvent.click(buttons[1]);
+    fireEvent.change(await screen.findByLabelText("Gatekeeper"), { target: { value: "7" } });
+    fireEvent.click(screen.getByRole("button", { name: "Assign 1 shift" }));
+    await screen.findByText("Assignment saved.");
+    const [, options] = vi.mocked(workHubRequest).mock.calls.find(([path]) => path === "/shifts")!;
+    expect(JSON.parse(String(options?.body)).payload).toMatchObject({
+      gateStationId: "gate2", assigneeUserIds: [7], startsAt: "2099-12-10T00:00:00.000Z", endsAt: "2099-12-10T12:00:00.000Z",
+    });
   });
   it("opens a dismissible Day Agenda flyout", () => {
     const onOpenChange = vi.fn();

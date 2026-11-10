@@ -12,10 +12,11 @@ export function calendarStaffingQuery(owner: WorkHubOwner, siteId: number, from:
   };
 }
 
-export default function CalendarFillShift({ owner, siteId, shift, onSaved }: {
+export default function CalendarFillShift({ owner, siteId, shift, unscheduled = false, onSaved }: {
   owner: WorkHubOwner;
   siteId: number;
   shift: ScheduleShift;
+  unscheduled?: boolean;
   onSaved: () => void;
 }) {
   const cache = useQueryClient();
@@ -29,7 +30,10 @@ export default function CalendarFillShift({ owner, siteId, shift, onSaved }: {
   const rangeValid = end >= shift.date && (Date.parse(end) - Date.parse(shift.date)) / 86_400_000 < 93;
   const query = useQuery({ ...calendarStaffingQuery(owner, siteId, shift.date, end), enabled: rangeValid });
   const userId = Number(person);
-  const shifts = (query.data?.shifts ?? []).filter(row => {
+  const availableShifts = query.data?.shifts ?? [];
+  const slotTaken = unscheduled && availableShifts.some(row => row.gateStationId === shift.gateStationId &&
+    Date.parse(row.startsAt) < Date.parse(shift.endsAt) && Date.parse(row.endsAt) > Date.parse(shift.startsAt));
+  const shifts = unscheduled ? (slotTaken ? [] : [shift]) : availableShifts.filter(row => {
     const matches = row.id === shift.id || (weekly && shift.gateStationId && row.gateStationId === shift.gateStationId &&
       row.weekday === shift.weekday && row.starts === shift.starts && row.ends === shift.ends && row.timezone === shift.timezone);
     return matches && row.assignees.length < row.required && !row.assignees.includes(userId);
@@ -38,16 +42,22 @@ export default function CalendarFillShift({ owner, siteId, shift, onSaved }: {
   const canSave = rangeValid && !query.isFetching && !query.isError && !query.data?.readOnly &&
     query.data?.people.some(row => row.id === userId) && shifts.length > 0 && !conflicts.length;
 
+  const path = unscheduled ? "/shifts" : `/site-shift-plans/${siteId}/assign`;
   async function save() {
     if (saving || (!pending && !canSave)) return;
-    const request = pending ?? commandEnvelope(owner, {
+    const request = pending ?? (unscheduled ? commandEnvelope(owner, {
+      title: `${shift.title} — ${shift.starts}–${shift.ends}`,
+      startsAt: shift.startsAt, endsAt: shift.endsAt, timezone: shift.timezone,
+      siteLocationId: siteId, gateStationId: shift.gateStationId,
+      requiredStaffCount: shift.required, workStartPolicy: "on_site", assigneeUserIds: [userId],
+    }, undefined, undefined, { kind: "gate", id: siteId }) : commandEnvelope(owner, {
       changes: shifts.map(row => ({ id: row.id, version: row.version, addUserId: userId })),
-    });
+    }));
     setPending(request);
     setSaving(true);
     setError("");
     try {
-      await workHubRequest(`/site-shift-plans/${siteId}/assign`, { method: "POST", body: JSON.stringify(request) });
+      await workHubRequest(path, { method: "POST", body: JSON.stringify(request) });
       await Promise.all([
         cache.invalidateQueries({ queryKey: ["site-shift-schedule", owner.type, owner.id, siteId] }),
         cache.invalidateQueries({ queryKey: ["work-hub", "calendar"] }),
@@ -76,7 +86,7 @@ export default function CalendarFillShift({ owner, siteId, shift, onSaved }: {
       <label className="grid gap-1">Assignment
         <BrandedSelect value={weekly ? "weekly" : "once"} onChange={event => setWeekly(event.target.value === "weekly")}>
           <option value="once">This shift only</option>
-          {shift.gateStationId && <option value="weekly">Weekly schedule</option>}
+          {shift.gateStationId && !unscheduled && <option value="weekly">Weekly schedule</option>}
         </BrandedSelect>
       </label>
       {weekly && <label className="grid gap-1">Through
@@ -87,6 +97,7 @@ export default function CalendarFillShift({ owner, siteId, shift, onSaved }: {
     {!rangeValid && <p role="alert">Choose a date range of up to 93 days.</p>}
     {query.isError && <p role="alert">The roster could not load. <button type="button" onClick={() => void query.refetch()}>Retry</button></p>}
     {query.isFetching && <p role="status">Checking schedule and gatekeepers…</p>}
+    {slotTaken && <p role="alert">A shift was already scheduled for this time.</p>}
     {query.data && !query.data.people.length && <p>No eligible gatekeepers are listed for this site.</p>}
     {!!conflicts.length && <p role="alert">This gatekeeper has an overlapping shift.</p>}
     {error && <p role="alert">{error}</p>}
