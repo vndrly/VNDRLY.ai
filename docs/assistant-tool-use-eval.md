@@ -17,7 +17,8 @@ this suite alongside authenticated workflow acceptance, database-backed runtime,
 permission, confirmation, conflict and browser tests. Microphone, camera, file
 pickers and external-provider delivery require their own acceptance evidence.
 
-`.github/workflows/assistant-tool-use-eval.yml` runs nightly and on demand. It
+`.github/workflows/assistant-tool-use-eval.yml` is currently manual-only. Automated credential transfer was not approved; local
+evaluation remains available with the existing local key. The workflow
 fails explicitly when the OpenAI secret is missing rather than reporting
 skipped tests as success. Outputs are retained as a workflow artifact.
 Existing scheduled-failure reporting remains in place.

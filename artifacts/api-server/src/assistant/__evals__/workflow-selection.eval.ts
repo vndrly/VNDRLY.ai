@@ -14,6 +14,7 @@ const cases = [
   { path: "/work-hub/search", prompt: "Search Work Hub for compressor.", tool: "search_work_hub" },
   { path: "/work-hub/meetings", prompt: "List my company's live meetings.", tool: "list_live_meetings" },
   { path: "/work-hub/settings", prompt: "Read my current Work Hub settings.", tool: "get_work_hub_settings" },
+  { path: "/work-hub/tasks", prompt: "Create an unassigned task titled Synthetic verification, no due date.", tool: "manage_work_hub_task", args: {action:"create"} },
 ] as const;
 
 describe.skipIf(!process.env.OPENAI_API_KEY)("Ask V workflow selection through production page packs", () => {

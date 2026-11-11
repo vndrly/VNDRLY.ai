@@ -228,11 +228,21 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["payload"])),
 
-  read("list_work_hub_tasks", "tasks", "List permission-scoped Work Hub tasks.", schema({ status: text(), assigneeUserId: { type: "number" } })),
-  write("manage_work_hub_task", "tasks", "Create or change the status of a Work Hub task after confirmation.", writeSchema({
+  read("list_work_hub_tasks", "tasks", "List permission-scoped Work Hub tasks. Returns rows, hasMore and nextCursor. Continue with nextCursor as cursor and preserve status, assigneeUserId and limit. Use taskId to read one exact task, including its current version, before editing or completing. Never treat one page as all tasks.", schema({ status: text(), assigneeUserId: { type: "integer",minimum:1 }, taskId:{type:"string",format:"uuid"}, cursor:{type:"string",format:"uuid"}, limit:{type:"integer",minimum:1,maximum:100} })),
+  write("manage_work_hub_task", "tasks", "Prepare a Work Hub task action, then execute after the server-bound user confirmation. Read existing tasks first for their exact ID and current version before updates. Complete requires the user's resolution; do not invent it. Unassigned tasks have null assigneeUserId; omit or use null dueAt for no due date. No notification suppression field exists; an unassigned task has no assignment notification recipient.", writeSchema({
     action: { type: "string", enum: ["create", "update", "complete", "cancel"] },
     taskId: identifier(),
-    payload: { type: "object" },
+    payload: schema({
+      title: {type:"string",minLength:1,maxLength:200},
+      description: {anyOf:[{type:"string",maxLength:20000},{type:"null"}]},
+      assigneeUserId: {anyOf:[{type:"integer",minimum:1},{type:"null"}]},
+      dueAt: {anyOf:[{type:"string",format:"date-time"},{type:"null"}]},
+      priority: {type:"string",enum:["low","normal","high","urgent"]},
+      status: {type:"string",enum:["open","in_progress","completed","cancelled"]},
+      channelId: {anyOf:[{type:"string",format:"uuid"},{type:"null"}]},
+      recurrence: {description:"Canonical recurrence rule, when explicitly requested."},
+      resolution: {type:"string",minLength:1,maxLength:2000},
+    }),
   }, ["action", "payload"])),
   write("manage_work_hub_form_template", "tasks", "Create or assign a form template after confirmation.", writeSchema({
     action: { type: "string", enum: ["create", "assign"] },

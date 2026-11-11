@@ -462,11 +462,11 @@ describe("resolveWorkHubToolRequest", () => {
       payload: { status: "open", description },
     })).toMatchObject({ body: { expectedVersion: 3, payload: { status: "open", description } } });
     expect(resolveWorkHubToolRequest("manage_work_hub_task", {
-      ...command, action: "complete", taskId, payload: {},
-    })).toMatchObject({ body: { payload: { status: "completed" } } });
+      ...command, action: "complete", taskId, payload: {resolution:"Verified result"},
+    })).toMatchObject({ body: { payload: { action:"complete", resolution:"Verified result" } } });
     expect(resolveWorkHubToolRequest("manage_work_hub_task", {
       ...command, action: "cancel", taskId, payload: {},
-    })).toMatchObject({ body: { payload: { status: "cancelled" } } });
+    })).toMatchObject({ body: { payload: { action:"cancel" } } });
   });
 
   it("preserves status-free task changes through prepared action validation and trusted execution", () => {
@@ -490,12 +490,13 @@ describe("resolveWorkHubToolRequest", () => {
     expect(resolveExecutableWorkHubToolRequest("manage_work_hub_task", {
       ...command, action: "update", taskId, payload: { status: "invented" },
     }, true)).toHaveProperty("error");
-    for (const [action, status] of [["complete", "completed"], ["cancel", "cancelled"]]) {
+    for (const action of ["complete", "cancel"]) {
       expect(resolveExecutableWorkHubToolRequest("manage_work_hub_task", {
         ...command, action, taskId, expectedVersion: 4,
-        payload: { status: "open", title: "Ignored override" },
-      }, true)).toMatchObject({ body: { expectedVersion: 4, payload: { status } } });
+        payload: { status: "open", title: "Ignored override", resolution:"Verified synthetic result" },
+      }, true)).toMatchObject({ body: { expectedVersion: 4, payload: { action, ...(action === "complete" ? {resolution:"Verified synthetic result"} : {}) } } });
     }
+    expect(resolveExecutableWorkHubToolRequest("manage_work_hub_task", {...command,action:"complete",taskId,expectedVersion:4,payload:{}}, true)).toHaveProperty("error");
   });
 
   it("uses a server-issued watch token when saving replay progress", () => {

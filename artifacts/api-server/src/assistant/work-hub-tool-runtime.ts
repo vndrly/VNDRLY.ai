@@ -778,6 +778,10 @@ export function resolveWorkHubToolRequest(
 
     case "list_work_hub_tasks":
       return request("GET", queryPath("/work-hub/tasks", {
+        paginated: "1",
+        cursor: input.cursor,
+        limit: input.limit,
+        task: input.taskId,
         status: input.status,
         assigneeUserId: input.assigneeUserId,
       }));
@@ -789,6 +793,11 @@ export function resolveWorkHubToolRequest(
       if (!["update", "complete", "cancel"].includes(String(input.action)))
         return unsupported("task");
       {
+        if (input.action === "complete" || input.action === "update" && payload.status === "completed") {
+          if (typeof payload.resolution !== "string" || !payload.resolution.trim()) return {error:"A resolution is required before completing this task."};
+          return request("PATCH", `/work-hub/tasks/${target}`, envelope(input, {action:"complete",resolution:payload.resolution}));
+        }
+        if (input.action === "cancel") return request("PATCH", `/work-hub/tasks/${target}`, envelope(input, {action:"cancel"}));
         const status =
           input.action === "complete"
             ? "completed"

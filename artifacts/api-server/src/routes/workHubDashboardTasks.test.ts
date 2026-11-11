@@ -34,6 +34,19 @@ describe.skipIf(!isolated)("Dashboard personal and company task projection", () 
     expect(new Set(all.map(task => task.id)).size).toBe(105);
     expect(all.every(task => task.ownerOrgId === vendorId && ["Admin", "Worker"].includes(task.assigneeName))).toBe(true);
   });
+  it("paginates Ask V tasks with stable filters and exact saved-record access", async () => {
+    const query={paginated:"1",limit:2,status:"open",assigneeUserId:workerId};
+    const first=await request(app).get("/work-hub/tasks").query(query).set("Cookie",adminCookie);
+    expect(first.status).toBe(200); expect(first.body.rows).toHaveLength(2); expect(first.body.hasMore).toBe(true);
+    const next=await request(app).get("/work-hub/tasks").query({...query,cursor:first.body.nextCursor}).set("Cookie",adminCookie);
+    expect(next.status).toBe(200); expect(next.body.rows).toHaveLength(2);
+    const rows=[...first.body.rows,...next.body.rows];
+    expect(new Set(rows.map(row=>row.id)).size).toBe(4);
+    expect(rows.every(row=>row.ownerOrgId===vendorId && row.assigneeUserId===workerId)).toBe(true);
+    const exact=await request(app).get("/work-hub/tasks").query({paginated:"1",task:taskId}).set("Cookie",adminCookie);
+    expect(exact.body.rows.map(row=>row.id)).toEqual([taskId]); expect(exact.body.hasMore).toBe(false);
+    for(const bad of [{cursor:"bad"},{limit:0},{assigneeUserId:"bad"}]) expect((await request(app).get("/work-hub/tasks").query({paginated:"1",...bad}).set("Cookie",adminCookie)).status).toBe(400);
+  });
   it("returns exact dashboard counts without sending or paging the task history", async () => {
     const result = await request(app).get("/work-hub/tasks?dashboard=summary").set("Cookie", adminCookie);
     expect(result.status).toBe(200);

@@ -668,6 +668,20 @@ router.get("/work-hub/tasks", async (req, res) => {
   }
   const exactTask = z.string().uuid().optional().safeParse(req.query.task);
   if (!exactTask.success) return sendApiError(res, 400, "work_hub.invalid_task", "Invalid task identity");
+  if (req.query.paginated === "1") {
+    const page = z.object({cursor:z.string().uuid().optional(),limit:z.coerce.number().int().min(1).max(100).default(50),
+      assigneeUserId:z.coerce.number().int().positive().optional(),status:z.enum(["open","in_progress","completed","cancelled"]).optional()}).safeParse(req.query);
+    if (!page.success) return sendApiError(res,400,"work_hub.invalid_task","Invalid task page or filter");
+    const {cursor,limit,assigneeUserId,status}=page.data;
+    const found=await db.select().from(workHubTasksTable).where(and(ownerFilter(session),
+      exactTask.data ? eq(workHubTasksTable.id,exactTask.data) : undefined,
+      cursor ? gt(workHubTasksTable.id,cursor) : undefined,
+      assigneeUserId ? eq(workHubTasksTable.assigneeUserId,assigneeUserId) : undefined,
+      status ? eq(workHubTasksTable.status,status) : undefined,
+    )).orderBy(asc(workHubTasksTable.id)).limit(limit+1);
+    const rows=found.slice(0,limit),hasMore=found.length>limit;
+    return res.json({rows,limit,hasMore,nextCursor:hasMore?rows.at(-1)!.id:null});
+  }
   return res.json(
     await db
       .select()

@@ -1,26 +1,8 @@
 name: Assistant tool-use eval
 
-# Nightly opt-in eval that replays a small prompt battery through
-# Claude with the production tool catalog attached, then asserts the
-# right tool was called with sane arguments. Sibling to
-# `assistant-language-eval.yml` — kept as its own workflow so a
-# tool-use regression files its own GitHub issue (under the
-# `assistant-tool-use-eval` label) instead of mixing into the
-# language-drift triage thread.
-#
-# The eval is gated locally on OPENAI_API_KEY (see
-# artifacts/api-server/src/assistant/__evals__/tool-use.eval.ts);
-# this workflow is the scheduled runner that wires the key in.
-#
-# See docs/assistant-tool-use-eval.md for the run instructions, the
-# prompt-add procedure, and the operational notes for this workflow.
-
+# Manual until the owner explicitly authorizes the OpenAI credential in Actions.
+# Local GPT-6.1 evaluations use the existing local key without transferring it.
 on:
-  schedule:
-    # 09:15 UTC — fifteen minutes after the language eval to avoid
-    # both jobs slamming the Anthropic API at the same minute. Same
-    # rough "morning coffee triage" reasoning as the sibling job.
-    - cron: "15 9 * * *"
   workflow_dispatch:
     inputs:
       reason:

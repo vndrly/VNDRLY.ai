@@ -4,6 +4,7 @@ import { fleetInventoryOperationId } from "./fleet-inventory-tools";
 import {
   runBoundTypedAskVTool,
   synchronizeTypedAskVContext,
+  typedAskVPendingAction,
 } from "./askv-pending-confirmation";
 const mock = vi.hoisted(() => ({
   execute: vi.fn(async (input: unknown) => JSON.stringify({ ok: true, input })),
@@ -25,6 +26,22 @@ const base = {
   execute: mock.execute,
 };
 describe("AskV typed mutation confirmation", () => {
+  it("carries exact pending arguments across turns without approving or leaking them", async () => {
+    const execute = vi.fn(async () => JSON.stringify({ok:true}));
+    const input = {action:"create",operationId:"11111111-1111-4111-8111-111111111111",payload:{title:"Synthetic task"}};
+    const action = {...base,name:"manage_work_hub_task",input,conversationId:1190,contextKey:"/work-hub/tasks",phrase:"Create a task",execute};
+    expect(JSON.parse(await runBoundTypedAskVTool(action)).requiresConfirmation).toBe(true);
+    const prepared=typedAskVPendingAction(base.session,1190,action.contextKey);
+    expect(prepared).toEqual({name:action.name,arguments:input});
+    expect(execute).not.toHaveBeenCalled();
+    expect(typedAskVPendingAction({...base.session,userId:11},1190,action.contextKey)).toBeNull();
+    expect(typedAskVPendingAction({...base.session,vendorId:23},1190,action.contextKey)).toBeNull();
+    expect(typedAskVPendingAction(base.session,1191,action.contextKey)).toBeNull();
+    expect(typedAskVPendingAction(base.session,1190,"/work-hub/files")).toBeNull();
+    await runBoundTypedAskVTool({...action,input:prepared!.arguments,turnId:2,phrase:"Confirm"});
+    expect(execute).toHaveBeenCalledOnce();
+    expect(typedAskVPendingAction(base.session,1190,action.contextKey)).toBeNull();
+  });
   it("confirms Fleet Inventory through the normal in-app runtime without a model-supplied operation ID", async () => {
     const input = { name: "Unit 17", category: "truck", legalOwner: "Synthetic Company", identifier: { kind: "vin", value: "UNIT17" } };
     const execute = vi.fn(async (raw: unknown) => {

@@ -117,6 +117,15 @@ export class AskVPendingConfirmationStore {
 }
 export const askvPendingConfirmations = new AskVPendingConfirmationStore();
 
+/** Supply the exact prepared values on the next turn, without granting approval. */
+export function typedAskVPendingAction(session: SessionPayload, conversationId: number, contextKey: string) {
+  if (!session.userId) return null;
+  const pending = askvPendingConfirmations.peek(session.userId, organizationKeyFromSession(session),
+    askVConfirmationScopeId(conversationId, `typed:${conversationId}`));
+  if (!pending || pending.contextKey !== contextKey) return null;
+  return { name: pending.toolName, arguments: pending.arguments };
+}
+
 const typedTurnApprovals = new Map<
   string,
   { key: string; expiresAt: number }
@@ -251,7 +260,7 @@ export async function runBoundTypedAskVTool(args: {
       return JSON.stringify({
         ok: false,
         requiresConfirmation: true,
-        message: "Summarize this exact action and ask the user to confirm.",
+        message: "This exact action is prepared, not executed. Summarize it and ask the user to reply Confirm or Cancel. Stop this turn; do not retry with invented confirmation fields or changed operation IDs.",
         name: args.name,
         arguments: input,
       });
