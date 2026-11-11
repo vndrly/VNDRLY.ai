@@ -24,12 +24,18 @@ export default function SiteShiftAdministration({ gateDefinitions = false }: { g
   useEffect(() => { if (gateDefinitions) setMode(current => current === "define" ? "assign" : current); }, [gateDefinitions]);
   if (!isWorkHubAdmin(user)) return null;
   const owner = ownerForUser(user);
-  return <><WorkspacePanel title="Administrative functions" subtitle="Weekly site staffing" icon={Settings2} actions={<BrandedSelect aria-label="Administrative function" value={mode} onChange={event => setMode(event.target.value as AdministrationMode)}>{!gateDefinitions && <option value="define">Set/Edit a recurring shift</option>}<option value="assign">Assign a recurring shift</option></BrandedSelect>}>
-    {owner ? <SitePlanner key={`${user?.userId}:${user?.activeMembershipId}:${owner.type}:${owner.id}:${mode}`} owner={owner} mode={mode} /> : user?.role === "admin" ? <AdminCompanyPlanner mode={mode} /> : <p className="p-4">Select a company workspace to manage its site shifts.</p>}
-  </WorkspacePanel>
-  <WorkspacePanel title="Coverage Gaps" subtitle="Unfilled shifts and coverage requests across all sites" icon={AlertTriangle}>
+  return <WorkspacePanel title="Administrative functions" subtitle="Weekly site staffing" icon={Settings2} actions={<BrandedSelect aria-label="Administrative function" value={mode} onChange={event => setMode(event.target.value as AdministrationMode)}>{!gateDefinitions && <option value="define">Set/Edit a recurring shift</option>}<option value="assign">Assign a recurring shift</option></BrandedSelect>}>
+    {owner ? <SitePlanner key={`${user?.userId}:${user?.activeMembershipId}:${owner.type}:${owner.id}:${mode}`} owner={owner} mode={mode} gateOnly={gateDefinitions} /> : user?.role === "admin" ? <AdminCompanyPlanner mode={mode} /> : <p className="p-4">Select a company workspace to manage its site shifts.</p>}
+  </WorkspacePanel>;
+}
+
+export function CalendarCoverageGaps() {
+  const { user } = useAuth();
+  if (!isWorkHubAdmin(user)) return null;
+  const owner = ownerForUser(user);
+  return <WorkspacePanel title="Coverage Gaps" subtitle="Unfilled shifts and coverage requests across all sites" icon={AlertTriangle}>
     {owner ? <CoverageGaps key={`${user?.userId}:${user?.activeMembershipId}:${owner.type}:${owner.id}`} owner={owner} /> : user?.role === "admin" ? <AdminCompanyPlanner mode="gaps" /> : <p>Select a company workspace to review coverage.</p>}
-  </WorkspacePanel></>;
+  </WorkspacePanel>;
 }
 function AdminCompanyPlanner({ mode }: { mode: AdministrationMode }) {
   const vendors = useListVendors(), partners = useListPartners();
@@ -40,11 +46,11 @@ function AdminCompanyPlanner({ mode }: { mode: AdministrationMode }) {
     {vendors.data?.map(company => <option key={`vendor:${company.id}`} value={`vendor:${company.id}`}>Vendor · {company.name}</option>)}
   </BrandedSelect></label></section></div>{selection && <SitePlanner key={`${selection}:${mode}`} owner={{ type: type as WorkHubOwner["type"], id: Number(id) }} mode={mode} />}</>;
 }
-function SitePlanner({ owner, mode }: { owner: WorkHubOwner; mode: AdministrationMode }) {
+function SitePlanner({ owner, mode, gateOnly = false }: { owner: WorkHubOwner; mode: AdministrationMode; gateOnly?: boolean }) {
   const { user } = useAuth();
-  const scopedSites = useQuery({ queryKey: ["work-hub", "staffing-sites", user?.userId, user?.activeMembershipId, owner.type, owner.id], retry: false,
+  const scopedSites = useQuery({ queryKey: ["work-hub", "staffing-sites", user?.userId, user?.activeMembershipId, owner.type, owner.id, gateOnly], retry: false,
     queryFn: async () => {
-      try { return (await workHubRequest<{ sites: { id: number; name: string }[] }>(`/site-shift-plans?type=${owner.type}&id=${owner.id}`)).sites; }
+      try { return (await workHubRequest<{ sites: { id: number; name: string }[] }>(`/site-shift-plans?type=${owner.type}&id=${owner.id}${gateOnly ? "&gateOnly=true" : ""}`)).sites; }
       catch (error) {
         if ((error as { status?: number }).status !== 404 || owner.type !== "vendor" || user?.vendorId !== owner.id) throw error;
         // Existing Gate contracts can expose sites absent from the partner catalog.
@@ -55,7 +61,8 @@ function SitePlanner({ owner, mode }: { owner: WorkHubOwner; mode: Administratio
     },
   });
   const availableSites = scopedSites.data ?? [];
-  const [siteId, setSiteId] = useState("");
+  const [selectedSiteId, setSiteId] = useState("");
+  const siteId = availableSites.some(site => String(site.id) === selectedSiteId) ? selectedSiteId : "";
   const linkedSite = new URLSearchParams(window.location.search).get("siteId");
   useEffect(() => { if (linkedSite && availableSites.some(site => String(site.id) === linkedSite)) setSiteId(linkedSite); }, [linkedSite, scopedSites.data]);
   if (mode === "gaps") return <CoverageGaps owner={owner} />;

@@ -1005,6 +1005,9 @@ router.get("/tickets", async (req, res): Promise<void> => {
 
   const query = ListTicketsQueryParams.safeParse(req.query);
   const conditions: any[] = [];
+  if (req.query.approvalHistory === "true") {
+    conditions.push(sql`(${ticketsTable.approvedAt} IS NOT NULL OR ${ticketsTable.status} IN ('approved', 'awaiting_payment', 'funds_dispersed'))`);
+  }
 
   if (query.success) {
     if (query.data.status) conditions.push(eq(ticketsTable.status, query.data.status));

@@ -1,4 +1,5 @@
 import "./vendor-profile.css";
+import "@/components/work-hub/calendar-create-cards.css";
 import { ContentCardHeader } from "@/components/ui/card";
 import { Fragment, useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useListTickets, useCreateTicket, useListSiteLocations, useListWorkTypes, useListVendors, useGetTicketGpsLogs, useGetSiteLocation, useReverseFundsDispersal, reverseFundsDispersal, getListTicketsQueryKey, getListSiteLocationsQueryKey, getGetTicketGpsLogsQueryKey, getGetSiteLocationQueryKey, getListWorkTypesQueryKey, getListVendorsQueryKey, getGetTicketQueryKey, getGetTicketNoteLogsQueryKey, getTicket, type Ticket } from "@workspace/api-client-react";
@@ -39,6 +40,7 @@ import { useTranslation } from "react-i18next";
 // see at a glance which one was restored.
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { DashboardTicketPanels, useDashboardTicketPanels } from "@/components/dashboard-ticket-panels";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -418,6 +420,7 @@ export default function Tickets() {
     { value: "submitted", label: t("tickets.submitted"), color: "amber" },
     { value: "completed", label: t("tickets.completed"), color: "blue" },
     { value: "approved", label: t("tickets.approved"), color: "green" },
+    { value: "approval_history", label: t("tickets.approvalHistory", { defaultValue: "Approved history" }), color: "green" },
     { value: "awaiting_payment", label: t("tickets.awaitingPaymentStatus"), color: "amber" },
     { value: "funds_dispersed", label: t("ticketDetail.fundsDispersed"), color: "green" },
     { value: "kicked_back", label: t("tickets.kickedBack"), color: "red" },
@@ -426,6 +429,7 @@ export default function Tickets() {
   type TicketStatus = (typeof validStatuses)[number];
   const isValidStatus = (s: string): s is TicketStatus => validStatuses.includes(s as TicketStatus);
   const listParams: Record<string, any> = { limit: 500, offset: 0 };
+  if (statusFilter === "approval_history") listParams.approvalHistory = true;
   if (statusFilter !== "all" && isValidStatus(statusFilter)) listParams.status = statusFilter;
   if (isVendor) listParams.vendorId = user.vendorId!;
   if (isPartner) listParams.partnerId = user.partnerId!;
@@ -450,6 +454,11 @@ export default function Tickets() {
   // generated hook sees the latest enabled flag on the same render
   // that the gate trips.
   const [listRateLimitedState, setListRateLimitedState] = useState(false);
+  const ticketSummaryEnabled = Boolean(user && !isFieldEmployee && !listRateLimitedState);
+  const ticketSummary = useDashboardTicketPanels(
+    `${user?.userId}:${user?.activeMembershipId}:${user?.role}:${user?.vendorId ?? user?.partnerId}`,
+    ticketSummaryEnabled,
+  );
   // Stash in a ref so SSE handlers (set up once with stable deps) and
   // the manual-refresh handler can read the latest gate state without
   // rebuilding their listeners.
@@ -1741,14 +1750,13 @@ export default function Tickets() {
           {/* Row 1: Start New, Group by visit, All states (+ role-specific extras) */}
           <div className="flex flex-wrap items-center gap-3">
           {(isVendor || isPartner) && (
-            <PngPillButton
-              color="image"
+            <button type="button" className="hub-task-mini-card"
               data-testid="button-start-new-ticket"
               onClick={() => setAddOpen(true)}
             >
               <Plus className="w-4 h-4" />
               {t("tickets.startNew", { defaultValue: "Start New" })}
-            </PngPillButton>
+            </button>
           )}
           {isVendorOffice && (
             <Dialog
@@ -1768,14 +1776,13 @@ export default function Tickets() {
                 }
               }}
             >
-              <PngPillButton
-                color="image"
+              <button type="button" className="hub-task-mini-card"
                 data-testid="button-phone-intake"
                 onClick={() => setPhoneOpen(true)}
               >
                 <Phone className="w-4 h-4" />
                 {t("tickets.phoneIntake", { defaultValue: "Phone intake" })}
-              </PngPillButton>
+              </button>
               <DialogContent className={isVendor ? "vendor-workspace-page app-dialog" : undefined}>
                 <DialogHeader>
                   <DialogTitle>
@@ -2210,8 +2217,7 @@ export default function Tickets() {
               they don't pad the toolbar count or claim a confirm dialog
               they couldn't deliver on. */}
           {isAdmin && selectedReversibleIds.length > 0 && (
-            <PngPillButton
-              color="red"
+            <button type="button" className="hub-task-mini-card"
               data-testid="button-bulk-reverse-funds"
               onClick={() => {
                 setBulkReverseReason("");
@@ -2223,11 +2229,10 @@ export default function Tickets() {
                 count: selectedReversibleIds.length,
                 defaultValue: "Reverse {{count}} payment(s)",
               })}
-            </PngPillButton>
+            </button>
           )}
           {isPartner && awaitingPayment && (
-            <PngPillButton
-              color="green"
+            <button type="button" className="hub-task-mini-card"
               data-testid="export-awaiting-payment-csv"
               onClick={() => {
                 // Task #865 — client-side CSV export of the AP queue.
@@ -2297,11 +2302,10 @@ export default function Tickets() {
               {t("tickets.exportAwaitingPaymentCsv", {
                 defaultValue: "Export CSV",
               })}
-            </PngPillButton>
+            </button>
           )}
           {isPartner && (
-            <PngPillButton
-              color="amber"
+            <button type="button" className="hub-task-mini-card"
               data-testid="toggle-awaiting-payment"
               onClick={() => {
                 const next = !awaitingPayment;
@@ -2315,17 +2319,15 @@ export default function Tickets() {
             >
               <DollarSign className="w-4 h-4" />
               {t("tickets.awaitingPayment", { defaultValue: "Awaiting payment" })}
-            </PngPillButton>
+            </button>
           )}
-          <PngPillButton
-            color="brand"
+          <button type="button" className="hub-task-mini-card"
             data-testid="toggle-group-by-visit"
-            className="px-2"
             onClick={() => setGroupByVisit((v) => !v)}
           >
             <Layers className="w-3.5 h-3.5" />
             {t("tickets.groupByVisit", { defaultValue: "Group by visit" })}
-          </PngPillButton>
+          </button>
           {/* Task #857: aggregate cross-ticket audit-trail CSV export.
               Admins, partners, and vendor org admins can pull every
               transition for the tickets they're allowed to see — useful
@@ -2333,26 +2335,22 @@ export default function Tickets() {
               this affordance (the server also returns 403 for that
               role). */}
           {!isFieldEmployee && (
-            <PngPillButton
-              color="green"
+            <button type="button" className="hub-task-mini-card"
               data-testid="button-audit-trail-export-all"
-              className="px-2"
               onClick={handleAuditTrailExportAll}
             >
               <FileText className="w-3.5 h-3.5" />
               {t("tickets.auditExportAll", { defaultValue: "Audit CSV" })}
-            </PngPillButton>
+            </button>
           )}
           {!isFieldEmployee && (
-            <PngPillButton
-              color="red"
+            <button type="button" className="hub-task-mini-card"
               data-testid="button-audit-trail-export-all-pdf"
-              className="px-2"
               onClick={handleAuditTrailExportAllPdf}
             >
               <FileText className="w-3.5 h-3.5" />
               {t("tickets.auditExportPdf", { defaultValue: "Audit PDF" })}
-            </PngPillButton>
+            </button>
           )}
           </div>
           {/* Row 2: Search tracking #, All locations, All States */}
@@ -2649,6 +2647,7 @@ export default function Tickets() {
         </div>
       )}
 
+      {!isFieldEmployee && <DashboardTicketPanels query={ticketSummary} enabled={ticketSummaryEnabled} />}
       <Card>
         <ContentCardHeader title="Tickets" spanish="Tickets" />
         <CardContent className="p-0">

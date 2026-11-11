@@ -39,13 +39,14 @@ router.use("/work-hub/site-shift-plans", async (req, res, next) => {
   return next();
 });
 
-async function authorize(req: Parameters<typeof getSessionFromRequest>[0], owner: WorkHubOwner, siteId?: number) {
+async function authorize(req: Parameters<typeof getSessionFromRequest>[0], owner: WorkHubOwner, siteId?: number, gateOnly = false) {
   const session = await validateAssistantSession(getSessionFromRequest(req)!,db);
   requireWorkHubCapability(createWorkHubAccess({ session: { ...session, userId: session.userId! }, owner, context: { kind: "organization", id: owner.id }, participant: true }), "shift.manage");
   const sites = await db.select({ id: siteLocationsTable.id, name: siteLocationsTable.name }).from(siteLocationsTable).where(and(
     siteId ? eq(siteLocationsTable.id, siteId) : undefined,
     siteId ? undefined : eq(siteLocationsTable.hidden, false),
-    owner.type === "partner" ? eq(siteLocationsTable.partnerId, owner.id) : sql`exists (select 1 from ${siteWorkAssignmentsTable} a where a.site_location_id = ${siteLocationsTable.id} and a.vendor_id = ${owner.id})`,
+    owner.type === "partner" ? eq(siteLocationsTable.partnerId, owner.id) : sql`exists (select 1 from ${siteWorkAssignmentsTable} a where a.site_location_id = ${siteLocationsTable.id} and a.vendor_id = ${owner.id} ${gateOnly ? sql`and a.is_gate_contractor = true` : sql.empty()})`,
+    gateOnly && owner.type === "vendor" ? eq(siteLocationsTable.isActive, true) : undefined,
   ));
   if (siteId && !sites.length) throw Object.assign(new Error("Site is not available to this company"), { status: 403 });
   return { session, sites };
@@ -58,7 +59,7 @@ function failure(res: import("express").Response, error: unknown) {
 router.get("/work-hub/site-shift-plans", async (req, res) => {
   try {
     const owner = scopeSchema.parse(req.query);
-    const { sites } = await authorize(req, owner);
+    const { sites } = await authorize(req, owner, undefined, req.query.gateOnly === "true");
     return res.json({ sites });
   } catch (error) { return failure(res, error); }
 });

@@ -220,12 +220,19 @@ router.get("/dashboard/ticket-panels", requireSession, async (req, res) => {
         WHERE vendor_id = ${session.role === "vendor" ? session.vendorId : null} AND is_gate_contractor
       ) AS enabled
     )
-    SELECT t.id, t.status, s.id AS "siteId", s.name AS "siteName",
+    SELECT t.id, t.status, s.id AS "siteId", s.name AS "siteName", p.name AS "partnerName",
+      CASE WHEN gate.is_gate THEN (
+        SELECT count(*)::int FROM gate_stations counted
+        JOIN site_locations counted_site ON counted_site.id=counted.site_id
+        WHERE counted.active AND counted_site.is_active AND NOT counted_site.hidden
+          AND (counted.site_id=s.id OR (s.gate_link_id IS NOT NULL AND counted_site.gate_link_id=s.gate_link_id))
+      ) END AS "gateCount",
       CASE WHEN gate.is_gate THEN s.gate_link_id END AS "linkId",
       station.id AS "stationId", station.name AS "gateName",
       (t.status = 'approved' AND t.updated_at >= date_trunc('month', CURRENT_DATE)) AS "approvedThisMonth"
     FROM tickets t
     JOIN site_locations s ON s.id = t.site_location_id
+    LEFT JOIN partners p ON p.id = s.partner_id
     LEFT JOIN (
       SELECT DISTINCT ON (vendor_id, ticket_id) vendor_id, ticket_id, station_id
       FROM (
@@ -259,9 +266,9 @@ router.get("/dashboard/ticket-panels", requireSession, async (req, res) => {
     ) station ON true
     WHERE ${scope} AND (NOT (SELECT enabled FROM gate_vendor)
       OR billing.station_id IS NOT NULL
-      OR (gate.is_gate AND EXISTS (
+      OR (gate.is_gate AND (t.status = 'awaiting_acceptance' OR EXISTS (
         SELECT 1 FROM job_offers j WHERE j.created_ticket_id = t.id AND j.status = 'accepted'
-      )))
+      ))))
     ORDER BY t.id DESC
   `);
   const gateLocations = session.role === "vendor" && session.vendorId

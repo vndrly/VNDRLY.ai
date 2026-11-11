@@ -11,6 +11,8 @@ type DashboardTicket = {
   status: string;
   siteId: number;
   siteName: string;
+  partnerName?: string;
+  gateCount?: number | null;
   linkId: string | null;
   stationId: string | null;
   gateName: string | null;
@@ -50,7 +52,8 @@ export function DashboardTicketPanels({ query, enabled }: { query: ReturnType<ty
     { label: t("dashboard.ticketPanels.all"), tickets },
     { label: t("dashboard.stats.active"), tickets: tickets.filter(ticket => activeStatuses.has(ticket.status)) },
     { label: t("dashboard.stats.pendingApproval"), tickets: tickets.filter(ticket => ticket.status === "submitted") },
-    { label: t("dashboard.stats.approvedThisMonth"), tickets: tickets.filter(ticket => ticket.approvedThisMonth) },
+    { label: t("dashboard.stats.approvedThisMonth"), tickets: tickets.filter(ticket => ticket.approvedThisMonth), href: "/tickets?status=approval_history" },
+    { label: t("tickets.awaitingAcceptance"), tickets: tickets.filter(ticket => ticket.status === "awaiting_acceptance") },
   ];
 
   return (
@@ -64,6 +67,11 @@ export function DashboardTicketPanels({ query, enabled }: { query: ReturnType<ty
         ) : !query.data ? (
           <p role="status">Loading tickets…</p>
         ) : panels.map(panel => {
+          if (panel.href) return <Link key={panel.label} href={panel.href} className="flex items-center gap-2 border-t border-border py-3 font-medium">
+            <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
+            <span className="min-w-0 flex-1">{panel.label}</span>
+            <span className="tabular-nums">{panel.tickets.length}</span>
+          </Link>;
           const groups = new Map<string, DashboardTicket[]>();
           for (const ticket of panel.tickets) {
             const key = ticket.linkId ? `linked:${ticket.linkId}` : ticket.stationId ?? `site:${ticket.siteId}`;
@@ -81,7 +89,9 @@ export function DashboardTicketPanels({ query, enabled }: { query: ReturnType<ty
               {groups.size === 0 && <p className="pb-3 pl-6 text-sm text-muted-foreground">No tickets</p>}
               {[...groups.entries()].map(([key, rows]) => {
                 const first = rows[0];
-                const label = first.linkId
+                const isWarwickGate = first.partnerName === "Warwick Energy Group" &&
+                  /^(San Roman Completions|Precision 550|Cactus 152)$/i.test(first.siteName);
+                const label = isWarwickGate ? `Warwick ${first.siteName}` : first.linkId
                   ? `${[...(linkedSites.get(first.linkId) ?? [])].join(" / ")} · Linked gates`
                   : [first.siteName, first.gateName].filter(Boolean).join(" · ");
                 return (
@@ -89,7 +99,7 @@ export function DashboardTicketPanels({ query, enabled }: { query: ReturnType<ty
                     <summary className="flex cursor-pointer list-none items-center gap-2 p-2 text-sm [&::-webkit-details-marker]:hidden">
                       <ChevronRight aria-hidden="true" className="size-4 shrink-0 group-open/gate:rotate-90" />
                       <span className="min-w-0 flex-1 break-words">{label}</span>
-                      <span className="tabular-nums">{rows.length}</span>
+                      <span className="tabular-nums">{first.gateCount ?? rows.length}</span>
                     </summary>
                     <ul className="max-h-80 overflow-y-auto px-2">
                       {rows.map(ticket => (

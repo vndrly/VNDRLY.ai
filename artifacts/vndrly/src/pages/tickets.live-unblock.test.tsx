@@ -98,6 +98,10 @@ vi.mock("@/hooks/use-auth", () => ({
     switchContext: async () => {},
   }),
 }));
+vi.mock("@/components/dashboard-ticket-panels", () => ({
+  useDashboardTicketPanels: () => ({ data: { tickets: [], gateLocationCount: null } }),
+  DashboardTicketPanels: () => null,
+}));
 
 // Task #648 — capture the toast spy at module scope so the assertions
 // for the new assignment-restored confirmation toast (mirrors the mobile

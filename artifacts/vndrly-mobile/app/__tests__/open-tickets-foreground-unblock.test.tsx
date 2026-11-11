@@ -220,7 +220,7 @@ describe("HomeScreen — Task #630 foreground ticket_unblocked toast", () => {
       expect(node).toBeTruthy();
       // The interpolated message must include the formatted tracking
       // number so the worker knows which ticket was restored.
-      expect(node.textContent || "").toContain("VNDRLY-00000042");
+      expect(node.textContent || "").toContain("V-00000042");
     });
   });
 

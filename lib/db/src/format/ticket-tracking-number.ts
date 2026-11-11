@@ -1,7 +1,7 @@
 /**
  * Canonical user-visible tracking number for a ticket.
  *
- * - Pads numeric ids to 8 digits, matching the new "VNDRLY-00000009" format
+ * - Pads numeric ids to 8 digits, matching the new "V-00000009" format
  *   we expose in the redesigned 6-step stepper.
  * - For ids that already exceed 8 digits we let the number grow naturally so
  *   we never silently truncate. (This keeps the formatter total — every
@@ -17,5 +17,5 @@ export function formatTicketTrackingNumber(id: number): string {
     );
   }
   const padded = String(id).padStart(8, "0");
-  return `VNDRLY-${padded}`;
+  return `V-${padded}`;
 }

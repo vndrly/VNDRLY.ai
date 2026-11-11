@@ -1031,6 +1031,7 @@
     "fundsDispersed": "Approval 3",
     "awaitingPaymentStatus": "Approval 2",
     "awaitingAcceptance": "Awaiting Acceptance",
+    "approvalHistory": "Approved history",
     "denied": "Denied",
     "stepperKickedBackNote": "Sent back for review",
     "stepperCancelledNote": "Cancelled",

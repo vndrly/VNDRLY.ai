@@ -1,6 +1,6 @@
 // Unit tests for the canonical ticket tracking-number formatter.
 // The formatter is a pure function exported from `@workspace/db`; it is
-// the single source of truth for the "VNDRLY-00000009" string we will
+// the single source of truth for the "V-00000009" string we will
 // surface in the 6-step stepper redesign (Task #496) and downstream
 // notifications. This file therefore locks down zero-pad behaviour at
 // the boundaries of single-, double-, eight- and nine-digit ids.
@@ -16,24 +16,24 @@ import { formatTicketTrackingNumber } from "@workspace/db";
 
 describe("formatTicketTrackingNumber", () => {
   it("pads single-digit ids to eight digits", () => {
-    expect(formatTicketTrackingNumber(1)).toBe("VNDRLY-00000001");
-    expect(formatTicketTrackingNumber(9)).toBe("VNDRLY-00000009");
+    expect(formatTicketTrackingNumber(1)).toBe("V-00000001");
+    expect(formatTicketTrackingNumber(9)).toBe("V-00000009");
   });
 
   it("pads two-digit and three-digit ids correctly", () => {
-    expect(formatTicketTrackingNumber(99)).toBe("VNDRLY-00000099");
-    expect(formatTicketTrackingNumber(100)).toBe("VNDRLY-00000100");
+    expect(formatTicketTrackingNumber(99)).toBe("V-00000099");
+    expect(formatTicketTrackingNumber(100)).toBe("V-00000100");
   });
 
   it("does not pad once the id reaches eight digits", () => {
-    expect(formatTicketTrackingNumber(99_999_999)).toBe("VNDRLY-99999999");
+    expect(formatTicketTrackingNumber(99_999_999)).toBe("V-99999999");
   });
 
   it("lets nine-digit ids grow naturally rather than truncating", () => {
     // Ids beyond 99,999,999 are never silently truncated — the formatter
     // returns the full number so tracking numbers remain unique and the
     // ordering matches the underlying serial.
-    expect(formatTicketTrackingNumber(100_000_000)).toBe("VNDRLY-100000000");
+    expect(formatTicketTrackingNumber(100_000_000)).toBe("V-100000000");
   });
 
   it("rejects non-positive or non-integer ids", () => {

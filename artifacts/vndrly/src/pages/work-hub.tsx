@@ -30,7 +30,7 @@ import { localDateKey } from "@/components/work-hub/calendar-views";
 import { calendarDayFromSearch, calendarWorkerFromSearch } from "@/lib/calendar-day-link";
 import { readDashboardShiftHours, readEmployeeCalendarContext } from "@/lib/dashboard-shift-hours";
 import CalendarSummaryCards from "@/components/work-hub/calendar-summary-cards";
-import SiteShiftAdministration from "@/components/work-hub/site-shift-administration";
+import SiteShiftAdministration, { CalendarCoverageGaps } from "@/components/work-hub/site-shift-administration";
 import {RequestShiftCoverage} from "@/components/work-hub/request-shift-coverage";
 import {CoverageAcknowledgments} from "@/components/work-hub/coverage-acknowledgments";
 import ProjectTimeline from "@/components/work-hub/project-timeline";
@@ -720,7 +720,10 @@ function CalendarModule() {
         {!employeeView && <GateCalendarStaffingWatch search={search} />}
         {user?.vendorId && <CoverageAcknowledgments owner={{type:"vendor",id:user.vendorId}} userId={user.userId} />}
         {employeeView && <p role={employeeContext.isError || !employeeLink.userId ? "alert" : "status"}>{employeeContext.isError || !employeeLink.userId ? "Employee calendar is unavailable or your access has changed." : employeeContext.data ? `${employeeContext.data.employee.name} — employee calendar` : "Loading employee calendar…"}</p>}
-        {!employeeView && <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />}
+        {!employeeView && <div className="hub-calendar-overview">
+          <CalendarSummaryCards scheduleUnavailable={calendar.isError || calendar.isPending} channelsUnavailable={channelSummary.isError || channelSummary.isPending} shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
+          <CalendarCoverageGaps />
+        </div>}
         <WorkCalendar month={month} selectedDay={selectedDay} items={filteredItems}
           showInlineDay={employeeView || personalGatekeeper || Boolean(linkedDay)}
           scheduleControl={!employeeView && clockOwner ? <><GateCalendarScheduling key={`${user?.userId}:${clockOwner.type}:${clockOwner.id}`} owner={clockOwner} canDefine={canDefineGateShifts} selectedDay={selectedDay} />{!gateCompany && canManage && <button type="button" className="hub-task-mini-card" aria-expanded={scheduling} onClick={() => setScheduling(current => !current)}>Add/Edit Shifts</button>}</> : undefined}
