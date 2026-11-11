@@ -129,7 +129,7 @@ describe("Work Hub AskV web/iOS parity", () => {
 
   it("lets Ask V prepare a scheduled shift directly from Gate and Calendar", () => {
     for (const path of ["/gate", "/gate/map?siteId=411", "/gate-map", "/work-hub/calendar"]) {
-      expect(namesFor(path)).toContain("manage_work_hub_shift");
+      expect(namesFor(path)).toEqual(expect.arrayContaining(["manage_work_hub_shift", "find_work_hub_people"]));
     }
   });
 
