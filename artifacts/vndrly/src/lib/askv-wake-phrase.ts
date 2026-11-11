@@ -4,7 +4,7 @@ export function isAskVWakePhrase(text: string, confidence = 1): boolean {
     .toLowerCase()
     .replace(/[^\w\s]/g, "")
     .replace(/\s+/g, " ");
-  if (normalized === "askv" || normalized === "ask v") return confidence >= 0.65;
+  if (["askv", "ask v", "hey v", "heyv"].includes(normalized)) return confidence >= 0.65;
   if (normalized === "v") return confidence >= 0.9;
   return false;
 }

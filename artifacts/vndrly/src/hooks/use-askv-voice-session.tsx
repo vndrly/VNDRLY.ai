@@ -19,6 +19,7 @@ import {
   type AskVVoiceAvailabilityStatus,
 } from '@/lib/askv-voice-availability';
 import { askVMicrophone } from '@workspace/askv-wake';
+import { notifyGateVoiceSaved } from '@workspace/gate-booth';
 import { useQueryClient } from '@tanstack/react-query';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 interface AskVVoiceSessionValue {
@@ -75,12 +76,17 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   const pendingWorkflowOffer = useRef<GateWorkflowOffer | undefined>(undefined);
   const latestAssistant = useRef(assistant); latestAssistant.current = assistant;
   const saveQueue = useRef(new AskVTranscriptQueue()); const mounted = useRef(true);
+  const spokenReceipt = useRef<{ sessionId: string; eventId: string; name: string; output: string } | null>(null);
   const voice = useAskVRealtime({ acrossVndrly,
     onGateSetupProgress: hint => { pendingGateGuidance.current = hint; },
     onGateWorkflowOffer: offer => { pendingWorkflowOffer.current = offer; },
     // Canonical Gate and ticket mutations affect multiple lists, history and maps.
     onMutation: mutation => { window.dispatchEvent(new CustomEvent('askv:data-changed', { detail: mutation })); },
     flushTranscripts: () => saveQueue.current.flush(),
+    readSpokenReceipt: (sessionId, eventId, name) => {
+      const receipt = spokenReceipt.current;
+      return receipt?.sessionId === sessionId && receipt.eventId === eventId && receipt.name === name ? receipt.output : undefined;
+    },
     prepareConversation: async signal => {
       await saveQueue.current.flush();
       return latestAssistant.current.prepareVoiceConversation(signal);
@@ -95,10 +101,17 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
             const response = await fetch(`${BASE}/api/assistant/voice/transcript`, { method: 'POST', credentials: 'include',
-              headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...message, conversationId, sessionId }) });
+              headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...message, conversationId, sessionId, ...(message.spoken ? { clientSurface: 'web' } : {}) }) });
             if (!response.ok) throw new Error('Your voice transcript could not be saved. It remains visible in this session.');
-            const result = await response.json() as { messageId: number };
+            const result = await response.json() as { messageId: number; action?: { ok: boolean; toolName?: string; output?: string; submitted?: Record<string, unknown>; mutation?: { name: string; refresh: string[] } } };
             if (mounted.current) latestAssistant.current.appendVoiceTranscript(message, result.messageId);
+            if (mounted.current && result.action?.toolName && result.action.output) {
+              spokenReceipt.current = { sessionId, eventId: message.eventId, name: result.action.toolName, output: result.action.output };
+              if (result.action.ok && result.action.toolName === 'confirm_visitor_check_in' && result.action.submitted) notifyGateVoiceSaved(result.action.submitted);
+            }
+            if (mounted.current && result.action?.mutation) {
+              window.dispatchEvent(new CustomEvent('askv:data-changed', { detail: result.action.mutation }));
+            }
             return;
           } catch (cause) { if (attempt === 1) throw cause; }
         }

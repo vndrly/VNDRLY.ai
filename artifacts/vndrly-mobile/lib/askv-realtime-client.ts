@@ -15,6 +15,7 @@ export interface AskVTranscript {
   eventId: string;
   role: "user" | "assistant";
   content: string;
+  spoken?: true;
 }
 export interface AskVRealtimeClient {
   connect(): Promise<void>;
@@ -169,7 +170,7 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
           const eventId = String(payload.item_id ?? payload.response_id ?? payload.event_id) + ":" + role;
           const content = String(payload.transcript ?? payload.text ?? "").trim();
           if (content && !transcriptEvents.has(eventId)) {
-            transcriptEvents.add(eventId); args.onTranscript?.({ eventId, role, content });
+            transcriptEvents.add(eventId); args.onTranscript?.({ eventId, role, content, ...(user ? { spoken: true } : {}) });
           }
           break;
         }

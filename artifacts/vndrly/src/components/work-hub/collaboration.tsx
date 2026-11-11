@@ -73,13 +73,13 @@ export function HubError({ error }: { error: unknown }) {
     </p>
   ) : null;
 }
-function useRows(path: string, enabled = true) {
+function useRows(path: string, enabled = true, refetchInterval = 15_000) {
   const { user } = useAuth();
   return useQuery<Row[]>({
     queryKey: ["work-hub", path, user?.userId, user?.activeMembershipId],
     queryFn: () => workHubRequest(path),
     enabled,
-    refetchInterval: 15000,
+    refetchInterval,
   });
 }
 
@@ -179,7 +179,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const channelOwner = channel
     ? { type: channel.ownerOrgType, id: channel.ownerOrgId }
     : owner;
-  const messages = useRows(`/channels/${active}/messages`, !!active);
+  const messages = useRows(`/channels/${active}/messages`, !!active, 5_000);
   const notes = useRows(`/channels/${active}/notes`, !!active);
   const members = useRows(`/channels/${active}/members`, !!active);
   const crewMembers = useRows(`/crews/${crew}/members`, !chat && !!crew);
@@ -1007,7 +1007,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   )}
                   <div className="min-h-48 space-y-4">
                     {shownMessages.map((m) => (
-                      <article key={m.id} data-message-tone={m.authorUserId === user?.userId ? "self" : m.authorIsAdmin ? "admin" : "other"} className="hub-chat-message flex gap-3">
+                      <article key={m.id} data-message-tone={m.kind === "askv_answer" ? "other" : m.authorUserId === user?.userId ? "self" : m.authorIsAdmin ? "admin" : "other"} className="hub-chat-message flex gap-3">
                         <div className="hub-chat-bubble min-w-0">
                           <header className="mb-2 flex items-center gap-2">
                             <div className="hub-chat-avatar flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold">
@@ -1024,7 +1024,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                           {!m.deletedAt && (
                             <div className="ml-auto -mt-1 flex shrink-0 self-start items-center gap-0.5 text-xs text-muted-foreground">
 
-                              {m.authorUserId === user?.userId && (
+                              {m.authorUserId === user?.userId && m.kind !== "askv_answer" && (
                                 <button type="button" className="hub-message-action" title="Edit" aria-label="Edit"
                                   onClick={() => {
                                     setEditing(m);

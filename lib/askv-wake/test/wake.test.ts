@@ -5,6 +5,7 @@ import { PcmRingBuffer, PcmResampler, MicrophoneCoordinator, isWakeKeyword, enco
 test('Ask V and standalone V activate', () => {
   assert.equal(isWakeKeyword('ASK V'), true);
   assert.equal(isWakeKeyword('AskV'), true);
+  assert.equal(isWakeKeyword('HEYV'), true);
   assert.equal(isWakeKeyword('V'), true);
   for (const text of ['ask me', 'ask Steve', 'please ask V later', 'vendor', '']) assert.equal(isWakeKeyword(text), false);
 });

@@ -5,7 +5,7 @@ import { captureAskVMicrophone, meterAskVMicrophone } from './askv-microphone';
 import { realtimeConnectionMessage } from './askv-voice-availability';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 export interface AskVRealtimeToolCall { name: string; arguments: unknown; callId: string }
-export interface VoiceTranscript { eventId: string; role: 'user' | 'assistant'; content: string }
+export interface VoiceTranscript { eventId: string; role: 'user' | 'assistant'; content: string; spoken?: true }
 export interface AskVRealtimeClient {
   connect(): Promise<void>; close(): void; interrupt(): void; sendText(text: string): void;
   setMicEnabled(enabled: boolean): void;
@@ -99,9 +99,9 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
   pc.onconnectionstatechange = () => { if (['failed', 'disconnected'].includes(pc.connectionState)) fail('AskV voice disconnected. Please open it again.'); };
   channel.onclose = () => fail('AskV voice disconnected.');
   channel.onerror = () => fail('AskV voice connection failed.');
-  const transcript = (eventId: string, role: VoiceTranscript['role'], content: unknown) => {
+  const transcript = (eventId: string, role: VoiceTranscript['role'], content: unknown, spoken?: true) => {
     if (!eventId || typeof content !== 'string' || !content.trim() || transcripts.has(eventId)) return;
-    transcripts.add(eventId); args.onTranscript?.({ eventId, role, content });
+    transcripts.add(eventId); args.onTranscript?.({ eventId, role, content, ...(spoken ? { spoken } : {}) });
   };
   channel.onmessage = event => {
     void (async () => {
@@ -118,7 +118,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
           if (!playing && payload.response?.status === 'completed' && payload.response?.output?.some((item: any) => item.type === 'message')
             && !payload.response.output.some((item: any) => item.type === 'function_call' || item.content?.some((part: any) => part.type === 'audio' || part.type === 'output_audio'))) args.onPlaybackStopped?.();
           break;
-        case 'conversation.item.input_audio_transcription.completed': transcript(`user:${payload.item_id}`, 'user', payload.transcript); break;
+        case 'conversation.item.input_audio_transcription.completed': transcript(`user:${payload.item_id}`, 'user', payload.transcript, true); break;
         case 'response.output_audio_transcript.done': case 'response.audio_transcript.done': transcript(`assistant:${payload.item_id}`, 'assistant', payload.transcript); break;
         case 'response.output_text.done': transcript(`assistant:${payload.item_id}`, 'assistant', payload.text); break;
         case 'error': if (payload.error?.code !== 'response_cancel_not_active') fail(payload.error?.message ?? 'AskV voice error'); break;

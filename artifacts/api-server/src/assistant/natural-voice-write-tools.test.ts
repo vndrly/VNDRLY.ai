@@ -130,40 +130,22 @@ describe("AskV canonical Gate and field operations", () => {
       "x-replay-view-session": "server-issued-token",
     });
   });
-  it("collects exact host and site without making optional operator GPS required", async () => {
+  it("needs only the name and site when no other details are supplied", async () => {
     const incomplete = JSON.parse(
       await prepareVisitorCheckIn({
         firstName: "Bob",
         lastName: "Villa",
         siteLocationId: 9,
-        hostType: "vendor",
       }),
     );
-    expect(incomplete.missing).toEqual([
-      "hostVendorId",
-      "vehiclePlate",
-    ]);
+    expect(incomplete).toMatchObject({ ok: true, missing: [] });
     expect(JSON.parse(await prepareVisitorCheckIn(fields)).ok).toBe(true);
   });
-  it("recovers incomplete plate input without treating it as a system failure", async () => {
-    expect(
-      JSON.parse(
-        await prepareVisitorCheckIn({
-          ...fields,
-          vehiclePlate: "12",
-          plateState: undefined,
-        }),
-      ),
-    ).toMatchObject({
-      ok: false,
-      missing: ["vehiclePlate"],
-      recovery: {
-        kind: "input",
-        promptField: "vehiclePlate",
-        offerCamera: true,
-        reportSystemFailure: false,
-      },
-    });
+  it("asks for plate state only when a supplied plate needs it", async () => {
+    vi.stubEnv("VNDRLY_REQUIRE_PLATE_STATE", "0");
+    expect(JSON.parse(await prepareVisitorCheckIn({ ...fields, plateState: undefined })))
+      .toMatchObject({ ok: true, missing: [] });
+    vi.stubEnv("VNDRLY_REQUIRE_PLATE_STATE", "1");
     expect(
       JSON.parse(
         await prepareVisitorCheckIn({ ...fields, plateState: undefined }),
@@ -172,6 +154,7 @@ describe("AskV canonical Gate and field operations", () => {
       missing: ["plateState"],
       recovery: { promptField: "plateState", offerCamera: true },
     });
+    vi.unstubAllEnvs();
   });
   it("normalizes spoken state names without inventing missing location data", async () => {
     const result = JSON.parse(await prepareVisitorCheckIn({ ...fields, plateState: " Oklahoma ", latitude: undefined, longitude: undefined }));

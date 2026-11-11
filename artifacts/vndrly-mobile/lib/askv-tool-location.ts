@@ -1,14 +1,31 @@
 import * as Location from "expo-location";
 const gpsWrites = new Set(["set_ticket_lifecycle", "close_ticket_for_review", "prepare_visitor_check_in", "confirm_visitor_check_in", "confirm_visitor_check_out"]);
+const optionalGateLocation = new Set(["prepare_visitor_check_in", "confirm_visitor_check_in", "confirm_visitor_check_out"]);
 const locationQueries = new Set(["lookup_map_origin", "query_ticket_route_eta", "query_ticket_mileage_audit", "estimate_driving_route"]);
 export type AskVCoordinates = { latitude: number; longitude: number };
 export function isAskVGpsWrite(name: string): boolean { return gpsWrites.has(name); }
 
 /** GPS comes from the device, never from model-invented coordinates. */
-export async function withAskVToolLocation(name: string, args: Record<string, unknown>, confirmedCoordinates?: AskVCoordinates): Promise<Record<string, unknown>> {
+export async function withAskVToolLocation(name: string, args: Record<string, unknown>, confirmedCoordinates?: AskVCoordinates | null): Promise<Record<string, unknown>> {
   const write = isAskVGpsWrite(name);
   if (!write && (!locationQueries.has(name) || args.origin === "shop")) return args;
   if (write && confirmedCoordinates) return { ...args, ...confirmedCoordinates };
+  if (optionalGateLocation.has(name)) {
+    const { latitude: _latitude, longitude: _longitude, ...withoutModelLocation } = args;
+    if (confirmedCoordinates === null) return withoutModelLocation;
+    try {
+      const permission = await Location.getForegroundPermissionsAsync();
+      if (permission.status !== "granted") return withoutModelLocation;
+      const position = await Location.getLastKnownPositionAsync({ maxAge: 15_000 });
+      if (!position) return withoutModelLocation;
+      const { latitude, longitude } = position.coords;
+      return Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180
+        ? { ...withoutModelLocation, latitude, longitude }
+        : withoutModelLocation;
+    } catch {
+      return withoutModelLocation;
+    }
+  }
   const previous = await Location.getForegroundPermissionsAsync();
   const permission = previous.status === "granted" ? previous : await Location.requestForegroundPermissionsAsync();
   if (permission.status !== "granted") throw new Error("Location permission is needed for this action. Nothing was changed.");

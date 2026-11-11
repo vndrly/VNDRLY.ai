@@ -56,6 +56,7 @@ vi.mock("expo-location", () => ({
   Accuracy: { Balanced: 3, High: 4 }, getForegroundPermissionsAsync: env.locationPermission,
   requestForegroundPermissionsAsync: async () => ({ status: "denied" }),
   getCurrentPositionAsync: env.locationPosition,
+  getLastKnownPositionAsync: env.locationPosition,
 }));
 
 import { AskVVoiceProvider, useAskVVoiceSession } from "@/hooks/use-askv-voice-session";

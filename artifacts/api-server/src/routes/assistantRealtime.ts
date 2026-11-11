@@ -53,6 +53,7 @@ import {
 } from "../assistant/voice-context";
 import {
   classifyConfirmation,
+  isExplicitSpokenAuthorization,
   requiresVoiceConfirmation,
 } from "../assistant/action-classifier";
 import {
@@ -197,8 +198,18 @@ const voiceContexts = new Map<string, VoiceContext>();
 const voiceOrganizations = new Map<string, string>();
 const approvedCalls = new Map<
   string,
-  { fingerprint: string; contextKey: string; expiresAt: number }
+  { fingerprint: string; contextKey: string; sessionId: string; expiresAt: number }
 >();
+
+function isVisitorCheckAction(name: string) {
+  return name === "confirm_visitor_check_in" || name === "confirm_visitor_check_out";
+}
+
+function isSpokenApproval(name: string, content: string) {
+  return isVisitorCheckAction(name)
+    ? classifyConfirmation(content) === "confirm"
+    : isExplicitSpokenAuthorization(content);
+}
 function voiceIdentity(session: SessionPayload, sessionId: string): string {
   return stableArguments([
     session.userId,
@@ -220,17 +231,13 @@ function contextFor(
   const ownerKey = stableArguments([session.userId, sessionId]);
   const priorOrganization = voiceOrganizations.get(ownerKey);
   if (priorOrganization && priorOrganization !== organizationKey) {
-    askvPendingConfirmations.clear(
-      session.userId!,
-      priorOrganization,
-      sessionId,
-    );
     const priorIdentity = stableArguments([
       session.userId,
       priorOrganization,
       sessionId,
     ]);
     const priorContext = voiceContexts.get(priorIdentity);
+    clearPendingVoiceAction(session.userId!, priorOrganization, sessionId, priorContext?.conversationId);
     if (priorContext)
       voiceContexts.set(priorIdentity, { ...priorContext, ended: true });
   }
@@ -278,11 +285,7 @@ function contextFor(
       : (prior?.location ?? null);
   const key = stableArguments([path, entityId, workflow, location]);
   if (prior && prior.key !== key)
-    askvPendingConfirmations.clear(
-      session.userId!,
-      organizationKeyFromSession(session),
-      sessionId,
-    );
+    clearPendingVoiceAction(session.userId!, organizationKey, sessionId, prior.conversationId);
   const value = {
     path,
     entityId,
@@ -295,6 +298,13 @@ function contextFor(
   };
   voiceContexts.set(identity, value);
   return value;
+}
+
+function clearPendingVoiceAction(userId: number, orgKey: string, sessionId: string, conversationId?: number | null) {
+  const scopeId = askVConfirmationScopeId(conversationId, sessionId);
+  if (askvPendingConfirmations.peek(userId, orgKey, scopeId)?.voiceSessionId === sessionId) {
+    askvPendingConfirmations.clear(userId, orgKey, scopeId);
+  }
 }
 async function buildRealtimeSetup(
   session: SessionPayload,
@@ -753,12 +763,8 @@ router.post("/assistant/realtime/end", async (req, res): Promise<void> => {
     return;
   }
   const sessionId = req.body.sessionId;
-  askvPendingConfirmations.clear(
-    session.userId!,
-    organizationKeyFromSession(session),
-    sessionId,
-  );
   const ctx = contextFor(session, sessionId);
+  clearPendingVoiceAction(session.userId!, organizationKeyFromSession(session), sessionId, ctx.conversationId);
   voiceContexts.set(voiceIdentity(session, sessionId), {
     ...ctx,
     ended: true,
@@ -767,23 +773,33 @@ router.post("/assistant/realtime/end", async (req, res): Promise<void> => {
   res.json({ ok: true });
 });
 
-router.post(
-  "/assistant/realtime/tool-call",
-  async (req, res): Promise<void> => {
+router.post("/assistant/realtime/tool-call", (req, res) => handleRealtimeToolCall(req, res));
+
+async function handleRealtimeToolCall(
+  req: Request,
+  res: Response,
+  body = req.body,
+  messageId?: number,
+): Promise<void> {
+  const reply = (status: number, result: Record<string, unknown>) => {
+    if (messageId !== undefined) {
+      res.json({ ok: true, messageId, action: result });
+    } else {
+      res.status(status).json(result);
+    }
+  };
     const session = requireSession(req, res);
     if (!session) return;
-    const name = typeof req.body?.name === "string" ? req.body.name : "";
+    const name = typeof body?.name === "string" ? body.name : "";
     const tool = name ? findAskVTool(name) : null;
     if (!tool) {
-      res
-        .status(400)
-        .json({ error: "Unknown AskV tool", code: "assistant.unknown_tool" });
+      reply(400, { error: "Unknown AskV tool", code: "assistant.unknown_tool" });
       return;
     }
     const role = normalizeAskVRole(session.role);
     const toolStartedAt = Date.now();
-    const metricSessionId = validSessionId(req.body?.sessionId)
-      ? req.body.sessionId
+    const metricSessionId = validSessionId(body?.sessionId)
+      ? body.sessionId
       : "invalid-session";
     if (!(tool.roles.includes(role) || tool.roles.includes("any"))) {
       recordVoiceToolOutcome({
@@ -792,7 +808,7 @@ router.post(
         name,
         outcome: "denied",
       });
-      res.status(403).json({
+      reply(403, {
         error: "AskV tool is not available to this role",
         code: "assistant.tool_not_allowed",
       });
@@ -822,42 +838,42 @@ router.post(
         name,
         outcome: "denied",
       });
-      res.status(403).json({
+      reply(403, {
         error: "This action is outside the current AskV voice scope.",
         code: "assistant.tool_not_available",
       });
       return;
     }
-    const sessionId = req.body?.sessionId;
+    const sessionId = body?.sessionId;
     if (!validSessionId(sessionId)) {
-      res.status(400).json({
+      reply(400, {
         error: "A valid voice sessionId is required.",
         code: "assistant.session_required",
       });
       return;
     }
-    const context = contextFor(session, sessionId, req.body);
+    const context = contextFor(session, sessionId, body);
     if (context.ended) {
-      res.status(409).json({
+      reply(409, {
         error: "This voice session has ended.",
         code: "assistant.session_ended",
       });
       return;
     }
     const confirmationScopeId = askVConfirmationScopeId(context.conversationId, sessionId);
-    const rawInput = req.body?.arguments ?? req.body?.input ?? {};
+    const rawInput = body?.arguments ?? body?.input ?? {};
     if (typeof rawInput === "string") {
       try {
         JSON.parse(rawInput);
       } catch {
-        res.status(400).json({ error: "Invalid tool arguments." });
+        reply(400, { error: "Invalid tool arguments." });
         return;
       }
     }
     const input = domainArguments(parseToolArguments(rawInput));
     if (name === "select_tool_pack") {
       if (!isVoiceWorkflow(input.workflow)) {
-        res.status(400).json({ error: "Choose a known tool workflow." });
+        reply(400, { error: "Choose a known tool workflow." });
         return;
       }
       const selectedContext = contextFor(session, sessionId, {
@@ -868,7 +884,7 @@ router.post(
         membershipRole: session.membershipRole,
         ...selectedContext,
       });
-      res.json({
+      reply(200, {
         ok: true,
         output: JSON.stringify({
           ok: true,
@@ -881,27 +897,31 @@ router.post(
       });
       return;
     }
-    const surface = normalizeSurface(req.body?.clientSurface);
+    const surface = normalizeSurface(body?.clientSurface);
     const transcriptText =
-      typeof req.body?.transcriptText === "string"
-        ? req.body.transcriptText.slice(0, 8000)
+      typeof body?.transcriptText === "string"
+        ? body.transcriptText.slice(0, 8000)
         : null;
     const orgKey = organizationKeyFromSession(session);
     const laterConfirmationPhrase = await readVoiceConfirmation({
       conversationId: context.conversationId,
       sessionId,
-      eventId: req.body?.confirmationEventId,
+      eventId: body?.confirmationEventId,
       pendingCreatedAt: askvPendingConfirmations.createdAt(
         session.userId!,
         orgKey,
         confirmationScopeId,
       ),
     });
-    const actionPhrase = isGateMutationTool(name)
+    if (messageId !== undefined && (!laterConfirmationPhrase || !isSpokenApproval(name, laterConfirmationPhrase))) {
+      reply(409, { ok: false, error: "The pending action changed. Review it before confirming again." });
+      return;
+    }
+    const actionPhrase = isGateMutationTool(name) && !isVisitorCheckAction(name)
       ? await readBoundVoiceUtterance({
           conversationId: context.conversationId,
           sessionId,
-          eventId: req.body?.actionEventId,
+          eventId: body?.actionEventId,
         })
       : null;
     const imperativeGateAuthorization = Boolean(
@@ -910,7 +930,7 @@ router.post(
           utterance: actionPhrase,
           toolName: name,
           toolArguments: input,
-          currentDraft: req.body?.gateDraft && typeof req.body.gateDraft === "object" && !Array.isArray(req.body.gateDraft) ? req.body.gateDraft : undefined,
+          currentDraft: body?.gateDraft && typeof body.gateDraft === "object" && !Array.isArray(body.gateDraft) ? body.gateDraft : undefined,
         })
           .authorization === "submit",
     );
@@ -918,9 +938,9 @@ router.post(
     const decision = laterConfirmationPhrase
       ? classifyConfirmation(laterConfirmationPhrase)
       : "none";
-    const key = req.body?.idempotencyKey ?? req.body?.callId;
+    const key = body?.idempotencyKey ?? body?.callId;
     if (tool.mutating && !validSessionId(key)) {
-      res.status(400).json({
+      reply(400, {
         error: "Every action needs a stable callId or idempotencyKey.",
         code: "assistant.idempotency_required",
       });
@@ -930,6 +950,7 @@ router.post(
       userId: session.userId!,
       organizationKey: orgKey,
       sessionId: confirmationScopeId,
+      voiceSessionId: sessionId,
       contextKey: context.key,
       toolName: name,
       arguments: input,
@@ -982,14 +1003,14 @@ router.post(
         toolName: name,
         actionFingerprint: scope.fingerprint,
       }).catch(() => undefined);
-      res.json({ ok: false, cancelled: true, output: "Cancelled." });
+      reply(200, { ok: false, cancelled: true, output: "Cancelled." });
       return;
     }
     const approved = approvedCalls.get(scopeKey);
     let confirmed = Boolean(
       approved &&
       approved.fingerprint === scope.fingerprint &&
-      approved.contextKey === context.key &&
+        approved.contextKey === context.key && approved.sessionId === sessionId &&
       approved.expiresAt > Date.now(),
     );
     if (!confirmed && imperativeGateAuthorization) confirmed = true;
@@ -999,6 +1020,10 @@ router.post(
       );
     }
     if (requiresVoiceConfirmation(name) && !confirmed) {
+      if (messageId !== undefined) {
+        reply(409, { ok: false, error: "The pending action changed. Review it before confirming again." });
+        return;
+      }
       askvPendingConfirmations.set(pending);
       if (tool.mutating) await audit("requires_confirmation");
       void publishAskVDeviceEvent(session, "work_hub.askv.confirmation_changed", context.conversationId ?? 0, {
@@ -1006,7 +1031,7 @@ router.post(
         toolName: name,
         actionFingerprint: scope.fingerprint,
       }).catch(() => undefined);
-      res.json({
+      reply(200, {
         ok: false,
         requiresConfirmation: true,
         awaitingUserConfirmation: true,
@@ -1015,7 +1040,7 @@ router.post(
         name,
         arguments: input,
         sessionId,
-        callId: req.body?.callId ?? key,
+        callId: body?.callId ?? key,
         idempotencyKey: key,
         message: "Nothing was changed. Summarize this exact action and ask for a clear spoken or typed reply, such as I confirm or Cancel. A confirmation problem is not an account-permission failure. If the action changed, explain the new action before asking again.",
       });
@@ -1025,6 +1050,7 @@ router.post(
       approvedCalls.set(scopeKey, {
         fingerprint: scope.fingerprint,
         contextKey: context.key,
+        sessionId,
         expiresAt: Date.now() + 300_000,
       });
     try {
@@ -1067,10 +1093,11 @@ router.post(
           duplicate: result.hit,
           durationMs: Date.now() - toolStartedAt,
         });
-      res.json({
+      reply(200, {
         ok: status === "success",
         output: result.value,
         replayed: result.hit,
+        ...(messageId !== undefined ? { toolName: name, submitted: input } : {}),
         mutation: voiceMutationHint(
           name,
           input,
@@ -1085,15 +1112,14 @@ router.post(
         "AskV Realtime tool call failed",
       );
       if (tool.mutating) await audit("failure");
-      res.status(409).json({
+      reply(409, {
         ok: false,
         error:
           "The action outcome could not be confirmed. Check the record before retrying.",
         code: "assistant.tool_failed",
       });
     }
-  },
-);
+}
 
 async function voiceConversation(
   session: SessionPayload,
@@ -1196,7 +1222,7 @@ router.post(
 router.post("/assistant/voice/transcript", async (req, res): Promise<void> => {
   const session = requireSession(req, res);
   if (!session) return;
-  const { conversationId, sessionId, eventId, role, content } = req.body ?? {};
+  const { conversationId, sessionId, eventId, role, content, spoken, clientSurface } = req.body ?? {};
   if (
     !Number.isSafeInteger(conversationId) ||
     conversationId <= 0 ||
@@ -1208,7 +1234,7 @@ router.post("/assistant/voice/transcript", async (req, res): Promise<void> => {
     content.length > 16000 ||
     Object.keys(req.body).some(
       (key) =>
-        !["conversationId", "sessionId", "eventId", "role", "content"].includes(
+        !["conversationId", "sessionId", "eventId", "role", "content", "spoken", "clientSurface"].includes(
           key,
         ),
     )
@@ -1284,14 +1310,31 @@ router.post("/assistant/voice/transcript", async (req, res): Promise<void> => {
     messageId,
   }).catch(() => undefined);
   if (role === "user" && classifyConfirmation(content) === "cancel") {
-    askvPendingConfirmations.clear(
+    clearPendingVoiceAction(
       session.userId!,
       organizationKeyFromSession(session),
-      askVConfirmationScopeId(conversationId, sessionId),
+      sessionId,
+      conversationId,
     );
     void publishAskVDeviceEvent(session, "work_hub.askv.confirmation_changed", conversationId, {
       state: "cancelled",
     }).catch(() => undefined);
+  }
+  if (role === "user" && spoken === true && !context.ended && classifyConfirmation(content) === "confirm") {
+    const scopeId = askVConfirmationScopeId(conversationId, sessionId);
+    const pending = askvPendingConfirmations.peek(session.userId!, organizationKeyFromSession(session), scopeId);
+    if (pending?.voiceSessionId === sessionId && pending.contextKey === context.key && isSpokenApproval(pending.toolName, content)) {
+      await handleRealtimeToolCall(req, res, {
+        sessionId,
+        conversationId,
+        name: pending.toolName,
+        arguments: pending.arguments,
+        idempotencyKey: pending.idempotencyKey,
+        confirmationEventId: eventId,
+        clientSurface,
+      }, messageId);
+      return;
+    }
   }
   res.json({ ok: true, messageId });
 });

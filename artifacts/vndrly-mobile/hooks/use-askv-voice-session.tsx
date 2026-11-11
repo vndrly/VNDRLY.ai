@@ -113,6 +113,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const turnStartedAfterUserEventId = useRef<string | null>(null);
   // The server retains one exact pending action per user/organization/session.
   const pendingConfirmation = useRef<PendingConfirmation | null>(null);
+  const spokenReceipt = useRef<{ sessionId: string; eventId: string; name: string; output: string } | null>(null);
   const prefsRef = useRef<{ userId: number; promise: Promise<void> } | null>(null);
   const preferenceVersion = useRef(0);
   const pendingTranscripts = useRef<PendingTranscript[]>([]);
@@ -203,11 +204,17 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         const data = await post(transcript.session.token, "voice/transcript", {
           conversationId: transcript.session.conversationId, sessionId: transcript.session.sessionId,
           eventId: transcript.eventId, role: transcript.role, content: transcript.content,
+          ...(transcript.spoken ? { spoken: true, clientSurface: "ios" } : {}),
         });
         if (pendingTranscripts.current[0] !== transcript) continue;
         pendingTranscripts.current.shift();
         if (scopeRef.current === transcript.session.scope && mounted.current) {
           assistantRef.current.upsertMessage({ id: transcript.eventId, role: transcript.role, content: transcript.content, serverId: data.messageId });
+          if (typeof data.action?.toolName === "string" && typeof data.action.output === "string") {
+            spokenReceipt.current = { sessionId: transcript.session.sessionId, eventId: transcript.eventId, name: data.action.toolName, output: data.action.output };
+            if (data.action.ok && data.action.toolName === "confirm_visitor_check_in" && data.action.submitted) notifyGateVoiceSaved(data.action.submitted);
+          }
+          if (data.action?.mutation) emitAskVDataChanged();
         }
       }
     })();
@@ -353,12 +360,18 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           greeting: spokenGreeting, history, audioSource: detector?.audioSource,
           onToolCall: async call => {
             check(); clearIdle(); writeState("thinking");
+            const readReceipt = () => {
+              const receipt = spokenReceipt.current;
+              return receipt?.sessionId === session.sessionId && receipt.eventId === latestUserTranscript.current?.eventId && receipt.name === call.name ? receipt.output : undefined;
+            };
+            const savedReceipt = readReceipt();
+            if (savedReceipt) { pendingConfirmation.current = null; return savedReceipt; }
             const parsed = typeof call.arguments === "string" ? JSON.parse(call.arguments) : call.arguments;
             const { confirmed: _untrustedConfirmed, confirmationPhrase: _untrustedPhrase,
               confirmationEventId: _untrustedEventId, actionEventId: _untrustedActionEventId,
               idempotencyKey: _untrustedKey, callId: _untrustedCallId,
               ...rawArguments } = parsed ?? {};
-            const gateDraft = /^(prepare|confirm)_visitor_check_in$/.test(call.name) ? readGateVoiceDraft() : undefined;
+            const gateDraft = /^(resolve_gate_check_in|(prepare|confirm)_visitor_check_in)$/.test(call.name) ? readGateVoiceDraft() : undefined;
             if (gateDraft) {
               for (const [key, value] of Object.entries(gateDraft)) if (rawArguments[key] == null) rawArguments[key] = value;
               await executeAskVClientIntent({ name: "prefill_gate_visit", arguments: { values: rawArguments } }, pathRef.current);
@@ -398,6 +411,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
               }
               try { await flushTranscripts(); check(); }
               catch { return JSON.stringify({ ok: false, requiresConfirmation: true, message: "The confirmation could not be saved. Nothing was changed." }); }
+              const receipt = readReceipt();
+              if (receipt) { pendingConfirmation.current = null; return receipt; }
               if (!sameContext()) return contextChanged();
               confirmationEventId = reply.eventId;
             } else if (GATE_SUBMISSION_TOOLS.has(call.name)) {
@@ -418,7 +433,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             }
             let domainArguments: Record<string, unknown>;
             try {
-              domainArguments = await withAskVToolLocation(call.name, rawArguments, pending?.coordinates);
+              domainArguments = await withAskVToolLocation(call.name, rawArguments, pending ? pending.coordinates ?? null : undefined);
             } catch (reason) { return JSON.stringify({ ok: false, error: reason instanceof Error ? reason.message : "Location unavailable. Nothing was changed." }); }
             check();
             if (!sameContext()) return contextChanged();
@@ -456,6 +471,9 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             }
             if (output.execution === "client" && output.intent) {
               const result = await executeAskVClientIntent(output.intent, pathRef.current);
+              if (["resolve_gate_check_in", "prepare_visitor_check_in", "prepare_visitor_check_out"].includes(call.name)) {
+                return JSON.stringify({ ...output, clientResult: result });
+              }
               return JSON.stringify(result);
             }
             if (output.ok === true && output.action === "visitor_checked_in") notifyGateVoiceSaved(domainArguments);

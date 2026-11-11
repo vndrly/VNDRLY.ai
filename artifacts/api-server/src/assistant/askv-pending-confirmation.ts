@@ -12,6 +12,7 @@ export interface AskVPendingConfirmation {
   userId: number;
   organizationKey: string;
   sessionId: string;
+  voiceSessionId?: string;
   contextKey: string;
   toolName: string;
   arguments: unknown;

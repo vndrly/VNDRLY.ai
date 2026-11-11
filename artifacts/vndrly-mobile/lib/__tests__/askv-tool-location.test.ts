@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const gps = vi.hoisted(() => ({ permission: vi.fn(), position: vi.fn() }));
 vi.mock("expo-location", () => ({ Accuracy: { High: 4 }, getForegroundPermissionsAsync: gps.permission,
-  requestForegroundPermissionsAsync: gps.permission, getCurrentPositionAsync: gps.position }));
+  requestForegroundPermissionsAsync: gps.permission, getCurrentPositionAsync: gps.position,
+  getLastKnownPositionAsync: gps.position }));
 import { withAskVToolLocation } from "../askv-tool-location";
 beforeEach(() => {
   gps.permission.mockReset().mockResolvedValue({ status: "granted" });
@@ -22,6 +23,13 @@ describe("AskV tool GPS source", () => {
     await expect(withAskVToolLocation("close_ticket_for_review", { ticketId: 7 })).rejects.toThrow("Nothing was changed");
     expect(await withAskVToolLocation("query_ticket_route_eta", { ticketId: 7, origin: "shop" }))
       .toEqual({ ticketId: 7, origin: "shop" });
+    expect(gps.position).not.toHaveBeenCalled();
+  });
+  it("continues a Gate check-in without invented coordinates or a permission prompt", async () => {
+    gps.permission.mockResolvedValue({ status: "denied" });
+    expect(await withAskVToolLocation("confirm_visitor_check_in", { siteLocationId: 9, latitude: 0, longitude: 0 }))
+      .toEqual({ siteLocationId: 9 });
+    expect(gps.permission).toHaveBeenCalledOnce();
     expect(gps.position).not.toHaveBeenCalled();
   });
 });

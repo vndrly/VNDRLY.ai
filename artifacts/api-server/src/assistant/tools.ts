@@ -932,7 +932,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "prepare_visitor_check_in",
     description:
-      "Collect visitor check-in fields and report what is still missing. Does not commit the visit. Use for gate check-in. Ask for missing first name, last name, company, plate, state, purpose, notes, duration, or site.",
+      "Validate a visitor check-in draft without saving. Ask only for fields returned as missing. Company, purpose, notes, duration and a plate can be omitted. The gate site supplies its host. If a supplied plate needs a state under the current policy, the tool reports it.",
     input_schema: {
       type: "object",
       properties: {
@@ -961,7 +961,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "confirm_visitor_check_in",
     description:
-      "Commit the exact resolved visitor check-in when the user directly commands check-in or later confirms a prepared draft. Include the resolved visitor name and plate when the command names them so the server can bind the target. The server independently validates the saved user utterance; model-generated confirmation text or flags never authorize the write.",
+      "Use the exact resolved visitor check-in draft. In a voice session, call once to stage the action, then read it back for one spoken confirmation. Include the resolved visitor name and all supplied details. The server binds approval to the saved user turn, and automatically submits when the user confirms.",
     input_schema: {
       type: "object",
       properties: {
@@ -986,7 +986,7 @@ export const TOOLS: Anthropic.Tool[] = [
         idempotencyKey: { type: "string" },
         confirmed: { type: "boolean" },
       },
-      required: ["firstName", "lastName", "siteLocationId", "hostType", "confirmed"],
+      required: ["firstName", "lastName", "siteLocationId"],
       additionalProperties: false,
     },
   },
@@ -1019,7 +1019,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "confirm_visitor_check_out",
-    description: "Commit the exact resolved visitor check-out when the user directly commands check-out or later confirms a prepared draft. Include the resolved visitor name and plate when the command names them so the server can bind the target. The server independently validates the saved user utterance; model-generated confirmation text or flags never authorize the write.",
+    description: "Use the exact resolved active visit for check-out. In a voice session, call once to stage the action, then read it back for one spoken confirmation. The server automatically submits when the user confirms.",
     input_schema: {
       type: "object",
       properties: {
@@ -1034,7 +1034,7 @@ export const TOOLS: Anthropic.Tool[] = [
         idempotencyKey: { type: "string" },
         confirmed: { type: "boolean" },
       },
-      required: ["visitId", "confirmed"],
+      required: ["visitId"],
       additionalProperties: false,
     },
   },

@@ -5,6 +5,7 @@ import assistantRealtimeRouter from "./assistantRealtime";
 
 const mocks = vi.hoisted(() => ({
   userLanguage: null as string | null,
+  transcriptId: 0,
   createCall: vi.fn(async () => "answer-sdp"),
   createSecret: vi.fn(async () => ({ value: "ek_test", expires_at: 123 })),
   runTool: vi.fn(async () => JSON.stringify({ ok: true })),
@@ -64,8 +65,24 @@ vi.mock("@workspace/db", () => ({
         })),
       })),
     })),
+    transaction: async (operation: (tx: unknown) => unknown) => operation({
+      execute: async () => undefined,
+      select: () => ({
+        from: (table: { id?: string }) => ({
+          where: () => ({
+            limit: async () => table.id === "assistantConversations.id" ? [{ id: 12 }] : [],
+            orderBy: async () => [],
+          }),
+        }),
+      }),
+      insert: () => ({ values: () => ({ returning: async () => [{ id: ++mocks.transcriptId }] }) }),
+      update: () => ({ set: () => ({ where: async () => undefined }) }),
+    }),
   },
   usersTable: { id: "users.id" },
+  assistantConversationsTable: { id: "assistantConversations.id", userId: "assistantConversations.userId" },
+  assistantActionAuditTable: { conversationId: "assistantActionAudit.conversationId", actionType: "assistantActionAudit.actionType" },
+  assistantMessagesTable: { id: "assistantMessages.id", conversationId: "assistantMessages.conversationId", role: "assistantMessages.role", content: "assistantMessages.content", createdAt: "assistantMessages.createdAt", toolCalls: "assistantMessages.toolCalls" },
   onboardingProgressTable: {
     partnerId: "onboarding.partnerId",
     vendorId: "onboarding.vendorId",
@@ -362,10 +379,53 @@ describe("AskV Realtime routes", () => {
     expect(mocks.runTool).not.toHaveBeenCalled();
   });
 
-  it("executes an exact Gate mutation from a saved imperative user command", async () => {
-    mocks.readBoundUtterance.mockResolvedValue("check Bob Villa in");
+  it("submits the exact pending voice action from the spoken reply alone", async () => {
+    const api = request(app());
+    const transcript = (sessionId: string, eventId: string, content: string, spoken = true) => api
+      .post("/assistant/voice/transcript")
+      .send({ conversationId: 12, sessionId, eventId, content, role: "user", spoken, clientSurface: "ios" });
+    await transcript(testSessionId, "initial", "Mark my notifications read").expect(200);
+    const proposal = await api.post("/assistant/realtime/tool-call").send({
+      sessionId: testSessionId,
+      callId: "original-action",
+      name: "mark_notifications_read",
+      arguments: { markAll: true },
+      clientSurface: "ios",
+    }).expect(200);
+    expect(proposal.body).toMatchObject({ requiresConfirmation: true });
 
-    const res = await request(app())
+    await transcript(testSessionId, "typed-reply", "I confirm", false).expect(200);
+    await transcript(testSessionId, "casual-reply", "Yes").expect(200);
+    await transcript(`${testSessionId}-other`, "other-reply", "I confirm").expect(200);
+    expect(mocks.runTool).not.toHaveBeenCalled();
+
+    mocks.readConfirmation.mockResolvedValue("I authorize");
+    const receipt = await transcript(testSessionId, "spoken-reply", "I authorize").expect(200);
+    expect(receipt.body).toMatchObject({ ok: true, action: { ok: true } });
+    expect(mocks.readConfirmation).toHaveBeenLastCalledWith({
+      conversationId: 12,
+      sessionId: testSessionId,
+      eventId: "spoken-reply",
+      pendingCreatedAt: expect.any(Number),
+    });
+    expect(mocks.runTool).toHaveBeenCalledWith(
+      "mark_notifications_read",
+      expect.objectContaining({ markAll: true, confirmed: true, idempotencyKey: "original-action" }),
+      expect.objectContaining({ userId: 10 }),
+      expect.any(String),
+    );
+    await transcript(testSessionId, "spoken-reply", "I authorize").expect(200);
+    expect(mocks.runTool).toHaveBeenCalledTimes(1);
+  });
+
+  it("submits the Gate check-in after one spoken confirmation and keeps volunteered fields", async () => {
+    const api = request(app());
+    const transcript = (eventId: string, content: string) => api.post("/assistant/voice/transcript")
+      .send({ conversationId: 12, sessionId: testSessionId, eventId, role: "user", content, spoken: true, clientSurface: "ios" });
+    const spokenRequest = "Check in Bob Jones, Texas plate ABC-123, with Bob's Trucking to deliver equipment, four hours.";
+    await transcript("saved-gate-command", spokenRequest).expect(200);
+    mocks.readBoundUtterance.mockResolvedValue(spokenRequest);
+    const res = await api
       .post("/assistant/realtime/tool-call")
       .send({
         sessionId: testSessionId,
@@ -374,20 +434,31 @@ describe("AskV Realtime routes", () => {
         name: "confirm_visitor_check_in",
         arguments: {
           firstName: "Bob",
-          lastName: "Villa",
+          lastName: "Jones",
           vehiclePlate: "ABC123",
+          plateState: "TX",
+          company: "Bob's Trucking",
+          purpose: "deliver equipment",
+          expectedDurationMinutes: 240,
           siteLocationId: 9,
         },
         clientSurface: "ios",
       })
       .expect(200);
 
-    expect(res.body).toMatchObject({ ok: true });
+    expect(res.body).toMatchObject({ requiresConfirmation: true });
+    expect(mocks.runTool).not.toHaveBeenCalled();
+    mocks.readConfirmation.mockResolvedValue("Confirmed.");
+    const receipt = await transcript("confirmed-gate-command", "Confirmed.").expect(200);
+    expect(receipt.body).toMatchObject({ action: { ok: true } });
     expect(mocks.runTool).toHaveBeenCalledWith(
       "confirm_visitor_check_in",
       expect.objectContaining({
         firstName: "Bob",
-        lastName: "Villa",
+        lastName: "Jones",
+        company: "Bob's Trucking",
+        purpose: "deliver equipment",
+        expectedDurationMinutes: 240,
         confirmed: true,
         idempotencyKey: "gate-command-1",
       }),
@@ -396,7 +467,7 @@ describe("AskV Realtime routes", () => {
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
-        confirmationPhrase: "check Bob Villa in",
+        confirmationPhrase: "Confirmed.",
         resultStatus: "success",
       }),
     );
@@ -422,6 +493,22 @@ describe("AskV Realtime routes", () => {
       .expect(200);
     expect(res.body).toMatchObject({ requiresConfirmation: true });
     expect(mocks.runTool).not.toHaveBeenCalled();
+  });
+
+  it("checks out the selected visit after a short spoken yes", async () => {
+    const api = request(app());
+    const transcript = (eventId: string, content: string) => api.post("/assistant/voice/transcript")
+      .send({ conversationId: 12, sessionId: testSessionId, eventId, role: "user", content, spoken: true, clientSurface: "web" });
+    await transcript("checkout-request", "Check Bob Jones out").expect(200);
+    const staged = await api.post("/assistant/realtime/tool-call").send({
+      sessionId: testSessionId, callId: "checkout", name: "confirm_visitor_check_out", arguments: { visitId: 91 }, clientSurface: "web",
+    }).expect(200);
+    expect(staged.body).toMatchObject({ requiresConfirmation: true });
+    expect(mocks.runTool).not.toHaveBeenCalled();
+    mocks.readConfirmation.mockResolvedValue("Yes");
+    const receipt = await transcript("checkout-yes", "Yes").expect(200);
+    expect(receipt.body).toMatchObject({ action: { ok: true, toolName: "confirm_visitor_check_out", submitted: { visitId: 91 } } });
+    expect(mocks.runTool).toHaveBeenCalledWith("confirm_visitor_check_out", expect.objectContaining({ visitId: 91, confirmed: true }), expect.anything(), expect.any(String));
   });
 
   it("does not execute Gate writes for a missing saved event or first name only", async () => {

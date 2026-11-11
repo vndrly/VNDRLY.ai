@@ -13,6 +13,7 @@ describe("meeting Ask V wake parsing", () => {
     ["ask v: What is the total?", "What is the total?"],
     ["Ask V - who owns the action?", "who owns the action?"],
     ["AskV, when is the inspection?", "when is the inspection?"],
+    ["Hey V, who is taking the next watch?", "who is taking the next watch?"],
   ])("accepts a leading standalone wake phrase", (value, question) => {
     expect(parseMeetingWakeQuestion(value)).toBe(question);
   });
@@ -27,6 +28,8 @@ describe("meeting Ask V wake parsing", () => {
     "AskVendors about it",
     "AskV",
     "V, Ask V, what was decided?",
+    "Hey Vendor, are you ready?",
+    "Hey V, Hey V, what was decided?",
   ])("rejects absent, embedded, incomplete, or partial wake phrases", (value) => {
     expect(parseMeetingWakeQuestion(value)).toBeNull();
   });

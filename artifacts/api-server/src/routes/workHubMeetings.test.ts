@@ -120,6 +120,37 @@ describe("source-bound meeting Ask V answers", () => {
     expect(response.body).toMatchObject({ replayed: false, answer: { body: "Inspect the pump.", displayName: "Ask V", messageType: "askv", userId: 1, recipientUserId: null, attachment: null, askv: { sourceId: messageId, sourceType: "chat", requestedByUserId: 1, sourceCreatedAt: "2026-09-09T12:00:00.000Z", sourceStartsAtMs: null, sourceEndsAtMs: null, answeredAt: expect.any(String) } } });
     expect(response.body.answer.askv.sourceFingerprint).toBeUndefined(); expect(mocks.mutations.filter((m) => m.type === "insert")).toHaveLength(1); expect(mocks.results).toEqual([]);
   });
+  it("answers an addressed chat message automatically after it commits", async () => {
+    const invocation = { ...source, body: "Hey V, what was decided?" };
+    seed({ invited: true });
+    mocks.results.push([]);
+    prepare(invocation, [invocation]);
+    mocks.answerQuestion.mockImplementation(async (input) => {
+      expect(mocks.transactionDepth).toBe(0);
+      expect(input).toMatchObject({ question: "what was decided?", audience: "shared" });
+      const runtime = (mocks.mutations.filter((mutation) => mutation.type === "update").at(-1)?.value as any)?.runtime;
+      seed({ invited: true, runtime });
+      mocks.results.push([invocation], [], []);
+      return "Inspect the pump.";
+    });
+    const response = await request(app()).post(`/meetings/${meetingId}/chat`).send({ id: messageId, body: invocation.body });
+    expect(response.status).toBe(200);
+    await vi.waitFor(() => expect(mocks.mutations).toContainEqual(expect.objectContaining({
+      type: "insert",
+      value: expect.objectContaining({ messageType: "askv", body: "Inspect the pump." }),
+    })));
+    expect(mocks.answerQuestion).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { invited: false, body: "Hey V, what was decided?" },
+    { invited: true, body: "Let's ask V about it later." },
+  ])("stays silent on meeting chat without an addressed invocation and invitation", async ({ invited, body }) => {
+    seed({ invited });
+    const response = await request(app()).post(`/meetings/${meetingId}/chat`).send({ id: messageId, body });
+    expect(response.status).toBe(200);
+    expect(mocks.answerQuestion).not.toHaveBeenCalled();
+  });
   it("excludes private side chats and historical attendance from shared context", async () => {
     prepare(source, [source, { ...source, recipientUserId: 2, body: "PRIVATE SIDE CONTENT" }, { ...source, messageType: "system", body: "RESTRICTED ATTENDANCE" }], [{ id: 1, displayName: "Host" }, { id: 2, displayName: "ABSENT NAME" }]);
     mocks.answerQuestion.mockImplementation(async (input) => { expect(JSON.stringify(input)).toContain("what was decided"); expect(JSON.stringify(input)).not.toMatch(/PRIVATE SIDE|RESTRICTED ATTENDANCE|ABSENT NAME/); finish(); return "Answer"; });
@@ -163,6 +194,28 @@ describe("source-bound meeting Ask V answers", () => {
     const response = await post("transcript");
     expect(response.status).toBe(200);
     expect(response.body.answer).toMatchObject({ body: "Transcript answer", askv: { sourceType: "transcript", sourceStartsAtMs: 100, sourceEndsAtMs: 200 } });
+  });
+  it("automatically answers a consented spoken Hey V question from its saved transcript", async () => {
+    const artifact = { id: "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea03", occurrenceId: meetingId, artifactType: "transcript" };
+    const turn = { id: messageId, text: "Hey V, who had the tablet last?", startsAtMs: 100, endsAtMs: 200 };
+    const segment = { ...turn, artifactId: artifact.id, speakerUserId: 1 };
+    const consents = [{ userId: 1 }];
+    seed({ invited: true });
+    mocks.results.push([], consents, [artifact], []);
+    seed({ invited: true });
+    mocks.results.push(consents, [segment], [artifact], [], [{ id: 1, displayName: "Host" }], [], [], []);
+    mocks.answerQuestion.mockImplementation(async (input) => {
+      expect(input).toMatchObject({ question: "who had the tablet last?", audience: "shared" });
+      const runtime = (mocks.mutations.filter(mutation => mutation.type === "update").at(-1)?.value as any)?.runtime;
+      seed({ invited: true, runtime });
+      mocks.results.push(consents, [segment], [artifact], [], []);
+      return "Joe had it last.";
+    });
+    const response = await request(app()).post(`/meetings/${meetingId}/transcript`).send(turn);
+    expect(response.status).toBe(200);
+    await vi.waitFor(() => expect(mocks.mutations).toContainEqual(expect.objectContaining({
+      type: "insert", value: expect.objectContaining({ messageType: "askv", body: "Joe had it last." }),
+    })));
   });
   it("rejects a transcript source whose artifact is outside the meeting", async () => {
     const transcriptSource = { id: messageId, artifactId: "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea03", speakerUserId: 1, text: "V, what was said?", startsAtMs: 100, endsAtMs: 200 };

@@ -9,6 +9,7 @@ import { readGateVoiceDraft, notifyGateVoiceSaved, subscribeGateVoiceDraft } fro
 import { parseGateSetupProgressHint, parseGateWorkflowOffer, type GateWorkflowOffer, type GateSetupProgressHint } from '@workspace/gate-booth';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 const GATE_SUBMISSION_TOOLS = new Set(['confirm_visitor_check_in', 'confirm_visitor_check_out']);
+const GATE_PREPARATION_TOOLS = new Set(['resolve_gate_check_in', 'prepare_visitor_check_in', 'prepare_visitor_check_out']);
 export type AskVRealtimeState = AskVVoiceState;
 type Conversation = { conversationId: number; messages: Array<{ role: 'user' | 'assistant'; content: string }> };
 export function useAskVRealtime(args?: {
@@ -16,6 +17,7 @@ export function useAskVRealtime(args?: {
   prepareConversation?: (signal: AbortSignal) => Promise<Conversation>;
   onTranscript?: (message: VoiceTranscript, conversationId: number, sessionId: string) => void;
   flushTranscripts?: () => Promise<void>;
+  readSpokenReceipt?: (sessionId: string, eventId: string, toolName: string) => string | undefined;
   onMutation?: (mutation: { name: string; refresh: string[] }) => void;
   onGateSetupProgress?: (hint: GateSetupProgressHint) => void;
   onGateWorkflowOffer?: (offer: GateWorkflowOffer) => void;
@@ -88,6 +90,9 @@ export function useAskVRealtime(args?: {
         onToolCall: async call => {
           if (!valid()) throw new Error('Voice session ended.');
           clearIdle(); transition('thinking');
+          const readReceipt = () => lastUserTranscript && latest.current?.readSpokenReceipt?.(sessionId, lastUserTranscript.eventId, call.name);
+          const savedReceipt = readReceipt();
+          if (savedReceipt) { pendingConfirmations.delete(call.name); return savedReceipt; }
           let domain = call.arguments && typeof call.arguments === 'object' ? call.arguments as Record<string, unknown> : {};
           const gateDraft = /^(resolve_gate_check_in|(prepare|confirm)_visitor_check_in)$/.test(call.name) ? readGateVoiceDraft() : undefined;
           if (gateDraft) {
@@ -106,6 +111,8 @@ export function useAskVRealtime(args?: {
             if (!valid()) return 'Voice session ended.';
             if (!lastUserTranscript || lastUserTranscript.eventId === pending.afterEventId) return JSON.stringify({ ok: false, requiresConfirmation: true, message: 'The spoken confirmation has not arrived. Please confirm the pending action.' });
             await latest.current?.flushTranscripts?.();
+            const receipt = readReceipt();
+            if (receipt) { pendingConfirmations.delete(call.name); return receipt; }
             confirmationEventId = lastUserTranscript.eventId;
           } else if (GATE_SUBMISSION_TOOLS.has(call.name)) {
             const until = Date.now() + 4000;
@@ -152,7 +159,7 @@ export function useAskVRealtime(args?: {
             return JSON.stringify({
               ...body,
               clientResult,
-              ...(intent.name === 'prefill_gate_visit' && clientResult.ok && (!Array.isArray(parsed?.missing) || parsed.missing.length === 0)
+              ...(intent.name === 'prefill_gate_visit' && !GATE_PREPARATION_TOOLS.has(call.name) && clientResult.ok && (!Array.isArray(parsed?.missing) || parsed.missing.length === 0)
                 ? { ok: true, responseMode: 'silent' }
                 : {}),
             });

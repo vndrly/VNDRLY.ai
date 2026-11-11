@@ -20,19 +20,10 @@ function missingCheckInFields(args: Record<string, unknown>): string[] {
   if (typeof args.lastName !== "string" || !args.lastName.trim())
     missing.push("lastName");
   if (!positiveId(args.siteLocationId)) missing.push("siteLocationId");
-  if (args.hostType === "partner" && !positiveId(args.hostPartnerId))
-    missing.push("hostPartnerId");
-  if (args.hostType === "vendor" && !positiveId(args.hostVendorId))
-    missing.push("hostVendorId");
-  const vehiclePlate =
-    typeof args.vehiclePlate === "string"
-      ? args.vehiclePlate.toUpperCase().replace(/[^A-Z0-9]/g, "")
-      : "";
-  if (vehiclePlate.length < 4) missing.push("vehiclePlate");
-  else if (
-    typeof args.plateState !== "string" ||
-    !/^[A-Z]{2}$/.test(args.plateState.trim().toUpperCase())
-  )
+  const plate = typeof args.vehiclePlate === "string" && args.vehiclePlate.trim();
+  const stateProvided = args.plateState != null && String(args.plateState).trim();
+  if (plate && (stateProvided || process.env.VNDRLY_REQUIRE_PLATE_STATE === "1") &&
+      !normalizePlateState(typeof args.plateState === "string" ? args.plateState : null))
     missing.push("plateState");
   return missing;
 }
@@ -401,7 +392,8 @@ export async function resolveGateCheckInCandidate(
         .filter(Boolean),
     ),
   ];
-  if (vehiclePlate && !args.plateState && states.length > 1) {
+  if (vehiclePlate && !args.plateState && states.length > 1 &&
+      (process.env.VNDRLY_REQUIRE_PLATE_STATE === "1" || !args.firstName || !args.lastName)) {
     return JSON.stringify({
       ok: false,
       confidence: "ambiguous",
@@ -447,13 +439,7 @@ export async function resolveGateCheckInCandidate(
       "firstName",
       "lastName",
       "company",
-      "purpose",
-      "expectedDurationMinutes",
       "siteLocationId",
-      "hostType",
-      "hostPartnerId",
-      "hostVendorId",
-      "entryCategory",
     ] as const;
     for (const field of historicalFields) {
       if (draft[field] != null || candidate[field] == null) continue;

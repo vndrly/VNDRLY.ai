@@ -4,6 +4,7 @@ export type ConfirmationDecision = "confirm" | "cancel" | "none";
 
 const CONFIRM_PHRASES = new Set([
   "confirm",
+  "confirmed",
   "sounds good",
   "execute",
   "do it",
@@ -32,6 +33,8 @@ const CONFIRM_PHRASES = new Set([
   "that's correct",
   "thats correct",
   "i approve",
+  "i authorize",
+  "autorizo",
   "sí",
   "si",
   "confirmo",
@@ -61,6 +64,10 @@ const CANCEL_PHRASES = new Set([
 
 function normalize(text: string): string {
   return text.trim().toLowerCase().replace(/’/g, "'").replace(/[,!¡.]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export function isExplicitSpokenAuthorization(text: string): boolean {
+  return /^(?:confirmed|i confirm|i authorize|confirmo|autorizo)$/.test(normalize(text));
 }
 
 export function classifyConfirmation(text: string): ConfirmationDecision {

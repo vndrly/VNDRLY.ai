@@ -15,6 +15,7 @@ import {
 } from "../work-hub/message-mutation";
 import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
 import { applyAwayRepliesForIncoming } from "../services/work-hub-away-responder-repository";
+import { answerChannelQuestion, CHANNEL_ASSISTANT_MESSAGE_KIND } from "../work-hub/channel-assistant";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, asc, desc, eq, gt, lt, ne, sql, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -404,7 +405,7 @@ router.get("/work-hub/channels/:channelId/transcript", async (req, res) => {
     const messages = await db.select({
       id: workHubMessagesTable.id,
       createdAt: workHubMessagesTable.createdAt,
-      authorName: usersTable.displayName,
+      authorName: sql<string>`CASE WHEN ${workHubMessagesTable.kind} = ${CHANNEL_ASSISTANT_MESSAGE_KIND} THEN 'V' ELSE ${usersTable.displayName} END`,
       body: sql<string>`CASE WHEN ${workHubMessagesTable.deletedAt} IS NULL THEN ${workHubMessagesTable.body} ELSE '[Message deleted]' END`,
       parentMessageId: workHubMessagesTable.parentMessageId,
     }).from(workHubMessagesTable).leftJoin(usersTable, eq(usersTable.id, workHubMessagesTable.authorUserId))
@@ -434,7 +435,7 @@ router.get("/work-hub/channels/:channelId/messages", async (req, res) => {
       inArray(userOrgMembershipsTable.userId, rows.map(r => r.authorUserId)), eq(userOrgMembershipsTable.role, "admin"),
       eq(userOrgMembershipsTable.orgType, channel.ownerOrgType), channel.ownerOrgType === "vendor" ? eq(userOrgMembershipsTable.vendorId, channel.ownerOrgId) : eq(userOrgMembershipsTable.partnerId, channel.ownerOrgId),
     )) : [];
-    return res.json(rows.map(row => ({ ...row, body: row.deletedAt ? "" : row.body, authorIsAdmin: admins.some(a => a.userId === row.authorUserId), authorName: authors.find(a => a.id === row.authorUserId)?.displayName ?? "", reactions: row.deletedAt ? [] : reactions.filter(r => r.messageId === row.id) })));
+    return res.json(rows.map(row => ({ ...row, body: row.deletedAt ? "" : row.body, authorIsAdmin: row.kind !== CHANNEL_ASSISTANT_MESSAGE_KIND && admins.some(a => a.userId === row.authorUserId), authorName: row.kind === CHANNEL_ASSISTANT_MESSAGE_KIND ? "V" : authors.find(a => a.id === row.authorUserId)?.displayName ?? "", reactions: row.deletedAt ? [] : reactions.filter(r => r.messageId === row.id) })));
   } catch (error) { return fail(res, error); }
 });
 
@@ -488,6 +489,9 @@ router.post("/work-hub/channels/:channelId/messages", expectedWorkforceContext, 
     if (result.resource.channelId !== channel.id || result.resource.authorUserId !== actor.userId || result.resource.body !== payload.body || result.resource.kind !== payload.kind || result.resource.parentMessageId !== thread.parentMessageId || result.resource.rootMessageId !== thread.rootMessageId) throw new WorkHubAccessError("forbidden");
     const savedMentions = await db.select({ userId: workHubMentionsTable.mentionedUserId }).from(workHubMentionsTable).where(eq(workHubMentionsTable.messageId, result.resource.id));
     if (JSON.stringify(savedMentions.map(row => row.userId).sort((a, b) => a - b)) !== JSON.stringify([...new Set(payload.mentionUserIds)].sort((a, b) => a - b))) throw new WorkHubAccessError("forbidden");
+    void answerChannelQuestion(actor, result.resource).catch(() => {
+      req.log?.warn?.({ channelId: channel.id, messageId: result.resource.id }, "Work Hub chat answer did not complete");
+    });
     if (!result.replayed) {
       const members = await db.select({ userId: workHubChannelMembersTable.userId }).from(workHubChannelMembersTable)
         .where(eq(workHubChannelMembersTable.channelId, channel.id));
@@ -517,7 +521,7 @@ router.patch("/work-hub/channels/:channelId/messages/:messageId", async (req, re
     const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "message.update", envelope, async (tx) => {
       const [current] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, req.params.messageId), eq(workHubMessagesTable.channelId, channel.id))).for("update").limit(1);
       if (!current) throw new WorkHubAccessError("not_found");
-      if (current.authorUserId !== actor.userId) throw new WorkHubAccessError("forbidden");
+      if (current.authorUserId !== actor.userId || current.kind === CHANNEL_ASSISTANT_MESSAGE_KIND) throw new WorkHubAccessError("forbidden");
       if (current.deletedAt) throw new WorkHubAccessError("forbidden");
       if (envelope.expectedVersion !== current.version) throw new Error("work_hub.version_conflict");
       await tx.insert(workHubMessageVersionsTable).values({ messageId: current.id, version: current.version, body: current.body, editorUserId: actor.userId });

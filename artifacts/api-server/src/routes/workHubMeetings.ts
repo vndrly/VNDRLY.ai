@@ -88,10 +88,10 @@ function clientSource(req: Request): "web" | "ios" {
 }
 
 /** All meeting mutations share a row lock, including consent, join, and removal. */
-async function context(req: Request, tx: Tx, currentSession?: ReturnType<typeof getSessionFromRequest>) {
+async function context(req: Request, tx: Tx, currentSession?: ReturnType<typeof getSessionFromRequest>, occurrenceId = req.params.occurrenceId) {
   const session = currentSession ?? getSessionFromRequest(req);
   if (!session?.userId) throw new MeetingError(401, "Authentication required");
-  const id = z.string().uuid().parse(req.params.occurrenceId);
+  const id = z.string().uuid().parse(occurrenceId);
   const [occurrence] = await tx.select().from(occurrences).where(eq(occurrences.id, id)).for("update");
   if (!occurrence) throw new MeetingError(404, "Meeting not found");
   const [meeting] = await tx.select().from(meetings).where(eq(meetings.id, occurrence.meetingId));
@@ -837,6 +837,7 @@ router.post("/:occurrenceId/transcript", route(async (req, _res, tx, ctx) => {
   if (!artifact) [artifact] = await tx.insert(artifacts).values({ occurrenceId: ctx.id, artifactType: "transcript", state: "active", metadata: { policyVersion: ctx.meeting.policyVersion } }).returning();
   const [segment] = await tx.insert(segments).values({ ...payload, artifactId: artifact.id, speakerUserId: ctx.session.userId }).onConflictDoNothing().returning();
   await tx.update(occurrences).set({ transcriptState: "active" }).where(eq(occurrences.id, ctx.id));
+  if (segment) answerMeetingWakeAfterCommit(req, ctx, "transcript", segment.id, segment.text);
   return { saved: true, segment: segment ?? null };
 }));
 
@@ -849,11 +850,13 @@ router.post("/:occurrenceId/chat", route(async (req, _res, tx, ctx) => {
   if (!message) {
     const [existing] = await tx.select().from(chat).where(and(eq(chat.id, payload.id!), eq(chat.occurrenceId, ctx.id), eq(chat.userId, ctx.session.userId)));
     if (!existing || existing.messageType !== "typed" || existing.body !== payload.body || existing.recipientUserId !== payload.recipientUserId) throw new MeetingError(409, "Message identifier conflict");
+    answerMeetingWakeAfterCommit(req, ctx, "chat", existing.id, existing.body);
     return existing;
   }
   await audit(tx, ctx, "meeting.message_sent", { messageId: message.id, private: payload.recipientUserId !== null });
   const activity = { ...ctx.runtime.activity }; delete activity[ctx.session.userId];
   await saveRuntime(tx, ctx, { ...ctx.runtime, activity });
+  answerMeetingWakeAfterCommit(req, ctx, "chat", message.id, message.body);
   return message;
 }, true));
 
@@ -943,26 +946,32 @@ function existingMeetingAnswer(message: typeof chat.$inferSelect | undefined, fi
   return safeMeetingMessage(message);
 }
 
-router.post("/:occurrenceId/askv/question", async (req, res, next): Promise<Response | void> => {
-  const controller = new AbortController();
-  const abort = () => controller.abort();
-  const disconnected = () => { if (!res.writableEnded) abort(); };
-  req.once("aborted", abort);
-  res.once("close", disconnected);
+const meetingQuestionPayload = z.object({
+  sourceId: z.string().uuid(),
+  sourceType: z.enum(["chat", "transcript"]),
+}).strict();
+
+function answerMeetingWakeAfterCommit(req: Request, ctx: Context, sourceType: "chat" | "transcript", sourceId: string, text: string) {
+  if (!ctx.occurrence.askvInvitedAt || !parseMeetingWakeQuestion(text)) return;
+  afterCommit(req, async () => {
+    void answerSavedMeetingQuestion(req, ctx.id, { sourceType, sourceId }, AbortSignal.timeout(25_000), true)
+      .catch((error: unknown) => {
+        req.log?.warn?.({ occurrenceId: ctx.id, sourceType, sourceId, status: error instanceof MeetingError ? error.status : undefined }, "Meeting wake question did not complete");
+      });
+  });
+}
+
+async function answerSavedMeetingQuestion(req: Request, occurrenceId: string, payload: z.infer<typeof meetingQuestionPayload>, signal: AbortSignal, automatic = false) {
   const reservationOwner = randomUUID();
-  try {
     const prepared = await db.transaction(async (tx) => {
-      const ctx = await context(req, tx);
+      const ctx = await context(req, tx, undefined, occurrenceId);
       active(ctx);
       if (!ctx.occurrence.askvInvitedAt) throw new MeetingError(409, "Invite V before asking a meeting question");
-      const payload = z.object({
-        sourceId: z.string().uuid(),
-        sourceType: z.enum(["chat", "transcript"]),
-      }).strict().parse(req.body);
+      if (automatic && payload.sourceType === "transcript" && !await captureState(tx, ctx)) throw new MeetingError(409, "Meeting transcription is paused");
       const source = await loadMeetingQuestionSource(tx, ctx, payload.sourceType, payload.sourceId);
       if (!source || source.userId !== ctx.session.userId || source.messageType === "askv") throw new MeetingError(422, "Ask V from your own saved meeting message");
       const question = parseMeetingWakeQuestion(source.text);
-      if (!question) throw new MeetingError(422, "Begin the saved question with V or Ask V");
+      if (!question) throw new MeetingError(422, "Begin the saved question with Hey V, V, or Ask V");
       if (question.length > 2_000) throw new MeetingError(422, "Meeting questions must be 2,000 characters or fewer");
       const audience = source.recipientUserId === null ? "shared" as const : "private" as const;
       const otherUserId = audience === "private" ? source.recipientUserId! : undefined;
@@ -1000,6 +1009,8 @@ router.post("/:occurrenceId/askv/question", async (req, res, next): Promise<Resp
         const transcriptArtifacts = await tx.select().from(artifacts).where(and(eq(artifacts.occurrenceId, ctx.id), eq(artifacts.artifactType, "transcript")));
         if (transcriptArtifacts.length) {
           const transcriptRows = await tx.select().from(segments).where(inArray(segments.artifactId, transcriptArtifacts.map((artifact) => artifact.id))).orderBy(asc(segments.startsAtMs));
+          const startedAt = Date.parse(ctx.runtime.startedAt ?? "");
+          const transcriptEpoch = Number.isFinite(startedAt) ? startedAt : (ctx.occurrence.startsAt?.getTime() ?? 0);
           contextRows.push(...transcriptRows.map((segment) => ({
             id: segment.id,
             kind: "transcript" as const,
@@ -1007,7 +1018,7 @@ router.post("/:occurrenceId/askv/question", async (req, res, next): Promise<Resp
             recipientUserId: null,
             speaker: names.get(segment.speakerUserId ?? 0) ?? "Attendee",
             text: segment.text,
-            occurredAt: segment.startsAtMs,
+            occurredAt: transcriptEpoch + segment.startsAtMs,
             messageType: "transcript",
           })));
         }
@@ -1034,26 +1045,27 @@ router.post("/:occurrenceId/askv/question", async (req, res, next): Promise<Resp
         input: buildMeetingAnswerInput({ question, audience, selected }),
       };
     });
-    if (prepared.replay) return res.json({ answer: prepared.replay, replayed: true });
-    controller.signal.throwIfAborted();
+    if (prepared.replay) return { answer: prepared.replay, replayed: true };
     let answerText: string;
     try {
-      answerText = await answerMeetingQuestion(prepared.input, controller.signal);
+      signal.throwIfAborted();
+      answerText = await answerMeetingQuestion(prepared.input, signal);
     } catch {
       await releaseOwnedMeetingAnswerReservation(
-        req.params.occurrenceId,
+        occurrenceId,
         `${prepared.payload.sourceType}:${prepared.payload.sourceId}`,
         reservationOwner,
         prepared.fingerprint,
       );
-      if (controller.signal.aborted || res.destroyed) return;
+      signal.throwIfAborted();
       throw new MeetingError(503, "V could not answer this meeting question right now");
     }
-    controller.signal.throwIfAborted();
     const saved = await db.transaction(async (tx) => {
-      const ctx = await context(req, tx);
+      signal.throwIfAborted();
+      const ctx = await context(req, tx, undefined, occurrenceId);
       active(ctx);
       if (!ctx.occurrence.askvInvitedAt) throw new MeetingError(409, "V is no longer invited to this meeting");
+      if (automatic && prepared.payload.sourceType === "transcript" && !await captureState(tx, ctx)) throw new MeetingError(409, "Meeting transcription is paused");
       const freshSource = await loadMeetingQuestionSource(tx, ctx, prepared.payload.sourceType, prepared.payload.sourceId);
       if (!freshSource || freshSource.userId !== ctx.session.userId || sourceFingerprint(freshSource) !== prepared.fingerprint) {
         throw new MeetingError(409, "The saved question changed while V was answering");
@@ -1094,6 +1106,17 @@ router.post("/:occurrenceId/askv/question", async (req, res, next): Promise<Resp
       await audit(tx, ctx, "meeting.askv_answered", { private: prepared.audience === "private", sourceType: prepared.source.sourceType });
       return { answer: safeMeetingMessage(message), replayed: false };
     });
+    return saved;
+}
+
+router.post("/:occurrenceId/askv/question", async (req, res, next): Promise<Response | void> => {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  const disconnected = () => { if (!res.writableEnded) abort(); };
+  req.once("aborted", abort);
+  res.once("close", disconnected);
+  try {
+    const saved = await answerSavedMeetingQuestion(req, req.params.occurrenceId, meetingQuestionPayload.parse(req.body), controller.signal);
     if (!controller.signal.aborted && !res.destroyed) return res.json(saved);
   } catch (error) {
     if (controller.signal.aborted || res.destroyed) return;

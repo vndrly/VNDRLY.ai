@@ -23,9 +23,10 @@ const RESERVATION_LEASE_MS = 30_000;
 
 export function parseMeetingWakeQuestion(value: string): string | null {
   if (typeof value !== "string") return null;
-  const wake = /^(?:ask\s*v|v)(?=$|[\s,.:;!?—–-])/i;
-  const match = value.trim().match(/^(?:ask\s*v|v)(?=$|[\s,.:;!?—–-])(?:[\s,.:;!?—–-]+)([\s\S]+)$/i);
-  const question = match?.[1]?.trim() ?? "";
+  const wake = /^(?:ask\s*v|hey\s+v|v)(?=$|[\s,.:;!?—–-])[\s,.:;!?—–-]*/i;
+  const spoken = value.trim();
+  const match = wake.exec(spoken);
+  const question = match ? spoken.slice(match[0].length).trim() : "";
   return question.length > 0 && !wake.test(question) ? question : null;
 }
 
