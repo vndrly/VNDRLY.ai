@@ -158,6 +158,41 @@ it("shows an empty state for successful completion and stops attention", async (
   expect(screen.getByRole("button", { name: "Next Steps, 0 available actions" }).getAttribute("data-attention")).toBe("none");
 });
 
+it("saves partner priority with a mini-card and returns to the list without the completed item", async () => {
+  mocks.summary.partnerSettings = { companyId: 4, options: [{ id: 9, name: "Example Partner" }], order: [] };
+  vi.mocked(fetch).mockImplementation(async (path, init) => {
+    if (path === "/api/account-next-steps/partner-order") {
+      expect(JSON.parse(String(init?.body))).toMatchObject({ vendorId: 4, order: [9] });
+      mocks.summary.partnerSettings = { ...mocks.summary.partnerSettings!, order: [9], configured: true };
+      return response({ order: [9] });
+    }
+    return response(mocks.summary);
+  });
+  mount();
+  const panel = await open();
+  fireEvent.click(within(panel).getByText("Company partner priority"));
+  fireEvent.change(within(panel).getByRole("spinbutton", { name: "Example Partner" }), { target: { value: "1" } });
+  const save = within(panel).getByRole("button", { name: "Save Partner Priority" });
+  expect(save.classList.contains("vendor-mini-card-button")).toBe(true);
+  fireEvent.click(save);
+  await waitFor(() => expect(screen.queryByText("Company partner priority")).toBeNull());
+  expect(screen.getByTestId("next-steps-panel")).toBe(panel);
+  expect(document.activeElement).toBe(within(panel).getByRole("heading", { name: "Next Steps" }));
+  fireEvent.click(within(panel).getByRole("button", { name: "Close Next Steps" }));
+  await open();
+  expect(screen.queryByText("Company partner priority")).toBeNull();
+});
+
+it("keeps the partner editor available when its save fails", async () => {
+  mocks.summary.partnerSettings = { companyId: 4, options: [{ id: 9, name: "Example Partner" }], order: [] };
+  vi.mocked(fetch).mockImplementation(async path => response(mocks.summary, path !== "/api/account-next-steps/partner-order"));
+  mount(); await open();
+  fireEvent.click(screen.getByText("Company partner priority"));
+  fireEvent.click(screen.getByRole("button", { name: "Save Partner Priority" }));
+  expect(await screen.findByText("Partner priority could not be saved. Refresh Next Steps and try again.")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Save Partner Priority" })).toBeTruthy();
+});
+
 it("removes completed first-watch work after fresh saved confirmation and records its actual guided proof once", async () => {
   mocks.summary.firstWatch = watch; mount(); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
   mocks.summary.firstWatch = { complete: true, action: null, message: null, context: { ...watch.context, watchId: "saved-watch-1", ticketId: 91 } };

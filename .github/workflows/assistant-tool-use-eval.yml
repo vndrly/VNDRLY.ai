@@ -8,7 +8,7 @@ name: Assistant tool-use eval
 # `assistant-tool-use-eval` label) instead of mixing into the
 # language-drift triage thread.
 #
-# The eval is gated locally on ANTHROPIC_API_KEY (see
+# The eval is gated locally on OPENAI_API_KEY (see
 # artifacts/api-server/src/assistant/__evals__/tool-use.eval.ts);
 # this workflow is the scheduled runner that wires the key in.
 #
@@ -50,21 +50,21 @@ jobs:
       issues: write
 
     env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Verify ANTHROPIC_API_KEY is configured
+      - name: Verify OPENAI_API_KEY is configured
         # Fail fast with a clear message if the secret is missing —
         # without it the eval suite would silently skip every test
         # (describe.skipIf(!HAS_KEY)) and the workflow would go green
         # while catching nothing. That's the exact failure mode this
         # workflow exists to prevent, so guard against it explicitly.
         run: |
-          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-            echo "::error title=Missing secret::ANTHROPIC_API_KEY is not set. Add it under Settings → Secrets and variables → Actions → New repository secret."
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "::error title=Missing secret::OPENAI_API_KEY is not set. Add it under Settings → Secrets and variables → Actions → New repository secret."
             exit 1
           fi
 

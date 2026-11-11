@@ -22,6 +22,9 @@
 .next-steps-workflow>svg{height:1rem;width:1rem;flex-shrink:0;color:var(--brand-primary)}
 .next-steps-context{padding:0 .25rem .3rem}
 .next-steps-helper{display:flex;flex-direction:column;gap:.8rem}
+.next-steps-panel .vendor-mini-card-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:7px 10px;border:1px solid var(--brand-primary);border-radius:8px;background:#2b2b2f;color:#ececec;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.next-steps-panel .vendor-mini-card-button:hover{background:#353539;color:var(--brand-primary)}
+.next-steps-panel .vendor-mini-card-button:disabled{opacity:.5;cursor:wait}
 .next-steps-back{display:inline-flex;align-items:center;gap:.4rem;align-self:flex-start;color:var(--brand-primary);font-size:.8rem;min-height:2rem}
 .next-steps-back svg{height:1rem;width:1rem}
 .next-steps-roadmap{list-style:decimal;padding-left:1.2rem;display:flex;flex-direction:column;gap:.5rem}

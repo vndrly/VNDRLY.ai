@@ -63,7 +63,7 @@
     "migrate:work-hub-meeting-replay": "node scripts/apply-work-hub-meeting-replay-migration.mjs",
     "migrate:work-hub-devices": "node scripts/apply-work-hub-devices-migration.mjs",
     "eval": "vitest run --config vitest.eval.config.ts",
-    "eval:tool-use": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tool-use.eval.ts",
+    "eval:tool-use": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tool-use.eval.ts src/assistant/__evals__/workflow-selection.eval.ts",
     "eval:tone": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tone.eval.ts",
     "eval:language": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/language.eval.ts",
     "eval:no-tool-use": "vitest run --config vitest.eval.config.ts --exclude '**/tool-use.eval.ts'",

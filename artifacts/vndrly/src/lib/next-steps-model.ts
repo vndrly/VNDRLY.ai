@@ -26,7 +26,7 @@ export type AccountNextStepsSummary = {
   credentials: NextStepAction[];
   coiUploadNeeded?: boolean;
   workflows?: NextStepWorkflow[];
-  partnerSettings?: {companyId:number; options:{id:number;name:string}[]; order:number[]};
+  partnerSettings?: {companyId:number; options:{id:number;name:string}[]; order:number[]; configured?:boolean};
   helperProgress?: { independentThreshold: number; independentCompletions: Record<string, number> };
   firstWatch: {
     complete: boolean; action: NextStepAction | null; message: string | null;

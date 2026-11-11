@@ -1,43 +1,8 @@
-// Tool-use eval for the Ask VNDRLY assistant.
-//
-// `language.eval.ts` and `tone.eval.ts` only exercise single-turn
-// text replies — they read the first `text` block of the response
-// and walk away. Anything that happens through Claude's tool_use
-// loop (the model calls a function, we run it, it continues) is
-// completely unexercised by those suites.
-//
-// That matters because the production route in
-// `routes/assistant.ts` advertises a small catalog of tools and
-// relies on the model invoking them on intent: "show my open
-// invoices" should produce a `lookup_open_invoices` tool_use,
-// "take me to the dashboard" should produce a `deep_link_to`
-// call with `screen: "dashboard"`, etc. A regression that breaks
-// any of those — the model stops calling the lookup tool and
-// hallucinates an answer, or it starts calling `deep_link_to`
-// with a screen we never registered — would slip past the other
-// nightly evals while degrading real users.
-//
-// This suite closes that gap by replaying a small fixed battery of
-// prompts that should each trigger a specific tool, then asserting:
-//
-//   1. the model emitted at least one `tool_use` block,
-//   2. the expected tool name was among them,
-//   3. (where applicable) the arguments are well-formed —
-//      `deep_link_to.screen` is one of the registered screens,
-//      `set_onboarding_field.path` is a non-empty dot-path, etc.
-//
-// Like the other live-model suites this is OPT-IN and skips
-// entirely unless ANTHROPIC_API_KEY is present. Run locally with:
-//
-//   ANTHROPIC_API_KEY=sk-ant-... \
-//     pnpm --filter @workspace/api-server run eval:tool-use
-//
-// See docs/assistant-tool-use-eval.md for the full operational
-// notes and the prompt-add procedure.
+// Live tool selection; domain actions are not executed by this suite.
+import { describe, expect, it } from "vitest";
+import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
-
+import { requestOpenAIVRound } from "../cooperative-v-providers";
 import { selectDocs, type KnowledgeRole } from "../knowledge";
 import {
   buildSystemPrompt,
@@ -45,18 +10,10 @@ import {
 } from "../prompts/system";
 import { DEEP_LINK_SCREENS, TOOLS } from "../tools";
 
-// Same model the production route uses. If the route changes models,
-// update this too — the eval should always exercise what ships.
-const MODEL = "claude-sonnet-4-5";
-// Tool-use turns are short — Claude usually just emits the tool_use
-// block and a one-line preface — so 600 tokens is plenty without
-// burning budget on chatty replies.
-const MAX_TOKENS = 600;
-// Per-call timeout. Cold model calls can occasionally take 20+ s; we
-// leave generous headroom so a flaky network doesn't fail the suite.
-const CALL_TIMEOUT_MS = 60_000;
-
-const HAS_KEY = Boolean(process.env.ANTHROPIC_API_KEY);
+// Exercise the deployed adapter and its configured model.
+const MAX_TOKENS = 2048;
+const CALL_TIMEOUT_MS = 120_000;
+const HAS_KEY = Boolean(process.env.OPENAI_API_KEY);
 
 // Set of valid `deep_link_to.screen` values, hoisted out of the loop
 // so the assertion stays a single Set lookup. Mirrors the enum in
@@ -242,12 +199,11 @@ function buildContext(role: KnowledgeRole) {
   };
 }
 
-// Single round-trip to Claude with the full production-shape envelope
+// Single round-trip to the production OpenAI adapter with the full production-shape envelope
 // (system prompt + language primer messages + the registered tool
 // catalog). Returns the raw content blocks so individual tests can
 // inspect both `tool_use` and any `text` preface.
 async function runOnce(
-  client: Anthropic,
   q: string,
   role: KnowledgeRole,
 ): Promise<Anthropic.ContentBlock[]> {
@@ -272,39 +228,21 @@ async function runOnce(
     { role: "user", content: q },
   ]);
 
-  const resp = await client.messages.create({
-    model: MODEL,
-    max_tokens: MAX_TOKENS,
-    system,
-    // Hand the model the EXACT same tool catalog the production
-    // route advertises. Importing TOOLS from `../tools` (the same
-    // module the route uses) is what makes a regression there
-    // surface as a real eval failure, not a snapshot mismatch.
-    tools: TOOLS,
-    // Cast: composeAssistantMessages is generic; the runtime shape
-    // is exactly what the SDK accepts.
+  const resp = await requestOpenAIVRound({
+    system, tools: TOOLS, maxTokens: MAX_TOKENS,
     messages: messages as Anthropic.MessageParam[],
-  });
+  }, { apiKey: process.env.OPENAI_API_KEY! });
 
   return resp.content;
 }
 
-describe.skipIf(!HAS_KEY)("tool-use eval (live Anthropic)", () => {
-  let client: Anthropic;
-
-  beforeAll(() => {
-    // Vanilla SDK client against api.anthropic.com — same reasoning
-    // as `language.eval.ts`: lets a developer with their own raw
-    // key run the eval without provisioning the in-product proxy.
-    client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  });
-
+describe.skipIf(!HAS_KEY)("tool-use eval (live OpenAI production adapter)", () => {
   for (const prompt of TOOL_PROMPTS) {
     const { q, role, expectTool, validateInput } = prompt;
     it(
       `[${role}] tool=${expectTool}: ${q}`,
       async () => {
-        const blocks = await runOnce(client, q, role);
+        const blocks = await runOnce(q, role);
 
         const toolUses = blocks.filter(
           (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",

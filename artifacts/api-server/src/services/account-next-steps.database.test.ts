@@ -181,10 +181,13 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
     }
     const admin = await summary(f.officeSession);
     expect(admin.partnerSettings?.order).toEqual([other.partner,f.partner]);
+    expect(admin.partnerSettings?.configured).toBe(true);
     expect(admin.workflows?.filter(flow=>flow.id.startsWith("safety:")).map(flow=>flow.title)).toEqual([
       `Review work stoppage · Stop work at ${other.site}`,`Review work stoppage · Stop work at ${f.site}`,
     ]);
     expect((await summary(f.workerSession)).workflows?.some(flow=>flow.id.startsWith("safety:"))).toBe(false);
+    await saveNextStepsPartnerOrder(f.officeSession,[]);
+    expect((await summary(f.officeSession)).partnerSettings).toMatchObject({order:[],configured:true});
   });
   it("advances a saved managed Gate worker from site access through the same shift and completed watch",async()=>{
     const f=await managedFixture(),station=await stationFor(f,"Synthetic managed setup gate");

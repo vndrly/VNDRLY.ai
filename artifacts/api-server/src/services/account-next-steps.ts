@@ -78,7 +78,7 @@ export async function readAccountNextSteps(session: SessionPayload) {
   const schedulingAccess = !session.managedSubcontractor && (office || session.vendorRole === "gate_supervisor");
   const setup: Action[] = [], credentials: Action[] = [];
   const vendor = (await pool.query(`
-    SELECT physical_address,billing_address,contact_phone,coi_document_url,current_catalog_version_id,operations_categories,next_steps_partner_order,
+    SELECT physical_address,billing_address,contact_phone,coi_document_url,current_catalog_version_id,operations_categories,next_steps_partner_order,next_steps_partner_order_saved_at,
       CASE WHEN $2::boolean THEN (
         SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name) ORDER BY p.name,p.id)
         FROM partner_vendor_relationships r JOIN partners p ON p.id=r.partner_id WHERE r.vendor_id=$1
@@ -112,7 +112,7 @@ export async function readAccountNextSteps(session: SessionPayload) {
     return rank < 0 ? undefined : rank;
   };
   const partnerSettings = office && !session.publicDemo && session.realm !== "demo" && Array.isArray(vendor?.partner_options)
-    ? {partnerSettings:{companyId:session.vendorId,options:vendor.partner_options,order:partnerOrder}} : {};
+    ? {partnerSettings:{companyId:session.vendorId,options:vendor.partner_options,order:partnerOrder,configured:Boolean(vendor.next_steps_partner_order_saved_at) || partnerOrder.length > 0}} : {};
   const safety = ((vendor?.open_safety ?? []) as {id:number;title:string;stop:boolean;partner_id:number;created_at:string}[]).map(event => ({
     id:`safety:${event.id}`,
     kind:"account",
@@ -282,7 +282,7 @@ export async function saveNextStepsPartnerOrder(session: SessionPayload, order: 
     throw new ChangeOverError(403, "next_steps.forbidden", "Company administrator access required.");
   }
   const saved = await pool.query(`
-    UPDATE vendors SET next_steps_partner_order=$1::jsonb WHERE id=$2
+    UPDATE vendors SET next_steps_partner_order=$1::jsonb,next_steps_partner_order_saved_at=now() WHERE id=$2
       AND EXISTS(SELECT 1 FROM user_org_memberships m JOIN users u ON u.id=m.user_id
         WHERE m.id=$3 AND m.user_id=$4 AND m.vendor_id=$2 AND m.org_type='vendor'
           AND m.role='admin' AND u.session_version=$5 AND u.suspended_at IS NULL)

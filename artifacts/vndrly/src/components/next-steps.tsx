@@ -234,13 +234,15 @@ export function NextStepsNavButton({ className = "" }: { className?: string }) {
   </button>;
 }
 
-function PartnerOrderSettings({ settings }: { settings: NonNullable<AccountNextStepsSummary["partnerSettings"]> }) {
+function PartnerOrderSettings({ settings, onSaved }: { settings: NonNullable<AccountNextStepsSummary["partnerSettings"]>; onSaved: () => void }) {
   const state = useNextSteps()!;
   const { user } = useAuth();
   const [ranks, setRanks] = useState<Record<number,string>>(() => Object.fromEntries(settings.order.map((id,index) => [id,String(index+1)])));
   const [busy,setBusy] = useState(false);
   const [message,setMessage] = useState("");
+  const [saved, setSaved] = useState(false);
   async function save() {
+    if (busy) return;
     const ranked = settings.options.filter(partner => ranks[partner.id]).map(partner => ({id:partner.id, rank:Number(ranks[partner.id])}));
     if (ranked.some(partner => !Number.isSafeInteger(partner.rank) || partner.rank < 1 || partner.rank > 100)
       || new Set(ranked.map(partner => partner.rank)).size !== ranked.length) {
@@ -255,12 +257,14 @@ function PartnerOrderSettings({ settings }: { settings: NonNullable<AccountNextS
         body:JSON.stringify({vendorId:settings.companyId,membershipId:user?.activeMembershipId,userId:user?.userId,order:ranked.sort((a,b) => a.rank-b.rank).map(partner => partner.id)}),
       });
       if (!response.ok) throw new Error("Partner priority could not be saved. Refresh Next Steps and try again.");
+      setSaved(true);
+      onSaved();
       await state.refresh();
-      setMessage("Partner priority saved.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Partner priority could not be saved.");
     } finally { setBusy(false); }
   }
+  if (saved) return null;
   return <details className="mt-4">
     <summary className="cursor-pointer">Company partner priority</summary>
     <p className="text-sm">Use 1 for the highest priority. Leave a partner blank to use the normal order.</p>
@@ -268,7 +272,7 @@ function PartnerOrderSettings({ settings }: { settings: NonNullable<AccountNextS
       <span>{partner.name}</span>
       <input className="w-16 rounded border bg-transparent px-2" type="number" min={1} max={100} step={1} value={ranks[partner.id] ?? ""} disabled={busy} onChange={event => setRanks(current => ({...current,[partner.id]:event.target.value}))} />
     </label>)}
-    <TogglePillButton color="brand" disabled={busy} onClick={() => void save()}>{busy ? "Saving…" : "Save partner priority"}</TogglePillButton>
+    <button type="button" className="vendor-mini-card-button" disabled={busy} onClick={() => void save()}>{busy ? "Saving…" : "Save Partner Priority"}</button>
     {message && <p role="status">{message}</p>}
   </details>;
 }
@@ -302,7 +306,7 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
           {workflow.context && <p className="next-steps-context">{firstWatchLocationLabel(workflow.context)}</p>}
         </li>)}</ul>
       </section>)}
-      {state.canManageStaff && state.partnerSettings?.options.length ? <PartnerOrderSettings key={state.scope} settings={state.partnerSettings} /> : null}
+      {state.canManageStaff && state.partnerSettings?.options.length && !state.partnerSettings.configured ? <PartnerOrderSettings key={state.scope} settings={state.partnerSettings} onSaved={() => heading.current?.focus()} /> : null}
     </div>
   </aside>;
 }
