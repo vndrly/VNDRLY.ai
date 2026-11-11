@@ -44,7 +44,7 @@ describe.skipIf(!isolated)("Dashboard personal and company task projection", () 
     expect(new Set(rows.map(row=>row.id)).size).toBe(4);
     expect(rows.every(row=>row.ownerOrgId===vendorId && row.assigneeUserId===workerId)).toBe(true);
     const exact=await request(app).get("/work-hub/tasks").query({paginated:"1",task:taskId}).set("Cookie",adminCookie);
-    expect(exact.body.rows.map(row=>row.id)).toEqual([taskId]); expect(exact.body.hasMore).toBe(false);
+    expect(exact.body.rows.map((row:{id:string})=>row.id)).toEqual([taskId]); expect(exact.body.hasMore).toBe(false);
     for(const bad of [{cursor:"bad"},{limit:0},{assigneeUserId:"bad"}]) expect((await request(app).get("/work-hub/tasks").query({paginated:"1",...bad}).set("Cookie",adminCookie)).status).toBe(400);
   });
   it("returns exact dashboard counts without sending or paging the task history", async () => {
