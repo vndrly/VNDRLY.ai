@@ -22,3 +22,8 @@ describe("classifyToolResult", () => {
     expect(classifyToolResult(JSON.stringify({ error: "Ticket not found." }), true)).toBe("failure");
   });
 });
+
+it("does not turn a rejected operation ID into completed work", () => {
+  for (const result of [{operationId:"saved-attempt",canonicalApplied:false},{id:"same-record",status:"conflict"},{ok:true,status:"blocked"}]) expect(classifyToolResult(JSON.stringify(result),true)).toBe("failure");
+  expect(classifyToolResult(JSON.stringify({success:true}),true)).toBe("success");
+});

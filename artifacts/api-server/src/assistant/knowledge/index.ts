@@ -5,10 +5,10 @@
 
 export type KnowledgeRole = "admin" | "partner" | "vendor" | "field_employee" | "any";
 export const KNOWLEDGE_VERSION = "2026-11-11";
-const synonyms: Record<string, string> = { puerta: "gate", mapa: "map", tareas: "tasks", tarea: "task", factura: "invoice", facturas: "invoices", turno: "shift", archivos: "files", calendario: "calendar", equipo: "crew", permisos: "permissions", paginacion: "pagination" };
+const synonyms: Record<string, string> = { organization: "org", organizations: "org", switching: "switch", switcher: "switch", overtime: "ot", puerta: "gate", mapa: "map", tareas: "tasks", tarea: "task", factura: "invoice", facturas: "invoices", turno: "shift", archivos: "files", calendario: "calendar", equipo: "crew", permisos: "permissions", paginacion: "pagination" };
 const stopWords = new Set(["the", "and", "for", "how", "can", "you", "please", "what", "with", "this", "that", "from", "are", "have", "does", "show", "tell", "about", "como", "por", "favor", "que", "los", "las", "una", "del", "para", "con", "mostrar"]);
 function queryWords(query: string): string[] {
-  return [...new Set(query.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/\W+/).filter(word => word.length >= 3 && !stopWords.has(word)).flatMap(word => [word, ...(synonyms[word] ? [synonyms[word]] : [])]))];
+  return [...new Set(query.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/\W+/).filter(word => (word.length >= 3 || word === "ot") && !stopWords.has(word)).flatMap(word => [word, ...(word.length > 4 && word.endsWith("s") && !word.endsWith("ss") ? [word.slice(0, -1)] : []), ...(synonyms[word] ? [synonyms[word]] : [])]))];
 }
 
 export interface KnowledgeDoc {
@@ -70,7 +70,7 @@ export function selectSignupDocs(
   max = 6,
 ): KnowledgeDoc[] {
   const eligible = KNOWLEDGE_DOCS.filter((d) => SIGNUP_PUBLIC_DOC_IDS.has(d.id));
-  const q = query.toLowerCase();
+  const q = query.toLowerCase().replace(/emergency contact/g, "personal emergency contact");
   const personaDocId = persona === "partner" ? "onboarding-partner" : "onboarding-vendor";
   const scored = eligible.map((d) => {
     const hay = new Set(queryWords(`${d.title} ${d.body}`));
@@ -101,7 +101,7 @@ export function getSignupPublicDocIds(): ReadonlySet<string> {
  * concepts (auth, navigation, branding) that every persona needs.
  */
 export function selectDocs(role: KnowledgeRole, query: string, max = 8): KnowledgeDoc[] {
-  const q = query.toLowerCase();
+  const q = query.toLowerCase().replace(/emergency contact/g, "personal emergency contact");
   const eligible = KNOWLEDGE_DOCS.filter((d) => d.roles.includes(role) || d.roles.includes("any"));
   // Score = number of stem words from the query that appear in the
   // doc's title or body. Cheap heuristic; good enough for Claude to

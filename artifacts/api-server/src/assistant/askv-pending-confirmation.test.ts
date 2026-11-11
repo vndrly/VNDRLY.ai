@@ -58,3 +58,15 @@ describe("AskV pending confirmation binding", () => {
     expect(store.consume("yes", pending)).toMatchObject(pending);
   });
 });
+
+it("does not recover approval in a new process or extend expiry by repeating a preview", () => {
+  let now = 0;
+  const original = new AskVPendingConfirmationStore(() => now);
+  original.set(pending);
+  now = 299_000;
+  original.set(pending);
+  expect(new AskVPendingConfirmationStore(() => now).consume("Confirm", pending)).toBeNull();
+  now = 300_000;
+  expect(original.peek(pending.userId, pending.organizationKey, pending.sessionId)).toBeNull();
+  expect(original.consume("Confirm", pending)).toBeNull();
+});

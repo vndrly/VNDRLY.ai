@@ -667,7 +667,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
          ))
      )
      SELECT account.id AS session_user_id,site.id,site.name,site.latitude,site.longitude,site.supervisor,(SELECT p.name FROM partners p JOIN site_locations sl ON sl.partner_id=p.id WHERE sl.id=site.id) AS "partnerName",
-       CASE WHEN $9::boolean THEN (SELECT coalesce(jsonb_agg(jsonb_build_object('id', station.id, 'name', station.name) ORDER BY station.created_at,station.id),'[]'::jsonb)
+       ${includeStations ? `(SELECT coalesce(jsonb_agg(jsonb_build_object('id', station.id, 'name', station.name) ORDER BY station.created_at,station.id),'[]'::jsonb)
          FROM gate_stations station WHERE station.site_id=site.id
          AND (station.active=true
            OR EXISTS(SELECT 1 FROM gate_shifts watch WHERE watch.station_id=station.id AND watch.operator_id=$1 AND watch.ended_at IS NULL)
@@ -677,7 +677,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
            OR EXISTS(SELECT 1 FROM current_membership membership JOIN vendor_person_operational_roles role ON role.vendor_people_id=membership.vendor_people_id JOIN vendor_person_site_access access ON access.vendor_people_id=role.vendor_people_id WHERE role.is_active=true AND role.role IN ('gatekeeper','gate_supervisor') AND access.site_location_id=site.id AND access.is_active=true)
            OR EXISTS(SELECT 1 FROM vendor_people person WHERE person.user_id=$1 AND person.vendor_id=$5 AND person.deleted_at IS NULL AND person.is_active=true AND person.vendor_role IN ('gatekeeper','gate_supervisor'))
            OR EXISTS(SELECT 1 FROM gate_duty_sessions duty JOIN gate_shifts watch ON watch.station_id=duty.station_id AND watch.operator_id=$1 AND watch.ended_at IS NULL WHERE duty.station_id=station.id AND duty.user_id=$1 AND duty.ended_at IS NULL AND duty.post_coverage->>'vendorId'=$5::text AND duty.post_coverage->>'temporaryOfficeCoverage'='true' AND duty.post_coverage->>'assigneeAcknowledged' IS DISTINCT FROM 'false'))
-       ) ELSE NULL END AS "lookupStations"
+       )` : "NULL"} AS "lookupStations"
      FROM current_account account
      LEFT JOIN visible_sites site ON true
      ORDER BY site.name NULLS LAST`,
@@ -690,7 +690,6 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
       session.activeMembershipId ?? null,
       session.membershipRole ?? null,
       Boolean(session.managedSubcontractor),
-      includeStations,
     ],
   );
   if (!result.rowCount)

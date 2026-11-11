@@ -359,7 +359,7 @@ router.get("/assistant/conversations/:id", async (req, res) => {
       id: m.id,
       role: m.role,
       content: clientReceiptDisplayContent(m.content, m.toolCalls),
-      confirmationReference: m.id === msgs.at(-1)?.id ? typedAskVPreviewReference(session, conv.id) : null,
+      confirmationReference: m.role === "assistant" && m.id === msgs.at(-1)?.id ? typedAskVPreviewReference(session, conv.id) : null,
       toolCalls: m.toolCalls ?? [],
       feedbackRating: m.feedbackRating ?? null,
       createdAt: m.createdAt,
@@ -370,12 +370,12 @@ router.get("/assistant/conversations/:id", async (req, res) => {
 router.patch("/assistant/conversations/:id/archive", async (req, res) => {
   const session = requireSession(req, res);
   if (!session) return;
-  if (!Number.isSafeInteger(Number(req.params.id)) || Number(req.params.id) <= 0) { res.status(400).json({ error: "Invalid conversation id" }); return; }
-  if (typeof req.body?.archived !== "boolean") { res.status(400).json({ error: "Specify archived true or false" }); return; }
+  if (!Number.isSafeInteger(Number(req.params.id)) || Number(req.params.id) <= 0) { res.status(400).json({ error: "Invalid conversation id", code: "validation.invalid_id" }); return; }
+  if (typeof req.body?.archived !== "boolean") { res.status(400).json({ error: "Specify archived true or false", code: "validation.invalid_request" }); return; }
   const [saved] = await db.update(assistantConversationsTable).set({ archivedAt: req.body.archived ? new Date() : null, updatedAt: new Date() })
     .where(and(eq(assistantConversationsTable.id, Number(req.params.id)), eq(assistantConversationsTable.userId, session.userId!)))
     .returning({ id: assistantConversationsTable.id, archivedAt: assistantConversationsTable.archivedAt });
-  if (!saved) { res.status(404).json({ error: "Not found" }); return; }
+  if (!saved) { res.status(404).json({ error: "Not found", code: "assistant.conversation_not_found" }); return; }
   res.json(saved);
 });
 
@@ -384,12 +384,12 @@ router.post("/assistant/messages/:id/client-receipts", async (req, res) => {
   if (!session) return;
   const parsed = clientReceiptsSchema.safeParse(req.body);
   const id = Number(req.params.id);
-  if (!parsed.success || !Number.isSafeInteger(id)) { res.status(400).json({ error: "Invalid client receipt" }); return; }
+  if (!parsed.success || !Number.isSafeInteger(id)) { res.status(400).json({ error: "Invalid client receipt", code: "validation.invalid_request" }); return; }
   const [message] = await db.select({ id: assistantMessagesTable.id, toolCalls: assistantMessagesTable.toolCalls })
     .from(assistantMessagesTable).innerJoin(assistantConversationsTable, eq(assistantMessagesTable.conversationId, assistantConversationsTable.id))
     .where(and(eq(assistantMessagesTable.id, id), eq(assistantMessagesTable.role, "assistant"), eq(assistantConversationsTable.userId, session.userId!))).limit(1);
   const calls = message && attachClientReceipts(message.toolCalls, parsed.data.receipts, organizationKeyFromSession(session));
-  if (!calls) { res.status(409).json({ error: "No matching client action in this conversation and organization" }); return; }
+  if (!calls) { res.status(409).json({ error: "No matching client action in this conversation and organization", code: "assistant.client_receipt_mismatch" }); return; }
   await db.update(assistantMessagesTable).set({ toolCalls: calls }).where(eq(assistantMessagesTable.id, id));
   res.json({ ok: true, authority: "display_only" });
 });
@@ -1479,7 +1479,7 @@ async function handleConversationMessage(
   if (selectedConnection) assistantTools = [...assistantTools, SELECTED_EXTERNAL_CALENDAR_TOOL];
   const typedConfirmationContext = confirmationContext(pageContext);
   if (req.body.confirmationReference != null && req.body.confirmationReference !== typedAskVPendingAction(session, conv.id, typedConfirmationContext)?.confirmationReference) {
-    res.status(409).json({ error: "This preview expired or changed. Ask V to prepare the action again before confirming." }); return;
+    res.status(409).json({ error: "This preview expired or changed. Ask V to prepare the action again before confirming.", code: "assistant.preview_expired" }); return;
   }
   synchronizeTypedAskVContext(session, conv.id, typedConfirmationContext, userMessage);
   const pendingAction = privatePersonalTurn ? null : typedAskVPendingAction(session, conv.id, typedConfirmationContext);
@@ -1773,6 +1773,7 @@ async function handleConversationMessage(
     res.end();
   } catch (err) {
     logger.error({ err, conversationId: conv.id }, "assistant stream failed");
+    void writeAskVActionAudit({ session, clientSurface: inferAskVSurface(pageContext), inputMode: inferAskVInputMode(pageContext), provider: vTurn.currentProvider === "openai" ? "openai_responses" : "anthropic", toolName: "askv_turn_metrics", actionType: "workflow_observation", resultStatus: "failure", targetType: "task", targetId: `conversation:${conv.id}`, toolOutput: { ...timing, elapsedMs: Date.now() - requestStartedAt, firstTextMs: firstTokenMs, interrupted: turnSignal.aborted, disconnected: aborted, model: process.env.ASKV_OPENAI_MODEL ?? "gpt-6.1-sol", synthetic: /\bsynthetic\b/i.test(userMessage), verification: "Interrupted turn; inspect saved receipts before retrying." } }).catch(error => logger.warn({ error }, "Ask V interrupted-turn audit unavailable"));
     // Best-effort persist whatever we have so the user can retry.
     if (finalText || toolCallTrace.length) {
       try {

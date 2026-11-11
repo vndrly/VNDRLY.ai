@@ -1065,7 +1065,7 @@ export const TOOLS: Anthropic.Tool[] = [
     name: "deliver_gate_report",
     description: "Email a secure Gate History or Shift Notes report link to selected eligible VNDRLY recipients. Uses the same filters and authorization as the page and never accepts free-text email addresses.",
     input_schema: { type: "object", properties: {
-      recipientUserIds: { type: "array", items: { type: "number" } }, reportKind: { type: "string", enum: ["history", "shift_notes"] }, format: { type: "string", enum: ["pdf", "excel", "word"] }, filters: { type: "object" }, idempotencyKey: { type: "string" }, confirmed: { type: "boolean" },
+      recipientUserIds: { type: "array", items: { type: "number" } }, reportKind: { type: "string", enum: ["history", "shift_notes"] }, format: { type: "string", enum: ["pdf", "excel", "word"] }, filters: {"type":"object","properties":{"siteId":{"type":"integer","minimum":1},"siteIds":{"type":"array","items":{"type":"integer","minimum":1},"minItems":1,"maxItems":100},"stationId":{"type":"string","format":"uuid"},"range":{"type":"string","enum":["current_shift","previous_shift","24h","7d","14d","30d","90d","1y"]},"recordType":{"type":"string","enum":["all","arrivals","check_ins","check_outs","on_site","visitors_on_site","employees_on_site","vehicles_on_site","pending","needs_review"]},"search":{"type":"string","maxLength":200}},"required":["siteId","range","recordType"],"additionalProperties":false}, idempotencyKey: { type: "string" }, confirmed: { type: "boolean" },
     }, required: ["recipientUserIds", "reportKind", "format", "filters", "idempotencyKey", "confirmed"], additionalProperties: false },
   },
   {

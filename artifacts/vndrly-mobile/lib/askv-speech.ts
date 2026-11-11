@@ -112,8 +112,7 @@ async function playOpenAiSpeech(
   activeOpenAiSound = sound;
   activeOpenAiUri = uri;
   sound.setOnPlaybackStatusUpdate((status) => {
-    if (!status.isLoaded) return;
-    if (!status.didJustFinish && !status.error) return;
+    if (status.isLoaded ? !status.didJustFinish : !status.error) return;
     if (runId === speechRunId) onDone?.();
     if (activeOpenAiSound === sound) {
       activeOpenAiSound = null;
@@ -161,7 +160,7 @@ export function speakAskV(text: string, language = "en-US", preserveRecording = 
     } catch {
       if (runId !== speechRunId) return;
       openAiSpeechPending = false;
-      Speech.speak(plain, { language, onDone: () => { if (runId === speechRunId) onDone?.(); } });
+      Speech.speak(plain, { language, onDone: () => { if (runId === speechRunId) onDone?.(); }, onError: () => { if (runId === speechRunId) onDone?.(); } });
     }
   })();
 }

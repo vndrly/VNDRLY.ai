@@ -1541,7 +1541,10 @@
       "tool_not_available": "Esa acción no está disponible aquí. Abre su pantalla o haz otra pregunta.",
       "session_required": "Abre AskV para iniciar una nueva conversación por voz.",
       "session_ended": "Esta conversación por voz ha terminado. Abre AskV para continuar.",
-      "idempotency_required": "AskV no pudo identificar esta acción de forma segura. Revisa el registro antes de volver a intentarlo."
+      "idempotency_required": "AskV no pudo identificar esta acción de forma segura. Revisa el registro antes de volver a intentarlo.",
+      "conversation_not_found": "No se encontro la conversacion.",
+      "client_receipt_mismatch": "No hay una accion del dispositivo que coincida con esta conversacion y organizacion.",
+      "preview_expired": "Esta vista previa vencio o cambio. Pide a Ask V que prepare la accion de nuevo antes de confirmar."
     },
     "common": {
       "not_found": "No pudimos encontrar ese registro."

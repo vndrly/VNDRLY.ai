@@ -553,7 +553,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
       try {
         const response = await fetch(`${BASE}/api/assistant/conversations/${remoteConversationId}`, { credentials: "include" });
         if (!response.ok || closed || myVersion !== restoreVersionRef.current) return;
-        const detail = await response.json() as { id: number; messages: Array<{ id: number; role: "user" | "assistant"; content: string; feedbackRating?: AssistantFeedbackRating | null }> };
+        const detail = await response.json() as { id: number; messages: Array<{ id: number; role: "user" | "assistant"; content: string; confirmationReference?: string | null; feedbackRating?: AssistantFeedbackRating | null }> };
         if (closed || myVersion !== restoreVersionRef.current) return;
         setConversationId(detail.id);
         setMessages(detail.messages.filter(message => message.role === "user" || message.content.trim()).map(message => ({

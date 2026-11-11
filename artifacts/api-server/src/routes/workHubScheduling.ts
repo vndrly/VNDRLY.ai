@@ -1,3 +1,4 @@
+import { schedulingTypePayload, schedulingWindowPayload, schedulingTimezone as timezone } from "../work-hub/assistant-payload-schemas";
 import { Router, type IRouter } from "express";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -34,35 +35,9 @@ type Actor = {
   owner: { type: "vendor" | "partner"; id: number };
   admin: boolean;
 };
-const timezone = z
-  .string()
-  .max(100)
-  .refine((value) => {
-    try {
-      new Intl.DateTimeFormat("en", { timeZone: value });
-      return true;
-    } catch {
-      return false;
-    }
-  }, "Use a valid time zone");
-const typeFields = z.object({
-  title: z.string().trim().min(1).max(120),
-  description: z.string().max(2000).default(""),
-  durationMinutes: z.number().int().min(5).max(480),
-  timezone,
-  visibility: z.enum(["personal", "shared"]).default("personal"),
-  active: z.boolean().default(true),
-});
+const typeFields = schedulingTypePayload;
+const windowSchema = schedulingWindowPayload;
 const operation = z.object({ operationId: z.string().uuid() });
-const windowSchema = z
-  .object({ startsAt: z.string().datetime(), endsAt: z.string().datetime() })
-  .refine(
-    (w) =>
-      new Date(w.endsAt) > new Date(w.startsAt) &&
-      new Date(w.endsAt).getTime() - new Date(w.startsAt).getTime() <=
-        7 * 86400000,
-    "Availability must end after its start within seven days",
-  );
 function envelope(a: Actor, operationId: string, payload: unknown) {
   return {
     owner: a.owner,

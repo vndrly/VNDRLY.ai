@@ -1541,7 +1541,10 @@
       "tool_not_available": "That action isn't available here. Open its screen or ask a different question.",
       "session_required": "Open AskV to start a new voice conversation.",
       "session_ended": "This voice conversation has ended. Open AskV to continue.",
-      "idempotency_required": "AskV couldn't safely identify this action. Check the record before trying again."
+      "idempotency_required": "AskV couldn't safely identify this action. Check the record before trying again.",
+      "conversation_not_found": "Conversation not found.",
+      "client_receipt_mismatch": "No matching client action in this conversation and organization.",
+      "preview_expired": "This preview expired or changed. Ask V to prepare the action again before confirming."
     },
     "common": {
       "not_found": "We couldn't find that record."

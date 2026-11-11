@@ -1,3 +1,6 @@
+import { payment, publicLink } from "../assistant/work-hub-finance-actions";
+import { transferRowSchema } from "./transfer-policy";
+import { MAX_REPLAY_DURATION_MS } from "./meeting-replay";
 import { z } from "zod/v4";
 import { LibraryDraftSchema, BundleDefinitionSchema, LibraryAssignmentRequestSchema, FormCampaignConfigSchema, FormCampaignResponseSchema, LiveMeetingStartSchema, LiveMeetingModeSchema, workHubExportCreateSchema, retentionPolicyCreateSchema, legalHoldCreateSchema } from "@workspace/api-zod";
 export const crewNamePayload = z.object({ name: z.string().trim().min(1).max(120) });
@@ -80,6 +83,35 @@ export const taskCreatePayload = z
         recurrence: z.unknown().nullable().optional(),
       });
 
+export const schedulingTimezone = z
+  .string()
+  .max(100)
+  .refine((value) => {
+    try {
+      new Intl.DateTimeFormat("en", { timeZone: value });
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Use a valid time zone");
+export const schedulingTypePayload = z.object({
+  title: z.string().trim().min(1).max(120),
+  description: z.string().max(2000).default(""),
+  durationMinutes: z.number().int().min(5).max(480),
+  timezone: schedulingTimezone,
+  visibility: z.enum(["personal", "shared"]).default("personal"),
+  active: z.boolean().default(true),
+});
+export const schedulingWindowPayload = z
+  .object({ startsAt: z.string().datetime(), endsAt: z.string().datetime() })
+  .refine(
+    (w) =>
+      new Date(w.endsAt) > new Date(w.startsAt) &&
+      new Date(w.endsAt).getTime() - new Date(w.startsAt).getTime() <=
+        7 * 86400000,
+    "Availability must end after its start within seven days",
+  );
+
 const schema = (value: z.ZodType) => z.toJSONSchema(value, { unrepresentable: "any", io: "input" });
 export const assistantPayloadSchemas: Record<string, Record<string, unknown>> = {
   set_work_hub_preferences: schema(preferencesPayload),
@@ -109,3 +141,13 @@ export const assistantPayloadSchemas: Record<string, Record<string, unknown>> = 
 };
 
 Object.assign(assistantPayloadSchemas, { manage_work_hub_shift: schema(shiftCreatePayload.partial()), manage_work_hub_meeting: schema(meetingCreatePayload.partial().extend({ expectedVersion: z.number().int().nonnegative().optional(), invited: z.boolean().optional() })), manage_work_hub_calendar_item: { anyOf: [schema(shiftCreatePayload.partial()), schema(meetingCreatePayload.partial()), schema(taskCreatePayload.partial())] } });
+
+Object.assign(assistantPayloadSchemas, {
+  manage_work_hub_meeting_type: schema(schedulingTypePayload.partial()),
+  manage_work_hub_scheduling: { anyOf: [schema(z.object({ windows: z.array(schedulingWindowPayload).max(60) })), schema(z.object({ startsAt: z.iso.datetime(), note: z.string().max(2000).default("") }))] },
+  manage_work_hub_subcontractor_hours: schema(z.object({ recipients: z.array(z.email()).max(50).optional() }).strict()),
+  manage_work_hub_replay: { anyOf: [schema(z.object({}).strict()), schema(z.object({ playheadMs: z.number().int().nonnegative().max(MAX_REPLAY_DURATION_MS) }).strict())] },
+  manage_work_hub_import: { anyOf: [schema(z.object({ source: z.string().trim().min(1).max(120), category: z.enum(["channels", "tasks", "notes"]), channelId: z.uuid().nullable().optional(), rows: z.array(transferRowSchema).min(1).max(500) })), schema(z.object({}).strict())] },
+});
+
+Object.assign(assistantPayloadSchemas, { manage_work_hub_finance: { anyOf: [schema(z.object({ id: z.uuid().optional(), customer: z.string().trim().min(1).max(200), description: z.string().trim().min(1).max(2000), amountCents: z.number().int().positive().max(1_000_000_000_000), dueDate: z.iso.date() }).strict()), schema(payment), schema(publicLink), schema(z.object({ id: z.uuid(), to: z.email() }).strict()), schema(z.object({}).strict())] } });

@@ -4,6 +4,8 @@ import { FLEET_CARGO_TOOLS } from "./fleet-cargo-tools";
 import { FLEET_REPLACEMENT_TOOLS } from "./fleet-replacement-tools";
 import { z } from "zod/v4";
 import {
+  FleetYardOrderSchema,
+  FleetDestinationInputSchema,
   CreateFleetRunSchema,
   FleetDraftEditSchema,
   FleetScheduleSchema,
@@ -79,7 +81,7 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
   action("finalize_fleet_ticket", "Prepare explicit office finalization and submission of an exact Fleet billing ticket. First read query_fleet_ticket_plan and review every noncancelled run. Requires canFinalize, current plan version, separate fleet:billing consent and authenticated confirmation. Acceptance of one run never finalizes the shared ticket. Server binds operation ID; preserve it after uncertain outcomes and verify status, version and finalizationOperationId independently. Does not approve or pay the ticket.", {ticketId:{type:"integer",minimum:1},expectedVersion:{type:"integer",minimum:1}}, ["ticketId","expectedVersion"]),
 
   action("save_fleet_ticket_plan", "Save an explicitly reviewed ticket Batch/Singles plan after confirmation. First read the exact ticket plan and destination directory. Origin cannot change. Use approved destination IDs, explicit per-run rate, closure choice and current version; retain operationId across retries. Server enforces dispatch authority and partner policy.", {ticketId:{type:"integer",minimum:1},operationId:id,expectedVersion:{type:"integer",minimum:0},mode:{type:"string",enum:["batch","singles"]},rateCents:{type:"integer",minimum:0,maximum:100000000},closure:{type:"string",enum:["shift","day","manual"]},closesAt:{type:["string","null"],format:"date-time"},destinationIds:{type:"array",minItems:1,maxItems:30,items:id}}, ["ticketId","operationId","expectedVersion","rateCents","closure","closesAt","destinationIds"]),
-  action("save_fleet_destination", "Save or edit a reusable disposal/delivery destination after explicit review and confirmation. Read current directory version; never invent address, coordinates, accepted materials or availability. This does not approve that destination for any ticket. Exact canonical readback required.", {operationId:id,expectedVersion:{type:"integer",minimum:1},destination:{type:"object"}}, ["operationId","expectedVersion","destination"]),
+  action("save_fleet_destination", "Save or edit a reusable disposal/delivery destination after explicit review and confirmation. Read current directory version; never invent address, coordinates, accepted materials or availability. This does not approve that destination for any ticket. Exact canonical readback required.", {operationId:id,expectedVersion:{type:"integer",minimum:1},destination:z.toJSONSchema(FleetDestinationInputSchema,{io:"input",unrepresentable:"any"})}, ["operationId","expectedVersion","destination"]),
   read("query_fleet_ticket_plan", "Read the exact authorized ticket origin, Batch/Singles mode, closure policy, approved destinations and accepted run charges. Finance fields depend on current grants; recommendations do not authorize destinations.", {ticketId:{type:"integer",minimum:1}}, ["ticketId"]),
   read("query_fleet_location_history", "Read recorded GPS for an exact authorized run for History & Replay. Preserve timestamps, accuracy and gaps. Never infer live positions, actual road speed or travel through missing samples.", {runId:id}, ["runId"]),
   read("query_fleet_commercial_settings", "Read authorized Batch/Singles billing policy, site restrictions and configured per-run rates. One ticket belongs to one originating site. Partner requirements may override vendor defaults; never invent a rate.", {siteId:{type:"integer",minimum:1}}),
@@ -391,7 +393,7 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
       assignedToUserId: { type: "integer", minimum: 1 },
       outcome: { type: "string", enum: ["ready", "needs_attention", "unable_to_complete"] },
       actualAssetIds: { type: "array", maxItems: 100, items: id },
-      findings: { type: "array", maxItems: 100, items: { type: "object" } },
+      findings: z.toJSONSchema(FleetYardOrderSchema.shape.findings,{io:"input",unrepresentable:"any"}),
       notes: { type: "string", maxLength: 2000 },
     },
     ["orderId", "expectedVersion", "kind"],

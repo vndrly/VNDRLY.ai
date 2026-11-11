@@ -8,11 +8,12 @@ export function classifyToolResult(output: string, mutating: boolean): AskVToolR
       ok?: unknown;
       status?: unknown;
       success?: unknown;
+      canonicalApplied?: unknown;
     };
     if (parsed === null || typeof parsed !== "object") return "failure";
     if (Array.isArray(parsed)) return mutating ? "failure" : "success";
     if (mutating && parsed.requiresConfirmation === true) return "requires_confirmation";
-    if (parsed.error || parsed.ok === false || parsed.success === false || ["error", "failed", "failure", "rejected", "unavailable", "unknown", "outcome_unknown"].includes(String(parsed.status))) return "failure";
+    if (parsed.error || parsed.ok === false || parsed.success === false || parsed.canonicalApplied === false || ["error", "failed", "failure", "rejected", "blocked", "conflict", "unavailable", "unknown", "outcome_unknown"].includes(String(parsed.status))) return "failure";
     if (mutating) {
       const record = parsed as Record<string, unknown>;
       const identity = ["id", "operationId", "taskId", "ticketId", "visitId", "messageId", "resourceId", "shiftId", "eventId", "invoiceId"].some(key => typeof record[key] === "string" || typeof record[key] === "number");
@@ -20,7 +21,7 @@ export function classifyToolResult(output: string, mutating: boolean): AskVToolR
         const value = record[key];
         return value && typeof value === "object" && !Array.isArray(value) && ("id" in value || "operationId" in value);
       });
-      if (parsed.ok !== true && !identity && !resource) return "failure";
+      if (parsed.ok !== true && parsed.success !== true && !identity && !resource) return "failure";
     }
   } catch {
     // An unreadable receipt cannot establish a saved action.

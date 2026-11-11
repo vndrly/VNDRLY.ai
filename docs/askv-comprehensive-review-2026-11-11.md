@@ -8,7 +8,7 @@ Ask V has useful, working execution paths, but the current evidence does not jus
 
 This review inventories every registered tool and examines the major execution boundaries. It does **not** certify that every tool has been executed against every role, organization, device and failure condition. That certification requires the acceptance matrix below. Static exposure, a named test reference, model tool selection, successful execution and saved readback are different evidence levels.
 
-No application source, credentials, customer assignments, notification policies or production configuration were changed during this review. The report and inventory are new review artifacts. In-memory probes and an authenticated read of aggregate production metrics were performed. The preceding completed release remains a separate event.
+The baseline review below describes b2a18f0. Implementation subsequently changed application source under the user's full-ship-minus-plugin authorization. Baseline measurements are historical; the companion CSV is regenerated from the repaired source. Production publication and physical-device acceptance must be recorded separately from code and isolated tests.
 
 ## Evidence gathered
 
@@ -184,8 +184,30 @@ Every area must include allowed and denied cases for applicable vendor, partner,
 5. **Operational acceptance:** run the workflow matrix with synthetic data and exact readback; physical-device speech trials; clearly label each supported, blocked, UI-required or unverified workflow.
 6. **Release:** use the established optimized validation and release process for implementation changes; preserve holds, credentials, permissions and approved UI branding.
 
-No new external dependency, credential transfer, fine-tuning job or architectural rewrite is required to start steps 1 and 2. Major integration changes should be reviewed explicitly. The optional cloud evaluation credential transfer previously rejected by automatic approval review remains blocked; local evaluation can use the existing authorized credential.
+No new external dependency, credential transfer, fine-tuning job or architectural rewrite is required to start steps 1 and 2. Major integration changes should be reviewed explicitly. The optional cloud evaluation credential transfer previously rejected by automatic approval review remains blocked; the subsequent local live-model evaluation was also rejected by automatic approval review because it would export internal prompts to OpenAI. Neither evaluation is counted as passed.
 
 ## Completion standard for mission-critical acceptance
 
 Use observed behavior as the gate: the requested authorized action reaches its correct saved state, appears correctly on the intended device, reports uncertainty accurately, survives recoverable failures and never repeats a committed mutation. Each required workflow needs its own evidence. Aggregate test totals, successful deployment, a model label and a registered tool are necessary context but cannot substitute for that evidence.
+
+## Implementation checkpoint and evidence boundaries
+
+The repair covers all 23 findings with code changes or an explicit evaluation boundary. This is not certification of every workflow on physical devices.
+
+| Findings | Implemented change | Evidence / remaining boundary |
+|---|---|---|
+| P1-01, P2-05, P2-06 | Stable surface/entity/draft confirmation, exact preview references, web/native controls; restart/expiry invalidates previews | Exact binding, correction, cross-company and expiry tests; no reused approval after restart |
+| P1-02, P1-03, P2-01 | Actual pack installation during model rounds; discoverable permission-filtered workflow packs; separate connection catalogue | All 27 previously missing tools reachable in static enumeration; pack/connection tests; live-model selection evaluation blocked |
+| P1-04, P2-09, P2-10 | Shared typed reasoning path for native speech, retryable capability cache, obsolete TTS abort, playback lifecycle repair | Native suite passed at first repair checkpoint; physical microphone/Bluetooth/latency trials remain unverified |
+| P1-05, P2-15 | Bounded organization-scoped structured observations and authenticated display-only client receipts | Cursor/filter pairing, scope/revocation, bounded JSON and client receipt tests; no receipt grants write authority |
+| P1-06, P1-07, P2-04 | Explicit failure/unknown handling, final reporting round, 180-second turn budget and disconnect abort | Malformed/blocked/conflicted receipt tests; uncertain executor results retained; canonical domain idempotency preserved |
+| P2-02 | Canonical-derived Work Hub, Fleet and capability input schemas; explicit ticket/action fields | Opaque fields reduced from 45 tools to eight: dynamic form/manifest/draft maps plus legacy unexposed proposal tool. Canonical APIs still validate each action |
+| P2-03, P2-14 | Truthful progress event, context/provider/tool/audit timing, interrupted-turn metrics, synthetic/model tags | Timing instrumentation is not a measured latency improvement; full response streaming and first-audio field trials are not certified |
+| P2-07, P2-08 | Scoped San/Sand matching, English/Spanish numbers through ten, one joined lookup then canonical target recheck | Resolver tests plus isolated database scope/inactive/revoked-session tests; default site reads skip optional station lookup |
+| P2-11, P2-12 | Production-adapter evals, bilingual retrieval, plural/acronym aliases and zero-score exclusion | Unit retrieval and multilingual question battery; live-model eval blocked by automatic approval review |
+| P2-13 | Preserve usage tokens and label unknown prices unpriced | No invented GPT-6.1 pricing or cost-performance claim |
+| P2-16 | Preserve stored history, explicit reversible archive/restore, existing export, additive archived_at migration | Conversation retention is separate from bounded model context; migration and live archive verification belong to release |
+
+The three intentionally unexposed legacy entries are query_work_hub (replaced by domain-specific reads), propose_work_hub_action (replaced by exact action tools), and deep_link_to (replaced by authorized client navigation). Dynamic answer maps must be filled from an authorized template or manifest read; they are not missing fixed field contracts.
+
+Cloud run 43044342537 at 2c5199a: libraries and mobile passed. Web: 2442 passed, three retrieval failures. API: 6656 passed, two failures, 49 skipped. Types: one missing web confirmation-reference field. Browser: dependency installation failed due runner DNS before tests started. Repairs are in the subsequent checkpoint; these failures are not waived. Targeted recovery 13/13, native 54/54, API 57/57, pack/catalogue 36/36, and receipt/gate/error-code checks 18/18 passed in the recorded local runs. Final release evidence must use the final unchanged source tree.
