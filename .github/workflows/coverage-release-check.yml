@@ -118,7 +118,17 @@ jobs:
           "$pg_bin/pg_ctl" --pgdata="$pg_data" --log="$RUNNER_TEMP/vndrly-postgres.log" --options="-h 127.0.0.1 -p 55439 -k '$RUNNER_TEMP'" --wait start
       - name: Install test browser
         if: startsWith(matrix.check, 'browser')
-        run: pnpm --filter @workspace/e2e exec playwright install --with-deps chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Azure's regional apt mirror failed DNS on two independent runners.
+          # Use Ubuntu's canonical mirror for the same signed dependencies.
+          for source in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources; do
+            if test -f "$source"; then
+              sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' "$source"
+            fi
+          done
+          pnpm --filter @workspace/e2e exec playwright install --with-deps chromium
       - name: Run required check
         shell: bash
         run: |
