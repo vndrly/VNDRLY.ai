@@ -2,7 +2,7 @@ type Candidate = {
   userId: number;
   requirements: { code: string; currentRecorded: boolean; vendorVerified: boolean }[];
   availability: string;
-  eligibility: { allowed: boolean; overrideRequired: boolean };
+  eligibility: { allowed: boolean; overrideRequired: boolean; warnings?: readonly string[] };
 };
 
 /** Saved eligibility only; this does not establish physical qualification or attendance. */
@@ -10,6 +10,7 @@ export function assertGateShiftAssignmentPolicy(
   configuredRequirements: string[] | null,
   selectedUserIds: number[],
   candidates: Candidate[],
+  supervisor = false,
 ): void {
   if (!selectedUserIds.length) return;
   if (configuredRequirements === null) throw Error("gate_assignment.configuration_unknown");
@@ -22,6 +23,8 @@ export function assertGateShiftAssignmentPolicy(
       throw Error("gate_assignment.qualification_required");
     }
     if (candidate.availability === "recorded_conflict") throw Error("work_hub.assignment_conflict");
-    if (!candidate.eligibility.allowed || candidate.eligibility.overrideRequired) throw Error("gate_assignment.policy_denied");
+    const { allowed, overrideRequired, warnings } = candidate.eligibility;
+    const overtimeOnly = warnings?.length === 1 && warnings[0] === "workforce.overtime_warning";
+    if (!allowed || (overrideRequired && !overtimeOnly)) throw Error("gate_assignment.policy_denied");
   }
 }

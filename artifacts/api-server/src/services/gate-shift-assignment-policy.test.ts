@@ -9,6 +9,13 @@ const candidate = {
 };
 
 describe("saved Gate assignment evidence", () => {
+  it("allows authorized scheduling with overtime alone and preserves other eligibility checks", () => {
+    const overtime = { ...candidate, eligibility: { allowed: true, overrideRequired: true, warnings: ["workforce.overtime_warning"] } };
+    expect(() => assertGateShiftAssignmentPolicy([], [18], [overtime])).not.toThrow();
+    const rest = { ...overtime, eligibility: { ...overtime.eligibility, warnings: ["workforce.overtime_warning", "workforce.rest_window_warning"] } };
+    expect(() => assertGateShiftAssignmentPolicy([], [18], [rest])).toThrow("policy_denied");
+    expect(() => assertGateShiftAssignmentPolicy([], [18], [{ ...overtime, eligibility: { ...overtime.eligibility, allowed: false } }])).toThrow("policy_denied");
+  });
   it("distinguishes unknown configuration from explicitly empty requirements", () => {
     expect(() => assertGateShiftAssignmentPolicy(null, [18], [candidate])).toThrow("configuration_unknown");
     expect(() => assertGateShiftAssignmentPolicy([], [18], [{ ...candidate, requirements: [] }])).not.toThrow();
