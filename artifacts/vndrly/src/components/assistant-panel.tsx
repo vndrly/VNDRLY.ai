@@ -1,7 +1,8 @@
 import { AskVGateHelperOffer } from "@/components/askv-gate-helper-offer";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Copy, Minus, Maximize2 } from "lucide-react";
+import { Archive, Sparkles, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Copy, Minus, Maximize2 } from "lucide-react";
+
 import SphereBackButton from "@/components/sphere-back-button";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { useTranslation } from "react-i18next";
@@ -340,6 +341,14 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   } = sharedAssistant ?? legacyAssistant;
   const send = sharedAssistant ? voiceSession.sendText : legacySend;
   const [input, setInput] = useState("");
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archivedConversations, setArchivedConversations] = useState<Array<{ id: number; title: string }>>([]);
+  const refreshArchive = async () => {
+    const response = await fetch(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/assistant/conversations?archived=true`, { credentials: "include" });
+    if (!response.ok) throw new Error("Archive unavailable");
+    const data = await response.json();
+    setArchivedConversations(data.conversations ?? []);
+  };
   useEffect(() => {
     if (!open || tokenMode || signupMode) return;
     const prefill = window.sessionStorage.getItem("vndrly.askv.prefill");
@@ -742,6 +751,18 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
     stopAskVSpeech();
     clear();
   };
+  const handleArchive = async (restoreId?: number) => {
+    const id = restoreId ?? conversationId;
+    if (!id) return;
+    const archived = restoreId == null;
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/assistant/conversations/${id}/archive`, { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ archived }) });
+      if (!response.ok) throw new Error("Archive unavailable");
+      if (archived) handleStartNew();
+      else { handleStartNew(); await loadLatest(); }
+      await refreshArchive();
+    } catch { setVoiceError("Could not update the archive. Your conversation is retained."); }
+  };
 
   const handleClose = () => {
     voiceSession.closePanel();
@@ -953,6 +974,11 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
             {/* Header action buttons only render once a conversation is in
                 progress; before that they're all disabled, so hiding them
                 lets the header collaise to its minimum height. */}
+            {!tokenMode && !signupMode && (
+              <HeaderIconButton brandedDark={embedded} onClick={() => { setArchiveOpen(value => !value); void refreshArchive().catch(() => setVoiceError("Could not load saved archives.")); }} disabled={streaming} testId="assistant-archive" title="Saved conversation archives">
+                <Archive className="w-4 h-4" />
+              </HeaderIconButton>
+            )}
             {messages.length > 0 && (
               <>
                 <HeaderIconButton
@@ -1113,6 +1139,12 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                   m.content ? (
                     <>
                       <AssistantMarkdown text={m.content} />
+                      {m.confirmationReference && messageIndex === messages.length - 1 && !m.pending && (
+                        <div className="mt-2 flex gap-2">
+                          <BrandPillButton tone="blue" disabled={streaming} onClick={() => void legacySend("Confirm", "web_text", m.confirmationReference)}>Confirm</BrandPillButton>
+                          <BrandPillButton tone="red" disabled={streaming} onClick={() => void legacySend("Cancel", "web_text", m.confirmationReference)}>Cancel</BrandPillButton>
+                        </div>
+                      )}
                       {showMessageFeedback &&
                         !m.pending &&
                         m.serverId != null &&
@@ -1194,6 +1226,14 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
             </div>
           )}
 
+          {archiveOpen && !tokenMode && !signupMode && (
+            <div className="rounded-lg border border-white/20 p-3 space-y-2" data-testid="assistant-archive-list">
+              <p className="text-sm">History is retained until you delete it. Archive keeps a conversation available to restore.</p>
+              {conversationId && <BrandPillButton tone="blue" disabled={streaming} onClick={() => void handleArchive()}>Archive current conversation</BrandPillButton>}
+              {archivedConversations.map(item => <div key={item.id} className="flex items-center justify-between gap-2"><span className="text-sm truncate">{item.title}</span><BrandPillButton tone="blue" disabled={streaming} onClick={() => void handleArchive(item.id)}>Restore</BrandPillButton></div>)}
+              {!archivedConversations.length && <p className="text-sm">No archived conversations.</p>}
+            </div>
+          )}
           {panelError && (
             <div className="rounded-lg border border-destructive/40 bg-destructive/5 text-destructive text-sm px-3 py-2">
               {panelError}

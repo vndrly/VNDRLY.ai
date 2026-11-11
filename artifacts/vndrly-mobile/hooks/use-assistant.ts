@@ -202,7 +202,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   }, [startNew]);
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, inputMode: "ios_text" | "ios_voice" = "ios_text") => {
       const trimmed = text.trim();
       if (!trimmed || streamingRef.current) return;
 
@@ -243,6 +243,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
                 ...(selectedConnection.current && isAuthScopeCurrent(selectedConnection.current.auth) ? { selectedConnection: selectedConnection.current.value } : {}),
                 pageContext: {
                   path: pagePathRef.current,
+                  inputMode,
                   ...(currentLocation ? { currentLocation } : {}),
                 },
               }),
@@ -432,6 +433,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   );
 
   return {
+    stopGeneration: () => abortRef.current?.abort(),
     conversationId,
     messages,
     streaming,

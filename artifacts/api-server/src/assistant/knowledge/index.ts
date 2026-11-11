@@ -29,7 +29,7 @@ export function getAllDocs(): KnowledgeDoc[] {
   return KNOWLEDGE_DOCS;
 }
 
-// ��� Pre-auth (signup-page) knowledge slice ���������������������
+// ─── Pre-auth (signup-page) knowledge slice ─────────────────────
 // Curated allow-list of doc IDs that are safe to surface to a visitor
 // who has NOT signed in yet (e.g. on `/signup/partner`,
 // `/signup/vendor`). Intentionally restricted to:
@@ -60,7 +60,7 @@ export type SignupPersona = "partner" | "vendor";
  * assistant. Persona-aware: gives a small score boost to the matching
  * onboarding doc so a partner asking "what's next?" gets the partner
  * onboarding overview ranked first, and a vendor asking the same gets
- * the vendor overview. No session, no role context - knowledge is
+ * the vendor overview. No session, no role context — knowledge is
  * limited to SIGNUP_PUBLIC_DOC_IDS regardless of query.
  */
 export function selectSignupDocs(

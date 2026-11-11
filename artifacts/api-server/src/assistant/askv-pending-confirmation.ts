@@ -124,7 +124,7 @@ export function typedAskVPendingAction(session: SessionPayload, conversationId: 
   const pending = askvPendingConfirmations.peek(session.userId, organizationKeyFromSession(session),
     askVConfirmationScopeId(conversationId, `typed:${conversationId}`));
   if (!pending || pending.contextKey !== contextKey) return null;
-  return { name: pending.toolName, arguments: pending.arguments };
+  return { name: pending.toolName, arguments: pending.arguments, confirmationReference: pending.idempotencyKey };
 }
 
 const typedTurnApprovals = new Map<
@@ -261,6 +261,8 @@ export async function runBoundTypedAskVTool(args: {
       return JSON.stringify({
         ok: false,
         requiresConfirmation: true,
+        confirmationReference: key,
+        expiresInSeconds: 300,
         message: "This exact action is prepared, not executed. Summarize it and ask the user to reply Confirm or Cancel. Stop this turn; do not retry with invented confirmation fields or changed operation IDs.",
         name: args.name,
         arguments: input,

@@ -151,6 +151,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     latestUserTranscript.current = null;
     clientRef.current?.close(); clientRef.current = null;
     stopAskVSpeech();
+    assistantRef.current.stopGeneration();
     const session = sessionRef.current; sessionRef.current = null;
     if (session) {
       recordAskVMetric(session, "session_end", { durationMs: Date.now() - session.startedAt,
@@ -362,7 +363,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             const turn = sharedVoiceQueue.current.catch(() => {}).then(async () => {
               check(); clearIdle(); writeState("thinking");
               sharedVoiceTurn.current = true;
-              try { await assistantRef.current.send(text); }
+              try { await assistantRef.current.send(text, "ios_voice"); }
               finally { sharedVoiceTurn.current = false; if (valid()) writeState("listening"); }
             });
             sharedVoiceQueue.current = turn;
@@ -496,6 +497,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           },
           onSpeechStarted: () => {
             if (!valid()) return;
+            stopAskVSpeech();
             turnStartedAfterUserEventId.current = latestUserTranscript.current?.sessionId === session.sessionId
               ? latestUserTranscript.current.eventId : null;
             clearIdle();

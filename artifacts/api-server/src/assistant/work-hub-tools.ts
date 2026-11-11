@@ -1,4 +1,5 @@
 import { NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
+import { assistantPayloadSchemas } from "../work-hub/assistant-payload-schemas";
 import { WORK_HUB_AVAILABILITY_TOOLS } from "./work-hub-availability-tools";
 import { AWAY_RESPONDER_TOOLS } from "./away-responder-tools";
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
@@ -112,6 +113,7 @@ function write(
   inputSchema: JsonSchema,
   companyAdminOnly = false,
 ): Entry {
+  if (assistantPayloadSchemas[name]) inputSchema = { ...inputSchema, properties: { ...inputSchema.properties, payload: assistantPayloadSchemas[name] } };
   return {
     tool: { name, description, input_schema: inputSchema },
     family,

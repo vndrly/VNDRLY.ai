@@ -28,7 +28,6 @@ const CORE_TOOLS = new Set([
   "lookup_user_progress",
   "query_attention_briefing",
   "query_notifications",
-  "deep_link_to",
   "query_site_locations",
   "lookup_site_detail",
   "open_screen",
@@ -89,6 +88,7 @@ const TICKET_SCREEN_TOOLS = new Set([
 ]);
 
 const SAFETY_SCREEN_TOOLS = new Set([
+  ...SAFETY_CAPABILITY_TOOLS.map(tool => tool.name),
   "query_safety_events",
   "lookup_safety_metrics",
   "draft_safety_report",
@@ -119,6 +119,10 @@ export const VOICE_WORKFLOWS = [
   "fleet_commercial",
   "finance_actions",
   "notifications",
+  "assets",
+  "workforce",
+  "trips",
+  "accounts",
   "collaboration",
   "tasks",
   "scheduling",
@@ -135,6 +139,10 @@ export function isVoiceWorkflow(value: unknown): value is VoiceWorkflow {
   );
 }
 const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
+  assets: new Set(ASSET_CAPABILITY_TOOLS.map(tool => tool.name)),
+  workforce: new Set([...WORKFORCE_CAPABILITY_TOOLS, ...INVITATION_CAPABILITY_TOOLS].map(tool => tool.name)),
+  trips: new Set(TRIP_CAPABILITY_TOOLS.map(tool => tool.name)),
+  accounts: new Set(ACCOUNT_CAPABILITY_TOOLS.map(tool => tool.name)),
   notifications: new Set(["query_notifications", "mark_notifications_read"]),
   fleet: new Set(ASK_V_TOOL_REGISTRY.filter(tool => /fleet/.test(tool.name) && !/cargo|replacement|maintenance|defect|compliance|agreement|rate|invoice|billing/.test(tool.name)).map(tool => tool.name)),
   fleet_cargo: new Set(ASK_V_TOOL_REGISTRY.filter(tool => /fleet/.test(tool.name) && /cargo|replacement/.test(tool.name)).map(tool => tool.name)),
@@ -293,11 +301,9 @@ export function toolsForRealtime(args: {
     const families =
       workHubToolFamilyForPath(path) === "command" &&
       /\/work-hub\/askv(?:[/?#]|$)/i.test(path)
-        ? WORK_HUB_TOOL_FAMILIES
+        ? ["command" as const]
         : [workHubToolFamilyForPath(path)];
     if (/\/work-hub\/askv(?:[/?#]|$)/i.test(path)) {
-      for (const tool of MARKETPLACE_TOOLS) allowed.add(tool.name);
-      for (const name of IMPLEMENTATION_A_TOOL_NAMES) allowed.add(name);
       for (const name of WORKFLOW_TOOLS.market) allowed.add(name);
     }
     for (const family of families) {

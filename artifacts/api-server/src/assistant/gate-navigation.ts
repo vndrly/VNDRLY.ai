@@ -53,10 +53,20 @@ export async function runGateNavigationTool(input: unknown, session: SessionPayl
   if (!["gate-dashboard", "gate-map"].includes(String(args.screen)) || (args.query == null && args.siteId == null && args.stationId == null)) return null;
   const fail = (error: string) => JSON.stringify({ ok: false, error });
   try {
-    const sites = await listChangeOverSites(session);
+    const sites = await listChangeOverSites(session, "operational", args.query != null);
     if (args.query != null) {
       if (typeof args.query !== "string" || args.query.length > 200) return fail("Use a site or gate name up to 200 characters.");
-      const target = await resolveGateNavigation(args.query, sites, id => listChangeOverStations(session, id));
+      const load = (id: number, fresh = false): Promise<Station[]> => {
+        const snapshot = sites.find(site => site.id === id)?.lookupStations;
+        return !fresh && Array.isArray(snapshot) ? Promise.resolve(snapshot) : listChangeOverStations(session, id);
+      };
+      let target = await resolveGateNavigation(args.query, sites, id => load(id));
+      const wasAmbiguous = !target.ok && Boolean(target.candidates?.length);
+      // Snapshot names never grant authority or certify current names. Re-read only
+      // matched sites with canonical authorization before exposing any candidates.
+      const candidateSiteIds = new Set(target.ok ? [target.siteId] : target.candidates?.map(candidate => candidate.siteId) ?? []);
+      if (candidateSiteIds.size) target = await resolveGateNavigation(args.query, sites.filter(site => candidateSiteIds.has(site.id)), id => load(id, true));
+      if (wasAmbiguous && target.ok) return fail("The matching gates changed during lookup. Please repeat the name so I can check all current authorized choices again.");
       if (!target.ok) return JSON.stringify({ ...target,
         candidates: target.candidates?.map(candidate => ({ ...candidate,
           href: `${args.screen === "gate-map" ? "/gate/map" : "/gate/change-over"}?siteId=${candidate.siteId}&stationId=${encodeURIComponent(candidate.stationId)}`,

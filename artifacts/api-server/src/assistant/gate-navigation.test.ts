@@ -7,6 +7,16 @@ const site = { id: 411, name: "San Roman Completions", partnerName: "Warwick Ene
 const station = { id: "e00cb909-a716-4a65-9375-dd84f337bf6b", name: "Warwick San Roman Completions 2" };
 beforeEach(() => { reads.sites.mockReset().mockResolvedValue([site]); reads.stations.mockReset().mockResolvedValue([station]); });
 describe("authorized conversational Gate navigation", () => {
+  it("uses the joined authorized snapshot and rereads only the matching site", async () => {
+    reads.sites.mockResolvedValue([{ ...site, lookupStations: [station] }, { id: 999, name: "Unrelated", lookupStations: [{ id: "other", name: "North" }] }]);
+    expect(JSON.parse((await runGateNavigationTool({ screen: "gate-map", query: "Sand Roman two" }, session))!)).toMatchObject({ ok: true });
+    expect(reads.stations).toHaveBeenCalledTimes(1);
+    expect(reads.stations).toHaveBeenCalledWith(session, site.id);
+  });
+  it("does not turn a stale ambiguous snapshot into an automatic selection", async () => {
+    reads.sites.mockResolvedValue([{ ...site, lookupStations: [station, { id: "other", name: "San Roman 1" }] }]);
+    expect(JSON.parse((await runGateNavigationTool({ screen: "gate-map", query: "San Roman" }, session))!)).toMatchObject({ ok: false, error: expect.stringContaining("changed") });
+  });
   it.each(["Open San Roman six", "Abre el mapa de San Roman seis por favor"])("resolves number words in %s without changing numeric identity", async query => {
     reads.stations.mockResolvedValue([{ ...station, name: "San Roman 6" }]);
     expect(await resolveGateNavigation(query, [site], reads.stations)).toMatchObject({ ok: true, stationId: station.id });
@@ -28,7 +38,7 @@ describe("authorized conversational Gate navigation", () => {
   it.each(["San Roman", "San Roman Completions", "Warwick San Roman Completions 2", "san romen completion two", "Show me San Roman please", "Warwick San Roman Gate 2"])("resolves %s without exact display text", async query => {
     const result = JSON.parse((await runGateNavigationTool({ screen: "gate-dashboard", query }, session))!);
     expect(result).toMatchObject({ ok: true, intent: { arguments: { path: `/gate/change-over?siteId=411&stationId=${station.id}` } } });
-    expect(reads.sites).toHaveBeenCalledWith(session);
+    expect(reads.sites).toHaveBeenCalledWith(session, "operational", true);
     expect(reads.stations).toHaveBeenCalledWith(session, site.id);
   });
   it("asks once for a real ambiguity instead of choosing an arbitrary gate", async () => {

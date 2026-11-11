@@ -1,3 +1,5 @@
+import { shiftCreatePayload, meetingCreatePayload, taskCreatePayload } from "../work-hub/assistant-payload-schemas";
+import { templatePayload, templateAssignmentPayload, checklistResponsePayload, formResponsePayload, approvalRequestPayload, approvalDecisionPayload } from "../work-hub/assistant-payload-schemas";
 import {indexChannelRepositoryFile} from "../work-hub/repository-file-reference";
 import {submitAssignedLibrary} from "../work-hub/training-service";
 import {calendarWorkerScope} from "../work-hub/calendar-worker-scope";
@@ -889,20 +891,7 @@ router.get("/work-hub/required-actions", async (req, res) => {
   return res.json({ checklists, forms, approvals });
 });
 
-const templatePayload = z.object({
-  name: z.string().trim().min(1).max(200),
-  definition: z
-    .array(
-      z.object({
-        id: z.string().min(1).max(80),
-        label: z.string().trim().min(1).max(300),
-        type: z.enum(["checkbox", "text", "number", "date", "choice"]),
-        required: z.boolean().default(false),
-      }),
-    )
-    .min(1)
-    .max(100),
-});
+
 
 async function createTemplate(
   req: Request,
@@ -994,13 +983,7 @@ async function assignTemplate(
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     await ownAccess(session, envelope.owner, "task.assign", envelope.context);
     const templateId = String(req.params.id);
-    const payload = z
-      .object({
-        assigneeUserId: z.number().int().positive(),
-        channelId: z.string().uuid().nullable().optional(),
-        dueAt: z.iso.datetime().nullable().optional(),
-      })
-      .parse(envelope.payload);
+    const payload = templateAssignmentPayload.parse(envelope.payload);
     await assertOwnerUsers(envelope.owner, [payload.assigneeUserId]);
     const template =
       kind === "checklist"
@@ -1121,12 +1104,7 @@ router.post("/work-hub/checklists/:id/respond", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    const payload = z
-      .object({
-        responses: z.record(z.string(), z.unknown()),
-        complete: z.boolean().default(false),
-      })
-      .parse(envelope.payload);
+    const payload = checklistResponsePayload.parse(envelope.payload);
     const [record] = await db
       .select({
         instance: workHubChecklistInstancesTable,
@@ -1197,9 +1175,7 @@ router.post("/work-hub/forms/:id/submit", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    const payload = z
-      .object({ values: z.record(z.string(), z.unknown()) })
-      .parse(envelope.payload);
+    const payload = formResponsePayload.parse(envelope.payload);
     const [record] = await db
       .select({
         instance: workHubFormInstancesTable,
@@ -1282,15 +1258,7 @@ router.post("/work-hub/admin/approvals", async (req, res) => {
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     await ownAccess(session, envelope.owner, "task.assign", envelope.context);
-    const payload = z
-      .object({
-        subjectType: z.string().min(1).max(80),
-        subjectId: z.string().min(1).max(200),
-        subjectVersion: z.number().int().positive().default(1),
-        approverUserIds: z.array(z.number().int().positive()).min(1).max(50),
-        mode: z.enum(["ordered", "parallel"]).default("ordered"),
-      })
-      .parse(envelope.payload);
+    const payload = approvalRequestPayload.parse(envelope.payload);
     const approvers = [...new Set(payload.approverUserIds)];
     await assertOwnerUsers(envelope.owner, approvers);
     const result = await executeWorkHubCommand(
@@ -1359,12 +1327,7 @@ router.post("/work-hub/admin/approvals/:id/decide", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    const payload = z
-      .object({
-        decision: z.enum(["approved", "rejected"]),
-        comment: z.string().max(5000).optional(),
-      })
-      .parse(envelope.payload);
+    const payload = approvalDecisionPayload.parse(envelope.payload);
     const [request] = await db
       .select()
       .from(workHubApprovalRequestsTable)
@@ -1458,17 +1421,7 @@ router.post("/work-hub/tasks", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    const payload = z
-      .object({
-        title: z.string().trim().min(1).max(200),
-        description: z.string().max(20_000).nullable().optional(),
-        assigneeUserId: z.number().int().positive().nullable().optional(),
-        dueAt: z.iso.datetime().nullable().optional(),
-        priority: z.enum(["low", "normal", "high", "urgent"]).default("normal"),
-        channelId: z.string().uuid().nullable().optional(),
-        recurrence: z.unknown().nullable().optional(),
-      })
-      .parse(envelope.payload);
+    const payload = taskCreatePayload.parse(envelope.payload);
     const session = await currentTaskAssignmentSession(savedSession) as Actor;
     const access = taskCreationAccess(session, envelope.owner, payload.assigneeUserId);
     await ownAccess(session, envelope.owner, access === "supervisor" ? "task.assign" : "note.create", envelope.context);
@@ -1992,45 +1945,7 @@ router.post("/work-hub/shifts", async (req, res) => {
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     await ownAccess(session, envelope.owner, "shift.manage", envelope.context);
-    const payload = z
-      .object({
-        title: z.string().trim().min(1).max(200),
-        startsAt: z.iso.datetime(),
-        endsAt: z.iso.datetime(),
-        timezone: z.string().min(3).max(80),
-        open: z.boolean().default(false),
-        assigneeUserIds: z
-          .array(z.number().int().positive())
-          .max(500)
-          .default([]),
-        qualificationCodes: z.array(z.string().max(80)).max(50).default([]),
-        recurrence: z.unknown().nullable().optional(),
-        calendarType: z.enum(["company", "project"]).default("company"),
-        projectName: z.string().trim().max(200).nullable().optional(),
-        milestoneStatus: z
-          .enum(["completed", "in_progress", "upcoming", "blocked", "overdue"])
-          .default("upcoming"),
-        percentComplete: z.number().int().min(0).max(100).default(0),
-        instructions: z.string().trim().max(4000).nullable().optional(),
-        dependencyTitle: z.string().trim().max(300).nullable().optional(),
-        blockers: z.string().trim().max(2000).nullable().optional(),
-        ownerUserId: z.number().int().positive().nullable().optional(),
-        afeCode: z.string().trim().max(100).nullable().optional(),
-        ticketNumber: z.string().trim().max(100).nullable().optional(),
-        budgetAmount: z.number().nonnegative().nullable().optional(),
-        budgetUsedAmount: z.number().nonnegative().nullable().optional(),
-        invoicedAmount: z.number().nonnegative().nullable().optional(),
-        invoiceReference: z.string().trim().max(100).nullable().optional(),
-        sharedWithUserIds: z
-          .array(z.number().int().positive())
-          .max(500)
-          .default([]),
-        siteLocationId: z.number().int().positive().nullable().optional(),
-        gateStationId: z.string().uuid().nullable().optional(),
-        requiredStaffCount: z.number().int().min(1).max(20).nullable().optional(),
-        workStartPolicy: z.enum(["on_site", "paid_travel"]).nullable().optional(),
-      })
-      .parse(envelope.payload);
+    const payload = shiftCreatePayload.parse(envelope.payload);
     const gateValues = [
       payload.siteLocationId,
       payload.gateStationId,
@@ -2340,24 +2255,7 @@ router.post("/work-hub/meetings", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    const payload = z
-      .object({
-        title: z.string().trim().min(1).max(200),
-        agenda: z.string().max(50_000).nullable().optional(),
-        startsAt: z.iso.datetime(),
-        endsAt: z.iso.datetime().nullable().optional(),
-        timezone: z.string().min(3).max(80),
-        attendanceConfirmationRequired: z.boolean().default(false),
-        admissionMode: z.enum(["company_open","host_approval"]).nullable().optional(),
-        recordingAllowed: z.boolean().default(false),
-        calendarEvent: z.boolean().default(false),
-        participantUserIds: z
-          .array(z.number().int().positive())
-          .max(500)
-          .default([]),
-        recurrence: z.unknown().nullable().optional(),
-      })
-      .parse(envelope.payload);
+    const payload = meetingCreatePayload.parse(envelope.payload);
     if (payload.calendarEvent) assertCalendarEventAccess(session, envelope.owner, payload);
     else await ownAccess(session, envelope.owner, "meeting.host", envelope.context);
     const recurrence = payload.recurrence

@@ -6,7 +6,7 @@
 // would drag in the full Express router, the DB pool, and every
 // handler, which a focused eval has no reason to load.
 //
-// Tool _execution_ still lives in `routes/assistant.ts#runTool` -
+// Tool _execution_ still lives in `routes/assistant.ts#runTool` —
 // this module is schema-only.
 
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
@@ -85,7 +85,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "lookup_user_progress",
     description:
-      "Returns the current onboarding progress for this user's org (current step, completed steps, skipped steps, and the partial payload). The step named in the prompt is a snapshot and is not the answer. When the user asks where they are in onboarding, what step they are on, what is left, or what is already saved, call this before answering. Do not call this first when the user already provided an explicit write (e.g. set company name to X) - call set_onboarding_field instead.",
+      "Returns the current onboarding progress for this user's org (current step, completed steps, skipped steps, and the partial payload). The step named in the prompt is a snapshot and is not the answer. When the user asks where they are in onboarding, what step they are on, what is left, or what is already saved, call this before answering. Do not call this first when the user already provided an explicit write (e.g. set company name to X) — call set_onboarding_field instead.",
     input_schema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -134,7 +134,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "finalize_onboarding",
     description:
-      "Submits the wizard for final completion. Calls the same /onboarding/:orgType/:orgId/complete endpoint the UI uses, which validates that every required field for the persona is present and writes the canonical partner/vendor records. Only call when the user confirms they're ready to finish - not for intermediate step advances.",
+      "Submits the wizard for final completion. Calls the same /onboarding/:orgType/:orgId/complete endpoint the UI uses, which validates that every required field for the persona is present and writes the canonical partner/vendor records. Only call when the user confirms they're ready to finish — not for intermediate step advances.",
     input_schema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -145,19 +145,19 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "lookup_open_tickets",
     description:
-      "Returns up to 10 in-flight tickets (status not closed) visible to this user, with site, vendor, and status. Use this - not query_tickets - when the user asks which tickets are still in flight, still open, or open right now with no extra filters.",
+      "Returns up to 10 in-flight tickets (status not closed) visible to this user, with site, vendor, and status. Use this — not query_tickets — when the user asks which tickets are still in flight, still open, or open right now with no extra filters.",
     input_schema: { type: "object", properties: {}, additionalProperties: false },
   },
-  // �������������������������������������������������������������
+  // ─────────────────────────────────────────────────────────────
   // Read-only DATA tools. All scoped to the caller's role + org by
-  // ../assistant/data-tools.ts (defense-in-depth) - admin sees
+  // ../assistant/data-tools.ts (defense-in-depth) — admin sees
   // everything, partner/vendor are clamped to their org, field
   // employees are blocked from aggregate metrics.
-  // �������������������������������������������������������������
+  // ─────────────────────────────────────────────────────────────
   {
     name: "query_tickets",
     description:
-      "Lists or counts tickets in the caller's scope with optional filters: status (e.g. 'in_progress', 'kicked_back', 'completed'), vendorId, siteId, sinceDays (default 30, max 365), limit (default 10, max 50), countOnly (true to return just a count). Use this for 'how many tickets', a status filter, a date window, or a filtered list. Do not use this for 'which tickets are still in flight / still open right now' with no extra filters - call lookup_open_tickets instead.",
+      "Lists or counts tickets in the caller's scope with optional filters: status (e.g. 'in_progress', 'kicked_back', 'completed'), vendorId, siteId, sinceDays (default 30, max 365), limit (default 10, max 50), countOnly (true to return just a count). Use this for 'how many tickets', a status filter, a date window, or a filtered list. Do not use this for 'which tickets are still in flight / still open right now' with no extra filters — call lookup_open_tickets instead.",
     input_schema: {
       type: "object",
       properties: {
@@ -191,7 +191,7 @@ export const TOOLS: Anthropic.Tool[] = [
     input_schema: {
       type: "object",
       properties: {
-        vendorId: { type: "number", description: "Optional - defaults to the caller's vendor for vendor accounts." },
+        vendorId: { type: "number", description: "Optional — defaults to the caller's vendor for vendor accounts." },
         sinceDays: { type: "number", description: "Window in days (1-365). Defaults to 30." },
       },
       additionalProperties: false,
@@ -241,7 +241,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "query_sales_tax_by_state",
     description:
-      "Returns sales tax collected by US state for a calendar period - taxable sales, exempt sales, tax collected, and effective rate per state. Uses the same engine as Reports  Sales tax. Scoped to the caller's vendor or partner org. Use for questions like 'how much sales tax did we pay in Texas YTD?' or 'sales tax by state this year'. Optional state filter (e.g. 'TX'). Field employees are blocked.",
+      "Returns sales tax collected by US state for a calendar period — taxable sales, exempt sales, tax collected, and effective rate per state. Uses the same engine as Reports → Sales tax. Scoped to the caller's vendor or partner org. Use for questions like 'how much sales tax did we pay in Texas YTD?' or 'sales tax by state this year'. Optional state filter (e.g. 'TX'). Field employees are blocked.",
     input_schema: {
       type: "object",
       properties: {
@@ -258,7 +258,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "query_nec1099_summary",
     description:
-      "Returns 1099-NEC payment totals for a calendar year - same aggregation as Reports  1099. Vendors see totals paid to them per partner; partners see totals paid to each vendor; admins see platform-wide (capped). Includes the $600 IRS threshold context. Use for 'how much did we pay vendor X on 1099-NEC this year?' or 'YTD 1099 totals'. Field employees are blocked.",
+      "Returns 1099-NEC payment totals for a calendar year — same aggregation as Reports → 1099. Vendors see totals paid to them per partner; partners see totals paid to each vendor; admins see platform-wide (capped). Includes the $600 IRS threshold context. Use for 'how much did we pay vendor X on 1099-NEC this year?' or 'YTD 1099 totals'. Field employees are blocked.",
     input_schema: {
       type: "object",
       properties: {
@@ -267,7 +267,7 @@ export const TOOLS: Anthropic.Tool[] = [
       additionalProperties: false,
     },
   },
-  // �� Field / foreman ticket drill-down (mobile-friendly) ���������
+  // ── Field / foreman ticket drill-down (mobile-friendly) ─────────
   {
     name: "query_ticket_detail",
     description:
@@ -304,7 +304,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "query_ticket_labor",
     description:
-      "Per-person hours and estimated labor cost for one ticket from check-in records, plus ticket odometer miles. Use for 'total hours on ticket #', 'labor cost for this crew', 'how many miles we drove'. Scoped like query_ticket_detail - field employees see tickets they work or foreman.",
+      "Per-person hours and estimated labor cost for one ticket from check-in records, plus ticket odometer miles. Use for 'total hours on ticket #', 'labor cost for this crew', 'how many miles we drove'. Scoped like query_ticket_detail — field employees see tickets they work or foreman.",
     input_schema: {
       type: "object",
       properties: { ticketId: { type: "number" } },
@@ -342,7 +342,7 @@ export const TOOLS: Anthropic.Tool[] = [
       additionalProperties: false,
     },
   },
-  // �� Vendor / partner financial toolbox ������������������������
+  // ── Vendor / partner financial toolbox ────────────────────────
   {
     name: "query_invoices",
     description:
@@ -420,7 +420,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "query_1099_k_summary",
     description:
-      "1099-K card-payment totals for a tax year (gross amount, transaction count). Same engine as Reports  1099-K. Field employees blocked.",
+      "1099-K card-payment totals for a tax year (gross amount, transaction count). Same engine as Reports → 1099-K. Field employees blocked.",
     input_schema: {
       type: "object",
       properties: {
@@ -432,7 +432,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "query_1099_misc_summary",
     description:
-      "1099-MISC box totals (rents, royalties, other income, medical, attorney) for a tax year. Same engine as Reports  1099-MISC. Field employees blocked.",
+      "1099-MISC box totals (rents, royalties, other income, medical, attorney) for a tax year. Same engine as Reports → 1099-MISC. Field employees blocked.",
     input_schema: {
       type: "object",
       properties: {
@@ -527,7 +527,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "query_live_crew",
-    description: "Tickets currently en route, on location, or on site - live crew map snapshot.",
+    description: "Tickets currently en route, on location, or on site — live crew map snapshot.",
     input_schema: {
       type: "object",
       properties: { siteId: { type: "number" }, limit: { type: "number" } },
@@ -780,7 +780,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "get_stock_quote",
     description:
-      "Returns the latest US equity quote for a ticker symbol. Use for questions like 'what is Exxon trading at?' - pass symbol XOM (not the company name). Finnhub is preferred when FINNHUB_API_KEY is set (near real-time); otherwise falls back to Alpha Vantage end-of-day GLOBAL_QUOTE. Available to all signed-in users; not scoped to org data.",
+      "Returns the latest US equity quote for a ticker symbol. Use for questions like 'what is Exxon trading at?' — pass symbol XOM (not the company name). Finnhub is preferred when FINNHUB_API_KEY is set (near real-time); otherwise falls back to Alpha Vantage end-of-day GLOBAL_QUOTE. Available to all signed-in users; not scoped to org data.",
     input_schema: {
       type: "object",
       properties: {
@@ -796,7 +796,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "get_crude_oil_price",
     description:
-      "Returns the latest West Texas Intermediate (WTI) light sweet crude oil price in USD per barrel from EIA data via Alpha Vantage. Use for 'price of a barrel of crude', 'WTI price', 'oil price today'. Requires ALPHA_VANTAGE_API_KEY. Free tier returns daily (default), weekly, or monthly snapshots - not a live NYMEX futures tick.",
+      "Returns the latest West Texas Intermediate (WTI) light sweet crude oil price in USD per barrel from EIA data via Alpha Vantage. Use for 'price of a barrel of crude', 'WTI price', 'oil price today'. Requires ALPHA_VANTAGE_API_KEY. Free tier returns daily (default), weekly, or monthly snapshots — not a live NYMEX futures tick.",
     input_schema: {
       type: "object",
       properties: {
@@ -812,7 +812,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "mark_notifications_read",
     description:
-      "Marks one notification or all unread notifications as read for the signed-in user - the same action as the bell inbox Mark all read button. Use when the user asks to clear their notification badge or mark alerts as read. Before calling, confirm whether the user wants one notification or all unread notifications marked read. Pass confirmed:true only after confirmation.",
+      "Marks one notification or all unread notifications as read for the signed-in user — the same action as the bell inbox Mark all read button. Use when the user asks to clear their notification badge or mark alerts as read. Before calling, confirm whether the user wants one notification or all unread notifications marked read. Pass confirmed:true only after confirmation.",
     input_schema: {
       type: "object",
       properties: {
@@ -1156,7 +1156,7 @@ export const TOOLS: Anthropic.Tool[] = [
     description: "Load a focused set of permitted tools before a task. Choose onboarding to fill, advance, or finish the existing onboarding wizard, gate for visits, tickets for field work, safety for drafts, operations for crew/site status, finance or reports for existing read-only office queries, catalog for read-only Hotlist/catalog queries, marketplace for service matches and confirmation-bound capabilities, rates and job offers, market for prices, or auto for the current screen. This changes available tools without navigating or writing domain records.",
     input_schema: {
       type: "object",
-      properties: { workflow: { type: "string", enum: ["auto", "gate", "tickets", "safety", "onboarding", "operations", "finance", "reports", "catalog", "marketplace", "market", "fleet", "fleet_cargo", "fleet_maintenance", "fleet_commercial", "finance_actions", "notifications", "collaboration", "tasks", "scheduling", "calls", "meetings", "files", "administration"] } },
+      properties: { workflow: { type: "string", enum: ["auto", "gate", "tickets", "safety", "onboarding", "operations", "finance", "reports", "catalog", "marketplace", "market", "fleet", "fleet_cargo", "fleet_maintenance", "fleet_commercial", "finance_actions", "notifications", "assets", "workforce", "trips", "accounts", "collaboration", "tasks", "scheduling", "calls", "meetings", "files", "administration"] } },
       required: ["workflow"],
       additionalProperties: false,
     },
@@ -1219,7 +1219,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "deep_link_to",
     description:
-      "Returns a URL the user can navigate to in this web app for a given screen. When the user says 'take me to', 'just take me', 'open the X list', or 'go to' a screen, you MUST call this tool this turn. Do not reply with only a hand-written markdown path. Use this instead of describing 'click X then Y' when a single link will do. Detail screens (ticket-detail, vendor-detail, partner-detail, invoice-detail, vendor-analytics, partner-analytics, crew-replay) require `id`. Field-employee onboarding requires the invite `token`. For Reports, pass reportCard (e.g. salesTaxByState) and optional reportPreset (ytd, this_year, .) plus highlightState (e.g. TX) to open the matching card scrolled into view.",
+      "Returns a URL the user can navigate to in this web app for a given screen. When the user says 'take me to', 'just take me', 'open the X list', or 'go to' a screen, you MUST call this tool this turn. Do not reply with only a hand-written markdown path. Use this instead of describing 'click X then Y' when a single link will do. Detail screens (ticket-detail, vendor-detail, partner-detail, invoice-detail, vendor-analytics, partner-analytics, crew-replay) require `id`. Field-employee onboarding requires the invite `token`. For Reports, pass reportCard (e.g. salesTaxByState) and optional reportPreset (ytd, this_year, …) plus highlightState (e.g. TX) to open the matching card scrolled into view.",
     input_schema: {
       type: "object",
       properties: {
@@ -1234,7 +1234,7 @@ export const TOOLS: Anthropic.Tool[] = [
         start: { type: "string" },
         end: { type: "string" },
         types: { type: "array", items: { type: "string" } },
-        token: { type: "string", description: "Required for onboarding-field - the invite token from the email link." },
+        token: { type: "string", description: "Required for onboarding-field — the invite token from the email link." },
         step: { type: "string", description: "Optional ?step= query for onboarding deep-links." },
         reportCard: {
           type: "string",

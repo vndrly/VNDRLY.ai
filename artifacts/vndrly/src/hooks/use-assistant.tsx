@@ -36,31 +36,32 @@ export interface AssistantMessage {
   serverId?: number;
   feedbackRating?: AssistantFeedbackRating | null;
   // Tool calls only attached to assistant messages once the stream
-  // finishes. Used by the panel to render a "Used tool: ." footer.
+  // finishes. Used by the panel to render a "Used tool: …" footer.
   toolCalls?: Array<{ name: string; input: unknown; output: string }>;
   pending?: boolean;
   recovery?: { completed: string[]; remaining: string[]; needed: string; taskId?: string | null };
   usageAlert?: string;
+  confirmationReference?: string;
   gateSetupProgress?: GateSetupProgressHint;
   gateWorkflowOffer?: GateWorkflowOffer;
 }
 export type VConnectionSelection = { connectionId: string; scope: "company" | "personal"; personalPermission: boolean; savePersonalContentToCompany: boolean };
 
-// �����������������������������������������������������������������
-// Pre-auth  post-auth hand-off: stash the signup-mode chat in
+// ─────────────────────────────────────────────────────────────────
+// Pre-auth → post-auth hand-off: stash the signup-mode chat in
 // sessionStorage so that after the visitor finishes the signup form
 // and signs in, the authenticated panel can offer to "Continue your
 // earlier chat?" instead of throwing the conversation away.
 //
 // Lives in sessionStorage (not localStorage) so the chat doesn't
-// outlive the browser session - once the user closes the tab the
+// outlive the browser session — once the user closes the tab the
 // pending chat is gone.
-// �����������������������������������������������������������������
+// ─────────────────────────────────────────────────────────────────
 const PENDING_SIGNUP_CHAT_KEY = "vndrly:pending-signup-chat:v1";
 
 export interface PendingSignupChat {
   persona: "partner" | "vendor";
-  // Plain text turns only - no pending bubbles, no tool traces. The
+  // Plain text turns only — no pending bubbles, no tool traces. The
   // server's `seedHistory` validator drops anything else defensively
   // but we filter here too so the offer banner can show an accurate
   // turn count without re-parsing.
@@ -107,7 +108,7 @@ export function clearPendingSignupChat(): void {
   try {
     window.sessionStorage.removeItem(PENDING_SIGNUP_CHAT_KEY);
   } catch {
-    // sessionStorage may throw in incognito / quota-exceeded - silent.
+    // sessionStorage may throw in incognito / quota-exceeded — silent.
   }
 }
 
@@ -117,7 +118,7 @@ function writePendingSignupChat(chat: PendingSignupChat): void {
     window.sessionStorage.setItem(PENDING_SIGNUP_CHAT_KEY, JSON.stringify(chat));
   } catch {
     // Best-effort: a failed stash just means the user won't see the
-    // "continue your earlier chat?" offer. Worth logging? No - the
+    // "continue your earlier chat?" offer. Worth logging? No — the
     // panel still works either way.
   }
 }
@@ -129,6 +130,8 @@ export interface ConversationSummary {
 }
 
 type StreamEvent =
+  | { type: "confirmation"; reference: string }
+  | { type: "progress"; message: string }
   | { type: "gate_guidance"; progress: GateSetupProgressHint }
   | { type: "gate_workflow_offer"; offer: GateWorkflowOffer }
   | { type: "token"; delta: string }
@@ -169,7 +172,7 @@ export interface AssistantOptions {
    * forwarded to the server so it can prime Claude in the visitor's
    * language from the very first reply. Read fresh from a ref on each
    * `send` so toggling EN/ES mid-conversation takes effect immediately
-   * - without re-mounting the panel or recreating the callback.
+   * — without re-mounting the panel or recreating the callback.
    */
   signupMode?: { persona: "partner" | "vendor"; lang?: SignupAssistantLang };
   /** Called when a streamed assistant reply finishes. */
@@ -192,7 +195,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
   onAssistantReplyRef.current = opts.onAssistantReply;
   const pageContextRef = useRef(opts.pageContext);
   pageContextRef.current = opts.pageContext;
-  // Both tokenMode and signupMode are stateless/anonymous - they
+  // Both tokenMode and signupMode are stateless/anonymous — they
   // share the same "no DB conversation row, history replayed each
   // turn" behaviour, just hitting different endpoints. Collapsing
   // them into one flag here keeps the rest of the hook readable.
@@ -247,7 +250,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
   }, [conversationId, tokenMode]);
 
   // Reset the panel for a fresh conversation. Does NOT delete the
-  // server-side history - that's what the trash button is for. Bumps
+  // server-side history — that's what the trash button is for. Bumps
   // the restore version so any in-flight loadLatest() bails out
   // instead of resurrecting the previous conversation behind the
   // user's back, and pins hasRestoredRef=true so a re-render of the
@@ -288,7 +291,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
   // same session, (b) clobbering an in-progress send, and (c) stale
   // responses arriving after startNew/clear.
   const loadLatest = useCallback(async () => {
-    // Stateless modes (token / signup) are unauthenticated - there's
+    // Stateless modes (token / signup) are unauthenticated — there's
     // no server-side history to load. The panel still calls this on
     // open; we just bail out as a no-op.
     if (stateless) return;
@@ -318,10 +321,10 @@ export function useAssistant(opts: AssistantOptions = {}) {
       };
       // Final stale-check after the second await. If anything mutated
       // local state in the meantime (startNew, clear, or a send) we
-      // refuse to write - the user's intent wins.
+      // refuse to write — the user's intent wins.
       if (myVersion !== restoreVersionRef.current) return;
       // Drop empty assistant rows (stream errors mid-flight) so we
-      // don't render blank "Thinking." bubbles from prior sessions.
+      // don't render blank "Thinking…" bubbles from prior sessions.
       const restored: AssistantMessage[] = detail.messages
         .filter((m) => m.role === "user" || m.content.trim().length > 0)
         .map((m) => ({
@@ -334,7 +337,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
       setConversationId(detail.id);
       setMessages(restored);
     } catch {
-      // Best-effort restore - silent failures keep the panel usable.
+      // Best-effort restore — silent failures keep the panel usable.
     }
   }, []);
 
@@ -347,7 +350,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
   }, []);
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, inputMode: "web_text" | "web_voice" = "web_text", confirmationReference?: string) => {
       const trimmed = text.trim();
       if (!trimmed || streaming) return;
 
@@ -418,6 +421,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
                 ...(pageContext || currentLocation || gateGuidanceRef.current || gateDraft
                   ? {
                       pageContext: {
+                        inputMode,
                         ...(pageContext ?? { path: "/web/askv" }),
                         ...(currentLocation ? { currentLocation } : {}),
                         ...(gateGuidanceRef.current ? { gateGuidance: gateGuidanceRef.current } : {}),
@@ -430,16 +434,21 @@ export function useAssistant(opts: AssistantOptions = {}) {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ ...body, ...(confirmationReference ? { confirmationReference } : {}) }),
           signal: ac.signal,
         });
         if (!res.ok || !res.body) {
-          throw new Error(`HTTP ${res.status}`);
+          const failure = await res.json().catch(() => null);
+          throw new Error(typeof failure?.error === "string" ? failure.error : `HTTP ${res.status}`);
         }
         let accumulatedContent = "";
         const clientResults: Array<Awaited<ReturnType<typeof applyAskVClientIntentVerified>>> = [];
         await consumeSse(res.body, ac.signal, async (evt) => {
-          if (evt.type === "token") {
+          if (evt.type === "confirmation") {
+            setMessages(prev => prev.map(message => message.id === assistantId ? { ...message, confirmationReference: evt.reference } : message));
+          } else if (evt.type === "progress") {
+            setActiveTool("request_and_available_actions");
+          } else if (evt.type === "token") {
             accumulatedContent += evt.delta;
             setMessages((prev) =>
               prev.map((m) =>
@@ -481,7 +490,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
             if (spoken) onAssistantReplyRef.current?.(spoken);
           } else if (evt.type === "error") {
             setError(evt.message);
-            // Clear the "Thinking." placeholder so the bubble doesn't
+            // Clear the "Thinking…" placeholder so the bubble doesn't
             // sit stuck in a pending state forever after a stream error.
             setMessages((prev) =>
               prev.map((m) => (m.id === assistantId ? { ...m, pending: false } : m)),
@@ -572,7 +581,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
     };
   }, [conversationId, liveUpdates, stateless, streaming]);
 
-  // �� Pre-auth  post-auth hand-off ����������������������������
+  // ── Pre-auth → post-auth hand-off ────────────────────────────
   // Whenever the panel runs in signupMode, mirror the visible chat
   // turns into sessionStorage so the authenticated panel can offer
   // the visitor a "Continue your earlier chat?" prompt after they
@@ -585,7 +594,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
       .filter((m) => !m.pending && m.content.trim().length > 0)
       .map((m) => ({ role: m.role, content: m.content }));
     if (settled.length === 0) {
-      // Nothing worth restoring yet - and we explicitly do NOT clear
+      // Nothing worth restoring yet — and we explicitly do NOT clear
       // here, because clearing on first render would wipe a chat the
       // visitor saved on a prior page mount before they navigated to
       // the actual signup form.
@@ -605,7 +614,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
   // success we hydrate local state to match what the server now has,
   // and clear the sessionStorage entry so the offer doesn't keep
   // resurfacing on subsequent panel opens. Only valid in fully
-  // session-authenticated mode - token/signup modes have no DB row.
+  // session-authenticated mode — token/signup modes have no DB row.
   const adoptSignupHistory = useCallback(
     async (seed: PendingSignupChat): Promise<boolean> => {
       if (stateless) return false;
@@ -624,8 +633,8 @@ export function useAssistant(opts: AssistantOptions = {}) {
         const data = (await res.json()) as { id: number };
         // Reflect the adopted history in the panel immediately so the
         // user sees their old chat right away. The IDs are local-only
-        // - the next open will reload from the DB rows the server
-        // just wrote - so we prefix them to avoid colliding with the
+        // — the next open will reload from the DB rows the server
+        // just wrote — so we prefix them to avoid colliding with the
         // db-{id} format loadLatest() uses.
         const restored: AssistantMessage[] = seed.messages.map((m, idx) => ({
           id: `seed-${idx}`,
@@ -713,12 +722,12 @@ export function useAssistant(opts: AssistantOptions = {}) {
   };
 }
 
-// �����������������������������������������������������������������
+// ─────────────────────────────────────────────────────────────────
 // Minimal SSE consumer. The standard EventSource API doesn't support
 // POST bodies, so we parse the stream manually from a fetch response.
 // Format follows the W3C spec: lines like `event: <name>` / `data: <json>`
 // terminated by a blank line.
-// �����������������������������������������������������������������
+// ─────────────────────────────────────────────────────────────────
 async function consumeSse(
   body: ReadableStream<Uint8Array>,
   signal: AbortSignal,
@@ -761,6 +770,8 @@ async function consumeSse(
       }
       else if (eventName === "gate_guidance") { const progress = parseGateSetupProgressHint(parsed); if (progress) await onEvent({ type: "gate_guidance", progress }); }
       else if (eventName === "gate_workflow_offer") { const offer = parseGateWorkflowOffer(parsed); if (offer) await onEvent({ type: "gate_workflow_offer", offer }); }
+      else if (eventName === "confirmation" && parsed && typeof parsed === "object" && typeof (parsed as { reference?: unknown }).reference === "string") await onEvent({ type: "confirmation", reference: (parsed as { reference: string }).reference });
+      else if (eventName === "progress" && parsed && typeof parsed === "object" && typeof (parsed as { message?: unknown }).message === "string") await onEvent({ type: "progress", message: (parsed as { message: string }).message });
       else if (eventName === "token") await onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
       else if (eventName === "tool") await onEvent({ type: "tool", ...(parsed as { name: string; status: "start" | "end" }) });
       else if (eventName === "recovery" && parsed && typeof parsed === "object") {

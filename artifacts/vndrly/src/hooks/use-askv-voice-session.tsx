@@ -85,7 +85,7 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
       stopAskVSpeech();
       await saveQueue.current.flush();
       spokenTurn.current = true;
-      try { await latestAssistant.current.send(text); }
+      try { await latestAssistant.current.send(text, "web_voice"); }
       finally { spokenTurn.current = false; }
     },
     onGateSetupProgress: hint => { pendingGateGuidance.current = hint; },

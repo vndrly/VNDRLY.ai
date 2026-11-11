@@ -3,6 +3,7 @@ import { parseAskVGateGuidance, type AskVGateGuidance } from "@workspace/gate-bo
 /** Browser path the client sends so askV can tailor answers to "this page". */
 export type AssistantPageContext = {
   path: string;
+  inputMode?: "ios_voice" | "web_voice" | "ios_text" | "web_text";
   entityId?: number | null;
   gateDraft?: Record<string, unknown>;
   gateGuidance?: AskVGateGuidance;
@@ -77,6 +78,7 @@ export function parsePageContext(
   const gateGuidance = parseAskVGateGuidance((raw as { gateGuidance?: unknown }).gateGuidance, companyId);
   return {
     path,
+    ...(["ios_voice", "web_voice", "ios_text", "web_text"].includes(String((raw as AssistantPageContext).inputMode)) ? { inputMode: (raw as AssistantPageContext).inputMode } : {}),
     ...(entityId != null ? { entityId } : {}),
     ...(currentLocation ? { currentLocation } : {}),
     ...(gateGuidance ? { gateGuidance } : {}),

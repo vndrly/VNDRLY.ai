@@ -1,3 +1,4 @@
+import { channelCreatePayload as createChannelPayload } from "../work-hub/assistant-payload-schemas";
 import unreadRoutes, { unreadFor } from "./workHubUnread";
 import { expectedWorkforceContext } from "../lib/workforce-context";
 import { changeChatParticipants } from "../work-hub/chat-participants";
@@ -55,12 +56,7 @@ import { notifyUsers } from "./notifications";
 
 const router: IRouter = Router();
 const uuid = z.string().uuid();
-const createChannelPayload = z.object({
-  name: z.string().trim().min(1).max(120),
-  visibility: z
-    .enum(["organization", "private", "group"])
-    .default("organization"),
-});
+
 const createMessagePayload = z.object({
   body: z.string().trim().min(1).max(20_000),
   kind: z.enum(["text", "voice_note", "system"]).default("text"),

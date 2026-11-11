@@ -5,7 +5,7 @@ import { DATA_TOOL_NAMES } from "./tool-names";
 describe("AskV realtime tool packs", () => {
   it("exposes previously unreachable operations through explicit workflows while preserving read-only pages", () => {
     for (const [workflow, name] of [["gate", "manage_gate_shift"], ["fleet_cargo", "prepare_fleet_cargo_transfer"], ["fleet_maintenance", "manage_fleet_maintenance"], ["tickets", "manage_ticket_record"], ["finance_actions", "record_ticket_payment"], ["tasks", "manage_work_hub_task"]] as const) {
-      expect(toolsForRealtime({ role: "admin", membershipRole: "admin", workflow }).map(tool => tool.name)).toContain(name);
+      expect(toolsForRealtime({ role: workflow === "finance_actions" ? "partner" : "vendor", membershipRole: "admin", workflow }).map(tool => tool.name)).toContain(name);
       expect(toolsForRealtime({ role: "admin", membershipRole: "admin", workflow, path: "/gate/shift-notes" }).every(tool => !tool.mutating)).toBe(true);
     }
   });
@@ -19,7 +19,10 @@ describe("AskV realtime tool packs", () => {
     const web = toolsForRealtime({ ...context, path: "/work-hub/askv" }).map((tool) => tool.name);
     const native = toolsForRealtime({ ...context, path: "/mobile/work-hub/askv" }).map((tool) => tool.name);
     expect(native).toEqual(web);
-    expect(native).toEqual(expect.arrayContaining([
+    expect(native).toContain("select_tool_pack");
+    expect(native.length).toBeLessThan(50);
+    const discoverable = VOICE_WORKFLOWS.flatMap(workflow => toolsForRealtime({ ...context, workflow }).map(tool => tool.name));
+    expect(discoverable).toEqual(expect.arrayContaining([
       "send_work_hub_message",
       "manage_work_hub_task",
       "manage_work_hub_calendar_item",
@@ -109,7 +112,7 @@ describe("AskV realtime tool packs", () => {
       expect(names.has(name), name).toBe(true);
     for (const workflow of VOICE_WORKFLOWS) {
       const tools = toolsForRealtime({ role: "admin", workflow });
-      expect(tools.length).toBeLessThanOrEqual(35);
+      expect(tools.length, workflow).toBeLessThanOrEqual(35);
       expect(tools.some((tool) => tool.name === "select_tool_pack")).toBe(true);
     }
   });
@@ -164,7 +167,7 @@ describe("AskV realtime tool packs", () => {
     expect(names).not.toContain("confirm_visitor_check_in");
   });
 
-  it("does not hide authorization - denied tools still fail at execution", () => {
+  it("does not hide authorization — denied tools still fail at execution", () => {
     const names = toolsForRealtime({
       role: "field_employee",
       path: "/gatekeeper",
@@ -197,8 +200,8 @@ describe("AskV realtime tool packs", () => {
   });
   it("routes conversation away rules and crew administration without removing either from Ask V", () => {
     const names=(path:string)=>toolsForRealtime({role:"vendor",membershipRole:"admin",path}).map(tool=>tool.name);
-    const chat=names("/work-hub/chat?channel=exact"),crews=names("/work-hub/crews"),command=names("/work-hub/askv");
-    for(const path of ["/work-hub/askv?run=exact","/work-hub/askv#run","/native/work-hub/askv?run=exact"])expect(names(path)).toEqual(command);
+    const chat=names("/work-hub/chat?channel=exact"),crews=names("/work-hub/crews"),command=VOICE_WORKFLOWS.flatMap(workflow => toolsForRealtime({role:"vendor",membershipRole:"admin",workflow}).map(tool => tool.name));
+    for(const path of ["/work-hub/askv?run=exact","/work-hub/askv#run","/native/work-hub/askv?run=exact"])expect(names(path)).toEqual(names("/work-hub/askv"));
     for(const name of ["query_work_hub_away_responder","query_work_hub_away_channels","manage_work_hub_away_responder"]){expect(chat).toContain(name);expect(crews).not.toContain(name);expect(command).toContain(name);}
     for(const name of ["get_work_hub_crew_members","manage_work_hub_crew","manage_work_hub_crew_member"]){expect(chat).not.toContain(name);expect(crews).toContain(name);expect(command).toContain(name);}
     for(const name of ["list_work_hub_channels","list_work_hub_channel_members","send_work_hub_message"]){expect(chat).toContain(name);}

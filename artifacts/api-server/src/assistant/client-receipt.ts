@@ -1,4 +1,13 @@
 import { z } from "zod/v4";
+/** Preserve the verified display result when a conversation is reopened. */
+export function clientReceiptDisplayContent(content: string, calls: unknown): string {
+  if (!Array.isArray(calls)) return content;
+  const messages = calls.flatMap(call => {
+    const receipt = call?.clientReceipt;
+    return receipt?.source === "authenticated_client" && receipt?.authority === "display_only" && typeof receipt.message === "string" ? [receipt.message] : [];
+  }).filter(Boolean);
+  return messages.length ? messages.join(" ") : content;
+}
 export const clientReceiptsSchema = z.object({ receipts: z.array(z.object({ ok: z.boolean(), message: z.string().max(1000) }).strict()).min(1).max(16) }).strict();
 /** The browser may report display outcomes only, never approve a business operation. */
 export function attachClientReceipts(calls: unknown, receipts: Array<{ ok: boolean; message: string }>, organizationKey: string) {
