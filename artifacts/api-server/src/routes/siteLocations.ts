@@ -195,6 +195,7 @@ router.get("/site-locations", async (req, res): Promise<void> => {
       .select(siteSelect)
       .from(siteLocationsTable)
       .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
+      .where(eq(siteLocationsTable.hidden, false))
       .orderBy(siteLocationsTable.createdAt);
   } else {
     // Unknown or unscoped role — deny by default (least privilege).

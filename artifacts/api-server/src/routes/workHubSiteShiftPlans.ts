@@ -44,6 +44,7 @@ async function authorize(req: Parameters<typeof getSessionFromRequest>[0], owner
   requireWorkHubCapability(createWorkHubAccess({ session: { ...session, userId: session.userId! }, owner, context: { kind: "organization", id: owner.id }, participant: true }), "shift.manage");
   const sites = await db.select({ id: siteLocationsTable.id, name: siteLocationsTable.name }).from(siteLocationsTable).where(and(
     siteId ? eq(siteLocationsTable.id, siteId) : undefined,
+    siteId ? undefined : eq(siteLocationsTable.hidden, false),
     owner.type === "partner" ? eq(siteLocationsTable.partnerId, owner.id) : sql`exists (select 1 from ${siteWorkAssignmentsTable} a where a.site_location_id = ${siteLocationsTable.id} and a.vendor_id = ${owner.id})`,
   ));
   if (siteId && !sites.length) throw Object.assign(new Error("Site is not available to this company"), { status: 403 });
