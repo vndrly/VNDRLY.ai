@@ -64,7 +64,7 @@ export function applyAskVClientIntent(intent: AskVClientIntent): { ok: boolean; 
   }
   if (intent.name === 'open_screen' || intent.name === 'start_ticket_entry') {
     const ok = navigate(args.path);
-    return { ok, message: ok ? 'Requested screen opened. The form still requires review and completion.' : 'That screen is unavailable.' };
+    return { ok, message: ok ? 'Requested screen opened.' : 'The navigation response did not contain a valid web destination.' };
   }
   if (intent.name === 'launch_scanner') return { ok: navigate('/work-hub/my-work'), message: 'Assigned work opened. QR job starts have been retired.' };
   if (intent.name === 'focus_control') {

@@ -24,7 +24,8 @@ function distance(a:{latitude:number;longitude:number},b:{latitude:number;longit
 export default function GateMap(){
  const colors=useColors(),{t}=useTranslation(),{user,activeMembershipId}=useAuth(),{width,height}=useWindowDimensions();
  const [gateId,setGateId]=useState<string|null>(null),[selectorOpen,setSelectorOpen]=useState(false),[filter,setFilter]=useState<"gate"|"all"|"relief">("gate"),[selected,setSelected]=useState<number|null>(null),[calendar,setCalendar]=useState(false),[dateError,setDateError]=useState<string|null>(null),[date,setDate]=useState(new Date().toLocaleDateString("en-CA")),[time,setTime]=useState("12:00"),[at,setAt]=useState<string|null>(null),[focus,setFocus]=useState<"gate"|"all">("gate"),[street,setStreet]=useState(false);
- const {equipmentId}=useLocalSearchParams<{equipmentId?:string}>();
+ const {equipmentId,stationId}=useLocalSearchParams<{equipmentId?:string;stationId?:string}>();
+ useEffect(()=>{if(stationId){setGateId(stationId);setFocus("gate");}},[stationId]);
  const [equipmentShown,setEquipmentShown]=useState(!!equipmentId),[selectedEquipment,setSelectedEquipment]=useState<string|null>(equipmentId??null),[equipmentGroup,setEquipmentGroup]=useState<string[]|null>(null),[equipmentFocus,setEquipmentFocus]=useState(false);
  const equipmentQuery=useEquipmentData(!at),equipment=equipmentQuery.data?.equipment??[],equipmentItem=equipment.find(item=>item.id===selectedEquipment);
  useEffect(()=>{if(equipmentId){setEquipmentShown(true);setSelectedEquipment(equipmentId);setEquipmentFocus(true);}},[equipmentId]);

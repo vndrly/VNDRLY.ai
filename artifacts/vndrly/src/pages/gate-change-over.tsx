@@ -215,6 +215,13 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
   const [selectedStation, setSelectedStation] = useState(
     () => linkedLocation ? entryParams.get("stationId") ?? "" : remembered?.stationId ?? "",
   );
+  useEffect(() => {
+    const params = new URLSearchParams(routeSearch);
+    if (!params.has("siteId") && !params.has("stationId")) return;
+    locationChosen.current = true;
+    setSelectedSite(params.get("siteId") ?? "");
+    setSelectedStation(params.get("stationId") ?? "");
+  }, [routeSearch]);
   const [notes, setNotes] = useState("");
   const [itemText, setItemText] = useState("");
   const [reason, setReason] = useState("");

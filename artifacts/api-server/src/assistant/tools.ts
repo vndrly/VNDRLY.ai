@@ -1131,15 +1131,17 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "open_screen",
-    description: "Client capability: open a permitted VNDRLY screen. Native screens include fleet, fleet-log, fleet-map, gate-map, company-operations, work-hub-calendar, work-hub-attention, work-hub-safety and work-hub-my-work. Return an intent; the client performs navigation and each page enforces company categories and employee permissions. Opening a page never changes its records.",
+    description: "Open a permitted VNDRLY page on the user's current device. Gate Dashboard is gate-dashboard; the visitor entry form is gate. Gate Map is gate-map, Gate Log gate-log, Calendar work-hub-calendar. For 'open/show [site or gate name]', use gate-dashboard (or gate-map when a map is requested) and pass the spoken name in query. The server resolves partial names, partner/site/gate combinations and minor spelling differences against the current account's authorized gates. Do not require exact display wording, guess record IDs or say a site is absent before this lookup. A genuinely ambiguous match returns candidate gates for one clarification. The client performs navigation and the destination checks access. Other native screens include fleet, fleet-log, fleet-map, company-operations, work-hub-attention, work-hub-safety and work-hub-my-work. Opening a page never changes its records.",
     input_schema: {
       type: "object",
       properties: {
         screen: { type: "string" },
+        siteId: { type: "integer", minimum: 1, description: "Optional exact authorized Gate site ID; prefer query for a spoken site name." },
+        stationId: { type: "string", format: "uuid", description: "Optional exact authorized gate ID at siteId; prefer query for a spoken gate name." },
         id: { type: "number" },
         subjectType: { type: "string", enum: ["asset", "task", "meeting", "file", "document", "announcement", "message", "note", "form", "transcript"] },
         itemId: { type: "string", format: "uuid", description: "Exact authorized item UUID; use document for a managed file-library document ID and file for a legacy finalized file ID." },
-        query: { type: "string" },
+        query: { type: "string", description: "For gate-dashboard/gate-map, the user's natural site or gate name, including partial names. For Work Hub search, the search text." },
         start: { type: "string" },
         end: { type: "string" },
         types: { type: "array", items: { type: "string", enum: ["asset", "task", "meeting", "file", "announcement", "message", "note", "form", "transcript"] } },

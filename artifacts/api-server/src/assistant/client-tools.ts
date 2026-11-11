@@ -38,7 +38,29 @@ export function runClientTool(
       : {};
   if (name === "open_screen") {
     if (typeof args.screen !== "string") return fail("Choose a screen.");
-    const nativeScreens: Record<string,string> = {"gate-map":"/gate-map","fleet":"/fleet","fleet-map":"/fleet-map","fleet-log":"/fleet-log","company-operations":"/company-operations","work-hub-attention":"/work-hub/attention","work-hub-safety":"/work-hub/safety","work-hub-my-work":"/work-hub/my-work"};
+    if (args.screen === "gate-dashboard") {
+      const access = gateDeepLinkScreen(session.role as AssistantRole, "gate");
+      if (!access.ok) return fail(access.error);
+      args.path = "/gate/change-over";
+      args.mobilePath = "/(tabs)/change-over";
+    }
+    if (["gate-dashboard", "gate-map"].includes(args.screen)) {
+      if (args.siteId != null && (!Number.isSafeInteger(args.siteId) || Number(args.siteId) <= 0)) return fail("Choose a valid site.");
+      if (args.stationId != null && (typeof args.stationId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(args.stationId))) return fail("Choose a valid gate.");
+      const params = new URLSearchParams();
+      if (args.siteId != null) params.set("siteId", String(args.siteId));
+      if (args.stationId != null) params.set("stationId", String(args.stationId));
+      const suffix = params.size ? `?${params}` : "";
+      if (args.screen === "gate-map") {
+        if (session.role === "partner") return fail("Use your current company portal.");
+        args.path = "/gate/map";
+        args.mobilePath = "/gate-map";
+      }
+      args.path = String(args.path) + suffix;
+      args.mobilePath = String(args.mobilePath) + suffix;
+      return JSON.stringify({ ok: true, execution: "client", intent: { name, arguments: args } });
+    }
+    const nativeScreens: Record<string,string> = {"fleet":"/fleet","fleet-map":"/fleet-map","fleet-log":"/fleet-log","company-operations":"/company-operations","work-hub-attention":"/work-hub/attention","work-hub-safety":"/work-hub/safety","work-hub-my-work":"/work-hub/my-work"};
     if(Object.hasOwn(nativeScreens,args.screen)) {
       if(session.role === "partner" && !args.screen.startsWith("work-hub")) return fail("Use your current company portal.");
       return JSON.stringify({ok:true,execution:"client",intent:{name,arguments:{screen:args.screen,mobilePath:nativeScreens[args.screen]}},message:"Open the native screen; its server permissions still apply. No settings or records were changed."});

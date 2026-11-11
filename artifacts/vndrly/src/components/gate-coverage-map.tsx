@@ -18,6 +18,7 @@ import { WorkspacePanel } from "@/components/work-hub/workspace-panel";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { useSearch } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import type { GateMapVehicle } from "@workspace/api-zod";
 import { gateMapVehiclePopup } from "@/lib/gate-map-vehicle-popup";
@@ -65,7 +66,8 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
   const [dropping, setDropping] = useState(false);
   const [draftPin, setDraftPin] = useState<{latitude:number;longitude:number} | null>(null);
   const [selectedPinId, setSelectedPinId] = useState<string | null>(() => new URLSearchParams(window.location.search).get("pinId"));
-  const [selectionGateId,setSelectionGateId]=useState<string|null>(null);
+  const [selectionGateId,setSelectionGateId]=useState<string|null>(() => new URLSearchParams(window.location.search).get("stationId"));
+  const navigationSearch = useSearch();
   const [centerOnMe,setCenterOnMe]=useState(false),[centeringMe,setCenteringMe]=useState(false);
   const [centerError,setCenterError]=useState("");
   const centerRequest=useRef(0);
@@ -80,6 +82,15 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
   const [selectedGate, setSelectedGate] = useState<string | null>(null);
   const [focusedGateId, setFocusedGateId] = useState<string | null>(null);
   const [focusedStaffId, setFocusedStaffId] = useState<number | null>(null);
+  useEffect(() => {
+    const stationId = new URLSearchParams(navigationSearch).get("stationId");
+    if (stationId) {
+      setSelectionGateId(stationId);
+      setSelectedGate(stationId);
+      setFocusedGateId(stationId);
+      setFocusedStaffId(null);
+    }
+  }, [navigationSearch]);
   const [activityGateId, setActivityGateId] = useState<string | null>(null);
   const [activityVisit, setActivityVisit] = useState(0);
   const pinnedActivity = useRef(false), leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

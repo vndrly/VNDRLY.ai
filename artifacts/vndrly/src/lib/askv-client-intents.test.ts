@@ -1,7 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 import { ASKV_WEB_CLIENT_INTENT_NAMES, applyAskVClientIntent, clearAskVClientDrafts, parseAskVClientIntent, readAskVSafetyDraft } from "./askv-client-intents";
+import { runClientTool } from "../../../api-server/src/assistant/client-tools";
 
 describe("AskV client intents", () => {
+  it("opens Gate pages and Calendar from the server's actual client intents", () => {
+    for (const [screen, path] of [["gate-map", "/gate/map"], ["gate", "/gate"], ["gate-dashboard", "/gate/change-over"], ["work-hub-calendar", "/work-hub/calendar"]]) {
+      const response = runClientTool("open_screen", { screen }, { userId: 10, role: "vendor" });
+      const intent = parseAskVClientIntent(response);
+      expect(intent).not.toBeNull();
+      expect(applyAskVClientIntent(intent!)).toMatchObject({ ok: true });
+      expect(window.location.pathname).toBe(path);
+    }
+  });
   it("wires every structured client intent the server may emit", () => {
     expect(new Set(ASKV_WEB_CLIENT_INTENT_NAMES)).toEqual(new Set([
       "open_screen", "focus_control", "prefill_draft", "prefill_gate_visit",

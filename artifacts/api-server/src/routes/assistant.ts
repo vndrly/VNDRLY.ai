@@ -952,6 +952,11 @@ export async function runTool(
     return runWriteTool(name, input, session);
   }
   if (isClientTool(name)) {
+    if (name === "open_screen") {
+      const { runGateNavigationTool } = await import("../assistant/gate-navigation");
+      const gateNavigation = await runGateNavigationTool(input, session);
+      if (gateNavigation !== null) return gateNavigation;
+    }
     return runClientTool(name, input, session);
   }
   try {

@@ -8,6 +8,22 @@ import { ASKV_NATIVE_CLIENT_INTENT_NAMES, executeAskVClientIntent, readAskVSafet
 import { ASKV_SERVER_CLIENT_INTENT_NAMES, runClientTool } from "../../../api-server/src/assistant/client-tools";
 beforeEach(() => { ui.push.mockReset(); ui.openURL.mockReset().mockResolvedValue(undefined); ui.api.mockReset().mockResolvedValue({}); ui.current.mockReturnValue(true); });
 describe("AskV native client capabilities", () => {
+  it("opens Gate Map, Gate Dashboard and Calendar from the server's actual client intents", async () => {
+    for (const [screen, route] of [["gate-map", "/(tabs)/gate-map"], ["gate", "/(tabs)/gate"], ["gate-dashboard", "/(tabs)/change-over"], ["work-hub-calendar", "/work-hub/calendar"]]) {
+      const emitted = JSON.parse(runClientTool("open_screen", { screen }, { userId: 10, role: "vendor" }));
+      expect(await executeAskVClientIntent(emitted.intent, "/askv")).toMatchObject({ ok: true, opened: true });
+      expect(ui.push).toHaveBeenLastCalledWith(route);
+      expect(ui.openURL).not.toHaveBeenCalled();
+    }
+  });
+  it("keeps the exact resolved gate when opening the native dashboard or map", async () => {
+    const stationId = "e00cb909-a716-4a65-9375-dd84f337bf6b";
+    for (const [screen, route] of [["gate-dashboard", "/(tabs)/change-over"], ["gate-map", "/(tabs)/gate-map"]]) {
+      const emitted = JSON.parse(runClientTool("open_screen", { screen, siteId: 411, stationId }, { userId: 10, role: "vendor" }));
+      expect(await executeAskVClientIntent(emitted.intent, "/askv")).toMatchObject({ ok: true });
+      expect(ui.push).toHaveBeenLastCalledWith(`${route}?siteId=411&stationId=${stationId}`);
+    }
+  });
   it("keeps every server-emitted client intent wired on native", () => {
     const expected = new Set([
       "open_screen", "focus_control", "prefill_draft", "prefill_gate_visit",

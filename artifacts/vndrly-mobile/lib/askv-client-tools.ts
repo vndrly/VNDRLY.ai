@@ -52,7 +52,7 @@ export function registerAskVControlAliases(paths: readonly string[], id: string,
   return () => remove.forEach((unregister) => unregister());
 }
 const screens: Record<string, string> = {
-  "gate-map": "/(tabs)/gate-map", "gate-log": "/(tabs)/gate-history",
+  "gate-map": "/(tabs)/gate-map", "gate-dashboard": "/(tabs)/change-over", "gate-log": "/(tabs)/gate-history",
   fleet: "/(tabs)/fleet", "fleet-log": "/(tabs)/fleet-log", "fleet-map": "/(tabs)/fleet-map",
   "company-operations": "/company-operations", "work-hub": "/(tabs)/work-hub",
   "work-hub-calendar": "/work-hub/calendar", "work-hub-attention": "/work-hub/attention", "work-hub-safety": "/work-hub/safety", "work-hub-my-work": "/work-hub/my-work",
@@ -127,6 +127,12 @@ export async function executeAskVClientIntent(intent: AskVClientIntent, path: st
       if (screens[String(args.screen)] && ["work-hub-attention","work-hub-safety","work-hub-my-work"].includes(String(args.screen))) {router.push(screens[String(args.screen)] as never);return opened("Opened the requested Work Hub screen.");}
       if (String(args.screen).startsWith("work-hub") || args.screen === "shift-notes") return openAuthorizedAssistantLink(`vndrly-deep-link:${args.screen}`);
       let target = screens[String(args.screen)];
+      if (target && ["gate-dashboard", "gate-map"].includes(String(args.screen))) {
+        const params = new URLSearchParams();
+        if (Number.isSafeInteger(args.siteId) && Number(args.siteId) > 0) params.set("siteId", String(args.siteId));
+        if (typeof args.stationId === "string" && /^[0-9a-f-]{36}$/i.test(args.stationId)) params.set("stationId", args.stationId);
+        if (params.size) target += `?${params}`;
+      }
       const id = ticketId(args.id);
       if (args.screen === "ticket-detail" && id) target = "/ticket/" + id;
       if (args.screen === "invoice-detail" && id) target = "/invoice/" + id;
