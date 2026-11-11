@@ -93,6 +93,16 @@ describe("onboarding address and marketplace coverage", () => {
     expect((await coverage()).reasonCodes).toEqual(["SERVICE_AREA_MISSING"]);
     expect(state.coverageWriteDepths).toEqual([1]);
   });
+  it("completes with blank optional overtime fields and preserves existing rates", async () => {
+    progress().completedAt = null;
+    progress().payload.rates = { dailyOtHours: "", weeklyOtHours: "  ", overtimeMultiplier: "2" };
+    Object.assign(vendor(), { dailyOtHours: "8", weeklyOtHours: "40", overtimeMultiplier: "1.5" });
+
+    const response = await request(app).post("/api/onboarding/vendor/3/complete").set("Cookie", cookie).send({});
+    expectStatus(response, 200);
+    expect(response.body.completedAt).toEqual(expect.any(String));
+    expect(vendor()).toMatchObject({ dailyOtHours: "8", weeklyOtHours: "40", overtimeMultiplier: "2" });
+  });
   it.each(["wizard", "AskV"])("rerunnable %s completion invalidates changed address coverage in the existing transaction", async lane => {
     if (lane === "AskV") {
       vi.spyOn(globalThis, "fetch").mockImplementation(async (url, init) => {

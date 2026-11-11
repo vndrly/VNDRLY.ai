@@ -1231,6 +1231,12 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     }
     const tax = payload.taxIds as Record<string, string>;
     const rates = (payload.rates ?? {}) as Record<string, string | number>;
+    const ratePatch: Partial<typeof vendorsTable.$inferInsert> = {};
+    for (const key of ["dailyOtHours", "weeklyOtHours", "overtimeMultiplier"] as const) {
+      const value = rates[key];
+      if (value == null || String(value).trim() === "") continue;
+      ratePatch[key] = String(value).trim();
+    }
     const compliance = (payload.compliance ?? {}) as Record<string, string>;
     const serviceArea = (payload.serviceArea ?? {}) as Record<string, unknown>;
     const compliancePatch: Partial<typeof vendorsTable.$inferInsert> = {};
@@ -1287,9 +1293,7 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
             // matching for nearby partners. Lat/lng come from a
             // background geocoder once the address is set.
             operatingRadiusMiles: Math.max(1, Math.round(Number(serviceArea.operatingRadiusMiles) || 0)),
-            ...(rates.dailyOtHours != null ? { dailyOtHours: String(rates.dailyOtHours) } : {}),
-            ...(rates.weeklyOtHours != null ? { weeklyOtHours: String(rates.weeklyOtHours) } : {}),
-            ...(rates.overtimeMultiplier != null ? { overtimeMultiplier: String(rates.overtimeMultiplier) } : {}),
+            ...ratePatch,
             // Optional compliance and legacy consent values only update
             // canonical records when supplied, preserving existing data.
             ...compliancePatch,
