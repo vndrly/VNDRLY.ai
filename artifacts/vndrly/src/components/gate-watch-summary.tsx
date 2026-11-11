@@ -13,18 +13,22 @@ import GateRecentShiftNotes from "./gate-recent-shift-notes";
 import GateWatchTimeline from "./gate-watch-timeline";
 import GateAssumeWatchFlyout from "./gate-assume-watch-flyout";
 import GateWatchRadar from "./gate-watch-radar";
+import { GateDashboardLiveSummary } from "./gate-dashboard-live-summary";
 
 type Watch = {userId:number;name:string;stationId:string;siteName:string;gateName:string;startedAt:string;watchId?:string|null;canManage?:boolean};
 type AdminCommand = {stationId:string;body:{operationId:string;expectedShiftId:string;action:"assume"|"assign";targetMembershipId?:number}};
 
-export default function GateWatchSummary({ stationId, current, onAssume, onHandoff, assumeDisabled }: { stationId: string; current?: ChangeOverState; onAssume?: () => void; onHandoff?: () => void; assumeDisabled?: boolean }) {
+export default function GateWatchSummary({ stationId, current, onAssume, onHandoff, assumeDisabled, liveScope }: { stationId: string; current?: ChangeOverState; onAssume?: () => void; onHandoff?: () => void; assumeDisabled?: boolean; liveScope?: string }) {
   const { user } = useAuth(), { i18n } = useTranslation(), es = (i18n?.language ?? "en").startsWith("es");
   const cache=useQueryClient();
   const [assignGate,setAssignGate]=useState<string|null>(null),[pendingAdmin,setPendingAdmin]=useState<AdminCommand|null>(null),[adminBusy,setAdminBusy]=useState(false),[adminMessage,setAdminMessage]=useState("");
   const [assignWatchId,setAssignWatchId]=useState<string|null>(null);
   const [assumeTarget,setAssumeTarget]=useState<Watch|null>(null),[assumeOpen,setAssumeOpen]=useState(false),[assumePending,setAssumePending]=useState(false);
   useEffect(()=>{setAssignGate(null);setPendingAdmin(null);setAdminMessage("");setAssumeTarget(null);setAssumeOpen(false);setAssumePending(false);},[user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId]);
-  const watches=useQuery({queryKey:["gate-active-watches",user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId],queryFn:()=>changeOverRequest<{watches:Watch[]}>("/watches"),retry:false,refetchInterval:15000});
+  const watches=useQuery({queryKey:["gate-active-watches",user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId],queryFn:()=>changeOverRequest<{watches:Watch[]}>("/watches"),retry:false,refetchInterval:liveScope ? 5000 : 15000});
+  const watchRevision = Array.isArray(watches.data?.watches)
+    ? JSON.stringify(watches.data.watches.map(watch => `${watch.stationId}:${watch.userId}:${watch.startedAt}`).sort())
+    : undefined;
   const standers=useQuery({queryKey:["gate-watch-standers",user?.userId,user?.activeMembershipId,assignGate],queryFn:()=>changeOverRequest<{operators:{userId:number;membershipId:number;name:string;companyName:string}[]}>(`/${assignGate}/watch/standers`),enabled:Boolean(assignGate),retry:false,staleTime:0});
   const ownsWatch=current?.shift?.operator_id===user?.userId;
   const c = (en: string, spanish: string) => es ? spanish : en;
@@ -53,7 +57,7 @@ export default function GateWatchSummary({ stationId, current, onAssume, onHando
     {assumePending&&!assumeOpen&&<button type="button" className="gate-watch-text-action" onClick={()=>setAssumeOpen(true)}>{c("Check assumption","Comprobar guardia")}</button>}
     <div className="gate-watch-roster-row">
       <details className="gate-panel-disclosure gate-watch-roster">
-        <summary><UserCheck aria-hidden="true"/><span>{c("On watch", "En vigilancia")}</span><small>{watches.isSuccess && Array.isArray(watches.data?.watches) ? watches.data.watches.length : c("Unavailable","No disponible")}</small></summary>
+        <GateDashboardLiveSummary scope={liveScope} row="watch-roster" value={watchRevision}><UserCheck aria-hidden="true"/><span>{c("On watch", "En vigilancia")}</span><small>{watches.isSuccess && Array.isArray(watches.data?.watches) ? watches.data.watches.length : c("Unavailable","No disponible")}</small></GateDashboardLiveSummary>
         <div className="gate-panel-detail">{watches.isSuccess && Array.isArray(watches.data?.watches) ? watches.data.watches.length ? watches.data.watches.map(w=><div className="gate-current-watch" key={`${w.stationId}:${w.userId}`}>
           <div className="gate-current-watch-heading"><strong>{w.name}</strong>{w.canManage&&w.watchId&&<span className="gate-watch-admin-actions" aria-label={c(`Manage ${w.name}'s watch at ${w.siteName}`,`Gestionar vigilancia de ${w.name} en ${w.siteName}`)}>
             <button type="button" className="gate-watch-text-action" disabled={blocked||w.userId===user?.userId} onClick={()=>{setAssumeTarget(w);setAssumeOpen(true);}}>{c("Assume","Asumir")}</button><span className="gate-watch-divider" aria-hidden="true">|</span>

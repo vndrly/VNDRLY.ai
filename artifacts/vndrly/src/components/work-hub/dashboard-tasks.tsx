@@ -12,21 +12,22 @@ import DashboardTaskCompletion from "./dashboard-task-completion";
 import { WorkspacePanel, WorkspaceRow } from "./workspace-panel";
 
 /** The server returns personal tasks or the authorized company's complete task list. */
-export default function DashboardTasks() {
+export default function DashboardTasks({ liveScope }: { liveScope?: string } = {}) {
   const { user } = useAuth(), { i18n } = useTranslation();
   const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
   const [panel, setPanel] = useState<DashboardTaskGroup | "hours" | null>(null);
   const [now, setNow] = useState(Date.now);
   const taskPanel = panel && panel !== "hours" ? panel : null;
+  const refreshInterval = liveScope ? 5000 : 15000;
   const summary = useQuery({ queryKey: ["work-hub", "dashboard-task-summary", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, user?.role, user?.vendorRole],
-    queryFn: ({ signal }) => readDashboardTaskSummary(path => workHubRequest(path, { signal, cache: "no-store" })), enabled: Boolean(user), retry: false, refetchInterval: 15000 });
+    queryFn: ({ signal }) => readDashboardTaskSummary(path => workHubRequest(path, { signal, cache: "no-store" })), enabled: Boolean(user), retry: false, refetchInterval: refreshInterval });
   const tasks = useQuery({ queryKey: ["work-hub", "dashboard-tasks", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, user?.role, user?.vendorRole],
     queryFn: ({ signal }) => readDashboardTasks(path => workHubRequest(path, { signal, cache: "no-store" })),
-    enabled: Boolean(user && (taskPanel || summary.data === null)), retry: false, refetchInterval: taskPanel ? 15000 : false });
+    enabled: Boolean(user && (taskPanel || summary.data === null)), retry: false, refetchInterval: taskPanel || summary.data === null ? refreshInterval : false });
   const company = summary.data?.scope === "company" || summary.data === null && tasks.data?.scope === "company";
   const hopper = useQuery({ queryKey: ["work-hub", "dashboard-unassigned", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, user?.role, user?.vendorRole],
     queryFn: ({ signal }) => readDashboardUnassigned(path => workHubRequest(path, { signal, cache: "no-store" })),
-    enabled: Boolean(user && (summary.data?.scope === "self" || summary.data === null && tasks.data?.scope !== "company")), retry: false, refetchInterval: 15000 });
+    enabled: Boolean(user && (summary.data?.scope === "self" || summary.data === null && tasks.data?.scope !== "company")), retry: false, refetchInterval: refreshInterval });
   useEffect(() => setPanel(null), [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, user?.role, user?.vendorRole]);
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(timer); }, []);
   const allTasks = [...new Map([...(tasks.data?.tasks ?? []), ...(hopper.data ?? [])].map(task => [task.id, task])).values()];
@@ -58,7 +59,9 @@ export default function DashboardTasks() {
         {company && <><span className="hub-task-mine">{mine} {c("mine", "mías")}</span> | </>}{total}{company || row.key === "stale" ? ` ${c("total", "total")}` : ""}
         {row.key === "stale" && <> | <span className="hub-task-unassigned-total">{unassigned} {c("unassigned", "sin asignar")}</span></>}</>;
       return <div className={`hub-task-group${row.key === "stale" ? " hub-task-group-stale" : ""}`} key={row.key}>
-        <WorkspaceRow icon={row.icon} label={row.label} value={value} onClick={() => toggle(row.key)} expanded={panel === row.key} />
+        <WorkspaceRow icon={row.icon} label={row.label} value={value} onClick={() => toggle(row.key)} expanded={panel === row.key}
+          pulseKey={liveScope ? `${liveScope}:task:${row.key}` : undefined}
+          pulseValue={!failed && !loading && total !== undefined ? JSON.stringify([total, company ? mine : null, row.key === "stale" ? unassigned : null]) : undefined} />
         {panel === row.key && <div className="hub-inline-panel hub-task-list" role="region" aria-label={c("Assigned task details", "Detalles de tareas asignadas")}>
           {group?.map(task => {
             const elapsed = taskElapsed(task, now), own = company && (task.gateHopper?.completedById ?? task.assigneeUserId) === user?.userId;

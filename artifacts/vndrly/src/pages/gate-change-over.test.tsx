@@ -49,6 +49,25 @@ const snapshot = {
   openItems: [],
   facts: [],
 };
+it("flashes only a changed live row, including after leaving and returning", () => {
+  const animate = vi.fn(() => ({ cancel: vi.fn() }));
+  const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "animate");
+  Object.defineProperty(HTMLElement.prototype, "animate", { configurable: true, value: animate });
+  const view = (checkIns: number) => <ShiftSnapshotView snapshot={{ ...snapshot, metrics: { ...snapshot.metrics, checkIns } }} historyBaseHref="/gate/history?siteId=1" liveScope="pulse-test" />;
+  try {
+    const first = render(view(2));
+    expect(animate).not.toHaveBeenCalled();
+    first.unmount();
+    const reopened = render(view(3));
+    expect(animate).toHaveBeenCalledTimes(1);
+    expect(animate.mock.contexts[0]).toBe(screen.getByTestId("dashboard-metric-checkIns").querySelector("summary"));
+    reopened.rerender(view(3));
+    expect(animate).toHaveBeenCalledTimes(1);
+  } finally {
+    if (original) Object.defineProperty(HTMLElement.prototype, "animate", original);
+    else Reflect.deleteProperty(HTMLElement.prototype, "animate");
+  }
+});
 const state = () => ({
   station: { id: "gate", name: "Main gate", site_id: 1 },
   site: { id: 1, name: "Site" },

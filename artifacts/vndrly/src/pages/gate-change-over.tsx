@@ -3,6 +3,7 @@ import { CardHeading } from "@/components/ui/card-heading";
 import { GateShiftNoteContent } from "@/components/gate-shift-note-content";
 import GateShiftNotesList from "@/components/gate-shift-notes-list";
 import { GateActivityCard } from "@/components/gate-activity-card";
+import { GateDashboardLiveSummary } from "@/components/gate-dashboard-live-summary";
 import LanguageToggle from "@/components/language-toggle";
 import WorkdayControls from "@/components/workday-controls";
 import GateHandoffDesk from "@/components/gate-handoff-desk";
@@ -59,10 +60,12 @@ export function ShiftSnapshotView({
   snapshot,
   historyBaseHref,
   activityWindow,
+  liveScope,
 }: {
   snapshot: ChangeOverSnapshot | null;
   historyBaseHref?: string;
   activityWindow?: "24h";
+  liveScope?: string;
 }) {
   const { t, i18n } = useTranslation();
   const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
@@ -97,7 +100,7 @@ export function ShiftSnapshotView({
       const matching = ids ? ids.map(id => records.get(id)).filter((row): row is RecordRow => Boolean(row)) :
         (snapshot?.outstanding ?? []).filter(row => key === "onSiteVisitorRecords" ? row.kind === "visitor" : key === "onSiteEmployeeRecords" ? row.kind === "employee" : false);
       return <details key={key} className="gate-panel-disclosure" data-testid={`dashboard-metric-${key}`}>
-        <summary><Icon aria-hidden="true" /><span className="flex-1">{t(`changeOver.${key}`)}</span><small>{snapshot ? String(snapshot.metrics[key]) : c("Unavailable", "No disponible")}</small></summary>
+        <GateDashboardLiveSummary scope={liveScope} row={key} value={snapshot?.metrics[key]}><Icon aria-hidden="true" /><span className="flex-1">{t(`changeOver.${key}`)}</span><small>{snapshot ? String(snapshot.metrics[key]) : c("Unavailable", "No disponible")}</small></GateDashboardLiveSummary>
         <div className="gate-panel-detail"><div className="gate-metric-records">{matching.map(row => recordLink(row, metricRecordType[key]))}</div>
           {!matching.length && <p>{snapshot && snapshot.metrics[key] === 0 ? t("changeOver.none") : unavailable}</p>}
           <Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=${metricRecordType[key]}`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link>
@@ -105,10 +108,10 @@ export function ShiftSnapshotView({
       </details>;
     };
     return <>
-      <GateActivityCard snapshot={snapshot} historyBaseHref={historyBaseHref} activityWindow={activityWindow} />
+      <GateActivityCard snapshot={snapshot} historyBaseHref={historyBaseHref} activityWindow={activityWindow} liveScope={liveScope} />
       <WorkspacePanel title={c("On site", "En el sitio")} subtitle={snapshot?.linkedScope?.name ? `${snapshot.linkedScope.name} · ${c("Shared linked-gate presence", "Presencia compartida de accesos vinculados")}` : c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
         {metric("onSiteVisitorRecords", Users)}{metric("onSiteEmployeeRecords", UserCheck)}{metric("onSiteVehicles", Car)}
-        <details className="gate-panel-disclosure" data-testid="dashboard-metric-outstanding"><summary><ClipboardList aria-hidden="true" /><span className="flex-1">{t("changeOver.outstanding")}</span><small>{snapshot?.outstanding.length ?? "—"}</small></summary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.outstanding.map(row => recordLink(row, "on_site"))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.outstanding.length && <p>{t("changeOver.none")}</p>}<Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=on_site`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link></div></details>
+        <details className="gate-panel-disclosure" data-testid="dashboard-metric-outstanding"><GateDashboardLiveSummary scope={liveScope} row="outstanding" value={snapshot?.outstanding.length}><ClipboardList aria-hidden="true" /><span className="flex-1">{t("changeOver.outstanding")}</span><small>{snapshot?.outstanding.length ?? "—"}</small></GateDashboardLiveSummary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.outstanding.map(row => recordLink(row, "on_site"))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.outstanding.length && <p>{t("changeOver.none")}</p>}<Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=on_site`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link></div></details>
       </WorkspacePanel>
     </>;
   }
@@ -283,6 +286,8 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
   });
   const allowedStation = allowedSite && stations.data?.stations.some(station => station.id === selectedStation);
   const stationId = (history || allowedStation ? selectedStation : "") || stations.data?.stations[0]?.id || "";
+  const dashboardScope = user?.userId ? JSON.stringify([...gateScope, user.role, user.vendorRole]) : undefined;
+  const trafficScope = dashboardScope && stationId ? `${dashboardScope}:${stationId}` : undefined;
   const gpsSite=sites.data?.sites.find(s=>String(s.id)===siteId),gpsGate=stations.data?.stations.find(s=>s.id===stationId);
   const latitude=gpsGate?.latitude??gpsSite?.latitude,longitude=gpsGate?.longitude??gpsSite?.longitude;
   const gpsFence=evaluateGpsFence({gps:gpsPosition?"locked":"unavailable",origin:gpsPosition,site:latitude!=null&&longitude!=null?{latitude,longitude,siteRadiusMeters:gpsGate?.geofenceRadiusM??500}:null});
@@ -293,9 +298,20 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
     queryFn: () => request<ChangeOverState>(`/${stationId}/state`),
     enabled: Boolean(stationId) && !history,
     retry: false,
-    refetchInterval: 15000,
+    refetchInterval: 5000,
     networkMode: "always",
   });
+  useEffect(() => {
+    if (history || !trafficScope || typeof EventSource === "undefined") return;
+    const source = new EventSource(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/visits/events`, { withCredentials: true });
+    const refresh = () => {
+      void cache.invalidateQueries({ queryKey: ["change-over-state"], refetchType: "active" }, { cancelRefetch: false });
+    };
+    source.onopen = refresh;
+    source.addEventListener("visit.checked_in", refresh);
+    source.addEventListener("visit.checked_out", refresh);
+    return () => source.close();
+  }, [cache, history, trafficScope]);
   const log = useQuery({
     queryKey: ["shift-notes", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, stationId, search, days, before, linkedNote],
     queryFn: () =>
@@ -588,9 +604,9 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
       </div>}
       {!history && current && (
           <div className="gate-dashboard-panels">
-            <GateWatchSummary stationId={stationId} current={current} onAssume={openWatch} onHandoff={()=>void act(releaseWatch)} assumeDisabled={busy || !online || Boolean(pendingWatch) || state.isError} />
-            <DashboardTasks />
-            <ShiftSnapshotView snapshot={current.snapshot} activityWindow={current.shift ? undefined : "24h"} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: current.shift ? "current_shift" : "24h" })}`} />
+            <GateWatchSummary stationId={stationId} current={current} onAssume={openWatch} onHandoff={()=>void act(releaseWatch)} assumeDisabled={busy || !online || Boolean(pendingWatch) || state.isError} liveScope={dashboardScope} />
+            <DashboardTasks liveScope={dashboardScope} />
+            <ShiftSnapshotView snapshot={current.snapshot} liveScope={trafficScope} activityWindow={current.shift ? undefined : "24h"} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: current.shift ? "current_shift" : "24h" })}`} />
             <GateHandoffDesk key={`${user?.userId}:${stationId}:${current.shift?.id ?? "none"}`} stationId={stationId} current={current} ownWatch={ownShift} gatekeeperOnDuty={onDuty && (user?.vendorRole === "gatekeeper" || user?.vendorRole === "gate_supervisor" || Boolean(user?.managedSubcontractor?.siteGrants.some(grant=>grant.siteId===Number(siteId))))} busy={busy} online={online} readError={state.isError}
               notes={notes} onNotesChange={setNotes} itemText={itemText} onItemTextChange={setItemText}
               itemNotes={itemNotes} onItemNoteChange={(id, text) => setItemNotes(value => ({ ...value, [id]: text }))}

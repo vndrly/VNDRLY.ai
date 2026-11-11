@@ -3,11 +3,13 @@ import { useTranslation } from "react-i18next";
 import { LogIn, LogOut, Clock3, AlertTriangle } from "lucide-react";
 import type { ChangeOverSnapshot } from "@workspace/gate-booth";
 import { WorkspacePanel } from "./work-hub/workspace-panel";
+import { GateDashboardLiveSummary } from "./gate-dashboard-live-summary";
 
 /** The same collapsible activity card on Dashboard and Gate Map. */
-export function GateActivityCard({ snapshot, historyBaseHref, activityWindow, scopeLabel, recordHistoryHref, showAllLogLink = true, contentOnly = false }: {
+export function GateActivityCard({ snapshot, historyBaseHref, activityWindow, scopeLabel, recordHistoryHref, showAllLogLink = true, contentOnly = false, liveScope }: {
   snapshot: ChangeOverSnapshot | null; historyBaseHref: string; activityWindow?: "24h"; scopeLabel?: string;
   recordHistoryHref?: (recordId: string) => string; showAllLogLink?: boolean; contentOnly?: boolean;
+  liveScope?: string;
 }) {
   const { t, i18n } = useTranslation();
   const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
@@ -41,7 +43,7 @@ export function GateActivityCard({ snapshot, historyBaseHref, activityWindow, sc
       const matching = ids ? ids.map(id => records.get(id)).filter((row): row is RecordRow => Boolean(row)) :
         (snapshot?.outstanding ?? []).filter(row => key === "onSiteVisitorRecords" ? row.kind === "visitor" : key === "onSiteEmployeeRecords" ? row.kind === "employee" : false);
       return <details key={key} className="gate-panel-disclosure" data-testid={`dashboard-metric-${key}`}>
-        <summary><Icon aria-hidden="true" /><span className="flex-1">{t(`changeOver.${key}`)}</span><small>{snapshot ? String(snapshot.metrics[key]) : c("Unavailable", "No disponible")}</small></summary>
+        <GateDashboardLiveSummary scope={liveScope} row={key} value={snapshot?.metrics[key]}><Icon aria-hidden="true" /><span className="flex-1">{t(`changeOver.${key}`)}</span><small>{snapshot ? String(snapshot.metrics[key]) : c("Unavailable", "No disponible")}</small></GateDashboardLiveSummary>
         <div className="gate-panel-detail"><div className="gate-metric-records">{matching.map(row => recordLink(row, metricRecordType[key]))}</div>
           {!matching.length && <p>{snapshot && snapshot.metrics[key] === 0 ? t("changeOver.none") : unavailable}</p>}
           {showAllLogLink && <Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=${metricRecordType[key]}`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link>}
