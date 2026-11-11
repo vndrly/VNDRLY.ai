@@ -5,7 +5,8 @@ import { runClientTool } from "./client-tools";
 type Site = { id: number; name: string; partnerName?: string | null };
 type Station = { id: string; name: string };
 const ignored = new Set(["open", "show", "me", "the", "please", "site", "gate", "gates", "dashboard", "map", "at", "for", "to"]);
-const numbers: Record<string, string> = { one: "1", two: "2", three: "3", four: "4", five: "5" };
+for (const word of ["abre", "abrir", "muestra", "mostrar", "el", "la", "los", "las", "mapa", "puerta", "sitio", "por", "favor", "en", "de", "del"]) ignored.add(word);
+const numbers: Record<string, string> = { zero: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10", cero: "0", uno: "1", dos: "2", tres: "3", cuatro: "4", cinco: "5", seis: "6", siete: "7", ocho: "8", nueve: "9", diez: "10" };
 function words(value: string): string[] {
   return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/).filter(word => word && !ignored.has(word)).map(word => Object.hasOwn(numbers, word) ? numbers[word] : word);
 }

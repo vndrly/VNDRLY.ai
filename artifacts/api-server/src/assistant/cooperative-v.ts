@@ -1,4 +1,5 @@
 import { stableArguments } from "./askv-idempotency";
+import { classifyToolResult } from "./tool-result";
 import { canonicalOperationToolName } from "./chatgpt-operation-tools";
 
 export type VProvider = "anthropic" | "openai";
@@ -80,10 +81,7 @@ export class CooperativeVTurn {
       this.remaining.set(fingerprint, name);
       const output = await executor();
       this.observeToolResult(output);
-      try {
-        const value = JSON.parse(output) as { error?: unknown; ok?: boolean; requiresConfirmation?: boolean };
-        if (!value.error && value.ok !== false && value.requiresConfirmation !== true) { this.completed.set(fingerprint, name); this.remaining.delete(fingerprint); }
-      } catch { if (!mutating) { this.completed.set(fingerprint, name); this.remaining.delete(fingerprint); } }
+      if (classifyToolResult(output, mutating) === "success") { this.completed.set(fingerprint, name); this.remaining.delete(fingerprint); }
       return output;
     })();
     // Keep even a rejected promise: transport ambiguity must go through canonical

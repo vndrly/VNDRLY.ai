@@ -7,7 +7,7 @@ import { useAssistant, type AssistantMessage } from "@/hooks/use-assistant";
 import { createAskVRealtimeClient, type AskVRealtimeClient, type AskVTranscript } from "@/lib/askv-realtime-client";
 import { configureAskVAudioSession, isAskVAppActive, releaseAskVAudioSession, requestAskVMicrophonePermission, subscribeAskVAppState } from "@/lib/askv-audio-session";
 import { createLocalAskVWakeDetector, type LocalAskVWakeDetector } from "@/lib/askv-local-wake";
-import { stopAskVSpeech } from "@/lib/askv-speech";
+import { speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
 import { emitAskVDataChanged, executeAskVClientIntent } from "@/lib/askv-client-tools";
 import { isAskVGpsWrite, withAskVToolLocation, type AskVCoordinates } from "@/lib/askv-tool-location";
 
@@ -121,8 +121,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const replies = useRef(new Set<(text: string) => void>());
   const contextVersion = useRef(0);
   const contextQueue = useRef<Promise<void>>(Promise.resolve());
+  const sharedVoiceTurn = useRef(false);
+  const sharedVoiceQueue = useRef(Promise.resolve());
   const baseAssistant = useAssistant({
-    onAssistantReply: text => replies.current.forEach(listener => listener(text)),
+    onAssistantReply: text => { replies.current.forEach(listener => listener(text)); if (sharedVoiceTurn.current && sessionRef.current && !mutedRef.current) speakAskV(text, "en-US", true); },
     onClientIntent: intent => executeAskVClientIntent(intent, pathRef.current),
     onMutation: emitAskVDataChanged,
     pagePath: nativeAskVContextPath(pathname),
@@ -355,6 +357,17 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         sessionRef.current = session;
         const toolPath = nativeAskVContextPath(path ?? pathRef.current);
         const client = await createAskVRealtimeClient({
+          onUserText: text => {
+            stopAskVSpeech();
+            const turn = sharedVoiceQueue.current.catch(() => {}).then(async () => {
+              check(); clearIdle(); writeState("thinking");
+              sharedVoiceTurn.current = true;
+              try { await assistantRef.current.send(text); }
+              finally { sharedVoiceTurn.current = false; if (valid()) writeState("listening"); }
+            });
+            sharedVoiceQueue.current = turn;
+            return turn;
+          },
           token, sessionId: session.sessionId, conversationId: session.conversationId,
           signal: ac.signal, seedMessage: seed, path: toolPath,
           greeting: spokenGreeting, history, audioSource: detector?.audioSource,
@@ -525,6 +538,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         clientRef.current = client;
         writeState("greeting");
         await client.connect(); check();
+        speakAskV(spokenGreeting, "en-US", true, () => { if (valid()) writeState("listening"); });
         recordAskVMetric(session, "session_start");
         if (session.woke) recordAskVMetric(session, "wake");
         if (!detector && acrossRef.current) recordAskVMetric(session, "fallback", { reason: "unavailable" });

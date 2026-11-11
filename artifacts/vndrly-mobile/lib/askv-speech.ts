@@ -19,6 +19,7 @@ let activeOpenAiSound: AvSound | null = null;
 let activeOpenAiUri: string | null = null;
 let openAiSpeechPending = false;
 let speechRunId = 0;
+let speechRequest: AbortController | null = null;
 
 /** Strip markdown so device TTS reads naturally. */
 export function markdownToSpeechText(text: string): string {
@@ -85,6 +86,8 @@ async function playOpenAiSpeech(
   audioBase64: string,
   mimeType: string | undefined,
   runId: number,
+  preserveRecording = false,
+  onDone?: () => void,
 ): Promise<void> {
   if (Platform.OS === "web") throw new Error("OpenAI TTS playback is mobile-only");
   const cacheDir = FileSystem.cacheDirectory;
@@ -98,7 +101,7 @@ async function playOpenAiSpeech(
     return;
   }
 
-  const Audio = await ensureAudioMode();
+  const Audio = preserveRecording ? (await import("expo-av")).Audio : await ensureAudioMode();
   const { sound } = await Audio.Sound.createAsync({ uri });
   if (runId !== speechRunId) {
     await sound.unloadAsync();
@@ -111,6 +114,7 @@ async function playOpenAiSpeech(
   sound.setOnPlaybackStatusUpdate((status) => {
     if (!status.isLoaded) return;
     if (!status.didJustFinish && !status.error) return;
+    if (runId === speechRunId) onDone?.();
     if (activeOpenAiSound === sound) {
       activeOpenAiSound = null;
       activeOpenAiUri = null;
@@ -123,6 +127,7 @@ async function playOpenAiSpeech(
 
 export function stopAskVSpeech(): void {
   speechRunId += 1;
+  speechRequest?.abort(); speechRequest = null;
   void stopOpenAiSpeech();
   void Speech.stop();
 }
@@ -132,10 +137,12 @@ export async function isAskVSpeaking(): Promise<boolean> {
   return Speech.isSpeakingAsync();
 }
 
-export function speakAskV(text: string, language = "en-US"): void {
+export function speakAskV(text: string, language = "en-US", preserveRecording = false, onDone?: () => void): void {
   const plain = markdownToSpeechText(text);
   if (!plain) return;
   const runId = speechRunId + 1;
+  speechRequest?.abort();
+  const request = new AbortController(); speechRequest = request;
   speechRunId = runId;
   void Speech.stop();
   void stopOpenAiSpeech();
@@ -143,17 +150,18 @@ export function speakAskV(text: string, language = "en-US"): void {
   void (async () => {
     try {
       const data = await apiFetch<AskVTtsResponse>("/api/assistant/tts", {
+        signal: request.signal,
         method: "POST",
         body: JSON.stringify({ text: plain, voice: OPENAI_TTS_VOICE }),
       });
       if (runId !== speechRunId) return;
       if (!data.audioBase64) throw new Error("Missing TTS audio");
       openAiSpeechPending = false;
-      await playOpenAiSpeech(data.audioBase64, data.mimeType, runId);
+      await playOpenAiSpeech(data.audioBase64, data.mimeType, runId, preserveRecording, onDone);
     } catch {
       if (runId !== speechRunId) return;
       openAiSpeechPending = false;
-      Speech.speak(plain, { language });
+      Speech.speak(plain, { language, onDone: () => { if (runId === speechRunId) onDone?.(); } });
     }
   })();
 }

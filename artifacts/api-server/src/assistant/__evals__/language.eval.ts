@@ -1,15 +1,16 @@
+import { ProductionEvalClient } from "./production-client";
 // Language-drift eval for the Ask VNDRLY assistant.
 //
 // Task #474 added unit tests that pin the system prompt's LANGUAGE
 // directive and the buildLanguagePrimerMessages envelope, but those
-// tests never call Claude — they only verify the prompt we send. This
+// tests never call Claude - they only verify the prompt we send. This
 // suite closes that gap by replaying a small fixed battery of prompts
 // through the live model and asserting the response language matches
 // the user's preferredLanguage.
 //
-// The suite is OPT-IN: it skips entirely unless ANTHROPIC_API_KEY is
+// The suite is OPT-IN: it skips entirely unless OPENAI_API_KEY is
 // present in the environment. CI runs without the key (the default)
-// will still pass — the eval is meant for nightly/manual runs.
+// will still pass - the eval is meant for nightly/manual runs.
 //
 // Importantly, this suite reuses `buildSystemPrompt`,
 // `composeAssistantMessages`, and `selectDocs` from the production
@@ -18,7 +19,7 @@
 // up here as a real-world failure, not just a snapshot mismatch.
 //
 // Run locally:
-//   ANTHROPIC_API_KEY=sk-ant-... \
+//   OPENAI_API_KEY=sk-ant-... \
 //     pnpm --filter @workspace/api-server run eval
 //
 // See docs/assistant-language-eval.md for how to add prompts.
@@ -27,7 +28,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
+import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 
 import { selectDocs, type KnowledgeRole } from "../knowledge";
 import {
@@ -37,8 +38,8 @@ import {
 import { detectLanguage } from "./language-detector";
 
 // Same model the production route uses. If the route changes models,
-// update this too — the eval should always exercise what ships.
-const MODEL = "claude-sonnet-4-5";
+// update this too - the eval should always exercise what ships.
+const MODEL = process.env.ASKV_OPENAI_MODEL ?? "gpt-6.1-sol";
 // Bound the response so a chatty turn doesn't burn budget. 512 tokens
 // is plenty to detect language; the goal is not full answers.
 const MAX_TOKENS = 512;
@@ -46,21 +47,21 @@ const MAX_TOKENS = 512;
 // leave generous headroom so a flaky network doesn't fail the suite.
 const CALL_TIMEOUT_MS = 60_000;
 
-const HAS_KEY = Boolean(process.env.ANTHROPIC_API_KEY);
+const HAS_KEY = Boolean(process.env.OPENAI_API_KEY);
 
-// ──────────────────────────────────────────────────────────────────
+// ������������������������������������������������������������������
 // Prompt battery. Ten realistic, persona-aligned questions covering
 // the major surfaces (onboarding, tickets, invoices, crew, visitors,
 // notifications, comments, language toggle). Each prompt runs twice:
 // once with `preferredLanguage: "en"` and once with `"es"`. The
-// English prompt text is held constant across both runs — that's the
+// English prompt text is held constant across both runs - that's the
 // failure mode we want to catch (a Spanish-toggled user typing a few
 // English words and getting an English reply).
 //
 // Add a prompt by appending an entry below; the suite will pick it
 // up automatically on the next run. Keep the battery small (~10) so
 // a full run stays under a minute and a few dollars of API spend.
-// ──────────────────────────────────────────────────────────────────
+// ������������������������������������������������������������������
 interface EvalPrompt {
   q: string;
   role: KnowledgeRole;
@@ -90,7 +91,7 @@ function buildContext(role: KnowledgeRole, preferredLanguage: "en" | "es") {
   } as const;
 }
 
-// ──────────────────────────────────────────────────────────────────
+// ������������������������������������������������������������������
 // Per-prompt result rows captured during the run, then flushed to a
 // JSON summary in `afterAll`. The trend dashboard (see
 // `scripts/src/aggregate-language-eval.ts` and the workflow's
@@ -100,9 +101,9 @@ function buildContext(role: KnowledgeRole, preferredLanguage: "en" | "es") {
 //
 // We capture rows from inside `it` blocks via try/finally so a
 // failing `expect()` still records the row (with `pass: false` and
-// the wrong-language `detected` value) — that's the whole point of
+// the wrong-language `detected` value) - that's the whole point of
 // the trend, so missing failures here would defeat it.
-// ──────────────────────────────────────────────────────────────────
+// ������������������������������������������������������������������
 interface SummaryRow {
   prompt: string;
   role: KnowledgeRole;
@@ -122,8 +123,8 @@ const SUMMARY_PATH = resolve(
   process.env.LANGUAGE_EVAL_SUMMARY_PATH ?? "./eval-summary.json",
 );
 
-describe.skipIf(!HAS_KEY)("language drift eval (live Anthropic)", () => {
-  let client: Anthropic;
+describe.skipIf(!HAS_KEY)("language drift eval (live production OpenAI)", () => {
+  let client: ProductionEvalClient;
 
   beforeAll(() => {
     // Construct a vanilla SDK client against api.anthropic.com.
@@ -133,11 +134,11 @@ describe.skipIf(!HAS_KEY)("language drift eval (live Anthropic)", () => {
     // (which is the common case for a developer running this eval
     // locally with their own raw API key). Constructing our own
     // client keeps the eval self-contained.
-    client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    client = new ProductionEvalClient();
   });
 
   afterAll(() => {
-    // Always write the summary, even on a failed suite — the trend
+    // Always write the summary, even on a failed suite - the trend
     // dashboard needs the failing rows just as much as the passing
     // ones. If no rows were captured (e.g. beforeAll itself blew
     // up) we still write an empty `results` array so the downstream
@@ -159,7 +160,7 @@ describe.skipIf(!HAS_KEY)("language drift eval (live Anthropic)", () => {
         "utf8",
       );
     } catch (err) {
-      // Don't mask a real eval failure with a write failure — log
+      // Don't mask a real eval failure with a write failure - log
       // and continue so the suite's exit code reflects the actual
       // assertion outcome.
       // eslint-disable-next-line no-console
@@ -250,7 +251,7 @@ describe.skipIf(!HAS_KEY)("language drift eval (live Anthropic)", () => {
 // When the gate is open but no prompts somehow load (file edited in a
 // bad way), we still want a clear failure rather than a green-with-
 // zero-tests false positive. This guard only runs when we have a key.
-describe.skipIf(!HAS_KEY)("language drift eval — battery sanity", () => {
+describe.skipIf(!HAS_KEY)("language drift eval - battery sanity", () => {
   it("battery is non-empty", () => {
     expect(PROMPTS.length).toBeGreaterThanOrEqual(10);
   });

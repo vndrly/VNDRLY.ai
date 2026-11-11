@@ -59,9 +59,9 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   const ensureCapabilities = useCallback(() => {
     capabilities.current ??= fetch(`${BASE}/api/assistant/voice/capabilities`, { credentials: 'include' })
       .then(async response => {
-        if (!response.ok) return { status: 'connection_failed', message: response.status === 401
+        if (!response.ok) { capabilities.current = undefined; return { status: 'connection_failed', message: response.status === 401
           ? 'Your session expired. Sign in again to use natural voice.'
-          : 'AskV could not verify voice availability. Check your connection and try again.' } as AskVVoiceAvailability;
+          : 'AskV could not verify voice availability. Check your connection and try again.' } as AskVVoiceAvailability; }
         return capabilityVoiceAvailability(await response.json());
       }).catch(() => {
         capabilities.current = undefined;

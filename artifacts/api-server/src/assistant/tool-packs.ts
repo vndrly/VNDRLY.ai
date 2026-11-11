@@ -28,6 +28,7 @@ const CORE_TOOLS = new Set([
   "lookup_user_progress",
   "query_attention_briefing",
   "query_notifications",
+  "deep_link_to",
   "query_site_locations",
   "lookup_site_detail",
   "open_screen",
@@ -38,6 +39,7 @@ const CORE_TOOLS = new Set([
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
+  "manage_gate_shift",
   "offer_gate_workflow",
   "query_gate_setup_progress",
   "query_gate_daily_billing", "configure_gate_daily_billing", "invoice_gate_post",
@@ -64,6 +66,10 @@ const GATE_SCREEN_TOOLS = new Set([
 ]);
 
 const TICKET_SCREEN_TOOLS = new Set([
+  "schedule_ticket_crew",
+  "set_ticket_flag",
+  "acknowledge_ticket_assignment",
+  "manage_ticket_record",
   "lookup_open_tickets",
   "query_gps_trail",
   "query_ticket_labor",
@@ -107,6 +113,19 @@ export const VOICE_WORKFLOWS = [
   "catalog",
   "marketplace",
   "market",
+  "fleet",
+  "fleet_cargo",
+  "fleet_maintenance",
+  "fleet_commercial",
+  "finance_actions",
+  "notifications",
+  "collaboration",
+  "tasks",
+  "scheduling",
+  "calls",
+  "meetings",
+  "files",
+  "administration",
 ] as const;
 export type VoiceWorkflow = (typeof VOICE_WORKFLOWS)[number];
 export function isVoiceWorkflow(value: unknown): value is VoiceWorkflow {
@@ -116,6 +135,19 @@ export function isVoiceWorkflow(value: unknown): value is VoiceWorkflow {
   );
 }
 const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
+  notifications: new Set(["query_notifications", "mark_notifications_read"]),
+  fleet: new Set(ASK_V_TOOL_REGISTRY.filter(tool => /fleet/.test(tool.name) && !/cargo|replacement|maintenance|defect|compliance|agreement|rate|invoice|billing/.test(tool.name)).map(tool => tool.name)),
+  fleet_cargo: new Set(ASK_V_TOOL_REGISTRY.filter(tool => /fleet/.test(tool.name) && /cargo|replacement/.test(tool.name)).map(tool => tool.name)),
+  fleet_maintenance: new Set(ASK_V_TOOL_REGISTRY.filter(tool => /fleet/.test(tool.name) && /maintenance|defect|compliance/.test(tool.name)).map(tool => tool.name)),
+  fleet_commercial: new Set([...FLEET_COMMERCIAL_TOOLS, ...FLEET_AUXILIARY_TOOLS].map(tool => tool.name)),
+  finance_actions: new Set(["record_ticket_payment", "reverse_ticket_payment_record", ...WORK_HUB_TOOL_NAMES_BY_FAMILY.finance]),
+  collaboration: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.collaboration),
+  tasks: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.tasks),
+  scheduling: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.scheduling),
+  calls: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.calls),
+  meetings: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.meetings),
+  files: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.files),
+  administration: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.administration),
   gate: GATE_SCREEN_TOOLS,
   tickets: TICKET_SCREEN_TOOLS,
   safety: SAFETY_SCREEN_TOOLS,
@@ -190,6 +222,7 @@ const ROLE_READ_TOOLS: Record<AskVRole, Set<string>> = {
 };
 
 export function voiceWorkflowForPath(path: string): VoiceWorkflow {
+  if (/\/fleet(?:[/-]|$)/i.test(path)) return "fleet";
   if (/onboarding/i.test(path)) return "onboarding";
   if (/gate|visitor|change-over|shift-notes/i.test(path)) return "gate";
   if (/ticket/i.test(path)) return "tickets";
@@ -226,7 +259,7 @@ export function toolsForRealtime(args: {
   const role = normalizeAskVRole(args.role);
   const path = args.path ?? "";
   const allowed = new Set<string>(CORE_TOOLS);
-  for (const name of ROLE_READ_TOOLS[role] ?? []) allowed.add(name);
+  if (!args.workflow || args.workflow === "auto") for (const name of ROLE_READ_TOOLS[role] ?? []) allowed.add(name);
   const workflow =
     args.workflow && args.workflow !== "auto"
       ? args.workflow

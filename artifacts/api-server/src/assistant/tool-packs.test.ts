@@ -3,6 +3,12 @@ import { toolsForRealtime, VOICE_WORKFLOWS } from "./tool-packs";
 import { DATA_TOOL_NAMES } from "./tool-names";
 
 describe("AskV realtime tool packs", () => {
+  it("exposes previously unreachable operations through explicit workflows while preserving read-only pages", () => {
+    for (const [workflow, name] of [["gate", "manage_gate_shift"], ["fleet_cargo", "prepare_fleet_cargo_transfer"], ["fleet_maintenance", "manage_fleet_maintenance"], ["tickets", "manage_ticket_record"], ["finance_actions", "record_ticket_payment"], ["tasks", "manage_work_hub_task"]] as const) {
+      expect(toolsForRealtime({ role: "admin", membershipRole: "admin", workflow }).map(tool => tool.name)).toContain(name);
+      expect(toolsForRealtime({ role: "admin", membershipRole: "admin", workflow, path: "/gate/shift-notes" }).every(tool => !tool.mutating)).toBe(true);
+    }
+  });
   it("gives the dedicated AskV page its market quote tools", () => {
     const names = toolsForRealtime({ role: "vendor", path: "/work-hub/askv" }).map(tool => tool.name);
     expect(names).toContain("get_stock_quote");
@@ -158,7 +164,7 @@ describe("AskV realtime tool packs", () => {
     expect(names).not.toContain("confirm_visitor_check_in");
   });
 
-  it("does not hide authorization — denied tools still fail at execution", () => {
+  it("does not hide authorization - denied tools still fail at execution", () => {
     const names = toolsForRealtime({
       role: "field_employee",
       path: "/gatekeeper",

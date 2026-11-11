@@ -1,4 +1,5 @@
 import { classifyConfirmation } from "./action-classifier";
+import { classifyToolResult } from "./tool-result";
 import { classifyGateIntent, isGateMutationTool } from "./gate-intent";
 import type { SessionPayload } from "../lib/session";
 import { publishAskVDeviceEvent } from "./device-context";
@@ -277,6 +278,6 @@ export async function runBoundTypedAskVTool(args: {
         ...(confirmed ? { confirmed: true } : {}),
       }),
   );
-  void publishAskVDeviceEvent(args.session, "work_hub.askv.action_changed", args.conversationId, { state: "completed", toolName: args.name, actionFingerprint: fingerprint }).catch(() => undefined);
+  void publishAskVDeviceEvent(args.session, "work_hub.askv.action_changed", args.conversationId, { state: classifyToolResult(result.value, true) === "success" ? "completed" : "needs_review", toolName: args.name, actionFingerprint: fingerprint }).catch(() => undefined);
   return result.value;
 }

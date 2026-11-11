@@ -32,7 +32,7 @@ vi.mock("@/lib/auth", () => ({
   setUser: async () => {},
 }));
 vi.mock("@/lib/api", () => ({ getApiBase: () => "https://example.test" }));
-vi.mock("@/lib/askv-speech", () => ({ stopAskVSpeech: () => {} }));
+vi.mock("@/lib/askv-speech", () => ({ stopAskVSpeech: () => {}, speakAskV: vi.fn() }));
 vi.mock("@/lib/askv-audio-session", () => ({
   configureAskVAudioSession: env.configure,
   requestAskVMicrophonePermission: async () => {},

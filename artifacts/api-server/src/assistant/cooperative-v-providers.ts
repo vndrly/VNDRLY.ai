@@ -113,9 +113,9 @@ export async function requestOpenAIVRound(input: VModelRoundInput, options: {
  * partial output cannot leave duplicate/contradictory text when the alternate replies.
  * Tool dispatch still happens exclusively in the authenticated route coordinator.
  */
-export async function requestAnthropicVRound(input: VModelRoundInput): Promise<VModelRound> {
+export async function requestAnthropicVRound(input: VModelRoundInput, signal?: AbortSignal): Promise<VModelRound> {
   try {
-    const stream = anthropic.messages.stream({ model: "claude-sonnet-4-5", max_tokens: input.maxTokens, system: input.system, tools: input.tools, messages: input.messages }, { timeout: 45_000, maxRetries: 0 });
+    const stream = anthropic.messages.stream({ model: "claude-sonnet-4-5", max_tokens: input.maxTokens, system: input.system, tools: input.tools, messages: input.messages }, { timeout: 45_000, maxRetries: 0, signal });
     const response = await stream.finalMessage();
     return { content: response.content, stop_reason: response.stop_reason, usage: response.usage, model: response.model };
   } catch (error) {

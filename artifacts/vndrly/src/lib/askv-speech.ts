@@ -10,6 +10,7 @@ let speechRunId = 0;
 let activeAudio: HTMLAudioElement | null = null;
 let activeObjectUrl: string | null = null;
 let openAiSpeechPending = false;
+let speechRequest: AbortController | null = null;
 
 export function speechPronunciationText(text: string): string {
   return text.replace(/\bVNDRLY\b/gi, "Vinderly");
@@ -72,6 +73,8 @@ async function playOpenAiSpeech(
 
 export function stopAskVSpeech(): void {
   speechRunId += 1;
+  speechRequest?.abort();
+  speechRequest = null;
   clearActiveAudio();
   window.speechSynthesis?.cancel();
 }
@@ -85,6 +88,9 @@ export function speakAskV(text: string, language = "en-US"): void {
   if (!plain) return;
 
   const runId = speechRunId + 1;
+  speechRequest?.abort();
+  const request = new AbortController();
+  speechRequest = request;
   speechRunId = runId;
   clearActiveAudio();
   window.speechSynthesis?.cancel();
@@ -93,6 +99,7 @@ export function speakAskV(text: string, language = "en-US"): void {
   void (async () => {
     try {
       const res = await fetch(`${BASE}/api/assistant/tts`, {
+        signal: request.signal,
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

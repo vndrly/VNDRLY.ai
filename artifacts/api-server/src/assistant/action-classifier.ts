@@ -16,6 +16,10 @@ const CONFIRM_PHRASES = new Set([
   "go ahead",
   "i confirm",
   "yes confirm",
+  "yes confirm that exact task",
+  "confirm that exact task",
+  "yes confirm that exact action",
+  "confirm that exact action",
   "yes i confirm",
   "yes continue",
   "yes please",
@@ -35,12 +39,12 @@ const CONFIRM_PHRASES = new Set([
   "i approve",
   "i authorize",
   "autorizo",
-  "sí",
+  "s�",
   "si",
   "confirmo",
-  "sí confirmo",
+  "s� confirmo",
   "si confirmo",
-  "sí adelante",
+  "s� adelante",
   "si adelante",
   "adelante",
 ]);
@@ -63,7 +67,7 @@ const CANCEL_PHRASES = new Set([
 ]);
 
 function normalize(text: string): string {
-  return text.trim().toLowerCase().replace(/’/g, "'").replace(/[,!¡.]+/g, " ").replace(/\s+/g, " ").trim();
+  return text.trim().toLowerCase().replace(/'/g, "'").replace(/[,!�.]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 export function isExplicitSpokenAuthorization(text: string): boolean {

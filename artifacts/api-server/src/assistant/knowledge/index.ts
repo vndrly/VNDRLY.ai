@@ -4,6 +4,11 @@
 // don't blow Claude's context window on irrelevant docs.
 
 export type KnowledgeRole = "admin" | "partner" | "vendor" | "field_employee" | "any";
+export const KNOWLEDGE_VERSION = "2026-11-11";
+const synonyms: Record<string, string> = { puerta: "gate", mapa: "map", tareas: "tasks", tarea: "task", factura: "invoice", facturas: "invoices", turno: "shift", archivos: "files", calendario: "calendar", equipo: "crew", permisos: "permissions", paginacion: "pagination" };
+function queryWords(query: string): string[] {
+  return [...new Set(query.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/\W+/).filter(word => word.length >= 3).flatMap(word => [word, ...(synonyms[word] ? [synonyms[word]] : [])]))];
+}
 
 export interface KnowledgeDoc {
   id: string;
@@ -24,7 +29,7 @@ export function getAllDocs(): KnowledgeDoc[] {
   return KNOWLEDGE_DOCS;
 }
 
-// ─── Pre-auth (signup-page) knowledge slice ─────────────────────
+// ��� Pre-auth (signup-page) knowledge slice ���������������������
 // Curated allow-list of doc IDs that are safe to surface to a visitor
 // who has NOT signed in yet (e.g. on `/signup/partner`,
 // `/signup/vendor`). Intentionally restricted to:
@@ -55,7 +60,7 @@ export type SignupPersona = "partner" | "vendor";
  * assistant. Persona-aware: gives a small score boost to the matching
  * onboarding doc so a partner asking "what's next?" gets the partner
  * onboarding overview ranked first, and a vendor asking the same gets
- * the vendor overview. No session, no role context — knowledge is
+ * the vendor overview. No session, no role context - knowledge is
  * limited to SIGNUP_PUBLIC_DOC_IDS regardless of query.
  */
 export function selectSignupDocs(
@@ -68,7 +73,7 @@ export function selectSignupDocs(
   const personaDocId = persona === "partner" ? "onboarding-partner" : "onboarding-vendor";
   const scored = eligible.map((d) => {
     const hay = `${d.title} ${d.body}`.toLowerCase();
-    const words = q.split(/\W+/).filter((w) => w.length > 3);
+    const words = queryWords(q);
     const keywordScore = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
     // Persona boost: ensures the right onboarding overview floats to
     // the top even when the user's question doesn't mention the word
@@ -102,14 +107,14 @@ export function selectDocs(role: KnowledgeRole, query: string, max = 8): Knowled
   // pick up on.
   const scored = eligible.map((d) => {
     const hay = `${d.title} ${d.body}`.toLowerCase();
-    const words = q.split(/\W+/).filter((w) => w.length > 3);
+    const words = queryWords(q);
     const score = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
     return { doc: d, score };
   });
   // Stable sort: highest score first, but always include "any" docs
   // as a baseline floor.
   scored.sort((a, b) => b.score - a.score);
-  const picked = scored.slice(0, max).map((s) => s.doc);
+  const picked = scored.filter(s => s.score > 0).slice(0, max).map((s) => s.doc);
   // Deduplicate while preserving order in case max>length.
   const seen = new Set<string>();
   return picked.filter((d) => (seen.has(d.id) ? false : (seen.add(d.id), true)));

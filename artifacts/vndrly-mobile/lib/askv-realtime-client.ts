@@ -55,6 +55,8 @@ type WebRTCModule = {
   mediaDevices: { getUserMedia(constraints: { audio: boolean; video: boolean }): Promise<Stream> };
 };
 export interface AskVRealtimeOptions {
+  /** Operational reasoning runs through the same authenticated text engine. */
+  onUserText?: (text: string) => Promise<void>;
   token: string;
   sessionId?: string;
   conversationId?: number;
@@ -144,6 +146,7 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
   };
   const updateContext = (context: AskVRealtimeContext) => {
     latestContext = context;
+    if (args.onUserText) return;
     if (context.tools) send({ type: "session.update", session: { type: "realtime", tools: context.tools } });
     const { tools: _tools, ...screenContext } = context;
     send({ type: "conversation.item.create", item: { type: "message", role: "user",
@@ -170,7 +173,9 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
           const eventId = String(payload.item_id ?? payload.response_id ?? payload.event_id) + ":" + role;
           const content = String(payload.transcript ?? payload.text ?? "").trim();
           if (content && !transcriptEvents.has(eventId)) {
-            transcriptEvents.add(eventId); args.onTranscript?.({ eventId, role, content, ...(user ? { spoken: true } : {}) });
+            transcriptEvents.add(eventId);
+            if (args.onUserText) { if (user) { await args.onUserText(content); if (live()) args.onDone?.(); } }
+            else args.onTranscript?.({ eventId, role, content, ...(user ? { spoken: true } : {}) });
           }
           break;
         }
@@ -185,6 +190,7 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
           break;
         }
         case "response.function_call_arguments.done": {
+          if (args.onUserText) break;
           const callId = String(payload.call_id ?? "");
           if (!callId || toolCalls.has(callId)) break;
           toolCalls.add(callId);
@@ -233,12 +239,12 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
             try {
             if (!live()) { reject(abortError()); return; }
             if (openTimer) clearTimeout(openTimer); openTimer = null; rejectOpen = null;
-            for (const item of args.history ?? []) {
+            for (const item of args.onUserText ? [] : args.history ?? []) {
               send({ type: "conversation.item.create", item: { type: "message", role: item.role,
                 content: [{ type: item.role === "user" ? "input_text" : "output_text", text: item.content }] } });
             }
             if (latestContext) updateContext(latestContext);
-            if (args.greeting) send({ type: "response.create", response: {
+            if (args.greeting && !args.onUserText) send({ type: "response.create", response: {
               output_modalities: ["audio"], instructions: "Say exactly this greeting, then listen: " + JSON.stringify(args.greeting),
             } });
             if (args.audioSource) unsubscribeAudio = args.audioSource.subscribe(frame => {
@@ -265,6 +271,7 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
         const offer = await pc.createOffer(); check();
         await pc.setLocalDescription(offer); check();
         const params = new URLSearchParams({ seedMessage: args.seedMessage ?? "voice conversation", clientSurface: "ios" });
+        if (args.onUserText) params.set("brain", "shared");
         if (args.path) params.set("path", args.path);
         if (args.sessionId) params.set("sessionId", args.sessionId);
         if (args.conversationId) params.set("conversationId", String(args.conversationId));
@@ -283,6 +290,7 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
     close, interrupt, updateContext,
     setMicEnabled(enabled) { micEnabled = enabled; stream?.getAudioTracks().forEach(track => { track.enabled = enabled; }); },
     sendText(text) {
+      if (args.onUserText) return false;
       if (!text.trim() || !live() || channel?.readyState !== "open") return false;
       interrupt();
       const id = "typed_" + Date.now() + "_" + ++itemCounter;

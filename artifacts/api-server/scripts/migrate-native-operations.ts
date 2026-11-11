@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 /** Additive authority state only. No new tables, data resets, or credential writes. */
 export const nativeOperationsMigration = [
+  "ALTER TABLE assistant_conversations ADD COLUMN IF NOT EXISTS archived_at timestamptz",
   "ALTER TABLE site_visits ADD COLUMN IF NOT EXISTS gate_identity_document jsonb",
   "ALTER TABLE vendors ADD COLUMN IF NOT EXISTS native_operations_policy jsonb NOT NULL DEFAULT '{}'::jsonb",
   "ALTER TABLE partners ADD COLUMN IF NOT EXISTS native_operations_policy jsonb NOT NULL DEFAULT '{}'::jsonb",

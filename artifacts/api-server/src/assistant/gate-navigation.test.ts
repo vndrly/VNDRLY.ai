@@ -7,6 +7,12 @@ const site = { id: 411, name: "San Roman Completions", partnerName: "Warwick Ene
 const station = { id: "e00cb909-a716-4a65-9375-dd84f337bf6b", name: "Warwick San Roman Completions 2" };
 beforeEach(() => { reads.sites.mockReset().mockResolvedValue([site]); reads.stations.mockReset().mockResolvedValue([station]); });
 describe("authorized conversational Gate navigation", () => {
+  it.each(["Open San Roman six", "Abre el mapa de San Roman seis por favor"])("resolves number words in %s without changing numeric identity", async query => {
+    reads.stations.mockResolvedValue([{ ...station, name: "San Roman 6" }]);
+    expect(await resolveGateNavigation(query, [site], reads.stations)).toMatchObject({ ok: true, stationId: station.id });
+    reads.stations.mockResolvedValue([{ ...station, name: "San Roman 7" }]);
+    expect(await resolveGateNavigation(query, [site], reads.stations)).toMatchObject({ ok: false });
+  });
   it.each(["Sand Roman", "Sand Roman two"])("tolerates speech transcription %s", async query => {
     expect(await resolveGateNavigation(query, [site], reads.stations)).toMatchObject({ ok: true, stationId: station.id });
   });
