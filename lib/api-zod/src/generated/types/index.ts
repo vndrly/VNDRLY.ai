@@ -176,6 +176,7 @@ export * from "./listPartnerCatalogImports200";
 export * from "./listPartnerCatalogImports200ItemsItem";
 export * from "./listPartnerContactsParamsType";
 export * from "./listSiteLocationsParams";
+export * from "./listSiteLocationsPurpose";
 export * from "./listTicketsParams";
 export * from "./listTicketsResponseType";
 export * from "./listTicketsSortBy";

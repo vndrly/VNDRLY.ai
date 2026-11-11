@@ -478,7 +478,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "query_site_locations",
-    description: "Lists site locations in scope with active/inactive status, AFE, site code. Optional search and inactiveOnly filter. Results are paginated: when hasMore is true, pass nextOffset as offset with the same search, inactiveOnly and limit for the next page. Never treat the first page as all sites. Search here is literal; for spoken or partial Gate names use open_screen with query to resolve authorized gate matches before claiming no match.",
+    description: "Lists site locations in scope with active/inactive status, AFE, and site code. For vendors, this covers sites with a company ticket or a Gate contractor assignment. Optional search and inactiveOnly filter. Results are paginated: when hasMore is true, pass nextOffset as offset with the same search, inactiveOnly and limit for the next page. Never treat the first page as all sites. Search here is literal; for spoken or partial Gate names use open_screen with query to resolve authorized gate matches before claiming no match.",
     input_schema: {
       type: "object",
       properties: {

@@ -45,7 +45,7 @@ import { LIVE_TRACKED_LIFECYCLE_STATES } from "@workspace/ticket-status-meta";
 import { normalizePlateState } from "@workspace/plate-state";
 import { summarizeGpsDistance } from "@workspace/map-utils";
 import { estimateMapboxDrivingRoute } from "../lib/mapbox-routing";
-import { approvedPartnersForVendor, vendorCanReadPartner, employeeCanReadSite } from "../lib/approved-partner-sites";
+import { vendorOperationalSiteScope, vendorCanReadSite, employeeCanReadSite } from "../lib/approved-partner-sites";
 import { GateReportError, getGateReport } from "../lib/gate-report";
 
 import { OPS_DATA_TOOL_NAMES } from "./tool-names";
@@ -143,7 +143,7 @@ async function lookupSiteOperationalStatus(args: Record<string, unknown>, sessio
 async function canReadSitePartner(session: SessionPayload, partnerId: number | null, siteId: number) {
   if (session.role === "admin") return true;
   if (session.role === "partner") return !!session.partnerId && session.partnerId === partnerId;
-  if (session.role === "vendor" && session.vendorId) return vendorCanReadPartner(session.vendorId, partnerId);
+  if (session.role === "vendor" && session.vendorId) return vendorCanReadSite(session.vendorId, siteId);
   if (session.role === "field_employee" && session.userId) {
     const [person] = await db.select({ id: vendorPeopleTable.id, vendorId: vendorPeopleTable.vendorId }).from(vendorPeopleTable)
       .where(and(eq(vendorPeopleTable.userId, session.userId), eq(vendorPeopleTable.isActive, true), isNull(vendorPeopleTable.deletedAt))).limit(1);
@@ -162,7 +162,7 @@ async function querySiteLocations(args: Record<string, unknown>, session: Sessio
   if (session.role === "partner" && session.partnerId) {
     filters.push(eq(siteLocationsTable.partnerId, session.partnerId));
   } else if (session.role === "vendor" && session.vendorId) {
-    filters.push(inArray(siteLocationsTable.partnerId, approvedPartnersForVendor(session.vendorId)));
+    filters.push(vendorOperationalSiteScope(session.vendorId));
   } else if (session.role !== "admin") {
     return err("No org scope on this session.");
   }

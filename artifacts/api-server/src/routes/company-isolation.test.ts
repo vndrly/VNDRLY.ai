@@ -75,12 +75,15 @@ describe("Company isolation", () => {
     expect(response.status).toBe(200);
     expect(lastFilter().params).toEqual([2]);
   });
-  it("uses approved relationships for vendor site lists", async () => {
+  it("requires site-specific work as well as relationship or marketplace access for vendor site lists", async () => {
     const response = await request(app).get("/api/site-locations").set("Cookie", cookie("vendor", null, 7));
     expect(response.status).toBe(200);
-    const relationshipFilter = new PgDialect().sqlToQuery(state.filters[0] as any);
-    expect(relationshipFilter.sql).toContain('"partner_vendor_relationships"');
-    expect(relationshipFilter.params).toEqual([7, "approved"]);
+    const filters = state.filters.slice(0, -1).map(filter => new PgDialect().sqlToQuery(filter as any));
+    expect(filters).toContainEqual(expect.objectContaining({
+      sql: expect.stringContaining('"partner_vendor_relationships"'), params: [7, "approved"],
+    }));
+    expect(filters.some(filter => filter.sql.includes('"tickets"."vendor_id"') && filter.params.join() === "7,cancelled,denied")).toBe(true);
+    expect(filters.some(filter => filter.sql.includes('"site_work_assignments"."is_gate_contractor"') && filter.params[0] === 7 && filter.params[1] === true)).toBe(true);
   });
   it.each(["/api/site-locations/1", "/api/site-locations/1/qr-code", "/api/site-locations/1/assignments"])("denies direct unrelated site access at %s", async path => {
     state.rows = [[{ id: 1, partnerId: 9 }], [{ partnerId: 2 }]];
@@ -111,11 +114,6 @@ describe("Company isolation", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual([]);
     expect(state.selects).toBe(2);
-  });
-  it("allows an approved vendor to read its partner's site assignments", async () => {
-    state.rows = [[{ id: 1, partnerId: 2 }], [{ partnerId: 2 }], []];
-    const response = await request(app).get("/api/site-locations/1/assignments").set("Cookie", cookie("vendor", null, 7));
-    expect(response.status).toBe(200);
   });
   it("allows an assigned employee at an approved partner site", async () => {
     state.rows = [[{ id: 1, partnerId: 2 }], [{ id: 11, vendorId: 7 }], [{ partnerId: 2 }], [{ siteLocationId: 1 }], []];

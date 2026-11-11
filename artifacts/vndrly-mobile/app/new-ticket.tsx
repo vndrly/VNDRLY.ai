@@ -183,7 +183,7 @@ export default function NewTicketScreen() {
         siteCode: string;
         partnerName: string | null;
       }>
-    >("/api/site-locations");
+    >(user?.role === "vendor" ? "/api/site-locations?purpose=ticket_creation" : "/api/site-locations");
     const next = (data ?? []).map((row) => ({
       id: row.id,
       name: row.name,
@@ -194,7 +194,7 @@ export default function NewTicketScreen() {
     }));
     setSites(next);
     return next;
-  }, [isFieldFlow]);
+  }, [isFieldFlow, user?.role]);
 
   useEffect(() => {
     if (!isPartnerFlow) return;

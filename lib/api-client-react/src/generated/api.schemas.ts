@@ -4861,7 +4861,18 @@ export type ListVendorContactsParams = {
 
 export type ListSiteLocationsParams = {
   partnerId?: number;
+  /**
+   * For vendor sessions, request sites eligible for opening a ticket, including sites awaiting their first ticket.
+   */
+  purpose?: ListSiteLocationsPurpose;
 };
+
+export type ListSiteLocationsPurpose =
+  (typeof ListSiteLocationsPurpose)[keyof typeof ListSiteLocationsPurpose];
+
+export const ListSiteLocationsPurpose = {
+  ticket_creation: "ticket_creation",
+} as const;
 
 export type ListDirectAssignmentsParams = {
   status?: ListDirectAssignmentsStatus;

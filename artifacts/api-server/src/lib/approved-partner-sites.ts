@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull, notInArray, or } from "drizzle-orm";
-import { db, partnerVendorRelationshipsTable, ACTIVE_APPROVAL_STATUSES, ticketsTable, ticketCrewTable } from "@workspace/db";
-import { hasAcceptedMarketplaceAccess } from "./accepted-marketplace-access";
+import { db, partnerVendorRelationshipsTable, ACTIVE_APPROVAL_STATUSES, siteLocationsTable, siteWorkAssignmentsTable, ticketsTable, ticketCrewTable } from "@workspace/db";
+import { acceptedMarketplaceSites, hasAcceptedMarketplaceAccess } from "./accepted-marketplace-access";
 
 export function approvedPartnersForVendor(vendorId: number) {
   return db.select({ partnerId: partnerVendorRelationshipsTable.partnerId })
@@ -14,8 +14,51 @@ export async function vendorCanReadPartner(vendorId: number, partnerId: number |
   return rows.some((row) => row.partnerId === partnerId);
 }
 
-export async function vendorCanReadSite(vendorId: number, partnerId: number | null, siteId: number) {
-  return await vendorCanReadPartner(vendorId, partnerId) || await hasAcceptedMarketplaceAccess(vendorId, { siteId });
+function sitesAssignedToVendor(vendorId: number, gateOnly: boolean) {
+  return db.select({ siteLocationId: siteWorkAssignmentsTable.siteLocationId })
+    .from(siteWorkAssignmentsTable)
+    .where(and(
+      eq(siteWorkAssignmentsTable.vendorId, vendorId),
+      gateOnly ? eq(siteWorkAssignmentsTable.isGateContractor, true) : undefined,
+    ));
+}
+
+export function vendorOperationalSiteScope(vendorId: number) {
+  const ticketSites = db.select({ siteLocationId: ticketsTable.siteLocationId })
+    .from(ticketsTable)
+    .where(and(eq(ticketsTable.vendorId, vendorId), notInArray(ticketsTable.status, ["cancelled", "denied"])));
+
+  // A Gate assignment must be visible before Assume Watch can open its first ticket.
+  return or(
+    and(
+      inArray(siteLocationsTable.partnerId, approvedPartnersForVendor(vendorId)),
+      or(inArray(siteLocationsTable.id, ticketSites), inArray(siteLocationsTable.id, sitesAssignedToVendor(vendorId, true))),
+    ),
+    inArray(siteLocationsTable.id, acceptedMarketplaceSites(vendorId)),
+  )!;
+}
+
+export function vendorTicketCreationSiteScope(vendorId: number) {
+  return and(
+    eq(siteLocationsTable.hidden, false),
+    eq(siteLocationsTable.isActive, true),
+    inArray(siteLocationsTable.id, sitesAssignedToVendor(vendorId, false)),
+    or(
+      inArray(siteLocationsTable.partnerId, approvedPartnersForVendor(vendorId)),
+      inArray(siteLocationsTable.id, acceptedMarketplaceSites(vendorId)),
+    ),
+  )!;
+}
+
+export async function vendorCanReadSite(vendorId: number, siteId: number, forTicketCreation = false) {
+  const scope = forTicketCreation
+    ? or(vendorOperationalSiteScope(vendorId), vendorTicketCreationSiteScope(vendorId))
+    : vendorOperationalSiteScope(vendorId);
+  const [site] = await db.select({ id: siteLocationsTable.id })
+    .from(siteLocationsTable)
+    .where(and(eq(siteLocationsTable.id, siteId), scope))
+    .limit(1);
+  return !!site;
 }
 
 // Vendor-wide work assignments have no employee identity. Only an employee's

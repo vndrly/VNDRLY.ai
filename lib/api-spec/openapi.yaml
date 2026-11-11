@@ -1431,13 +1431,20 @@ paths:
     get:
       operationId: listSiteLocations
       tags: [siteLocations]
-      summary: List all site locations
+      summary: List site locations visible to the current account
       parameters:
         - name: partnerId
           in: query
           required: false
           schema:
             type: integer
+        - name: purpose
+          in: query
+          required: false
+          description: For vendor sessions, request sites eligible for opening a ticket, including sites awaiting their first ticket.
+          schema:
+            type: string
+            enum: [ticket_creation]
       responses:
         "200":
           description: List of site locations

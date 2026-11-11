@@ -1004,7 +1004,7 @@ export default function Tickets() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tickets]);
 
-  const { data: sites } = useListSiteLocations();
+  const { data: sites } = useListSiteLocations(isVendor ? { purpose: "ticket_creation" } : undefined);
   const { data: workTypes } = useListWorkTypes();
   // Ask the browser for location once, the first time the operator
   // opens the Create New Job dialog. We don't re-prompt — if they
@@ -1028,9 +1028,7 @@ export default function Tickets() {
       { timeout: 10_000, maximumAge: 5 * 60_000 },
     );
   }, [addOpen]);
-  // Create New Job dialog: list every site the API returned, sorted
-  // alphabetically. No proximity / radius filter — the operator must
-  // see the full set.
+  // Keep assigned sites available for the first ticket regardless of distance.
   const allSitesForCreate = useMemo(() => {
     if (!sites) return [] as NonNullable<typeof sites>;
     return [...sites].sort((a, b) => a.name.localeCompare(b.name));

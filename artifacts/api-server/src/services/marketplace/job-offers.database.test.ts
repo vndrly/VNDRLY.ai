@@ -299,7 +299,6 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
     expect(
       await vendorCanReadSite(
         f.vendor.id,
-        f.input.partnerId,
         f.input.siteLocationId,
       ),
     ).toBe(false);
@@ -364,14 +363,12 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
     expect(
       await vendorCanReadSite(
         f.vendor.id,
-        f.input.partnerId,
         f.input.siteLocationId,
       ),
     ).toBe(true);
     expect(
       await vendorCanReadSite(
         f.vendor.id,
-        f.input.partnerId,
         f.input.siteLocationId + 1000000,
       ),
     ).toBe(false);

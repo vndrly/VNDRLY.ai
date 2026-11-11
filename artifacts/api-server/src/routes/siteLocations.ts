@@ -3,7 +3,7 @@ import { requireGateStationManagementAccess } from "../services/gate-change-over
 import { Router, type IRouter } from "express";
 import { eq, sql, and, or, isNull, inArray } from "drizzle-orm";
 import { db, pool, siteLocationsTable, partnersTable, siteWorkAssignmentsTable, workTypesTable, vendorsTable, vendorWorkTypesTable, vendorPeopleTable, ticketsTable, ticketCrewTable, siteLocationAdminAuditLogTable } from "@workspace/db";
-import { approvedPartnersForVendor, vendorCanReadSite, sitesAssignedToEmployee, employeeCanReadSite } from "../lib/approved-partner-sites";
+import { approvedPartnersForVendor, vendorCanReadSite, vendorOperationalSiteScope, vendorTicketCreationSiteScope, sitesAssignedToEmployee, employeeCanReadSite } from "../lib/approved-partner-sites";
 import { acceptedMarketplaceSites } from "../lib/accepted-marketplace-access";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
@@ -83,7 +83,7 @@ function generateSiteCode(): string {
 }
 
 // Verifies the caller has read access to a specific site.
-// Admin sees any; partners see their own sites; vendor crews see approved partners.
+// Admin sees any; partners see their own sites; vendor access is site-specific.
 // Returns true to continue, false if a response was already sent.
 async function verifySiteReadAccess(
   session: SessionPayload,
@@ -91,6 +91,7 @@ async function verifySiteReadAccess(
   res: any,
   sitePartnerId: number | null,
   siteId: number,
+  forTicketCreation = false,
 ): Promise<boolean> {
   if (session.role === "admin") return true;
 
@@ -103,7 +104,7 @@ async function verifySiteReadAccess(
   }
 
   if (session.role === "vendor" && session.vendorId != null) {
-    if (await vendorCanReadSite(session.vendorId, sitePartnerId, siteId)) return true;
+    if (await vendorCanReadSite(session.vendorId, siteId, forTicketCreation)) return true;
   }
 
   if (session.role === "field_employee" && session.userId != null) {
@@ -166,15 +167,27 @@ router.get("/site-locations", async (req, res): Promise<void> => {
   let results;
 
   const isAdmin = session?.role === "admin";
-  // Public Hotlist discovery does not grant access to private site catalogs.
-  const isVendorScoped = vendorId != null;
-
-  if (isVendorScoped) {
+  if (vendorId != null) {
+    const siteScope = employeeId != null
+      ? and(
+          or(
+            inArray(siteLocationsTable.partnerId, approvedPartnersForVendor(vendorId)),
+            inArray(siteLocationsTable.id, acceptedMarketplaceSites(vendorId, { employeeId })),
+          ),
+          inArray(siteLocationsTable.id, sitesAssignedToEmployee(employeeId, vendorId)),
+        )
+      : query.success && query.data.purpose === "ticket_creation"
+        ? vendorTicketCreationSiteScope(vendorId)
+        : vendorOperationalSiteScope(vendorId);
     results = await db
       .select(siteSelect)
       .from(siteLocationsTable)
       .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
-      .where(and(eq(siteLocationsTable.hidden, false), or(inArray(siteLocationsTable.partnerId, approvedPartnersForVendor(vendorId!)), inArray(siteLocationsTable.id, acceptedMarketplaceSites(vendorId!, { employeeId: employeeId ?? undefined }))), employeeId == null ? undefined : inArray(siteLocationsTable.id, sitesAssignedToEmployee(employeeId, vendorId!)), query.success && query.data.partnerId ? eq(siteLocationsTable.partnerId, query.data.partnerId) : undefined))
+      .where(and(
+        eq(siteLocationsTable.hidden, false),
+        siteScope,
+        query.success && query.data.partnerId ? eq(siteLocationsTable.partnerId, query.data.partnerId) : undefined,
+      ))
       .orderBy(siteLocationsTable.createdAt);
   } else if (sessionPartnerId) {
     results = await db
@@ -336,7 +349,8 @@ router.get("/site-locations/:id", async (req, res): Promise<void> => {
     sendApiError(res, 404, "site_location.not_found", "Site location not found");
     return;
   }
-  if (!(await verifySiteReadAccess(session, req, res, site.partnerId, site.id))) return;
+  // The new-ticket form loads work types from this exact site's detail.
+  if (!(await verifySiteReadAccess(session, req, res, site.partnerId, site.id, true))) return;
 
   let assignmentVendorId = session.role === "vendor" ? session.vendorId : null;
   if (session.role === "field_employee") {
@@ -620,7 +634,7 @@ router.get("/site-locations/:siteId/assignments", async (req, res): Promise<void
     sendApiError(res, 404, "site_location.not_found", "Site location not found");
     return;
   }
-  if (!(await verifySiteReadAccess(session, req, res, siteForCheck.partnerId, siteForCheck.id))) return;
+  if (!(await verifySiteReadAccess(session, req, res, siteForCheck.partnerId, siteForCheck.id, true))) return;
 
   // Task #583: same FK reasoning as the GET /:id assignments embed —
   // workTypeId / vendorId are NOT NULL, so an INNER join cannot drop

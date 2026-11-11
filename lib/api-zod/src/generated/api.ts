@@ -3709,10 +3709,16 @@ export const ListWorkTypesResponseItem = zod.object({
 export const ListWorkTypesResponse = zod.array(ListWorkTypesResponseItem);
 
 /**
- * @summary List all site locations
+ * @summary List site locations visible to the current account
  */
 export const ListSiteLocationsQueryParams = zod.object({
   partnerId: zod.coerce.number().optional(),
+  purpose: zod
+    .enum(["ticket_creation"])
+    .optional()
+    .describe(
+      "For vendor sessions, request sites eligible for opening a ticket, including sites awaiting their first ticket.",
+    ),
 });
 
 export const ListSiteLocationsResponseItem = zod.object({

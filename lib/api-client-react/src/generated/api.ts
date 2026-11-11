@@ -5985,7 +5985,7 @@ export function useListWorkTypes<
 }
 
 /**
- * @summary List all site locations
+ * @summary List site locations visible to the current account
  */
 export const getListSiteLocationsUrl = (params?: ListSiteLocationsParams) => {
   const normalizedParams = new URLSearchParams();
@@ -6055,7 +6055,7 @@ export type ListSiteLocationsQueryResult = NonNullable<
 export type ListSiteLocationsQueryError = ErrorType<unknown>;
 
 /**
- * @summary List all site locations
+ * @summary List site locations visible to the current account
  */
 
 export function useListSiteLocations<

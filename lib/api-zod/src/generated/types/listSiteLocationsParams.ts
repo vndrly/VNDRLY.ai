@@ -5,7 +5,12 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListSiteLocationsPurpose } from "./listSiteLocationsPurpose";
 
 export type ListSiteLocationsParams = {
   partnerId?: number;
+  /**
+   * For vendor sessions, request sites eligible for opening a ticket, including sites awaiting their first ticket.
+   */
+  purpose?: ListSiteLocationsPurpose;
 };
