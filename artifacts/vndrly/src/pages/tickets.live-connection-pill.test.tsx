@@ -1,3 +1,4 @@
+vi.mock("@/components/dashboard-ticket-panels", () => ({ useDashboardTicketPanels: () => ({ data: undefined }), DashboardTicketPanels: () => null }));
 import * as React from "react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 

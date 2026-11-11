@@ -29,6 +29,19 @@ describe('realtime transport lifecycle', () => {
     Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })) } });
   });
   afterEach(() => { client?.close(); vi.restoreAllMocks(); });
+  it('routes transcripts once to the shared brain and never executes realtime tools', async () => {
+    const onUserText = vi.fn(async () => {}), onToolCall = vi.fn(async () => '');
+    client = await createAskVRealtimeClient({ onUserText, onToolCall, greeting: 'Hello' });
+    await client.connect();
+    const event = { type: 'conversation.item.input_audio_transcription.completed', item_id: 'one', transcript: 'Open Sand Roman' };
+    peer.channel.emit(event); peer.channel.emit(event);
+    peer.channel.emit({ type: 'response.function_call_arguments.done', name: 'open_screen', call_id: 'c1', arguments: '{}' });
+    await Promise.resolve();
+    expect(onUserText).toHaveBeenCalledExactlyOnceWith('Open Sand Roman');
+    expect(onToolCall).not.toHaveBeenCalled();
+    expect(peer.channel.sent.some(event => event.type === 'response.create')).toBe(false);
+    expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).includes('brain=shared'))).toBe(true);
+  });
   it('waits for the data channel before reporting a ready connection', async () => {
     peer.channel.readyState = 'connecting';
     client = await createAskVRealtimeClient({ onToolCall: async () => '' });

@@ -31,7 +31,7 @@ describe("DayAgendaDialog", () => {
       { id: "am", kind: "Shift", title: "Gate 2 AM", gateStationId: "gate2", siteLocationId: 411, startsAt: "2099-09-09T11:00:00Z" },
       { id: "pm", kind: "Shift", title: "Gate 2 PM", gateStationId: "gate2", siteLocationId: 411, startsAt: "2099-09-09T23:00:00Z" },
     ]} />);
-    fireEvent.click(await screen.findByRole("button", { name: "Fill", exact: true }));
+    fireEvent.click(await screen.findByRole("button", { name: "Fill" }));
     expect(screen.queryByText("Gate 1 AM")).toBeNull();
     expect(screen.getByText("Gate 2 PM")).toBeTruthy();
     fireEvent.change(await screen.findByLabelText("Gatekeeper"), { target: { value: "7" } });
@@ -46,7 +46,7 @@ describe("DayAgendaDialog", () => {
       return { shifts: [], people: [{ id: 7, name: "Xavier Hunter" }], busy: [], readOnly: false };
     });
     render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2099-12-09" staffingOwner={{ type: "vendor", id: 1054 }} items={[]} />);
-    const buttons = await screen.findAllByRole("button", { name: "Fill", exact: true });
+    const buttons = await screen.findAllByRole("button", { name: "Fill" });
     expect(buttons).toHaveLength(2);
     fireEvent.click(buttons[1]);
     fireEvent.change(await screen.findByLabelText("Gatekeeper"), { target: { value: "7" } });

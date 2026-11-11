@@ -13,6 +13,7 @@ export interface AskVRealtimeClient {
   updateContext(context: { path?: string; entityId?: number | null; org?: string | null; location?: string | null; gateDraft?: Record<string, unknown> | null; gateGuidance?: AskVGateGuidance | null }): void;
 }
 export interface RealtimeClientOptions {
+  onUserText?: (text: string) => Promise<void>;
   seedMessage?: string; path?: string; entityId?: number | null;
   sessionId?: string; conversationId?: number; signal?: AbortSignal;
   greeting?: string; history?: Array<{ role: 'user' | 'assistant'; content: string }>;
@@ -54,6 +55,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
   const send = (event: object) => { if (!closed && channel.readyState === 'open') channel.send(JSON.stringify(event)); };
   const ensureActive = () => { if (closed) throw new DOMException('Cancelled', 'AbortError'); };
   const applyToolContext = (payload: { tools?: unknown[]; context?: unknown }) => {
+    if (args.onUserText) return;
     if (payload.tools) send({ type: 'session.update', session: { type: 'realtime', tools: payload.tools } });
     if (payload.context) {
       if (contextItemId) send({ type: 'conversation.item.delete', item_id: contextItemId });
@@ -101,6 +103,11 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
   channel.onerror = () => fail('AskV voice connection failed.');
   const transcript = (eventId: string, role: VoiceTranscript['role'], content: unknown, spoken?: true) => {
     if (!eventId || typeof content !== 'string' || !content.trim() || transcripts.has(eventId)) return;
+    if (args.onUserText) {
+      transcripts.add(eventId);
+      if (role === 'user') void args.onUserText(content).catch(error => fail(error instanceof Error ? error.message : 'AskV request failed.'));
+      return;
+    }
     transcripts.add(eventId); args.onTranscript?.({ eventId, role, content, ...(spoken ? { spoken } : {}) });
   };
   channel.onmessage = event => {
@@ -124,7 +131,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
         case 'error': if (payload.error?.code !== 'response_cancel_not_active') fail(payload.error?.message ?? 'AskV voice error'); break;
       }
       const item = payload.type === 'response.output_item.done' ? payload.item : payload.type === 'response.function_call_arguments.done' ? payload : null;
-      if (!item || (payload.type === 'response.output_item.done' && item.type !== 'function_call') || !item.name || !item.call_id || calls.has(item.call_id)) return;
+      if (args.onUserText || !item || (payload.type === 'response.output_item.done' && item.type !== 'function_call') || !item.name || !item.call_id || calls.has(item.call_id)) return;
       calls.add(item.call_id);
       let parsed: unknown; try { parsed = typeof item.arguments === 'string' ? JSON.parse(item.arguments) : item.arguments ?? {}; } catch { parsed = null; }
       const output = parsed === null ? 'Invalid tool arguments. Ask for clarification.' : await args.onToolCall({ name: item.name, arguments: parsed, callId: item.call_id });
@@ -152,6 +159,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
         }
         const offer = await pc.createOffer(); ensureActive(); await pc.setLocalDescription(offer); ensureActive();
         const params = new URLSearchParams({ seedMessage: args.seedMessage ?? 'voice conversation' });
+        if (args.onUserText) params.set('brain', 'shared');
         if (args.path) params.set('path', args.path);
         if (args.entityId != null) params.set('entityId', String(args.entityId));
         if (args.sessionId) params.set('sessionId', args.sessionId);
@@ -175,7 +183,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
         for (const message of (args.history ?? []).slice(-30)) send({ type: 'conversation.item.create', item: {
           type: 'message', role: message.role, content: [{ type: message.role === 'user' ? 'input_text' : 'output_text', text: message.content }],
         } });
-        if (args.greeting && !args.audioSource) send({ type: 'response.create', response: { instructions: `Greet the user once by saying exactly: ${args.greeting}` } });
+        if (!args.onUserText && args.greeting && !args.audioSource) send({ type: 'response.create', response: { instructions: `Greet the user once by saying exactly: ${args.greeting}` } });
         if (args.audioSource) pcmWave = observeAskVPcm();
         if (args.audioSource) unsubscribe = args.audioSource.subscribe(samples => {
           if (!connected || closed) return;
@@ -199,6 +207,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
     interrupt() { send({ type: 'response.cancel' }); send({ type: 'output_audio_buffer.clear' }); },
     sendText(text) {
       if (!connected || closed) throw new Error('AskV is still connecting.');
+      if (args.onUserText) { void args.onUserText(text).catch(error => fail(error.message)); return; }
       send({ type: 'response.cancel' }); send({ type: 'output_audio_buffer.clear' });
       send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text }] } });
       transcript(`typed:${crypto.randomUUID()}`, 'user', text); send({ type: 'response.create' });

@@ -11,7 +11,7 @@ function words(value: string): string[] {
 }
 function similarity(a: string, b: string): number {
   if (a === b) return 1;
-  if (/\d/.test(a + b) || Math.min(a.length, b.length) < 4) return 0;
+  if (/\d/.test(a + b) || Math.min(a.length, b.length) < 3) return 0;
   if (a.startsWith(b) || b.startsWith(a)) return .94;
   let row = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {
@@ -27,13 +27,11 @@ export async function resolveGateNavigation(query: string, sites: Site[], statio
   const requested = words(query);
   if (!requested.length) return { ok: false as const, error: "Name the site or gate to open." };
   const candidates: { siteId: number; stationId: string; name: string; score: number }[] = [];
-  // Shortlist locally before station reads; never search the nationwide catalogue.
-  const relevant = sites.filter(site => {
-    const siteWords = words(site.name);
-    return requested.some(word => siteWords.some(token => similarity(word, token) > 0));
-  });
-  for (const site of relevant) {
-    for (const station of await stationsForSite(site.id)) {
+  // Gate names may differ entirely from their site's name. Search every
+  // authorized site's gates, never the nationwide catalogue.
+  for (let start = 0; start < sites.length; start += 6) {
+    const batch = await Promise.all(sites.slice(start, start + 6).map(async site => ({ site, stations: await stationsForSite(site.id) })));
+    for (const { site, stations } of batch) for (const station of stations) {
       const aliases = words(`${site.partnerName ?? ""} ${site.name} ${station.name}`);
       const scores = requested.map(word => Math.max(0, ...aliases.map(token => similarity(word, token))));
       if (scores.every(score => score > 0)) candidates.push({ siteId: site.id, stationId: station.id, name: station.name, score: scores.reduce((a, b) => a + b, 0) });
@@ -58,7 +56,12 @@ export async function runGateNavigationTool(input: unknown, session: SessionPayl
     if (args.query != null) {
       if (typeof args.query !== "string" || args.query.length > 200) return fail("Use a site or gate name up to 200 characters.");
       const target = await resolveGateNavigation(args.query, sites, id => listChangeOverStations(session, id));
-      if (!target.ok) return JSON.stringify(target);
+      if (!target.ok) return JSON.stringify({ ...target,
+        candidates: target.candidates?.map(candidate => ({ ...candidate,
+          href: `${args.screen === "gate-map" ? "/gate/map" : "/gate/change-over"}?siteId=${candidate.siteId}&stationId=${encodeURIComponent(candidate.stationId)}`,
+        })),
+        guidance: "Offer each returned candidate as a clickable Markdown link using its name and href. Ask which one; never guess. Similar spoken words such as San/Sand are lookup hints only, never authorization to change a record.",
+      });
       return runClientTool("open_screen", { screen: args.screen, siteId: target.siteId, stationId: target.stationId }, session);
     }
     const site = sites.find(site => site.id === args.siteId);

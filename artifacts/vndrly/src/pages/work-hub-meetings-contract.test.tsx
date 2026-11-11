@@ -15,7 +15,7 @@ describe("canonical Work Hub calendar meeting envelopes", () => {
     env.path = `/work-hub/${page}`;
     window.history.replaceState({}, "", `${env.path}?meeting=9845cacc-c88e-410b-a8c6-8ae52328796d`);
     const meeting = { id: "meeting-1", title: "Synthetic attendance review", agenda: "Recorded agenda", recordingAllowed: false };
-    const occurrence = { id: "9845cacc-c88e-410b-a8c6-8ae52328796d", startsAt: new Date().toISOString(), endsAt: new Date(Date.now() + 900000).toISOString(), status: "scheduled" };
+    const occurrence = { id: "9845cacc-c88e-410b-a8c6-8ae52328796d", startsAt: new Date(Date.now() + 3600000).toISOString(), endsAt: new Date(Date.now() + 4500000).toISOString(), status: "scheduled" };
     env.request.mockReset().mockImplementation(async (path: string) => {
       if (path.startsWith("/calendar?")) return { shifts: [], tasks: [], meetings: [{ source: "vndrly", authority: "work_hub_meeting", item: { meeting, occurrence } }], external: [] };
       if (path.endsWith("/catch-up")) return { meeting, occurrence, participationMode: "view_only", startedAt: null };

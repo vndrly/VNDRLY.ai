@@ -46,12 +46,12 @@ export function createModelServiceClassifier(model: ServiceModelBoundary): Servi
 
 /** Uses the same configured Anthropic client as AskV, without loading credentials at import time. */
 export function createConfiguredServiceClassifier(): ServiceClassifier {
-  const model = process.env.SERVICE_MATCHING_MODEL?.trim() || "claude-sonnet-4-5";
+  const model = process.env.SERVICE_MATCHING_OPENAI_MODEL?.trim() || process.env.ASKV_OPENAI_MODEL?.trim() || "gpt-6.1-sol";
   return createModelServiceClassifier({
     modelVersion: `${model}:service-matching-v1`,
     async complete(request) {
-      const { anthropic } = await import("@workspace/integrations-anthropic-ai");
-      const result = await anthropic.messages.create({
+      const { requestOpenAIText } = await import("../../assistant/openai-text");
+      const result = await requestOpenAIText({
         model, max_tokens: 1500, temperature: 0, system: request.system,
         messages: [{ role: "user", content: request.input }],
       }, { timeout: 15000, maxRetries: 0 });

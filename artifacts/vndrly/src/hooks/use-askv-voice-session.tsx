@@ -7,7 +7,7 @@ import type { GateWorkflowOffer, GateSetupProgressHint } from '@workspace/gate-b
 import { useAskVRealtime } from '@/hooks/use-askv-realtime';
 import { useAskVWakeListener } from '@/hooks/use-askv-wake-listener';
 import { readAskVAcrossVndrly, readAskVMuted, writeAskVMuted } from '@/lib/askv-voice-preferences';
-import { stopAskVSpeech } from '@/lib/askv-speech';
+import { speakAskV, stopAskVSpeech } from '@/lib/askv-speech';
 import { clearAskVClientDrafts } from '@/lib/askv-client-intents';
 import { AskVTranscriptQueue } from '@/lib/askv-transcript-queue';
 import { isAskVNaturalVoiceEnabled } from '@/lib/askv-natural-voice';
@@ -71,13 +71,23 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   }, []);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [microphoneOwner, setMicrophoneOwner] = useState(askVMicrophone.owner);
-  const assistant = useAssistant({ pageContext: { path: location }, liveUpdates: panelOpen });
+  const spokenTurn = useRef(false);
+  const assistant = useAssistant({ pageContext: { path: location }, liveUpdates: panelOpen,
+    onAssistantReply: text => { if (spokenTurn.current) speakAskV(text); },
+  });
   const pendingGateGuidance = useRef<GateSetupProgressHint | undefined>(undefined);
   const pendingWorkflowOffer = useRef<GateWorkflowOffer | undefined>(undefined);
   const latestAssistant = useRef(assistant); latestAssistant.current = assistant;
   const saveQueue = useRef(new AskVTranscriptQueue()); const mounted = useRef(true);
   const spokenReceipt = useRef<{ sessionId: string; eventId: string; name: string; output: string } | null>(null);
   const voice = useAskVRealtime({ acrossVndrly,
+    onUserText: async text => {
+      stopAskVSpeech();
+      await saveQueue.current.flush();
+      spokenTurn.current = true;
+      try { await latestAssistant.current.send(text); }
+      finally { spokenTurn.current = false; }
+    },
     onGateSetupProgress: hint => { pendingGateGuidance.current = hint; },
     onGateWorkflowOffer: offer => { pendingWorkflowOffer.current = offer; },
     // Canonical Gate and ticket mutations affect multiple lists, history and maps.
@@ -123,7 +133,14 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (["stopped", "error", "muted", "wake-idle"].includes(voice.state)) { pendingGateGuidance.current = undefined; pendingWorkflowOffer.current = undefined; }
   }, [voice.state]);
-  const stop = useCallback(() => { startAttempt.current++; voice.stop(); }, [voice.stop]);
+  const stop = useCallback(() => {
+    startAttempt.current++;
+    // Audio lifecycle changes must not abort an independent typed request.
+    if (spokenTurn.current) latestAssistant.current.cancel();
+    spokenTurn.current = false;
+    stopAskVSpeech();
+    voice.stop();
+  }, [voice.stop]);
   const latest = useRef({ muted, foreground, userId, location, voice, acrossVndrly });
   latest.current = { muted, foreground, userId, location, voice, acrossVndrly };
   useEffect(() => askVMicrophone.subscribe(owner => {
@@ -212,10 +229,9 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
     else void startConversation('unmute');
   }, [startConversation, stop]);
   const sendText = useCallback(async (text: string) => {
-    if (!latestAssistant.current.cooperativeContextActive && latest.current.voice.sendText(text)) return;
     stop();
-    try { await saveQueue.current.flush(); await latestAssistant.current.send(text); }
-    catch { setHistoryError('Your previous voice turn is still waiting to save. Reconnect and retry your message.'); }
+    // Typed requests never depend on the audio transport being connected.
+    await latestAssistant.current.send(text);
   }, [stop]);
   const unavailable = clientAvailability.status !== 'available';
   const value = useMemo<AskVVoiceSessionValue>(() => ({ state: muted ? 'muted' : unavailable ? 'error' : voice.state,

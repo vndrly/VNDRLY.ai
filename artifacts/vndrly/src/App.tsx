@@ -268,7 +268,7 @@ function AuthenticatedRouter() {
         <Route path="/switch-account"><Login allowAccountSwitch /></Route>
         <Route path="/operations-display/:displayId/:monitorId">{params => <OperationsDisplayViewer displayId={params.displayId} monitorId={params.monitorId} />}</Route>
         <Route path="/operations-display" component={OperationsDisplayDirectory} />
-        <Route path="/organization-subscription" component={OrganizationSubscription} />
+        <Route path="/organization-subscription"><OrganizationSubscription /></Route>
         {user && <Route path="/work-hub/administration/displays"><Layout><OperationsDisplayDirectory embedded /></Layout></Route>}
         {user && <Route path="/work-hub/form/:instanceId" component={FormCampaignLinkRedirect}/>}
         {user && <Route path="/work-hub/campaign/:campaignId" component={FormCampaignLinkRedirect}/>}

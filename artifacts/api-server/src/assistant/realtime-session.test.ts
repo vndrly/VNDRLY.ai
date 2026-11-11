@@ -7,6 +7,14 @@ import {
 } from "./realtime-session";
 
 describe("AskV Realtime session", () => {
+  it("disables independent responses and tools for shared GPT reasoning", async () => {
+    const fetchImpl = vi.fn(async (_url: unknown, _init: unknown) => new Response('answer'));
+    await createAskVRealtimeCall({ apiKey: 'test', userId: 7, model: 'gpt-realtime-2.1', voice: 'marin', instructions: 'Transcribe', tools: [{ type: 'function', name: 'write_record', description: 'write', parameters: { type: 'object' } }], sdp: 'offer', transcriptionOnly: true, fetchImpl });
+    const body = (fetchImpl.mock.calls[0][1] as RequestInit).body as FormData;
+    const config = JSON.parse(String(body.get('session')));
+    expect(config.tools).toEqual([]);
+    expect(config.audio.input.turn_detection.create_response).toBe(false);
+  });
   it("defaults to the current OpenAI realtime voice model", () => {
     expect(DEFAULT_ASKV_REALTIME_MODEL).toBe("gpt-realtime-2.1");
   });

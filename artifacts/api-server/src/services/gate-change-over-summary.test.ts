@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 const create = vi.hoisted(() => vi.fn());
-vi.mock("@workspace/integrations-anthropic-ai", () => ({
-  anthropic: { messages: { create } },
+vi.mock("../assistant/openai-text", () => ({
+  requestOpenAIText: create,
 }));
 import { summarizeShiftFacts } from "./gate-change-over-summary";
 const facts = [

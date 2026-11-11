@@ -1,4 +1,4 @@
-import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { requestOpenAIText } from "../assistant/openai-text";
 
 export type MeetingAnswerInput = {
   question: string;
@@ -31,8 +31,7 @@ export async function answerMeetingQuestion(input: MeetingAnswerInput, signal?: 
   if (active >= MAX_CONCURRENT) throw new Error("Meeting answers are busy");
   active++;
   try {
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5",
+    const response = await requestOpenAIText({
       max_tokens: 1_000,
       system: [
         `Answer only from the supplied ${source} context.`,

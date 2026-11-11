@@ -22,7 +22,7 @@ import {
   vendorPeopleTable,
 } from "@workspace/db";
 import { isNull } from "drizzle-orm";
-import { anthropic } from "@workspace/integrations-anthropic-ai";
+
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { logger } from "../lib/logger";
@@ -125,9 +125,7 @@ router.get("/assistant/usage", async (req, res) => {
   catch { res.status(403).json({ code: "assistant.usage_unavailable", error: "Current company administrator permission is required." }); }
 });
 
-// Claude model used for all assistant turns. The skill template recommends
-// `claude-sonnet-4-5` as a current high-quality choice.
-const MODEL = "claude-sonnet-4-5";
+// Provider adapters own model selection; all entry points share the same tools.
 const MAX_TOKENS = 2048;
 // We loop tool_use rounds up to this many times per request to prevent
 // runaway tool chains. In practice 2-3 is enough for the wizard flows.
@@ -1926,17 +1924,8 @@ router.post("/assistant/field-onboarding/:token/chat", async (req, res) => {
   try {
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
       if (aborted) break;
-      const stream = anthropic.messages.stream({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: systemPrompt,
-        tools,
-        messages,
-      });
-      stream.on("text", (delta: string) => {
-        if (delta) send("token", { delta });
-      });
-      const finalMsg = await stream.finalMessage();
+      const finalMsg = await requestOpenAIVRound({ system: systemPrompt, messages, tools: tools, maxTokens: MAX_TOKENS }, { apiKey: process.env.OPENAI_API_KEY ?? "" });
+      for (const block of finalMsg.content) if (block.type === "text") send("token", { delta: block.text });
       messages.push({ role: "assistant", content: finalMsg.content });
       for (const block of finalMsg.content) {
         if (block.type === "text" && block.text) finalText += block.text;
@@ -2180,16 +2169,8 @@ router.post("/assistant/signup/:persona/chat", async (req, res) => {
     // ever appear in the response, so we don't need the loop the
     // session-authenticated and token-mode handlers have. If a future
     // change ever adds tools here, remember to put back a bounded loop.
-    const stream = anthropic.messages.stream({
-      model: MODEL,
-      max_tokens: MAX_TOKENS,
-      system: systemPrompt,
-      messages,
-    });
-    stream.on("text", (delta: string) => {
-      if (delta) send("token", { delta });
-    });
-    const finalMsg = await stream.finalMessage();
+    const finalMsg = await requestOpenAIVRound({ system: systemPrompt, messages, tools: [], maxTokens: MAX_TOKENS }, { apiKey: process.env.OPENAI_API_KEY ?? "" });
+      for (const block of finalMsg.content) if (block.type === "text") send("token", { delta: block.text });
     for (const block of finalMsg.content) {
       if (block.type === "text" && block.text) finalText += block.text;
     }

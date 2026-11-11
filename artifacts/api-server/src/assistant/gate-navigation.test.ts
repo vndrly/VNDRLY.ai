@@ -7,6 +7,18 @@ const site = { id: 411, name: "San Roman Completions", partnerName: "Warwick Ene
 const station = { id: "e00cb909-a716-4a65-9375-dd84f337bf6b", name: "Warwick San Roman Completions 2" };
 beforeEach(() => { reads.sites.mockReset().mockResolvedValue([site]); reads.stations.mockReset().mockResolvedValue([station]); });
 describe("authorized conversational Gate navigation", () => {
+  it.each(["Sand Roman", "Sand Roman two"])("tolerates speech transcription %s", async query => {
+    expect(await resolveGateNavigation(query, [site], reads.stations)).toMatchObject({ ok: true, stationId: station.id });
+  });
+  it("finds gate-only names even when neither the site nor partner name matches", async () => {
+    reads.stations.mockResolvedValue([{ ...station, name: "North entrance" }]);
+    expect(await resolveGateNavigation("North entrance", [site], reads.stations)).toMatchObject({ ok: true, stationId: station.id });
+  });
+  it("keeps short ambiguous speech matches as choices", async () => {
+    reads.stations.mockResolvedValue([station, { ...station, id: "other", name: "Sand Roman Completions 2" }]);
+    const result = await resolveGateNavigation("San Roman", [site], reads.stations);
+    expect(result).toMatchObject({ ok: false, candidates: expect.any(Array) });
+  });
   it.each(["San Roman", "San Roman Completions", "Warwick San Roman Completions 2", "san romen completion two", "Show me San Roman please", "Warwick San Roman Gate 2"])("resolves %s without exact display text", async query => {
     const result = JSON.parse((await runGateNavigationTool({ screen: "gate-dashboard", query }, session))!);
     expect(result).toMatchObject({ ok: true, intent: { arguments: { path: `/gate/change-over?siteId=411&stationId=${station.id}` } } });
@@ -18,6 +30,8 @@ describe("authorized conversational Gate navigation", () => {
     const ambiguous = JSON.parse((await runGateNavigationTool({ screen: "gate-dashboard", query: "San Roman" }, session))!);
     expect(ambiguous).toMatchObject({ ok: false, candidates: expect.arrayContaining([expect.objectContaining({ stationId: station.id })]) });
     expect(ambiguous.candidates).toHaveLength(2);
+    expect(ambiguous.candidates[0].href).toBe(`/gate/change-over?siteId=411&stationId=${station.id}`);
+    expect(ambiguous.guidance).toContain("never guess");
     expect(JSON.parse((await runGateNavigationTool({ screen: "gate-dashboard", query: "San Roman 2" }, session))!)).toHaveProperty("ok", true);
   });
   it("never fuzzy-matches a gate number or invents a site", async () => {
@@ -26,7 +40,7 @@ describe("authorized conversational Gate navigation", () => {
   it("does not query stations outside the account's authorized sites", async () => {
     const result = await resolveGateNavigation("Other Company Private Site 2", [site], reads.stations);
     expect(result.ok).toBe(false);
-    expect(reads.stations).not.toHaveBeenCalled();
+    expect(reads.stations).toHaveBeenCalledWith(site.id);
   });
   it("rechecks explicit IDs and rejects a gate belonging to another site", async () => {
     expect(JSON.parse((await runGateNavigationTool({ screen: "gate-map", siteId: 999, stationId: station.id }, session))!)).toHaveProperty("ok", false);

@@ -46,6 +46,41 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 describe("AskVVoiceProvider", () => {
+  it('keeps an in-flight typed request alive when audio stops', async () => {
+    let release!: () => void;
+    let requestSignal: AbortSignal | undefined;
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith('/conversations')) return new Response(JSON.stringify({ id: 8 }));
+      if (String(url).endsWith('/messages')) {
+        requestSignal = init?.signal as AbortSignal;
+        await new Promise<void>(resolve => { release = resolve; });
+        return new Response('event: done\ndata: {"content":"Ready","assistantMessageId":23}\n\n');
+      }
+      return new Response(JSON.stringify({ enabled: true }));
+    }));
+    const { result } = renderHook(() => useAskVVoiceSession(), { wrapper });
+    let pending!: Promise<void>;
+    await act(async () => { pending = result.current.sendText('Open Gate Map'); });
+    act(() => result.current.stop());
+    expect(requestSignal?.aborted).toBe(false);
+    await act(async () => { release(); await pending; });
+    expect(result.current.assistant?.messages.at(-1)?.content).toBe('Ready');
+    vi.unstubAllGlobals();
+  });
+  it('submits typed messages after a voice connection fails', async () => {
+    mocks.state = 'error';
+    mocks.sendText.mockReturnValue(false);
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (String(url).endsWith('/conversations')) return new Response(JSON.stringify({ id: 8 }));
+      if (String(url).endsWith('/messages')) return new Response('event: done\ndata: {"content":"Ready","assistantMessageId":23}\n\n');
+      return new Response(JSON.stringify({ enabled: true }));
+    }));
+    const { result } = renderHook(() => useAskVVoiceSession(), { wrapper });
+    await act(async () => { await result.current.sendText('Open Gate Map'); });
+    expect(result.current.assistant?.messages.at(-1)?.content).toBe('Ready');
+    mocks.state = 'stopped';
+    vi.unstubAllGlobals();
+  });
   beforeEach(() => {
     window.localStorage.clear();
     mocks.user = { userId: 11, vendorId: 22 };

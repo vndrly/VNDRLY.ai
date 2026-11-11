@@ -716,6 +716,7 @@ router.post(
         )),
         tools: toRealtimeTools(roleTools),
         sdp,
+        transcriptionOnly: req.query.brain === "shared",
       });
       res.type("application/sdp").send(answer);
     } catch (err) {

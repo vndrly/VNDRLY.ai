@@ -41,7 +41,7 @@ describe("V runtime authority and minimized external reads", () => {
   });
   it("company opt out stops cooperation and external reads without promoting OpenAI", async () => {
     mocks.policy.mockResolvedValue({ enabled: false, approvedAiProviders: ["anthropic", "openai"] });
-    expect(await resolveVTurnPolicy(actor)).toMatchObject({ enabled: false, approvedAiProviders: ["anthropic"] });
+    expect(await resolveVTurnPolicy(actor)).toMatchObject({ enabled: false, approvedAiProviders: ["openai"] });
     expect(await listVConnections(actor)).toEqual([]);
     await expect(readSelectedVConnection(actor, selection)).rejects.toThrow("disabled");
     expect(mocks.query).not.toHaveBeenCalled();

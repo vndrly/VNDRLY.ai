@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const provider = vi.hoisted(() => ({ create: vi.fn() }));
-vi.mock("@workspace/integrations-anthropic-ai", () => ({ anthropic: { messages: { create: provider.create } } }));
+vi.mock("../assistant/openai-text", () => ({ requestOpenAIText: provider.create }));
 const input = { question: "What is the plan?", audience: "shared" as const, roster: [{ userId: 1, displayName: "Alex" }], chat: [{ speaker: "Alex", text: "Inspect the pump" }], transcript: [] };
 beforeEach(() => provider.create.mockReset());
 describe("meeting text answers", () => {

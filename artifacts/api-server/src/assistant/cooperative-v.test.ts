@@ -4,7 +4,7 @@ import { CooperativeVTurn, VProviderError, selectVProvider, shouldVConsult, save
 describe("one cooperative V", () => {
   it("selects a suitable approved engine and never treats a client preference as approval", () => {
     expect(selectVProvider("Analyze this report", ["anthropic", "openai"], true)).toBe("openai");
-    expect(selectVProvider("Check in this visitor", ["anthropic", "openai"], true)).toBe("anthropic");
+    expect(selectVProvider("Check in this visitor", ["anthropic", "openai"], true)).toBe("openai");
     expect(selectVProvider("Analyze this report", ["anthropic"], true)).toBe("anthropic");
     expect(() => selectVProvider("hello", [], true)).toThrow("approved");
   });

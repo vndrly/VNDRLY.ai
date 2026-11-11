@@ -10,8 +10,7 @@ export class VProviderError extends Error {
 export function selectVProvider(message: string, approved: readonly VProvider[], openaiAvailable: boolean): VProvider {
   const available = approved.filter(provider => provider !== "openai" || openaiAvailable);
   if (!available.length) throw new VProviderError("No approved V provider is available", false);
-  const analytical = /\b(analy[sz]e|compare|summari[sz]e|draft|proofread|translate)\b/i.test(message);
-  return analytical && available.includes("openai") ? "openai" : available.includes("anthropic") ? "anthropic" : available[0];
+  return available.includes("openai") ? "openai" : available[0];
 }
 export function shouldVConsult(message: string): boolean { return /\b(double[- ]check|cross[- ]check|second opinion|independent review)\b/i.test(message); }
 export function savedVTaskMutationBlock(task: { taskStatus?: string; completed: Array<{ toolNames: string[] }> }, name: string): string | null {

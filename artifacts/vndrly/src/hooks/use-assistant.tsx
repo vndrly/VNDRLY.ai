@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { applyAskVClientIntent, type AskVClientIntent } from '@/lib/askv-client-intents';
+import { applyAskVClientIntentVerified, type AskVClientIntent } from '@/lib/askv-client-intents';
 import {
   type AskVLocationContext,
   readAskVCurrentLocationForMessage,
@@ -7,7 +7,7 @@ import {
 import { createWorkHubOperationId } from "@/lib/work-hub-client";
 import { shouldOfferAskVVisualResult } from "@workspace/api-client-react/askv-visual-results";
 import { useAskVGateGuidance } from "./use-askv-gate-guidance";
-import { parseGateSetupProgressHint, parseGateWorkflowOffer, type GateWorkflowOffer, type GateSetupProgressHint } from "@workspace/gate-booth";
+import { readGateVoiceDraft, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateWorkflowOffer, type GateSetupProgressHint } from "@workspace/gate-booth";
 
 export type SignupAssistantLang = "en" | "es";
 
@@ -401,6 +401,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           ? null
           : await readAskVCurrentLocationForMessage(trimmed);
         const pageContext = pageContextRef.current;
+        const gateDraft = readGateVoiceDraft();
         const body = signupMode
           ? {
               message: trimmed,
@@ -414,12 +415,13 @@ export function useAssistant(opts: AssistantOptions = {}) {
                 ...(selectedConnection.current ? { selectedConnection: selectedConnection.current } : {}),
                 ...(savedTaskId.current ? { taskId: savedTaskId.current } : {}),
                 deviceContext: { sourceDeviceId: browserWorkHubDeviceId() },
-                ...(pageContext || currentLocation || gateGuidanceRef.current
+                ...(pageContext || currentLocation || gateGuidanceRef.current || gateDraft
                   ? {
                       pageContext: {
                         ...(pageContext ?? { path: "/web/askv" }),
                         ...(currentLocation ? { currentLocation } : {}),
                         ...(gateGuidanceRef.current ? { gateGuidance: gateGuidanceRef.current } : {}),
+                        ...(gateDraft ? { gateDraft } : {}),
                       },
                     }
                   : {}),
@@ -435,8 +437,8 @@ export function useAssistant(opts: AssistantOptions = {}) {
           throw new Error(`HTTP ${res.status}`);
         }
         let accumulatedContent = "";
-        const clientResults: Array<ReturnType<typeof applyAskVClientIntent>> = [];
-        await consumeSse(res.body, ac.signal, (evt) => {
+        const clientResults: Array<Awaited<ReturnType<typeof applyAskVClientIntentVerified>>> = [];
+        await consumeSse(res.body, ac.signal, async (evt) => {
           if (evt.type === "token") {
             accumulatedContent += evt.delta;
             setMessages((prev) =>
@@ -451,7 +453,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           } else if (evt.type === "gate_workflow_offer") {
             setMessages(prev => prev.map(message => message.id === assistantId ? { ...message, gateWorkflowOffer: evt.offer } : message));
           } else if (evt.type === "client_intent") {
-            clientResults.push(applyAskVClientIntent(evt.intent));
+            clientResults.push(await applyAskVClientIntentVerified(evt.intent));
           } else if (evt.type === "recovery") {
             setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, recovery: { completed: evt.completed, remaining: evt.remaining, needed: evt.needed, taskId: evt.taskId } } : m));
           } else if (evt.type === "usage_alert") {
@@ -697,6 +699,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
     streaming,
     activeTool,
     error,
+    cancel: () => { abortRef.current?.abort(); setStreaming(false); setMessages(previous => previous.map(message => message.pending ? { ...message, pending: false } : message)); },
     send,
     clear,
     startNew,
@@ -716,7 +719,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
 async function consumeSse(
   body: ReadableStream<Uint8Array>,
   signal: AbortSignal,
-  onEvent: (evt: StreamEvent) => void,
+  onEvent: (evt: StreamEvent) => void | Promise<void>,
 ): Promise<void> {
   const reader = body.getReader();
   const decoder = new TextDecoder("utf-8");
@@ -751,29 +754,29 @@ async function consumeSse(
       }
       else if (eventName === 'client_intent') {
         const intent = (parsed as { intent?: AskVClientIntent }).intent;
-        if (intent?.name) onEvent({ type: "client_intent", intent });
+        if (intent?.name) await onEvent({ type: "client_intent", intent });
       }
-      else if (eventName === "gate_guidance") { const progress = parseGateSetupProgressHint(parsed); if (progress) onEvent({ type: "gate_guidance", progress }); }
-      else if (eventName === "gate_workflow_offer") { const offer = parseGateWorkflowOffer(parsed); if (offer) onEvent({ type: "gate_workflow_offer", offer }); }
-      else if (eventName === "token") onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
-      else if (eventName === "tool") onEvent({ type: "tool", ...(parsed as { name: string; status: "start" | "end" }) });
+      else if (eventName === "gate_guidance") { const progress = parseGateSetupProgressHint(parsed); if (progress) await onEvent({ type: "gate_guidance", progress }); }
+      else if (eventName === "gate_workflow_offer") { const offer = parseGateWorkflowOffer(parsed); if (offer) await onEvent({ type: "gate_workflow_offer", offer }); }
+      else if (eventName === "token") await onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
+      else if (eventName === "tool") await onEvent({ type: "tool", ...(parsed as { name: string; status: "start" | "end" }) });
       else if (eventName === "recovery" && parsed && typeof parsed === "object") {
         const value = parsed as { completed?: unknown; remaining?: unknown; needed?: unknown; taskId?: string | null };
-        if (Array.isArray(value.completed) && Array.isArray(value.remaining) && typeof value.needed === "string") onEvent({ type: "recovery", completed: value.completed.filter((item): item is string => typeof item === "string"), remaining: value.remaining.filter((item): item is string => typeof item === "string"), needed: value.needed, taskId: value.taskId });
+        if (Array.isArray(value.completed) && Array.isArray(value.remaining) && typeof value.needed === "string") await onEvent({ type: "recovery", completed: value.completed.filter((item): item is string => typeof item === "string"), remaining: value.remaining.filter((item): item is string => typeof item === "string"), needed: value.needed, taskId: value.taskId });
       }
-      else if (eventName === "usage_alert" && parsed && typeof parsed === "object" && typeof (parsed as { message?: unknown }).message === "string") onEvent({ type: "usage_alert", message: (parsed as { message: string }).message });
+      else if (eventName === "usage_alert" && parsed && typeof parsed === "object" && typeof (parsed as { message?: unknown }).message === "string") await onEvent({ type: "usage_alert", message: (parsed as { message: string }).message });
       else if (eventName === "done") {
         const payload = parsed as { content: string; assistantMessageId?: number };
         if (shouldOfferAskVVisualResult(payload.content)) {
           window.dispatchEvent(new CustomEvent("askv:show-results", { detail: { content: payload.content } }));
         }
-        onEvent({
+        await onEvent({
           type: "done",
           content: payload.content,
           assistantMessageId: payload.assistantMessageId,
         });
       }
-      else if (eventName === "error") onEvent({ type: "error", message: (parsed as { message: string }).message });
+      else if (eventName === "error") await onEvent({ type: "error", message: (parsed as { message: string }).message });
     }
   }
 }
