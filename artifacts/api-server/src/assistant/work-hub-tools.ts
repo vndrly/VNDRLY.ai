@@ -272,7 +272,7 @@ const entries: Entry[] = [
     announcementId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
-  write("manage_work_hub_shift", "tasks", "Create, claim, update, reschedule, or cancel an authorized shift after confirmation. To open or close claims on an existing future unassigned shift, use update with payload {open:boolean}, its exact current expectedVersion and owner. Cancelled or completed shifts cannot reopen. This changes planning availability, not attendance.", writeSchema({
+  write("manage_work_hub_shift", "tasks", "Create, claim, update, reschedule, or cancel an authorized shift after confirmation. To open or close claims on an existing future unassigned shift, use update with payload {open:boolean}, its exact current expectedVersion and owner. Cancelled or completed shifts cannot reopen. This changes planning availability, not attendance. For Gate shift creation resolve the station via query_gate_stations, use context kind gate with the site ID, and supply title, startsAt and endsAt (UTC ISO), timezone (IANA), siteLocationId, gateStationId, requiredStaffCount, workStartPolicy (on_site or paid_travel), and assigneeUserIds (empty for unassigned). Default to one required worker, on_site, and open:false as on the Calendar form unless the user requests otherwise.", writeSchema({
     action: { type: "string", enum: ["create", "claim", "update", "reschedule", "cancel"] },
     shiftId: identifier(),
     payload: { type: "object" },

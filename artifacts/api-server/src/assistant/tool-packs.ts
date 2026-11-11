@@ -244,6 +244,7 @@ export function toolsForRealtime(args: {
   if (role === "vendor" && /\/gate(?:\/history\/billing|-billing)(?:\/|$)/i.test(path)) {
     allowed.add("configure_gate_daily_billing"); allowed.add("invoice_gate_post");
   }
+  if (/(?:\/gate(?:\/|$)|\/gate-map(?:[/?#]|$)|\/work-hub\/calendar(?:[/?#]|$))/i.test(path)) allowed.add("manage_work_hub_shift");
   const inWorkHub = /\/work-hub(?:\/|$)/i.test(path);
   if (/\/(?:profile|compliance)(?:\/|$)/i.test(path)) {
     for (const name of ["get_work_hub_settings", "set_work_hub_language", "get_work_hub_connections", "prepare_work_hub_profile", "confirm_work_hub_profile", "get_work_hub_gate_locations", "prepare_work_hub_gate_location", "confirm_work_hub_gate_location"]) allowed.add(name);
