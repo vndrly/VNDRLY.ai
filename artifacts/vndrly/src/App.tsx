@@ -267,8 +267,8 @@ function AuthenticatedRouter() {
         <Route path="/print-hotlist" component={PrintHotlistPage} />
         <Route path="/switch-account"><Login allowAccountSwitch /></Route>
         <Route path="/operations-display/:displayId/:monitorId">{params => <OperationsDisplayViewer displayId={params.displayId} monitorId={params.monitorId} />}</Route>
-        <Route path="/operations-display" component={OperationsDisplayDirectory} />
-        <Route path="/organization-subscription"><OrganizationSubscription /></Route>
+        <Route path="/operations-display"><OperationsDisplayDirectory /></Route>
+        <Route path="/organization-subscription" component={OrganizationSubscription} />
         {user && <Route path="/work-hub/administration/displays"><Layout><OperationsDisplayDirectory embedded /></Layout></Route>}
         {user && <Route path="/work-hub/form/:instanceId" component={FormCampaignLinkRedirect}/>}
         {user && <Route path="/work-hub/campaign/:campaignId" component={FormCampaignLinkRedirect}/>}
