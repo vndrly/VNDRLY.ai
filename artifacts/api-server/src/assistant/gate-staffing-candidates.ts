@@ -107,7 +107,7 @@ export async function readGateStaffingCandidatesForClient(
       const unsupportedRecurrence = availability.rows.some(item => item.recurrence != null);
       const explicitlyUnavailable = availability.rows.some(item => item.available === false);
       const recordedAvailable = availability.rows.some(item => item.available === true && item.recurrence == null && date(item.starts_at) <= start && date(item.ends_at) >= end);
-      const eligibility = evaluateAssignmentEligibility({ accountState: "active", credentialsCurrent: requirements.every(item => item.currentRecorded), overlaps: overlaps || meeting.rows.length > 0, restWindow, overtime });
+      const eligibility = evaluateAssignmentEligibility({ accountState: "active", credentialsCurrent: requirements.every(item => item.currentRecorded), overlaps: overlaps || meeting.rows.length > 0, restWindow, overtime, overtimeAdvisory: true });
       const pickupCommitments = rawPerson.pickup_shifts === true ? await client.query(`SELECT s.starts_at,s.ends_at FROM work_hub_shift_assignments a JOIN work_hub_shifts s ON s.id=a.shift_id
         WHERE a.user_id=$1 AND s.id<>$2 AND a.status NOT IN ('cancelled','declined') AND s.milestone_status<>'cancelled'
         AND s.ends_at>$3 AND s.starts_at<$4

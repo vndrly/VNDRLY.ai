@@ -87,7 +87,7 @@ async function eligibilityFor(workerUserId: number, shiftId: string, vendorId: n
   const overlaps = assigned.some((item) => item.startsAt < shift.endsAt && item.endsAt > shift.startsAt);
   const restWindow = assigned.some((item) => Math.abs(item.endsAt.getTime() - shift.startsAt.getTime()) < 8 * 60 * 60_000 || Math.abs(shift.endsAt.getTime() - item.startsAt.getTime()) < 8 * 60 * 60_000);
   const weekHours = assigned.reduce((sum, item) => sum + Math.max(0, item.endsAt.getTime() - item.startsAt.getTime()), shift.endsAt.getTime() - shift.startsAt.getTime()) / 3_600_000;
-  return { shift, eligibility: { accountState, credentialsCurrent, overlaps, overtime: weekHours > 40, restWindow } };
+  return { shift, eligibility: { accountState, credentialsCurrent, overlaps, overtime: weekHours > 40, overtimeAdvisory: Boolean(shift.gateStationId), restWindow } };
 }
 
 router.get("/implementation-a/workforce/ticket-assignment-candidates", async (req, res) => {
