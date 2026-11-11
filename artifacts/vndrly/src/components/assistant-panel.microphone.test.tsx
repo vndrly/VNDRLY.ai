@@ -95,6 +95,14 @@ it('keeps empty submissions disabled while allowing the Send hover surface to re
   expect(send.disabled).toBe(false);
 });
 
+it('submits typed text from the embedded page when voice is unavailable', () => {
+  state.assistant.send.mockClear();
+  render(<QueryClientProvider client={new QueryClient()}><AssistantPanel embedded open onOpenChange={() => {}} /></QueryClientProvider>);
+  fireEvent.change(screen.getByTestId('assistant-input'), { target: { value: 'Open Gate Map' } });
+  fireEvent.click(screen.getByTestId('assistant-send'));
+  expect(state.assistant.send).toHaveBeenCalledWith('Open Gate Map');
+});
+
 it('uses the selected input for fallback recording and releases it when AskV is muted', async () => {
   const queryClient = new QueryClient();
   const panel = () => <QueryClientProvider client={queryClient}><AssistantPanel open onOpenChange={() => {}} /></QueryClientProvider>;
