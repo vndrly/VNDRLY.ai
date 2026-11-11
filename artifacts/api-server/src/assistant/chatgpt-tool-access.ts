@@ -14,6 +14,14 @@ import { ticketRecordActionsForRole } from "./ticket-workflow-tools";
 
 export type ChatGptAssistantScope = "gate:read" | "work_hub:read" | "gate:write" | "work_hub:write" | ChatGptReadCapabilityScope | ChatGptWriteCapabilityScope;
 
+// Connection grants cover the existing catalogue; the in-app page's focused
+// presentation must not remove already granted connection capabilities.
+function workHubCatalogue(session: SessionPayload): AskVToolDefinition[] {
+  return ASK_V_TOOL_REGISTRY.filter(tool => Boolean(tool.workHubFamily)
+    && (tool.roles.includes(session.role as never) || tool.roles.includes("any"))
+    && (!tool.companyAdminOnly || session.membershipRole === "admin"));
+}
+
 const hasOnboardingScope = (session: SessionPayload) =>
   (session.role === "field_employee" && Boolean(session.vendorPeopleId)) ||
   (session.membershipRole === "admin" && ((session.role === "partner" && Boolean(session.partnerId)) || (session.role === "vendor" && Boolean(session.vendorId))));
@@ -74,7 +82,7 @@ export function chatGptActionTools(session: SessionPayload, scopes: readonly str
   if (!session.userId || !["admin", "partner", "vendor", "field_employee"].includes(session.role ?? "")) return [];
   const gate = scopes.includes("gate:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/gate", workflow: "gate" }).filter((tool) => GATE_ACTIONS.has(tool.name)) : [];
   if (scopes.includes("gate:write")) gate.push(...ASK_V_TOOL_REGISTRY.filter(tool => tool.name === "manage_gate_shift" && tool.roles.includes(session.role as never)));
-  const hub = scopes.includes("work_hub:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/work-hub/askv" }).filter((tool) => Boolean(tool.workHubFamily) && tool.mutating && (tool.name !== "request_native_location" || scopes.includes("crew:read"))) : [];
+  const hub = scopes.includes("work_hub:write") ? workHubCatalogue(session).filter((tool) => tool.mutating && (tool.name !== "request_native_location" || scopes.includes("crew:read"))) : [];
   const names = new Set<string>(Object.entries(CHATGPT_WRITE_CAPABILITIES).filter(([scope]) => scopes.includes(scope)).flatMap(([, capability]) => [...capability.tools]));
   const additional = ASK_V_TOOL_REGISTRY.filter(tool => names.has(tool.name)
     && (tool.name !== "confirm_operations_displays_action" || ((session.role === "admin" || session.membershipRole === "admin") && Boolean(session.vendorId || session.partnerId)))
@@ -119,10 +127,7 @@ export function chatGptReadableTools(
     }).filter((tool) => GATE_DRAFT_TOOLS.has(tool.name) || /^(query_gate_|query_shift_notes$|search_gate_history$|query_active_visitors$|query_visits$|find_active_visitors$)/.test(tool.name)));
   }
   if (scopes.includes("work_hub:read")) {
-    candidates.push(...toolsForRealtime({
-      role: session.role, membershipRole: session.membershipRole,
-      path: "/work-hub/askv",
-    }).filter((tool) => Boolean(tool.workHubFamily)));
+    candidates.push(...workHubCatalogue(session));
   }
   return [...new Map(candidates.filter((tool) =>
     (tool.name!=="query_gate_daily_billing"||gateDailyBillingAvailable(session,scopes)) && (tool.name !== "query_gate_coverage_map" || scopes.includes("crew:read")) && (tool.name!=="query_work_hub_availability"||workHubAvailabilityAvailable(session,scopes)) && !tool.mutating && tool.confirmation === "none" && tool.execution !== "client" && (tool.name!=="query_ticket_invoice_candidates"||ticketInvoiceCandidatesAvailable(session,scopes)) && (tool.name!=="query_calendar_reschedule_snapshot"||calendarRescheduleAvailable(session,scopes,false)) && (tool.name!=="query_work_hub_meeting_responses"||calendarResponseAvailable(session,scopes,false)) && (!["query_work_hub_away_responder","query_work_hub_away_channels"].includes(tool.name)||awayResponderAvailable(session,scopes,false)),

@@ -122,9 +122,19 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const contextVersion = useRef(0);
   const contextQueue = useRef<Promise<void>>(Promise.resolve());
   const sharedVoiceTurn = useRef(false);
+  const localSpeechPending = useRef(false);
   const sharedVoiceQueue = useRef(Promise.resolve());
   const baseAssistant = useAssistant({
-    onAssistantReply: text => { replies.current.forEach(listener => listener(text)); if (sharedVoiceTurn.current && sessionRef.current && !mutedRef.current) speakAskV(text, "en-US", true); },
+    onAssistantReply: text => {
+      replies.current.forEach(listener => listener(text));
+      const active = sessionRef.current;
+      if (sharedVoiceTurn.current && active && !mutedRef.current) {
+        localSpeechPending.current = true;
+        writeState("speaking");
+        const language = userRef.current?.preferredLanguage === "es" ? "es-US" : userRef.current?.preferredLanguage === "pt" ? "pt-BR" : "en-US";
+        speakAskV(text, language, true, () => { if (sessionRef.current !== active) return; localSpeechPending.current = false; if (!mutedRef.current) writeState("listening"); });
+      }
+    },
     onClientIntent: intent => executeAskVClientIntent(intent, pathRef.current),
     onMutation: emitAskVDataChanged,
     pagePath: nativeAskVContextPath(pathname),
@@ -142,6 +152,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     idleRef.current = null;
   }, []);
   const dispose = useCallback(async (next: AskVVoiceState = "stopped", keepWake = false, releaseOwner = true) => {
+    localSpeechPending.current = false;
     generation.current += 1;
     startPromise.current = null;
     abortRef.current?.abort(); abortRef.current = null;
@@ -364,7 +375,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
               check(); clearIdle(); writeState("thinking");
               sharedVoiceTurn.current = true;
               try { await assistantRef.current.send(text, "ios_voice"); }
-              finally { sharedVoiceTurn.current = false; if (valid()) writeState("listening"); }
+              finally { sharedVoiceTurn.current = false; if (valid() && stateRef.current !== "speaking") writeState("listening"); }
             });
             sharedVoiceQueue.current = turn;
             return turn;
@@ -497,7 +508,9 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           },
           onSpeechStarted: () => {
             if (!valid()) return;
+            localSpeechPending.current = false;
             stopAskVSpeech();
+            assistantRef.current.stopGeneration();
             turnStartedAfterUserEventId.current = latestUserTranscript.current?.sessionId === session.sessionId
               ? latestUserTranscript.current.eventId : null;
             clearIdle();
@@ -513,7 +526,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             clearIdle(); writeState("speaking");
           } },
           onDone: () => {
-            if (!valid() || userSpeakingRef.current) return;
+            if (!valid() || userSpeakingRef.current || localSpeechPending.current) return;
             clearIdle(); writeState("listening");
             idleRef.current = setTimeout(() => {
               if (!valid() || stateRef.current !== "listening") return;
@@ -563,18 +576,18 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   }, [clearIdle, ensurePreferences, flushTranscripts, recordTranscript, syncContext, writeState]);
   startRef.current = startConversation;
 
-  const send = useCallback(async (text: string) => {
+  const send = useCallback(async (text: string, inputMode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string) => {
     if (!text.trim()) return;
     if (startPromise.current) await startPromise.current;
     const session = sessionRef.current;
-    const accepted = !mutedRef.current && clientRef.current?.sendText(text);
+    const accepted = !confirmationReference && !mutedRef.current && clientRef.current?.sendText(text);
     if (accepted && session) {
       session.turnStartedAt = Date.now();
       clearIdle(); writeState("thinking");
       recordTranscript({ eventId: accepted + ":user", role: "user", content: text.trim() }, session);
       return;
     }
-    try { await flushTranscripts(); await assistantRef.current.send(text); }
+    try { await flushTranscripts(); await assistantRef.current.send(text, inputMode, confirmationReference); }
     catch { if (mounted.current) setError("askv.voiceHistoryFailed"); }
   }, [clearIdle, flushTranscripts, recordTranscript, writeState]);
   const setMuted = useCallback((next: boolean) => {

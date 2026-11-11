@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ASK_V_TOOL_REGISTRY } from "./tool-registry";
-import { toolsForRealtime, workHubToolFamilyForPath } from "./tool-packs";
+import { toolsForRealtime, workHubToolFamilyForPath, VOICE_WORKFLOWS } from "./tool-packs";
 import { workHubContextRefSchema } from "@workspace/api-zod";
 import { bindWorkHubToolScope, resolveExecutableWorkHubToolRequest } from "./work-hub-tool-runtime";
 
@@ -170,8 +170,11 @@ describe("Work Hub AskV web/iOS parity", () => {
     );
   });
 
-  it("loads the complete role-safe toolbox on the dedicated Ask V page", () => {
-    const companyAdmin = namesFor("/work-hub/askv", "vendor", "admin");
+  it("discovers the complete role-safe toolbox through focused selections on the dedicated Ask V page", () => {
+    expect(namesFor("/work-hub/askv", "vendor", "admin")).toContain("select_tool_pack");
+    expect(namesFor("/work-hub/askv", "vendor", "admin").length).toBeLessThan(40);
+    const catalogue = (membershipRole: string) => [...new Set(VOICE_WORKFLOWS.flatMap(workflow => toolsForRealtime({ role: "vendor", membershipRole, workflow }).map(tool => tool.name)))];
+    const companyAdmin = catalogue("admin");
     expect(companyAdmin).toEqual(expect.arrayContaining([
       "send_work_hub_message",
       "manage_work_hub_task",
@@ -183,7 +186,7 @@ describe("Work Hub AskV web/iOS parity", () => {
       "manage_work_hub_export",
       "manage_work_hub_legal_hold",
     ]));
-    const member = namesFor("/work-hub/askv", "vendor", "member");
+    const member = catalogue("member");
     expect(member).toContain("send_work_hub_message");
     expect(member).not.toContain("manage_work_hub_export");
   });

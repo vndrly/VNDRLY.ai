@@ -113,7 +113,7 @@ function write(
   inputSchema: JsonSchema,
   companyAdminOnly = false,
 ): Entry {
-  if (assistantPayloadSchemas[name]) inputSchema = { ...inputSchema, properties: { ...inputSchema.properties, payload: assistantPayloadSchemas[name] } };
+  if (assistantPayloadSchemas[name]) inputSchema = { ...inputSchema, properties: { ...(inputSchema.properties as Record<string, unknown>), payload: assistantPayloadSchemas[name] } };
   return {
     tool: { name, description, input_schema: inputSchema },
     family,

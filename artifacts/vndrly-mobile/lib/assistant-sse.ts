@@ -1,4 +1,5 @@
 export type StreamEvent =
+  | { type: "confirmation"; reference: string }
   | { type: "token"; delta: string }
   | { type: "tool"; name: string; status: "start" | "end" }
   | { type: "client_intent"; intent: import("./askv-client-tools").AskVClientIntent }
@@ -28,7 +29,9 @@ function dispatchSseBlock(raw: string, onEvent: (evt: StreamEvent) => void): voi
   } catch {
     return;
   }
-  if (eventName === "token") {
+  if (eventName === "confirmation" && typeof (parsed as { reference?: unknown })?.reference === "string") {
+    onEvent({ type: "confirmation", reference: (parsed as { reference: string }).reference });
+  } else if (eventName === "token") {
     onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
   } else if (eventName === "tool") {
     onEvent({

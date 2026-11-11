@@ -1,3 +1,4 @@
+import { preferencesPayload, crewNamePayload, crewMemberPayload } from "../work-hub/assistant-payload-schemas";
 import { randomUUID } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
@@ -33,22 +34,12 @@ import {
 
 const router: IRouter = Router();
 type Actor = SessionPayload & { userId: number };
-const name = z.string().trim().min(1).max(120);
+const name = crewNamePayload.shape.name;
 const ownerSchema = z.object({
   type: z.enum(["vendor", "partner"]),
   id: z.number().int().positive(),
 });
-const preferenceSchema = z.object({
-  pinned: z.array(z.string().max(100)).max(40).default([]),
-  order: z.array(z.string().max(100)).max(40).default([]),
-  favorites: z.array(z.string().max(100)).max(500).default([]),
-  muted: z.array(z.string().max(100)).max(500).default([]),
-  drafts: z
-    .record(z.string().max(100), z.string().max(20000))
-    .refine((x) => Object.keys(x).length <= 100)
-    .default({}),
-  lastConversationId: z.string().uuid().nullable().default(null),
-});
+const preferenceSchema = preferencesPayload;
 function owns(a: Actor, type: string, id: number) {
   return type === "vendor" ? a.vendorId === id : a.partnerId === id;
 }
@@ -323,7 +314,7 @@ router.post("/work-hub/crews/:id/members", async (req, res) => {
   const p = z
     .object({
       userId: z.number().int().positive(),
-      mode: z.enum(["owner", "member"]).default("member"),
+      mode: crewMemberPayload.shape.mode,
     })
     .parse(req.body);
   if (!(await memberOf(p.userId, crew.ownerOrgType, crew.ownerOrgId)))

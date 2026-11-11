@@ -316,7 +316,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           id: number;
           role: "user" | "assistant";
           content: string;
-          feedbackRating?: AssistantFeedbackRating | null;
+          feedbackRating?: AssistantFeedbackRating | null; confirmationReference?: string;
         }>;
       };
       // Final stale-check after the second await. If anything mutated
@@ -332,7 +332,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           serverId: m.id,
           role: m.role,
           content: m.content,
-          feedbackRating: m.feedbackRating ?? null,
+          feedbackRating: m.feedbackRating ?? null, confirmationReference: m.confirmationReference ?? undefined,
         }));
       setConversationId(detail.id);
       setMessages(restored);
@@ -561,7 +561,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           serverId: message.id,
           role: message.role,
           content: message.content,
-          feedbackRating: message.feedbackRating ?? null,
+          feedbackRating: message.feedbackRating ?? null, confirmationReference: message.confirmationReference ?? undefined,
         })));
         window.dispatchEvent(new CustomEvent("askv:cross-device-state", { detail: { conversationId: detail.id } }));
       } catch {

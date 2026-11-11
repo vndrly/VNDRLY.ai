@@ -33,13 +33,7 @@ import { guidedResult } from './guided-training';
 import {certificationExamRead,certificationExamResult} from './certification-exam';
 import {isCanonicalEnergySafetyCourse} from './certification-issuer';
 import {trainingQualificationContext} from './training-qualification-context';
-const response = z.object({
-  acknowledged: z.boolean().default(false),
-  lessonIds: z.array(z.string()).max(50).default([]),
-  answers: z.record(z.string(), z.array(z.string()).max(20)).default({}),
-  values: z.record(z.string(), z.unknown()).default({}),
-  choices: z.array(z.string()).max(20).default([]),
-});
+import { libraryResponsePayload as response } from "./assistant-payload-schemas";
 export async function getAssignedLibrary(actor: LibraryActor, id: string) {
   const own = await readAssignedLibrary(db, actor, id),
     history = await db

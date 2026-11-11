@@ -152,6 +152,19 @@ describe("Change Over database guarantees", () => {
     await pool.query(migration);
     await pool.query(migration);
   });
+  it("returns only currently authorized active station names in the joined lookup", async () => {
+    const f = await fixture();
+    const hiddenStation = randomUUID();
+    await pool.query("INSERT INTO gate_stations(id,site_id,name,active) VALUES($1,$2,'Inactive lookup gate',false)", [hiddenStation, f.site]);
+    const joined = await listChangeOverSites(f.outgoing, "operational", true);
+    const site = joined.find(item => item.id === f.site);
+    expect(site?.lookupStations).toEqual(expect.arrayContaining([expect.objectContaining({ id: f.station })]));
+    expect(site?.lookupStations.map((station: { id: string }) => station.id)).not.toContain(hiddenStation);
+    const ordinary = await listChangeOverSites(f.outgoing);
+    expect(ordinary.every(item => !("lookupStations" in item))).toBe(true);
+    await pool.query("UPDATE users SET session_version=session_version+1 WHERE id=$1", [f.outgoing.userId]);
+    await expect(listChangeOverSites(f.outgoing, "operational", true)).rejects.toThrow();
+  });
   it("rolls back all work on a failed transfer transaction", async () => {
     await expect(
       changeOverTransaction(async (client) => {

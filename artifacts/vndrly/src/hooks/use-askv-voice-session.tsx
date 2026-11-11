@@ -8,6 +8,7 @@ import { useAskVRealtime } from '@/hooks/use-askv-realtime';
 import { useAskVWakeListener } from '@/hooks/use-askv-wake-listener';
 import { readAskVAcrossVndrly, readAskVMuted, writeAskVMuted } from '@/lib/askv-voice-preferences';
 import { speakAskV, stopAskVSpeech } from '@/lib/askv-speech';
+import { createAskVCapabilityCache } from '@/lib/askv-capability-cache';
 import { clearAskVClientDrafts } from '@/lib/askv-client-intents';
 import { AskVTranscriptQueue } from '@/lib/askv-transcript-queue';
 import { isAskVNaturalVoiceEnabled } from '@/lib/askv-natural-voice';
@@ -54,21 +55,17 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   const browserAvailability = useMemo(currentBrowserVoiceAvailability, []);
   const [permissionAvailability, setPermissionAvailability] = useState<AskVVoiceAvailability>({ status: 'available', message: null });
   const [serverAvailability, setServerAvailability] = useState<AskVVoiceAvailability | null>(null);
-  const capabilities = useRef<Promise<AskVVoiceAvailability> | undefined>(undefined);
   const startAttempt = useRef(0);
-  const ensureCapabilities = useCallback(() => {
-    capabilities.current ??= fetch(`${BASE}/api/assistant/voice/capabilities`, { credentials: 'include' })
+  const ensureCapabilities = useMemo(() => createAskVCapabilityCache(() =>
+    fetch(`${BASE}/api/assistant/voice/capabilities`, { credentials: 'include' })
       .then(async response => {
-        if (!response.ok) { capabilities.current = undefined; return { status: 'connection_failed', message: response.status === 401
+        if (!response.ok) { return { status: 'connection_failed', message: response.status === 401
           ? 'Your session expired. Sign in again to use natural voice.'
           : 'AskV could not verify voice availability. Check your connection and try again.' } as AskVVoiceAvailability; }
         return capabilityVoiceAvailability(await response.json());
       }).catch(() => {
-        capabilities.current = undefined;
         return { status: 'connection_failed', message: 'AskV could not verify voice availability. Check your connection and try again.' } as AskVVoiceAvailability;
-      });
-    return capabilities.current;
-  }, []);
+      }), value => value.status === 'available'), []);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [microphoneOwner, setMicrophoneOwner] = useState(askVMicrophone.owner);
   const spokenTurn = useRef(false);

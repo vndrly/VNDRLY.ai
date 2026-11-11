@@ -7,11 +7,12 @@ export function classifyToolResult(output: string, mutating: boolean): AskVToolR
       requiresConfirmation?: unknown;
       ok?: unknown;
       status?: unknown;
+      success?: unknown;
     };
     if (parsed === null || typeof parsed !== "object") return "failure";
     if (Array.isArray(parsed)) return mutating ? "failure" : "success";
     if (mutating && parsed.requiresConfirmation === true) return "requires_confirmation";
-    if (parsed.error || parsed.ok === false || ["failed", "failure", "rejected", "unavailable", "unknown", "outcome_unknown"].includes(String(parsed.status))) return "failure";
+    if (parsed.error || parsed.ok === false || parsed.success === false || ["error", "failed", "failure", "rejected", "unavailable", "unknown", "outcome_unknown"].includes(String(parsed.status))) return "failure";
     if (mutating) {
       const record = parsed as Record<string, unknown>;
       const identity = ["id", "operationId", "taskId", "ticketId", "visitId", "messageId", "resourceId", "shiftId", "eventId", "invoiceId"].some(key => typeof record[key] === "string" || typeof record[key] === "number");

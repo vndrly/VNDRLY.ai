@@ -5,6 +5,9 @@ const reviewedFamilies = ['manage_work_hub_crew_member', 'manage_work_hub_channe
 for (const name of reviewedFamilies) families.add(name);
 const workforceOperations = ['assign', 'acknowledge', 'evaluate', 'escalate'];
 function operations(tool: AskVToolDefinition): string[] {
+  // These installed connection tools historically use an explicit action field.
+  // Improving their schema must not rename the existing public tool identities.
+  if (["confirm_field_trips_action", "confirm_incident_response_action"].includes(tool.name)) return [];
   if (tool.name === 'prepare_workforce_coverage_action' || tool.name === 'confirm_workforce_coverage_action') return workforceOperations;
   const action = (tool.inputSchema.properties as Record<string, unknown> | undefined)?.action as { enum?: string[] } | undefined;
   return action?.enum ?? [];

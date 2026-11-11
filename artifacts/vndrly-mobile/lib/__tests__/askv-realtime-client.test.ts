@@ -34,6 +34,23 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("mobile Realtime transport", () => {
+  it("routes a spoken turn once to the shared engine and never executes realtime tools", async () => {
+    const onUserText = vi.fn().mockResolvedValue(undefined);
+    const onToolCall = vi.fn();
+    const client = await createAskVRealtimeClient({ ...options(), onUserText, onToolCall, greeting: "Hello", history: [{ role: "user", content: "old" }] });
+    await client.connect();
+    expect(String(vi.mocked(fetch).mock.calls[0][0])).toContain("brain=shared");
+    expect(rtc.channels[0].sent).toEqual([]);
+    const spoken = { type: "conversation.item.input_audio_transcription.completed", item_id: "spoken-1", transcript: "Open Sand Roman two" };
+    await emit(spoken); await emit(spoken);
+    await emit({ type: "response.function_call_arguments.done", call_id: "forged", name: "confirm_visitor_check_out", arguments: "{}" });
+    expect(onUserText).toHaveBeenCalledExactlyOnceWith("Open Sand Roman two");
+    expect(onToolCall).not.toHaveBeenCalled();
+    expect(client.sendText("Next page")).toBe(false);
+    client.close();
+    await emit({ ...spoken, item_id: "late" });
+    expect(onUserText).toHaveBeenCalledTimes(1);
+  });
   it("stops permission-delayed microphone tracks after close and never posts an SDP", async () => {
     let resolve!: (value: any) => void;
     rtc.getMedia.mockImplementation(() => new Promise(done => { resolve = done; }));

@@ -127,6 +127,12 @@ export function typedAskVPendingAction(session: SessionPayload, conversationId: 
   return { name: pending.toolName, arguments: pending.arguments, confirmationReference: pending.idempotencyKey };
 }
 
+/** Display reference only; execution still requires current context and exact arguments. */
+export function typedAskVPreviewReference(session: SessionPayload, conversationId: number) {
+  if (!session.userId) return null;
+  return askvPendingConfirmations.peek(session.userId, organizationKeyFromSession(session), askVConfirmationScopeId(conversationId, `typed:${conversationId}`))?.idempotencyKey ?? null;
+}
+
 const typedTurnApprovals = new Map<
   string,
   { key: string; expiresAt: number }

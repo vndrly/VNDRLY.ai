@@ -18,6 +18,7 @@ export type VConnectionSelection = { connectionId: string; scope: "company" | "p
 export type AssistantFeedbackRating = "helpful" | "unhelpful";
 
 export interface AssistantMessage {
+  confirmationReference?: string;
   id: string;
   role: "user" | "assistant";
   content: string;
@@ -166,7 +167,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           id: number;
           role: "user" | "assistant";
           content: string;
-          feedbackRating?: AssistantFeedbackRating | null;
+          feedbackRating?: AssistantFeedbackRating | null; confirmationReference?: string;
         }>;
       };
       if (myVersion !== restoreVersionRef.current || streamingRef.current) return;
@@ -178,7 +179,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           serverId: m.id,
           role: m.role,
           content: m.content,
-          feedbackRating: m.feedbackRating ?? null,
+          feedbackRating: m.feedbackRating ?? null, confirmationReference: m.confirmationReference ?? undefined,
         }));
       conversationIdRef.current = detail.id;
       setConversationId(detail.id);
@@ -202,7 +203,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   }, [startNew]);
 
   const send = useCallback(
-    async (text: string, inputMode: "ios_text" | "ios_voice" = "ios_text") => {
+    async (text: string, inputMode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string) => {
       const trimmed = text.trim();
       if (!trimmed || streamingRef.current) return;
 
@@ -237,6 +238,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
               headers: { accept: "text/event-stream" },
               body: JSON.stringify({
                 message: trimmed,
+                ...(confirmationReference ? { confirmationReference } : {}),
                 ...(convId !== null ? { conversationId: convId } : {}),
                 deviceContext: { sourceDeviceId },
                 ...(savedTask.current && isAuthScopeCurrent(savedTask.current.auth) ? { taskId: savedTask.current.id } : {}),
@@ -280,6 +282,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
         }
 
         let sawDone = false;
+        let serverMessageId: number | undefined;
         let sawError = false;
         let accumulatedContent = "";
         let completedText = "";
@@ -296,6 +299,8 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
                   : m,
               ),
             );
+          } else if (evt.type === "confirmation") {
+            setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, confirmationReference: evt.reference } : message));
           } else if (evt.type === "tool") {
             setActiveTool(evt.status === "start" ? evt.name : null);
           } else if (evt.type === "client_intent") {
@@ -309,6 +314,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
             setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, providers: [...new Set([...(message.providers ?? []), evt.provider])] } : message));
           } else if (evt.type === "done") {
             sawDone = true;
+            serverMessageId = evt.assistantMessageId;
             accumulatedContent = evt.content || accumulatedContent;
             setMessages((prev) =>
               prev.map((m) =>
@@ -338,6 +344,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
         const clientResults = await Promise.all(clientIntents);
         if (ac.signal.aborted || sendVersion !== restoreVersionRef.current) return;
         if (clientResults.length) {
+          if (serverMessageId) await assistantFetch(`/api/assistant/messages/${serverMessageId}/client-receipts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ receipts: clientResults.map(({ ok, message }) => ({ ok, message })) }), signal: ac.signal }).catch(() => undefined);
           completedText = clientResults.map(result => result.message).join(" ");
           setMessages(previous => previous.map(message => message.id === assistantId || message === previous[previous.length - 1]
             ? { ...message, content: completedText, pending: false } : message));
@@ -400,7 +407,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           serverId: message.id,
           role: message.role,
           content: message.content,
-          feedbackRating: message.feedbackRating ?? null,
+          feedbackRating: message.feedbackRating ?? null, confirmationReference: message.confirmationReference ?? undefined,
         })));
       } catch {
         // Keep the local conversation intact while the other device is offline.

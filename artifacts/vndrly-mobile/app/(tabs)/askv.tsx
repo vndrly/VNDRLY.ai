@@ -465,6 +465,10 @@ export default function AskVScreen() {
               <>
                 <AssistantMarkdown text={m.content || (m.pending ? "…" : "")} />
                 {m.providers?.length ? <Text style={{ color: colors.mutedForeground }}>{t("nativeCooperation.consulted", { providers: m.providers.join(", ") })}</Text> : null}
+                {m.confirmationReference && messageIndex === messages.length - 1 && !m.pending ? <View style={{ flexDirection: "row", gap: 8 }}>
+                  <LayeredPillButton color={brand.primary} disabled={streaming} onPress={() => void send("Confirm", "ios_text", m.confirmationReference)} testID="askv-confirm"><Text>{t("gatekeeper.voiceConfirm")}</Text></LayeredPillButton>
+                  <LayeredPillButton color={brand.primary} disabled={streaming} onPress={() => void send("Cancel", "ios_text", m.confirmationReference)} testID="askv-cancel"><Text>{t("common.cancel")}</Text></LayeredPillButton>
+                </View> : null}
                 {m.recovery ? <View style={{ gap: 6 }}>
                   {(["completed", "remaining", "needed"] as const).map(kind => m.recovery![kind].length ? <View key={kind}>
                     <Text style={{ color: colors.text, fontWeight: "700" }}>{t(`nativeCooperation.${kind}`)}</Text>

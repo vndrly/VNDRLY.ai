@@ -32,7 +32,7 @@ describe("AskV typed mutation confirmation", () => {
     const action = {...base,name:"manage_work_hub_task",input,conversationId:1190,contextKey:"/work-hub/tasks",phrase:"Create a task",execute};
     expect(JSON.parse(await runBoundTypedAskVTool(action)).requiresConfirmation).toBe(true);
     const prepared=typedAskVPendingAction(base.session,1190,action.contextKey);
-    expect(prepared).toEqual({name:action.name,arguments:input});
+    expect(prepared).toEqual({name:action.name,arguments:input,confirmationReference:expect.any(String)});
     expect(execute).not.toHaveBeenCalled();
     expect(typedAskVPendingAction({...base.session,userId:11},1190,action.contextKey)).toBeNull();
     expect(typedAskVPendingAction({...base.session,vendorId:23},1190,action.contextKey)).toBeNull();

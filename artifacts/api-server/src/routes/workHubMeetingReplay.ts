@@ -403,7 +403,7 @@ router.get("/:occurrenceId/replay", async (req, res, next): Promise<Response | v
   } catch (error) { return handle(error, res, next); }
 });
 
-const assignmentSchema = z.object({ assigneeUserId: z.number().int().positive(), requirement: z.enum(["optional", "required"]), dueAt: z.iso.datetime().nullable().optional() }).strict();
+const assignmentSchema = replayAssignmentPayload;
 router.post("/:occurrenceId/replay/assignments", express.json({ limit: "4kb" }), async (req, res, next): Promise<Response | void> => {
   try {
     const payload = assignmentSchema.parse(req.body);
@@ -534,3 +534,4 @@ function handle(error: unknown, res: Response, next: NextFunction): Response | v
 }
 
 export default router;
+import { replayAssignmentPayload } from "../work-hub/assistant-payload-schemas";

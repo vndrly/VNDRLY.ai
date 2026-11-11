@@ -1,3 +1,4 @@
+import { announcementPayload } from "../work-hub/assistant-payload-schemas";
 import { shiftCreatePayload, meetingCreatePayload, taskCreatePayload } from "../work-hub/assistant-payload-schemas";
 import { templatePayload, templateAssignmentPayload, checklistResponsePayload, formResponsePayload, approvalRequestPayload, approvalDecisionPayload } from "../work-hub/assistant-payload-schemas";
 import {indexChannelRepositoryFile} from "../work-hub/repository-file-reference";
@@ -1612,17 +1613,7 @@ router.post("/work-hub/announcements", async (req, res) => {
       "announcement.publish",
       envelope.context,
     );
-    const payload = z
-      .object({
-        title: z.string().trim().min(1).max(200),
-        body: z.string().trim().min(1).max(50_000),
-        recipientUserIds: z.array(z.number().int().positive()).min(1).max(5000),
-        urgency: z.enum(["normal", "urgent"]).default("normal"),
-        acknowledgementRequired: z.boolean().default(false),
-        channelId: z.string().uuid().optional(),
-        expiresAt: z.iso.datetime().nullable().optional(),
-      })
-      .parse(envelope.payload);
+    const payload = announcementPayload.parse(envelope.payload);
     let recipients = [...new Set(payload.recipientUserIds)];
     await assertOwnerUsers(envelope.owner, recipients);
     if (payload.channelId) {

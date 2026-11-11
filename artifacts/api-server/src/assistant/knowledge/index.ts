@@ -6,8 +6,9 @@
 export type KnowledgeRole = "admin" | "partner" | "vendor" | "field_employee" | "any";
 export const KNOWLEDGE_VERSION = "2026-11-11";
 const synonyms: Record<string, string> = { puerta: "gate", mapa: "map", tareas: "tasks", tarea: "task", factura: "invoice", facturas: "invoices", turno: "shift", archivos: "files", calendario: "calendar", equipo: "crew", permisos: "permissions", paginacion: "pagination" };
+const stopWords = new Set(["the", "and", "for", "how", "can", "you", "please", "what", "with", "this", "that", "from", "are", "have", "does", "show", "tell", "about", "como", "por", "favor", "que", "los", "las", "una", "del", "para", "con", "mostrar"]);
 function queryWords(query: string): string[] {
-  return [...new Set(query.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/\W+/).filter(word => word.length >= 3).flatMap(word => [word, ...(synonyms[word] ? [synonyms[word]] : [])]))];
+  return [...new Set(query.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/\W+/).filter(word => word.length >= 3 && !stopWords.has(word)).flatMap(word => [word, ...(synonyms[word] ? [synonyms[word]] : [])]))];
 }
 
 export interface KnowledgeDoc {
@@ -72,9 +73,9 @@ export function selectSignupDocs(
   const q = query.toLowerCase();
   const personaDocId = persona === "partner" ? "onboarding-partner" : "onboarding-vendor";
   const scored = eligible.map((d) => {
-    const hay = `${d.title} ${d.body}`.toLowerCase();
+    const hay = new Set(queryWords(`${d.title} ${d.body}`));
     const words = queryWords(q);
-    const keywordScore = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
+    const keywordScore = words.reduce((s, w) => s + (hay.has(w) ? 1 : 0), 0);
     // Persona boost: ensures the right onboarding overview floats to
     // the top even when the user's question doesn't mention the word
     // "partner"/"vendor" explicitly.
@@ -106,9 +107,9 @@ export function selectDocs(role: KnowledgeRole, query: string, max = 8): Knowled
   // doc's title or body. Cheap heuristic; good enough for Claude to
   // pick up on.
   const scored = eligible.map((d) => {
-    const hay = `${d.title} ${d.body}`.toLowerCase();
+    const hay = new Set(queryWords(`${d.title} ${d.body}`));
     const words = queryWords(q);
-    const score = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
+    const score = words.reduce((s, w) => s + (hay.has(w) ? 1 : 0), 0);
     return { doc: d, score };
   });
   // Stable sort: highest score first, but always include "any" docs
