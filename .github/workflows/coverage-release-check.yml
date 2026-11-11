@@ -128,7 +128,13 @@ jobs:
               sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' "$source"
             fi
           done
-          pnpm --filter @workspace/e2e exec playwright install --with-deps chromium
+          pnpm --filter @workspace/e2e exec playwright install chromium
+          # Hosted runners often already have Chromium's libraries. Verify that
+          # directly before depending on apt availability for extra packages.
+          if ! pnpm --filter @workspace/e2e exec node --input-type=module -e "import {chromium} from '@playwright/test'; const browser=await chromium.launch(); await browser.close();"; then
+            pnpm --filter @workspace/e2e exec playwright install-deps chromium
+            pnpm --filter @workspace/e2e exec node --input-type=module -e "import {chromium} from '@playwright/test'; const browser=await chromium.launch(); await browser.close();"
+          fi
       - name: Run required check
         shell: bash
         run: |
