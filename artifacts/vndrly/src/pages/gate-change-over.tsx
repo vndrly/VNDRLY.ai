@@ -14,6 +14,7 @@ import GateAssumeWatchFlyout from "@/components/gate-assume-watch-flyout";
 import GateGpsSelector from "@/components/gate-gps-selector";
 import GateSiteGateSelect from "@/components/gate-site-gate-select";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { haversineMeters } from "@workspace/map-utils";
 import { Link, useSearch } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -175,17 +176,41 @@ export default function GateChangeOverPage({
 }: {
   history?: boolean;
 }) {
+  const { user } = useAuth();
+  const selectionKey = !history && user?.userId
+    ? `gate-dashboard-selection:${user.userId}:${user.activeMembershipId ?? ""}:${user.vendorId ?? ""}:${user.partnerId ?? ""}`
+    : undefined;
+  return <GateChangeOverContent key={selectionKey ?? String(history)} history={history} selectionKey={selectionKey} />;
+}
+
+function GateChangeOverContent({ history, selectionKey }: { history: boolean; selectionKey?: string }) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const cache = useQueryClient();
   const routeSearch = useSearch();
   const linkedNote = history ? new URLSearchParams(routeSearch).get("handoffId") : null;
   const [onDuty, setOnDuty] = useState(false);
+  const [remembered] = useState(() => {
+    if (!selectionKey) return null;
+    try {
+      const saved = JSON.parse(localStorage.getItem(selectionKey) ?? "null");
+      return typeof saved?.siteId === "string" && typeof saved?.stationId === "string"
+        ? { siteId: saved.siteId, stationId: saved.stationId }
+        : null;
+    } catch {
+      return null;
+    }
+  });
+  const [entryParams] = useState(() => new URLSearchParams(window.location.search));
+  const linkedLocation = entryParams.has("siteId") || entryParams.has("stationId");
+  const locationChosen = useRef(false);
+  const prefillFromGps = !history && !linkedLocation && (user?.vendorRole === "gatekeeper" ||
+    Boolean(user?.managedSubcontractor?.siteGrants.some(grant => grant.role === "gatekeeper")));
   const [selectedSite, setSelectedSite] = useState(
-    () => new URLSearchParams(window.location.search).get("siteId") ?? "",
+    () => linkedLocation ? entryParams.get("siteId") ?? "" : remembered?.siteId ?? "",
   );
   const [selectedStation, setSelectedStation] = useState(
-    () => new URLSearchParams(window.location.search).get("stationId") ?? "",
+    () => linkedLocation ? entryParams.get("stationId") ?? "" : remembered?.stationId ?? "",
   );
   const [notes, setNotes] = useState("");
   const [itemText, setItemText] = useState("");
@@ -216,7 +241,36 @@ export default function GateChangeOverPage({
       ),
     retry: false,
   });
-  const siteId = selectedSite || String(sites.data?.sites[0]?.id ?? "");
+  const gpsGates = useQuery({
+    queryKey: ["gate-site-gate-options", ...gateScope, false],
+    queryFn: () => request<{ gates: { id: string; siteId: number; active?: boolean; latitude?: number | null; longitude?: number | null; geofenceRadiusM?: number | null }[] }>("/map"),
+    enabled: prefillFromGps && Boolean(gpsPosition && !locationChosen.current),
+    retry: false,
+  });
+  useEffect(() => {
+    if (!prefillFromGps || locationChosen.current || !gpsPosition || !sites.data || !gpsGates.data?.gates) return;
+    locationChosen.current = true;
+    const allowedSites = new Set(sites.data.sites.map(site => site.id));
+    let nearest: { id: string; siteId: number; distance: number } | undefined;
+    let tied = false;
+    for (const gate of gpsGates.data.gates) {
+      if (gate.active === false || !allowedSites.has(gate.siteId) || gate.latitude == null || gate.longitude == null) continue;
+      const distance = haversineMeters(gpsPosition.latitude, gpsPosition.longitude, gate.latitude, gate.longitude);
+      if (!Number.isFinite(distance) || distance > (gate.geofenceRadiusM ?? 500)) continue;
+      if (!nearest || distance < nearest.distance) {
+        nearest = { id: gate.id, siteId: gate.siteId, distance };
+        tied = false;
+      } else if (distance === nearest.distance) {
+        tied = true;
+      }
+    }
+    if (nearest && !tied) {
+      setSelectedSite(String(nearest.siteId));
+      setSelectedStation(nearest.id);
+    }
+  }, [prefillFromGps, gpsPosition, sites.data, gpsGates.data]);
+  const allowedSite = sites.data?.sites.some(site => String(site.id) === selectedSite);
+  const siteId = (history || allowedSite ? selectedSite : "") || String(sites.data?.sites[0]?.id ?? "");
   const stations = useQuery({
     queryKey: ["change-over-stations", ...gateScope, siteId, history],
     staleTime: 60_000,
@@ -227,14 +281,15 @@ export default function GateChangeOverPage({
     enabled: Boolean(siteId),
     retry: false,
   });
-  const stationId = selectedStation || stations.data?.stations[0]?.id || "";
+  const allowedStation = allowedSite && stations.data?.stations.some(station => station.id === selectedStation);
+  const stationId = (history || allowedStation ? selectedStation : "") || stations.data?.stations[0]?.id || "";
   const gpsSite=sites.data?.sites.find(s=>String(s.id)===siteId),gpsGate=stations.data?.stations.find(s=>s.id===stationId);
   const latitude=gpsGate?.latitude??gpsSite?.latitude,longitude=gpsGate?.longitude??gpsSite?.longitude;
   const gpsFence=evaluateGpsFence({gps:gpsPosition?"locked":"unavailable",origin:gpsPosition,site:latitude!=null&&longitude!=null?{latitude,longitude,siteRadiusMeters:gpsGate?.geofenceRadiusM??500}:null});
   const gpsStatus=gpsFence.milesToSite==null?"unavailable":gpsFence.insideFence?"verified":"mismatch";
   const gpsLabel=t(gpsStatus==="verified"?"gatekeeper.gpsAtSelectedLocation":gpsStatus==="mismatch"?"gatekeeper.gpsOutsideGeofence":"gatekeeper.gpsUnavailable");
   const state = useQuery({
-    queryKey: ["change-over-state", user?.userId, stationId],
+    queryKey: ["change-over-state", ...gateScope, stationId],
     queryFn: () => request<ChangeOverState>(`/${stationId}/state`),
     enabled: Boolean(stationId) && !history,
     retry: false,
@@ -360,7 +415,19 @@ export default function GateChangeOverPage({
     sites.error || stations.error || (history ? log.error : state.error);
   const locationSelectors = !history ? <GateSiteGateSelect
     sites={sites.data?.sites ?? []} siteId={Number(siteId)} gate={gpsGate}
-    onChange={(nextSite, nextGate) => { setSelectedSite(String(nextSite)); setSelectedStation(nextGate); }}
+    onChange={(nextSite, nextGate) => {
+      locationChosen.current = true;
+      const siteId = String(nextSite);
+      setSelectedSite(siteId);
+      setSelectedStation(nextGate);
+      if (selectionKey) {
+        try {
+          localStorage.setItem(selectionKey, JSON.stringify({ siteId, stationId: nextGate }));
+        } catch {
+          // The selection remains usable for this visit when browser storage is unavailable.
+        }
+      }
+    }}
     gpsStatus={gpsStatus} gpsLabel={gpsLabel}
   /> : (
     <div className={history ? "flex flex-wrap gap-3" : "gate-dashboard-location-selectors"}>

@@ -120,7 +120,76 @@ beforeEach(() => {
   );
 });
 const caches: QueryClient[] = [];
-afterEach(() => { cleanup(); for (const cache of caches.splice(0)) cache.clear(); });
+afterEach(() => {
+  cleanup();
+  localStorage.removeItem("gate-dashboard-selection:1:::");
+  for (const cache of caches.splice(0)) cache.clear();
+});
+it("restores the selected gate after reopening Dashboard without GPS and ignores an unavailable gate", async () => {
+  const base = api.getMockImplementation()!;
+  const otherGate = { id: "gate-2", name: "Gate 2", siteId: 1 };
+  let active = true;
+  api.mockImplementation(async (path: string) => {
+    const gates = [{ id: "gate", name: "Main gate", siteId: 1 }, ...(active ? [otherGate] : [])];
+    if (path === "/map") return { gates };
+    if (path.startsWith("/stations")) return { stations: gates };
+    return base(path);
+  });
+  mount();
+  const selector = await screen.findByRole("combobox", { name: "changeOver.site | changeOver.gate" });
+  fireEvent.focus(selector);
+  await screen.findByRole("option", { name: /Gate 2/ });
+  fireEvent.change(selector, { target: { value: otherGate.id } });
+  await waitFor(() => expect(api).toHaveBeenCalledWith("/gate-2/state"));
+  cleanup();
+  api.mockClear();
+  mount();
+  await waitFor(() => expect(api).toHaveBeenCalledWith("/gate-2/state"));
+  cleanup();
+  active = false;
+  api.mockClear();
+  mount();
+  await waitFor(() => expect(api).toHaveBeenCalledWith("/gate/state"));
+  expect(api).not.toHaveBeenCalledWith("/gate-2/state");
+});
+it("prefills the nearby active gate instead of the remembered gate for a gatekeeper", async () => {
+  duty.vendorRole = "gatekeeper";
+  localStorage.setItem("gate-dashboard-selection:1:::", JSON.stringify({ siteId: "1", stationId: "gate" }));
+  const original = Object.getOwnPropertyDescriptor(navigator, "geolocation");
+  Object.defineProperty(navigator, "geolocation", {
+    configurable: true,
+    value: {
+      watchPosition: (receive: PositionCallback) => {
+        receive({ coords: { latitude: 35, longitude: -98 } } as GeolocationPosition);
+        return 1;
+      },
+      clearWatch: vi.fn(),
+    },
+  });
+  const base = api.getMockImplementation()!;
+  const gates = [
+    { id: "gate", siteId: 1, name: "Gate 1", latitude: 35.01, longitude: -98 },
+    { id: "gate-2", siteId: 2, name: "Gate 2", latitude: 35.0001, longitude: -98 },
+    { id: "closed", siteId: 2, name: "Closed", latitude: 35, longitude: -98, active: false },
+  ];
+  api.mockImplementation(async (path: string) => {
+    if (path === "/map") return { gates };
+    if (path === "/sites") return { sites: [{ id: 1, name: "Site 1" }, { id: 2, name: "Site 2" }] };
+    if (path.startsWith("/stations")) return { stations: gates.filter(gate => gate.active !== false && path.endsWith(String(gate.siteId))) };
+    return base(path);
+  });
+  try {
+    mount();
+    await waitFor(() => expect(api).toHaveBeenCalledWith("/gate-2/state"));
+    expect((screen.getByRole("combobox", { name: "changeOver.site | changeOver.gate" }) as HTMLSelectElement).value).toBe("gate-2");
+    expect(api).not.toHaveBeenCalledWith("/closed/state");
+    expect(api.mock.calls.every(([, body]) => body === undefined)).toBe(true);
+  } finally {
+    cleanup();
+    if (original) Object.defineProperty(navigator, "geolocation", original);
+    else Reflect.deleteProperty(navigator, "geolocation");
+  }
+});
 it("opens an exact historical note independently of the date filter and marks only a visible note viewed", async () => {
   const oldUrl = window.location.href;
   const observe = vi.fn(), disconnect = vi.fn();
@@ -296,7 +365,7 @@ it('uses one explicit reviewed-assumption action bound to the saved handoff and 
 it('opens review after watch activity changes without assuming immediately', async () => {
   useIncoming(); const cache = mount();
   await screen.findByRole('button', { name: 'handoffDesk.assume' });
-  cache.setQueryData(['change-over-state', 1, 'gate'], { ...incomingState(), stale: true, snapshot: { ...snapshot, revision: 'b' } });
+  cache.setQueryData(['change-over-state', 1, undefined, undefined, undefined, 'gate'], { ...incomingState(), stale: true, snapshot: { ...snapshot, revision: 'b' } });
   await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume', hidden:true }) as HTMLButtonElement).disabled).toBe(false));
   expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
 });
@@ -314,7 +383,7 @@ it('assumes a reviewed watch using the signed-in account without credentials or 
 it('allows opening review when the saved and live revisions differ', async () => {
   useIncoming(); const cache = mount();
   await screen.findByRole('button', { name: 'handoffDesk.assume' });
-  await act(async () => { cache.setQueryData(['change-over-state', 1, 'gate'], { ...incomingState(), snapshot: { ...snapshot, revision: 'b' } }); });
+  await act(async () => { cache.setQueryData(['change-over-state', 1, undefined, undefined, undefined, 'gate'], { ...incomingState(), snapshot: { ...snapshot, revision: 'b' } }); });
   await waitFor(() => expect((screen.getByRole('button', { name: 'handoffDesk.assume', hidden:true }) as HTMLButtonElement).disabled).toBe(false));
   expect(api.mock.calls.some(([path]) => path.endsWith('/watch/assume'))).toBe(false);
 });
