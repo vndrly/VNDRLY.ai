@@ -29,7 +29,7 @@ test("Ask V opens Gate Map and Gate Dashboard from real server navigation intent
       if (route.request().method() !== "POST") return route.continue();
       const question = route.request().postDataJSON().message;
       const screen = question.includes("Map") ? "gate-map" : "gate-dashboard";
-      const query = question.includes("Romen") ? "San Romen completion two" : question.includes("Warwick") ? "Warwick San Roman Completions 2" : question.includes("San Roman") ? "San Roman" : undefined;
+      const query = question.includes("Sand Roman") ? "Sand Roman two" : question.includes("Romen") ? "San Romen completion two" : question.includes("Warwick") ? "Warwick San Roman Completions 2" : question.includes("San Roman") ? "San Roman" : undefined;
       const tool = await page.request.post("/api/assistant/realtime/tool-call", {
         data: { name: "open_screen", arguments: { screen, ...(query ? { query } : {}) }, sessionId: `navigation-${stamp}`, callId: crypto.randomUUID(), clientSurface: "web" },
       });
@@ -44,7 +44,7 @@ test("Ask V opens Gate Map and Gate Dashboard from real server navigation intent
       await route.fulfill({ contentType: "text/event-stream", body: `event: client_intent\ndata: ${JSON.stringify({ intent: output.intent })}\n\nevent: done\ndata: {"content":"Opened."}\n\n` });
       expect(output.ok, JSON.stringify(output)).toBe(true);
     });
-    for (const [question, destination, heading] of [["Open Gate Map", "/gate/map", "Gate Map"], ["Open Gate Dashboard", "/gate/change-over", "Dashboard"], ["Open San Roman", "/gate/change-over", "Dashboard"], ["Open Warwick San Roman Completions 2", "/gate/change-over", "Dashboard"], ["Open San Romen completion two on the Map", "/gate/map", "Gate Map"]]) {
+    for (const [question, destination, heading] of [["Open Sand Roman two on the Map", "/gate/map", "Gate Map"], ["Open Gate Map", "/gate/map", "Gate Map"], ["Open Gate Dashboard", "/gate/change-over", "Dashboard"], ["Open San Roman", "/gate/change-over", "Dashboard"], ["Open Warwick San Roman Completions 2", "/gate/change-over", "Dashboard"], ["Open San Romen completion two on the Map", "/gate/map", "Gate Map"]]) {
       await page.goto("/work-hub/askv");
       await page.getByTestId("assistant-input").fill(question);
       await page.getByTestId("assistant-send").click();

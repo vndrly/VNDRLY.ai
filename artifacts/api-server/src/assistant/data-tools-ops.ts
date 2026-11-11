@@ -156,6 +156,8 @@ async function querySiteLocations(args: Record<string, unknown>, session: Sessio
   const blocked = blockFieldEmployee(session, "query_site_locations");
   if (blocked) return blocked;
   const limit = clampLimit(args.limit);
+  const offset = args.offset ?? 0;
+  if (!Number.isSafeInteger(offset) || Number(offset) < 0) return err("offset must be a non-negative integer.");
   const filters = [eq(siteLocationsTable.hidden, false)];
   if (session.role === "partner" && session.partnerId) {
     filters.push(eq(siteLocationsTable.partnerId, session.partnerId));
@@ -182,9 +184,11 @@ async function querySiteLocations(args: Record<string, unknown>, session: Sessio
     })
     .from(siteLocationsTable)
     .where(and(...filters))
-    .orderBy(siteLocationsTable.name)
-    .limit(limit);
-  return JSON.stringify({ rows, limit });
+    .orderBy(siteLocationsTable.name, siteLocationsTable.id)
+    .limit(limit + 1)
+    .offset(Number(offset));
+  const hasMore = rows.length > limit;
+  return JSON.stringify({ rows: rows.slice(0, limit), limit, offset, hasMore, nextOffset: hasMore ? Number(offset) + limit : null });
 }
 
 async function lookupSiteDetail(args: Record<string, unknown>, session: SessionPayload) {

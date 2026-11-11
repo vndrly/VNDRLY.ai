@@ -2,6 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 import { openAIConversationInput, requestOpenAIVRound } from "./cooperative-v-providers";
 
 describe("OpenAI V provider bridge", () => {
+  it("replays opaque reasoning with tool calls inside the same turn", async () => {
+    const output = [{ type: "reasoning", id: "rs_1", encrypted_content: "opaque", summary: [] }, { type: "function_call", call_id: "c1", name: "read_task", arguments: "{}" }];
+    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: "completed", output })));
+    const round = await requestOpenAIVRound({ system: "V", messages: [], tools, maxTokens: 2048 }, { apiKey: "test", fetcher, model: "gpt-6.1-sol" });
+    expect(openAIConversationInput([{ role: "assistant", content: round.content }])).toEqual(output);
+    expect(JSON.stringify(round.content)).not.toContain("opaque");
+  });
   const tools = [{ name: "read_task", description: "Read saved task", input_schema: { type: "object" as const, properties: {} } }];
   it("translates the shared transcript including saved tool outputs without private ChatGPT state", () => {
     expect(openAIConversationInput([
@@ -21,7 +28,7 @@ describe("OpenAI V provider bridge", () => {
     ], usage: { input_tokens: 20, output_tokens: 5 } }), { status: 200 }));
     const result = await requestOpenAIVRound({ system: "V", messages: [{ role: "user", content: "read" }], tools, maxTokens: 2048 }, { apiKey: "test-key", fetcher });
     const body = JSON.parse(fetcher.mock.calls[0][1].body);
-    expect(body).toMatchObject({ store: false, parallel_tool_calls: false, max_output_tokens: 2048, tools: [{ type: "function", name: "read_task", strict: false }] });
+    expect(body).toMatchObject({ store: false, parallel_tool_calls: false, model: "gpt-6.1-sol", reasoning: { effort: "medium" }, max_output_tokens: 8192, tools: [{ type: "function", name: "read_task", strict: false }] });
     expect(body).not.toHaveProperty("conversation");
     expect(body).not.toHaveProperty("previous_response_id");
     expect(result).toMatchObject({ stop_reason: "tool_use", usage: { input_tokens: 20, output_tokens: 5 } });

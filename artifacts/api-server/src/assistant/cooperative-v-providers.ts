@@ -5,6 +5,10 @@ import { VProviderError } from "./cooperative-v";
 export type VModelRoundInput = { system: string; messages: Anthropic.MessageParam[]; tools: Anthropic.Tool[]; maxTokens: number };
 export type VModelRound = Pick<Anthropic.Message, "content" | "stop_reason" | "usage"> & { model: string };
 
+// Preserve opaque reasoning/tool-call items within a turn without storing them
+// in the company transcript or exposing them to another provider.
+const openAIResponseItems = new WeakMap<object, Record<string, unknown>[]>();
+
 export function isAnthropicVConfigured(environment: Record<string, string | undefined> = process.env): boolean {
   return Boolean(environment.AI_INTEGRATIONS_ANTHROPIC_API_KEY?.trim() && environment.AI_INTEGRATIONS_ANTHROPIC_BASE_URL?.trim());
 }
@@ -46,6 +50,8 @@ export async function requestOptionalVReview(draft: VModelRound, request: () => 
 export function openAIConversationInput(messages: Anthropic.MessageParam[]): Record<string, unknown>[] {
   return messages.flatMap(message => {
     if (typeof message.content === "string") return [{ role: message.role, content: message.content }];
+    const original = message.role === "assistant" ? openAIResponseItems.get(message.content) : undefined;
+    if (original) return original;
     return message.content.flatMap((block): Record<string, unknown>[] => {
       if (block.type === "text") return [{ role: message.role, content: block.text }];
       if (block.type === "tool_use") return [{ type: "function_call", call_id: block.id, name: block.name, arguments: JSON.stringify(block.input) }];
@@ -58,18 +64,20 @@ export function openAIConversationInput(messages: Anthropic.MessageParam[]): Rec
 }
 
 export async function requestOpenAIVRound(input: VModelRoundInput, options: {
-  apiKey: string; model?: string; fetcher?: typeof fetch; timeoutMs?: number;
+  apiKey: string; model?: string; fetcher?: typeof fetch; timeoutMs?: number; signal?: AbortSignal;
 }): Promise<VModelRound> {
   if (!options.apiKey.trim()) throw new VProviderError("OpenAI provider is not configured", false);
-  const model = options.model || process.env.ASKV_OPENAI_MODEL?.trim() || "gpt-4.1";
+  const model = options.model || process.env.ASKV_OPENAI_MODEL?.trim() || "gpt-6.1-sol";
+  const reasoningModel = /^gpt-6\.1-/.test(model);
   let response: Response;
   try {
     response = await (options.fetcher ?? fetch)("https://api.openai.com/v1/responses", {
-      method: "POST", signal: AbortSignal.timeout(options.timeoutMs ?? 45_000),
+      method: "POST", signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(options.timeoutMs ?? 90_000)]) : AbortSignal.timeout(options.timeoutMs ?? 90_000),
       headers: { Authorization: `Bearer ${options.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model, instructions: input.system, input: openAIConversationInput(input.messages),
         tools: input.tools.map(tool => ({ type: "function", name: tool.name, description: tool.description, parameters: tool.input_schema, strict: false })),
-        store: false, parallel_tool_calls: false, max_output_tokens: input.maxTokens,
+        ...(reasoningModel ? { reasoning: { effort: "medium" }, include: ["reasoning.encrypted_content"] } : {}),
+        store: false, parallel_tool_calls: false, max_output_tokens: reasoningModel ? Math.max(input.maxTokens, 8192) : input.maxTokens,
       }),
     });
   } catch (error) {
@@ -95,6 +103,7 @@ export async function requestOpenAIVRound(input: VModelRoundInput, options: {
       }
     }
   }
+  if (reasoningModel) openAIResponseItems.set(content, payload.output);
   return { content, stop_reason: content.some(block => block.type === "tool_use") ? "tool_use" : "end_turn", model: payload.model ?? model,
     usage: { input_tokens: payload.usage?.input_tokens ?? 0, output_tokens: payload.usage?.output_tokens ?? 0, cache_creation_input_tokens: null, cache_read_input_tokens: payload.usage?.input_tokens_details?.cached_tokens ?? null },
   } as VModelRound;

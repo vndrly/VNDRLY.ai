@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { WakeAudioSource } from '@workspace/askv-wake';
-import { applyAskVClientIntent, parseAskVClientIntent } from '@/lib/askv-client-intents';
+import { applyAskVClientIntent, applyAskVClientIntentVerified, parseAskVClientIntent } from '@/lib/askv-client-intents';
 import { createAskVRealtimeClient, type AskVRealtimeClient, type VoiceTranscript } from '@/lib/askv-realtime-client';
 import { ASKV_IDLE_MS, type AskVVoiceState } from '@/lib/askv-voice-state';
 import { addAskVToolLocation } from '@/lib/askv-tool-location';
 import { createAskVVoiceMetrics } from '@/lib/askv-voice-metrics';
+import { stopAskVSpeech } from '@/lib/askv-speech';
 import { readGateVoiceDraft, notifyGateVoiceSaved, subscribeGateVoiceDraft } from '@workspace/gate-booth';
 import { parseGateSetupProgressHint, parseGateWorkflowOffer, type GateWorkflowOffer, type GateSetupProgressHint } from '@workspace/gate-booth';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -13,6 +14,7 @@ const GATE_PREPARATION_TOOLS = new Set(['resolve_gate_check_in', 'prepare_visito
 export type AskVRealtimeState = AskVVoiceState;
 type Conversation = { conversationId: number; messages: Array<{ role: 'user' | 'assistant'; content: string }> };
 export function useAskVRealtime(args?: {
+  onUserText?: (text: string) => Promise<void>;
   acrossVndrly?: boolean;
   prepareConversation?: (signal: AbortSignal) => Promise<Conversation>;
   onTranscript?: (message: VoiceTranscript, conversationId: number, sessionId: string) => void;
@@ -49,6 +51,7 @@ export function useAskVRealtime(args?: {
     transition('stopped');
   }, [clearIdle, transition]);
   const armIdle = useCallback(() => {
+    if (latest.current?.onUserText) { clearIdle(); return; }
     clearIdle(); timer.current = setTimeout(() => {
       metrics.current?.event('idle', { reason: 'timeout', durationMs: ASKV_IDLE_MS });
       stop(); if (latest.current?.acrossVndrly) transition('wake-idle');
@@ -80,7 +83,17 @@ export function useAskVRealtime(args?: {
       let lastUserTranscript: VoiceTranscript | undefined;
       let turnStartedAfterEventId: string | undefined;
       const pendingConfirmations = new Map<string, { key: string; arguments: unknown; afterEventId?: string }>();
+      let turns = Promise.resolve();
       const created = await createAskVRealtimeClient({ seedMessage, path, sessionId, conversationId: conversation.conversationId,
+        onUserText: latest.current?.onUserText ? text => {
+          turns = turns.then(async () => {
+            if (!valid()) return;
+            clearIdle(); transition('thinking');
+            await latest.current?.onUserText?.(text);
+            if (valid()) transition('listening');
+          });
+          return turns;
+        } : undefined,
         signal: controller.signal, greeting: text, history: conversation.messages, audioSource,
         onTranscript: message => {
           if (!valid()) return;
@@ -155,7 +168,7 @@ export function useAskVRealtime(args?: {
           if (!valid()) throw new Error('Voice session ended.');
           const intent = parseAskVClientIntent(output);
           if (intent) {
-            const clientResult = applyAskVClientIntent(intent);
+            const clientResult = await applyAskVClientIntentVerified(intent);
             return JSON.stringify({
               ...body,
               clientResult,
@@ -166,7 +179,7 @@ export function useAskVRealtime(args?: {
           }
           return typeof output === 'string' ? output : JSON.stringify(output);
         },
-        onSpeechStarted: () => { if (valid()) { turnStartedAfterEventId = lastUserTranscript?.eventId; userSpeaking.current = true; clearIdle(); if (current.current === 'speaking') { metrics.current?.event('interruption'); client.current?.interrupt(); } transition('listening'); } },
+        onSpeechStarted: () => { if (valid()) { if (latest.current?.onUserText) stopAskVSpeech(); turnStartedAfterEventId = lastUserTranscript?.eventId; userSpeaking.current = true; clearIdle(); if (current.current === 'speaking') { metrics.current?.event('interruption'); client.current?.interrupt(); } transition('listening'); } },
         onSpeechStopped: () => { if (valid()) { metrics.current?.startTurn(); userSpeaking.current = false; clearIdle(); transition('thinking'); } },
         onAudio: () => { if (valid()) { metrics.current?.audio(); clearIdle(); transition('speaking'); } },
         onResponse: response => { if (valid()) metrics.current?.response(response); },

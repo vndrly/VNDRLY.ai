@@ -12,6 +12,7 @@ export interface CreateAskVRealtimeClientSecretArgs {
   tools: OpenAIRealtimeTool[];
   language?: "en" | "es";
   workContextSummary?: string;
+  transcriptionOnly?: boolean;
   fetchImpl?: typeof fetch;
 }
 
@@ -46,14 +47,14 @@ function buildRealtimeSessionConfig(args: CreateAskVRealtimeClientSecretArgs) {
         noise_reduction: { type: "near_field" },
         // A short pause is not necessarily the end of a request. Semantic
         // detection lets users finish while retaining automatic replies/barge-in.
-        turn_detection: { type: "semantic_vad", eagerness: "medium", create_response: true, interrupt_response: true },
+        turn_detection: { type: "semantic_vad", eagerness: "medium", create_response: !args.transcriptionOnly, interrupt_response: true },
       },
       output: {
         voice: args.voice,
       },
     },
     tool_choice: "auto",
-    tools: args.tools,
+    tools: args.transcriptionOnly ? [] : args.tools,
   };
 }
 

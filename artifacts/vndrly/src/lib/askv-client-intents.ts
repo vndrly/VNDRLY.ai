@@ -29,6 +29,23 @@ let safetyDraft: Record<string, unknown> | null = null;
 export function readAskVSafetyDraft() { return safetyDraft; }
 export function clearAskVClientDrafts() { safetyDraft = null; }
 
+/** Gate Map acknowledgement requires its rendered page, not just pushState. */
+export async function applyAskVClientIntentVerified(intent: AskVClientIntent) {
+  const result = applyAskVClientIntent(intent);
+  if (!result.ok || intent.name !== 'open_screen' || intent.arguments?.screen !== 'gate-map') return result;
+  const expected = new URL(String(intent.arguments.path), window.location.origin);
+  const rendered = () => window.location.pathname.endsWith(expected.pathname)
+    && window.location.search === expected.search
+    && document.querySelector('.gate-map-page h1') !== null;
+  if (rendered()) return result;
+  return new Promise<typeof result>(resolve => {
+    const observer = new MutationObserver(() => { if (rendered()) finish(result); });
+    const finish = (value: typeof result) => { observer.disconnect(); clearTimeout(timer); resolve(value); };
+    const timer = setTimeout(() => finish({ ok: false, message: 'Gate Map navigation was requested, but the page did not finish rendering. I cannot confirm it opened.' }), 5000);
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+}
+
 export function applyAskVClientIntent(intent: AskVClientIntent): { ok: boolean; message: string } {
   const args = intent.arguments ?? {};
   const navigate = (path: unknown) => {

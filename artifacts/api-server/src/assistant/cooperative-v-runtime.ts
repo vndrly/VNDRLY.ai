@@ -36,11 +36,10 @@ export async function bindVConversationCompany(session: SessionPayload, conversa
 }
 
 export async function resolveVTurnPolicy(session: SessionPayload) {
-  // Platform/onboarding chats have no company context; retain their existing AskV
-  // engine, without assuming company authorization to share them with OpenAI.
-  if (!session.vendorId && !session.partnerId) return { enabled: false, approvedAiProviders: ["anthropic"] as VProvider[], openaiAvailable: false };
+  // Platform chat uses the configured OpenAI engine; company approvals remain authoritative.
+  if (!session.vendorId && !session.partnerId) return { enabled: false, approvedAiProviders: ["openai"] as VProvider[], openaiAvailable: Boolean(process.env.OPENAI_API_KEY?.trim()) };
   const policy = await getNativeCompanyPolicy(session);
-  const approvedAiProviders = policy.enabled ? policy.approvedAiProviders : policy.approvedAiProviders.filter(provider => provider === "anthropic");
+  const approvedAiProviders = policy.enabled ? policy.approvedAiProviders : policy.approvedAiProviders.filter(provider => provider === "openai");
   return { enabled: policy.enabled, approvedAiProviders, openaiAvailable: Boolean(process.env.OPENAI_API_KEY?.trim()) };
 }
 

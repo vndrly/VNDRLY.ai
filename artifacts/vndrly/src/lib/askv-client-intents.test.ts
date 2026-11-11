@@ -1,8 +1,25 @@
 import { describe, expect, it, vi } from "vitest";
-import { ASKV_WEB_CLIENT_INTENT_NAMES, applyAskVClientIntent, clearAskVClientDrafts, parseAskVClientIntent, readAskVSafetyDraft } from "./askv-client-intents";
+import { ASKV_WEB_CLIENT_INTENT_NAMES, applyAskVClientIntent, applyAskVClientIntentVerified, clearAskVClientDrafts, parseAskVClientIntent, readAskVSafetyDraft } from "./askv-client-intents";
 import { runClientTool } from "../../../api-server/src/assistant/client-tools";
 
 describe("AskV client intents", () => {
+  it("waits for Gate Map to render before confirming navigation", async () => {
+    const result = applyAskVClientIntentVerified({ name: "open_screen", arguments: { screen: "gate-map", path: "/gate/map" } });
+    const page = document.createElement('div');
+    page.className = 'gate-map-page';
+    page.innerHTML = '<h1>Gate Map</h1>';
+    document.body.appendChild(page);
+    expect(await result).toMatchObject({ ok: true });
+    page.remove();
+  });
+  it("does not call a URL change a rendered page", async () => {
+    vi.useFakeTimers();
+    try {
+      const result = applyAskVClientIntentVerified({ name: "open_screen", arguments: { screen: "gate-map", path: "/gate/map" } });
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(await result).toMatchObject({ ok: false, message: expect.stringContaining('cannot confirm') });
+    } finally { vi.useRealTimers(); }
+  });
   it("opens Gate pages and Calendar from the server's actual client intents", () => {
     for (const [screen, path] of [["gate-map", "/gate/map"], ["gate", "/gate"], ["gate-dashboard", "/gate/change-over"], ["work-hub-calendar", "/work-hub/calendar"]]) {
       const response = runClientTool("open_screen", { screen }, { userId: 10, role: "vendor" });

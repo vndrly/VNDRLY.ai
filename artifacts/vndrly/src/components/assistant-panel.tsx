@@ -1174,7 +1174,13 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                     </div>
                   )
                 ) : (
-                  <span className="block whitespace-pre-wrap">{m.content}</span>
+                  <>
+                    <span className="block whitespace-pre-wrap">{m.content}</span>
+                    <PillButton type="button" disabled={streaming || transcribing || voiceRecording}
+                      onClick={() => { setInput(m.content); document.querySelector<HTMLTextAreaElement>('[data-testid="assistant-input"]')?.focus(); }}>
+                      Correct wording
+                    </PillButton>
+                  </>
                 )}
               </div>
             </div>

@@ -478,12 +478,13 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "query_site_locations",
-    description: "Lists site locations in scope with active/inactive status, AFE, site code. Optional search and inactiveOnly filter.",
+    description: "Lists site locations in scope with active/inactive status, AFE, site code. Optional search and inactiveOnly filter. Results are paginated: when hasMore is true, pass nextOffset as offset with the same search, inactiveOnly and limit for the next page. Never treat the first page as all sites. Search here is literal; for spoken or partial Gate names use open_screen with query to resolve authorized gate matches before claiming no match.",
     input_schema: {
       type: "object",
       properties: {
         search: { type: "string" },
         inactiveOnly: { type: "boolean" },
+        offset: { type: "integer", minimum: 0 },
         limit: { type: "number" },
       },
       additionalProperties: false,
@@ -1131,7 +1132,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "open_screen",
-    description: "Open a permitted VNDRLY page on the user's current device. Gate Dashboard is gate-dashboard; the visitor entry form is gate. Gate Map is gate-map, Gate Log gate-log, Calendar work-hub-calendar. For 'open/show [site or gate name]', use gate-dashboard (or gate-map when a map is requested) and pass the spoken name in query. The server resolves partial names, partner/site/gate combinations and minor spelling differences against the current account's authorized gates. Do not require exact display wording, guess record IDs or say a site is absent before this lookup. A genuinely ambiguous match returns candidate gates for one clarification. The client performs navigation and the destination checks access. Other native screens include fleet, fleet-log, fleet-map, company-operations, work-hub-attention, work-hub-safety and work-hub-my-work. Opening a page never changes its records.",
+    description: "Open a permitted VNDRLY page on the user's current device. Gate Dashboard is gate-dashboard; the visitor entry form is gate. Gate Map is gate-map, Gate Log gate-log, Calendar work-hub-calendar. For 'open/show [site or gate name]', use gate-dashboard (or gate-map when a map is requested) and pass the spoken name in query. The server resolves partial names, partner/site/gate combinations and minor spelling differences against the current account's authorized gates. Do not require exact display wording, guess record IDs or say a site is absent before this lookup. Limited speech ambiguity such as San/Sand is supported. A genuinely ambiguous match returns candidate gates with href links: render these as clickable Markdown choices and ask one clarification. Preserve numbers exactly. Never use a fuzzy name match as authority for a mutation; resolve and confirm the exact record first. The client performs navigation and the destination checks access. Other native screens include fleet, fleet-log, fleet-map, company-operations, work-hub-attention, work-hub-safety and work-hub-my-work. Opening a page never changes its records.",
     input_schema: {
       type: "object",
       properties: {
