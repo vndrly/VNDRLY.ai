@@ -359,7 +359,7 @@ router.get("/assistant/conversations/:id", async (req, res) => {
       id: m.id,
       role: m.role,
       content: clientReceiptDisplayContent(m.content, m.toolCalls),
-      confirmationReference: m.role === "assistant" && m.id === msgs.at(-1)?.id ? typedAskVPreviewReference(session, conv.id) : null,
+      confirmationReference: m.role === "assistant" && m.id === msgs.at(-1)?.id ? typedAskVPreviewReference(session, conv.id, m.toolCalls) : null,
       toolCalls: m.toolCalls ?? [],
       feedbackRating: m.feedbackRating ?? null,
       createdAt: m.createdAt,

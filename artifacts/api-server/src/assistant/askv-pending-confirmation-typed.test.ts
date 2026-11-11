@@ -5,6 +5,7 @@ import {
   runBoundTypedAskVTool,
   synchronizeTypedAskVContext,
   typedAskVPendingAction,
+  typedAskVPreviewReference,
 } from "./askv-pending-confirmation";
 const mock = vi.hoisted(() => ({
   execute: vi.fn(async (input: unknown) => JSON.stringify({ ok: true, input })),
@@ -164,4 +165,15 @@ describe("AskV typed mutation confirmation", () => {
       ).requiresConfirmation,
     ).toBe(true);
   });
+});
+
+it("restores a confirmation button only on the exact still-pending preview", async () => {
+  const request = { ...base, conversationId: 1297 };
+  const output = await runBoundTypedAskVTool(request);
+  const reference = JSON.parse(output).confirmationReference;
+  expect(typedAskVPreviewReference(base.session,1297,[{output}])).toBe(reference);
+  expect(typedAskVPreviewReference(base.session,1297,[{output:JSON.stringify({requiresConfirmation:true,confirmationReference:"older-preview"})}])).toBeNull();
+  expect(typedAskVPreviewReference(base.session,1297,[])).toBeNull();
+  synchronizeTypedAskVContext(base.session,1297,base.contextKey,"Cancel");
+  expect(typedAskVPreviewReference(base.session,1297,[{output}])).toBeNull();
 });

@@ -400,7 +400,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
       try {
         const response = await assistantFetch(`/api/assistant/conversations/${activeId}`);
         if (!response.ok || stopped || streamingRef.current || myVersion !== restoreVersionRef.current) return;
-        const detail = await response.json() as { id: number; messages: Array<{ id: number; role: "user" | "assistant"; content: string; feedbackRating?: AssistantFeedbackRating | null }> };
+        const detail = await response.json() as { id: number; messages: Array<{ id: number; role: "user" | "assistant"; content: string; confirmationReference?: string | null; feedbackRating?: AssistantFeedbackRating | null }> };
         if (stopped || streamingRef.current || myVersion !== restoreVersionRef.current || detail.id !== conversationIdRef.current) return;
         setMessages(detail.messages.filter(message => message.role === "user" || message.content.trim()).map(message => ({
           id: `db-${message.id}`,

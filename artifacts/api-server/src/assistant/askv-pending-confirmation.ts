@@ -128,9 +128,11 @@ export function typedAskVPendingAction(session: SessionPayload, conversationId: 
 }
 
 /** Display reference only; execution still requires current context and exact arguments. */
-export function typedAskVPreviewReference(session: SessionPayload, conversationId: number) {
+export function typedAskVPreviewReference(session: SessionPayload, conversationId: number, calls: unknown) {
   if (!session.userId) return null;
-  return askvPendingConfirmations.peek(session.userId, organizationKeyFromSession(session), askVConfirmationScopeId(conversationId, `typed:${conversationId}`))?.idempotencyKey ?? null;
+  const reference = askvPendingConfirmations.peek(session.userId, organizationKeyFromSession(session), askVConfirmationScopeId(conversationId, `typed:${conversationId}`))?.idempotencyKey;
+  if (!reference || !Array.isArray(calls)) return null;
+  return calls.some(call => { try { const result = JSON.parse(call.output); return result.requiresConfirmation === true && result.confirmationReference === reference; } catch { return false; } }) ? reference : null;
 }
 
 const typedTurnApprovals = new Map<
