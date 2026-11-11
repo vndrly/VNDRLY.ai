@@ -72,6 +72,14 @@ it('does not count a skipped mandatory legal step as completion', () => {
 });
 
 
+it("hides the dashboard stepper once onboarding completion is saved", () => {
+  useProgress.mockReturnValueOnce({
+    progress: { ...completedVendorProgress, completedAt: "2026-11-09T19:29:34.844Z" },
+  });
+  render(<QueryClientProvider client={new QueryClient()}><DashboardSetup orgType="vendor" orgId={1} section="stepper" /></QueryClientProvider>);
+  expect(screen.queryByRole("heading", { name: "Vendor Onboarding" })).toBeNull();
+});
+
 it("preserves the onboarding stepper without a duplicate fixed Next Steps card", () => {
   useProgress.mockReturnValueOnce({
     progress: {

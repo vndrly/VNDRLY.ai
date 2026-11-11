@@ -318,7 +318,7 @@ export function DashboardSetup({ orgType, orgId, section }: { orgType: "vendor" 
   const completed = orgProgress?.completedSteps ?? [];
   const currentIndex = steps.findIndex((step) => step.key === orgProgress?.currentStep);
 
-  if (section === "next-steps") return null;
+  if (section === "next-steps" || orgProgress?.completedAt) return null;
   return (
     <section className={`min-w-0 space-y-4 ${section === "stepper" ? "mb-4" : ""} ${orgType === "vendor" ? "vendor-workspace-page" : ""}`} aria-label="Company setup">
       <Card className="min-w-0">
