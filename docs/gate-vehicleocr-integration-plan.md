@@ -105,3 +105,9 @@ Offline behavior must be explicit: retain recoverable drafts/media where support
 ## Definition of done for the first Gate benchmark
 
 A gatekeeper can choose or confirm the operating gate, browse other authorized gates without losing context, review an arrival, correct recognition, capture evidence, explicitly check in/out, find the same evidence through Gate Log and the ticket, and hand over the watch on both web and iOS. Failures are visible and recoverable; unauthorized actions and duplicate writes are rejected. John’s iOS panel mapping is implemented, physical-device workflows pass, and the requested release tracks are verified. Future cameras can enter through the observation/candidate contracts without redefining visits, gate authority or evidence ownership.
+
+## Implementation checkpoint — November 12, 2026
+
+The implementation now separates transient viewing selection from server-backed operating watch, includes conservative GPS suggestions, enforces crossing/movement authority on the API, and provides native arrival-review and internal-movement cards. Original uploads are immutable, evidence carries server timestamps/actor/checksums, and authorized ticket readers can inspect linked entry/exit images with missing evidence disclosed. This supersedes the initial persistent-selection and adapter-only baseline above.
+
+Release qualification is tracked separately in the release ledger. Representative physical-device capture, a labeled operational OCR benchmark, the final iOS panel mapping, and the deferred camera/vehicle-awareness phases are not represented as completed by code tests. The existing recognition provider remains the default; alternative engines remain opt-in pending measured results.
