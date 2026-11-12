@@ -13,7 +13,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local" && process.env.
   async function fixture() {
     const tag = randomUUID();
     const [vendor] = await database.db.insert(database.vendorsTable).values({ name: `AskV draft ${tag}`, contactName: "Synthetic", contactEmail: `${tag}@example.invalid` }).returning();
-    const [user] = await database.db.insert(database.usersTable).values({ username: `draft-${tag}`, passwordHash: "unused-fixture", role: "vendor" }).returning();
+    const [user] = await database.db.insert(database.usersTable).values({ username: `draft-${tag}`, passwordHash: "unused-fixture", role: "vendor", displayName: "Synthetic driver" }).returning();
     const [conversation] = await database.db.insert(database.assistantConversationsTable).values({ userId: user.id }).returning();
     const session: SessionPayload = { userId: user.id, vendorId: vendor.id, role: "vendor" };
     const fields = { firstName: "Synthetic", lastName: "Driver", siteLocationId: 42, plateState: "TX" };
