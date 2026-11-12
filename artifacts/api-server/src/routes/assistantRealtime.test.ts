@@ -338,8 +338,7 @@ describe("AskV Realtime routes", () => {
         idempotencyKey: expect.any(String),
       }),
       expect.objectContaining({ userId: 10, role: "vendor" }),
-      expect.any(String),
-    );
+      expect.any(String), false, false, undefined);
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         inputMode: "ios_voice",
@@ -412,8 +411,7 @@ describe("AskV Realtime routes", () => {
       "mark_notifications_read",
       expect.objectContaining({ markAll: true, confirmed: true, idempotencyKey: "original-action" }),
       expect.objectContaining({ userId: 10 }),
-      expect.any(String),
-    );
+      expect.any(String), false, false, 12);
     await transcript(testSessionId, "spoken-reply", "I authorize").expect(200);
     expect(mocks.runTool).toHaveBeenCalledTimes(1);
   });
@@ -463,8 +461,7 @@ describe("AskV Realtime routes", () => {
         idempotencyKey: "gate-command-1",
       }),
       expect.objectContaining({ userId: 10, vendorId: 22 }),
-      "",
-    );
+      "", false, false, 12);
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmationPhrase: "Confirmed.",
@@ -508,7 +505,7 @@ describe("AskV Realtime routes", () => {
     mocks.readConfirmation.mockResolvedValue("Yes");
     const receipt = await transcript("checkout-yes", "Yes").expect(200);
     expect(receipt.body).toMatchObject({ action: { ok: true, toolName: "confirm_visitor_check_out", submitted: { visitId: 91 } } });
-    expect(mocks.runTool).toHaveBeenCalledWith("confirm_visitor_check_out", expect.objectContaining({ visitId: 91, confirmed: true }), expect.anything(), expect.any(String));
+    expect(mocks.runTool).toHaveBeenCalledWith("confirm_visitor_check_out", expect.objectContaining({ visitId: 91, confirmed: true }), expect.anything(), expect.any(String), false, false, 12);
   });
 
   it("does not execute Gate writes for a missing saved event or first name only", async () => {
@@ -616,7 +613,7 @@ describe("AskV Realtime onboarding", () => {
       ...original, confirmationEventId: "saved-user-turn",
     }).expect(200);
     expect(completed.body).toMatchObject({ ok: true, mutation: { name, refresh: expect.arrayContaining(["onboarding"]) } });
-    expect(mocks.runTool).toHaveBeenCalledWith(name, expect.objectContaining({ ...args, confirmed: true }), expect.objectContaining({ vendorId: 22 }), "");
+    expect(mocks.runTool).toHaveBeenCalledWith(name, expect.objectContaining({ ...args, confirmed: true }), expect.objectContaining({ vendorId: 22 }), "", false, false, undefined);
     const firstScope = mocks.runMutation.mock.calls[0][0];
     await request(app()).post("/assistant/realtime/tool-call").send(original).expect(200);
     expect(mocks.runMutation.mock.calls[1][0]).toEqual(firstScope);

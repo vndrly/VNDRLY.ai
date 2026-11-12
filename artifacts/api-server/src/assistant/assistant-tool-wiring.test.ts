@@ -53,10 +53,12 @@ describe("AskV advertised tool wiring", () => {
     expect(workHubRuntime).toContain("awayResponderRequest(fields,z.uuid().parse(operationId))");
     expect(awayCommands).toContain("AWAY_RESPONDER_ARGUMENTS.parse(raw)");
     expect(awayCommands).toContain("WorkHubAwayCommandSchema.parse(");
+    const gateTaskSource = readFileSync(new URL("./gate-task-state.ts", import.meta.url), "utf8");
+    expect(routeSource).toContain("runGateTaskTool(name, input, session, conversationId)");
     const missing = ASK_V_TOOL_REGISTRY.flatMap((tool) => {
       const actionSchema = (tool.inputSchema.properties as Record<string, { enum?: unknown[] }> | undefined)?.action;
       const actions = Array.isArray(actionSchema?.enum) ? actionSchema.enum.filter((value): value is string => typeof value === "string") : [];
-      const source = tool.name.includes("marketplace") ? marketplaceRuntime : tool.name === "manage_my_workday" ? workHubRuntime + workdayCommands : tool.name === "propose_work_hub_action" ? routeSource : tool.name === "confirm_operations_displays_action" ? workHubRuntime + displayCommands : tool.name === "manage_work_hub_away_responder" ? workHubRuntime + awayCommands : workHubRuntime;
+      const source = tool.name === "update_gate_task" ? gateTaskSource : tool.name.includes("marketplace") ? marketplaceRuntime : tool.name === "manage_my_workday" ? workHubRuntime + workdayCommands : tool.name === "propose_work_hub_action" ? routeSource : tool.name === "confirm_operations_displays_action" ? workHubRuntime + displayCommands : tool.name === "manage_work_hub_away_responder" ? workHubRuntime + awayCommands : workHubRuntime;
       return actions.filter((action) =>
         !source.includes(`"${action}"`) &&
         !source.includes(`'${action}'`) &&
