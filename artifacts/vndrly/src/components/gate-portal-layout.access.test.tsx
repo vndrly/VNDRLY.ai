@@ -39,3 +39,5 @@ it("does not offer Return to Admin to an unauthorized gate worker", () => {
   render(<GatePortalLayout returnToAdmin>Dashboard</GatePortalLayout>);
   expect(screen.queryByText("tab-gate-return-admin")).toBeNull();
 });
+
+vi.mock("@/hooks/use-gate-operating-context",()=>({useGateOperatingContext:()=>({operating:null,viewing:null,isError:false,myGate:()=>{}})}));

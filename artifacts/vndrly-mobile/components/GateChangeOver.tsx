@@ -126,8 +126,8 @@ export default function GateChangeOver({
     gateMode?: string;
     purpose?: string;
   }>();
-  const operatingContext=useGateOperatingContext();
   const assumeReview = !history && params.purpose === "assume";
+  const operatingContext=useGateOperatingContext(!assumeReview);
   const [selectedSite, setSite] = useState<number | null>(
     params.siteId ? Number(params.siteId) : null,
   );
@@ -439,7 +439,7 @@ export default function GateChangeOver({
   if (assumeReview) return <ScreenSafeArea>
     {assumeOpen && <GateAssumeWatchFlyout open current={current} busy={busy} blocked={!online || state.isError || state.isFetching || !current || ownShift} pending={Boolean(pendingWatch)} error={error} onClose={() => setAssumeOpen(false)} onAssume={confirmAssume} />}
     <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
-      <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" /><GateOperatingContext/>
+      <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />{!assumeReview&&<GateOperatingContext/>}
       <Text accessibilityRole="header" style={{ color: colors.foreground, fontSize: 20, fontWeight: "700" }}>{t("watch.assume")}</Text>
       <TogglePillButton compactOnTablet onPress={() => router.replace("/work-hub" as never)}>{t("workHub.title", { defaultValue: "Work Hub" })}</TogglePillButton>
       {current ? <Text style={{ color: colors.foreground }}>{current.site.name} · {current.station.name}</Text> : null}
@@ -458,7 +458,7 @@ export default function GateChangeOver({
         contentContainerStyle={{ padding: 20, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-        <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" /><GateOperatingContext/>
+        <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />{!assumeReview&&<GateOperatingContext/>}
         <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
           <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
             <SphereBackButton

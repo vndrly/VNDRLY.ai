@@ -536,3 +536,6 @@ describe("ticket-detail voice entry integration", () => {
     });
   }
 });
+
+// Gate proof owns its authenticated-query tests; this suite isolates ticket behavior.
+vi.mock("@/components/ticket-gate-proof", () => ({ default: () => null }));

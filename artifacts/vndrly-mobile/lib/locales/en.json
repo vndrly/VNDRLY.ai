@@ -455,13 +455,6 @@
     "errorHint": "Error: {{error}}"
   },
   "gatekeeper": {
-    "recognitionCropGuide": "Drag around the plate to read a closer crop, or use the crop controls.",
-    "recognitionCropControls": "Adjust crop with controls",
-    "recognitionReadCrop": "Read selected plate area",
-    "cropLeft": "Left",
-    "cropTop": "Top",
-    "cropWidth": "Width",
-    "cropHeight": "Height",
     "recognitionCaptureFailed": "Photo could not be prepared or uploaded. Retake a clear JPEG, PNG or WebP photo under 8 MB, or enter the plate manually.",
     "recognitionCaptureGuide": "Center one vehicle or plate, keep it sharp, and avoid glare. Verify the reading and current driver before saving.",
     "recognitionPhoto": "Photo used for recognition",
@@ -1371,7 +1364,8 @@
       "employee_vendor_mismatch": "Select an active field employee from this company.",
       "reviewer_required": "An authorized partner reviewer must review this ticket.",
       "vendor_submission_required": "The vendor must submit the ticket and its proof sheet.",
-      "partner_review_required": "The partner must review the submitted ticket."
+      "partner_review_required": "The partner must review the submitted ticket.",
+      "invalid_input": "The ticket request is invalid. Refresh and try again."
     },
     "site": {
       "not_found": "Site not found.",
@@ -4018,7 +4012,10 @@
     "exit": "Exit",
     "photo": "Crossing evidence",
     "original": "View original",
-    "exitPhoto": "Add exit photo"
+    "exitPhoto": "Add exit photo",
+    "missingEntryPhoto": "No confirmed entry photo recorded.",
+    "missingExitPhoto": "No confirmed exit photo recorded.",
+    "unclassified": "Photo direction not recorded"
   },
   "gateArrivalReview": {
     "title": "Site arrivals",

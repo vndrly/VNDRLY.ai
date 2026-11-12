@@ -418,3 +418,6 @@ describe("ticket-detail — proof-to-pay packet", () => {
     expect(screen.queryByTestId("ticket-proof-packet-missing")).toBeNull();
   });
 });
+
+// Gate proof owns its authenticated-query tests; this suite isolates ticket behavior.
+vi.mock("@/components/ticket-gate-proof", () => ({ default: () => null }));

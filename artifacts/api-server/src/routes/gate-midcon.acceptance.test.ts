@@ -44,6 +44,7 @@ describe.skipIf(!isolated)('MidCon authorized gatekeepers · PostgreSQL and HTTP
   for(const [id,name,topology] of [[outer,'Warwick Completions 1',{kind:'independent',area:'',parentGateId:null,parallelGateId:null}],[inner,'Warwick Roman Completions 2',{kind:'series',area:'Roman Completions',parentGateId:outer,parallelGateId:null}],[parallel,'Warwick Completions alternate',{kind:'parallel',area:'',parentGateId:null,parallelGateId:outer}]] as const){
    await pool.query('INSERT INTO gate_stations(id,site_id,name,topology,latitude,longitude) VALUES($1,$2,$3,$4,31,-102)',[id,site,name,JSON.stringify(topology)]);
   }
+  await pool.query('INSERT INTO gate_shifts(station_id,operator_id) VALUES($1,$2),($3,$4)',[outer,actors[0],inner,actors[1]]);
  });
  const get=async(actor=0)=>{const response=await request(app).get(`/api/gate-change-over/movements?siteId=${site}`).set('Cookie',cookies[actor]);expect(response.status,JSON.stringify(response.body)).toBe(200);return response.body;};
  const checkIn=async(label:string,gate=outer,actor=0)=>{const response=await request(app).post('/api/visits/gate/check-in').set('Cookie',cookies[actor]).send({firstName:label,lastName:tag,vehiclePlate:`T${randomUUID().replaceAll('-','').slice(0,6).toUpperCase()}`,siteLocationId:site,gateStationId:gate,latitude:31,longitude:-102});expect(response.status,JSON.stringify(response.body)).toBe(201);return response.body.id as number;};
@@ -61,6 +62,10 @@ describe.skipIf(!isolated)('MidCon authorized gatekeepers · PostgreSQL and HTTP
   for(const m of saved.movements){expect(m.gateId).toBeTruthy();expect(m.gateName).toBeTruthy();expect(m.actorName).toMatch(/Acceptance Gatekeeper/);expect(Number.isFinite(Date.parse(m.at))).toBe(true);}
   expect((await get()).visits.filter((v:any)=>v.id===id)).toHaveLength(1);
  });
+ it('browsing another gate never grants crossing authority',async()=>{
+  const response=await request(app).post('/api/visits/gate/check-in').set('Cookie',cookies[0]).send({firstName:'Wrong gate',lastName:tag,siteLocationId:site,gateStationId:inner});
+  expect(response.status).toBe(403);
+ });
  it('early turnaround clears the expected inner arrival and retains its audit note',async()=>{
   const id=await checkIn('Turnaround');expect((await checkout(id)).status).toBe(200);const saved=await row(id);expect(saved.checkOutTime).toBeTruthy();expect(saved.presence.expectedGateId).toBeNull();expect(saved.movements.at(-1).note).toBe('Exited before inner arrival');expect((await move(id,inner,'enter')).status).toBe(409);
  });
@@ -76,6 +81,7 @@ describe.skipIf(!isolated)('MidCon authorized gatekeepers · PostgreSQL and HTTP
   expect((await move(id,inner,'enter')).status).toBe(200);const saved=await row(id);expect(saved.checkOutTime).toBeNull();expect(saved.presence).toMatchObject({currentGateId:inner,expectedSiteExit:false});expect((await checkout(id)).status).toBe(409);
  });
  it('parallel outer gates retain one active visit and permit alternate outer checkout',async()=>{
+  await pool.query('UPDATE gate_shifts SET station_id=$1 WHERE operator_id=$2 AND ended_at IS NULL',[parallel,actors[1]]);
   const id=await checkIn('Parallel');const saved=await row(id);const plate=(await pool.query('SELECT vehicle_plate FROM site_visits WHERE id=$1',[id])).rows[0].vehicle_plate;
   const duplicate=await request(app).post('/api/visits/gate/check-in').set('Cookie',cookies[1]).send({firstName:'Parallel',lastName:tag,vehiclePlate:plate,siteLocationId:site,gateStationId:parallel,latitude:31,longitude:-102});
   expect([200,409]).toContain(duplicate.status);if(duplicate.status===200)expect(duplicate.body.id).toBe(id);expect((await get(1)).visits.filter((v:any)=>v.vehiclePlate===plate)).toHaveLength(1);expect(saved.id).toBe(id);expect((await checkout(id,parallel,1)).status).toBe(200);expect((await row(id)).movements.at(-1).gateId).toBe(parallel);

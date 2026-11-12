@@ -3426,7 +3426,7 @@ export default function TicketDetailScreen() {
 
       <TicketWorkSection title="Visits & evidence" initiallyOpen={false}>
       <TicketSiteVisitSummary ticketId={ticketId} refreshKey={lastLoadedAt} />
-      <TicketGateProof ticketId={ticketId}/>
+      {currentUser&&<TicketGateProof key={`${currentUser.id}:${currentUser.activeMembershipId}:${ticketId}`} ticketId={ticketId} accountKey={`${currentUser.id}:${currentUser.activeMembershipId}`} refreshKey={lastLoadedAt}/>}
       {currentUser && ["vendor", "partner", "admin"].includes(currentUser.role) ? (
         <TicketSubmittedProof key={`${currentUser.id}:${currentUser.activeMembershipId}:${ticketId}`} ticketId={ticketId} status={ticket.status} role={currentUser.role} onChanged={() => { void load(); }} />
       ) : null}

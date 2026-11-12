@@ -15,7 +15,7 @@ Unknown state remains optional; conflicting known states cannot match. Appearanc
 alone never establishes identity. Two white pickups remain two possible vehicles.
 
 Web decodes, orients and converts images to JPEG, preserving up to a 2560-pixel
-edge. Gate capture on mobile uses higher image quality and the native crop editor.
+edge. Gate capture on mobile uses higher image quality and the full-frame native camera capture.
 Web offers an operator-drawn crop with keyboard controls and re-reading. Upload/reader limits align
 at 8 MB. Unsupported formats, upload problems, unreadable content and provider
 failure are recoverable through manual entry. Photo evidence survives OCR failure
@@ -128,3 +128,15 @@ requires actual labeled photographs; no real-world accuracy is claimed.
   Broad release validation, device camera testing and a real-photo pilot remain
   required before calling the recognition production-ready. The MidCon hold was
   not changed.
+
+## Integration checkpoint — 2026-11-12
+
+The current integration adds a server-derived operating gate from the user’s saved watch. Browsing is separate, shared across Gate panels in memory, and resets on reload. Recording requires the operating gate on both clients and the server; future remote grants are not enabled. GPS suggests a gate only for a fresh, accurate fix inside exactly one authorized gate fence.
+
+Reviewed arrival links attach crossing evidence to the actual run ticket. Entry and exit photos carry separate phases, server receipt time, recording user, and SHA-256 hashes of original and derived bytes. Upload objects reject replacement bytes. Ticket views on web and native explicitly disclose missing entry/exit photographs, including when a visit has a checkout timestamp. Legacy images without a recorded phase are unclassified. These are audit evidence, not legal certification or proof of absence.
+
+Keep/fix/replace decision: keep the review-required recognition provider behind the bounded adapter; fix capture integrity, scoping, permissions, retry behavior, and evidence links now. Evaluate Plate Recognizer Snapshot and FastALPR using the existing labeled-photo benchmark runner before selecting a replacement. No specialist service subscription, new recognition runtime dependency, calibrated accuracy claim, or autonomous admission is introduced. Primary references: https://guides.platerecognizer.com/docs/snapshot/api-reference/ and https://github.com/ankandrew/fast-alpr.
+
+Composite video, learned vehicle fingerprints, automated rig comparison, camera ingestion, sitewide remote authority, recognition-correction analytics, and partner retention/export policy remain later work. Native panel placement remains subject to John’s upcoming page mapping. Physical device camera/background testing and a representative labeled-photo pilot remain qualification work; automated suites do not substitute for either.
+
+Candidate implementation was published on branch codex/gate-vehicleocr-integration-20261112 for cloud validation. The release ledger records exact candidate commits, follow-up fixes, workflow runs, and final deployment status. Plugin is excluded from this full ship.

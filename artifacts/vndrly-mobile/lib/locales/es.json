@@ -455,13 +455,6 @@
     "errorHint": "Error: {{error}}"
   },
   "gatekeeper": {
-    "recognitionCropGuide": "Arrastre alrededor de la placa para leer un recorte más cercano, o use los controles.",
-    "recognitionCropControls": "Ajustar recorte con controles",
-    "recognitionReadCrop": "Leer área seleccionada de la placa",
-    "cropLeft": "Izquierda",
-    "cropTop": "Arriba",
-    "cropWidth": "Ancho",
-    "cropHeight": "Alto",
     "recognitionCaptureFailed": "No se pudo preparar o cargar la foto. Tome una foto clara JPEG, PNG o WebP de menos de 8 MB, o escriba la placa.",
     "recognitionCaptureGuide": "Centre un vehículo o una placa, mantenga el enfoque y evite reflejos. Verifique la lectura y el conductor actual antes de guardar.",
     "recognitionPhoto": "Foto utilizada para reconocimiento",
@@ -1371,7 +1364,8 @@
       "employee_vendor_mismatch": "Selecciona un empleado de campo activo de esta empresa.",
       "reviewer_required": "Un revisor autorizado del socio debe revisar este ticket.",
       "vendor_submission_required": "El proveedor debe enviar el ticket y su hoja de comprobantes.",
-      "partner_review_required": "El socio debe revisar el ticket enviado."
+      "partner_review_required": "El socio debe revisar el ticket enviado.",
+      "invalid_input": "La solicitud del ticket no es válida. Actualiza e inténtalo de nuevo."
     },
     "site": {
       "not_found": "No se encontró el sitio.",
@@ -4018,7 +4012,10 @@
     "exit": "Salida",
     "photo": "Evidencia de cruce",
     "original": "Ver original",
-    "exitPhoto": "Agregar foto de salida"
+    "exitPhoto": "Agregar foto de salida",
+    "missingEntryPhoto": "No hay foto de entrada confirmada.",
+    "missingExitPhoto": "No hay foto de salida confirmada.",
+    "unclassified": "Dirección de la foto no registrada"
   },
   "gateArrivalReview": {
     "title": "Llegadas al sitio",

@@ -1,7 +1,7 @@
 import {beforeEach,expect,it,vi} from 'vitest';
 const mocks=vi.hoisted(()=>({query:vi.fn()}));
 vi.mock('@workspace/db',()=>({pool:{query:mocks.query}}));
-vi.mock('./gate-change-over',()=>({ChangeOverError:class extends Error{constructor(public status:number,public code:string,message:string){super(message);}},changeOverTransaction:async(fn:any)=>fn({query:mocks.query}),requireChangeOverAccess:vi.fn(),requireGateStationManagementAccess:vi.fn()}));
+vi.mock('./gate-change-over',()=>({ChangeOverError:class extends Error{constructor(public status:number,public code:string,message:string){super(message);}},changeOverTransaction:async(fn:any)=>fn({query:mocks.query}),requireChangeOverAccess:vi.fn(),requireGateOperatingContext:vi.fn(),requireGateStationManagementAccess:vi.fn()}));
 import {recordGateMovement,movementPresence,type GateMovement} from './gate-topology';
 let history:GateMovement[]=[];
 const gates=[{id:'outer',name:'Warwick Completions 1',topology:null},{id:'inner',name:'Warwick Roman Completions 2',topology:{kind:'series',area:'Secure area',parentGateId:'outer'}}];

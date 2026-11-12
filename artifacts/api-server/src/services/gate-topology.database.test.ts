@@ -1,7 +1,7 @@
 import {randomUUID} from 'node:crypto';
 import {expect,it,vi} from 'vitest';
 import {assertFreshLocalTestDatabaseEnvironment} from '../../../../scripts/fresh-test-database.mjs';
-vi.mock('./gate-change-over',async original=>({...await original<typeof import('./gate-change-over')>(),requireChangeOverAccess:vi.fn(async()=>({})),requireGateStationManagementAccess:vi.fn(async()=>({}))}));
+vi.mock('./gate-change-over',async original=>({...await original<typeof import('./gate-change-over')>(),requireChangeOverAccess:vi.fn(async()=>({})),requireGateOperatingContext:vi.fn(async()=>({})),requireGateStationManagementAccess:vi.fn(async()=>({}))}));
 import {recordGateMovement,readGateMovements,saveGateTopology} from './gate-topology';
 const isolated=process.env.VNDRLY_TEST_DB_MODE==='fresh-local'&&process.env.VNDRLY_ISOLATED_TEST_DB==='1';
 it.skipIf(!isolated)('persists secure-area transfers on one site visit and preserves departure expectations and history',async()=>{

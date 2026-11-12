@@ -4481,7 +4481,8 @@
       "employee_vendor_mismatch": "Select an active field employee from this company.",
       "reviewer_required": "An authorized partner reviewer must review this ticket.",
       "vendor_submission_required": "The vendor must submit the ticket and its proof sheet.",
-      "partner_review_required": "The partner must review the submitted ticket."
+      "partner_review_required": "The partner must review the submitted ticket.",
+      "invalid_input": "The ticket request is invalid. Refresh and try again."
     },
     "invalid_ticket_id": "That ticket id is invalid.",
     "ticket_not_found": "Ticket not found.",
@@ -5726,7 +5727,6 @@
     "fullGateHistory": "Gate Log",
     "historyTitle": "Gate Log",
     "historySearch": "Search by name, plate, company, or site",
-    "historyEmpty": "No visits in the last 30 days.",
     "historyLoadFailed": "Could not load history.",
     "historyOnSite": "On site",
     "historyCheckedOut": "Checked out",
@@ -6586,29 +6586,9 @@
     "exit": "Exit",
     "photo": "Crossing evidence",
     "original": "View original",
-    "exitPhoto": "Add exit photo"
-  },
-  "gateArrivalReview": {
-    "title": "Site arrivals",
-    "failed": "Arrivals could not be refreshed.",
-    "empty": "No arrivals recorded.",
-    "review": "Review for check-in",
-    "truncated": "More arrivals exist than this source returned. This is not the complete queue.",
-    "wrongSite": "This arrival belongs to another site. Verify the selected site before saving.",
-    "notAdmitted": "Not checked in. Verify the driver, plate and company before saving.",
-    "use": "Use driver and company",
-    "remove": "Remove arrival link"
-  },
-  "gateMovement": {
-    "title": "Site and secure-area movements",
-    "saved": "Movement recorded.",
-    "failed": "Movements could not be refreshed. Reconnect and retry.",
-    "enter": "Confirm arrival in area",
-    "leave": "Confirm departure from area",
-    "route": "Set destination",
-    "destination": "Next destination",
-    "remain": "Remain on site",
-    "exit": "Leaving site through outer gate",
-    "empty": "No open visits in this queue."
+    "exitPhoto": "Add exit photo",
+    "missingEntryPhoto": "No confirmed entry photo recorded.",
+    "missingExitPhoto": "No confirmed exit photo recorded.",
+    "unclassified": "Photo direction not recorded"
   }
 }

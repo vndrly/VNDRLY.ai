@@ -49,6 +49,8 @@ export default function TicketGateProof({ ticketId }: { ticketId: number }) {
                 ? new Date(v.checkOutTime).toLocaleString()
                 : t("gateProof.notRecorded")}
             </p>
+            {!v.capture?.images.some(image=>image.phase==="entry")&&<p>{t("gateProof.missingEntryPhoto")}</p>}
+            {!v.capture?.images.some(image=>image.phase==="exit")&&<p>{t("gateProof.missingExitPhoto")}</p>}
             <div className="flex flex-wrap gap-2">
               {v.capture?.images.map((image) => (
                 <a
@@ -66,7 +68,7 @@ export default function TicketGateProof({ ticketId }: { ticketId: number }) {
                     {t(
                       image.phase === "exit"
                         ? "gateProof.exit"
-                        : "gateProof.entry",
+                        : image.phase === "entry" ? "gateProof.entry" : "gateProof.unclassified",
                     )}{" "}
                     · {t("gateProof.original")}
                   </span>

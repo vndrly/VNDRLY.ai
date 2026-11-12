@@ -4481,7 +4481,8 @@
       "employee_vendor_mismatch": "Selecciona un empleado de campo activo de esta empresa.",
       "reviewer_required": "Un revisor autorizado del socio debe revisar este ticket.",
       "vendor_submission_required": "El proveedor debe enviar el ticket y su hoja de comprobantes.",
-      "partner_review_required": "El socio debe revisar el ticket enviado."
+      "partner_review_required": "El socio debe revisar el ticket enviado.",
+      "invalid_input": "La solicitud del ticket no es válida. Actualiza e inténtalo de nuevo."
     },
     "invalid_ticket_id": "El ID del ticket no es válido.",
     "ticket_not_found": "No se encontró el ticket.",
@@ -5726,7 +5727,6 @@
     "fullGateHistory": "Registro de acceso",
     "historyTitle": "Registro de acceso",
     "historySearch": "Buscar por nombre, placa, empresa o sitio",
-    "historyEmpty": "No hay visitas en los últimos 30 días.",
     "historyLoadFailed": "No se pudo cargar el historial.",
     "historyOnSite": "En el sitio",
     "historyCheckedOut": "Salió",
@@ -6586,29 +6586,9 @@
     "exit": "Salida",
     "photo": "Evidencia de cruce",
     "original": "Ver original",
-    "exitPhoto": "Agregar foto de salida"
-  },
-  "gateArrivalReview": {
-    "title": "Llegadas al sitio",
-    "failed": "No se pudieron actualizar las llegadas.",
-    "empty": "No hay llegadas registradas.",
-    "review": "Revisar para entrada",
-    "truncated": "Existen más llegadas que las devueltas por esta fuente. Esta no es la cola completa.",
-    "wrongSite": "Esta llegada pertenece a otro sitio. Verifique el sitio antes de guardar.",
-    "notAdmitted": "Entrada no registrada. Verifique conductor, placa y empresa antes de guardar.",
-    "use": "Usar conductor y empresa",
-    "remove": "Quitar vínculo de llegada"
-  },
-  "gateMovement": {
-    "title": "Movimientos del sitio y áreas seguras",
-    "saved": "Movimiento registrado.",
-    "failed": "No se pudieron actualizar los movimientos. Reconecte y reintente.",
-    "enter": "Confirmar llegada al área",
-    "leave": "Confirmar salida del área",
-    "route": "Establecer destino",
-    "destination": "Próximo destino",
-    "remain": "Permanecer en el sitio",
-    "exit": "Salir por el acceso principal",
-    "empty": "No hay visitas abiertas en esta lista."
+    "exitPhoto": "Agregar foto de salida",
+    "missingEntryPhoto": "No hay foto de entrada confirmada.",
+    "missingExitPhoto": "No hay foto de salida confirmada.",
+    "unclassified": "Dirección de la foto no registrada"
   }
 }

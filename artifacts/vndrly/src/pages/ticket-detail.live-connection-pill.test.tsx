@@ -442,3 +442,6 @@ describe("ticket-detail — live connection pill (Task #677)", () => {
     ).toBe("live");
   });
 });
+
+// Gate proof owns its authenticated-query tests; this suite isolates ticket behavior.
+vi.mock("@/components/ticket-gate-proof", () => ({ default: () => null }));

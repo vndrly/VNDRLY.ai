@@ -221,7 +221,7 @@ function evalPred(pred: Pred | undefined, row: Row, now = new Date()): boolean {
   if (!pred) return true;
   switch (pred.kind) {
     case "jsonbEqual":
-      return JSON.stringify(row[pred.col.__col]??(pred.col.__col==='gateCapture'?{}:[]))===JSON.stringify(pred.val);
+      return JSON.stringify(row[pred.col.__col]??(pred.col.__col==='gateCapture'?null:[]))===JSON.stringify(pred.val);
     case "true":
       return true;
     case "eq":

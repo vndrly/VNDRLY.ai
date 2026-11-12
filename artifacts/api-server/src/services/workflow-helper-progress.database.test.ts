@@ -144,12 +144,16 @@ describe.skipIf(!isolated)("verified Gate helper proficiency receipts", () => {
     const request=(workflowKey:string)=>({workflowKey,mode:"independent",recordType:"gate-visit",recordId:visit,siteId:f.site});
     expect(await record(f.workerSession,request("gate-vehicle-check-in"))).toMatchObject({counted:true});
     await expect(record(f.workerSession,request("gate-inner-arrival"))).rejects.toMatchObject({status:409});
+    await pool.query("UPDATE gate_shifts SET ended_at=now() WHERE operator_id=$1 AND ended_at IS NULL",[f.worker]);
+    await pool.query("INSERT INTO gate_shifts(station_id,operator_id) VALUES($1,$2)",[inner,f.worker]);
     await movement(f.workerSession,{siteId:f.site,gateId:inner,visitId:visit,operationId:randomUUID(),kind:"enter"});
     expect(await record(f.workerSession,request("gate-inner-arrival"))).toMatchObject({counted:true});
     await movement(f.workerSession,{siteId:f.site,gateId:inner,visitId:visit,operationId:randomUUID(),kind:"leave",destination:"remain"});
     await expect(record(f.workerSession,request("gate-return-to-inner"))).rejects.toMatchObject({status:409});
+    await pool.query("UPDATE gate_shifts SET station_id=$1 WHERE operator_id=$2 AND ended_at IS NULL",[f.station,f.worker]);
     await movement(f.workerSession,{siteId:f.site,gateId:f.station,visitId:visit,operationId:randomUUID(),kind:"route",destinationGateId:inner});
     await expect(record(f.workerSession,request("gate-return-to-inner"))).rejects.toMatchObject({status:409});
+    await pool.query("UPDATE gate_shifts SET station_id=$1 WHERE operator_id=$2 AND ended_at IS NULL",[inner,f.worker]);
     await movement(f.workerSession,{siteId:f.site,gateId:inner,visitId:visit,operationId:randomUUID(),kind:"enter"});
     expect(await record(f.workerSession,request("gate-return-to-inner"))).toMatchObject({counted:true});
     await expect(record(f.workerSession,request("gate-vehicle-check-out"))).rejects.toMatchObject({status:409});

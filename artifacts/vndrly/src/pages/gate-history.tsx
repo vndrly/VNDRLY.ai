@@ -66,7 +66,7 @@ export default function GateHistoryPage() {
   const resolvedSiteId = siteId || String(sites.data?.sites[0]?.id ?? "");
   const stations = useQuery({ queryKey: ["change-over-history-stations",user?.userId,user?.activeMembershipId, resolvedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${resolvedSiteId}&mode=history`), enabled: Boolean(resolvedSiteId), retry: false });
   const resolvedStationId = stationId || stations.data?.stations[0]?.id || "";
-    useEffect(()=>{if(initialLinkPending.current&&sites.data&&stations.data&&stations.data.stations.some(g=>g.id===resolvedStationId)){initialLinkPending.current=false;saveGateSelection(user,resolvedSiteId,resolvedStationId);}},[sites.data,stations.data,resolvedSiteId,resolvedStationId]);
+    useEffect(()=>{if(initialLinkPending.current&&sites.data&&stations.data&&stations.data.stations.some(g=>g.id===resolvedStationId)){initialLinkPending.current=false;saveGateSelection(user,Number(resolvedSiteId),resolvedStationId);}},[sites.data,stations.data,resolvedSiteId,resolvedStationId]);
   const filters = resolvedSiteId ? {
     siteId: Number(resolvedSiteId), ...(resolvedStationId ? { stationId: resolvedStationId } : {}), range, recordType,
     ...(search.trim() ? { search: search.trim() } : {}),

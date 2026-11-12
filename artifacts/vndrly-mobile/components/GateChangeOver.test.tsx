@@ -1,3 +1,4 @@
+import {clearNativeGateSelections,saveNativeGateSelection,nativeGateSelectionKey} from "@/lib/gate-selection";
 vi.mock("react-native-svg", () => ({default: ({children}: any) => <svg>{children}</svg>, Defs: ({children}: any) => <defs>{children}</defs>, LinearGradient: ({children}: any) => <linearGradient>{children}</linearGradient>, Stop: () => null, Path: () => null}));
 import React from "react";
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
@@ -104,6 +105,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   env.user = { id: 1 };
   env.params = {};
+  clearNativeGateSelections();saveNativeGateSelection(nativeGateSelectionKey(env.user),{siteId:1,stationId:"gate"});
   env.fetch.mockResolvedValue({ recipients: [] });
   env.api.mockImplementation(async (path: string) =>
     path.startsWith("/sites")
@@ -117,7 +119,7 @@ beforeEach(() => {
             : {},
   );
 });
-afterEach(cleanup);
+afterEach(()=>{cleanup();clearNativeGateSelections();});
 it("uses an isolated exact Assume Watch preview without ordinary Gate discovery or cached Gate state", async () => {
   env.user = { id: 1, role: "vendor", vendorRole: "office" };
   env.params = { siteId: "1", stationId: "gate", purpose: "assume", gateMode: "1", workHubShiftId: "scheduled-shift" };

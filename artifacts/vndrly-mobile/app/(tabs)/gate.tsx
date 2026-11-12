@@ -149,7 +149,8 @@ function driverSuggestions(
 
 import { interpretGateSpeech, registerGateVoiceForm, gateDraftMatches, recoverGateSpeechFields, notifyGateVoiceDraftChanged } from "@workspace/gate-booth";
 
-export default function GatekeeperScreen() {
+export default function GatekeeperScreen(){const {user,activeMembershipId}=useAuth();return <GatekeeperWorkspace key={[user?.id,activeMembershipId,user?.vendorId,user?.partnerId].join(":")}/>;}
+function GatekeeperWorkspace() {
   const colors = useColors();
   const { t } = useTranslation();
   const { user, activeMembershipId } = useAuth();
@@ -891,7 +892,7 @@ export default function GatekeeperScreen() {
 
   const [exitCaptures,setExitCaptures]=useState<Record<number,NonNullable<import('@/lib/gatekeeper').GatekeeperVisitInput['gateCapture']>['images']>>({});
   const captureContext=useRef({user:user?.id,membership:activeMembershipId,site:selectedSiteId,gate:selectedGate?.id});
-  useEffect(()=>{const previous=captureContext.current;const next={user:user?.id,membership:activeMembershipId,site:selectedSiteId,gate:selectedGate?.id};captureContext.current=next;if(previous.user===next.user&&previous.membership===next.membership&&(!previous.site||previous.site===next.site)&&(!previous.gate||previous.gate===next.gate))return;recognitionSequence.current++;setExitCaptures({});setCaptureImages([]);setPlatePhotoUrl(null);setVehiclePhotoUrl(null);setRecognition(null);setArrivalDraft(null);},[user?.id,activeMembershipId,selectedSiteId,selectedGate?.id]);
+  useEffect(()=>{const previous=captureContext.current;const next={user:user?.id,membership:activeMembershipId,site:selectedSiteId,gate:selectedGate?.id};captureContext.current=next;if(previous.user===next.user&&previous.membership===next.membership&&(!previous.site||previous.site===next.site)&&(!previous.gate||previous.gate===next.gate))return;recognitionSequence.current++;setExitCaptures({});setCaptureImages([]);setPlatePhotoUrl(null);setVehiclePhotoUrl(null);setRecognition(null);setRecognitionPreview(null);setArrivalDraft(null);},[user?.id,activeMembershipId,selectedSiteId,selectedGate?.id]);
   const captureExit=async(visitId:number)=>{if(busy||!operatingContext.canOperate(selectedSiteId,selectedGate?.id))return;const sequence=recognitionSequence.current;setBusy(true);try{if((exitCaptures[visitId]?.length??0)>=12)throw Error(t('gatekeeper.captureLimit'));const photo=await captureAndUploadImage({maxBytes:8*1024*1024,purpose:'gate-evidence',authScope:captureAuthScope()});if(photo&&sequence===recognitionSequence.current)setExitCaptures(previous=>({...previous,[visitId]:[...(previous[visitId]??[]),{objectPath:photo.objectPath,originalPath:photo.objectPath,kind:'vehicle',capturedAt:new Date().toISOString()}]}));}catch(error){Alert.alert(t('visitor.error'),error instanceof Error?error.message:t('gateProof.unavailable'));}finally{setBusy(false);}};
   const onCheckOut = async (visitId: number) => {
     if(!operatingContext.canOperate(selectedSiteId,selectedGate?.id)){Alert.alert(t("visitor.error"), t("gateOperating.readOnly"));return;}

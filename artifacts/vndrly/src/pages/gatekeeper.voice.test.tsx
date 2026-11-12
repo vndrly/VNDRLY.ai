@@ -515,3 +515,5 @@ describe("GatekeeperPage voice entry", () => {
     expect(screen.getByText("Bonnie West")).toBeTruthy();
   });
 });
+
+vi.mock("@/hooks/use-gate-operating-context",()=>({useGateOperatingContext:()=>({operating:{siteId:1,stationId:"gate"},canOperate:()=>true,myGate:()=>{}})}));
