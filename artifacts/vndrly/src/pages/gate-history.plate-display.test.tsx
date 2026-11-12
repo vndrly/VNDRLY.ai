@@ -253,3 +253,18 @@ describe("GateHistoryPage plate display", () => {
     expect(queryGateReportRows).toHaveBeenLastCalledWith("history", expect.objectContaining({ search: "Taylor" }));
   });
 });
+
+it("pages records without changing gate scope and clamps a shrinking last page",async()=>{
+ window.history.replaceState({},"","/gate/history?siteId=42&stationId=00000000-0000-4000-8000-000000000042&recordType=check_ins");
+ let records=Array.from({length:26},(_,i)=>({id:"visit:"+(i+1),name:"Page driver "+i,checkInTime:"2026-11-12T08:00:00Z"}));
+ queryGateReportRows.mockImplementation(async()=>records);
+ const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});
+ render(<QueryClientProvider client={cache}><GateHistoryPage/></QueryClientProvider>);
+ await screen.findByText("Page driver 0");fireEvent.click(screen.getByRole("button",{name:"Next records"}));
+ expect(await screen.findByText("Page driver 25")).toBeTruthy();
+ expect(new URLSearchParams(window.location.search).get("stationId")).toBe("00000000-0000-4000-8000-000000000042");
+ records=records.slice(0,1);await cache.invalidateQueries({queryKey:["gate-history-report"]});
+ await waitFor(()=>expect(screen.queryByText("Page driver 25")).toBeNull());
+ expect(screen.getByText("Page driver 0")).toBeTruthy();
+ expect((screen.getByRole("button",{name:"Previous records"}) as HTMLButtonElement).disabled).toBe(true);
+});

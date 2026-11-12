@@ -27,7 +27,7 @@ it("cycles to an offline gate without hiding it or changing GPS evidence",()=>{
   expect(change).toHaveBeenCalledWith(1,"two");
   page.rerender(view("two",change));
   expect(screen.getByTestId("gate-link-indicator").getAttribute("data-connection")).toBe("offline");
-  expect(screen.getByTestId("gate-link-indicator").querySelector('stop[offset="100%"]')?.getAttribute("stop-color")).toBe("#ef4444");
+  expect(screen.getByTestId("gate-link-indicator").querySelector('stop[offset="100%"]')?.getAttribute("stop-color")).toBe("#9ca3af");
 });
 it("does not keep a green connection indicator after a failed status read",()=>{
   mocks.failed=true;render(view("one"));
@@ -37,4 +37,25 @@ it("hides the left indicator for an unlinked gate and retains GPS on the right",
   mocks.groupId=null;render(view("one"));
   expect(screen.queryByTestId("gate-link-indicator")).toBeNull();
   expect(screen.getByTestId("gate-gps-indicator").getAttribute("data-gps-status")).toBe("mismatch");
+});
+
+it("retains the saved link when the live feed omits inactive gates",()=>{
+  const saved=mocks.gates;
+  try {
+    mocks.gates=[saved[0]];
+    render(view("two"));
+    const indicator=screen.getByTestId("gate-link-indicator");
+    expect(indicator.getAttribute("data-connection")).toBe("unknown");
+    expect(indicator.querySelector('stop[offset="0%"]')?.getAttribute("stop-color")).toBe("#9ca3af");
+    expect(indicator.querySelector('stop[offset="100%"]')?.getAttribute("stop-color")).toBe("#9ca3af");
+    expect(screen.getByTestId("gate-gps-indicator").getAttribute("data-gps-status")).toBe("mismatch");
+  } finally { mocks.gates=saved; }
+});
+it("keeps a grey saved-link indicator when no booths are reporting",()=>{
+  const saved=mocks.gates;
+  try {
+    mocks.gates=[];render(view("one"));
+    expect(screen.getByTestId("gate-link-indicator")).toBeTruthy();
+    expect(screen.getByTestId("gate-link-indicator").querySelector('stop[offset="0%"]')?.getAttribute("stop-color")).toBe("#9ca3af");
+  } finally { mocks.gates=saved; }
 });

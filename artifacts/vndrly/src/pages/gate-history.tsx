@@ -1,3 +1,4 @@
+import { readGateSelection, saveGateSelection, useGateSelection } from "@/lib/gate-selection";
 import { GateAreaTraffic } from '@/components/gate-area-traffic';
 import { ContentCardHeader } from "@/components/ui/card";
 import { useLinkedGates } from "@/hooks/use-linked-gates";
@@ -48,8 +49,8 @@ export default function GateHistoryPage() {
   const [checkingOut, setCheckingOut] = useState<string | null>(null), [checkoutError, setCheckoutError] = useState("");
   const checkoutLock = useRef(false), checkoutKeys = useRef(new Map<string, string>());
   const initial = useMemo(() => new URLSearchParams(window.location.search), []);
-  const [siteId, setSiteId] = useState(initial.get("siteId") ?? initial.get("siteLocationId") ?? "");
-  const [stationId, setStationId] = useState(initial.get("stationId") ?? "");
+  const [siteId, setSiteId] = useState(initial.get("siteId") ?? initial.get("siteLocationId") ?? readGateSelection(user)?.siteId ?? "");
+  const [stationId, setStationId] = useState(initial.get("stationId") ?? (initial.has("siteId") || initial.has("siteLocationId") ? "" : readGateSelection(user)?.stationId) ?? "");
   const [range, setRange] = useState<GateReportRange>((initial.get("range") as GateReportRange) || "current_shift");
   const [recordType, setRecordType] = useState<GateReportRecordType>((initial.get("recordType") as GateReportRecordType) || "all");
   const [search, setSearch] = useState(initial.get("search") ?? "");
@@ -57,17 +58,21 @@ export default function GateHistoryPage() {
   const [focusedRecordId, setFocusedRecordId] = useState<string | null>(initial.get("view") === "record" ? initial.get("recordId") : null);
   const [recordId, setRecordId] = useState<string | null>(initial.get("view") === "record" ? null : initial.get("recordId"));
   const [runId, setRunId] = useState<string | null>(null);
+  const sharedSelection=useGateSelection(user);
+  const initialLinkPending=useRef(initial.has("siteId")||initial.has("siteLocationId")||initial.has("stationId"));
+  useEffect(()=>{if(sharedSelection&&!initialLinkPending.current){setSiteId(sharedSelection.siteId);setStationId(sharedSelection.stationId);}},[sharedSelection]);
   const [page, setPage] = useState(0);
-  const sites = useQuery({ queryKey: ["change-over-history-sites"], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites?mode=history"), retry: false });
+  const sites = useQuery({ queryKey: ["change-over-history-sites",user?.userId,user?.activeMembershipId], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites?mode=history"), retry: false });
   const resolvedSiteId = siteId || String(sites.data?.sites[0]?.id ?? "");
-  const stations = useQuery({ queryKey: ["change-over-history-stations", resolvedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${resolvedSiteId}&mode=history`), enabled: Boolean(resolvedSiteId), retry: false });
+  const stations = useQuery({ queryKey: ["change-over-history-stations",user?.userId,user?.activeMembershipId, resolvedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${resolvedSiteId}&mode=history`), enabled: Boolean(resolvedSiteId), retry: false });
   const resolvedStationId = stationId || stations.data?.stations[0]?.id || "";
+    useEffect(()=>{if(initialLinkPending.current&&sites.data&&stations.data&&stations.data.stations.some(g=>g.id===resolvedStationId)){initialLinkPending.current=false;saveGateSelection(user,resolvedSiteId,resolvedStationId);}},[sites.data,stations.data,resolvedSiteId,resolvedStationId]);
   const filters = resolvedSiteId ? {
     siteId: Number(resolvedSiteId), ...(resolvedStationId ? { stationId: resolvedStationId } : {}), range, recordType,
     ...(search.trim() ? { search: search.trim() } : {}),
   } : null;
   const listFilters = filters && focusedRecordId ? { ...filters, recordType: "all" as const, recordId: focusedRecordId } : filters && trafficView === "arrivals" ? { ...filters, recordType: "pending" as const } : filters;
-  const rows = useQuery({ queryKey: ["gate-history-report", listFilters], queryFn: () => queryGateReportRows<GateHistoryRow>("history", listFilters!), enabled: Boolean(listFilters), retry: false });
+  const rows = useQuery({ queryKey: ["gate-history-report",user?.userId,user?.activeMembershipId, listFilters], queryFn: () => queryGateReportRows<GateHistoryRow>("history", listFilters!), enabled: Boolean(listFilters), retry: false });
   const linkedGates = useLinkedGates(Number(resolvedSiteId) || undefined);
   const arrivals = useGateArrivals(!focusedRecordId && (trafficView === "arrivals" || trafficView === "all" && recordType === "all") ? Number(resolvedSiteId) || undefined : undefined, linkedGates.data?.siteIds);
   const selectedRecord = useQuery({
@@ -124,10 +129,10 @@ export default function GateHistoryPage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="min-w-0 max-w-full"><GateSiteGateSelect history showGps={false} sites={sites.data?.sites ?? []} siteId={Number(resolvedSiteId)}
               gate={stations.data?.stations.find(row => row.id === resolvedStationId)}
-              onChange={(nextSite, nextGate) => { setSiteId(String(nextSite)); setStationId(nextGate); setRecordId(null); setFocusedRecordId(null); }} /></div>
+              onChange={(nextSite, nextGate) => { saveGateSelection(user, nextSite, nextGate); setSiteId(String(nextSite)); setStationId(nextGate); setRecordId(null); setFocusedRecordId(null); }} /></div>
             <GateReportToolbar dropdown reportKind="history" filters={filters} disabled={rows.isLoading} />
           </div>
-          <GateAreaTraffic siteId={Number(resolvedSiteId)||undefined} gateId={resolvedStationId} view={trafficView} history />
+          <details className="gate-panel-disclosure"><summary>{c("Current site movements (separate from the report)", "Movimientos actuales del sitio (separados del informe)")}</summary><p className="text-xs text-muted-foreground">{c("Live operations. Report date, search and export filters below do not apply to this section.", "Operaciones en vivo. Los filtros de fecha, búsqueda y exportación no se aplican a esta sección.")}</p><GateAreaTraffic siteId={Number(resolvedSiteId)||undefined} gateId={resolvedStationId} view="all" history /></details>
           <div className="gate-history-filters" aria-label="Gate activity filters">
             {([['arrivals','Arrivals'],['on_site','On Site'],['departures','Departures'],['all','All']] as const).map(([type,label]) =>
               <button type="button" key={type} className="gate-history-filter" aria-pressed={trafficView === type} onClick={() => {
@@ -145,7 +150,7 @@ export default function GateHistoryPage() {
             {rows.isLoading && <Loader2 className="animate-spin text-muted-foreground" />}
             {rows.isError && <p role="alert" className="text-sm text-destructive">{t("gatekeeper.historyLoadFailed")}</p>}
             {(trafficView === "arrivals" || trafficView === "all" && recordType === "all") && arrivals.isError && <p role="alert" className="text-sm text-destructive">{t("gatekeeper.arrivalsLoadFailed")}</p>}
-            {!rows.isLoading && !rows.isError && !visibleRecords.length && !((trafficView === "arrivals" || trafficView === "all" && recordType === "all") && arrivals.isLoading) && <p className="text-sm text-muted-foreground">{t("gatekeeper.historyEmpty")}</p>}
+            {!rows.isLoading && !rows.isError && !visibleRecords.length && !((trafficView === "arrivals" || trafficView === "all" && recordType === "all") && arrivals.isLoading) && <p className="text-sm text-muted-foreground">{c("No records match the selected range and filters.", "Ningún registro coincide con el período y los filtros seleccionados.")}</p>}
             {(trafficView === "arrivals" || trafficView === "all") && arrivals.preview && <p className="text-xs text-muted-foreground">{c("Sample arrivals · approval preview", "Llegadas de ejemplo · vista previa de aprobación")}</p>}
             {pageRecords.map(item => {
               if (item.type === "arrival") return <GateArrivalCard key={`arrival:${item.run.id}`} run={item.run} query={arrivals} onOpen={setRunId} />;

@@ -703,7 +703,10 @@
     "heroDescription": "VNDRLY conecta a Socios, Proveedores y Empleados de Campo con seguimiento GPS en tiempo real y gestión sin interrupciones de órdenes de trabajo."
   },
   "dashboard": {
-    "ticketPanels": { "title": "Tickets", "all": "Todos los tickets" },
+    "ticketPanels": {
+      "title": "Tickets",
+      "all": "Todos los tickets"
+    },
     "companyOperations": "Operaciones de {{company}}",
     "title": "Panel",
     "subtitle": "Resumen de Operaciones de Campo VNDRLY",
@@ -5616,6 +5619,20 @@
     "assignFailed": "No se pudo asignar la puesta al día."
   },
   "gatekeeper": {
+    "recognitionCropGuide": "Arrastre alrededor de la placa para leer un recorte más cercano, o use los controles.",
+    "recognitionCropControls": "Ajustar recorte con controles",
+    "recognitionReadCrop": "Leer área seleccionada de la placa",
+    "cropLeft": "Izquierda",
+    "cropTop": "Arriba",
+    "cropWidth": "Ancho",
+    "cropHeight": "Alto",
+    "recognitionCaptureFailed": "No se pudo preparar o cargar la foto. Tome una foto clara JPEG, PNG o WebP de menos de 8 MB, o escriba la placa.",
+    "recognitionCaptureGuide": "Centre un vehículo o una placa, mantenga el enfoque y evite reflejos. Verifique la lectura y el conductor actual antes de guardar.",
+    "recognitionPhoto": "Foto utilizada para reconocimiento",
+    "recognitionReview": "Revise la placa y el estado. La apariencia describe el vehículo; no confirma su identidad.",
+    "recognitionMultiple": "Se ve más de un vehículo. Tome una foto más cercana del vehículo correcto.",
+    "recognitionUse": "Usar placa revisada",
+    "recognitionUnavailable": "El reconocimiento no está disponible o tardó demasiado. Reintente o escriba la placa; la foto guardada sigue adjunta.",
     "historyCheckedIn": "Entrada registrada",
     "linkedRunsUnavailable": "No se pudieron cargar los detalles de los viajes vinculados.",
     "arrivalsTab": "Llegadas",
@@ -5732,7 +5749,11 @@
     "pendingAdmit": "Esperando entrar",
     "reconciliationObserved": "Entrada observada; faltan detalles",
     "reconciliationReview": "Se necesita revision del supervisor de puerta",
-    "admit": "Admitir"
+    "admit": "Admitir",
+    "selectionUnavailable": "El acceso anterior no está disponible para esta asignación. Verifique el sitio antes de registrar un cruce.",
+    "presenceLoadFailed": "No se pudieron actualizar los registros. No lo considere un sitio vacío. Use Actualizar para reintentar.",
+    "captureLimit": "Ya hay doce fotos adjuntas. Guarde esta entrada antes de agregar más.",
+    "arrivalWrongSite": "Seleccione el destino de la llegada antes de registrar la entrada o quite el vínculo."
   },
   "ticketVoiceEntry": {
     "photoTitle": "Agregar foto al ticket",
@@ -6548,5 +6569,46 @@
   "trainingQualifications": {
     "heading": "Cualificaciones para la tarea y requisitos de credenciales",
     "help": "Aplique estos requisitos solo a su función asignada. La finalización del curso, la evaluación práctica, las credenciales externas y la autorización de trabajo son registros separados."
+  },
+  "gateOperating": {
+    "myGate": "Mi acceso",
+    "operating": "Operando: {{site}} / {{gate}}",
+    "readOnly": "Este acceso es de solo lectura. Asuma su guardia y regrese a su acceso operativo para registrar actividad.",
+    "noWatch": "Seleccione un acceso y asuma su guardia para registrar actividad.",
+    "unavailable": "Acceso operativo no disponible. Reintente antes de registrar actividad."
+  },
+  "gateProof": {
+    "title": "Prueba de cruce de acceso",
+    "unavailable": "No se pudo cargar la evidencia.",
+    "missing": "No hay evidencia de cruce vinculada. Esto no demuestra que no hubo un cruce.",
+    "notRecorded": "No registrado",
+    "entry": "Entrada",
+    "exit": "Salida",
+    "photo": "Evidencia de cruce",
+    "original": "Ver original",
+    "exitPhoto": "Agregar foto de salida"
+  },
+  "gateArrivalReview": {
+    "title": "Llegadas al sitio",
+    "failed": "No se pudieron actualizar las llegadas.",
+    "empty": "No hay llegadas registradas.",
+    "review": "Revisar para entrada",
+    "truncated": "Existen más llegadas que las devueltas por esta fuente. Esta no es la cola completa.",
+    "wrongSite": "Esta llegada pertenece a otro sitio. Verifique el sitio antes de guardar.",
+    "notAdmitted": "Entrada no registrada. Verifique conductor, placa y empresa antes de guardar.",
+    "use": "Usar conductor y empresa",
+    "remove": "Quitar vínculo de llegada"
+  },
+  "gateMovement": {
+    "title": "Movimientos del sitio y áreas seguras",
+    "saved": "Movimiento registrado.",
+    "failed": "No se pudieron actualizar los movimientos. Reconecte y reintente.",
+    "enter": "Confirmar llegada al área",
+    "leave": "Confirmar salida del área",
+    "route": "Establecer destino",
+    "destination": "Próximo destino",
+    "remain": "Permanecer en el sitio",
+    "exit": "Salir por el acceso principal",
+    "empty": "No hay visitas abiertas en esta lista."
   }
 }

@@ -1,0 +1,7 @@
+import {expect,it} from 'vitest';
+import {getGateOperatingContext,requireGateOperatingContext} from './gate-change-over';
+const session={userId:7,role:'admin',sv:4};
+function client(gates:any[]){return {query:async(sql:string)=>{if(sql.startsWith('SELECT DISTINCT g.id'))return{rows:gates};if(sql.startsWith('SELECT id, role'))return{rows:[{id:7,role:'admin',session_version:4}]};if(sql.startsWith('SELECT id, name'))return{rows:[{id:1,name:'Site',partner_id:2}]};throw Error(sql);}} as any;}
+it('uses the one saved personal watch, not a browsed gate',async()=>{const db=client([{siteId:1,stationId:'gate-1',gateName:'One',siteName:'Site'}]);await expect(requireGateOperatingContext(session,1,'gate-1',db)).resolves.toMatchObject({stationId:'gate-1'});await expect(requireGateOperatingContext(session,1,'gate-4',db)).rejects.toMatchObject({status:403,code:'change_over.viewing_gate_read_only'});});
+it('does not choose an arbitrary operating gate with absent or overlapping watches',async()=>{await expect(getGateOperatingContext(session,client([]))).resolves.toMatchObject({operatingGate:null,reason:'no_watch'});await expect(getGateOperatingContext(session,client([{siteId:1,stationId:'a'},{siteId:1,stationId:'b'}]))).resolves.toMatchObject({operatingGate:null,reason:'multiple_watches'});});
+it('rejects demo write context even if a watch exists',async()=>{await expect(requireGateOperatingContext({...session,publicDemo:true},1,'a',client([{siteId:1,stationId:'a'}]))).rejects.toMatchObject({status:403});});

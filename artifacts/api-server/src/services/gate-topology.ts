@@ -1,3 +1,4 @@
+import { getGateOperatingContext, requireGateOperatingContext } from "./gate-change-over";
 import { pool } from '@workspace/db';
 import { z } from 'zod';
 import type { SessionPayload } from '../lib/session';
@@ -90,17 +91,22 @@ export async function saveGateTopology(session:SessionPayload,siteId:number,gate
 }
 export async function readGateMovements(session:SessionPayload,siteId:number) {
   const topology=await readGateTopology(session,siteId);
+  // Topology administration and recording a crossing are different permissions.
+  const movementGateIds:string[]=[];
+  const {operatingGate}=await getGateOperatingContext(session);
+  if(operatingGate?.siteId===siteId&&topology.gates.some(gate=>gate.active&&gate.id===operatingGate.stationId))movementGateIds.push(operatingGate.stationId);
   const visits=(await pool.query(`SELECT id,first_name AS "firstName",last_name AS "lastName",company,vehicle_plate AS "vehiclePlate",gate_station_id AS "entryGateId",check_in_time AS "checkInTime",check_out_time AS "checkOutTime",gate_movements AS movements FROM site_visits WHERE site_location_id=$1 AND admission_status IS DISTINCT FROM 'pending' AND admission_status IS DISTINCT FROM 'denied' AND reconciliation_state IS DISTINCT FROM 'confirmed_off_site' AND (check_out_time IS NULL OR check_out_time>now()-interval '30 days') ORDER BY check_in_time DESC`,[siteId])).rows;
   const actorIds=[...new Set(visits.flatMap(v=>(v.movements as GateMovement[]).map(m=>m.actorId)))];
   const actors=actorIds.length?(await pool.query('SELECT id,display_name FROM users WHERE id=ANY($1::int[])',[actorIds])).rows:[];
   const names=new Map(actors.map(a=>[a.id,a.display_name]));
-  return {...topology,visits:visits.map(v=>({...v,movements:v.movements.map((m:GateMovement)=>({...m,actorName:names.get(m.actorId)??`User #${m.actorId}`})),presence:movementPresence(v.movements,v.entryGateId,!!v.checkOutTime)}))};
+  return {...topology,movementGateIds,visits:visits.map(v=>({...v,movements:v.movements.map((m:GateMovement)=>({...m,actorName:names.get(m.actorId)??`User #${m.actorId}`})),presence:movementPresence(v.movements,v.entryGateId,!!v.checkOutTime)}))};
 }
 export const movementSchema=z.object({siteId:z.number().int().positive(),gateId:z.string().uuid(),visitId:z.number().int().positive(),operationId:z.string().uuid(),kind:z.enum(['enter','leave','route','site_exit']),destinationGateId:z.string().uuid().nullable().optional(),destination:z.enum(['site_exit','remain']).optional(),destinationId:z.string().uuid().optional()}).strict();
 export async function recordGateMovement(session:SessionPayload,input:z.infer<typeof movementSchema>) {
   if(session.publicDemo||session.realm==='demo')fail(403,'This session is read only.');
   return changeOverTransaction(async c=>{
     await requireChangeOverAccess(c,session,input.siteId,{stationId:input.gateId});
+    await requireGateOperatingContext(session,input.siteId,input.gateId,c);
     const gate=(await c.query('SELECT id,name,topology FROM gate_stations WHERE id=$1 AND site_id=$2 AND active=true',[input.gateId,input.siteId])).rows[0];
     if(!gate)fail(404,'Gate unavailable at this site.');
     const visit=(await c.query('SELECT id,gate_station_id,gate_movements,check_out_time FROM site_visits WHERE id=$1 AND site_location_id=$2 FOR UPDATE',[input.visitId,input.siteId])).rows[0];

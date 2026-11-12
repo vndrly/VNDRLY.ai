@@ -75,3 +75,20 @@ describe("Gate incoming runs", () => {
     expect(screen.queryByText("gatekeeper.noArrivals")).toBeNull();
   });
 });
+
+it("pages all client arrivals and exposes a review action without approval",()=>{
+ const records=Array.from({length:105},(_,i)=>({...arrival,id:"page-"+i,runId:"page-run-"+i}));
+ const query={isLoading:false,isError:false,data:{arrivals:records,truncated:false},newInboundIds:new Set()} as ReturnType<typeof useGateArrivals>;
+ const prepare=vi.fn();render(<GateArrivalsPanel query={query} onOpen={vi.fn()} onPrepare={prepare} limit={100}/>);
+ fireEvent.click(screen.getByRole("button",{name:"Next arrivals"}));
+ expect(screen.getAllByRole("button",{name:"Review for check-in"})).toHaveLength(5);
+ fireEvent.click(screen.getAllByRole("button",{name:"Review for check-in"})[0]);
+ expect(prepare).toHaveBeenCalledWith(records[100]);
+ expect(screen.queryByText("Approved — Drive through")).toBeNull();
+});
+it("clamps a negative arrival limit and keeps overflow reachable",()=>{
+ const query={isLoading:false,isError:false,data:{arrivals:[arrival,{...arrival,id:"second",runId:"second"}],truncated:false},newInboundIds:new Set()} as ReturnType<typeof useGateArrivals>;
+ render(<GateArrivalsPanel query={query} onOpen={vi.fn()} limit={-1}/>);
+ expect(screen.getAllByRole("button",{name:/Pat Driver/})).toHaveLength(1);
+ expect((screen.getByRole("button",{name:"Next arrivals"}) as HTMLButtonElement).disabled).toBe(false);
+});

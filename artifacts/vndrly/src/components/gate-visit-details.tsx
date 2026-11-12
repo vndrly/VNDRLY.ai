@@ -8,7 +8,7 @@ import { formatPlateForDisplay } from "@/lib/plate-display";
 import { gateArrivalsApi } from "@/lib/gate-arrivals-api";
 
 export function GateVisitDetails({ visitId, onClose, onOpenRun }: { visitId: number | null; onClose: () => void; onOpenRun?: (runId: string) => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const record = useQuery({
     queryKey: ["gate-visit-detail", user?.userId, user?.activeMembershipId, visitId],
@@ -38,6 +38,7 @@ export function GateVisitDetails({ visitId, onClose, onOpenRun }: { visitId: num
             [t("gatekeeper.notes"), visit.notes],
           ].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
         </dl>
+        {visit.gateCapture?.images?.length ? <section aria-label={i18n?.language?.startsWith("es") ? "Fotos del cruce" : "Crossing photos"} className="grid grid-cols-2 gap-2">{visit.gateCapture.images.map((image,index)=><a key={image.objectPath} href={"/api/storage"+image.originalPath} target="_blank" rel="noreferrer"><img src={"/api/storage"+image.objectPath} alt={image.kind + " " + (index+1)} className="max-h-40 object-contain"/><span>{i18n?.language?.startsWith("es") ? "Ver original" : "View original"} · {new Date(image.capturedAt).toLocaleString()}</span></a>)}</section> : null}
         {onOpenRun && links.data?.runs.map(run => <button className="gate-record-link" key={run.id} type="button" onClick={() => onOpenRun(run.runId)}>{run.title} · #{run.ticketNumber}</button>)}
         {links.isError && <p role="alert" className="text-xs text-muted-foreground">{t("gatekeeper.linkedRunsUnavailable")}</p>}
       </div> : null}

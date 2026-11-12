@@ -30,12 +30,14 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   const reportConnection = /^\/gate(?:\/change-over)?\/?$/.test(window.location.pathname);
   const [choicesRequested, setChoicesRequested] = useState(false);
   const link = useLinkedGates(siteId, gate?.id, reportConnection);
-  const linked = Boolean(link.data?.groupId) && (link.data?.gates?.length ?? 0) > 1;
+  // Saved linkage remains visible even when inactive gates are omitted from the live feed.
+  const linked = Boolean(link.data?.groupId);
   const selectedConnection = linked && !link.isError ? link.data?.gates?.find(row => row.id === gate?.id)?.connection ?? "unknown" : "unknown";
   const online = link.data?.gates?.filter(row => row.connection === "online").length ?? 0;
   const connectionText = selectedConnection === "online" ? (es ? "Caseta conectada" : "Booth connected") : selectedConnection === "offline" ? (es ? "Sin conexión reciente de caseta" : "No recent booth connection") : (es ? "Conexión de caseta desconocida" : "Booth connection unknown");
   const linkTitle = !linked ? (es ? "Sin accesos vinculados" : "No linked gates") : `${link.data?.name || (es ? "Accesos vinculados" : "Linked gates")} · ${connectionText} · ${online}/${link.data?.gates?.length ?? 0} ${es ? "conectados" : "connected"}`;
-  const endpoint = selectedConnection === "online" ? "#22c55e" : selectedConnection === "offline" ? "#ef4444" : "#9ca3af";
+  const endpoint = selectedConnection === "online" ? "#22c55e" : "#9ca3af";
+  const startpoint = selectedConnection === "online" ? "#f59e0b" : "#9ca3af";
   const label = `${t("changeOver.site")} | ${t("changeOver.gate")}`;
   const options = useQuery({
     queryKey: ["gate-site-gate-options", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, history, ...(history ? sites.map(site => site.id) : [])],
@@ -66,7 +68,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
       <span className="gate-linked-selector">
         {showGps ? <GateGpsSelector status={gpsStatus} label={gpsLabel} detail={gpsDetail}>{selector}</GateGpsSelector> : selector}
         {gate && linked && <span className="gate-link-indicator" role="img" aria-label={linkTitle} title={linkTitle} data-testid="gate-link-indicator" data-connection={selectedConnection}>
-          <svg viewBox="0 0 32 52" aria-hidden="true" focusable="false"><defs><linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f59e0b"/><stop offset="100%" stopColor={endpoint}/></linearGradient></defs><g transform="translate(32 0) scale(-1 1)"><path d="M 5 4 A 22 22 0 0 1 5 48" fill="none" stroke="#151719" strokeWidth="8" strokeLinecap="round"/><path d="M 5 4 A 22 22 0 0 1 5 48" fill="none" stroke={`url(#${gradientId})`} strokeWidth="5" strokeLinecap="round"/><path d="M 20 9 L 23 6 M 27 26 L 31 26 M 20 43 L 23 46" fill="none" stroke="currentColor" strokeWidth="1.5" opacity=".7"/></g></svg>
+          <svg viewBox="0 0 32 52" aria-hidden="true" focusable="false"><defs><linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={startpoint}/><stop offset="100%" stopColor={endpoint}/></linearGradient></defs><g transform="translate(32 0) scale(-1 1)"><path d="M 5 4 A 22 22 0 0 1 5 48" fill="none" stroke="#151719" strokeWidth="8" strokeLinecap="round"/><path d="M 5 4 A 22 22 0 0 1 5 48" fill="none" stroke={`url(#${gradientId})`} strokeWidth="5" strokeLinecap="round"/><path d="M 20 9 L 23 6 M 27 26 L 31 26 M 20 43 L 23 46" fill="none" stroke="currentColor" strokeWidth="1.5" opacity=".7"/></g></svg>
         </span>}
       </span>
     </label>

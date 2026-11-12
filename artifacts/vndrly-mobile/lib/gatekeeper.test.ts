@@ -141,6 +141,9 @@ describe("submitGatekeeperVisit", () => {
       durationStr: "45",
       platePhotoUrl: "/uploads/tag.jpg",
       vehiclePhotoUrl: "/uploads/truck.jpg",
+      gateStationId: "entry-gate",
+      destinationId: "delivery-destination",
+      destinationGateId: "inner-gate",
     });
 
     expect(result).toEqual({ ok: true, visitId: 88 });
@@ -151,6 +154,7 @@ describe("submitGatekeeperVisit", () => {
     expect(body).not.toHaveProperty("email");
     expect(body.platePhotoUrl).toBe("/uploads/tag.jpg");
     expect(body.vehiclePhotoUrl).toBe("/uploads/truck.jpg");
+    expect(body).toMatchObject({gateStationId:"entry-gate",destinationId:"delivery-destination",destinationGateId:"inner-gate"});
     expect(body.firstName).toBe("Jordan");
     expect(body.vehiclePlate).toBe("4412");
     expect(body.plateState).toBe("OK");

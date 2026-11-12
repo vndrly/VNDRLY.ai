@@ -6,7 +6,7 @@ const mocks=vi.hoisted(()=>({request:vi.fn(),checkout:vi.fn(),data:{} as any,hel
 vi.mock('@/components/next-steps',()=>({useNextSteps:()=>mocks.helper}));
 vi.mock('@/hooks/use-auth',()=>({useAuth:()=>({user:{userId:1}})}));
 vi.mock('react-i18next',()=>({useTranslation:()=>({i18n:{language:'en'}})}));
-vi.mock('@/lib/change-over-api',()=>({changeOverRequest:(path:string,body?:any)=>body?mocks.request(path,body):Promise.resolve(mocks.data)}));
+vi.mock('@/lib/change-over-api',()=>({changeOverRequest:(path:string,body?:any)=>body?mocks.request(path,body):Promise.resolve({canManage:true,movementGateIds:(mocks.data.gates??[]).filter((g:any)=>g.active!==false).map((g:any)=>g.id),...mocks.data})}));
 vi.mock('@/lib/visits-api',()=>({visitsApi:{gateCheckOut:mocks.checkout}}));
 vi.mock('./work-hub/chrome',()=>({BrandedSelect:(props:any)=><select {...props}/>}));
 import {GateAreaTraffic,GateMovementLocationSummary,gateCheckInDestinationDefaults,parallelGateGroup} from './gate-area-traffic';
@@ -129,4 +129,16 @@ it('waits for the outer colleague after saved inner departure without claiming f
 it('does not guide a revoked reader or a different selected gate',async()=>{
  guide('gate-inner-arrival',77,'two');mocks.data={gates,canManage:false,visits:[visit(77,'main','one')]};guidedShow('one','arrivals');await screen.findByText('Visitor77 Test');
  expect(screen.queryByText(/Confirm this selected vehicle has physically arrived/)).toBeNull();
+});
+
+it('disables movement writes for view-only readers',async()=>{
+ mocks.data={canManage:false,movementGateIds:[],gates,visits:[visit(1,'main',null,true)]};show('main','departures');
+ const button=await screen.findByRole('button',{name:'Check out'});expect((button as HTMLButtonElement).disabled).toBe(true);fireEvent.click(button);
+ expect(mocks.checkout).not.toHaveBeenCalled();expect(screen.getByText(/View only/)).toBeTruthy();
+});
+
+it('allows an assigned gatekeeper to record movement without topology administration',async()=>{
+ mocks.checkout.mockResolvedValue({});mocks.data={canManage:false,movementGateIds:['main'],gates,visits:[visit(3,'main',null,true)]};
+ show('main','departures');fireEvent.click(await screen.findByRole('button',{name:'Check out'}));
+ await waitFor(()=>expect(mocks.checkout).toHaveBeenCalledWith(3,undefined,undefined,undefined,'main'));
 });

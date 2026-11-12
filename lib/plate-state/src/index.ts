@@ -1,3 +1,5 @@
+export * from "./recognition";
+
 export interface PlateState {
   code: string;
   name: string;

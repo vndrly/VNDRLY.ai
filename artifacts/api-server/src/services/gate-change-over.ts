@@ -1623,3 +1623,30 @@ export async function markShiftNoteViewed(session: SessionPayload, stationId: st
     return { viewed: true };
   });
 }
+
+/** Operational authority is saved watch state, never the gate selected for browsing. */
+export async function getGateOperatingContext(session: SessionPayload, client: Queryable = pool) {
+  if (!session.userId || session.publicDemo || session.realm === "demo") return { operatingGate: null, reason: "read_only" };
+  const rows = (await client.query(`SELECT DISTINCT g.id AS "stationId", g.site_id AS "siteId", g.name AS "gateName", s.name AS "siteName"
+    FROM gate_stations g JOIN site_locations s ON s.id=g.site_id
+    WHERE g.active=true AND g.id IN (
+      SELECT station_id FROM gate_shifts WHERE operator_id=$1 AND ended_at IS NULL
+      UNION SELECT station_id FROM gate_duty_sessions WHERE user_id=$1 AND ended_at IS NULL)
+    ORDER BY g.id`,[session.userId])).rows;
+  const allowed = [];
+  for (const row of rows) {
+    try { await requireChangeOverAccess(client,session,row.siteId,{stationId:row.stationId}); allowed.push(row); }
+    catch(error) { if (!(error instanceof ChangeOverError) || error.status!==403) throw error; }
+  }
+  return { operatingGate: allowed.length===1 ? allowed[0] as {stationId:string;siteId:number;gateName:string;siteName:string} : null,
+    reason: allowed.length===1 ? null : allowed.length ? "multiple_watches" : "no_watch" };
+}
+export async function requireGateOperatingContext(session: SessionPayload, siteId: number, stationId?: string, client: Queryable = pool) {
+  const context=await getGateOperatingContext(session,client);
+  if (!context.operatingGate) fail(403,"operating_gate_required",context.reason==="multiple_watches"
+    ? "Resolve overlapping personal watches before recording gate activity."
+    : "Assume your Gate watch before recording entry, exit or movement.");
+  const gate=context.operatingGate!;
+  if (gate.siteId!==siteId || (stationId && gate.stationId!==stationId)) fail(403,"viewing_gate_read_only","This is a viewing gate. Return to your operating gate to record activity.");
+  return gate;
+}

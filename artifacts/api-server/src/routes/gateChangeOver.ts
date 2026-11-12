@@ -22,6 +22,7 @@ import { listMyScheduledWatches, respondToScheduledWatch } from "../services/gat
 import { listGateWatchTimeline } from "../services/gate-watch-timeline";
 import {
   ChangeOverError,
+  getGateOperatingContext,
   listChangeOverSites,
   listGateStationManagementSites,
   listChangeOverStations,
@@ -108,6 +109,7 @@ router.post("/gate-change-over/my-scheduled-watches/:shiftId/response", async(re
 });
 const sessionFor = (req: Parameters<typeof getSessionFromRequest>[0]) =>
   getSessionFromRequest(req)!;
+router.get("/gate-change-over/operating-context",async(req,res)=>res.json(await getGateOperatingContext(sessionFor(req))));
 router.get("/gate-change-over/watches",async(req,res)=>res.json(await listActiveGateWatches(sessionFor(req))));
 router.get("/gate-change-over/watch-timeline",async(req,res)=>res.json(await listGateWatchTimeline(sessionFor(req))));
 router.get("/gate-change-over/:stationId/watch/standers",async(req,res)=>res.json(await listAvailableGateWatchStanders(sessionFor(req),uuid.parse(req.params.stationId))));

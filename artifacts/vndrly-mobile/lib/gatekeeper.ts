@@ -1,3 +1,4 @@
+import type { GateRecognition } from "@workspace/plate-state";
 import { apiFetch } from "./api";
 import type { AssignedGateSitesResponse } from "./gate-default-site";
 import type { ActiveVisit, SiteContext } from "./guest";
@@ -18,8 +19,11 @@ export type GatekeeperVisitInput = {
   durationStr: string;
   platePhotoUrl?: string;
   vehiclePhotoUrl?: string;
+  gateCapture?: { images: { objectPath: string; originalPath: string; kind: "plate" | "vehicle" | "crop"; capturedAt: string }[]; arrivalRunId?: string };
   coordinates?: { latitude: number; longitude: number } | null;
   gateStationId?: string;
+  destinationId?: string;
+  destinationGateId?: string;
 };
 
 export type GatekeeperSubmitResult =
@@ -77,7 +81,7 @@ async function fetchVisitPages(prefix: string): Promise<ActiveVisit[]> {
   }
 }
 
-export type PlateOcrCandidate = {
+export type PlateOcrCandidate = GateRecognition & {
   plate: string | null;
   state: PlateStateCode | null;
   plateConfidence: number | null;
@@ -86,10 +90,11 @@ export type PlateOcrCandidate = {
 
 export async function readGatePlate(
   objectPath: string,
+  mode: "plate" | "vehicle" = "plate",
 ): Promise<PlateOcrCandidate> {
   return apiFetch<PlateOcrCandidate>("/api/visits/gate/read-plate", {
     method: "POST",
-    body: JSON.stringify({ objectPath }),
+    body: JSON.stringify({ objectPath, mode }),
   });
 }
 
@@ -106,13 +111,13 @@ export async function deleteGateEvidence(
 export async function gatekeeperCheckOut(
   visitId: number,
   notes?: string,
-  evidence?: { coordinates?: { latitude: number; longitude: number } | null; gateStationId?: string },
+  evidence?: { coordinates?: { latitude: number; longitude: number } | null; gateStationId?: string; gateCapture?: GatekeeperVisitInput["gateCapture"] },
 ): Promise<void> {
   // Use the device observation already available on the operator's screen.
   // Waiting for a new fix must never prevent recording a gate crossing.
   await apiFetch(`/api/visits/gate/${visitId}/check-out`, {
     method: "POST",
-    body: JSON.stringify({ latitude: evidence?.coordinates?.latitude, longitude: evidence?.coordinates?.longitude, gateStationId: evidence?.gateStationId, notes }),
+    body: JSON.stringify({ latitude: evidence?.coordinates?.latitude, longitude: evidence?.coordinates?.longitude, gateStationId: evidence?.gateStationId, gateCapture:evidence?.gateCapture, notes }),
   });
 }
 
@@ -141,12 +146,15 @@ export async function submitGatekeeperVisit(
       notes: input.notes?.trim() || undefined,
       expectedDurationMinutes: parseDurationMinutes(input.durationStr),
       ...(input.platePhotoUrl ? { platePhotoUrl: input.platePhotoUrl } : {}),
+      ...(input.gateCapture ? { gateCapture: input.gateCapture } : {}),
       ...(input.vehiclePhotoUrl
         ? { vehiclePhotoUrl: input.vehiclePhotoUrl }
         : {}),
       latitude: input.coordinates?.latitude,
       longitude: input.coordinates?.longitude,
       gateStationId: input.gateStationId,
+      destinationId: input.destinationId,
+      destinationGateId: input.destinationGateId,
     }),
   });
   return { ok: true, visitId: res.id };

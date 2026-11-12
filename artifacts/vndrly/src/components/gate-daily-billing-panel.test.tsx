@@ -128,3 +128,18 @@ it.each([false, true])("submits the displayed server quote and shows the saved r
   ).toBeTruthy();
   expect(screen.getByText("Billing stopped after this period.")).toBeTruthy();
 });
+
+it("shows UNPAID for an initiated ticket and PAID only for dispersed funds",async()=>{
+ const request=vi.fn(async(path:string)=>{
+  if(path==="/gate-billing/tickets")return [
+   {id:101,status:"initiated",group:"unstarted",tone:"white",invoiceCents:0,stationId:post.id,siteName:post.siteName,daysSinceBilled:0},
+   {id:102,status:"funds_dispersed",group:"closed",tone:"green",invoiceCents:100,stationId:post.id,siteName:post.siteName,daysSinceBilled:0}];
+  if(path.endsWith("/scope"))return {stationId:post.id};
+  if(path.endsWith("/posts"))return {items:[post],nextCursor:null};
+  if(path.endsWith("/setup"))return {post,config:null,services:[]};
+  return {};
+ });
+ render(<GateDailyBillingPanel scopeKey="payment-label" dashboardPostId={post.id} request={request}/>);
+ await screen.findByText("UNPAID");expect(screen.getAllByText("PAID")).toHaveLength(1);
+ expect(screen.getByText(/Company-wide billing/)).toBeTruthy();
+});

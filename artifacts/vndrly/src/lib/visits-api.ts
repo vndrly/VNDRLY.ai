@@ -1,3 +1,5 @@
+export type GateCapture = { images: { objectPath: string; originalPath: string; kind: "plate" | "vehicle" | "crop"; capturedAt: string; phase?: "entry" | "exit"; sha256?: string; originalSha256?: string; receivedAt?: string; recordedByUserId?: number }[]; arrivalRunId?: string; ticketId?: number; receivedAt?: string; recordedByUserId?: number };
+import type { GateRecognition } from "@workspace/plate-state";
 import type { PlateStateCode } from "@workspace/plate-state";
 import type { GateGpsEvidence } from "./gate-record-flags";
 
@@ -14,6 +16,7 @@ export type VisitorRow = {
   plateState: PlateStateCode | null;
   platePhotoUrl: string | null;
   vehiclePhotoUrl: string | null;
+  gateCapture?: GateCapture | null;
   purpose: string | null;
   entryCategory?: "visitor" | "routine_vendor_work" | "partner_admin" | "vendor_admin" | null;
   notes?: string | null;
@@ -160,7 +163,7 @@ export type GuestSessionResponse = {
 
 export type GuestSessionRead = Omit<GuestSessionResponse, "token">;
 
-export type PlateOcrCandidate = {
+export type PlateOcrCandidate = GateRecognition & {
   plate: string | null;
   state: PlateStateCode | null;
   plateConfidence: number | null;
@@ -235,6 +238,7 @@ export const visitsApi = {
     plateState?: string;
     platePhotoUrl?: string;
     vehiclePhotoUrl?: string;
+    gateCapture?: GateCapture;
     latitude: number;
     longitude: number;
   }) =>
@@ -289,6 +293,7 @@ export const visitsApi = {
     plateState?: string;
     platePhotoUrl?: string;
     vehiclePhotoUrl?: string;
+    gateCapture?: GateCapture;
     latitude?: number;
     longitude?: number;
     gateStationId?: string;
@@ -299,10 +304,10 @@ export const visitsApi = {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  gateCheckOut: (id: number, latitude?: number, longitude?: number, notes?: string, gateStationId?: string) =>
+  gateCheckOut: (id: number, latitude?: number, longitude?: number, notes?: string, gateStationId?: string, gateCapture?: Pick<GateCapture,"images">) =>
     jf<VisitorRow>(`/api/visits/gate/${id}/check-out`, {
       method: "POST",
-      body: JSON.stringify({ latitude, longitude, notes, gateStationId }),
+      body: JSON.stringify({ latitude, longitude, notes, gateStationId, gateCapture }),
     }),
   correctGatePresence: (id: number, idempotencyKey: string) =>
     jf(`/api/visits/gate/${id}/resolve-stale`, {
@@ -315,7 +320,7 @@ export const visitsApi = {
     jf<VisitorRow>(`/api/visits/gate/${id}/admit`, {
       method: "POST",
     }),
-  readPlate: (input: { objectPath: string }) =>
+  readPlate: (input: { objectPath: string; mode?: "plate" | "vehicle" }) =>
     jf<PlateOcrCandidate>(`/api/visits/gate/read-plate`, {
       method: "POST",
       body: JSON.stringify(input),

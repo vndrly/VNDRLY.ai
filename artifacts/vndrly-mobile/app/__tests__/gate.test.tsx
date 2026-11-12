@@ -773,6 +773,7 @@ describe("GatekeeperScreen", () => {
       target: { value: "Manual" },
     });
     tap(firstByTestId("gate-capture-tag-photo"));
+    tap(await findFirstByTestId("gate-confirm-recognition"));
 
     await waitFor(() => {
       expect(
@@ -843,6 +844,7 @@ describe("GatekeeperScreen", () => {
     tap(await screen.findByRole("button", { name: "Select plate state" }));
     tap(screen.getByRole("button", { name: "Oklahoma (OK), state option" }));
     tap(firstByTestId("gate-capture-tag-photo"));
+    tap(await findFirstByTestId("gate-confirm-recognition"));
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
@@ -856,6 +858,7 @@ describe("GatekeeperScreen", () => {
     });
 
     tap(firstByTestId("gate-capture-tag-photo"));
+    tap(await findFirstByTestId("gate-confirm-recognition"));
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
@@ -922,6 +925,7 @@ describe("GatekeeperScreen", () => {
     renderScreen();
 
     tap(await findFirstByTestId("gate-capture-tag-photo"));
+    tap(await findFirstByTestId("gate-confirm-recognition"));
     await waitFor(() => {
       expect(
         (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
@@ -935,6 +939,7 @@ describe("GatekeeperScreen", () => {
     });
 
     tap(firstByTestId("gate-capture-tag-photo"));
+    tap(await findFirstByTestId("gate-confirm-recognition"));
     await waitFor(() => {
       expect(
         (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
@@ -952,6 +957,7 @@ describe("GatekeeperScreen", () => {
     });
 
     tap(firstByTestId("gate-capture-tag-photo"));
+    tap(await findFirstByTestId("gate-confirm-recognition"));
     await waitFor(() => {
       expect(
         (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
@@ -1025,4 +1031,35 @@ describe("GatekeeperScreen", () => {
     expect(createPttRecorderMock).not.toHaveBeenCalled();
     expect(recorderStartMock).not.toHaveBeenCalled();
   });
+  it("reviews vehicle recognition before prefill and never submits automatically", async () => {
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    captureAndUploadImageMock.mockResolvedValue({ objectPath: "/uploads/vehicle.jpg" });
+    readGatePlateMock.mockResolvedValue({ plate: "TRK123", state: "OK", plateConfidence: .99, stateConfidence: .99,
+      appearance: { color: "white", bodyType: "pickup", make: "Ford", model: null, markings: ["unit 12"] } });
+    renderScreen();
+    tap(await findFirstByTestId("gate-capture-vehicle-photo"));
+    await findFirstByTestId("gate-confirm-recognition");
+    expect(readGatePlateMock).toHaveBeenCalledWith("/uploads/vehicle.jpg", "vehicle");
+    expect((firstByTestId("gate-vehicle-plate") as HTMLInputElement).value).toBe("");
+    expect(screen.getByText("white · Ford · pickup · unit 12")).toBeTruthy();
+    tap(firstByTestId("gate-confirm-recognition"));
+    await waitFor(() => expect((firstByTestId("gate-vehicle-plate") as HTMLInputElement).value).toBe("TRK123"));
+    expect(submitGatekeeperVisitMock).not.toHaveBeenCalled();
+    expect(gatekeeperCheckOutMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps manual entry available and reports a provider outage", async () => {
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    captureAndUploadImageMock.mockResolvedValue({ objectPath: "/uploads/vehicle.jpg" });
+    readGatePlateMock.mockRejectedValue(new Error("provider failed"));
+    renderScreen();
+    tap(await findFirstByTestId("gate-capture-vehicle-photo"));
+    expect(await screen.findByText("gatekeeper.recognitionUnavailable")).toBeTruthy();
+    expect(screen.queryByTestId("gate-confirm-recognition")).toBeNull();
+    fireEvent.change(firstByTestId("gate-vehicle-plate"), { target: { value: "MANUAL1" } });
+    expect((firstByTestId("gate-vehicle-plate") as HTMLInputElement).value).toBe("MANUAL1");
+  });
+
 });
+
+vi.mock("@/hooks/use-gate-operating-context",()=>({useGateOperatingContext:()=>({operating:{siteId:1,stationId:"gate"},canOperate:()=>true,myGate:()=>{}})}));

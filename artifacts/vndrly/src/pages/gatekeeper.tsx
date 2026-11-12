@@ -1,3 +1,10 @@
+import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
+import type { GateArrival } from "@workspace/api-zod";
+import type { GateCapture } from "@/lib/visits-api";
+import { readGateSelection, saveGateSelection, useGateSelection } from "@/lib/gate-selection";
+import { GateRecognitionPhoto } from "@/components/gate-recognition-photo";
+import { recognitionMatchesVisit, vehicleAppearanceSummary, type GateRecognition } from "@workspace/plate-state";
+import { normalizeGatePhoto } from "@/lib/gate-recognition-photo";
 import { GateAreaTraffic, useGateAreaTraffic, gateCheckInDestinationDefaults, parallelGateGroup } from '@/components/gate-area-traffic';
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import WorkdayControls from "@/components/workday-controls";
@@ -242,6 +249,7 @@ async function deleteUnattachedEvidence(
 export default function GatekeeperPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const operatingContext=useGateOperatingContext();
   const brand = useBrand();
   const entryCardRef = useRef<HTMLDivElement>(null);
   const [entryCardHeight, setEntryCardHeight] = useState<number | null>(null);
@@ -271,6 +279,9 @@ export default function GatekeeperPage() {
   const [presenceView, setPresenceView] = useState<"arrivals" | "active" | "departures">("active");
   const [detailVisitId, setDetailVisitId] = useState<number | null>(null);
   const [detailRunId, setDetailRunId] = useState<string | null>(null);
+  const [arrivalDraft, setArrivalDraft] = useState<GateArrival | null>(null);
+  const [captureImages, setCaptureImages] = useState<GateCapture["images"]>([]);
+  const captureOriginal = useRef<string | null>(null);
   const [duration, setDuration] = useState("240");
   const [gps, setGps] = useState<GpsLockState>("searching");
   const [origin, setOrigin] = useState<Coordinates | null>(null);
@@ -292,6 +303,10 @@ export default function GatekeeperPage() {
   const [plateOcrStatus, setPlateOcrStatus] = useState<
     "idle" | "reading" | "read" | "unreadable"
   >("idle");
+  const [recognition, setRecognition] = useState<GateRecognition | null>(null);
+  const [recognitionPreview, setRecognitionPreview] = useState<string | null>(null);
+  const recognitionSequence = useRef(0);
+  useEffect(() => () => { if (recognitionPreview) URL.revokeObjectURL(recognitionPreview); }, [recognitionPreview]);
   const [ocrPlate, setOcrPlate] = useState<string | null>(null);
   const displayPlate = (
     state: string | null | undefined,
@@ -852,7 +867,10 @@ export default function GatekeeperPage() {
     }
     setResolvedPrefillSiteId(null);
   }, [assignedSites, resolvedPrefillSiteId]);
-  const defaultSiteCode = assigned.data?.defaultSite?.siteCode ?? assignedSites[0]?.siteCode;
+  const rememberedGate = useGateSelection(user);
+  useEffect(()=>{const chosen=assignedSites.find(row=>String(row.id)===rememberedGate?.siteId);if(chosen){setSiteCode(chosen.siteCode);setConfirmedCode(chosen.siteCode);setGateLocationId(rememberedGate?.stationId??"");}},[rememberedGate,assignedSites]);
+  const rememberedSite = assignedSites.find(row => String(row.id) === rememberedGate?.siteId);
+  const defaultSiteCode = rememberedSite?.siteCode ?? assigned.data?.defaultSite?.siteCode ?? assignedSites[0]?.siteCode;
   const showPreviousBanner = Boolean(
     previousPlateVisit &&
     (!firstName.trim() ||
@@ -874,6 +892,8 @@ export default function GatekeeperPage() {
     appliedDefault.current = true;
     setSiteCode(defaultSiteCode!);
     setConfirmedCode(defaultSiteCode!);
+    if (rememberedSite) setGateLocationId(rememberedGate?.stationId ?? "");
+    else if (rememberedGate) setError(t("gatekeeper.selectionUnavailable", { defaultValue: "Your previous gate is unavailable for this assignment. Verify the selected site before recording a crossing." }));
     setHostKey("");
   }, [confirmedCode, defaultSiteCode, siteCode]);
 
@@ -979,6 +999,7 @@ export default function GatekeeperPage() {
   }, [currentPlateMatchKey, entryDraft, memory.fill]);
 
   const resetEntry = () => {
+    setArrivalDraft(null); setCaptureImages([]); captureOriginal.current = null;
     entryDraftRef.current = { firstName: "", lastName: "", company: "", vehiclePlate: "", plateState: null, purpose: "", notes: "", expectedDuration: "240" };
     plateAutoFillRef.current = null;
     setFirstName("");
@@ -997,6 +1018,9 @@ export default function GatekeeperPage() {
     setVehiclePhotoUrl(null);
     setActiveMemoryField(null);
     setMemoryDeleting(false);
+    recognitionSequence.current++;
+    setRecognition(null);
+    setRecognitionPreview(null);
     setPlateOcrStatus("idle");
     setOcrPlate(null);
     setVoiceCheckInPending(false);
@@ -1018,14 +1042,15 @@ export default function GatekeeperPage() {
       entryCategory: entryCategory || undefined,
       platePhotoUrl: platePhotoUrl ?? undefined,
       vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
+      gateCapture: { images: captureImages, ...(arrivalDraft ? { arrivalRunId: arrivalDraft.runId } : {}) },
       latitude: origin?.latitude,
       longitude: origin?.longitude,
     }),
     saved: submitted => {
       if (gateDraftMatches({ ...entryDraftRef.current, siteLocationId: voiceSiteRef.current }, submitted)) resetVoiceDraftRef.current();
     },
-  }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, vehiclePhotoUrl]);
-  useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl]);
+  }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft]);
+  useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl, captureImages, arrivalDraft]);
 
   const usePreviousPlateDetails = () => {
     if (!previousPlateVisit) return;
@@ -1045,78 +1070,78 @@ export default function GatekeeperPage() {
     );
   };
 
-  const capture = async (file: File | undefined, kind: "plate" | "vehicle") => {
+  const previousRecognitionSite = useRef(site.data?.site.id);
+  useEffect(() => {
+    if (previousRecognitionSite.current != null && previousRecognitionSite.current !== site.data?.site.id) {
+      recognitionSequence.current++;
+      setRecognition(null);
+    }
+    previousRecognitionSite.current = site.data?.site.id;
+  }, [site.data?.site.id]);
+  useEffect(() => () => { recognitionSequence.current++; }, []);
+
+  const capture = async (file: File | undefined, kind: "plate" | "vehicle", derived = false) => {
     if (!file) return;
+    if (captureImages.length >= 12) { setError(t("gatekeeper.captureLimit", { defaultValue: "Twelve photos are already attached. Save this entry before adding more." })); return; }
+    const sequence = ++recognitionSequence.current;
+    let uploaded = false;
     setBusy(true);
     setError(null);
-    if (kind === "plate") {
-      setPlateOcrStatus("reading");
-      setOcrStateNotice(null);
-    }
+    setRecognition(null);
+    setPlateOcrStatus("reading");
+    setOcrStateNotice(null);
     try {
+      const photo = await normalizeGatePhoto(file);
+      if (sequence !== recognitionSequence.current) return;
+      setRecognitionPreview(URL.createObjectURL(photo));
+      const originalPath = derived && captureOriginal.current ? captureOriginal.current : await uploadEvidence(file, t);
+      const objectPath = await uploadEvidence(photo, t);
+      if (sequence !== recognitionSequence.current) { void deleteUnattachedEvidence(objectPath); return; }
+      captureOriginal.current = originalPath;
+      setCaptureImages(images => [...images, { objectPath, originalPath, kind: derived ? "crop" : kind, capturedAt: new Date().toISOString() }]);
       if (kind === "vehicle") {
-        const next = await uploadEvidence(file, t);
-        void deleteUnattachedEvidence(vehiclePhotoUrl);
-        setVehiclePhotoUrl(next);
-        return;
-      }
-      const objectPath = await uploadEvidence(file, t);
-      const candidate = await visitsApi
-        .readPlate({ objectPath })
-        .catch(() => null);
-      void deleteUnattachedEvidence(platePhotoUrl);
-      setPlatePhotoUrl(objectPath);
-      if (candidate?.plate) {
-        setMemoryDeleting(false);
-        const confidentPlate =
-          candidate.plateConfidence != null &&
-          candidate.plateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD;
-        const confidentState =
-          candidate.stateConfidence != null &&
-          candidate.stateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD
-            ? normalizePlateState(candidate.state)
-            : null;
-        // History identity autofill from OCR requires the same confident
-        // plate+state pair used by the established state-correction flow.
-        // A plate alone remains visible for manual confirmation without
-        // guessing who is driving it.
-        setActiveMemoryField(
-          confidentPlate && confidentState ? "vehiclePlate" : null,
-        );
-        const automatedPlate = reconcileAutomatedPlateUpdate({
-          currentPlate: vehiclePlate,
-          currentState: plateState,
-          automatedPlate: candidate.plate,
-          automatedState: confidentState,
-        });
-        setVehiclePlate(automatedPlate.vehiclePlate ?? "");
-        setPlateState(automatedPlate.plateState);
-        setPlateStateError(null);
-        setOcrPlate(automatedPlate.vehiclePlate);
-        if (confidentState) {
-          setOcrStateNotice({
-            suggestedState: confidentState,
-            selectedState: confidentState,
-          });
-        }
-        setPlateOcrStatus("read");
+        setVehiclePhotoUrl(objectPath);
       } else {
-        setPlateOcrStatus("unreadable");
+        setPlatePhotoUrl(objectPath);
       }
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : t("gatekeeper.photoUploadFailed"),
-      );
-      if (kind === "plate") setPlateOcrStatus("unreadable");
+      uploaded = true;
+      const candidate = await visitsApi.readPlate({ objectPath, mode: kind });
+      if (sequence !== recognitionSequence.current) return;
+      setRecognition({ ...candidate, state: candidate.stateConfidence != null && candidate.stateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD ? candidate.state : null });
+      setPlateOcrStatus(candidate.plate ? "read" : "unreadable");
+    } catch {
+      if (sequence !== recognitionSequence.current) return;
+      setError(t(uploaded ? "gatekeeper.recognitionUnavailable" : "gatekeeper.recognitionCaptureFailed"));
+      setPlateOcrStatus("idle");
     } finally {
       setBusy(false);
     }
   };
 
+  const confirmRecognition = () => {
+    if (!recognition?.plate) return;
+    const automated = reconcileAutomatedPlateUpdate({
+      currentPlate: entryDraftRef.current.vehiclePlate,
+      currentState: entryDraftRef.current.plateState,
+      automatedPlate: recognition.plate,
+      automatedState: recognition.state,
+    });
+    setVehiclePlate(automated.vehiclePlate ?? "");
+    setPlateState(automated.plateState);
+    setPlateStateError(null);
+    setActiveMemoryField(automated.plateState ? "vehiclePlate" : null);
+    setMemoryDeleting(false);
+    setOcrStateNotice(automated.plateState ? { suggestedState: automated.plateState, selectedState: automated.plateState } : null);
+    setOcrPlate(automated.vehiclePlate);
+    setVoiceCheckoutMatches(onSiteVisits.filter(visit => recognitionMatchesVisit(recognition, visit)));
+    setRecognition(null);
+  };
+
+  const canRecord=operatingContext.canOperate(site.data?.site.id,selectedGateLocation?.id)&&navigator.onLine;
   const checkIn = async () => {
+    if(!canRecord){setError("Return to your operating gate and assume your watch before recording activity.");return;}
     if (gateSaveInFlightRef.current || !navigator.onLine) return;
+    if (arrivalDraft && arrivalDraft.siteLocationId !== site.data?.site.id) { setError(t("gatekeeper.arrivalWrongSite", { defaultValue: "Select the arrival destination before checking in, or remove the arrival link." })); return; }
     const { firstName, lastName, company, vehiclePlate, plateState, purpose, notes, expectedDuration: duration } = entryDraftRef.current;
     const context = site.data;
     if (
@@ -1152,6 +1177,7 @@ export default function GatekeeperPage() {
         siteLocationId: context.site.id,
         platePhotoUrl: platePhotoUrl ?? undefined,
         vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
+        gateCapture: { images: captureImages, ...(arrivalDraft ? { arrivalRunId: arrivalDraft.runId } : {}) },
         latitude: origin?.latitude,
         longitude: origin?.longitude,
         gateStationId: selectedGateLocation?.id,
@@ -1179,7 +1205,12 @@ export default function GatekeeperPage() {
   };
   submitVoiceDraftRef.current = checkIn;
 
+  const [exitCaptures,setExitCaptures]=useState<Record<number,import('@/lib/visits-api').GateCapture['images']>>({});
+  const captureContext=useRef({user:user?.userId,membership:user?.activeMembershipId,site:site.data?.site.id,gate:selectedGate?.id});
+  useEffect(()=>{const previous=captureContext.current;const next={user:user?.userId,membership:user?.activeMembershipId,site:site.data?.site.id,gate:selectedGate?.id};captureContext.current=next;if(previous.user===next.user&&previous.membership===next.membership&&(!previous.site||previous.site===next.site)&&(!previous.gate||previous.gate===next.gate))return;recognitionSequence.current++;setExitCaptures({});setCaptureImages([]);setPlatePhotoUrl(null);setVehiclePhotoUrl(null);setRecognition(null);},[user?.userId,user?.activeMembershipId,site.data?.site.id,selectedGate?.id]);
+  const captureExit=async(id:number,file:File)=>{if(!canRecord||busy)return;const sequence=recognitionSequence.current;setBusy(true);try{if((exitCaptures[id]?.length??0)>=12)throw Error(t('gatekeeper.captureLimit'));const photo=await normalizeGatePhoto(file);const originalPath=await uploadEvidence(file,t);const objectPath=await uploadEvidence(photo,t);if(sequence!==recognitionSequence.current)return;setExitCaptures(previous=>({...previous,[id]:[...(previous[id]??[]),{objectPath,originalPath,kind:'vehicle',capturedAt:new Date().toISOString()}]}));}catch(error){setError(error instanceof Error?error.message:t('gateProof.unavailable'));}finally{setBusy(false);}};
   const checkOut = async (id: number) => {
+    if(!canRecord){setError(t('gateOperating.readOnly'));return;}
     if (gateSaveInFlightRef.current || !navigator.onLine) return;
     gateSaveInFlightRef.current = true;
     setBusy(true);
@@ -1198,7 +1229,9 @@ export default function GatekeeperPage() {
         coords?.longitude,
         undefined,
         selectedGateLocation?.id,
+        exitCaptures[id]?.length ? {images:exitCaptures[id]} : undefined,
       );
+      setExitCaptures(previous=>{const next={...previous};delete next[id];return next;});
         resetEntry();
       await queryClient.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
       await queryClient.invalidateQueries({ queryKey: ["gatekeeper-departures"] });
@@ -1220,6 +1253,7 @@ export default function GatekeeperPage() {
   checkoutVoiceRef.current = checkOut;
 
   const admitVisit = async (id: number) => {
+    if(!canRecord){setError(t('gateOperating.readOnly'));return;}
     setBusy(true);
     setError(null);
     try {
@@ -1276,6 +1310,7 @@ export default function GatekeeperPage() {
             if (!nextSite) return;
             setSiteCode(nextSite.siteCode); setConfirmedCode(nextSite.siteCode);
             setGateLocationId(nextGateId);
+            saveGateSelection(user, nextSiteId, nextGateId);
             if (nextSite.siteCode !== confirmedCode) setHostKey("");
           }} />
       } />
@@ -1338,6 +1373,8 @@ export default function GatekeeperPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {arrivalDraft && <section className="space-y-2 rounded border p-3" aria-label={i18n?.language?.startsWith("es") ? "Revisar llegada" : "Review arrival"}><p>{arrivalDraft.driverName} · {arrivalDraft.companyName} · {arrivalDraft.vehicleLabel}</p><p>{arrivalDraft.destinationName} · #{arrivalDraft.ticketNumber}</p><p>{i18n?.language?.startsWith("es") ? "Verifique el conductor, la placa y el sitio. Aún no se ha registrado la entrada." : "Verify the driver, plate and site. No check-in has been recorded."}</p><button type="button" className="gate-history-filter" onClick={()=>{ const names=(arrivalDraft.driverName??"").trim().split(/\s+/); setFirstName(names.shift()??"");setLastName(names.join(" "));setCompany(arrivalDraft.companyName); }}>{i18n?.language?.startsWith("es") ? "Usar conductor y empresa" : "Use driver and company"}</button><button type="button" className="gate-history-filter" onClick={()=>setArrivalDraft(null)}>{i18n?.language?.startsWith("es") ? "Quitar vínculo de llegada" : "Remove arrival link"}</button></section>}
+
             {error && (
               <div
                 role="alert"
@@ -1359,7 +1396,7 @@ export default function GatekeeperPage() {
                     {t("common.cancel")}
                   </BlueButton>
                   <AmberButton
-                    disabled={busy || !site.data}
+                    disabled={busy || !site.data || !canRecord}
                     data-testid="button-gate-voice-confirm-checkin"
                     onClick={() => {
                       setVoiceCheckInPending(false);
@@ -1532,12 +1569,27 @@ export default function GatekeeperPage() {
                 })}
               </p>
             )}
+            <p className="text-sm text-muted-foreground">{t("gatekeeper.recognitionCaptureGuide")}</p>
+            {recognition && (
+              <div className="space-y-2" data-testid="gate-recognition-review">
+                {recognitionPreview && <GateRecognitionPhoto key={recognitionPreview} src={recognitionPreview} disabled={busy} onCrop={file => void capture(file, "plate", true)} />}
+                <p>{vehicleAppearanceSummary(recognition.appearance)}</p>
+                <p>{t(recognition.quality === "multiple_vehicles" ? "gatekeeper.recognitionMultiple" : "gatekeeper.recognitionReview")}</p>
+                {recognition.plate !== null && <>
+                  <input aria-label={t("gatekeeper.vehiclePlate")} value={recognition.plate} onChange={e => setRecognition({ ...recognition, plate: e.target.value.toUpperCase() })} className={WORK_HUB_BRANDED_FIELD_CLASS} />
+                  <PlateStatePicker value={normalizePlateState(recognition.state)} onChange={state => setRecognition({ ...recognition, state })} preferredStates={[]} />
+                  {(recognition.alternatives ?? []).filter(plate => plate !== recognition.plate).map(plate => <BlueButton key={plate} onClick={() => setRecognition({ ...recognition, plate })}>{plate}</BlueButton>)}
+                  <BlueButton data-testid="gate-confirm-recognition" disabled={busy || !recognition.plate.trim()} onClick={confirmRecognition}>{t("gatekeeper.recognitionUse")}</BlueButton>
+                </>}
+                <BlueButton onClick={() => { setRecognition(null); setPlateOcrStatus("idle"); }}>{t("common.cancel")}</BlueButton>
+              </div>
+            )}
             {plateOcrStatus === "reading" && (
               <p className="text-sm text-muted-foreground">
                 {t("gatekeeper.plateReading")}
               </p>
             )}
-            {plateOcrStatus === "read" && ocrPlate && (
+            {plateOcrStatus === "read" && ocrPlate && !recognition && (
               <p className="text-sm text-muted-foreground">
                 {t("gatekeeper.plateRead", { plate: ocrPlate })}
               </p>
@@ -1627,7 +1679,7 @@ export default function GatekeeperPage() {
             <button type="button"
               className="gate-history-filter w-full"
               onClick={() => void checkIn()}
-              disabled={busy || !site.data}
+              disabled={busy || !site.data || !canRecord}
               data-testid="button-gate-check-in"
               data-guidance-id="save-check-in"
             >
@@ -1683,6 +1735,7 @@ export default function GatekeeperPage() {
             >
             <GateAreaTraffic siteId={site.data?.site.id} gateId={selectedGateLocation?.id} view={presenceView==='active'?'on_site':presenceView} />
             {presenceView === "arrivals" ? <>
+            {visits.isError && <p role="alert">{t("gatekeeper.presenceLoadFailed", { defaultValue: "Records could not be refreshed. Use Refresh to retry." })}</p>}
             {pendingVisits.length > 0 && <div className="space-y-2" data-testid="gate-pending-visitors">
               <p className="text-sm font-semibold text-foreground">{t("gatekeeper.pendingAdmit")}</p>
               {pendingVisits.map(visit => <GateTrafficRecord key={visit.id} name={`${visit.firstName} ${visit.lastName}`}
@@ -1690,9 +1743,9 @@ export default function GatekeeperPage() {
                 flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
                 status={isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Autorizado" : "Admitted") : t("gatekeeper.pendingAdmit")} className={isGateEntryCleared(visit) ? "gate-traffic-approved" : "gate-traffic-pending"} onOpen={() => setDetailVisitId(visit.id)}
                 footer={<span data-testid={`gate-reconciliation-status-${visit.id}`}>{isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Puede entrar · esperando llegada" : "Cleared to enter · awaiting arrival") : visit.reconciliationState === "needs_supervisor_review" ? t("gatekeeper.reconciliationReview") : visit.reconciliationState === "observed" ? t("gatekeeper.reconciliationObserved") : t("gatekeeper.pendingAdmit")}</span>}
-                action={!isGateEntryCleared(visit) && <button type="button" className="gate-history-filter" onClick={() => void admitVisit(visit.id)} disabled={busy} data-testid={`button-gate-admit-${visit.id}`}>{t("gatekeeper.admit")}</button>} />)}
+                action={!isGateEntryCleared(visit) && <button type="button" className="gate-history-filter" onClick={() => void admitVisit(visit.id)} disabled={busy || visits.isError || !canRecord} data-testid={`button-gate-admit-${visit.id}`}>{t("gatekeeper.admit")}</button>} />)}
             </div>}
-            <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} limit={100 - pendingVisits.length} hideEmpty={pendingVisits.length > 0} /></> : presenceView === "departures" ? (
+            <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} onPrepare={run => { setArrivalDraft(run); setDetailRunId(null); entryCardRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" }); }} limit={100 - pendingVisits.length} hideEmpty={pendingVisits.length > 0} /></> : presenceView === "departures" ? (
               departures.isLoading || site.isLoading ? <Loader2 className="animate-spin text-muted-foreground" />
               : departures.isError ? <p role="alert" className="text-sm text-destructive">{t("gatekeeper.departuresLoadFailed")}</p>
               : recentDepartures.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noRecentDepartures")}</p>
@@ -1707,14 +1760,14 @@ export default function GatekeeperPage() {
                   {visit.checkOutNotes && <span className="whitespace-pre-wrap text-xs text-muted-foreground">{visit.checkOutNotes}</span>}
                 </GateTrafficRecord>)
             ) : <>
-            {visits.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : onSiteVisits.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noActive")}</p> : !hasSecureAreas && onSiteVisits.map(visit => {
+            {visits.isError ? <p role="alert" className="text-sm text-destructive">{t("gatekeeper.presenceLoadFailed", { defaultValue: "Records could not be refreshed. Do not treat this as an empty site. Use Refresh to retry." })}</p> : visits.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : onSiteVisits.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noActive")}</p> : !hasSecureAreas && onSiteVisits.map(visit => {
               const dwell = onSiteDwell({ checkInTime: visit.checkInTime, expectedDurationMinutes: visit.expectedDurationMinutes });
               return <GateTrafficRecord key={visit.id} name={`${visit.firstName} ${visit.lastName}`}
                 description={[visit.company, displayPlate(visit.plateState, visit.vehiclePlate), visit.siteName].filter(Boolean).join(" · ")}
                 status={t("gatekeeper.onSiteTab")} overdue={dwell.overdue} onOpen={() => setDetailVisitId(visit.id)}
                 className={live.flash?.visitId === visit.id ? "ring-2 ring-amber-500" : ""}
                 flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
-                action={<button type="button" className="gate-history-filter" onClick={() => void checkOut(visit.id)} disabled={busy}>{t("gatekeeper.checkOut")}</button>}>
+                action={<><label className="gate-history-filter">{t('gateProof.exitPhoto')} ({exitCaptures[visit.id]?.length??0})<input aria-label={t('gateProof.exitPhoto')} type="file" accept="image/*" capture="environment" disabled={busy||!canRecord} className="sr-only" onChange={event=>{const file=event.target.files?.[0];if(file)void captureExit(visit.id,file);event.target.value='';}}/></label><button type="button" className="gate-history-filter" onClick={() => void checkOut(visit.id)} disabled={busy || !canRecord}>{t("gatekeeper.checkOut")}</button></>}>
                 <span className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</span>
                 {(visit.reconciliationState === "observed" || visit.reconciliationState === "needs_supervisor_review") && <span className="text-xs text-amber-400" data-testid={`gate-reconciliation-status-${visit.id}`}>{t(visit.reconciliationState === "observed" ? "gatekeeper.reconciliationObserved" : "gatekeeper.reconciliationReview")}</span>}
               </GateTrafficRecord>;

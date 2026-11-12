@@ -158,9 +158,10 @@ export function createGateArrivalsService(
         const run = candidates[0].run, ids = new Set(run.stops.filter(stop=>gateStopMatchesSite(stop,site)).map(stop=>stop.id));
         const events = await readCompleteFleetRunEvents(client,run);
         const links = await client.query("SELECT tool_output FROM assistant_action_audit WHERE target_type='fleet-gate-link' AND vendor_id=$1 AND tool_output->>'runId'=$2 ORDER BY id DESC LIMIT 201",[run.companyId,run.id]);
+        const captured = await client.query("SELECT id FROM site_visits WHERE site_location_id=$1 AND gate_capture->>'arrivalRunId'=$2",[siteId,run.id]);
         details = {
           events: events.filter(event=>ids.has(String(event.details?.stopId)) && ["arrive_stop","depart_stop","gate_linked"].includes(event.type)).map(event=>({type:event.type,recordedAt:event.recordedAt})),
-          linkedVisitIds: [...new Set(links.rows.filter(row=>row.tool_output.observation?.siteId===siteId).map(row=>Number(row.tool_output.visitId)))].filter(Number.isSafeInteger),
+          linkedVisitIds: [...new Set([...captured.rows.map(row=>Number(row.id)),...links.rows.filter(row=>row.tool_output.observation?.siteId===siteId).map(row=>Number(row.tool_output.visitId))])].filter(Number.isSafeInteger),
         };
       }
       await client.query("COMMIT");
@@ -215,7 +216,8 @@ export function createGateArrivalsService(
         if (!visit.rows.length) throw new GateArrivalsError("gate_arrivals.visit_unavailable",404);
         const links=await client.query("SELECT DISTINCT tool_output->>'runId' AS run_id FROM assistant_action_audit WHERE target_type='fleet-gate-link' AND target_id=$1 AND (tool_output->'observation'->>'siteId')::int=$2 AND (tool_output->>'visitId')::int=$1::int LIMIT 11",[String(visitId),siteId]);
         if (links.rows.length>10) throw new GateArrivalsError("gate_arrivals.link_capacity_reached",409);
-        ids=links.rows.map(row=>row.run_id);
+        const captured=await client.query("SELECT gate_capture->>'arrivalRunId' run_id FROM site_visits WHERE id=$1 AND site_location_id=$2",[visitId,siteId]);
+        ids=[...new Set([...links.rows,...captured.rows].map(row=>row.run_id).filter(Boolean))];
         await client.query("COMMIT");
       } catch(error) {await client.query("ROLLBACK");throw error;}
       finally {client.release();}

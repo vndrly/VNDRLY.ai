@@ -4,6 +4,7 @@ import { apiFetch, getApiBase } from "./api";
 import { isAuthScopeCurrent, type AuthScope } from "./auth";
 
 export type UploadResult = {
+  localUri?: string;
   objectPath: string;
   contentType: string;
   size: number;
@@ -41,8 +42,8 @@ export async function captureAndUploadImage(options?: {
     throw new Error("Camera permission denied");
   }
   const result = await ImagePicker.launchCameraAsync({
-    quality: 0.6,
-    allowsEditing: false,
+    quality: options?.purpose === "gate-evidence" ? 0.9 : 0.6,
+    allowsEditing: false, // Preserve the full camera frame for crossing evidence.
   });
   assertCurrent(options?.authScope);
   if (result.canceled || !result.assets?.[0]) return null;
@@ -137,5 +138,5 @@ export async function uploadAsset(
   if (authScope && finalized.objectPath !== presigned.objectPath)
     throw new Error("Photo finalization was not verified");
 
-  return { objectPath: presigned.objectPath, contentType, size };
+  return { objectPath: presigned.objectPath, contentType, size, localUri: asset.uri };
 }

@@ -1,3 +1,5 @@
+import { readGateSelection } from "@/lib/gate-selection";
+import { clearGateSelections, saveGateSelection } from "@/lib/gate-selection";
 import { equipmentFixture } from "./equipment/fixture.test-data";
 import { act, cleanup, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
@@ -65,7 +67,7 @@ it("keeps on-call contact links usable without GPS and reflects a started shift 
  expect(screen.getByRole("button",{name:"On-call worker"}).hasAttribute("disabled")).toBe(true);
  expect(screen.getByText(/No active assignment recorded/)).toBeTruthy();
 });
-afterEach(() => { mocks.equipment=[];mocks.constrained=false; cleanup(); vi.clearAllMocks(); vi.useRealTimers(); window.history.replaceState(null,"","/"); vi.unstubAllGlobals(); });
+afterEach(() => { clearGateSelections(); localStorage.clear(); mocks.equipment=[];mocks.constrained=false; cleanup(); vi.clearAllMocks(); vi.useRealTimers(); window.history.replaceState(null,"","/"); vi.unstubAllGlobals(); });
 it("closes the expanded header back action without navigating away",async()=>{
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
  const back=vi.spyOn(window.history,"back");
@@ -319,4 +321,18 @@ it("shows a gate coverage failure even when equipment loads successfully",async(
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
  expect((await screen.findByRole("alert")).textContent).toContain("Gate coverage could not be loaded");
  expect(screen.queryByText("No mapped locations for this filter")).toBeNull();
+});
+
+it("loads Dashboard selection on Map and persists a newly selected gate for the return", async () => {
+ saveGateSelection({userId:1,activeMembershipId:3,vendorId:2},2,"west");
+ mocks.read.mockResolvedValue({at:new Date().toISOString(),staff:[],duties:[],gates:[
+ {id:"east",siteId:1,name:"East",siteName:"First site",latitude:31,longitude:-101},
+ {id:"west",siteId:2,name:"West",siteName:"Second site",latitude:32,longitude:-102}]});
+ const view=render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ await waitFor(()=>expect(mocks.mapProps.selectedPointId).toBe("gate:west"));
+ act(()=>mocks.points.find(point=>point.id==="gate:east").onClick());
+ await waitFor(()=>expect(readGateSelection({userId:1,activeMembershipId:3,vendorId:2})).toEqual({siteId:"1",stationId:"east"}));
+ view.unmount();
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ await waitFor(()=>expect(mocks.mapProps.selectedPointId).toBe("gate:east"));
 });

@@ -234,9 +234,14 @@ class SupabaseObjectStore implements ObjectStore {
       .from(this.bucket)
       .upload(key, body, {
         contentType: contentType || "application/octet-stream",
-        upsert: true,
+        upsert: false,
       });
-    if (error) throw error;
+    if (error) {
+      // A retry may repeat identical bytes; a signed URL must never replace evidence.
+      const existing = await this.getObject('/objects/' + key);
+      if (existing?.body.equals(body) && existing.contentType === (contentType || 'application/octet-stream')) return;
+      throw error;
+    }
   }
 
   async setAcl(objectPath: string, acl: ObjectAclPolicy): Promise<string> {

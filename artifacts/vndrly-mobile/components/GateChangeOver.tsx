@@ -1,3 +1,8 @@
+import {captureGateObservation} from "@/lib/gate-location-capture";
+import {suggestGateFromGps} from "@workspace/gate-booth";
+import GateOperatingContext from "@/components/GateOperatingContext";
+import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
+import { useGateSelection } from "@/lib/gate-selection";
 import WatchPassControl from "@/components/WatchPassControl";
 import GateAssumeWatchFlyout from "@/components/GateAssumeWatchFlyout";
 import React, { useEffect, useRef, useState } from "react";
@@ -111,7 +116,8 @@ export default function GateChangeOver({
   const colors = useColors();
   const { width, height } = useWindowDimensions();
   const wideLandscape = width >= 768 && width > height;
-  const { user } = useAuth();
+  const { user, activeMembershipId } = useAuth();
+  const rememberedGate = useGateSelection(user, activeMembershipId);
   const cache = useQueryClient();
   const params = useLocalSearchParams<{
     siteId?: string;
@@ -120,11 +126,17 @@ export default function GateChangeOver({
     gateMode?: string;
     purpose?: string;
   }>();
+  const operatingContext=useGateOperatingContext();
   const assumeReview = !history && params.purpose === "assume";
   const [selectedSite, setSite] = useState<number | null>(
     params.siteId ? Number(params.siteId) : null,
   );
   const [selectedGate, setGate] = useState(params.stationId ?? "");
+  useEffect(() => {
+    if (!params.siteId && !params.stationId && rememberedGate.selection) {
+      setSite(rememberedGate.selection.siteId); setGate(rememberedGate.selection.stationId);
+    }
+  }, [rememberedGate.selection, params.siteId, params.stationId]);
   const [siteMenuOpen, setSiteMenuOpen] = useState(false);
   const [gateMenuOpen, setGateMenuOpen] = useState(false);
   useEffect(() => {
@@ -157,7 +169,7 @@ export default function GateChangeOver({
   const [newGate, setNewGate] = useState("");
   const [reportRecipientIds, setReportRecipientIds] = useState<number[]>([]);
   const sites = useQuery({
-    queryKey: ["change-over-sites", user?.id, history],
+    queryKey: ["change-over-sites", user?.id, activeMembershipId, history],
     queryFn: () =>
       request<{ sites: { id: number; name: string; supervisor: boolean }[] }>(
         history ? "/sites?mode=history" : "/sites",
@@ -166,9 +178,15 @@ export default function GateChangeOver({
     enabled: !assumeReview,
     networkMode: "always",
   });
-  const siteId = selectedSite ?? sites.data?.sites[0]?.id;
+  useEffect(()=>{
+    if(history||assumeReview||params.siteId||rememberedGate.selection||!operatingContext.isSuccess||operatingContext.operating)return;
+    const controller=new AbortController();
+    void Promise.all([captureGateObservation(controller.signal),request<{gates:import('@workspace/gate-booth').GateLocationCandidate[]}>('/map')]).then(([gps,data])=>{if(controller.signal.aborted)return;const suggested=suggestGateFromGps(data.gates,gps);if(suggested)rememberedGate.save(suggested.siteId,suggested.id);}).catch(()=>{});
+    return()=>controller.abort();
+  },[history,assumeReview,params.siteId,rememberedGate.selection,operatingContext.isSuccess,operatingContext.operating?.stationId]);
+  const siteId = history || assumeReview ? selectedSite ?? sites.data?.sites[0]?.id : sites.data?.sites.some(site => site.id === selectedSite) ? selectedSite! : undefined;
   const stations = useQuery({
-    queryKey: ["change-over-stations", user?.id, siteId, history],
+    queryKey: ["change-over-stations", user?.id, activeMembershipId, siteId, history],
     queryFn: () =>
       request<{ stations: { id: string; name: string }[] }>(
         `/stations?siteId=${siteId}${history ? "&mode=history" : ""}`,
@@ -177,7 +195,7 @@ export default function GateChangeOver({
     retry: false,
     networkMode: "always",
   });
-  const stationId = selectedGate || stations.data?.stations[0]?.id || "";
+  const stationId = history || assumeReview ? selectedGate || stations.data?.stations[0]?.id || "" : stations.data?.stations.some(gate => gate.id === selectedGate) ? selectedGate : "";
   const reportRange = days === 7 ? "7d" : days === 30 ? "30d" : days === 90 ? "90d" : "1y";
   const reportFilters = siteId ? { siteId, ...(stationId ? { stationId } : {}), range: reportRange, recordType: "all", ...(search.trim() ? { search: search.trim() } : {}) } : null;
   const reportRecipients = useQuery({
@@ -421,7 +439,7 @@ export default function GateChangeOver({
   if (assumeReview) return <ScreenSafeArea>
     {assumeOpen && <GateAssumeWatchFlyout open current={current} busy={busy} blocked={!online || state.isError || state.isFetching || !current || ownShift} pending={Boolean(pendingWatch)} error={error} onClose={() => setAssumeOpen(false)} onAssume={confirmAssume} />}
     <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
-      <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />
+      <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" /><GateOperatingContext/>
       <Text accessibilityRole="header" style={{ color: colors.foreground, fontSize: 20, fontWeight: "700" }}>{t("watch.assume")}</Text>
       <TogglePillButton compactOnTablet onPress={() => router.replace("/work-hub" as never)}>{t("workHub.title", { defaultValue: "Work Hub" })}</TogglePillButton>
       {current ? <Text style={{ color: colors.foreground }}>{current.site.name} · {current.station.name}</Text> : null}
@@ -440,7 +458,7 @@ export default function GateChangeOver({
         contentContainerStyle={{ padding: 20, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-        <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />
+        <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" /><GateOperatingContext/>
         <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
           <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
             <SphereBackButton
@@ -471,7 +489,7 @@ export default function GateChangeOver({
         )}
         {!history ? <View testID="dashboard-blank-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
           <GateSiteGateSelect sites={sites.data?.sites ?? []} siteId={siteId} gate={stations.data?.stations.find(row => row.id === stationId)}
-            onChange={(nextSite, nextGate) => { setSite(nextSite); setGate(nextGate); }} />
+            onChange={(nextSite, nextGate) => { setSite(nextSite); setGate(nextGate); rememberedGate.save(nextSite, nextGate); }} />
         </View> : null}
         {history ? <View testID="shift-notes-browser-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
           {sectionHeading(t("changeOver.shiftNotes"))}
@@ -530,12 +548,12 @@ export default function GateChangeOver({
               <View style={{ flex: 1, gap: 8 }}>
                 {sectionHeading(t("changeOver.site"))}
                 {sites.data?.sites.filter((site) => site.id === siteId).map((site) => <TogglePillButton compactOnTablet key={site.id} solid accessibilityState={{ expanded: siteMenuOpen }} onPress={() => { if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open); }}>{site.name}</TogglePillButton>)}
-                {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((site) => <TogglePillButton compactOnTablet key={site.id} onPress={() => { setSite(site.id); setGate(""); setSiteMenuOpen(false); setGateMenuOpen(false); }}>{site.name}</TogglePillButton>)}
+                {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((site) => <TogglePillButton compactOnTablet key={site.id} onPress={() => { setSite(site.id); setGate(""); rememberedGate.save(site.id, ""); setSiteMenuOpen(false); setGateMenuOpen(false); }}>{site.name}</TogglePillButton>)}
               </View>
               <View style={{ flex: 1, gap: 8 }}>
                 {sectionHeading(t("changeOver.gate"))}
                 {stations.data?.stations.filter((station) => station.id === stationId).map((station) => <TogglePillButton compactOnTablet key={station.id} solid accessibilityState={{ expanded: gateMenuOpen }} onPress={() => { if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open); }}>{station.name}</TogglePillButton>)}
-                {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((station) => <TogglePillButton compactOnTablet key={station.id} onPress={() => { setGate(station.id); setGateMenuOpen(false); }}>{station.name}</TogglePillButton>)}
+                {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((station) => <TogglePillButton compactOnTablet key={station.id} onPress={() => { setGate(station.id); if(siteId) rememberedGate.save(siteId,station.id); setGateMenuOpen(false); }}>{station.name}</TogglePillButton>)}
               </View>
             </View>
             <View style={{ backgroundColor: colors.border, height: 1 }} />

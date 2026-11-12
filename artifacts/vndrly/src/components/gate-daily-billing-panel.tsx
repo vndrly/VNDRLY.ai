@@ -535,6 +535,7 @@ function ScopedPanel({ request, dashboardPostId, showGateGoDemo }: { request: Ga
       {tickets && <div className="gate-billing-ticket-subcard">
       <h3 className="pt-3 text-sm font-semibold">{copy("Recent Tickets")}</h3>
       <div className="gate-billing-ticket-scroll" role="region" aria-label={copy("Recent Tickets")} tabIndex={0}>
+      <p className="text-xs text-muted-foreground">{i18n.language?.startsWith("es") ? "Facturación de toda la empresa · todos los sitios" : "Company-wide billing · all sites"}</p>
       {ticketLists.map(({ group, label, singular }) => {
         const rows = tickets.filter(ticket => ticket.group === group);
         const total = rows.reduce((sum, ticket) => sum + ticket.invoiceCents, 0);
@@ -566,7 +567,7 @@ function ScopedPanel({ request, dashboardPostId, showGateGoDemo }: { request: Ga
                       <button type="button" className={`${ticketAction} font-bold`} style={{ color: ticketColors[ticket.tone] }}
                         onClick={() => setEditing(ticket)}>{formatTicketTrackingNumber(ticket.id)}</button>
                     ) : <strong style={{ color: ticketColors[ticket.tone] }}>{formatTicketTrackingNumber(ticket.id)}</strong>}
-                    <span className={ticket.tone === "green" ? "text-[#86efac]" : "text-[#a3a3a3]"}>{copy("PAID")}</span>
+                    <span className={ticket.tone === "green" ? "text-[#86efac]" : "text-[#a3a3a3]"}>{ticket.status === "funds_dispersed" ? copy("PAID") : (i18n.language?.startsWith("es") ? "SIN PAGAR" : "UNPAID")}</span>
                   </div>
                   <div className="flex flex-wrap justify-between gap-x-3 text-[#b3b3b3]">
                     <span>{[ticket.siteName, ticket.gateName].filter(Boolean).join(" · ")}</span>
@@ -580,13 +581,13 @@ function ScopedPanel({ request, dashboardPostId, showGateGoDemo }: { request: Ga
                       )}
                     </> : <>
                     <button type="button" className={ticketAction}
-                      disabled={opening || !workflow || !ticket.stationId || ticket.group !== "unstarted"}
+                      disabled={opening || !workflow || !ticket.stationId || ticket.group !== "unstarted" || ["funds_dispersed", "cancelled", "denied"].includes(ticket.status)}
                       onClick={() => void openTicketAction(ticket, "start")}>{copy("Start Ticket")}</button>
                     <button type="button" className={ticketAction}
-                      disabled={opening || !workflow || ticket.group !== "open"}
+                      disabled={opening || !workflow || ticket.group !== "open" || ["funds_dispersed", "cancelled", "denied"].includes(ticket.status)}
                       onClick={() => void openTicketAction(ticket, "invoice")}>{copy("Invoice Now")}</button>
                     <button type="button" className={ticketAction}
-                      disabled={opening || !workflow || ticket.group !== "open"}
+                      disabled={opening || !workflow || ticket.group !== "open" || ["funds_dispersed", "cancelled", "denied"].includes(ticket.status)}
                       onClick={() => void openTicketAction(ticket, "end")}>{copy("Close Ticket")}</button>
                     </>}
                   </div>

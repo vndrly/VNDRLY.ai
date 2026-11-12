@@ -1,3 +1,4 @@
+import {canReadTicket} from "../lib/field-ticket-access";
 import { managedWorkerSiteRole } from "../lib/managed-worker-access";
 import { Router, type IRouter, type Request, type Response } from "express";
 import express from "express";
@@ -24,7 +25,7 @@ import {
   ticketNoteLogsTable,
   workHubFilesTable,
 } from "@workspace/db";
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import {
   canReadTicketAttachment,
   ticketAttachmentReference,
@@ -74,6 +75,7 @@ async function canReadVisitEvidence(
   if (!session?.userId) return false;
   const [visit] = await db
     .select({
+      ticketId: sql<string>`${siteVisitsTable.gateCapture}->>'ticketId'`,
       siteLocationId: siteVisitsTable.siteLocationId,
       hostVendorId: siteVisitsTable.hostVendorId,
       sitePartnerId: siteLocationsTable.partnerId,
@@ -87,11 +89,13 @@ async function canReadVisitEvidence(
       or(
         eq(siteVisitsTable.platePhotoUrl, objectPath),
         eq(siteVisitsTable.vehiclePhotoUrl, objectPath),
+        sql`EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(${siteVisitsTable.gateCapture}->'images','[]'::jsonb)) image WHERE image->>'objectPath'=${objectPath} OR image->>'originalPath'=${objectPath})`,
       ),
     )
     .limit(1);
   if (!visit) return false;
   if (session.role === "admin") return true;
+  if (visit.ticketId && /^[1-9]\d*$/.test(visit.ticketId) && await canReadTicket(session,Number(visit.ticketId))) return true;
   if (session.role === "partner")
     return session.partnerId === visit.sitePartnerId;
   if (session.managedSubcontractor && !managedWorkerSiteRole(session, visit.siteLocationId)) return false;
@@ -357,6 +361,7 @@ router.delete("/storage/uploads", async (req: Request, res: Response) => {
         or(
           eq(siteVisitsTable.platePhotoUrl, objectPath),
           eq(siteVisitsTable.vehiclePhotoUrl, objectPath),
+        sql`EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(${siteVisitsTable.gateCapture}->'images','[]'::jsonb)) image WHERE image->>'objectPath'=${objectPath} OR image->>'originalPath'=${objectPath})`,
         ),
       )
       .limit(1);

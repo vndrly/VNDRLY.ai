@@ -1,3 +1,4 @@
+import {readTicketGateProof} from "../services/ticket-gate-proof";
 import {effectiveFinancialAmountSql} from "../lib/effective-financial-line";
 import { ticketAfeSql } from "../lib/ticket-afe";
 import { freezeTicketSubmission, reviewedSubmission, TicketSubmissionError } from "../lib/ticket-submissions";
@@ -1552,6 +1553,11 @@ router.post("/tickets", async (req, res): Promise<void> => {
   sendResponseStatus(res, 201, GetTicketResponse, result);
 });
 
+router.get("/tickets/:id/gate-proof",async(req,res):Promise<void>=>{
+ const id=Number(req.params.id);if(!Number.isSafeInteger(id)||id<1){res.status(400).json({message:"Invalid ticket",code:"ticket.invalid_input"});return;}
+ const proof=await readTicketGateProof(getSessionFromRequest(req),id);if(!proof){res.status(404).json({message:"Ticket unavailable",code:"ticket.not_found"});return;}
+ res.setHeader("Cache-Control","private, no-store");res.json(proof);
+});
 router.get("/tickets/:id", async (req, res): Promise<void> => {
   const params = GetTicketParams.safeParse(req.params);
   if (!params.success) {

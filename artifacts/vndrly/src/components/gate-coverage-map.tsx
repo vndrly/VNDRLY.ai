@@ -1,3 +1,4 @@
+import { readGateSelection, saveGateSelection, useGateSelection } from "@/lib/gate-selection";
 import { GateMovementLocationSummary } from './gate-area-traffic';
 import { gateLocationLabel } from "@/lib/warwick-gate-label";
 import { EquipmentListResponseSchema, type EquipmentItem } from "@workspace/api-zod";
@@ -51,6 +52,7 @@ type Coverage = {
 /** Server-authorized Gate locations and company-shared pins. */
 export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { showGateSelector?: boolean; expandedHeader?: (close: () => void) => ReactNode }) {
   const { user } = useAuth();
+  const sharedSelection=useGateSelection(user);
   const brand = useBrand();
   const [gateDraft,setGateDraft]=useState<{latitude:number;longitude:number;gateId?:string;siteId?:number}|null>(null);
   const [movingGate,setMovingGate]=useState<string|null>(null);
@@ -67,7 +69,7 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
   const [dropping, setDropping] = useState(false);
   const [draftPin, setDraftPin] = useState<{latitude:number;longitude:number} | null>(null);
   const [selectedPinId, setSelectedPinId] = useState<string | null>(() => new URLSearchParams(window.location.search).get("pinId"));
-  const [selectionGateId,setSelectionGateId]=useState<string|null>(() => new URLSearchParams(window.location.search).get("stationId"));
+  const [selectionGateId,setSelectionGateId]=useState<string|null>(() => new URLSearchParams(window.location.search).get("stationId") ?? readGateSelection(user)?.stationId ?? null);
   const navigationSearch = useSearch();
   const [centerOnMe,setCenterOnMe]=useState(false),[centeringMe,setCenteringMe]=useState(false);
   const [centerError,setCenterError]=useState("");
@@ -80,8 +82,9 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
   const [revealOpen,setRevealOpen]=useState(false),[revealedStaffIds,setRevealedStaffIds]=useState<number[]|null>(null);
   const [staffVisible,setStaffVisible]=useState(false);
   const [equipmentOpen,setEquipmentOpen]=useState(false),[equipmentVisible,setEquipmentVisible]=useState(()=>!!new URLSearchParams(window.location.search).get("equipmentId")),[equipmentIds,setEquipmentIds]=useState<string[]|null>(()=>{const id=new URLSearchParams(window.location.search).get("equipmentId");return id?[id]:null;}),[selectedEquipmentId,setSelectedEquipmentId]=useState<string|null>(()=>new URLSearchParams(window.location.search).get("equipmentId"));
-  const [selectedGate, setSelectedGate] = useState<string | null>(null);
-  const [focusedGateId, setFocusedGateId] = useState<string | null>(null);
+  const [selectedGate, setSelectedGate] = useState<string | null>(selectionGateId);
+  const [focusedGateId, setFocusedGateId] = useState<string | null>(selectionGateId);
+  useEffect(()=>{if(sharedSelection){setSelectionGateId(sharedSelection.stationId);setSelectedGate(sharedSelection.stationId);setFocusedGateId(sharedSelection.stationId);}},[sharedSelection]);
   const [focusedStaffId, setFocusedStaffId] = useState<number | null>(null);
   useEffect(() => {
     const stationId = new URLSearchParams(navigationSearch).get("stationId");
@@ -155,6 +158,10 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
   const sites = [...new Map(gates.map(gate => [gate.siteId, { id: gate.siteId, name: gate.siteName, partnerName: gate.partnerName }])).values()];
   const focusedGate = gates.find(gate => gate.id === focusedGateId);
   const selectionGate = gates.find(gate => gate.id === selectionGateId);
+  useEffect(() => {
+    // Persist only an authorized gate returned by this account's map endpoint.
+    if (selectionGate && !instant) saveGateSelection(user, selectionGate.siteId, selectionGate.id);
+  }, [selectionGate?.id, selectionGate?.siteId, instant, user?.userId, user?.activeMembershipId]);
   const duties = coverage.data?.duties ?? [];
   const staff = [...(coverage.data?.staff ?? [])].sort((a,b) => a.name.localeCompare(b.name, es ? "es" : "en", { sensitivity: "base" }) || a.userId-b.userId);
   const onWatch = (person: Coverage["staff"][number]) => person.onWatch || duties.some(duty => duty.userId === person.userId);

@@ -47,23 +47,28 @@ export function useGateArrivals(siteId?: number, linkedSiteIds?: number[]) {
     approvePreviewArrival: (id: string) => { if (preview) setPreviewApprovedIds(ids => new Set([...ids, id])); } };
 }
 
-export function GateArrivalsPanel({ query, onOpen, limit, search = "", hideEmpty = false }: {
-  query: ReturnType<typeof useGateArrivals>; onOpen: (runId: string) => void; limit?: number; search?: string; hideEmpty?: boolean;
+export function GateArrivalsPanel({ query, onOpen, onPrepare, limit, search = "", hideEmpty = false }: {
+  query: ReturnType<typeof useGateArrivals>; onOpen: (runId: string) => void; onPrepare?: (run: GateArrival) => void; limit?: number; search?: string; hideEmpty?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const c = (en: string, es: string) => i18n?.language?.startsWith("es") ? es : en;
+  const [page,setPage]=useState(0);
+  useEffect(()=>setPage(0),[search,limit,query.data?.arrivals[0]?.siteLocationId]);
   if (query.isLoading) return <Loader2 className="animate-spin" />;
   if (query.isError) return <p role="alert" className="text-sm text-destructive">{t("gatekeeper.arrivalsLoadFailed")}</p>;
   const arrivals = query.data?.arrivals.filter(run => !search.trim() || [run.driverName, run.title, run.companyName, run.vehicleLabel, run.ticketNumber, run.destinationName].some(value => value?.toLowerCase().includes(search.trim().toLowerCase()))) ?? [];
   if (!arrivals.length) return hideEmpty && !query.data?.truncated ? null : <p className="text-sm text-muted-foreground">{t(query.data?.truncated ? "gatekeeper.arrivalsTruncated" : "gatekeeper.noArrivals")}</p>;
+  const pageSize=Math.max(1,Math.min(100,limit??100));
+  const lastPage=Math.max(0,Math.ceil(arrivals.length/pageSize)-1),currentPage=Math.min(page,lastPage);
   return <div className="space-y-2">
     {query.preview && <p className="text-xs text-muted-foreground">{c("Sample arrivals · approval preview", "Llegadas de ejemplo · vista previa de aprobación")}</p>}
-    {arrivals.slice(0, limit).map(run => <GateArrivalCard key={run.id} run={run} query={query} onOpen={onOpen} />)}
+    {arrivals.slice(currentPage*pageSize,(currentPage+1)*pageSize).map(run => <GateArrivalCard key={run.id} run={run} query={query} onOpen={onOpen} onPrepare={onPrepare} />)}
+    {arrivals.length>pageSize&&<nav aria-label={c("Arrival pages","Páginas de llegadas")} className="flex items-center justify-between gap-2"><button type="button" className="gate-history-filter" disabled={currentPage===0} onClick={()=>setPage(currentPage-1)}>{c("Previous arrivals","Llegadas anteriores")}</button><span role="status">{currentPage*pageSize+1}–{Math.min((currentPage+1)*pageSize,arrivals.length)} / {arrivals.length}</span><button type="button" className="gate-history-filter" disabled={currentPage===lastPage} onClick={()=>setPage(currentPage+1)}>{c("Next arrivals","Siguientes llegadas")}</button></nav>}
     {query.data?.truncated && <p className="text-xs text-muted-foreground">{t("gatekeeper.arrivalsTruncated")}</p>}
   </div>;
 }
 
-export function GateArrivalCard({ run, query, onOpen }: { run: GateArrival; query: ReturnType<typeof useGateArrivals>; onOpen: (runId: string) => void }) {
+export function GateArrivalCard({ run, query, onOpen, onPrepare }: { run: GateArrival; query: ReturnType<typeof useGateArrivals>; onOpen: (runId: string) => void; onPrepare?: (run: GateArrival) => void }) {
   const { t, i18n } = useTranslation();
   const c = (en: string, es: string) => i18n?.language?.startsWith("es") ? es : en;
   const approved = query.preview && (run.id.endsWith("-2") || run.id.endsWith("-4") || query.previewApprovedIds.has(run.id));
@@ -73,7 +78,7 @@ export function GateArrivalCard({ run, query, onOpen }: { run: GateArrival; quer
     status={<span className={`gate-arriving${query.newInboundIds.has(run.id) ? " is-new" : ""}${query.preview && !approved ? " gate-arriving-awaiting" : ""}`}>{t("gatekeeper.arriving")}</span>}
     footer={query.preview && <span className="gate-arrival-approval-status" role="status">{approved ? c("Approved · Drive through", "Aprobado · Pase directo") : c("Waiting on booth approval", "Esperando aprobación de la caseta")}</span>}
     className={query.preview ? approved ? "gate-traffic-approved" : "gate-traffic-pending" : ""}
-    action={query.preview && !approved && <button type="button" className="gate-history-filter" aria-label={`${c("Approve", "Aprobar")}: ${run.driverName}`} onClick={() => query.approvePreviewArrival(run.id)}>{c("Approve", "Aprobar")}</button>}>
+    action={!query.preview && onPrepare ? <button type="button" className="gate-history-filter" onClick={()=>onPrepare(run)}>{c("Review for check-in","Revisar para registrar entrada")}</button> : query.preview && !approved && <button type="button" className="gate-history-filter" aria-label={`${c("Approve", "Aprobar")}: ${run.driverName}`} onClick={() => query.approvePreviewArrival(run.id)}>{c("Approve", "Aprobar")}</button>}>
   <span className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
     <span>{run.ticketNumber ? `#${run.ticketNumber}` : run.title}</span>
     <span>{run.etaMinutes == null ? t("gatekeeper.etaUnavailable") : t("gatekeeper.arrivalEta", { minutes: Math.ceil(run.etaMinutes) })}</span>

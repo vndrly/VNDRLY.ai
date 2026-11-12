@@ -1,3 +1,4 @@
+import TicketGateProof from "@/components/TicketGateProof";
 import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
@@ -3425,6 +3426,7 @@ export default function TicketDetailScreen() {
 
       <TicketWorkSection title="Visits & evidence" initiallyOpen={false}>
       <TicketSiteVisitSummary ticketId={ticketId} refreshKey={lastLoadedAt} />
+      <TicketGateProof ticketId={ticketId}/>
       {currentUser && ["vendor", "partner", "admin"].includes(currentUser.role) ? (
         <TicketSubmittedProof key={`${currentUser.id}:${currentUser.activeMembershipId}:${ticketId}`} ticketId={ticketId} status={ticket.status} role={currentUser.role} onChanged={() => { void load(); }} />
       ) : null}

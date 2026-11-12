@@ -1,3 +1,8 @@
+import { ChangeOverError, requireGateOperatingContext } from "../services/gate-change-over";
+import { gateCaptureInput } from "../lib/gate-capture";
+import { createGateArrivalsService } from "../services/gate-arrivals";
+import { readWithPlateRecognizer } from "../lib/plate-recognizer";
+import { logger } from "../lib/logger";
 import { recordGateMovement, resolveGateDestination, gateDestinations, confirmedSecureArea, type GateMovement } from '../services/gate-topology';
 import { linkedGateScope } from "../services/gate-links";
 import {offlineGateObservationService,OfflineGateError} from "../services/gate-offline-observation";
@@ -181,6 +186,7 @@ async function isSeriesGateVisit(visit:{siteLocationId:number;gateStationId?:str
 async function validateGateEvidencePath(
   raw: unknown,
   userId: number,
+  hashes?: Map<string,string>,
 ): Promise<string | null> {
   if (raw == null || raw === "") return null;
   const path = String(raw).trim();
@@ -206,6 +212,7 @@ async function validateGateEvidencePath(
       "Gate evidence is unavailable or is not owned by this session.",
     );
   }
+  hashes?.set(path, crypto.createHash("sha256").update(object.body).digest("hex"));
   return path;
 }
 
@@ -794,6 +801,7 @@ const visitListProjection = {
   plateState: siteVisitsTable.plateState,
   platePhotoUrl: siteVisitsTable.platePhotoUrl,
   vehiclePhotoUrl: siteVisitsTable.vehiclePhotoUrl,
+  gateCapture: siteVisitsTable.gateCapture,
   purpose: siteVisitsTable.purpose,
   entryCategory: siteVisitsTable.entryCategory,
   notes: siteVisitsTable.notes,
@@ -1049,7 +1057,11 @@ router.post("/visits/gate/read-plate", async (req, res): Promise<void> => {
     return;
   }
   if (!(await enforceGateOcrRateLimit(req, res, session))) return;
-  const b = (req.body ?? {}) as { objectPath?: string };
+  const b = (req.body ?? {}) as { objectPath?: string; mode?: string };
+  if (b.mode !== undefined && b.mode !== "plate" && b.mode !== "vehicle") {
+    res.status(400).json({ message: "Invalid recognition mode", code: VISIT_INVALID_INPUT });
+    return;
+  }
   if (!b.objectPath) {
     res
       .status(400)
@@ -1076,7 +1088,12 @@ router.post("/visits/gate/read-plate", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const candidate = await readPlateFromImage({ imageBase64, mimeType });
+    const candidate = b.mode !== "vehicle" && process.env.GATE_PLATE_OCR_PROVIDER === "plate-recognizer"
+      ? await readWithPlateRecognizer({ imageBase64, mimeType })
+      : await readPlateFromImage({ imageBase64, mimeType, ...(b.mode === "vehicle" ? { mode: "vehicle" as const } : {}) });
+    logger.info({ event: "gate.recognition", mode: b.mode ?? "plate", provider: candidate.provider,
+      model: candidate.modelVersion, elapsedMs: candidate.elapsedMs, quality: candidate.quality,
+      plateDetected: Boolean(candidate.plate) }, "Gate recognition completed");
     res.json(candidate);
   } catch (reason) {
     if (reason instanceof PlateOcrUnavailableError) {
@@ -1418,6 +1435,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     gateStationId?: string;
     destinationGateId?: string;
     destinationId?: string;
+    gateCapture?: unknown;
   };
   let entryCategory;
   try { entryCategory = parseVisitEntryCategory(b.entryCategory); }
@@ -1493,6 +1511,9 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     if (!allowed.some(gate => gate.id === b.gateStationId)) { res.status(403).json({ message: "Gate location is not available to this operator", code: VISIT_NO_ACCESS }); return; }
     [selectedGate] = await db.select().from(gateStationsTable).where(and(eq(gateStationsTable.id, b.gateStationId), eq(gateStationsTable.siteId, site.id)));
   }
+  try { const operating=await requireGateOperatingContext(session,site.id,b.gateStationId); b.gateStationId=operating.stationId;
+    if(!selectedGate) [selectedGate]=await db.select().from(gateStationsTable).where(eq(gateStationsTable.id,operating.stationId));
+  } catch(error) {if (!(error instanceof ChangeOverError)) throw error; res.status(403).json({message:error instanceof Error?error.message:"Operating gate required",code:VISIT_NO_ACCESS});return;}
   const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
 
   const expectedDuration =
@@ -1505,7 +1526,21 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     : null;
   let platePhotoUrl: string | null;
   let vehiclePhotoUrl: string | null;
+  let gateCapture: typeof siteVisitsTable.$inferInsert.gateCapture = null;
   try {
+    if (b.gateCapture != null) {
+      const capture = gateCaptureInput.parse(b.gateCapture);
+      const hashes = new Map<string,string>();
+      const paths = new Set(capture.images.flatMap(image => [image.objectPath, image.originalPath]));
+      await Promise.all([...paths].map(path => validateGateEvidencePath(path, session.userId!, hashes)));
+      let ticketId: number | undefined;
+      if (capture.arrivalRunId) {
+        const arrival = await createGateArrivalsService().detail(session, site.id, capture.arrivalRunId);
+        ticketId=arrival.ticketId;
+        if (arrival.runComplete || arrival.status === "cancelled") throw new Error("This arrival is no longer available for check-in.");
+      }
+      gateCapture = { ...capture, images:capture.images.map(image=>({...image,phase:"entry" as const,sha256:hashes.get(image.objectPath),originalSha256:hashes.get(image.originalPath),receivedAt:new Date().toISOString(),recordedByUserId:session.userId!})), ticketId, receivedAt: new Date().toISOString(), recordedByUserId: session.userId! };
+    }
     [platePhotoUrl, vehiclePhotoUrl] = await Promise.all([
       validateGateEvidencePath(b.platePhotoUrl, session.userId!),
       validateGateEvidencePath(b.vehiclePhotoUrl, session.userId!),
@@ -1521,7 +1556,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     return;
   }
 
-  let destinationGate: typeof selectedGate = null;
+  let destinationGate: typeof selectedGate | null = null;
   let destinationName: string | null = null;
   if(selectedGate){
     const gates=await db.select().from(gateStationsTable).where(eq(gateStationsTable.siteId,site.id));
@@ -1556,6 +1591,21 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       const same = active.firstName.trim().toLowerCase() === firstName.toLowerCase()
         && active.lastName.trim().toLowerCase() === lastName.toLowerCase()
         && (active.company ?? '').trim().toLowerCase() === String(b.company ?? '').trim().toLowerCase();
+      // Do not acknowledge evidence/run linkage that cannot belong to this visit.
+      if (same && gateCapture && (gateCapture.images.length > 0 || gateCapture.arrivalRunId)
+        && active.siteLocationId !== site.id) return { visit: null, reused: true };
+      if (same && selectedArea && arrivalMovement) {
+        const currentArea = confirmedSecureArea((active.gateMovements ?? []) as GateMovement[]);
+        if (currentArea && currentArea !== selectedArea) return { visit: null, reused: true };
+      }
+      if (same && gateCapture && active.siteLocationId === site.id) {
+        const images = [...new Map([...gateCapture.images, ...(active.gateCapture?.images ?? [])].map(image => [image.objectPath,image])).values()];
+        if(images.filter(image=>image.phase!=="exit").length>12) return {visit:null,reused:true};
+        const combined = { ...gateCapture, ...(active.gateCapture??{}), ticketId: active.gateCapture?.ticketId ?? gateCapture.ticketId, arrivalRunId: active.gateCapture?.arrivalRunId ?? gateCapture.arrivalRunId, images };
+        if (active.gateCapture?.arrivalRunId && gateCapture.arrivalRunId && active.gateCapture.arrivalRunId !== gateCapture.arrivalRunId) return {visit:null,reused:true};
+        await tx.update(siteVisitsTable).set({gateCapture:combined}).where(eq(siteVisitsTable.id,active.id));
+        active.gateCapture=combined;
+      }
       if (same && active.admissionStatus === "pending") {
         // This form records an actual entry. Reuse the waiting record rather
         // than treating prior drive-through clearance as the arrival itself.
@@ -1603,6 +1653,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       plateState: plate.plateState,
       platePhotoUrl,
       vehiclePhotoUrl,
+      gateCapture,
       purpose:
         typeof b.purpose === "string" && b.purpose.trim()
           ? b.purpose.trim()
@@ -1692,7 +1743,7 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     res.status(400).json({ message: "Invalid id", code: VISIT_INVALID_ID });
     return;
   }
-  const b = (req.body ?? {}) as { latitude?: number; longitude?: number; notes?: string; gateStationId?: string };
+  const b = (req.body ?? {}) as { latitude?: number; longitude?: number; notes?: string; gateStationId?: string; gateCapture?: unknown };
   const [visit] = await db
     .select()
     .from(siteVisitsTable)
@@ -1732,7 +1783,11 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     const allowed = await listChangeOverStations(session, selectedGate.siteId);
     if (!allowed.some(gate => gate.id === gateId)) { res.status(403).json({ message: "Gate location is not available to this operator", code: VISIT_NO_ACCESS }); return; }
   }
+  try { const operating=await requireGateOperatingContext(session,selectedGate?.siteId??visit.siteLocationId,gateId);
+    if(!selectedGate) [selectedGate]=await db.select().from(gateStationsTable).where(eq(gateStationsTable.id,operating.stationId));
+  } catch(error) {if (!(error instanceof ChangeOverError)) throw error; res.status(403).json({message:error instanceof Error?error.message:"Operating gate required",code:VISIT_NO_ACCESS});return;}
   if(selectedGate && (selectedGate.topology as {area?:string}|null)?.area){
+    if(b.gateCapture!=null){res.status(400).json({message:"Capture site-exit proof at the outer gate; use area movement controls for internal departure.",code:VISIT_INVALID_INPUT});return;}
     await recordGateMovement(session,{siteId:visit.siteLocationId,gateId:selectedGate.id,visitId:id,operationId:crypto.randomUUID(),kind:'leave',destination:'site_exit'});
     const [current]=await db.select().from(siteVisitsTable).where(eq(siteVisitsTable.id,id));res.json(current);return;
   }
@@ -1744,17 +1799,28 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
   }
   const earlyTurnaround=savedMovements.at(-1)?.destinationGateId!=null;
   const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
+  let exitCapture=visit.gateCapture;
+  if(b.gateCapture!=null){try{
+    const capture=gateCaptureInput.parse(b.gateCapture);
+    if(capture.arrivalRunId)throw new Error("An exit cannot change the arrival link.");
+    const hashes=new Map<string,string>();
+    await Promise.all([...new Set(capture.images.flatMap(image=>[image.objectPath,image.originalPath]))].map(path=>validateGateEvidencePath(path,session.userId!,hashes)));
+    if((visit.gateCapture?.images.filter(image=>image.phase==="exit").length??0)+capture.images.filter(image=>!visit.gateCapture?.images.some(saved=>saved.objectPath===image.objectPath)).length>12)throw new Error("At most twelve exit photos may be attached.");
+    const now=new Date().toISOString();
+    exitCapture={...(visit.gateCapture??{receivedAt:now,recordedByUserId:session.userId!}),images:[...(visit.gateCapture?.images??[]),...capture.images.filter(image=>!visit.gateCapture?.images.some(saved=>saved.objectPath===image.objectPath)).map(image=>({...image,phase:"exit" as const,sha256:hashes.get(image.objectPath),originalSha256:hashes.get(image.originalPath),receivedAt:now,recordedByUserId:session.userId!}))]};
+  }catch(error){res.status(400).json({message:error instanceof Error?error.message:"Invalid exit evidence",code:VISIT_INVALID_INPUT});return;}}
   const [updated] = await db
     .update(siteVisitsTable)
     .set({
       checkOutTime: new Date(),
+      gateCapture: exitCapture,
       ...(selectedGate ? {gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify([{operationId:crypto.randomUUID(),kind:"site_exit",gateId:selectedGate.id,gateName:selectedGate.name,area:"",destinationGateId:null,destination:"remain",at:new Date().toISOString(),actorId:session.userId,...(earlyTurnaround?{note:"Exited before inner arrival"}:{})}])}::jsonb`} : {}),
       checkOutLatitude: gpsEvidence.latitude,
       checkOutLongitude: gpsEvidence.longitude,
       checkOutGpsEvidence: gpsEvidence,
       checkOutNotes: [trimVisitNotes(b.notes) ?? visit.checkOutNotes,earlyTurnaround?'Exited before inner arrival':null].filter(Boolean).join('\n') || null,
     })
-    .where(and(eq(siteVisitsTable.id, id), isNull(siteVisitsTable.checkOutTime), sql`${siteVisitsTable.gateMovements} = ${JSON.stringify(savedMovements)}::jsonb`))
+    .where(and(eq(siteVisitsTable.id, id), isNull(siteVisitsTable.checkOutTime), sql`${siteVisitsTable.gateMovements} = ${JSON.stringify(savedMovements)}::jsonb`, sql`coalesce(${siteVisitsTable.gateCapture}, 'null'::jsonb) = ${JSON.stringify(visit.gateCapture??null)}::jsonb`))
     .returning();
   if (!updated) {
     const [current] = await db.select().from(siteVisitsTable).where(eq(siteVisitsTable.id,id));
@@ -1825,6 +1891,8 @@ router.post("/visits/gate/:id/admit", async (req, res): Promise<void> => {
     res.status(404).json({ message: "Visit not found", code: VISIT_NOT_FOUND });
     return;
   }
+  try {await requireGateOperatingContext(session,visit.siteLocationId,visit.gateStationId??undefined);}
+  catch(error){if (!(error instanceof ChangeOverError)) throw error; res.status(403).json({message:error instanceof Error?error.message:"Operating gate required",code:VISIT_NO_ACCESS});return;}
   if (visit.checkOutTime || visit.admissionStatus !== "pending") {
     res.json({
       ...visit,
@@ -2791,6 +2859,7 @@ router.get("/visits/:id", async (req, res): Promise<void> => {
       plateState: siteVisitsTable.plateState,
       platePhotoUrl: siteVisitsTable.platePhotoUrl,
       vehiclePhotoUrl: siteVisitsTable.vehiclePhotoUrl,
+      gateCapture: siteVisitsTable.gateCapture,
       purpose: siteVisitsTable.purpose,
       entryCategory: siteVisitsTable.entryCategory,
       expectedDurationMinutes: siteVisitsTable.expectedDurationMinutes,

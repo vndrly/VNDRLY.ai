@@ -78,7 +78,15 @@ export async function localWriteUpload(
   const entityId = `uploads/${path.basename(uploadId)}`;
   const file = resolveEntityFile(entityId);
   await fsp.mkdir(path.dirname(file), { recursive: true });
-  await fsp.writeFile(file, body);
+  try {
+    await fsp.writeFile(file, body, { flag: 'wx' });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+    const existing = await fsp.readFile(file);
+    const meta = await readMeta(file);
+    if (existing.equals(body) && meta?.contentType === (contentType || 'application/octet-stream')) return;
+    throw new Error('Upload already exists; request a new upload URL.');
+  }
   await writeMeta(file, {
     contentType: contentType || "application/octet-stream",
     size: body.length,

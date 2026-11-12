@@ -82,3 +82,18 @@ it("downloads each filtered export in the browser with the correct file type", a
   expect(createObjectURL).toHaveBeenCalledTimes(3);
   expect(revokeObjectURL).toHaveBeenCalledTimes(3);
 });
+
+it("clamps the last page after refreshed records shrink",async()=>{
+ let rows=Array.from({length:51},(_,i)=>({id:i+1,name:"Page driver "+i,vehiclePlate:"PLATE"+i}));
+ env.api.mockImplementation(async(path:string)=>path.includes("/query")?{rows}:{recipients:[]});
+ const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});
+ render(<QueryClientProvider client={cache}><GateHistory/></QueryClientProvider>);
+ await screen.findAllByText("Page driver 0");
+ fireEvent.click(screen.getByTestId("gate-history-older"));
+ expect((await screen.findAllByText("Page driver 50")).length).toBeGreaterThan(0);
+ rows=rows.slice(0,1);await cache.invalidateQueries({queryKey:["gate-history-report"]});
+ await waitFor(()=>expect(screen.queryAllByText("Page driver 50")).toHaveLength(0));
+ expect(screen.getAllByText("Page driver 0").length).toBeGreaterThan(0);
+ expect((screen.getByTestId("gate-history-newer") as HTMLButtonElement).disabled).toBe(true);
+ expect((screen.getByTestId("gate-history-older") as HTMLButtonElement).disabled).toBe(true);
+});

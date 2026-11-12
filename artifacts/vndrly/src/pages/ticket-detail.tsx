@@ -1,3 +1,4 @@
+import TicketGateProof from "@/components/ticket-gate-proof";
 import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
 
@@ -1854,6 +1855,7 @@ export default function TicketDetail({ id }: { id: number }) {
       </div>
 
       {user?.role === "field_employee" && ticket && !assignmentRemoved && <TicketFieldActions id={id} status={ticket.status} lifecycleState={ticket.lifecycleState} onSaved={invalidate} />}
+      <TicketGateProof ticketId={id}/>
       <Card data-testid="ticket-proof-packet-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

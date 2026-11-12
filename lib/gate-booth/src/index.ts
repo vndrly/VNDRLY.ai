@@ -163,3 +163,9 @@ export function onSiteDwell(input: {
 export * from "./change-over";
 export type { GateWatchTimeline } from "./watch-timeline";
 export type { GateStaffingAlert, GateStaffingAlertKind, GateStaffingAlertsResponse } from './staffing-alerts';
+
+export { parallelGateGroup, gateCheckInDestinationDefaults, type PhysicalGate, type Movement, type AreaVisit, type GateAreaTrafficResponse } from "./gate-traffic";
+
+export {suggestGateFromGps,type GateLocationObservation,type GateLocationCandidate} from "./gate-context";
+
+export type {TicketGateProof} from "./gate-proof";

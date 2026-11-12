@@ -455,6 +455,20 @@
     "errorHint": "Error: {{error}}"
   },
   "gatekeeper": {
+    "recognitionCropGuide": "Drag around the plate to read a closer crop, or use the crop controls.",
+    "recognitionCropControls": "Adjust crop with controls",
+    "recognitionReadCrop": "Read selected plate area",
+    "cropLeft": "Left",
+    "cropTop": "Top",
+    "cropWidth": "Width",
+    "cropHeight": "Height",
+    "recognitionCaptureFailed": "Photo could not be prepared or uploaded. Retake a clear JPEG, PNG or WebP photo under 8 MB, or enter the plate manually.",
+    "recognitionCaptureGuide": "Center one vehicle or plate, keep it sharp, and avoid glare. Verify the reading and current driver before saving.",
+    "recognitionPhoto": "Photo used for recognition",
+    "recognitionReview": "Review the plate and state. Vehicle appearance is a description, not proof of identity.",
+    "recognitionMultiple": "More than one vehicle is visible. Retake a closer photo of the intended vehicle.",
+    "recognitionUse": "Use reviewed plate",
+    "recognitionUnavailable": "Photo recognition is unavailable or timed out. Retry or type the plate; your saved photo is still attached.",
     "voiceNeedsDetail": "One more detail",
     "voiceRecovery": {
       "name": "What is the driver's full name?",
@@ -517,7 +531,8 @@
     "pendingAdmit": "Waiting to enter",
     "reconciliationObserved": "Observed entry - details needed",
     "reconciliationReview": "Gate Supervisor review needed",
-    "admit": "Admit"
+    "admit": "Admit",
+    "captureLimit": "Twelve photos are already attached. Save this entry before adding more."
   },
   "login": {
     "title": "Field Employee Portal",
@@ -3986,5 +4001,46 @@
     "waiting": "Waiting for the current operator to prepare the handover.",
     "independent": "Signing in or out does not start or end your shift or watch.",
     "recover": "Recover watch action"
+  },
+  "gateOperating": {
+    "myGate": "My gate",
+    "operating": "Operating: {{site}} / {{gate}}",
+    "readOnly": "This viewing gate is read-only. Assume your watch and return to your operating gate to record activity.",
+    "noWatch": "Select a gate and assume your watch to record activity.",
+    "unavailable": "Operating gate unavailable. Retry before recording activity."
+  },
+  "gateProof": {
+    "title": "Gate crossing proof",
+    "unavailable": "Crossing evidence could not be loaded.",
+    "missing": "No linked crossing evidence recorded. This does not prove that a crossing did not occur.",
+    "notRecorded": "Not recorded",
+    "entry": "Entry",
+    "exit": "Exit",
+    "photo": "Crossing evidence",
+    "original": "View original",
+    "exitPhoto": "Add exit photo"
+  },
+  "gateArrivalReview": {
+    "title": "Site arrivals",
+    "failed": "Arrivals could not be refreshed.",
+    "empty": "No arrivals recorded.",
+    "review": "Review for check-in",
+    "truncated": "More arrivals exist than this source returned. This is not the complete queue.",
+    "wrongSite": "This arrival belongs to another site. Verify the selected site before saving.",
+    "notAdmitted": "Not checked in. Verify the driver, plate and company before saving.",
+    "use": "Use driver and company",
+    "remove": "Remove arrival link"
+  },
+  "gateMovement": {
+    "title": "Site and secure-area movements",
+    "saved": "Movement recorded.",
+    "failed": "Movements could not be refreshed. Reconnect and retry.",
+    "enter": "Confirm arrival in area",
+    "leave": "Confirm departure from area",
+    "route": "Set destination",
+    "destination": "Next destination",
+    "remain": "Remain on site",
+    "exit": "Leaving site through outer gate",
+    "empty": "No open visits in this queue."
   }
 }

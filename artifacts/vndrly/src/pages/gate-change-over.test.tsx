@@ -1,3 +1,4 @@
+import { clearGateSelections, saveGateSelection } from "@/lib/gate-selection";
 import React from "react";
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import {
@@ -115,6 +116,7 @@ it("shows two-line counter records and links visitor and employee identities to 
   expect(screen.getByTestId("dashboard-metric-outstanding").tagName).toBe("DETAILS");
 });
 beforeEach(() => {
+  clearGateSelections();saveGateSelection({userId:1},1,"gate");
   duty.onShift = false;
   duty.vendorRole = "office";
   duty.managedSiteId = null;
@@ -139,7 +141,7 @@ beforeEach(() => {
   );
 });
 const caches: QueryClient[] = [];
-afterEach(() => {
+afterEach(() => { clearGateSelections();
   cleanup();
   localStorage.removeItem("gate-dashboard-selection:1:::");
   for (const cache of caches.splice(0)) cache.clear();
@@ -168,12 +170,13 @@ it("restores the selected gate after reopening Dashboard without GPS and ignores
   active = false;
   api.mockClear();
   mount();
-  await waitFor(() => expect(api).toHaveBeenCalledWith("/gate/state"));
+  await waitFor(() => expect(api).toHaveBeenCalledWith("/sites"));
+  expect(api).not.toHaveBeenCalledWith("/gate/state");
   expect(api).not.toHaveBeenCalledWith("/gate-2/state");
 });
-it("prefills the nearby active gate instead of the remembered gate for a gatekeeper", async () => {
+it("preserves the remembered gate despite a nearer GPS gate for a gatekeeper", async () => {
   duty.vendorRole = "gatekeeper";
-  localStorage.setItem("gate-dashboard-selection:1:::", JSON.stringify({ siteId: "1", stationId: "gate" }));
+  saveGateSelection({userId:1},1,"gate");
   const original = Object.getOwnPropertyDescriptor(navigator, "geolocation");
   Object.defineProperty(navigator, "geolocation", {
     configurable: true,
@@ -199,8 +202,8 @@ it("prefills the nearby active gate instead of the remembered gate for a gatekee
   });
   try {
     mount();
-    await waitFor(() => expect(api).toHaveBeenCalledWith("/gate-2/state"));
-    expect((screen.getByRole("combobox", { name: "changeOver.site | changeOver.gate" }) as HTMLSelectElement).value).toBe("gate-2");
+    await waitFor(() => expect(api).toHaveBeenCalledWith("/gate/state"));
+    expect((screen.getByRole("combobox", { name: "changeOver.site | changeOver.gate" }) as HTMLSelectElement).value).toBe("gate");
     expect(api).not.toHaveBeenCalledWith("/closed/state");
     expect(api.mock.calls.every(([, body]) => body === undefined)).toBe(true);
   } finally {

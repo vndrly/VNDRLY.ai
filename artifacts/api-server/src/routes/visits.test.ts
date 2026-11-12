@@ -115,6 +115,7 @@ const tables = {
     "plateState",
     "platePhotoUrl",
     "vehiclePhotoUrl",
+    "gateCapture",
     "purpose",
     "notes",
     "checkOutNotes",
@@ -220,7 +221,7 @@ function evalPred(pred: Pred | undefined, row: Row, now = new Date()): boolean {
   if (!pred) return true;
   switch (pred.kind) {
     case "jsonbEqual":
-      return JSON.stringify(row[pred.col.__col]??[])===JSON.stringify(pred.val);
+      return JSON.stringify(row[pred.col.__col]??(pred.col.__col==='gateCapture'?{}:[]))===JSON.stringify(pred.val);
     case "true":
       return true;
     case "eq":
@@ -443,7 +444,7 @@ vi.mock("../services/gate-links",()=>({linkedGateScope:async(_c:any,_s:any,siteI
   const source=fixtures.siteLocations.find(row=>row.id===siteId);
   return {siteIds:source?.gateLinkId ? fixtures.siteLocations.filter(row=>row.gateLinkId===source.gateLinkId && row.partnerId===source.partnerId).map(row=>row.id) : [siteId],groupId:source?.gateLinkId??null};
 }}));
-vi.mock("../services/gate-change-over",async original=>({...await original<typeof import("../services/gate-change-over")>(),listChangeOverStations:async(_s:any,siteId:number)=>fixtures.gateStations.filter(row=>row.siteId===siteId&&row.active!==false)}));
+vi.mock("../services/gate-change-over",async original=>({...await original<typeof import("../services/gate-change-over")>(),requireGateOperatingContext:async(_s:any,siteId:number,stationId?:string)=>({siteId,stationId:stationId??fixtures.gateStations.find(row=>row.siteId===siteId)?.id}),listChangeOverStations:async(_s:any,siteId:number)=>fixtures.gateStations.filter(row=>row.siteId===siteId&&row.active!==false)}));
 
 vi.mock("drizzle-orm", () => {
   const passthrough = (..._args: any[]) => ({ kind: "true" });
@@ -454,7 +455,7 @@ vi.mock("drizzle-orm", () => {
   const sqlTag: any = (strings: any, ...values: any[]) => {
     if (Array.isArray(strings) && (strings as any).raw !== undefined) {
       const joined = (strings as string[]).join(" ");
-      if(values.length===2&&values[0]?.__col==='gateMovements'&&/ = .*::jsonb/.test(joined))return {kind:"jsonbEqual",col:values[0],val:JSON.parse(values[1])};
+      if(values.length===2&&['gateMovements','gateCapture'].includes(values[0]?.__col)&&/ = .*::jsonb/.test(joined))return {kind:"jsonbEqual",col:values[0],val:JSON.parse(values[1])};
       if(values.length===2&&values[0]?.__col==='gateMovements'&&/ \|\| .*::jsonb/.test(joined))return {kind:"jsonbAppend",col:values[0],facts:JSON.parse(values[1])};
       if (values.length === 1 && /->'entryClearanceAt'->>'value'/.test(joined)) return { kind: "entryClearance", col: values[0] };
       if (values.length === 2 && /::jsonb \|\| coalesce\(/.test(joined)) {

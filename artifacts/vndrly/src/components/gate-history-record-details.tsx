@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { GateVisitDetails } from "./gate-visit-details";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -25,9 +27,11 @@ export default function GateHistoryRecordDetails({ open, record, loading, failed
   open: boolean; record?: GateHistoryRecord; loading: boolean; failed: boolean; onClose: () => void;
 }) {
   const { t, i18n } = useTranslation();
+  const [evidenceVisitId,setEvidenceVisitId]=useState<number|null>(null);
+  useEffect(()=>setEvidenceVisitId(null),[open,record?.id]);
   const c = (en: string, es: string) => i18n?.language?.startsWith("es") ? es : en;
   const time = (value?: string | null) => value ? new Date(value).toLocaleString() : "";
-  return <Dialog open={open} onOpenChange={value => { if (!value) onClose(); }}><DialogContent className="max-w-xl">
+  return <><Dialog open={open} onOpenChange={value => { if (!value) onClose(); }}><DialogContent className="max-w-xl">
     <DialogHeader><DialogTitle>{record?.name || c("Gate record", "Registro de acceso")}</DialogTitle>
     <DialogDescription>{c("Recorded details for this gate crossing.", "Detalles registrados de este cruce de acceso.")}</DialogDescription></DialogHeader>
     {loading ? <Loader2 className="animate-spin" /> : failed ? <p role="alert">{c("The record could not be loaded.", "No se pudo cargar el registro.")}</p> : !record ? <p role="status">{c("This record is unavailable in the selected site.", "Este registro no está disponible en el sitio seleccionado.")}</p> : <dl className="gate-record-facts text-sm">
@@ -51,5 +55,6 @@ export default function GateHistoryRecordDetails({ open, record, loading, failed
         [c("Notes", "Notas"), record.notes],
       ].filter(([, value]) => value != null && value !== "").map(([label, value]) => <div key={label}><dt className="!text-gray-600">{label}</dt><dd className="whitespace-pre-wrap text-gray-900">{value}</dd></div>)}
     </dl>}
-  </DialogContent></Dialog>;
+    {record && /^visit:[1-9]\d*$/.test(record.id) && <button type="button" className="gate-history-filter" onClick={()=>setEvidenceVisitId(Number(record.id.slice(6)))}>{c("View crossing photos", "Ver fotos del cruce")}</button>}
+  </DialogContent></Dialog>{evidenceVisitId !== null && <GateVisitDetails visitId={evidenceVisitId} onClose={()=>setEvidenceVisitId(null)}/>}</>;
 }

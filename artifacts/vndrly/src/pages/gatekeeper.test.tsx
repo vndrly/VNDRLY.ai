@@ -1,3 +1,5 @@
+import { gateArrivalsApi } from "@/lib/gate-arrivals-api";
+vi.mock("@/lib/gate-recognition-photo", () => ({ normalizeGatePhoto: vi.fn(async (file: File) => file) }));
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -195,6 +197,8 @@ async function selectState(name: string) {
 }
 
 beforeEach(() => {
+  URL.createObjectURL = vi.fn(() => "blob:test-photo");
+  URL.revokeObjectURL = vi.fn();
   coaching.value = null;
   vi.clearAllMocks();
   window.localStorage.setItem(ASKV_NATURAL_VOICE_FLAG, "0");
@@ -501,6 +505,7 @@ describe("GatekeeperPage plate state", () => {
     )!;
     const file = new File(["plate"], "plate.jpg", { type: "image/jpeg" });
     fireEvent.change(plateInput, { target: { files: [file] } });
+    fireEvent.click(await screen.findByTestId("gate-confirm-recognition"));
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
@@ -513,6 +518,7 @@ describe("GatekeeperPage plate state", () => {
     });
 
     fireEvent.change(plateInput, { target: { files: [file] } });
+    fireEvent.click(await screen.findByTestId("gate-confirm-recognition"));
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
@@ -832,6 +838,9 @@ describe("GatekeeperPage compact branded workspace", () => {
     fireEvent.change(plateInput, {
       target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] },
     });
+    await screen.findByTestId("gate-confirm-recognition");
+    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
+    fireEvent.click(screen.getByTestId("gate-confirm-recognition"));
 
     await waitFor(() => {
       expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Latest");
@@ -869,6 +878,9 @@ describe("GatekeeperPage compact branded workspace", () => {
     fireEvent.change(plateInput, {
       target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] },
     });
+    await screen.findByTestId("gate-confirm-recognition");
+    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
+    fireEvent.click(screen.getByTestId("gate-confirm-recognition"));
 
     await waitFor(() => expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("4412"));
     expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("");
@@ -899,8 +911,11 @@ describe("GatekeeperPage compact branded workspace", () => {
     fireEvent.change(plateInput, {
       target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] },
     });
+    await screen.findByTestId("gate-confirm-recognition");
+    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
 
-    await waitFor(() => expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("4412"));
+
+    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
     expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("");
     expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("");
   });
@@ -1079,3 +1094,20 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(screen.getByTestId("button-gate-vehicle-photo").getAttribute("aria-pressed")).toBe("false");
   });
 });
+
+it("reviews a fleet arrival before filling and links it only on confirmed check-in",async()=>{
+ const runId="11111111-1111-4111-8111-111111111111";
+ vi.mocked(gateArrivalsApi.list).mockResolvedValueOnce({arrivals:[{id:runId,runId,ticketId:1,ticketNumber:"1",title:"Delivery",driverName:"Arrival Driver",companyName:"Hauler",vehicleLabel:"Truck 7",status:"in_progress",phase:null,etaMinutes:5,etaUnavailableReason:null,observedAt:null,destinationName:"Acme HQ",siteLocationId:42,physicalProofVerified:false}],truncated:false,generatedAt:"now"});
+ renderPage();await screen.findByTestId("input-gate-plate");
+ fireEvent.click(screen.getByRole("button",{name:"gatekeeper.arrivalsTab"}));
+ fireEvent.click(await screen.findByRole("button",{name:"Review for check-in"}));
+ expect(api.gateCheckIn).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole("button",{name:"Use driver and company"}));
+ expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Arrival");
+ expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
+ fireEvent.change(screen.getByTestId("input-gate-plate"),{target:{value:"4412"}});
+ fireEvent.click(screen.getByTestId("button-gate-check-in"));
+ await waitFor(()=>expect(api.gateCheckIn).toHaveBeenCalledWith(expect.objectContaining({firstName:"Arrival",lastName:"Driver",gateCapture:{images:[],arrivalRunId:runId}})));
+});
+
+vi.mock("@/hooks/use-gate-operating-context",()=>({useGateOperatingContext:()=>({operating:{siteId:1,stationId:"gate"},canOperate:()=>true,myGate:()=>{}})}));
