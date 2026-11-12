@@ -38,6 +38,9 @@ const CORE_TOOLS = new Set([
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
+  "read_gate_task",
+  "update_gate_task",
+  "query_gate_visit_movements", "confirm_gate_visit_movement",
   "manage_gate_shift",
   "offer_gate_workflow",
   "query_gate_setup_progress",

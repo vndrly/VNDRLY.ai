@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import { normalizePlateState } from "@workspace/plate-state";
 import { SESSION_SECRET, type SessionPayload } from "../lib/session";
+import { classifyToolResult } from "./tool-result";
 
 function err(message: string): string {
   return JSON.stringify({ ok: false, error: message });
@@ -12,6 +13,43 @@ function argsOf(input: unknown): Record<string, unknown> {
 }
 function positiveId(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+/** A transport success alone is not a saved Gate visit receipt. */
+function gateReceiptFailure(value: unknown, expectedVisitId?: number): string | null {
+  const receipt = argsOf(value);
+  if (typeof receipt.status === "number" && receipt.status >= 500)
+    return JSON.stringify({ ok: false, status: "outcome_unknown", error: "The Gate server failed while saving. Check the original operation before any retry; do not submit a replacement." });
+  const classification = classifyToolResult(JSON.stringify(value) ?? "null", true);
+  if (classification === "failure" &&
+      (receipt.error || receipt.ok === false || receipt.success === false || receipt.canonicalApplied === false || receipt.status)) {
+    return JSON.stringify({ ...receipt, ok: false });
+  }
+  if (classification !== "success" ||
+      !positiveId(receipt.id) || (expectedVisitId !== undefined && receipt.id !== expectedVisitId)) {
+    return JSON.stringify({
+      ok: false,
+      status: "outcome_unknown",
+      code: "assistant.action_outcome_unknown",
+      error: "The Gate API did not return a valid saved visit receipt. Check the existing operation and visit before retrying; do not submit a new action.",
+    });
+  }
+  return null;
+}
+export async function verifySavedGateVisit(receipt: Record<string, unknown>, session: SessionPayload, checkout: boolean): Promise<string | null> {
+  const savedReceipt = Object.fromEntries(["id", "firstName", "lastName", "siteLocationId", "checkInTime", "checkOutTime", "vehiclePlate", "plateState"].map(key => [key, receipt[key]]));
+  const unknown = JSON.stringify({ ok: false, status: "outcome_unknown", visitId: receipt.id,
+    savedReceipt,
+    error: "The save response arrived, but the current visit could not be verified. Read this visit before any retry; do not submit a replacement." });
+  try {
+    const current = argsOf(await callNaturalVoiceDomainApi(`/visits/${receipt.id}`, "GET", {}, session));
+    if (gateReceiptFailure(current, receipt.id as number)) return unknown;
+    for (const key of ["firstName", "lastName", "siteLocationId", "checkInTime"])
+      if (receipt[key] == null || current[key] !== receipt[key]) return unknown;
+    for (const key of ["vehiclePlate", "plateState"])
+      if ((current[key] ?? null) !== (receipt[key] ?? null)) return unknown;
+    if (checkout && (!receipt.checkOutTime || current.checkOutTime !== receipt.checkOutTime)) return unknown;
+    return null;
+  } catch { return unknown; }
 }
 function missingCheckInFields(args: Record<string, unknown>): string[] {
   const missing: string[] = [];
@@ -165,6 +203,10 @@ export async function confirmVisitorCheckIn(
     args,
     session,
   )) as Record<string, unknown>;
+  const receiptFailure = gateReceiptFailure(result);
+  if (receiptFailure) return receiptFailure;
+  const readbackFailure = await verifySavedGateVisit(result, session, false);
+  if (readbackFailure) return readbackFailure;
   const displayName = [args.firstName, args.lastName]
     .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
     .map((value) => value.trim())
@@ -176,6 +218,7 @@ export async function confirmVisitorCheckIn(
           ok: true,
           action: "visitor_checked_in",
           visitId: result.id,
+          verification: "canonical_readback",
           displayName,
           message: `${displayName} checked in.`,
           responseMode: "concise",
@@ -420,6 +463,8 @@ export async function resolveGateCheckInCandidate(
     "expectedDurationMinutes",
     "siteLocationId",
     "gateStationId",
+    "destinationGateId",
+    "destinationId",
     "hostType",
     "hostPartnerId",
     "hostVendorId",
@@ -528,6 +573,16 @@ export async function confirmVisitorCheckOut(
     args,
     session,
   )) as Record<string, unknown>;
+  const receiptFailure = gateReceiptFailure(result, args.visitId);
+  if (receiptFailure) return receiptFailure;
+  if (!result.checkOutTime) {
+    // Legacy callers may select an inner gate. That ends an area visit, not the
+    // property visit; never announce a property checkout for that receipt.
+    return JSON.stringify({ ok: false, status: "outcome_unknown", visitId: result.id,
+      error: "Property checkout is not confirmed. Read this visit's movements: an inner Gate departure may have been saved. Do not repeat the action." });
+  }
+  const readbackFailure = await verifySavedGateVisit(result, session, true);
+  if (readbackFailure) return readbackFailure;
   const displayName = [result.firstName, result.lastName]
     .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
     .map((value) => value.trim())
@@ -539,6 +594,7 @@ export async function confirmVisitorCheckOut(
           ok: true,
           action: "visitor_checked_out",
           visitId: result.id,
+          verification: "canonical_readback",
           displayName,
           message: `${displayName} checked out.`,
           responseMode: "concise",

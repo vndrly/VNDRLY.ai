@@ -48,14 +48,14 @@ beforeEach(() => {
 });
 describe("AskV canonical Gate and field operations", () => {
   it("submits an explicitly confirmed operator entry and checkout without GPS and preserves the selected Gate", async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 44, firstName: "Bob", lastName: "Villa" }) });
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 44, firstName: "Bob", lastName: "Villa", siteLocationId: 9, checkInTime: "2026-11-11T10:00:00Z", checkOutTime: "2026-11-11T11:00:00Z" }) });
     const { latitude: _latitude, longitude: _longitude, ...manual } = fields;
     const gateStationId = "11111111-1111-4111-8111-111111111111";
     expect(JSON.parse(await confirmVisitorCheckIn({ ...manual, gateStationId }, gate))).toMatchObject({ ok: true, visitId: 44 });
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ siteLocationId: 9, gateStationId });
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).not.toHaveProperty("latitude");
     expect(JSON.parse(await confirmVisitorCheckOut({ visitId: 44, gateStationId, confirmed: true, idempotencyKey: "manual-out" }, gate))).toMatchObject({ ok: true });
-    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).not.toHaveProperty("latitude");
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body)).not.toHaveProperty("latitude");
     const prepared = JSON.parse(await prepareVisitorCheckIn({ ...manual, gateStationId, entryCategory: "routine_vendor_work" }));
     expect(prepared.intent.arguments.values.gateStationId).toBe(gateStationId);
     expect(prepared.intent.arguments.values.entryCategory).toBe("routine_vendor_work");

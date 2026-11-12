@@ -191,6 +191,7 @@ export default function GatekeeperScreen() {
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
   const [partnerMenuOpen, setPartnerMenuOpen] = useState(false);
   const [gateLocationId, setGateLocationId] = useState("");
+  const [pendingAskVGate, setPendingAskVGate] = useState<{ siteId: number; gateId: string } | null>(null);
 
   const activeVisits = useQuery({
     queryKey: ["gatekeeper-visits"],
@@ -200,6 +201,9 @@ export default function GatekeeperScreen() {
   });
   useEffect(() => subscribeAskVGatePrefill((prefill) => {
     const values = prefill.values;
+    if (typeof values.siteLocationId === "number" && typeof values.gateStationId === "string") {
+      setPendingAskVGate({ siteId: values.siteLocationId, gateId: values.gateStationId });
+    }
     if (typeof values.siteLocationId === "number" && Number.isSafeInteger(values.siteLocationId)) {
       setResolvedPrefillSiteId(values.siteLocationId);
     }
@@ -274,6 +278,13 @@ export default function GatekeeperScreen() {
   });
   const selectedGate = gateLocations.data?.stations.find(g => g.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
   useEffect(() => { if (gateLocations.data) setGateLocationId(current => gateLocations.data.stations.some(gate => gate.id === current) ? current : ""); }, [gateLocations.data]);
+  useEffect(() => {
+    if (!pendingAskVGate || selectedSiteId !== pendingAskVGate.siteId || !gateLocations.data) return;
+    // Resolve against the newly selected site's authorized gates, never the
+    // previous site's list while navigation is still loading.
+    if (gateLocations.data.stations.some(gate => gate.id === pendingAskVGate.gateId)) setGateLocationId(pendingAskVGate.gateId);
+    setPendingAskVGate(null);
+  }, [pendingAskVGate, selectedSiteId, gateLocations.data]);
   useEffect(() => {
     if (!selectedSiteId) return;
     return gateEventPoller.start(selectedSiteId, () => {

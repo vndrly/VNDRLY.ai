@@ -11,11 +11,11 @@ describe("AskV Gate client bridge", () => {
     const unsubscribe = subscribeAskVGatePrefill(listener);
     const result = await executeAskVClientIntent({
       name: "prefill_gate_visit",
-      arguments: { mode: "check-in", values: { firstName: "Bob", vehiclePlate: "8TRK22", submitted: true }, missing: ["plateState"] },
+      arguments: { mode: "check-in", values: { firstName: "Bob", vehiclePlate: "8TRK22", siteLocationId: 9, gateStationId: "11111111-1111-4111-8111-111111111111", submitted: true }, missing: ["plateState"] },
     }, "/gate");
     expect(result).toMatchObject({ ok: true, saved: false });
     expect(listener).toHaveBeenCalledWith({
-      mode: "check-in", values: { firstName: "Bob", vehiclePlate: "8TRK22" }, matches: [], missing: ["plateState"], provenance: {},
+      mode: "check-in", values: { firstName: "Bob", vehiclePlate: "8TRK22", siteLocationId: 9, gateStationId: "11111111-1111-4111-8111-111111111111" }, matches: [], missing: ["plateState"], provenance: {},
     });
     unsubscribe();
   });

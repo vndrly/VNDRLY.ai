@@ -1071,8 +1071,9 @@ async function handleRealtimeToolCall(
               req.headers.cookie ?? "",
               false,
               confirmed,
+              context.conversationId ?? undefined,
             )
-          : runTool(name, executableInput, session, req.headers.cookie ?? "");
+          : runTool(name, executableInput, session, req.headers.cookie ?? "", false, false, context.conversationId ?? undefined);
       const result = tool.mutating
         ? await runPersistentAskVMutation(scope, execute)
         : { hit: false, value: await execute() };

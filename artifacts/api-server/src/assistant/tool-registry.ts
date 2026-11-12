@@ -11,6 +11,8 @@ import { SAFETY_CAPABILITY_TOOLS } from "./capabilities/safety";
 import { ACCOUNT_CAPABILITY_TOOLS } from "./capabilities/accounts";
 import { TICKET_WORKFLOW_TOOLS } from "./ticket-workflow-tools";
 import { GATE_WORKFLOW_TOOLS } from "./gate-workflow-tools";
+import { GATE_MOVEMENT_TOOLS } from "./gate-movement-tools";
+import { GATE_TASK_TOOLS } from "./gate-task-state";
 import { MARKETPLACE_TOOL_METADATA } from "./marketplace-tool-catalog";
 import {
   WORK_HUB_TOOL_METADATA,
@@ -246,6 +248,8 @@ export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = [
   ...FLEET_TOOLS,
   ...TICKET_WORKFLOW_TOOLS,
   ...GATE_WORKFLOW_TOOLS,
+  ...GATE_MOVEMENT_TOOLS,
+  ...GATE_TASK_TOOLS,
   ...TOOLS.map((tool) => {
     const metadata = { ...DEFAULT_METADATA, ...(TOOL_METADATA[tool.name] ?? {}) };
     return {

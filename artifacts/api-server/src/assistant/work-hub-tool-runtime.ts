@@ -1,4 +1,5 @@
 import {GATE_DAILY_BILLING_NAMES,gateDailyBillingToolRequest} from "./gate-daily-billing-tools";
+import { GATE_MOVEMENT_TOOL_NAMES, gateMovementRequest, projectGateMovements } from "./gate-movement-tools";
 import {fleetAuxiliaryToolRequest,fleetCommercialToolRequest,FLEET_COMMERCIAL_TOOLS,FLEET_COMMERCIAL_READ_TOOLS} from "./fleet-commercial-tools";
 import {WorkdayAssistantInputSchema,FleetPolicyChangeSchema,FleetYardOrderActionSchema,FleetCustodyObservationInputSchema} from "@workspace/api-zod";
 import {randomUUID} from "node:crypto";
@@ -66,6 +67,7 @@ export function inferWorkHubAuditTargetId(rawInput: unknown, rawOutput?: unknown
 }
 
 export function describeWorkHubToolResult(name: string, rawInput: unknown, result: Record<string, unknown> | unknown[]) {
+  if (name === "query_gate_visit_movements") return projectGateMovements(rawInput, result);
   if (name === "query_gate_setup_progress") {
     if (Array.isArray(result) || result.ok === false || result.error) return result;
     const saved = record(result.firstWatch);
@@ -183,6 +185,10 @@ const direct = (input: Input, extra: Input = {}): Input => ({
 });
 
 function resolveImplementationACapabilityRequest(name: string, input: Input): WorkHubToolRequest | null {
+  if ((GATE_MOVEMENT_TOOL_NAMES as readonly string[]).includes(name)) {
+    try { return gateMovementRequest(name, input); }
+    catch { return { error: "Read the exact authorized visit and Gate first, then supply one valid movement and destination." }; }
+  }
   if((GATE_DAILY_BILLING_NAMES as readonly string[]).includes(name)){try{return gateDailyBillingToolRequest(name,input);}catch{return {error:"Read the exact Gate billing post and current quote before confirming this change."};}}
   if (name === "manage_gate_shift") {
     const uuid = (value: unknown) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -1280,7 +1286,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  [...GATE_DAILY_BILLING_NAMES,"query_gate_setup_progress","manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  [...GATE_MOVEMENT_TOOL_NAMES,...GATE_DAILY_BILLING_NAMES,"query_gate_setup_progress","manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,
@@ -1289,6 +1295,7 @@ export function bindWorkHubToolScope(
 ): Input {
   const input = record(rawInput);
   if (toolName === "query_gate_setup_progress") return input;
+  if ((GATE_MOVEMENT_TOOL_NAMES as readonly string[]).includes(toolName ?? "")) return input;
   if((GATE_DAILY_BILLING_NAMES as readonly string[]).includes(toolName??""))return input;
   if (FLEET_COMMERCIAL_TOOLS.some(row=>row.name===toolName)||FLEET_COMMERCIAL_READ_TOOLS.some(row=>row.name===toolName))return input;
   if (FLEET_INVENTORY_TOOLS.some(tool => tool.name === toolName)) return input;

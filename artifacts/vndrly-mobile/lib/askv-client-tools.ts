@@ -28,7 +28,7 @@ export function subscribeAskVGatePrefill(listener: (prefill: AskVGatePrefill) =>
 function readGatePrefill(args: Record<string, unknown>): AskVGatePrefill {
   const mode = args.mode === "check-out" ? "check-out" : "check-in";
   const raw = args.values && typeof args.values === "object" && !Array.isArray(args.values) ? args.values as Record<string, unknown> : {};
-  const allowed = new Set(["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId"]);
+  const allowed = new Set(["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId", "gateStationId"]);
   const values = Object.fromEntries(Object.entries(raw).filter(([key, value]) => allowed.has(key) && (typeof value === "string" || typeof value === "number")));
   const matches = Array.isArray(args.matches) ? args.matches.flatMap((match) => {
     const id = Number((match as { id?: unknown })?.id);
