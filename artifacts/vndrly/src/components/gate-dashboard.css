@@ -135,7 +135,7 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-map-view-controls { margin-left: auto; }
 .gate-map-control,.gate-map-live { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 7px 10px; font-size: 12px; }
 .gate-map-control svg,.gate-map-live svg { width: 15px; height: 15px; flex-shrink: 0; }
-.gate-map-time-toolbar { display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0; }
+.gate-map-time-toolbar { display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;min-width:0; }
 .gate-map-compact .gate-map-time-toolbar { padding-top:6px;margin-bottom:6px !important; }
 .gate-map-time-toolbar .gate-map-controls { flex-wrap:nowrap;flex-shrink:0;gap:8px; }
 .gate-map-time-toolbar .gate-map-time-link { display:inline-flex; align-items:center; gap:5px; min-height:32px; min-width:0; padding:4px 2px; border:0; border-radius:0; background:none; box-shadow:none; color:inherit; font-size:12px; text-decoration:none; }
