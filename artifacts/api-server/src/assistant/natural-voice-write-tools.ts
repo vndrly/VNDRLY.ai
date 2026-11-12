@@ -41,7 +41,7 @@ export async function verifySavedGateVisit(receipt: Record<string, unknown>, ses
     savedReceipt,
     error: "The save response arrived, but the current visit could not be verified. Read this visit before any retry; do not submit a replacement." });
   try {
-    const current = argsOf(await callNaturalVoiceDomainApi(`/visits/${receipt.id}`, "GET", {}, session));
+    const current = argsOf(await callNaturalVoiceDomainApi(`/visits/gate/${receipt.id}/receipt`, "GET", {}, session));
     if (gateReceiptFailure(current, receipt.id as number)) return unknown;
     for (const key of ["firstName", "lastName", "siteLocationId", "checkInTime"])
       if (receipt[key] == null || current[key] !== receipt[key]) return unknown;

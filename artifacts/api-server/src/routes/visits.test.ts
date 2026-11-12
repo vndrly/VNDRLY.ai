@@ -617,6 +617,20 @@ beforeEach(async () => {
 });
 
 describe("normalized Gate review access", () => {
+  it.each(["gatekeeper", "gate_supervisor"])("reads a saved receipt with current %s access despite a legacy role label", async role => {
+    const { site, vendor, otherSite } = seedScenario();
+    fixtures.siteVisits.push({ id: 700, siteLocationId: site.id, firstName: "Synthetic", lastName: "Driver", plateState: "Texas", checkInTime: new Date(), checkInGpsEvidence: { latitude: 40 } });
+    fixtures.siteVisits.push({ id: 701, siteLocationId: otherSite.id, firstName: "Other", lastName: "Driver" });
+    personAccessMock.mockResolvedValue({ isVendorAdmin: false, operationalRoles: [role], siteIds: [site.id, otherSite.id] });
+    const cookie = buildTestCookie({ userId: 12, role: "field_employee", vendorId: vendor.id, vendorPeopleId: 969, vendorRole: "field_employee" });
+    const response = await request(app).get("/api/visits/gate/700/receipt").set("Cookie", cookie);
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ id: 700, siteLocationId: site.id, plateState: "TX" });
+    expect(response.body).not.toHaveProperty("checkInGpsEvidence");
+    expect((await request(app).get("/api/visits/gate/701/receipt").set("Cookie", cookie)).status).toBe(404);
+    personAccessMock.mockResolvedValue({ isVendorAdmin: false, operationalRoles: ["field_employee"], siteIds: [site.id] });
+    expect((await request(app).get("/api/visits/gate/700/receipt").set("Cookie", cookie)).status).toBe(403);
+  });
   it("preserves scoped office access without including another assigned site", async () => {
     fixtures.siteWorkAssignments.push(
       { id: 1, vendorId: 41, siteLocationId: 22, isGateContractor: true },

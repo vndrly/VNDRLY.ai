@@ -42,6 +42,10 @@ These are components to reuse, not evidence that every workflow is accepted.
 - Movement saves require exact operation/visit/gate/destination readback. A lost
   response or server error is followed by a read, never a replacement write.
   read_gate_task can reconcile an uncertain movement by its original operation.
+- Added a minimal Gate receipt read using the same current Gatekeeper role,
+  contracted site and temporary-watch scope as the write. The general host-detail
+  route is not used for save verification. Revoked roles and uncontracted sites
+  are denied, including sessions with legacy role labels.
 - Check-in/out reject missing, failed and mismatched receipts. Success requires
   an authorized visit readback matching the saved identity and timestamps.
   An inner departure is never announced as a property checkout. A receipt whose
@@ -67,7 +71,12 @@ Focused automated checks observed during development:
 - 31 tests across three mobile files passed (Gate screen and client handoff).
 - These are synthetic/mocked tests, not a production-data exercise.
 
-Cloud compilation and broader regression results will be recorded below.
+Cloud run 43146855100 passed all 2,447 web and 2,221 mobile tests.
+Cloud run 43148978768 passed compilation/locale checks, the full selected Ask V
+suite (including the three PostgreSQL draft tests), and the canonical Gate suite.
+The subsequent normalized-role receipt route passed both focused Gatekeeper and
+supervisor tests locally; its cloud recheck is tracked on the review branch.
+No production data was used.
 
 ## Remaining acceptance limits
 

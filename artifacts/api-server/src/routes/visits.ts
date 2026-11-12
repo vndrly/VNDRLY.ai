@@ -2733,6 +2733,30 @@ router.get(
 );
 
 // ---------- GET /api/visits/:id — staff detail with role-aware access ----------
+// Gate save verification must use the same current role/site scope as the write.
+// The general visit detail endpoint also serves hosts and legacy portal roles.
+router.get("/visits/gate/:id/receipt", async (req, res): Promise<void> => {
+  const session = await requireGatekeeperSession(req, res);
+  if (!session) return;
+  if (!(await enforceVisitsRateLimit(req, res, session))) return;
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    res.status(400).json({ message: "Invalid id", code: VISIT_INVALID_ID }); return;
+  }
+  const [visit] = await db.select({
+    id: siteVisitsTable.id, firstName: siteVisitsTable.firstName, lastName: siteVisitsTable.lastName,
+    siteLocationId: siteVisitsTable.siteLocationId, gateStationId: siteVisitsTable.gateStationId,
+    vehiclePlate: siteVisitsTable.vehiclePlate, plateState: siteVisitsTable.plateState,
+    checkInTime: siteVisitsTable.checkInTime, checkOutTime: siteVisitsTable.checkOutTime,
+    checkInGpsEvidence: siteVisitsTable.checkInGpsEvidence,
+  }).from(siteVisitsTable).where(eq(siteVisitsTable.id, id)).limit(1);
+  if (!visit || !session.gateAccessSiteIds?.includes(visit.siteLocationId) || !temporaryGateVisitAllowed(session, visit)) {
+    res.status(404).json({ message: "Visit not found", code: VISIT_NOT_FOUND }); return;
+  }
+  const { checkInGpsEvidence: _evidence, ...receipt } = visit;
+  res.json({ ...receipt, plateState: normalizePlateState(visit.plateState) });
+});
+
 router.get("/visits/:id", async (req, res): Promise<void> => {
   const session = getStaffSession(req);
   if (!session || session.role === "guest") {
