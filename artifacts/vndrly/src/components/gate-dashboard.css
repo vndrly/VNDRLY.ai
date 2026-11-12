@@ -204,7 +204,8 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-map-compact { position:relative; }
 .gate-map-compact .gate-map-refresh { color:inherit; position:static; padding:10px; transform:none; flex-shrink:0; }
 .gate-map-clock-actions { display:flex; align-items:center; gap:4px; margin-left:auto; white-space:nowrap; }
-.gate-map-title-row { min-width:0; }
+.gate-map-title-row { display:flex; align-items:center !important; gap:12px; min-width:0; }
+.gate-map-title-row > .app-card-heading { margin:0; align-self:center; }
 .gate-map-title-row > button { flex-shrink:0; }
 .gate-map-activity-popup { z-index:4; }
 

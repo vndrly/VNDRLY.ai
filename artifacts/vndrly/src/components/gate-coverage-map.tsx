@@ -1,3 +1,4 @@
+import { PngPillButton as TogglePillButton } from "./png-pill-rollover";
 import { readGateSelection, saveGateSelection, useGateSelection } from "@/lib/gate-selection";
 import { GateMovementLocationSummary } from './gate-area-traffic';
 import { gateLocationLabel } from "@/lib/warwick-gate-label";
@@ -266,7 +267,7 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
   if (!user?.vendorId) return null;
   return <section onFocusCapture={() => cardGuide.begin()} onPointerDownCapture={() => cardGuide.begin()} data-guidance-scope={scopeId} data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
     <div className="gate-map-selector-row">
-    <div className="gate-map-title-row flex items-center gap-3"><CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de accesos" : "Gate Map"}</CardHeading><button type="button" className="gate-history-filter" onClick={() => cardGuide.begin(true)}>Next Steps</button></div>
+    <div className="gate-map-title-row flex items-center gap-3"><CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de accesos" : "Gate Map"}</CardHeading><TogglePillButton type="button" color="brand" onClick={() => cardGuide.begin(true)}>Next Steps</TogglePillButton></div>
     {showGateSelector && coverage.isSuccess && <GateSiteGateSelect sites={sites} siteId={selectionGate?.siteId ?? 0}
       gate={selectionGate} gateOptions={gates} gpsStatus="unavailable" gpsLabel={es ? "GPS no evaluado en este mapa" : "GPS not evaluated on this map"} allOptionLabel={c.all} testId="select-gate-map-location"
       onChange={(_siteId, gateId) => { setSelectedEquipmentId(null);setEquipmentIds(null);closeActivity(); cancelCenterRequest();setCenterOnMe(false);setSelectionGateId(gateId || null);setFitRevision(value=>value+1); setSelectedPinId(null); setFocusedGateId(gateId || null); setSelectedGate(gateId || null); setFocusedStaffId(null); }} />}
