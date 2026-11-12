@@ -456,7 +456,7 @@
   },
   "gatekeeper": {
     "recognitionCaptureFailed": "No se pudo preparar o cargar la foto. Tome una foto clara JPEG, PNG o WebP de menos de 8 MB, o escriba la placa.",
-    "recognitionCaptureGuide": "Centre un vehículo o una placa, mantenga el enfoque y evite reflejos. Verifique la lectura y el conductor actual antes de guardar.",
+    "recognitionCaptureGuide": "Las fotos son opcionales para registrar entradas y salidas. Centre un vehículo o una placa, mantenga el enfoque y evite reflejos. Verifique la lectura y el conductor actual antes de guardar.",
     "recognitionPhoto": "Foto utilizada para reconocimiento",
     "recognitionReview": "Revise la placa y el estado. La apariencia describe el vehículo; no confirma su identidad.",
     "recognitionMultiple": "Se ve más de un vehículo. Tome una foto más cercana del vehículo correcto.",

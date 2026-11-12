@@ -5628,7 +5628,7 @@
     "cropWidth": "Width",
     "cropHeight": "Height",
     "recognitionCaptureFailed": "Photo could not be prepared or uploaded. Retake a clear JPEG, PNG or WebP photo under 8 MB, or enter the plate manually.",
-    "recognitionCaptureGuide": "Center one vehicle or plate, keep it sharp, and avoid glare. Verify the reading and current driver before saving.",
+    "recognitionCaptureGuide": "Photos are optional for check-in and check-out. Center one vehicle or plate, keep it sharp, and avoid glare. Verify the reading and current driver before saving.",
     "recognitionPhoto": "Photo used for recognition",
     "recognitionReview": "Review the plate and state. Vehicle appearance is a description, not proof of identity.",
     "recognitionMultiple": "More than one vehicle is visible. Retake a closer photo of the intended vehicle.",

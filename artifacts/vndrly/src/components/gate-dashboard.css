@@ -153,7 +153,7 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 
 @media (max-width: 480px) { .gate-map-control-group { gap: 4px; } .gate-map-controls .gate-map-control { font-size: 10px; padding: 6px; } .gate-map-controls .gate-map-control svg { width: 12px; height: 12px; } }
 /* Compact Gate Map only; shared selectors and other map surfaces keep their sizing. */
-.gate-map-compact .gate-map-selector-row { display:grid; grid-template-columns:minmax(110px,1fr) minmax(0,1fr) minmax(110px,1fr); align-items:start; gap:18px; }
+.gate-map-compact .gate-map-selector-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:18px; }
 .gate-map-compact .gate-map-selector-row > .gate-site-gate-select { flex:1; min-width:0; }
 .gate-map-compact .gate-map-controls { justify-content:flex-start; gap:6px; }
 .gate-map-compact .gate-map-control-group { gap:6px; }
@@ -202,7 +202,10 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 }
 
 .gate-map-compact { position:relative; }
-.gate-map-compact .gate-map-refresh { color:inherit; position:absolute; top:4px; right:4px; padding:10px; transform:none; }
+.gate-map-compact .gate-map-refresh { color:inherit; position:static; padding:10px; transform:none; flex-shrink:0; }
+.gate-map-clock-actions { display:flex; align-items:center; gap:4px; margin-left:auto; white-space:nowrap; }
+.gate-map-title-row { min-width:0; }
+.gate-map-title-row > button { flex-shrink:0; }
 .gate-map-activity-popup { z-index:4; }
 
 /* Staff records use one compact name/detail pair, with one layer of row padding. */

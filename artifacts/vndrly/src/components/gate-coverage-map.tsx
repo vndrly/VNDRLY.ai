@@ -265,17 +265,16 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader }: { 
   });
   if (!user?.vendorId) return null;
   return <section onFocusCapture={() => cardGuide.begin()} onPointerDownCapture={() => cardGuide.begin()} data-guidance-scope={scopeId} data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
-    <button type="button" className="gate-history-filter" onClick={() => cardGuide.begin(true)}>Next Steps</button>
     <div className="gate-map-selector-row">
-    <CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de accesos" : "Gate Map"}</CardHeading>
+    <div className="gate-map-title-row flex items-center gap-3"><CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de accesos" : "Gate Map"}</CardHeading><button type="button" className="gate-history-filter" onClick={() => cardGuide.begin(true)}>Next Steps</button></div>
     {showGateSelector && coverage.isSuccess && <GateSiteGateSelect sites={sites} siteId={selectionGate?.siteId ?? 0}
       gate={selectionGate} gateOptions={gates} gpsStatus="unavailable" gpsLabel={es ? "GPS no evaluado en este mapa" : "GPS not evaluated on this map"} allOptionLabel={c.all} testId="select-gate-map-location"
       onChange={(_siteId, gateId) => { setSelectedEquipmentId(null);setEquipmentIds(null);closeActivity(); cancelCenterRequest();setCenterOnMe(false);setSelectionGateId(gateId || null);setFitRevision(value=>value+1); setSelectedPinId(null); setFocusedGateId(gateId || null); setSelectedGate(gateId || null); setFocusedStaffId(null); }} />}
-      <button type="button" className="gate-map-control gate-map-icon-control gate-map-refresh" aria-label={c.refresh} title={c.refresh} disabled={coverage.isFetching} onClick={() => void coverage.refetch()}><RefreshCw aria-hidden="true" /></button>
+
     </div>
     <div ref={expandedFrame} className={expanded ? `gate-map-expanded${fullscreenView ? " gate-map-fullscreen" : ""} fixed inset-0 z-50 flex flex-col gap-3 p-4` : "space-y-3"}>
       {expanded && expandedHeader?.(closeExpanded)}
-      <GateMapTimeControl instant={instant} onChange={value => setAt(value ?? "")} liveConnected={coverage.isSuccess && coverage.fetchStatus !== "paused"} es={Boolean(es)} />
+      <GateMapTimeControl instant={instant} onChange={value => setAt(value ?? "")} liveConnected={coverage.isSuccess && coverage.fetchStatus !== "paused"} es={Boolean(es)} clockAction={<button type="button" className="gate-map-control gate-map-icon-control gate-map-refresh" aria-label={c.refresh} title={c.refresh} disabled={coverage.isFetching} onClick={() => void coverage.refetch()}><RefreshCw aria-hidden="true" /></button>} />
       {centerError && <p role="status">{centerError}</p>}
       {pinError && <p role="alert">{pinError}</p>}
       {removedPinId && <p role="status" className="gate-map-pin-undo">{es ? "Pin eliminado." : "Pin removed."} <button type="button" disabled={pinChanging} onClick={()=>void changePinRemoval(removedPinId,false)}>{es ? "Deshacer" : "Undo"}</button></p>}

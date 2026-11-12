@@ -9,9 +9,9 @@ const clockFormat = new Intl.DateTimeFormat("en-US", { timeZone: CENTRAL, month:
 export const formatGateMapTime = (instant: string | number) => `${clockFormat.format(new Date(instant))} CT`;
 
 /** Keep the ticking clock isolated: it never rerenders the map or changes its query key. */
-export function GateMapTimeControl({ instant, onChange, liveConnected, children, es = false }: {
+export function GateMapTimeControl({ instant, onChange, liveConnected, children, clockAction, es = false }: {
   instant: string | null; onChange: (instant: string | null) => void;
-  liveConnected: boolean; children?: ReactNode; es?: boolean;
+  liveConnected: boolean; children?: ReactNode; clockAction?: ReactNode; es?: boolean;
 }) {
   const [now, setNow] = useState(Date.now);
   const [open, setOpen] = useState(false), [draft, setDraft] = useState("");
@@ -53,6 +53,6 @@ export function GateMapTimeControl({ instant, onChange, liveConnected, children,
       {instant && <button type="button" className="gate-map-time-reset" aria-label={es ? "RESTABLECER" : "RESET"} title={es ? "Restablecer" : "Reset"} onClick={reset}><RotateCcw aria-hidden="true" /></button>}
       {children}
     </div>
-    <time aria-label="Coverage clock" dateTime={instant ?? new Date(now).toISOString()} className="gate-map-clock font-medium tabular-nums">{formatGateMapTime(instant ?? now)}</time>
+    <div className="gate-map-clock-actions"><time aria-label="Coverage clock" dateTime={instant ?? new Date(now).toISOString()} className="gate-map-clock font-medium tabular-nums">{formatGateMapTime(instant ?? now)}</time>{clockAction}</div>
   </div>;
 }
