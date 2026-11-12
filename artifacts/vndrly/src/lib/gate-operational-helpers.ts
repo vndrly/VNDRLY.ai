@@ -33,10 +33,10 @@ export const gateOperationalHelpers: readonly GateHelperDefinition[] = [
   definition("gate-return-to-inner", "Confirm a return to the inner gate", "Find the actual vehicle already on site and confirm its return at this inner gate. The saved arrival clears an obsolete pending outer departure.", ["return to inner", "return-to-inner", "unexpected arrival", "returned inside", "regreso al acceso interior"], "gate", "/gate", "Find the saved vehicle"),
   definition("gate-map-and-log", "Read the Gate map and log", "Compare the last gate-confirmed location with the intended destination, then inspect the saved Gate Log. These are recorded facts, not live vehicle GPS.", ["gate map and log", "gate map", "gate log", "last confirmed location", "mapa y registro"], "gate", "/gate/map", "Open the Gate map"),
   definition("gate-shift-scheduling", "Schedule and assign a gate shift", "Open the exact site, gate and date, define a shift if needed, then review and save eligible assignments. Scheduling never starts a watch.", ["shift scheduling", "schedule a gate shift", "assign a gatekeeper", "reassign a gate shift", "programar guardia"], "office", "/work-hub/calendar", "Open Gate shift scheduling"),
-  definition("gate-station-management", "Manage a gate station", "Review the station configuration for an authorized site.", ["manage a gate station", "move a gate", "edit a gate", "gate links"], "admin", "/gate-locations", "Open Gate Locations", [
+  definition("gate-station-management", "Manage a gate station", "Review the station configuration for an authorized site.", ["manage a gate station", "move a gate", "edit a gate", "gate links"], "admin", "/gate/map", "Open Gate administration", [
     "Choose the authorized site and existing station, or use Add Gate Location for a new station.",
-    "Edit the station name, position, boundary, links or active state as needed.",
-    "Review the change and use Confirm & Save. Check the saved station before leaving.",
+    "Use Create Gate or Edit Gate in Administrative functions. Edit Gate includes moving the location.",
+    "Save Gate Changes saves name and location; Save relationship and Save link save their own sections. Remove Gate requires confirmation and retains history. Check the server result before leaving.",
   ]),
   definition("gate-staff-visibility", "Reveal staff on the Gate Map", "View staff locations available to your current account.", ["reveal staff", "show staff", "staff visibility"], "gate", "/gate/map", "Open Gate Map", [
     "Choose the site on the Gate Map.",

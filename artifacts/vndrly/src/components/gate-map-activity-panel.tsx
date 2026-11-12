@@ -43,7 +43,7 @@ export function GateMapActivityPanel({ gates, selectedGateId, userId, membership
   return <div className="min-w-0">
     {activity.isPending && scoped.length > 0 && <p role="status" className="text-xs">{es ? "Cargando actividad…" : "Loading activity…"}</p>}
     {activity.isError && <p role="alert" className="text-xs">{es ? "Actividad no disponible." : "Activity unavailable."}</p>}
-    <GateActivityCard snapshot={snapshot} historyBaseHref={baseHref}
+    <GateActivityCard snapshot={snapshot} historyBaseHref={baseHref} showSubtitle={false}
       scopeLabel={selected ? `${selected.siteName} · ${es ? "Registros del sitio" : "Site records"}` : es ? "Todos los sitios · Actividad actual" : "All sites · Current activity"}
       recordHistoryHref={id => links.get(id) ?? baseHref} showAllLogLink={scoped.length === 1} />
   </div>;

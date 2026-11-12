@@ -38,7 +38,7 @@ export type GateWorkflowContext = Partial<FirstWatchContext> & { employeeUserId?
 
 export type NextStepWorkflow = {
   id: string; title: string;
-  kind: "first-watch" | "gate-operation" | "account";
+  kind: "first-watch" | "gate-operation" | "account" | "card-guide";
   description?: string;
   action: NextStepAction | null;
   message?: string | null;

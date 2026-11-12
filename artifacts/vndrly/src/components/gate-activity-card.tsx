@@ -6,10 +6,10 @@ import { WorkspacePanel } from "./work-hub/workspace-panel";
 import { GateDashboardLiveSummary } from "./gate-dashboard-live-summary";
 
 /** The same collapsible activity card on Dashboard and Gate Map. */
-export function GateActivityCard({ snapshot, historyBaseHref, activityWindow, scopeLabel, recordHistoryHref, showAllLogLink = true, contentOnly = false, liveScope }: {
+export function GateActivityCard({ snapshot, historyBaseHref, activityWindow, scopeLabel, recordHistoryHref, showAllLogLink = true, contentOnly = false, liveScope, showSubtitle = true }: {
   snapshot: ChangeOverSnapshot | null; historyBaseHref: string; activityWindow?: "24h"; scopeLabel?: string;
   recordHistoryHref?: (recordId: string) => string; showAllLogLink?: boolean; contentOnly?: boolean;
-  liveScope?: string;
+  liveScope?: string; showSubtitle?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
@@ -54,7 +54,7 @@ export function GateActivityCard({ snapshot, historyBaseHref, activityWindow, sc
         {metric("checkIns", LogIn)}{metric("checkOuts", LogOut)}{metric("pendingAdmission", Clock3)}
         <details className="gate-panel-disclosure" data-testid="dashboard-metric-exceptions"><summary><AlertTriangle aria-hidden="true" /><span className="flex-1">{t("changeOver.exceptions")}</span><small>{snapshot?.exceptions.length ?? "—"}</small></summary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.exceptions.map(e => recordLink(records.get(e.sourceId) ?? { id: e.sourceId, name: e.sourceId, kind: "visitor", company: null, plate: null, checkIn: "", notes: null }, "needs_review", `${e.sourceId}:${e.code}`, e.text))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.exceptions.length && <p>{t("changeOver.none")}</p>}{showAllLogLink && <Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=needs_review`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link>}</div></details>
       </>;
-    return contentOnly ? contents : <WorkspacePanel title={c("Gate activity", "Actividad del acceso")} subtitle={snapshot ? `${scopeLabel || snapshot.linkedScope?.name ? (scopeLabel ?? snapshot.linkedScope?.name) + " · " : ""}${activityWindow === "24h" ? c("Last 24 hours", "Últimas 24 horas") + " · " : ""}${t("changeOver.asOf")} ${new Date(snapshot.generatedAt).toLocaleString()}` : unavailable} icon={LogIn}>{contents}</WorkspacePanel>;
+    return contentOnly ? contents : <WorkspacePanel title={c("Gate activity", "Actividad del acceso")} subtitle={!showSubtitle ? "" : snapshot ? `${scopeLabel || snapshot.linkedScope?.name ? (scopeLabel ?? snapshot.linkedScope?.name) + " · " : ""}${activityWindow === "24h" ? c("Last 24 hours", "Últimas 24 horas") + " · " : ""}${t("changeOver.asOf")} ${new Date(snapshot.generatedAt).toLocaleString()}` : unavailable} icon={LogIn}>{contents}</WorkspacePanel>;
 }
 
 /** Activity totals captured when this shift was handed over. */

@@ -11,5 +11,5 @@ export function WorkspaceRow({ icon: Icon, label, value, href, onClick, expanded
 }
 
 export function WorkspacePanel({ title, titleContent, subtitle, icon: Icon, children, actions, className = "" }: { title: string; titleContent?: ReactNode; subtitle: string; icon: LucideIcon; children: ReactNode; actions?: ReactNode; className?: string }) {
-  return <section className={`hub-home-card ${className}`} aria-label={title}><header data-card-header-row className="hub-card-heading"><span className="hub-card-icon"><Icon aria-hidden="true" /></span><div><h2>{titleContent ?? title}</h2><p>{subtitle}</p></div>{actions && <div className="hub-panel-actions">{actions}</div>}</header>{children}</section>;
+  return <section className={`hub-home-card ${className}`} aria-label={title}><header data-card-header-row className="hub-card-heading"><span className="hub-card-icon"><Icon aria-hidden="true" /></span><div><h2>{titleContent ?? title}</h2>{subtitle && <p>{subtitle}</p>}</div>{actions && <div className="hub-panel-actions">{actions}</div>}</header>{children}</section>;
 }

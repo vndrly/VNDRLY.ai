@@ -18,7 +18,7 @@ it("reuses the collapsible Dashboard card and scopes selected-site records and l
   await waitFor(() => expect(row.querySelector("summary small")?.textContent).toBe("4"));
   fireEvent.click(row.querySelector("summary")!);
   expect(within(row).getByRole("link", { name: /Visitor 1/ }).getAttribute("href")).toContain("siteId=1&stationId=a&range=current_shift");
-  expect(screen.getByText(/Site A · Site records/)).toBeTruthy();
+  expect(screen.queryByText(/Site A · Site records/)).toBeNull();
 });
 it("counts each authorized site once in All mode and preserves each record's correct site link", async () => {
   request.mockImplementation(async path => path === "/b/state" ? state("b", 2, 2) : state("c", 1, 4)); mount(null);

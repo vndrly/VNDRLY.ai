@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { cleanup, render, screen, waitFor, fireEvent, act, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -23,12 +23,14 @@ beforeEach(() => {
   cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 });
 afterEach(() => { cleanup(); cache.clear(); cleanDefinitions.splice(0).forEach(clean => clean()); vi.unstubAllGlobals(); });
+import { useCardNextSteps, cardPromptKey } from "./card-next-steps";
 const noOffers: NextStepWorkflow[] = [];
 function ContextProbe({ offers = noOffers }: { offers?: NextStepWorkflow[] }) {
   const state = useNextSteps();
   const publish = state?.setWorkflowOffers;
   useEffect(() => publish?.("actual-saved-blockers", offers), [publish, offers]);
   return <>
+    <button onClick={() => state?.showCardGuide({id:"card:test",kind:"card-guide",title:"Edit this gate",steps:["Choose the existing gate"],message:"No changes saved",action:null,priority:30})}>Card help</button>
     <output data-testid="shared-askv-workflow" data-context={JSON.stringify(state?.assistantContext)} />
     <button onClick={() => void state?.resumeHelper("first-watch")}>Resume setup with askV</button>
     <button onClick={() => state?.updateHelperStep("first-watch", { message: "Review this current form before saving.", action: { title: "Current form step", href: "/work-hub/calendar?siteId=11" } })}>Publish current form step</button>
@@ -41,6 +43,24 @@ function AppView({ page = "Dashboard ready", offers = noOffers, secondButton = f
   return <QueryClientProvider client={cache}><NextStepsProvider><p>{page}</p><a href="/tickets">Other navigation</a><NextStepsNavButton />{secondButton && <NextStepsNavButton />}<ContextProbe offers={offers} /></NextStepsProvider></QueryClientProvider>;
 }
 function mount(offers = noOffers) { return render(<AppView offers={offers} />); }
+it("opens card guidance without account blockers and does not report a saved completion", async () => {
+  mount();
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  fireEvent.click(screen.getByText("Card help"));
+  expect(await screen.findByRole("heading", {name:"Edit this gate"})).toBeTruthy();
+  expect(screen.getByText("No changes saved")).toBeTruthy();
+  expect(screen.queryByText("Check saved progress")).toBeNull();
+  expect(vi.mocked(fetch).mock.calls.every(([path]) => path === "/api/account-next-steps")).toBe(true);
+  fireEvent.click(screen.getByRole("button", {name:"Stop current helper"}));
+  expect(screen.queryByRole("heading", {name:"Edit this gate"})).toBeNull();
+});
+it("does not replace an active operational workflow with a card prompt", async () => {
+  mocks.summary.firstWatch = watch; mount();
+  await screen.findByRole("button", {name:/Next Steps, 1 available/});
+  fireEvent.click(screen.getByText("Start requested gate helper"));
+  fireEvent.click(screen.getByText("Card help"));
+  expect(screen.queryByRole("heading", {name:"Edit this gate"})).toBeNull();
+});
 async function open() { fireEvent.click(await screen.findByRole("button", { name: /Next Steps, \d+ available/ })); return screen.getByTestId("next-steps-panel"); }
 const watch = { complete: false, action: { title: "Give an eligible gate employee access to this site", href: "/field-employees?siteId=11&stationId=main&shiftId=s-1&day=2026-11-09&employee=42" }, message: null, context: { siteId: 11, stationId: "main", siteName: "Lease A", stationName: "Main", shiftId: "s-1" } };
 function offered(key: GateHelperKey, title: string, priority: number): NextStepWorkflow {
@@ -314,3 +334,24 @@ it("resumes a saved waiting state without manufacturing another watch action", a
   expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
 });
 
+
+function PageCard({ enabled = true }: { enabled?: boolean }) {
+  const [task, setTask] = useState("controls");
+  const scope = useNextSteps()!.scope;
+  localStorage.setItem(cardPromptKey(scope, "example", "staff"), "3");
+  const guide = useCardNextSteps({ card: "example", task, enabled, title: `Help ${task}`, steps: ["Use the real controls"], target: null, prompt: "No action saved", choices: [{id:"staff",title:"Reveal staff walkthrough",prepare:()=>setTask("staff")}] });
+  return <div data-guidance-scope={guide.scopeId}>Card ready</div>;
+}
+it("keeps page help available after three openings and unregisters it when the card leaves", async () => {
+  localStorage.setItem(cardPromptKey("user:7:vendor:4:membership:2", "example", "staff"), "3");
+  const view = render(<QueryClientProvider client={cache}><NextStepsProvider><NextStepsNavButton/><PageCard/></NextStepsProvider></QueryClientProvider>);
+  fireEvent.click(await screen.findByRole("button", {name:/Next Steps,/}));
+  fireEvent.click(screen.getByRole("button", {name:/Reveal staff walkthrough/}));
+  expect(await screen.findByRole("heading", {name:"Help staff"})).toBeTruthy();
+  expect(screen.queryByTestId("next-steps-panel")).toBeNull();
+  expect(vi.mocked(fetch).mock.calls.every(([path]) => path === "/api/account-next-steps")).toBe(true);
+  view.rerender(<QueryClientProvider client={cache}><NextStepsProvider><NextStepsNavButton/></NextStepsProvider></QueryClientProvider>);
+  expect(screen.queryByTestId("next-steps-active-helper")).toBeNull();
+  expect(screen.queryByRole("button", {name:/Next Steps,/})).toBeNull();
+  expect(screen.queryByRole("button", {name:/Reveal staff walkthrough/})).toBeNull();
+});

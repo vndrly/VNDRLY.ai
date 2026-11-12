@@ -11,6 +11,8 @@ import { BrandedInput, BrandedSelect } from "./work-hub/chrome";
 import { WorkspacePanel } from "./work-hub/workspace-panel";
 import "./gate-dashboard.css";
 import "./work-hub/site-shift-administration.css";
+import { useCardNextSteps } from "./card-next-steps";
+import { PngPillButton as TogglePillButton } from "./png-pill-rollover";
 import type { PhysicalGate } from './gate-area-traffic';
 
 type Method = "gps" | "coordinates" | "address";
@@ -23,7 +25,8 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   const [selectedSite, setSelectedSite] = useState(initialSiteId?String(initialSiteId):"");
   const [topology,setTopology]=useState<NonNullable<PhysicalGate['topology']>>(independent);
   const [link, setLink] = useState(emptyGateLink);
-  const [mode, setMode] = useState<"create" | "move" | "edit">(initialGateId?'edit':'create');
+  const [helpRemoval, setHelpRemoval] = useState(false);
+  const [mode, setMode] = useState<"create" | "edit">(initialGateId?'edit':'create');
   const [editingGate, setEditingGate] = useState<EditableGate | null>(null);
   const editOperation = useRef<{ fingerprint: string; operationId: string } | null>(null);
   const [name, setName] = useState("");
@@ -31,6 +34,7 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   const [latitude, setLatitude] = useState(""), [longitude, setLongitude] = useState("");
   const [address, setAddress] = useState(""), [resolvedAddress, setResolvedAddress] = useState("");
   const [busy, setBusy] = useState(false), [locating, setLocating] = useState(false);
+  const [removeRequested, setRemoveRequested] = useState(false);
   const [error, setError] = useState(""), [saved, setSaved] = useState("");
   const requestRevision = useRef(0), saveLock = useRef(false);
   useEffect(() => () => { requestRevision.current += 1; }, []);
@@ -66,7 +70,7 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   }
   function loadGate(gateId: string) {
     const gate = stations.find(row => row.id === gateId) ?? null;
-    clearLocation(); setAddress(""); setEditingGate(gate); setName(gate?.name ?? ""); setMethod("coordinates");
+    setRemoveRequested(false); clearLocation(); setAddress(""); setEditingGate(gate); setName(gate?.name ?? ""); setMethod("coordinates");
     setTopology(gate?.topology??independent);
     setLatitude(initialLocation?String(initialLocation.latitude):gate?.latitude == null ? "" : String(gate.latitude));
     setLongitude(initialLocation?String(initialLocation.longitude):gate?.longitude == null ? "" : String(gate.longitude));
@@ -123,23 +127,41 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
       const fingerprint = JSON.stringify({ ...values, id: editingGate.id, action: "remove" });
       if (editOperation.current?.fingerprint !== fingerprint) editOperation.current = { fingerprint, operationId: crypto.randomUUID() };
       await changeOverRequest(`/stations/${editingGate.id}/retire`, { ...values, operationId: editOperation.current.operationId });
-      setEditingGate(null); setName(""); setAddress(""); clearLocation();
+      setRemoveRequested(false); setEditingGate(null); setName(""); setAddress(""); clearLocation();
       await Promise.all(["linked-gates", "gate-station-management-sites", "gate-coverage-map", "change-over-stations", "gate-site-gate-options", "change-over-history-stations", "gate-station-management-gates", "gate-locations"].map(key => cache.invalidateQueries({ queryKey: [key] })));
       onSaved?.();
       setSaved(c("Gate removed from active use. Its history is retained.", "Acceso retirado del uso activo. Su historial se conserva."));
     } catch (failure) { setError(failure instanceof Error ? failure.message : t("changeOver.failed")); }
     finally { saveLock.current = false; setBusy(false); }
   }
+  const guide = useCardNextSteps({
+    choices: [
+      { id: "create", title: c("Create a gate", "Crear un acceso"), prepare: () => { setHelpRemoval(false); if (mode !== "create") { setEditingGate(null); setName(""); setAddress(""); clearLocation(); } setMode("create"); setRemoveRequested(false); } },
+      { id: "edit", title: c("Edit or move a gate", "Editar o mover un acceso"), prepare: () => { setHelpRemoval(false); setMode("edit"); setRemoveRequested(false); } },
+      { id: "remove", title: c("Remove a gate", "Retirar un acceso"), prepare: () => { setHelpRemoval(true); setMode("edit"); setRemoveRequested(false); } },
+    ],
+    card: "gate-administration", task: removeRequested || helpRemoval ? "remove" : mode, enabled: canManage,
+    title: removeRequested || helpRemoval ? c("Remove a gate", "Retirar un acceso") : mode === "create" ? c("Create a gate", "Crear un acceso") : c("Edit or move a gate", "Editar o mover un acceso"),
+    steps: removeRequested || helpRemoval ? [c("Choose the authorized site and existing gate. Use Remove Gate to open its confirmation; selecting help does not remove anything.", "Elija sitio y acceso. Retirar acceso abre su confirmación; la ayuda no retira nada."),c("Check the selected gate name before confirming removal.", "Revise el nombre del acceso antes de confirmar."), c("Confirm Remove Gate retires it from active use; existing history is retained. Cancel leaves it unchanged.", "Confirmar retira el acceso del uso activo y conserva su historial. Cancelar no lo cambia.")] : [
+      c("Choose the authorized site. For Edit Gate, choose the existing gate to load its saved details.", "Elija el sitio autorizado. Para editar, elija el acceso existente para cargar sus datos."),
+      c("Use the exact gate name. To move it, change Gate Location using GPS, coordinates, or a resolved address.", "Use el nombre exacto. Para moverlo, cambie Ubicación con GPS, coordenadas o una dirección resuelta."),
+      c("Relationship and destinations use Save relationship when editing. Traffic-sharing links use Save link. These are separate saves.", "Al editar, relaciones y destinos usan Guardar relación; los vínculos usan Guardar vínculo. Son guardados separados."),
+      c("Review the name and coordinates, then save. Selecting a gate alone is not a change. Wait for the saved result; errors do not mean success.", "Revise nombre y coordenadas y guarde. Elegir un acceso no es un cambio. Espere la confirmación; un error no significa éxito."),
+      c("To remove a selected gate, use Remove Gate and review the confirmation. This retains history.", "Para retirar un acceso elegido, use Retirar acceso y revise la confirmación. Se conserva el historial."),
+    ],
+    target: busy || locating || error || saved ? null : removeRequested ? "confirm-remove" : mode === "edit" && !editingGate ? "choose-gate" : !name.trim() ? "gate-name" : !validLocation ? "location-method" : mode === "create" || hasEdits ? "save-gate" : "gate-name",
+    prompt: error || (busy ? c("Saving. Wait for the server result.", "Guardando. Espere el resultado del servidor.") : saved) || (removeRequested ? c(`Review removal of ${editingGate?.name ?? ""}. Nothing changes until you confirm.`, `Revise el retiro de ${editingGate?.name ?? ""}. Nada cambia hasta confirmar.`) : mode === "edit" && !editingGate ? c("Choose the gate you want to edit.", "Elija el acceso que desea editar.") : !name.trim() ? c("Enter the exact gate name.", "Ingrese el nombre exacto del acceso.") : !validLocation ? c("Set a valid location. GPS uses your device’s current position; Address requires Find Location.", "Establezca una ubicación válida. GPS usa su posición actual; Dirección requiere Buscar ubicación.") : mode === "edit" && !hasEdits ? c("Gate loaded. Change the name or location to enable Save Gate Changes. Relationship and link changes have their own save buttons.", "Acceso cargado. Cambie nombre o ubicación para habilitar Guardar. Relaciones y vínculos tienen sus propios botones.") : c("Review the name and location, then use the save button.", "Revise nombre y ubicación y use el botón Guardar.")),
+  });
   if (!canManage || !sites.isSuccess || !available.length) return null;
   return <WorkspacePanel title={c("Administrative functions", "Funciones administrativas")} subtitle={c("Create gates and edit gate locations.", "Crear accesos y editar sus ubicaciones.")} icon={Settings2}
-    actions={<BrandedSelect aria-label={c("Administrative function", "Función administrativa")} value={mode} disabled={busy} onChange={event => { setMode(event.target.value as "create" | "move" | "edit"); setEditingGate(null); setName(""); setAddress(""); setMethod("gps"); clearLocation(); }}><option value="create">{c("Create Gate", "Crear acceso")}</option><option value="move">{c("Move a Gate", "Mover un acceso")}</option><option value="edit">{c("Edit a Gate", "Editar un acceso")}</option></BrandedSelect>}>
-    <form onSubmit={addGate} aria-label={mode === "move" ? c("Move a Gate", "Mover un acceso") : mode === "edit" ? c("Edit a Gate", "Editar un acceso") : t("changeOver.addGate")} className="gate-administration pb-4">
+    actions={<div className="flex items-center gap-2"><TogglePillButton type="button" color="brand" onClick={() => guide.begin(true)}>Next Steps</TogglePillButton><BrandedSelect aria-label={c("Administrative function", "Función administrativa")} value={mode} disabled={busy} onChange={event => { setRemoveRequested(false); setMode(event.target.value as "create" | "edit"); setEditingGate(null); setName(""); setAddress(""); setMethod("gps"); clearLocation(); }}><option value="create">{c("Create Gate", "Crear acceso")}</option><option value="edit">{c("Edit a Gate", "Editar un acceso")}</option></BrandedSelect></div>}>
+    <form data-guidance-scope={guide.scopeId} onFocusCapture={() => guide.begin()} onSubmit={addGate} aria-label={mode === "edit" ? c("Edit a Gate", "Editar un acceso") : t("changeOver.addGate")} className="gate-administration pb-4">
       <details className="gate-panel-disclosure" open>
         <summary><ClipboardList aria-hidden="true" /><span className="flex-1">{c("Gate Details", "Detalles del acceso")}</span></summary>
         <div className="grid gap-3 pb-3 sm:grid-cols-2">
-          <label className="grid min-w-0 gap-1 text-sm font-medium">{t("changeOver.site")}<BrandedSelect value={siteId} disabled={busy} onChange={event => { setSelectedSite(event.target.value); setLink(emptyGateLink); setEditingGate(null); if (mode !== "create") setName(""); clearLocation(); setAddress(""); }}>{available.map(site => <option key={site.id} value={site.id}>{siteLabel(site)}</option>)}</BrandedSelect></label>
-          {mode !== "create" && <label className="grid min-w-0 gap-1 text-sm font-medium">{c("Choose a gate", "Elegir acceso")}<BrandedSelect value={editingGate?.id ?? ""} disabled={busy || editableGates.isFetching} onChange={event => loadGate(event.target.value)}><option value="">{c("Choose a gate", "Elegir acceso")}</option>{stations.map(gate => <option key={gate.id} value={gate.id}>{gateLabel(gate)}</option>)}</BrandedSelect></label>}
-          <label className="grid min-w-0 gap-1 text-sm font-medium">{mode !== "create" ? c("Gate name", "Nombre del acceso") : t("changeOver.newGate")}<BrandedInput required value={name} maxLength={80} readOnly={mode === "move"} disabled={busy || !editable} onChange={event => { setName(event.target.value); setSaved(""); }} /></label>
+          <label className="grid min-w-0 gap-1 text-sm font-medium">{t("changeOver.site")}<BrandedSelect value={siteId} disabled={busy} onChange={event => { setRemoveRequested(false); setSelectedSite(event.target.value); setLink(emptyGateLink); setEditingGate(null); if (mode !== "create") setName(""); clearLocation(); setAddress(""); }}>{available.map(site => <option key={site.id} value={site.id}>{siteLabel(site)}</option>)}</BrandedSelect></label>
+          {mode !== "create" && <label className="grid min-w-0 gap-1 text-sm font-medium">{c("Choose a gate", "Elegir acceso")}<BrandedSelect data-guidance-id="choose-gate" value={editingGate?.id ?? ""} disabled={busy || editableGates.isFetching} onChange={event => loadGate(event.target.value)}><option value="">{c("Choose a gate", "Elegir acceso")}</option>{stations.map(gate => <option key={gate.id} value={gate.id}>{gateLabel(gate)}</option>)}</BrandedSelect></label>}
+          <label className="grid min-w-0 gap-1 text-sm font-medium">{mode !== "create" ? c("Gate name", "Nombre del acceso") : t("changeOver.newGate")}<BrandedInput data-guidance-id="gate-name" required value={name} maxLength={80} disabled={busy || !editable} onChange={event => { setName(event.target.value); setSaved(""); }} /></label>
           {mode !== "create" && editableGates.isError && <p role="alert">{c("Gates could not load. Refresh to try again.", "No se pudieron cargar los accesos. Actualice para reintentar.")}</p>}
         </div>
       </details>
@@ -171,17 +193,22 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
       <details className="gate-panel-disclosure" open>
         <summary><MapPin aria-hidden="true" /><span className="flex-1">{c("Gate Location", "Ubicación del acceso")}</span><small>{validLocation ? c("Location set", "Ubicación lista") : c("Not set", "Sin establecer")}</small></summary>
         <div className="grid gap-3 pb-3">
-          <label className="grid gap-1 text-sm font-medium">{c("Set location by", "Establecer ubicación con")}<BrandedSelect value={method} disabled={busy || !editable} onChange={event => { setMethod(event.target.value as Method); clearLocation(); }}><option value="gps">{c("Current GPS", "GPS actual")}</option><option value="coordinates">{c("Latitude / Longitude", "Latitud / Longitud")}</option><option value="address">{c("Address", "Dirección")}</option></BrandedSelect></label>
+          <label className="grid gap-1 text-sm font-medium">{c("Set location by", "Establecer ubicación con")}<BrandedSelect data-guidance-id="location-method" value={method} disabled={busy || !editable} onChange={event => { setMethod(event.target.value as Method); clearLocation(); }}><option value="gps">{c("Current GPS", "GPS actual")}</option><option value="coordinates">{c("Latitude / Longitude", "Latitud / Longitud")}</option><option value="address">{c("Address", "Dirección")}</option></BrandedSelect></label>
           {method === "gps" && <div><button className="gate-history-filter" type="button" disabled={busy || locating || !editable} onClick={locate}>{locating ? c("Locating…", "Localizando…") : c("Use My Current Location", "Usar mi ubicación actual")}</button></div>}
-          {method === "coordinates" && <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">{c("Latitude", "Latitud")}<BrandedInput type="number" step="any" min={-90} max={90} disabled={busy || !editable} value={latitude} onChange={event => { setLatitude(event.target.value); setError(""); }} /></label><label className="grid gap-1 text-sm">{c("Longitude", "Longitud")}<BrandedInput type="number" step="any" min={-180} max={180} disabled={busy || !editable} value={longitude} onChange={event => { setLongitude(event.target.value); setError(""); }} /></label></div>}
+          {method === "coordinates" && <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">{c("Latitude", "Latitud")}<BrandedInput type="number" step="any" min={-90} max={90} disabled={busy || !editable} value={latitude} onChange={event => { setLatitude(event.target.value); setError(""); setSaved(""); }} /></label><label className="grid gap-1 text-sm">{c("Longitude", "Longitud")}<BrandedInput type="number" step="any" min={-180} max={180} disabled={busy || !editable} value={longitude} onChange={event => { setLongitude(event.target.value); setError(""); setSaved(""); }} /></label></div>}
           {method === "address" && <><label className="grid gap-1 text-sm">{c("Address", "Dirección")}<BrandedInput value={address} disabled={busy || !editable} maxLength={500} onChange={event => { setAddress(event.target.value); clearLocation(); }} /></label><div><button className="gate-history-filter" type="button" disabled={busy || locating || !editable || !address.trim()} onClick={() => void findAddress()}>{locating ? c("Finding location…", "Buscando ubicación…") : c("Find Location", "Buscar ubicación")}</button></div></>}
           {validLocation && <div role="status" className="rounded-lg border border-white/10 p-2 text-sm"><strong>{c("Gate coordinates", "Coordenadas del acceso")}</strong><p>{lat.toFixed(6)}, {lng.toFixed(6)}</p>{resolvedAddress && <p className="text-xs text-muted-foreground">{resolvedAddress}</p>}</div>}
         </div>
       </details>
       <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
-        {mode === "edit" && <><button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} onClick={() => void removeGate()}>{c("Mark Inactive", "Marcar inactivo")}</button><button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} onClick={() => void removeGate()}>{c("Remove Gate", "Retirar acceso")}</button></>}
-        <button className="gate-history-filter ml-auto" type="submit" disabled={busy || locating || !editable || (mode !== "create" && !hasEdits) || !siteId || !name.trim() || !validLocation || !navigator.onLine}>{busy ? c("Saving…", "Guardando…") : mode === "move" ? c("Save Moved Gate Locations", "Guardar ubicaciones modificadas") : mode === "edit" ? c("Save Gate Changes", "Guardar cambios del acceso") : t("changeOver.addGate")}</button>
+        {mode === "edit" && <><button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} onClick={() => setRemoveRequested(true)}>{c("Mark Inactive", "Marcar inactivo")}</button><button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} onClick={() => setRemoveRequested(true)}>{c("Remove Gate", "Retirar acceso")}</button></>}
+        <button data-guidance-id="save-gate" className="gate-history-filter ml-auto" type="submit" disabled={busy || locating || !editable || (mode !== "create" && !hasEdits) || !siteId || !name.trim() || !validLocation || !navigator.onLine}>{busy ? c("Saving…", "Guardando…") : mode === "edit" ? c("Save Gate Changes", "Guardar cambios del acceso") : t("changeOver.addGate")}</button>
       </div>
+      {removeRequested && editingGate && <section aria-label={c("Confirm gate removal", "Confirmar retiro del acceso")} className="rounded border border-white/20 p-3">
+        <p>{c(`Remove ${editingGate.name} from active use? Its history will be retained.`, `¿Retirar ${editingGate.name} del uso activo? Se conservará su historial.`)}</p>
+        <TogglePillButton type="button" color="red" data-guidance-id="confirm-remove" disabled={busy || !navigator.onLine} onClick={() => void removeGate()}>{c("Confirm Remove Gate", "Confirmar retiro")}</TogglePillButton>
+        <TogglePillButton type="button" color="blue" disabled={busy} onClick={() => setRemoveRequested(false)}>{c("Cancel", "Cancelar")}</TogglePillButton>
+      </section>}
       {error && <p role="alert" className="pt-2 text-sm text-red-400">{error}</p>}
       {saved && <p role="status" className="pt-2 text-sm text-green-400">{saved}</p>}
     </form>
