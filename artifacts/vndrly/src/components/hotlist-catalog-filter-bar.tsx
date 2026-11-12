@@ -1,12 +1,8 @@
 import { ListChecks } from "lucide-react";
-
-import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
+import "./hotlist-catalog-filter-bar.css";
 
 export default function HotlistCatalogFilterBar({
-  includeAll,
-  filteredCount,
-  onShowAll,
-  onFilter,
+  includeAll, filteredCount, onShowAll, onFilter,
 }: {
   includeAll: boolean;
   filteredCount: number;
@@ -14,38 +10,17 @@ export default function HotlistCatalogFilterBar({
   onFilter: () => void;
 }) {
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-2 text-xs" data-testid="hotlist-catalog-filter-bar">
-      {includeAll ? (
-        <>
-          <PngPill rest data-testid="pill-catalog-all">
-            <ListChecks className="h-3 w-3" />
-            Showing all jobs
-          </PngPill>
-          <PngPillButton color="brand" onClick={onFilter} data-testid="button-filter-by-catalog">
-            Filter to my services
-          </PngPillButton>
-        </>
-      ) : (
-        <>
-          <PngPill
-            color="brand"
-            data-color="brand"
-            data-testid="pill-catalog-filtered"
-            aria-label="Only jobs matching your service catalog are shown"
-          >
-            <ListChecks className="h-3 w-3" />
-            Filtered by your services
-          </PngPill>
-          {filteredCount > 0 ? (
-            <span className="text-muted-foreground" data-testid="text-catalog-filtered-count">
-              {filteredCount} hidden
-            </span>
-          ) : null}
-          <PngPillButton color="brand" className="ml-auto" onClick={onShowAll} data-testid="button-show-all-jobs">
-            Show all
-          </PngPillButton>
-        </>
-      )}
+    <div className="hotlist-catalog-controls mb-3 flex flex-wrap items-center gap-2 text-xs" data-testid="hotlist-catalog-filter-bar">
+      <button type="button" className="vendor-mini-card-button" aria-pressed={!includeAll} onClick={onFilter} data-testid="button-filter-by-catalog">
+        <ListChecks className="h-3 w-3" aria-hidden="true" />
+        {includeAll ? "Filter to my services" : <span data-color="brand" data-testid="pill-catalog-filtered">Filtered by your services</span>}
+      </button>
+      {!includeAll && filteredCount > 0 ? (
+        <span className="text-muted-foreground" data-testid="text-catalog-filtered-count">{filteredCount} hidden</span>
+      ) : null}
+      <button type="button" className="vendor-mini-card-button ml-auto" aria-pressed={includeAll} onClick={onShowAll} data-testid="button-show-all-jobs">
+        {includeAll ? <span data-testid="pill-catalog-all">Showing all jobs</span> : "Show all"}
+      </button>
     </div>
   );
 }

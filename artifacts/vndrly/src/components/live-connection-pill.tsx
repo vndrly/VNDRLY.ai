@@ -63,12 +63,14 @@ export function LiveConnectionPill({
   testId = "live-connection-pill",
 
   compact = false,
+  appearance = "pill",
 
 }: {
 
   status: LiveConnectionStatus;
 
   compact?: boolean;
+  appearance?: "pill" | "indicator";
 
   onRefresh?: () => void;
 
@@ -183,6 +185,16 @@ export function LiveConnectionPill({
   const minWidthClass = compact ? "" : "min-w-[126px]";
 
 
+
+  if (appearance === "indicator" && !interactive) {
+    return (
+      <span role="status" aria-live="polite" data-testid={testId} data-status={status}
+        className={cn("inline-flex items-center gap-1.5 text-xs font-semibold", status === "reconnecting" ? "text-red-600" : status === "connecting" ? "text-amber-500" : "text-green-600")}>
+        <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+        <span data-testid={`${testId}-label`}>{labels[status]}</span>
+      </span>
+    );
+  }
 
   if (interactive) {
 

@@ -325,6 +325,7 @@ function HotlistHeader({
               global Live-indicator placement doctrine. */}
           {liveStatus && (
             <LiveConnectionPill
+              appearance="indicator"
               status={liveStatus}
               testId={liveTestId ?? "hotlist-live-connection-pill"}
             />

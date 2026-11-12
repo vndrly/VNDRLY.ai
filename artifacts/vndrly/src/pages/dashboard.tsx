@@ -849,29 +849,14 @@ export default function Dashboard() {
             ))}
       </div>
 
-      {showTicketPanels && (
-        <DashboardTicketPanels
-          query={ticketPanels}
-          enabled={ticketPanelsEnabled}
-        />
-      )}
-
-      {isVendor && user?.vendorId ? (
-        <DashboardSetup orgType="vendor" orgId={user.vendorId} section="next-steps" />
-      ) : isPartner && user?.partnerId ? (
-        <DashboardSetup orgType="partner" orgId={user.partnerId} section="next-steps" />
-      ) : null}
-
-      <div id="hotlist">
-        <HotlistSection />
-      </div>
-
-      <SafetyTrainingBanner />
-
-      {(isPartner || isVendor) && <SafetyDashboardCard />}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card data-testid="card-ticket-stats">
+      <div className={cn("grid grid-cols-1 gap-6", showTicketPanels && "md:grid-cols-2")}>
+        {showTicketPanels && (
+          <DashboardTicketPanels
+            query={ticketPanels}
+            enabled={ticketPanelsEnabled}
+          />
+        )}
+        <Card className="min-w-0" data-testid="card-ticket-stats">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2"><BarChart3 className={CARD_TITLE_ICON_CLASS} style={iconStyle} />{t("dashboard.trackingStatus")}</CardTitle>
           </CardHeader>
@@ -907,7 +892,23 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
 
+      {isVendor && user?.vendorId ? (
+        <DashboardSetup orgType="vendor" orgId={user.vendorId} section="next-steps" />
+      ) : isPartner && user?.partnerId ? (
+        <DashboardSetup orgType="partner" orgId={user.partnerId} section="next-steps" />
+      ) : null}
+
+      <div id="hotlist">
+        <HotlistSection />
+      </div>
+
+      <SafetyTrainingBanner />
+
+      {(isPartner || isVendor) && <SafetyDashboardCard />}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SiteLocationSnapshotCard
           loading={siteListQuery.isLoading || siteTicketsQuery.isLoading}
           rows={siteWorkloadRows}
