@@ -3,7 +3,7 @@ import { requireGateStationManagementAccess } from "../services/gate-change-over
 import { Router, type IRouter } from "express";
 import { eq, sql, and, or, isNull, inArray } from "drizzle-orm";
 import { db, pool, siteLocationsTable, partnersTable, siteWorkAssignmentsTable, workTypesTable, vendorsTable, vendorWorkTypesTable, vendorPeopleTable, ticketsTable, ticketCrewTable, siteLocationAdminAuditLogTable } from "@workspace/db";
-import { approvedPartnersForVendor, vendorCanReadSite, vendorOperationalSiteScope, vendorTicketCreationSiteScope, sitesAssignedToEmployee, employeeCanReadSite } from "../lib/approved-partner-sites";
+import { approvedPartnersForVendor, vendorCanReadSite, vendorOfferedSiteScope, vendorOperationalSiteScope, vendorTicketCreationSiteScope, sitesAssignedToEmployee, employeeCanReadSite } from "../lib/approved-partner-sites";
 import { acceptedMarketplaceSites } from "../lib/accepted-marketplace-access";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
@@ -26,6 +26,7 @@ import {
   ListSiteLocationsQueryParams,
   ListSiteLocationsResponse,
   ListSiteLocationsResponseItem,
+  ListSiteOfferPreviewsResponse,
   GetSiteLocationQrCodeParams,
   GetSiteLocationQrCodeResponse,
   ListSiteAssignmentsParams,
@@ -319,6 +320,35 @@ router.post("/site-locations", async (req, res): Promise<void> => {
   // as the list endpoint (per openapi.yaml), so we route through the
   // generated list-item schema to enforce the projection at compile time.
   sendResponseStatus(res, 201, ListSiteLocationsResponseItem, result);
+});
+
+router.get("/site-locations/offer-previews", async (req, res): Promise<void> => {
+  const session = getSessionFromRequest(req);
+  if (!session) {
+    sendApiError(res, 401, "auth.not_authenticated", "Authentication required");
+    return;
+  }
+  if (session.role !== "vendor" || !session.vendorId) {
+    sendApiError(res, 403, "auth.forbidden", "Vendor access required");
+    return;
+  }
+
+  const rows = await db.select({
+    id: siteLocationsTable.id,
+    name: siteLocationsTable.name,
+    partnerId: siteLocationsTable.partnerId,
+    partnerName: partnersTable.name,
+  }).from(siteLocationsTable)
+    .innerJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
+    .where(and(
+      eq(siteLocationsTable.hidden, false),
+      vendorOfferedSiteScope(session.vendorId),
+      sql`(${vendorOperationalSiteScope(session.vendorId)}) is not true`,
+    ))
+    .orderBy(siteLocationsTable.name, siteLocationsTable.id);
+
+  res.set("Cache-Control", "private, no-store");
+  sendResponse(res, ListSiteOfferPreviewsResponse, rows);
 });
 
 router.get("/site-locations/:id", async (req, res): Promise<void> => {

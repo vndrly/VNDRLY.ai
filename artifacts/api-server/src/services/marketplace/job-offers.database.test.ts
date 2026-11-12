@@ -388,6 +388,38 @@ describe.skipIf(!enabled)("job offers on isolated PostgreSQL", () => {
       automaticBilling: "hourly_usd",
     });
   });
+  it("previews only sent, open offers at the exact site and grants full site details on acceptance", async () => {
+    const f = await fixture();
+    const [{ vendorCanReadSite }, { runOpsDataTool }] = await Promise.all([
+      import("../../lib/approved-partner-sites"), import("../../assistant/data-tools-ops"),
+    ]);
+    const [site] = await db.select().from(s.siteLocationsTable).where(eq(s.siteLocationsTable.id, f.input.siteLocationId));
+    const session = { role: "vendor", vendorId: f.vendor.id, userId: f.user.id } as const;
+    const query = async (vendorSession: SessionPayload = session) =>
+      JSON.parse(await runOpsDataTool("query_site_locations", {}, vendorSession)).rows;
+    const update = (values: Partial<typeof s.jobOffersTable.$inferInsert>) =>
+      db.update(s.jobOffersTable).set(values).where(eq(s.jobOffersTable.id, f.sent.id));
+    await update({ expiresAt: new Date(Date.now() - 86_400_000) });
+    expect(await query()).toEqual([]); // Past deadline, even before the expiry job runs.
+    await update({ expiresAt: new Date(Date.now() + 86_400_000), status: "draft" });
+    expect(await query()).toEqual([]);
+    await update({ status: "offered", sentAt: null });
+    expect(await query()).toEqual([]);
+    await update({ sentAt: f.sent.sentAt });
+    const preview = { id: site.id, name: site.name, partnerId: site.partnerId, status: "offer_pending" };
+    expect(await query()).toEqual([preview]);
+    expect(await query({ ...session, vendorId: f.vendor.id + 1_000_000 })).toEqual([]);
+    expect(await vendorCanReadSite(f.vendor.id, site.id)).toBe(false);
+    await update({ status: "vendor_reviewing" });
+    expect(await query()).toEqual([preview]);
+    for (const status of ["declined", "withdrawn", "expired"] as const) {
+      await update({ status });
+      expect(await query()).toEqual([]);
+    }
+    await update({ status: "offered", expiresAt: f.sent.expiresAt });
+    await f.api.acceptJobOffer(f.accept);
+    expect(await query()).toEqual([expect.objectContaining({ id: site.id, siteCode: site.siteCode, status: site.status })]);
+  });
   it.each([
     "coverage",
     "rate",

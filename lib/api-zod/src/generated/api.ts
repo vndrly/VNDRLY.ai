@@ -3809,6 +3809,19 @@ export const CreateSiteLocationBody = zod.object({
 });
 
 /**
+ * @summary List sites visible to the current vendor only while a job offer is open
+ */
+export const ListSiteOfferPreviewsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  partnerId: zod.number(),
+  partnerName: zod.string().nullable(),
+});
+export const ListSiteOfferPreviewsResponse = zod.array(
+  ListSiteOfferPreviewsResponseItem,
+);
+
+/**
  * @summary Get site location by ID
  */
 export const GetSiteLocationParams = zod.object({

@@ -1315,7 +1315,7 @@
     "addSite": "Agregar Sitio",
     "addSiteLocation": "Agregar Ubicación",
     "subtitleAdmin": "Administra las ubicaciones de perforación",
-    "subtitleVendor": "Sitios donde estás trabajando actualmente",
+    "subtitleVendor": "Sitios donde trabajas o tienes una oferta abierta",
     "siteName": "Nombre del Sitio",
     "partner": "Socio",
     "address": "Dirección",
@@ -1339,11 +1339,13 @@
     "filterAllPartners": "Todos los socios",
     "filterStatusPlaceholder": "Estado",
     "filterAllStatuses": "Todos los estados",
+    "offerPreviewsUnavailable": "No se pudieron cargar los sitios con ofertas pendientes.",
     "statusOption": {
       "active": "Activo",
       "inactive": "Inactivo",
       "standby": "En espera",
-      "offline": "Sin conexión"
+      "offline": "Sin conexión",
+      "offer_pending": "Oferta pendiente"
     },
     "clearFilters": "Limpiar filtros",
     "filteredCount": "Mostrando {{shown}} de {{total}}",

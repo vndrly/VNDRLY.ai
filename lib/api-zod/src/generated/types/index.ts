@@ -308,6 +308,7 @@ export * from "./siteLocationDetailTypeTaxProvider";
 export * from "./siteLocationStatusType";
 export * from "./siteLocationType";
 export * from "./siteLocationTypeTaxProvider";
+export * from "./siteOfferPreviewType";
 export * from "./siteWorkAssignmentType";
 export * from "./taxRateType";
 export * from "./ticketLineItemType";

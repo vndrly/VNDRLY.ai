@@ -1,6 +1,6 @@
 // AskV read-only tools — safety, sites, ops, hotlist, catalog, notifications.
 
-import { and, asc, desc, eq, gte, ilike, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 import { vendorCatalogPartnerIds } from "../lib/partner-catalog-access";
 import {
   db,
@@ -45,7 +45,7 @@ import { LIVE_TRACKED_LIFECYCLE_STATES } from "@workspace/ticket-status-meta";
 import { normalizePlateState } from "@workspace/plate-state";
 import { summarizeGpsDistance } from "@workspace/map-utils";
 import { estimateMapboxDrivingRoute } from "../lib/mapbox-routing";
-import { vendorOperationalSiteScope, vendorCanReadSite, employeeCanReadSite } from "../lib/approved-partner-sites";
+import { vendorOfferedSiteScope, vendorOperationalSiteScope, vendorCanReadSite, employeeCanReadSite } from "../lib/approved-partner-sites";
 import { GateReportError, getGateReport } from "../lib/gate-report";
 
 import { OPS_DATA_TOOL_NAMES } from "./tool-names";
@@ -159,10 +159,12 @@ async function querySiteLocations(args: Record<string, unknown>, session: Sessio
   const offset = args.offset ?? 0;
   if (!Number.isSafeInteger(offset) || Number(offset) < 0) return err("offset must be a non-negative integer.");
   const filters = [eq(siteLocationsTable.hidden, false)];
+  const vendorId = session.role === "vendor" ? session.vendorId : undefined;
+  const operational = vendorId ? vendorOperationalSiteScope(vendorId) : undefined;
   if (session.role === "partner" && session.partnerId) {
     filters.push(eq(siteLocationsTable.partnerId, session.partnerId));
-  } else if (session.role === "vendor" && session.vendorId) {
-    filters.push(vendorOperationalSiteScope(session.vendorId));
+  } else if (vendorId && operational) {
+    filters.push(args.inactiveOnly === true ? operational : or(operational, vendorOfferedSiteScope(vendorId))!);
   } else if (session.role !== "admin") {
     return err("No org scope on this session.");
   }
@@ -181,6 +183,7 @@ async function querySiteLocations(args: Record<string, unknown>, session: Sessio
       isActive: siteLocationsTable.isActive,
       afe: siteLocationsTable.afe,
       partnerId: siteLocationsTable.partnerId,
+      offerPending: operational ? sql<boolean>`(${operational}) is not true` : sql<boolean>`false`,
     })
     .from(siteLocationsTable)
     .where(and(...filters))
@@ -188,7 +191,10 @@ async function querySiteLocations(args: Record<string, unknown>, session: Sessio
     .limit(limit + 1)
     .offset(Number(offset));
   const hasMore = rows.length > limit;
-  return JSON.stringify({ rows: rows.slice(0, limit), limit, offset, hasMore, nextOffset: hasMore ? Number(offset) + limit : null });
+  const visibleRows = rows.slice(0, limit).map(({ offerPending, ...site }) => offerPending
+    ? { id: site.id, name: site.name, partnerId: site.partnerId, status: "offer_pending" }
+    : site);
+  return JSON.stringify({ rows: visibleRows, limit, offset, hasMore, nextOffset: hasMore ? Number(offset) + limit : null });
 }
 
 async function lookupSiteDetail(args: Record<string, unknown>, session: SessionPayload) {

@@ -1,5 +1,5 @@
-import { and, eq, inArray, isNull, notInArray, or } from "drizzle-orm";
-import { db, partnerVendorRelationshipsTable, ACTIVE_APPROVAL_STATUSES, siteLocationsTable, siteWorkAssignmentsTable, ticketsTable, ticketCrewTable } from "@workspace/db";
+import { and, eq, gt, inArray, isNotNull, isNull, notInArray, or, sql } from "drizzle-orm";
+import { db, jobOffersTable, partnerVendorRelationshipsTable, ACTIVE_APPROVAL_STATUSES, siteLocationsTable, siteWorkAssignmentsTable, ticketsTable, ticketCrewTable } from "@workspace/db";
 import { acceptedMarketplaceSites, hasAcceptedMarketplaceAccess } from "./accepted-marketplace-access";
 
 export function approvedPartnersForVendor(vendorId: number) {
@@ -26,7 +26,7 @@ function sitesAssignedToVendor(vendorId: number, gateOnly: boolean) {
 export function vendorOperationalSiteScope(vendorId: number) {
   const ticketSites = db.select({ siteLocationId: ticketsTable.siteLocationId })
     .from(ticketsTable)
-    .where(and(eq(ticketsTable.vendorId, vendorId), notInArray(ticketsTable.status, ["cancelled", "denied"])));
+    .where(and(eq(ticketsTable.vendorId, vendorId), notInArray(ticketsTable.status, ["awaiting_acceptance", "cancelled", "denied"])));
 
   // A Gate assignment must be visible before Assume Watch can open its first ticket.
   return or(
@@ -36,6 +36,26 @@ export function vendorOperationalSiteScope(vendorId: number) {
     ),
     inArray(siteLocationsTable.id, acceptedMarketplaceSites(vendorId)),
   )!;
+}
+
+/** Pending offers grant a directory preview for the receiving vendor and the exact site. */
+export function vendorOfferedSiteScope(vendorId: number) {
+  const jobOffers = db.select({ siteId: jobOffersTable.siteLocationId })
+    .from(jobOffersTable)
+    .where(and(
+      eq(jobOffersTable.vendorId, vendorId),
+      eq(jobOffersTable.partnerId, siteLocationsTable.partnerId),
+      inArray(jobOffersTable.status, ["offered", "vendor_reviewing"]),
+      isNotNull(jobOffersTable.sentAt),
+      or(isNull(jobOffersTable.expiresAt), gt(jobOffersTable.expiresAt, sql`now()`)),
+    ));
+  const ticketOffers = db.select({ siteId: ticketsTable.siteLocationId })
+    .from(ticketsTable)
+    .where(and(
+      eq(ticketsTable.vendorId, vendorId),
+      eq(ticketsTable.status, "awaiting_acceptance"),
+    ));
+  return or(inArray(siteLocationsTable.id, jobOffers), inArray(siteLocationsTable.id, ticketOffers))!;
 }
 
 export function vendorTicketCreationSiteScope(vendorId: number) {

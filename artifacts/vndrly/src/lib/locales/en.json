@@ -1315,7 +1315,7 @@
     "addSite": "Add Site",
     "addSiteLocation": "Add Site Location",
     "subtitleAdmin": "Manage drilling site locations",
-    "subtitleVendor": "Sites where you are currently working",
+    "subtitleVendor": "Sites where you work or have an open offer",
     "siteName": "Site Name",
     "partner": "Partner",
     "address": "Address",
@@ -1339,11 +1339,13 @@
     "filterAllPartners": "All partners",
     "filterStatusPlaceholder": "Status",
     "filterAllStatuses": "All statuses",
+    "offerPreviewsUnavailable": "Pending offer sites could not be loaded.",
     "statusOption": {
       "active": "Active",
       "inactive": "Inactive",
       "standby": "Standby",
-      "offline": "Offline"
+      "offline": "Offline",
+      "offer_pending": "Offer pending"
     },
     "clearFilters": "Clear filters",
     "filteredCount": "Showing {{shown}} of {{total}}",

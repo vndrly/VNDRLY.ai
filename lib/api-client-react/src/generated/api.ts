@@ -181,6 +181,7 @@ import type {
   SetVendorWorkTypeCatalogResponse,
   SiteLocation,
   SiteLocationDetail,
+  SiteOfferPreview,
   SiteWorkAssignment,
   TaxRate,
   Ticket,
@@ -6166,6 +6167,81 @@ export const useCreateSiteLocation = <
 > => {
   return useMutation(getCreateSiteLocationMutationOptions(options));
 };
+
+/**
+ * @summary List sites visible to the current vendor only while a job offer is open
+ */
+export const getListSiteOfferPreviewsUrl = () => {
+  return `/api/site-locations/offer-previews`;
+};
+
+export const listSiteOfferPreviews = async (
+  options?: RequestInit,
+): Promise<SiteOfferPreview[]> => {
+  return customFetch<SiteOfferPreview[]>(getListSiteOfferPreviewsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSiteOfferPreviewsQueryKey = () => {
+  return [`/api/site-locations/offer-previews`] as const;
+};
+
+export const getListSiteOfferPreviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSiteOfferPreviews>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSiteOfferPreviews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSiteOfferPreviewsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listSiteOfferPreviews>>
+  > = ({ signal }) => listSiteOfferPreviews({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSiteOfferPreviews>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSiteOfferPreviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSiteOfferPreviews>>
+>;
+export type ListSiteOfferPreviewsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List sites visible to the current vendor only while a job offer is open
+ */
+
+export function useListSiteOfferPreviews<
+  TData = Awaited<ReturnType<typeof listSiteOfferPreviews>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSiteOfferPreviews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSiteOfferPreviewsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get site location by ID

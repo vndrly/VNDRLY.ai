@@ -4,7 +4,7 @@ import { ContentCardHeader } from "@/components/ui/card";
 import GateLinkFields, { emptyGateLink, gateLinkPayload } from "@/components/gate-link-fields";
 import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useListSiteLocations, useCreateSiteLocation, useUpdateSiteLocation, useListPartners, getListSiteLocationsQueryKey } from "@workspace/api-client-react";
+import { useListSiteLocations, useListSiteOfferPreviews, useCreateSiteLocation, useUpdateSiteLocation, useListPartners, getListSiteLocationsQueryKey, getListSiteOfferPreviewsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
@@ -74,7 +74,14 @@ export default function SiteLocations() {
   const isPartner = user?.role === "partner" && !!user.partnerId;
   const siteParams = isPartner ? { partnerId: user!.partnerId! } : undefined;
   const { data: sites, isLoading } = useListSiteLocations(siteParams, {
-    query: { queryKey: getListSiteLocationsQueryKey(siteParams) },
+    query: { queryKey: getListSiteLocationsQueryKey(siteParams), refetchInterval: isVendor ? 15_000 : false },
+  });
+  const { data: offerPreviews, isLoading: offersLoading, isError: offersUnavailable } = useListSiteOfferPreviews({
+    query: {
+      queryKey: [...getListSiteOfferPreviewsQueryKey(), user?.vendorId],
+      enabled: !!isVendor,
+      refetchInterval: 15_000,
+    },
   });
   const { data: partners } = useListPartners();
   const createSite = useCreateSiteLocation();
@@ -281,8 +288,13 @@ export default function SiteLocations() {
   };
 
   const sortedSites = useMemo(() => {
-    if (!sites) return [];
-    return [...sites].sort((a, b) => {
+    const siteIds = new Set(sites?.map(({ id }) => id));
+    const previews = isVendor && !offersUnavailable
+      ? (offerPreviews ?? []).filter(({ id }) => !siteIds.has(id)).map(site => ({
+          ...site, status: "offer_pending" as const, address: "", siteCode: "",
+        }))
+      : [];
+    return [...(sites ?? []), ...previews].sort((a, b) => {
       let valA = "";
       let valB = "";
       if (sortKey === "name") {
@@ -299,7 +311,7 @@ export default function SiteLocations() {
       if (valA > valB) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [sites, sortKey, sortDir]);
+  }, [sites, isVendor, offerPreviews, offersUnavailable, sortKey, sortDir]);
 
   const filteredSites = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -317,9 +329,8 @@ export default function SiteLocations() {
   }, [sortedSites, searchQuery, partnerFilter, statusFilter]);
 
   const availablePartners = useMemo(() => {
-    if (!sites) return [];
     const map = new Map<number, string>();
-    for (const s of sites) {
+    for (const s of sortedSites) {
       if (s.partnerId != null && !map.has(s.partnerId)) {
         map.set(s.partnerId, s.partnerName || "");
       }
@@ -327,14 +338,15 @@ export default function SiteLocations() {
     return Array.from(map.entries())
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [sites]);
+  }, [sortedSites]);
 
-  const statusOptions: Array<"active" | "inactive" | "standby" | "offline"> = [
+  const statusOptions: Array<"active" | "inactive" | "standby" | "offline" | "offer_pending"> = [
     "active",
     "inactive",
     "standby",
     "offline",
   ];
+  if (isVendor) statusOptions.push("offer_pending");
 
   const filtersActive = searchQuery.trim() !== "" || partnerFilter !== "all" || statusFilter !== "all";
 
@@ -668,7 +680,10 @@ export default function SiteLocations() {
       <Card className="site-locations-card">
         <ContentCardHeader title="Site locations" spanish="Ubicaciones de sitios" />
         <CardContent className="p-0">
-          {isLoading ? (
+          {isVendor && offersUnavailable ? (
+            <p role="status" className="px-4 py-2 text-sm text-muted-foreground">{t("siteLocations.offerPreviewsUnavailable")}</p>
+          ) : null}
+          {isLoading || (isVendor && offersLoading && !sites?.length) ? (
             <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
           ) : sortedSites.length > 0 ? (
             <Table>
@@ -704,7 +719,18 @@ export default function SiteLocations() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSites.map((s) => (
+                {filteredSites.map((s) => s.status === "offer_pending" ? (
+                  <TableRow key={s.id} data-testid={`row-site-${s.id}`}>
+                    <TableCell>
+                      <div className="flex items-center gap-2 font-medium"><MapPin className="w-4 h-4 shrink-0" />{s.name}</div>
+                    </TableCell>
+                    <TableCell>{s.partnerName || "—"}</TableCell>
+                    <TableCell>—</TableCell>
+                    <TableCell>—</TableCell>
+                    <TableCell>{t("siteLocations.statusOption.offer_pending")}</TableCell>
+                    <TableCell>—</TableCell>
+                  </TableRow>
+                ) : (
                   <TableRow key={s.id} data-testid={`row-site-${s.id}`}>
                     {!isVendor && (
                       <TableCell className="w-10">

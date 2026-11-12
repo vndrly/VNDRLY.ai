@@ -1472,6 +1472,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/SiteLocation"
 
+  /site-locations/offer-previews:
+    get:
+      operationId: listSiteOfferPreviews
+      tags: [siteLocations]
+      summary: List sites visible to the current vendor only while a job offer is open
+      responses:
+        "200":
+          description: Pending offer site previews for the receiving vendor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SiteOfferPreview"
+
   /site-locations/{id}:
     get:
       operationId: getSiteLocation
@@ -6358,6 +6373,19 @@ components:
           type: string
           format: date-time
       required: [id, partnerId, name, address, latitude, longitude, siteCode, state, isActive, status, partnerName, siteRadiusMeters, afe, photoUrl, taxJurisdictionPostalCode, taxJurisdictionCounty, taxJurisdictionCity, taxJurisdictionLabel, stateTaxRate, localTaxRate, combinedTaxRate, merchandiseTaxRate, laborTaxRate, taxJurisdictionResolvedAt, taxProvider, createdAt]
+
+    SiteOfferPreview:
+      type: object
+      required: [id, name, partnerId, partnerName]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        partnerId:
+          type: integer
+        partnerName:
+          type: ["string", "null"]
 
     SiteLocationDetail:
       type: object

@@ -2130,6 +2130,14 @@ export interface SiteLocation {
   createdAt: string;
 }
 
+export interface SiteOfferPreview {
+  id: number;
+  name: string;
+  partnerId: number;
+  /** @nullable */
+  partnerName: string | null;
+}
+
 /**
  * @nullable
  */
