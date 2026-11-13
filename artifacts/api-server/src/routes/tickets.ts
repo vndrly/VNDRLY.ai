@@ -1,4 +1,4 @@
-import { ticketStaffContext, eligibleGateEmployeeCondition } from "../lib/ticket-staff-eligibility";
+import { ticketStaffContext, eligibleGateEmployeeCondition, eligibleManagedGateEmployees, managedGateTicketCondition } from "../lib/ticket-staff-eligibility";
 import {readTicketGateProof} from "../services/ticket-gate-proof";
 import {effectiveFinancialAmountSql} from "../lib/effective-financial-line";
 import { ticketAfeSql } from "../lib/ticket-afe";
@@ -25,6 +25,12 @@ const COOKIE_NAME = "vndrly_session";
 type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null };
 async function ensurePartnerReviewer(session: Session, res: any): Promise<boolean> {
   if (session.role === "admin") return true;
+  const fullSession = getSessionFromRequest(req);
+  if (fullSession?.managedSubcontractor) {
+    const {canReadTicket} = await import("../lib/field-ticket-access");
+    if (await canReadTicket(fullSession,ticketId)) return true;
+    res.status(403).json({message:"You do not have access to this ticket",code:"ticket.no_access"}); return false;
+  }
   const member = (await db.execute(sql`SELECT role FROM user_org_memberships
     WHERE user_id=${session.userId} AND org_type='partner' AND partner_id=${session.partnerId}`)).rows[0];
   if (session.role === "partner" && ["admin", "member"].includes(String(member?.role))) return true;
@@ -573,6 +579,7 @@ const ticketSelect = {
       engagementJobOfferId: ticketsTable.engagementJobOfferId,
   siteLocationId: ticketsTable.siteLocationId,
   vendorId: ticketsTable.vendorId,
+  gateEmployeeUserId: ticketsTable.gateEmployeeUserId,
   fieldEmployeeId: ticketsTable.fieldEmployeeId,
   workTypeId: ticketsTable.workTypeId,
   status: ticketsTable.status,
@@ -590,7 +597,7 @@ const ticketSelect = {
   vendorLogoUrl: vendorsTable.logoUrl,
   workTypeName: workTypesTable.name,
   workTypeCategory: workTypesTable.category,
-  fieldEmployeeName: sql<string | null>`CASE WHEN ${fieldEmployeesTable.firstName} IS NOT NULL THEN ${fieldEmployeesTable.firstName} || ' ' || ${fieldEmployeesTable.lastName} ELSE NULL END`,
+  fieldEmployeeName: sql<string | null>`CASE WHEN ${ticketsTable.gateEmployeeUserId} IS NOT NULL THEN (SELECT display_name FROM users WHERE id=${ticketsTable.gateEmployeeUserId}) WHEN ${fieldEmployeesTable.firstName} IS NOT NULL THEN ${fieldEmployeesTable.firstName} || ' ' || ${fieldEmployeesTable.lastName} ELSE NULL END`,
   partnerName: partnersTable.name,
   partnerLogoUrl: partnersTable.logoUrl,
   createdAt: ticketsTable.createdAt,
@@ -1053,7 +1060,7 @@ router.get("/tickets", async (req, res): Promise<void> => {
     session.role === "vendor" ||
     session.role === "admin"
   ) {
-    conditions.push(mobileOfficeTicketVisibilityCondition());
+    if (!(req.query.siteHistory === "true" && query.success && query.data.siteLocationId)) conditions.push(mobileOfficeTicketVisibilityCondition());
   }
 
   const limit = query.success && typeof query.data.limit === "number"
@@ -1722,6 +1729,16 @@ router.patch("/tickets/:id", async (req, res): Promise<void> => {
       if (!eligible) { res.status(400).json({code:"ticket.employee_not_eligible",message:"Choose an active gate employee with access to this ticket's site."}); return; }
     }
   }
+  if (parsed.data.gateEmployeeUserId != null) {
+    const context = await ticketStaffContext(params.data.id);
+    const actor = getSession(req);
+    if (!actor || !["admin", "vendor"].includes(actor.role)) { res.status(403).json({message:"Office access required to assign a gatekeeper"}); return; }
+    const eligible = context?.isGate ? await eligibleManagedGateEmployees(context.vendorId, context.siteId) : [];
+    if (!eligible.some(person => person.userId === parsed.data.gateEmployeeUserId) || parsed.data.fieldEmployeeId != null) {
+      res.status(400).json({code:"ticket.employee_not_eligible", message:"Choose an active gatekeeper with access to this ticket's site."}); return;
+    }
+    parsed.data.fieldEmployeeId = null;
+  } else if (parsed.data.fieldEmployeeId !== undefined) parsed.data.gateEmployeeUserId = null;
   const [updated] = await db.update(ticketsTable).set(parsed.data).where(eq(ticketsTable.id, params.data.id)).returning();
   if (!updated) {
     res.status(404).json({

@@ -2,6 +2,37 @@
   overflow: hidden;
 }
 
+.site-sort-controls { display: flex; align-items: center; gap: 16px; padding: 8px 12px; }
+.site-sort-button { font-size: 12px; min-height: 32px; }
+.site-compact-row { position: relative; border-top: 1px solid #62666a; }
+.site-row-toggle { display: block; width: 100%; text-align: left; padding: 12px; min-width: 0; }
+.site-row-toggle:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -3px; }
+.site-row-check { position: absolute; left: 10px; top: 17px; }
+.site-row-check + .site-row-toggle { padding-left: 36px; }
+.site-row-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(40px, auto) auto; gap: 10px; align-items: center; }
+.site-row-name, .site-row-partner { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site-row-name { font-weight: 600; }
+.site-row-partner { max-width: 140px; font-size: 12px; }
+.site-state { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 11px; font-weight: 600; }
+.site-state.is-live { color: #48cf85; }
+.site-state.is-inactive { color: #aeb2b7; }
+.site-row-bottom { display: flex; justify-content: space-between; gap: 8px; margin-top: 7px; font-size: 12px; white-space: nowrap; }
+.site-row-bottom > span { display: inline-flex; align-items: center; gap: 4px; }
+.site-row-bottom svg { width: 12px; height: 12px; flex-shrink: 0; color: var(--brand-primary); }
+.site-row-expanded { padding: 4px 12px 12px; }
+.site-row-actions { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--brand-primary); }
+.site-ticket-list h3 { margin-top: 12px; font-weight: 600; font-size: 12px; }
+.site-ticket-link { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid #62666a; font-size: 12px; }
+.site-ticket-link > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site-ticket-link > span:last-child { flex-shrink: 0; }
+@media (max-width: 480px) {
+  .site-row-toggle { padding: 10px 8px; }
+  .site-row-top { gap: 6px; }
+  .site-row-name { font-size: 12px; }
+  .site-row-partner { max-width: 60px; font-size: 10px; }
+  .site-row-bottom { font-size: 10px; gap: 4px; }
+}
+
 .site-locations-page [data-testid="site-locations-filters"] :is(input, [role="combobox"]),
 .site-locations-dialog :is(input:not([type="checkbox"]):not([type="radio"]), [role="combobox"]) {
   background: #303236;

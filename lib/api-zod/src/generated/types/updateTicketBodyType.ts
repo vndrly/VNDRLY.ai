@@ -7,6 +7,11 @@
  */
 
 export interface UpdateTicketBodyType {
+  /**
+   * Managed gatekeeper user identity, separate from direct employee records.
+   * @nullable
+   */
+  gateEmployeeUserId?: number | null;
   /** @nullable */
   description?: string | null;
   /** @nullable */

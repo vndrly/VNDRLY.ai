@@ -660,7 +660,7 @@ export default function TicketDetail({ id }: { id: number }) {
     if (ticket) {
       setEditDescription(ticket.description || "");
       setEditNotes(ticket.notes || "");
-      setEditFieldEmployeeId(ticket.fieldEmployeeId ? String(ticket.fieldEmployeeId) : "none");
+      setEditFieldEmployeeId(ticket.gateEmployeeUserId ? `managed:${ticket.gateEmployeeUserId}` : ticket.fieldEmployeeId ? String(ticket.fieldEmployeeId) : "none");
     }
   }, [ticket]);
 
@@ -1209,7 +1209,8 @@ export default function TicketDetail({ id }: { id: number }) {
         data: {
           description: editDescription || null,
           notes: editNotes || null,
-          fieldEmployeeId: editFieldEmployeeId && editFieldEmployeeId !== "none" ? Number(editFieldEmployeeId) : null,
+          fieldEmployeeId: editFieldEmployeeId && editFieldEmployeeId !== "none" && !editFieldEmployeeId.startsWith("managed:") ? Number(editFieldEmployeeId) : null,
+          gateEmployeeUserId: editFieldEmployeeId.startsWith("managed:") ? Number(editFieldEmployeeId.slice(8)) : null,
         },
       },
       {
@@ -1228,7 +1229,7 @@ export default function TicketDetail({ id }: { id: number }) {
     if (ticket) {
       setEditDescription(ticket.description || "");
       setEditNotes(ticket.notes || "");
-      setEditFieldEmployeeId(ticket.fieldEmployeeId ? String(ticket.fieldEmployeeId) : "none");
+      setEditFieldEmployeeId(ticket.gateEmployeeUserId ? `managed:${ticket.gateEmployeeUserId}` : ticket.fieldEmployeeId ? String(ticket.fieldEmployeeId) : "none");
     }
     setLineItemsDirty(false);
     setIsEditing(false);
@@ -1239,7 +1240,7 @@ export default function TicketDetail({ id }: { id: number }) {
     return (
       editDescription !== (ticket.description || "") ||
       editNotes !== (ticket.notes || "") ||
-      editFieldEmployeeId !== (ticket.fieldEmployeeId ? String(ticket.fieldEmployeeId) : "none") ||
+      editFieldEmployeeId !== (ticket.gateEmployeeUserId ? `managed:${ticket.gateEmployeeUserId}` : ticket.fieldEmployeeId ? String(ticket.fieldEmployeeId) : "none") ||
       lineItemsDirty
     );
   }, [ticket, editDescription, editNotes, editFieldEmployeeId, lineItemsDirty]);
@@ -1738,7 +1739,7 @@ export default function TicketDetail({ id }: { id: number }) {
                       <SelectItem value="none">{t("tickets.unassigned", { defaultValue: "Unassigned" })}</SelectItem>
                       {vendorFieldEmployees.length > 0 ? (
                         vendorFieldEmployees.map((fe) => (
-                          <SelectItem key={fe.id} value={String(fe.id)}>{fe.firstName} {fe.lastName}{credentialMatchText(fe, i18n.language.startsWith("es")) && ` — ${credentialMatchText(fe, i18n.language.startsWith("es"))}`}</SelectItem>
+                          <SelectItem key={fe.managedUserId ? `managed:${fe.managedUserId}` : fe.id} value={fe.managedUserId ? `managed:${fe.managedUserId}` : String(fe.id)}>{fe.firstName} {fe.lastName}{credentialMatchText(fe, i18n.language.startsWith("es")) && ` — ${credentialMatchText(fe, i18n.language.startsWith("es"))}`}</SelectItem>
                         ))
                       ) : (
                         <div

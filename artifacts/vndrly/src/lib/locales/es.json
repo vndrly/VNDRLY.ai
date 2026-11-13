@@ -1540,7 +1540,18 @@
     "wellheadPhoto": "Foto del cabezal del pozo",
     "wellheadPhotoHelp": "Una imagen del cabezal del pozo para que las cuadrillas identifiquen el sitio al llegar.",
     "siteCodeAutoHint": "Se genera automáticamente un código de sitio único al guardar.",
-    "radiusOptionalLabel": "Radio de geocerca (metros)"
+    "radiusOptionalLabel": "Radio de geocerca (metros)",
+    "ticketRows": {
+      "loading": "Cargando tickets…",
+      "retry": "No se pudieron cargar los tickets. Reintentar",
+      "empty": "No hay tickets para este sitio.",
+      "history": "Tickets anteriores",
+      "current": "Tickets abiertos",
+      "more": "Cargar más tickets",
+      "live": "Activo",
+      "coordinates": "Coordenadas",
+      "details": "Detalles del sitio"
+    }
   },
   "fieldEmployees": {
     "title": "Empleados",

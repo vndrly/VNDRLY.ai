@@ -7,7 +7,7 @@ import {
 } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 
-export type ServiceEmployee = FieldEmployee & {credentialMatch?:{status:string;missing:string[];expired:string[];required:string[];assignmentAllowed:boolean}};
+export type ServiceEmployee = FieldEmployee & {managedUserId?: number; credentialMatch?:{status:string;missing:string[];expired:string[];required:string[];assignmentAllowed:boolean}};
 export function useServiceEmployees(vendorId:number|undefined,workTypeIds:number[],siteId:number|undefined){
  return useQuery<ServiceEmployee[]>({queryKey:["service-employees",vendorId,workTypeIds,siteId],enabled:!!vendorId&&workTypeIds.length>0&&!!siteId,
  queryFn:async({signal})=>{const response=await fetch(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/field-employees?vendorId=${vendorId}&workTypeIds=${workTypeIds.join(',')}&siteId=${siteId}`,{credentials:'include',signal});if(!response.ok)throw new Error('Unable to load service employees');return response.json();}});

@@ -4790,6 +4790,12 @@ export const GetPortalOpenTicketsQueryParams = zod.object({
 export const getPortalOpenTicketsResponseUnreadCommentCountMin = 0;
 
 export const GetPortalOpenTicketsResponseItem = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -5024,6 +5030,12 @@ export const listTicketsResponseItemsItemUnreadCommentCountMin = 0;
 export const ListTicketsResponse = zod.object({
   items: zod.array(
     zod.object({
+      gateEmployeeUserId: zod
+        .number()
+        .nullish()
+        .describe(
+          "Managed gatekeeper user identity, separate from direct employee records.",
+        ),
       jobOfferId: zod.number().nullish(),
       marketplaceCommercialTerms: zod
         .record(zod.string(), zod.unknown())
@@ -5273,6 +5285,12 @@ export const GetTicketParams = zod.object({
 export const getTicketResponseUnreadCommentCountMin = 0;
 
 export const GetTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -5459,6 +5477,12 @@ export const UpdateTicketParams = zod.object({
 });
 
 export const UpdateTicketBody = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   description: zod.string().nullish(),
   notes: zod.string().nullish(),
   fieldEmployeeId: zod.number().nullish(),
@@ -5467,6 +5491,12 @@ export const UpdateTicketBody = zod.object({
 export const updateTicketResponseUnreadCommentCountMin = 0;
 
 export const UpdateTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -5661,6 +5691,12 @@ export const enRouteTicketResponseTicketUnreadCommentCountMin = 0;
 
 export const EnRouteTicketResponse = zod.object({
   ticket: zod.object({
+    gateEmployeeUserId: zod
+      .number()
+      .nullish()
+      .describe(
+        "Managed gatekeeper user identity, separate from direct employee records.",
+      ),
     jobOfferId: zod.number().nullish(),
     marketplaceCommercialTerms: zod
       .record(zod.string(), zod.unknown())
@@ -5856,6 +5892,12 @@ export const CheckInTicketBody = zod.object({
 export const checkInTicketResponseUnreadCommentCountMin = 0;
 
 export const CheckInTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -6051,6 +6093,12 @@ export const CheckOutTicketBody = zod.object({
 export const checkOutTicketResponseUnreadCommentCountMin = 0;
 
 export const CheckOutTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -6239,6 +6287,12 @@ export const SubmitTicketParams = zod.object({
 export const submitTicketResponseUnreadCommentCountMin = 0;
 
 export const SubmitTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -6427,6 +6481,12 @@ export const ApproveTicketParams = zod.object({
 export const approveTicketResponseUnreadCommentCountMin = 0;
 
 export const ApproveTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -6635,6 +6695,12 @@ export const DisperseFundsTicketBody = zod.object({
 export const disperseFundsTicketResponseUnreadCommentCountMin = 0;
 
 export const DisperseFundsTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -6835,6 +6901,12 @@ export const ReverseFundsDispersalBody = zod.object({
 export const reverseFundsDispersalResponseUnreadCommentCountMin = 0;
 
 export const ReverseFundsDispersalResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -7042,6 +7114,12 @@ export const ReverseDispersalBody = zod.object({
 export const reverseDispersalResponseUnreadCommentCountMin = 0;
 
 export const ReverseDispersalResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -7234,6 +7312,12 @@ export const KickbackTicketBody = zod.object({
 export const kickbackTicketResponseUnreadCommentCountMin = 0;
 
 export const KickbackTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -7428,6 +7512,12 @@ export const UnlockTicketBody = zod.object({
 export const unlockTicketResponseUnreadCommentCountMin = 0;
 
 export const UnlockTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -7815,6 +7905,12 @@ export const AcceptTicketParams = zod.object({
 export const acceptTicketResponseUnreadCommentCountMin = 0;
 
 export const AcceptTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -8009,6 +8105,12 @@ export const DenyTicketBody = zod.object({
 export const denyTicketResponseUnreadCommentCountMin = 0;
 
 export const DenyTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -8201,6 +8303,12 @@ export const ReinviteTicketBody = zod.object({
 export const reinviteTicketResponseUnreadCommentCountMin = 0;
 
 export const ReinviteTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -8517,6 +8625,12 @@ export const CancelTicketParams = zod.object({
 export const cancelTicketResponseUnreadCommentCountMin = 0;
 
 export const CancelTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())
@@ -8705,6 +8819,12 @@ export const ReactivateTicketParams = zod.object({
 export const reactivateTicketResponseUnreadCommentCountMin = 0;
 
 export const ReactivateTicketResponse = zod.object({
+  gateEmployeeUserId: zod
+    .number()
+    .nullish()
+    .describe(
+      "Managed gatekeeper user identity, separate from direct employee records.",
+    ),
   jobOfferId: zod.number().nullish(),
   marketplaceCommercialTerms: zod
     .record(zod.string(), zod.unknown())

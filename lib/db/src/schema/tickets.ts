@@ -15,6 +15,7 @@ export const ticketsTable = pgTable("tickets", {
   id: serial("id").primaryKey(),
   siteLocationId: integer("site_location_id").notNull().references(() => siteLocationsTable.id),
   vendorId: integer("vendor_id").notNull().references(() => vendorsTable.id),
+  gateEmployeeUserId: integer("gate_employee_user_id"),
   fieldEmployeeId: integer("field_employee_id").references(() => fieldEmployeesTable.id),
   workTypeId: integer("work_type_id").notNull().references(() => workTypesTable.id),
   canonicalServiceId: integer("canonical_service_id").references(() => canonicalServicesTable.id),

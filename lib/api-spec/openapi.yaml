@@ -7330,6 +7330,9 @@ components:
     Ticket:
       type: object
       properties:
+        gateEmployeeUserId:
+          type: ["integer", "null"]
+          description: Managed gatekeeper user identity, separate from direct employee records.
         jobOfferId:
           type: [integer, "null"]
         marketplaceCommercialTerms:
@@ -7619,6 +7622,9 @@ components:
     UpdateTicketBody:
       type: object
       properties:
+        gateEmployeeUserId:
+          type: ["integer", "null"]
+          description: Managed gatekeeper user identity, separate from direct employee records.
         description:
           type: ["string", "null"]
         notes:

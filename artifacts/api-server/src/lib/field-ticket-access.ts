@@ -1,3 +1,4 @@
+import { managedGateTicketCondition } from "./ticket-staff-eligibility";
 import { and, eq, isNull } from "drizzle-orm";
 import {
   db,
@@ -19,6 +20,10 @@ export async function canReadTicket(
   const ticket = await loadFieldTicketAccessRow(ticketId, database);
   if (!ticket) return false;
   if (session.role === "admin") return true;
+  if (session.managedSubcontractor && session.vendorId) {
+    const [assigned] = await database.select({id:ticketsTable.id}).from(ticketsTable).where(and(eq(ticketsTable.id,ticketId),managedGateTicketCondition(session.userId,session.vendorId)));
+    return Boolean(assigned);
+  }
   if (session.role === "vendor")
     return Boolean(session.vendorId && session.vendorId === ticket.vendorId);
   if (session.role === "partner")

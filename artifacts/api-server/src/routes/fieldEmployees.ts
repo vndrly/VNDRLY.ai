@@ -1,5 +1,5 @@
 import {serviceCredentialAdvisories} from "../lib/service-credential-matching";
-import { ticketStaffContext, eligibleGateEmployeeCondition } from "../lib/ticket-staff-eligibility";
+import { ticketStaffContext, eligibleGateEmployeeCondition, eligibleManagedGateEmployees } from "../lib/ticket-staff-eligibility";
 import { Router, type IRouter } from "express";
 import { eq, and, inArray, isNull, sql } from "drizzle-orm";
 import crypto from "crypto";
@@ -176,7 +176,14 @@ router.get("/field-employees", async (req, res): Promise<void> => {
   const shaped=results.map(shapeEmployee);
   if(serviceIds.length){
     const advisories=await serviceCredentialAdvisories(serviceIds,results.map(p=>({...p,pecExpirationDate:p.pecExpirationDate??null})));
-    res.json(shaped.map(person=>({...person,credentialMatch:advisories.get(person.id)})));return;
+    const people = shaped.map(person=>({...person,credentialMatch:advisories.get(person.id)}));
+    if (ticketStaff?.isGate) {
+      const managed = await eligibleManagedGateEmployees(ticketStaff.vendorId, ticketStaff.siteId);
+      res.json([...people, ...managed.map(person => ({id: person.userId, managedUserId: person.userId,
+        vendorId: ticketStaff.vendorId, userId: person.userId, firstName: person.name, lastName: "",
+        isActive: true, vendorRole: "gatekeeper", jobTitle: "Gatekeeper", credentialMatch: null}))]); return;
+    }
+    res.json(people);return;
   }
   sendResponse(res, ListFieldEmployeesResponse, shaped);
 });

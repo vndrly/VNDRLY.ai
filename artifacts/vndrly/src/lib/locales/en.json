@@ -1540,7 +1540,18 @@
     "wellheadPhoto": "Wellhead Photo",
     "wellheadPhotoHelp": "A picture of the wellhead so field crews can identify the site on arrival.",
     "siteCodeAutoHint": "A unique site code is generated automatically when you save.",
-    "radiusOptionalLabel": "Geofence Radius (meters)"
+    "radiusOptionalLabel": "Geofence Radius (meters)",
+    "ticketRows": {
+      "loading": "Loading tickets…",
+      "retry": "Unable to load tickets. Retry",
+      "empty": "No tickets for this site.",
+      "history": "Past tickets",
+      "current": "Open tickets",
+      "more": "Load more tickets",
+      "live": "Live",
+      "coordinates": "Coordinates",
+      "details": "Site details"
+    }
   },
   "fieldEmployees": {
     "title": "Employees",

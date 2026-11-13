@@ -663,6 +663,11 @@ export type TicketMarketplaceCommercialTerms = {
 } | null;
 
 export interface Ticket {
+  /**
+   * Managed gatekeeper user identity, separate from direct employee records.
+   * @nullable
+   */
+  gateEmployeeUserId?: number | null;
   /** @nullable */
   jobOfferId?: number | null;
   /**
@@ -3052,6 +3057,11 @@ export interface ReverseDispersalBody {
 }
 
 export interface UpdateTicketBody {
+  /**
+   * Managed gatekeeper user identity, separate from direct employee records.
+   * @nullable
+   */
+  gateEmployeeUserId?: number | null;
   /** @nullable */
   description?: string | null;
   /** @nullable */

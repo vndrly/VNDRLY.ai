@@ -14,6 +14,11 @@ import type { TicketTypePaymentMethod } from "./ticketTypePaymentMethod";
 import type { TicketTypeWorkTypeTaxTreatment } from "./ticketTypeWorkTypeTaxTreatment";
 
 export interface TicketType {
+  /**
+   * Managed gatekeeper user identity, separate from direct employee records.
+   * @nullable
+   */
+  gateEmployeeUserId?: number | null;
   /** @nullable */
   jobOfferId?: number | null;
   /**

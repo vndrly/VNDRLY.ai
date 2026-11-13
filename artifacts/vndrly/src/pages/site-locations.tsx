@@ -12,10 +12,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import StatusBadge from "@/components/status-badge";
+import SiteTicketList from "@/components/site-ticket-list";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, MapPin, ArrowUpDown, Printer, Search, Ruler, LocateFixed } from "lucide-react";
@@ -212,6 +212,7 @@ export default function SiteLocations() {
   };
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [expandedSites, setExpandedSites] = useState<Set<number>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [partnerFilter, setPartnerFilter] = useState<string>("all");
@@ -409,7 +410,7 @@ export default function SiteLocations() {
   };
 
   const SortableHeader = ({ label, sortField }: { label: string; sortField: SortKey }) => (
-    <TableHead className="cursor-pointer select-none" onClick={() => handleSort(sortField)}>
+    <button type="button" className="site-sort-button" onClick={() => handleSort(sortField)}>
       <div className="flex items-center gap-1">
         {label}
         <ArrowUpDown
@@ -417,7 +418,7 @@ export default function SiteLocations() {
           style={sortKey === sortField ? { color: "var(--brand-primary)" } : undefined}
         />
       </div>
-    </TableHead>
+    </button>
   );
 
   return (
@@ -686,117 +687,42 @@ export default function SiteLocations() {
           {isLoading || (isVendor && offersLoading && !sites?.length) ? (
             <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
           ) : sortedSites.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {!isVendor && (
-                    <TableHead className="w-10">
-                      <Checkbox
-                        data-testid="checkbox-select-all-sites"
-                        checked={allFilteredSelected}
-                        disabled={filteredSites.length === 0}
-                        onCheckedChange={(checked) => {
-                          setSelectedIds((prev) => {
-                            const next = new Set(prev);
-                            if (checked) {
-                              for (const s of filteredSites) next.add(s.id);
-                            } else {
-                              for (const s of filteredSites) next.delete(s.id);
-                            }
-                            return next;
-                          });
-                        }}
-                        aria-label="Select all sites"
-                      />
-                    </TableHead>
-                  )}
-                  <SortableHeader label={t("siteLocations.siteName")} sortField="name" />
-                  <SortableHeader label={t("siteLocations.partner")} sortField="partnerName" />
-                  <TableHead>{t("siteLocations.address")}</TableHead>
-                  <TableHead>{t("siteLocations.siteCode")}</TableHead>
-                  <SortableHeader label={t("siteLocations.status")} sortField="status" />
-                  <TableHead>{t("siteLocations.geofenceRadius")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSites.map((s) => s.status === "offer_pending" ? (
-                  <TableRow key={s.id} data-testid={`row-site-${s.id}`}>
-                    <TableCell>
-                      <div className="flex items-center gap-2 font-medium"><MapPin className="w-4 h-4 shrink-0" />{s.name}</div>
-                    </TableCell>
-                    <TableCell>{s.partnerName || "—"}</TableCell>
-                    <TableCell>—</TableCell>
-                    <TableCell>—</TableCell>
-                    <TableCell>{t("siteLocations.statusOption.offer_pending")}</TableCell>
-                    <TableCell>—</TableCell>
-                  </TableRow>
-                ) : (
-                  <TableRow key={s.id} data-testid={`row-site-${s.id}`}>
-                    {!isVendor && (
-                      <TableCell className="w-10">
-                        <Checkbox
-                          data-testid={`checkbox-select-site-${s.id}`}
-                          checked={selectedIds.has(s.id)}
-                          onCheckedChange={() => toggleSelected(s.id)}
-                          aria-label={`Select ${s.name}`}
-                        />
-                      </TableCell>
-                    )}
-                    <TableCell>
-                      <Link href={`/site-locations/${s.id}`} className="font-medium text-gray-700 hover:text-[var(--brand-primary)] hover:underline transition-colors" data-testid={`link-site-${s.id}`}>
-                        <div className="flex items-center gap-2"><MapPin className="w-4 h-4 shrink-0" />{s.name}</div>
-                      </Link>
-                    </TableCell>
-                    <TableCell>{s.partnerName || "-"}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{s.address}</TableCell>
-                    <TableCell><code className="text-xs bg-muted px-2 py-1 rounded">{s.siteCode}</code></TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <StatusBadge status={s.status} className="w-[100px] justify-center" />
-                        {(s.status === "inactive" || s.isActive === false) && canReactivateSite ? (
-                          <GreenV2Button
-                            type="button"
-                            onClick={() => handleReactivateSite(s.id)}
-                            disabled={reactivatingId === s.id}
-                            data-testid={`button-reactivate-site-${s.id}`}
-                          >
-                            {reactivatingId === s.id ? t("siteLocations.reactivating") : t("siteLocations.reactivateSite")}
-                          </GreenV2Button>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground" data-testid={`text-radius-${s.id}`}>
-                          {s.siteRadiusMeters != null
-                            ? t("siteLocations.radiusMeters", { meters: s.siteRadiusMeters })
-                            : t("siteLocations.radiusDefault", { meters: DEFAULT_RADIUS_METERS })}
-                        </span>
-                        {canEditRadius && (
-                          <PngPillButton
-                            type="button"
-                            color="brand"
-                            className="min-w-[120px]"
-                            onClick={() => openRadiusDialog(s)}
-                            data-testid={`button-edit-radius-${s.id}`}
-                          >
-                            <Ruler className="w-3.5 h-3.5" />
-                            {t("siteLocations.editRadius")}
-                          </PngPillButton>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredSites.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={isVendor ? 6 : 7} className="p-8 text-center text-muted-foreground" data-testid="text-no-filter-matches">
-                      {t("siteLocations.noFilterMatches")}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <div className="site-compact-list">
+              <div className="site-sort-controls">
+                {!isVendor && <Checkbox data-testid="checkbox-select-all-sites" checked={allFilteredSelected} disabled={!filteredSites.length} aria-label="Select all sites" onCheckedChange={checked => setSelectedIds(previous => { const next = new Set(previous); for (const site of filteredSites) checked ? next.add(site.id) : next.delete(site.id); return next; })} />}
+                <SortableHeader label={t("siteLocations.siteName")} sortField="name" />
+                <SortableHeader label={t("siteLocations.partner")} sortField="partnerName" />
+                <SortableHeader label={t("siteLocations.status")} sortField="status" />
+              </div>
+              {filteredSites.map(s => {
+                const preview = s.status === "offer_pending";
+                const expanded = expandedSites.has(s.id);
+                const live = !preview && s.status !== "inactive" && s.isActive !== false;
+                return <div key={s.id} className="site-compact-row" data-testid={`row-site-${s.id}`}>
+                  {!isVendor && <Checkbox className="site-row-check" checked={selectedIds.has(s.id)} onCheckedChange={() => toggleSelected(s.id)} aria-label={`Select ${s.name}`} data-testid={`checkbox-select-site-${s.id}`} />}
+                  <button type="button" className="site-row-toggle" disabled={preview} aria-expanded={preview ? undefined : expanded} aria-controls={preview ? undefined : `site-tickets-${s.id}`} onClick={() => setExpandedSites(previous => {const next = new Set(previous); next.has(s.id) ? next.delete(s.id) : next.add(s.id); return next;})}>
+                    <span className="site-row-top">
+                      <span className="site-row-name" title={s.name}>{expanded ? "▾" : "▸"} {s.name}</span>
+                      <span className="site-row-partner" title={s.partnerName || ""}>{(s.partnerName || "—").replace(/ Energy Group$| Energy$/i, "")}</span>
+                      <span className={`site-state ${live ? "is-live" : "is-inactive"}`}><span aria-hidden="true">●</span> {t(preview ? "siteLocations.statusOption.offer_pending" : live ? "siteLocations.ticketRows.live" : "siteLocations.statusOption.inactive")}</span>
+                    </span>
+                    {!preview && <span className="site-row-bottom">
+                      <span title={t("siteLocations.ticketRows.coordinates")}><LocateFixed aria-hidden="true" /> <span>{t("siteLocations.ticketRows.coordinates")}: </span>{s.latitude == null || s.longitude == null ? "—" : `${Number(s.latitude).toFixed(5)}, ${Number(s.longitude).toFixed(5)}`}</span>
+                      <span data-testid={`text-radius-${s.id}`} title={t("siteLocations.geofenceRadius")}><Ruler aria-hidden="true" /> {Number(((s.siteRadiusMeters ?? DEFAULT_RADIUS_METERS) / 1609.344).toFixed(2))} mi</span>
+                    </span>}
+                  </button>
+                  {!preview && expanded && <div className="site-row-expanded" id={`site-tickets-${s.id}`}>
+                    <div className="site-row-actions">
+                      <Link href={`/site-locations/${s.id}`} data-testid={`link-site-${s.id}`}>{t("siteLocations.ticketRows.details")}</Link>
+                      {canEditRadius && <button type="button" onClick={() => openRadiusDialog(s)} data-testid={`button-edit-radius-${s.id}`}>{t("siteLocations.editRadius")}</button>}
+                      {!live && canReactivateSite && <GreenV2Button type="button" onClick={() => handleReactivateSite(s.id)} disabled={reactivatingId === s.id} data-testid={`button-reactivate-site-${s.id}`}>{t("siteLocations.reactivateSite")}</GreenV2Button>}
+                    </div>
+                    <SiteTicketList siteId={s.id} />
+                  </div>}
+                </div>;
+              })}
+              {!filteredSites.length && <p className="p-8 text-center" data-testid="text-no-filter-matches">{t("siteLocations.noFilterMatches")}</p>}
+            </div>
           ) : (
             <div className="p-12 text-center text-muted-foreground">
               <MapPin className="w-12 h-12 mx-auto mb-3 opacity-30" />
