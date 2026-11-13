@@ -2734,6 +2734,10 @@
   },
   "approvals": {
     "partnerApprovals": "Partner Approvals ({{count}})",
+    "currentPartners": "Current Partners",
+    "formerPartners": "Former Partners",
+    "noCurrentPartners": "No current partners.",
+    "noFormerPartners": "No former partners.",
     "vendorApprovals": "Vendor Approvals ({{count}})",
     "noPartnerRelationships": "No partner relationships yet. Once a partner rates one of your jobs you'll appear here as Pending review.",
     "noVendorRelationships": "No vendor relationships yet. Vendors enter Pending review automatically when you rate them, then can be promoted to Approved.",

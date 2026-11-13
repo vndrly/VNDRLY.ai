@@ -43,9 +43,9 @@ export default function VendorOperatingArea({ vendorId, canEdit }: { vendorId: n
   const summary = area?.operatingRadiusMiles != null ? `${area.operatingRadiusMiles} miles` : "Not set";
   return <div className="vendor-operating-radius-control" data-testid="operating-area-section">
     <div className="vendor-operating-radius-label">Operating Radius</div>
-    {canEdit ? <Popover open={open} onOpenChange={changeOpen}>
+    {canEdit ? <div className="vendor-radius-anchor"><Popover open={open} onOpenChange={changeOpen}>
       <PopoverTrigger asChild><button type="button" className="vendor-radius-mini-card" data-testid="button-edit-operating-area"><MapPin aria-hidden="true" className="h-4 w-4" /><span><strong data-testid="text-operating-radius">{summary}</strong></span></button></PopoverTrigger>
-      <PopoverContent align="start" sideOffset={8} collisionPadding={12} className="vendor-radius-flyout" aria-label="Set operating radius">
+      <PopoverContent inline side="top" align="start" sideOffset={8} avoidCollisions={false} className="vendor-radius-flyout" aria-label="Set operating radius">
         <h3>Operating Radius</h3>
         <form onSubmit={event => { event.preventDefault(); void save(); }}>
           <label htmlFor={`radius-${vendorId}`}>Radius (miles)</label>
@@ -56,6 +56,6 @@ export default function VendorOperatingArea({ vendorId, canEdit }: { vendorId: n
           <div className="vendor-radius-actions"><button type="submit" className="vendor-mini-card-button" disabled={saving} data-testid="button-save-operating-area"><Check className="h-4 w-4" />{saving ? "Saving…" : "Save"}</button><button type="button" className="vendor-mini-card-button" onClick={() => changeOpen(false)} data-testid="button-cancel-operating-area"><X className="h-4 w-4" />Cancel</button></div>
         </form>
       </PopoverContent>
-    </Popover> : <div><strong className="block" data-testid="text-operating-radius">{summary}</strong></div>}
+    </Popover></div> : <div><strong className="block" data-testid="text-operating-radius">{summary}</strong></div>}
   </div>;
 }

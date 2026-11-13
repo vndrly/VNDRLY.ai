@@ -69,7 +69,7 @@ main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-wo
 .vendor-radius-mini-card small, .vendor-radius-mini-card strong { display: block; }
 .vendor-radius-mini-card small { color: #b3b3b3; font-size: 11px; }
 .vendor-radius-mini-card strong { font-size: 12px; font-weight: 400; }
-.vendor-radius-flyout { width: min(320px, calc(100vw - 24px)); max-height: min(480px, var(--radix-popover-content-available-height)); overflow-y: auto; border: 2px solid var(--brand-primary); border-radius: 12px; padding: 12px; background: #242426; color: #ececec; box-shadow: 0 8px 26px #0008; font-size: 13px; }
+.vendor-radius-flyout { width: min(320px, calc(100vw - 64px)); max-height: 480px; overflow-y: auto; border: 2px solid var(--brand-primary); border-radius: 12px; padding: 12px; background: #242426; color: #ececec; box-shadow: 0 8px 26px #0008; font-size: 13px; }
 .vendor-radius-flyout h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
 .vendor-radius-flyout input[inputmode="decimal"] { width: 100%; margin-top: 5px; background: #303034; color: #ececec; border-color: #5b5b60; }
 .vendor-radius-flyout p { font-size: 11px; color: #b3b3b3; margin-block: 8px; }
@@ -83,8 +83,17 @@ main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-wo
 
 .vendor-profile-footer-actions { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
 .vendor-profile-footer-actions .vendor-profile-info-actions { margin-left: 0; }
-.vendor-operating-radius-control { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.vendor-operating-radius-control { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+/* Keep the flyout attached to the minicard as its containing card scrolls. */
+.vendor-radius-anchor { position: relative; }
+.vendor-radius-anchor > [data-radix-popper-content-wrapper] { position: absolute !important; top: auto !important; bottom: calc(100% + 8px) !important; left: 0 !important; transform: none !important; }
 .vendor-operating-radius-label { color: #b3b3b3; font-size: 12px; }
+.vendor-partner-group > summary { display: flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; list-style: none; color: #ececec; font-size: 13px; font-weight: 600; }
+.vendor-partner-group > summary::-webkit-details-marker { display: none; }
+.vendor-partner-group > summary::before { content: '›'; color: var(--brand-primary); }
+.vendor-partner-group[open] > summary::before { transform: rotate(90deg); }
+.vendor-partner-group + .vendor-partner-group { border-top: 1px solid #3a3a3a; }
+.vendor-partner-group > summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 4px; }
 
 
 @media (max-width: 480px) {

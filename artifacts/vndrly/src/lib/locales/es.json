@@ -2734,6 +2734,10 @@
   },
   "approvals": {
     "partnerApprovals": "Aprobaciones de Socios ({{count}})",
+    "currentPartners": "Socios actuales",
+    "formerPartners": "Socios anteriores",
+    "noCurrentPartners": "No hay socios actuales.",
+    "noFormerPartners": "No hay socios anteriores.",
     "vendorApprovals": "Aprobaciones de Proveedores ({{count}})",
     "noPartnerRelationships": "Aún no hay relaciones con socios. Cuando un socio califique uno de tus trabajos, aparecerás aquí en Revisión pendiente.",
     "noVendorRelationships": "Aún no hay relaciones con proveedores. Los proveedores entran en Revisión pendiente automáticamente al calificarlos, y luego pueden ser promovidos a Aprobados.",
