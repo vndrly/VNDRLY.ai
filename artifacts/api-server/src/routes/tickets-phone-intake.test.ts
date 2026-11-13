@@ -77,7 +77,14 @@ vi.mock("@workspace/db", () => {
       { get: (_t, k: string) => ({ __table: name, __col: k }) },
     );
   const db: any = {
-    select: () => {
+    select: (fields?: Record<string, any>) => {
+      // Employee eligibility reads are independent of the site/assignment queue.
+      if (fields?.name?.__table === "workTypes" && fields?.category) {
+        return makeChain([{ name: "Field Service", category: "field" }]);
+      }
+      if (fields?.id?.__table === "vendorPeople") {
+        return makeChain([{ id: 25 }]);
+      }
       // Pop the next expected row off the queue. After the queue is
       // drained we fall back to ticketQueryRow so the route's final
       // ticketQuery() join always resolves to a usable row.
