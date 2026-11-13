@@ -79,6 +79,13 @@ const TRACKING_PAGE_LABEL_KEYS: Record<string, string> = {
   cancelled: "tickets.cancelled",
 };
 
+// Ticket categories and journeys replace these summaries on the vendor dashboard.
+const VENDOR_REMOVED_ANALYTICS_CARDS = new Set([
+  "site-throughput", "vendor-performance", "workforce-utilization",
+  "operational-reliability", "financial-performance", "lifecycle-bottleneck",
+  "vendor-response-health", "ap-aging", "safety-trends", "site-risk-score",
+]);
+
 type SiteWorkloadRow = {
   siteId: number;
   siteName: string;
@@ -894,17 +901,17 @@ export default function Dashboard() {
 
       <SafetyTrainingBanner />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {!isVendor && <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SiteLocationSnapshotCard
           loading={siteListQuery.isLoading || siteTicketsQuery.isLoading}
           rows={siteWorkloadRows}
           accentColor={accentColor}
           progressPillSrc={progressPillSrc}
         />
-      </div>
+      </div>}
 
       <DashboardAnalyticsCards
-        cards={analyticsCards}
+        cards={isVendor ? analyticsCards.filter((card) => !VENDOR_REMOVED_ANALYTICS_CARDS.has(card.key)) : analyticsCards}
         loading={siteTicketsQuery.isLoading || siteListQuery.isLoading}
         accentColor={accentColor}
       />
