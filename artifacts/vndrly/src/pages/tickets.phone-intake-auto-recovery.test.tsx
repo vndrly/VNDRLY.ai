@@ -1,4 +1,10 @@
-vi.mock("@/components/dashboard-ticket-panels", () => ({ useDashboardTicketPanels: () => ({ data: undefined }), DashboardTicketPanels: () => null }));
+vi.mock("@/components/dashboard-ticket-panels", () => ({ useDashboardTicketPanels: () => ({ data: undefined }), DashboardTicketPanels: () => null, DashboardTicketLocationCount: () => null }));
+vi.mock("@/hooks/use-eligible-vendor-field-employees", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/hooks/use-eligible-vendor-field-employees")>();
+  const api = await import("@workspace/api-client-react");
+  return { ...actual, useServiceEmployees: () => api.useListFieldEmployees() };
+});
+vi.mock("@/components/dashboard-ticket-journeys", () => ({ DashboardTicketJourneys: () => null }));
 import * as React from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 

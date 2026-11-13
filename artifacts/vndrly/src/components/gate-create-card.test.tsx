@@ -186,7 +186,7 @@ it("saves only the gate name and refreshes its selector without saving draft coo
   fireEvent.change(screen.getByLabelText("Choose a gate"), {target:{value:"gate-west"}});
   fireEvent.change(screen.getByLabelText("Gate name"), {target:{value:"My exact name"}});
   fireEvent.change(screen.getByLabelText("Latitude"), {target:{value:"36"}});
-  fireEvent.click(screen.getByRole("button", {name:"Save",exact:true}));
+  fireEvent.click(screen.getByRole("button", {name:"Save"}));
   await screen.findByText("Gate name saved.");
   expect(mocks.request).toHaveBeenCalledWith("/stations/gate-west/name", {siteId:10,name:"My exact name",expectedVersion:4,operationId:expect.any(String)});
   expect(await within(screen.getByLabelText("Choose a gate")).findByRole("option", {name:/My exact name/})).toBeTruthy();

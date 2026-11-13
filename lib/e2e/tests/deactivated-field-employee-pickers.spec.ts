@@ -288,6 +288,9 @@ test.describe.serial("Task #522 — vendor-side pickers exclude deactivated fiel
     await page.goto("/tickets");
 
     await page.locator('[data-testid="button-start-new-ticket"]').click();
+    await page.getByTestId("select-site").click();
+    await page.getByRole("option", { name: /E522 Site/ }).first().click();
+    await page.getByRole("switch", { name: /E522 Work Type/ }).click();
     await page.locator('[data-testid="select-field-employee"]').click();
     await expect(page.getByRole("option", { name: /E522ActiveForeman/ })).toBeVisible();
     await expect(page.getByRole("option", { name: /E522DeactivatedForeman/ })).toHaveCount(0);

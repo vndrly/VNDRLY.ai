@@ -59,6 +59,7 @@ const DEFAULTS: TicketRow = {
   siteLocationId: 1,
   vendorId: 11,
   fieldEmployeeId: null,
+  gateEmployeeUserId: null,
   workTypeId: 2,
   status: "approved",
   description: null,

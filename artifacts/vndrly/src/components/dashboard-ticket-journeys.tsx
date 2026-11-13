@@ -26,7 +26,7 @@ type Detail = { history: Event[]; invoices: Invoice[]; canRecordPayment: boolean
 
 export function DashboardTicketJourneys({ scope, enabled, headerAction }: { scope: string; enabled: boolean; headerAction?: ReactNode }) {
   const { t } = useTranslation();
-  const query = useQuery({ queryKey: ["ticket-journeys", scope], enabled, staleTime: 30_000,
+  const query = useQuery<{ tickets: JourneyTicket[] }>({ queryKey: ["ticket-journeys", scope], enabled, staleTime: 30_000,
     retry: (count, error) => !accessDenied(error) && count < 2,
     retryDelay: attempt => Math.min(1000 * 2 ** attempt, 5000),
     refetchInterval: current => current.state.status === "error" && !accessDenied(current.state.error) ? 30_000 : false,
@@ -40,7 +40,7 @@ export function DashboardTicketJourneys({ scope, enabled, headerAction }: { scop
     <CardContent>
       {!enabled ? <p role="status">{t("ticketJourney.paused")}</p> : query.isPending ? <p role="status">{t("ticketJourney.loading")}</p>
         : accessDenied(query.error) ? <p role="alert">{t("ticketJourney.accessRequired")}</p>
-        : query.isError && !query.data ? <div role="status">{t("ticketJourney.reconnecting")} <button type="button" className="journey-link" onClick={() => void query.refetch()}>{t("ticketJourney.retry")}</button> <Link href="/tickets" className="journey-link">{t("nav.tickets")}</Link></div>
+        : query.isError && !query.data ? <div role="status">{t("ticketJourney.reconnecting")} <button type="button" className="journey-link" onClick={() => void query.refetch()}>{t("ticketJourney.retry")}</button> <Link href="/tickets" className="journey-link">{t("nav.tracking")}</Link></div>
         : <>
           {query.isError && <p role="status" className="journey-muted">{t("ticketJourney.stale")}</p>}
           <h3>{t("ticketJourney.open")} <span>{open.length}</span></h3>

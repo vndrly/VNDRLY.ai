@@ -220,21 +220,25 @@ router.get('/field-employees/:employeeId/certification-training-topics', async (
 router.put('/field-employees/:employeeId/certifications/:certId/training-credit', async (req,res):Promise<void> => {
   const employeeId=Number(req.params.employeeId),certId=Number(req.params.certId);
   const auth=await ensureCertMutate(req,res,employeeId);if(!auth)return;
-  if(!isVendorOrAdminSession(auth.session)){res.status(403).json({error:'Only vendor office/admin can review outside training credit'});return;}
+  if(!isVendorOrAdminSession(auth.session)){res.status(403).json({error:'Only vendor office/admin can review outside training credit',code: "auth.not_allowed"});return;}
   const parsed=z.object({familyIds:z.array(z.string()).max(200),reviewNote:z.string().trim().min(10).max(2000)}).safeParse(req.body);
-  if(!parsed.success){sendValidationFailed(res,parsed.error,{code:'validation.invalid_input'});return;}
+  if(!parsed.success){sendValidationFailed(res,parsed.error,{code: "validation.invalid_input"});return;}
   const families=[...new Set(parsed.data.familyIds)].map(id=>trainingCatalog.curriculum.find(c=>c.id===id));
-  if(families.some(c=>!c)){res.status(400).json({error:'Unknown training topic'});return;}
+  if(families.some(c=>!c)){res.status(400).json({error:'Unknown training topic',code: "certification.unknown_training_topic"});return;}
   const result=await db.transaction(async tx=>{
     const [row]=await tx.select().from(employeeCertificationsTable).where(and(eq(employeeCertificationsTable.id,certId),eq(employeeCertificationsTable.employeeId,employeeId),isNull(employeeCertificationsTable.deletedAt))).for('update');
-    if(!row)return {status:404,error:'Certification not found'};
+    if(!row)return {status:404,error:'Certification not found',code: "certification.not_found"};
     const today=new Date().toISOString().slice(0,10);
-    if(families.length&&(!row.vendorVerifiedAt||!row.certNumber?.trim()||!row.issuer?.trim()||!hasCurrentCertificateDates(row,today)))return {status:400,error:'Verify the certificate and record its issuer, number, and current expiration (unless the issuer does not expire this credential) before granting training credit.'};
+    if(families.length&&(!row.vendorVerifiedAt||!row.certNumber?.trim()||!row.issuer?.trim()||!hasCurrentCertificateDates(row,today)))return {status:400,code: "certification.evidence_required",error:'Verify the certificate and record its issuer, number, and current expiration (unless the issuer does not expire this credential) before granting training credit.'};
     const trainingCredit=ExternalTrainingCreditSchema.parse({version:1,reviewedAt:new Date().toISOString(),reviewedByUserId:auth.session.userId,reviewNote:parsed.data.reviewNote,evidenceFingerprint:certificateEvidenceFingerprint(row),families:families.map(c=>({familyId:c!.id,sourceSha256:c!.sourceSha256}))});
     const [saved]=await tx.update(employeeCertificationsTable).set({trainingCredit}).where(eq(employeeCertificationsTable.id,certId)).returning();
     return {status:200,row:saved};
   });
-  if('error' in result){res.status(result.status).json({error:result.error});return;}
+  if ('error' in result) {
+    if (result.status === 404) res.status(404).json({ error: result.error, code: "certification.not_found" });
+    else res.status(400).json({ error: result.error, code: "certification.evidence_required" });
+    return;
+  }
   res.json(shapeCertRow(result.row!));
 });
 

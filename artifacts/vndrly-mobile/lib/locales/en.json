@@ -1190,8 +1190,10 @@
     "certification": {
       "cert_number_required": "Certificate number is required.",
       "invalid_document_url": "That certification document URL isn't valid.",
-      "not_found": "That certification wasn't found.",
-      "verify_forbidden": "Only vendor admin can verify certifications."
+      "not_found": "Certification not found.",
+      "verify_forbidden": "Only vendor admin can verify certifications.",
+      "unknown_training_topic": "Unknown training topic.",
+      "evidence_required": "Verify the certificate and record its issuer, number, and valid dates before granting training credit."
     },
     "crew": {
       "already_checked_in": "That employee is already checked in to this ticket.",
@@ -1365,7 +1367,8 @@
       "reviewer_required": "An authorized partner reviewer must review this ticket.",
       "vendor_submission_required": "The vendor must submit the ticket and its proof sheet.",
       "partner_review_required": "The partner must review the submitted ticket.",
-      "invalid_input": "The ticket request is invalid. Refresh and try again."
+      "invalid_input": "The ticket request is invalid. Refresh and try again.",
+      "employee_not_eligible": "This employee is not eligible for this assignment."
     },
     "site": {
       "not_found": "Site not found.",

@@ -1126,7 +1126,6 @@
     "showMap": "Mostrar mapa",
     "gpsDataRecorded": "Datos de GPS registrados",
     "pickSiteFirst": "Selecciona un sitio primero.",
-    "pickVendorFirst": "Selecciona un proveedor primero.",
     "noVendorsApproved": "Aún no hay proveedores aprobados para trabajar en este sitio.",
     "partnerInviteNotice": "Se notificará al proveedor para aceptar y asignar una cuadrilla.",
     "selectedCount": "{{count}} seleccionados",
@@ -1391,7 +1390,6 @@
     "siteName": "Nombre del Sitio",
     "partner": "Socio",
     "address": "Dirección",
-    "siteCode": "Código del Sitio",
     "status": "Estado",
     "latitude": "Latitud",
     "longitude": "Longitud",
@@ -2186,14 +2184,10 @@
     "kickbackReason": "Motivo del Rechazo",
     "siteVisitSummary": {
       "title": "Resumen de visita al sitio",
-      "subtitle": "Ruta, tiempo en sitio y verificaciones de geocerca para todos los que trabajaron este ticket — para facturación y revisión de disputas.",
       "loading": "Cargando resumen de visita al sitio…",
       "failed": "No se pudo cargar el resumen de visita al sitio.",
       "onSiteCount": "En sitio",
-      "totalOnSite": "Total en sitio",
       "travel": "Viaje",
-      "routePoints": "Puntos de ruta",
-      "peopleOnSite": "Todos en sitio",
       "noPeople": "Aún no hay registros de entrada para este ticket.",
       "lead": "Líder",
       "crew": "Equipo",
@@ -4424,11 +4418,13 @@
     "certification": {
       "cert_number_required": "Se requiere el número de certificado.",
       "invalid_document_url": "Ese enlace de documento no es válido.",
-      "not_found": "No se encontró esa certificación.",
+      "not_found": "Certificación no encontrada.",
       "save_failed": "No se pudo guardar la certificación. Inténtalo de nuevo.",
       "delete_failed": "No se pudo eliminar la certificación. Inténtalo de nuevo.",
       "upload_failed": "No se pudo subir el documento de la certificación. Inténtalo de nuevo.",
-      "verify_forbidden": "Solo el administrador del proveedor puede verificar certificaciones."
+      "verify_forbidden": "Solo el administrador del proveedor puede verificar certificaciones.",
+      "unknown_training_topic": "Tema de formación desconocido.",
+      "evidence_required": "Verifique el certificado y registre el emisor, número y fechas válidas antes de conceder crédito de formación."
     },
     "crew": {
       "already_checked_in": "Ese empleado ya tiene entrada registrada en este ticket.",
@@ -4564,7 +4560,8 @@
       "reviewer_required": "Un revisor autorizado del socio debe revisar este ticket.",
       "vendor_submission_required": "El proveedor debe enviar el ticket y su hoja de comprobantes.",
       "partner_review_required": "El socio debe revisar el ticket enviado.",
-      "invalid_input": "La solicitud del ticket no es válida. Actualiza e inténtalo de nuevo."
+      "invalid_input": "La solicitud del ticket no es válida. Actualiza e inténtalo de nuevo.",
+      "employee_not_eligible": "Este empleado no es elegible para esta asignación."
     },
     "invalid_ticket_id": "El ID del ticket no es válido.",
     "ticket_not_found": "No se encontró el ticket.",

@@ -1126,7 +1126,6 @@
     "showMap": "Show map",
     "gpsDataRecorded": "GPS data recorded",
     "pickSiteFirst": "Pick a site first.",
-    "pickVendorFirst": "Pick a vendor first.",
     "noVendorsApproved": "No vendors are approved for work at this site yet.",
     "partnerInviteNotice": "The vendor will be notified to accept and assign a crew.",
     "selectedCount": "{{count}} selected",
@@ -1391,7 +1390,6 @@
     "siteName": "Site Name",
     "partner": "Partner",
     "address": "Address",
-    "siteCode": "Site Code",
     "status": "Status",
     "latitude": "Latitude",
     "longitude": "Longitude",
@@ -2186,14 +2184,10 @@
     "kickbackReason": "Kickback Reason",
     "siteVisitSummary": {
       "title": "Site visit summary",
-      "subtitle": "Route, time on site, and geofence checks for everyone who worked this ticket — for billing and dispute review.",
       "loading": "Loading site visit summary…",
       "failed": "Could not load site visit summary.",
       "onSiteCount": "On site",
-      "totalOnSite": "Total on-site",
       "travel": "Travel",
-      "routePoints": "Route points",
-      "peopleOnSite": "Everyone on site",
       "noPeople": "No check-ins recorded for this ticket yet.",
       "lead": "Lead",
       "crew": "Crew",
@@ -4424,11 +4418,13 @@
     "certification": {
       "cert_number_required": "Certificate number is required.",
       "invalid_document_url": "That document link isn't valid.",
-      "not_found": "That certification wasn't found.",
+      "not_found": "Certification not found.",
       "save_failed": "Couldn't save the certification. Please try again.",
       "delete_failed": "Couldn't remove the certification. Please try again.",
       "upload_failed": "Couldn't upload the certification document. Please try again.",
-      "verify_forbidden": "Only vendor admin can verify certifications."
+      "verify_forbidden": "Only vendor admin can verify certifications.",
+      "unknown_training_topic": "Unknown training topic.",
+      "evidence_required": "Verify the certificate and record its issuer, number, and valid dates before granting training credit."
     },
     "crew": {
       "already_checked_in": "That employee is already checked in to this ticket.",
@@ -4564,7 +4560,8 @@
       "reviewer_required": "An authorized partner reviewer must review this ticket.",
       "vendor_submission_required": "The vendor must submit the ticket and its proof sheet.",
       "partner_review_required": "The partner must review the submitted ticket.",
-      "invalid_input": "The ticket request is invalid. Refresh and try again."
+      "invalid_input": "The ticket request is invalid. Refresh and try again.",
+      "employee_not_eligible": "This employee is not eligible for this assignment."
     },
     "invalid_ticket_id": "That ticket id is invalid.",
     "ticket_not_found": "Ticket not found.",

@@ -1,3 +1,9 @@
+vi.mock("@/components/dashboard-ticket-journeys", () => ({ DashboardTicketJourneys: () => null }));
+vi.mock("@/hooks/use-eligible-vendor-field-employees", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/hooks/use-eligible-vendor-field-employees")>();
+  const api = await import("@workspace/api-client-react");
+  return { ...actual, useServiceEmployees: () => api.useListFieldEmployees() };
+});
 import * as React from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
@@ -101,6 +107,7 @@ vi.mock("@/hooks/use-auth", () => ({
 vi.mock("@/components/dashboard-ticket-panels", () => ({
   useDashboardTicketPanels: () => ({ data: { tickets: [], gateLocationCount: null } }),
   DashboardTicketPanels: () => null,
+  DashboardTicketLocationCount: () => null,
 }));
 
 // Task #648 — capture the toast spy at module scope so the assertions

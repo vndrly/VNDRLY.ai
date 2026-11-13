@@ -1190,8 +1190,10 @@
     "certification": {
       "cert_number_required": "Se requiere el número de certificado.",
       "invalid_document_url": "Esa URL del documento de certificación no es válida.",
-      "not_found": "Esa certificación no se encontró.",
-      "verify_forbidden": "Solo el administrador del proveedor puede verificar certificaciones."
+      "not_found": "Certificación no encontrada.",
+      "verify_forbidden": "Solo el administrador del proveedor puede verificar certificaciones.",
+      "unknown_training_topic": "Tema de formación desconocido.",
+      "evidence_required": "Verifique el certificado y registre el emisor, número y fechas válidas antes de conceder crédito de formación."
     },
     "crew": {
       "already_checked_in": "Ese empleado ya tiene entrada registrada en este ticket.",
@@ -1365,7 +1367,8 @@
       "reviewer_required": "Un revisor autorizado del socio debe revisar este ticket.",
       "vendor_submission_required": "El proveedor debe enviar el ticket y su hoja de comprobantes.",
       "partner_review_required": "El socio debe revisar el ticket enviado.",
-      "invalid_input": "La solicitud del ticket no es válida. Actualiza e inténtalo de nuevo."
+      "invalid_input": "La solicitud del ticket no es válida. Actualiza e inténtalo de nuevo.",
+      "employee_not_eligible": "Este empleado no es elegible para esta asignación."
     },
     "site": {
       "not_found": "No se encontró el sitio.",
