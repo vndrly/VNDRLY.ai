@@ -2,11 +2,11 @@ import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { TicketVisitMap } from "./ticket-visit-map";
 import type { SiteVisitSummary } from "./ticket-site-visit-summary-card";
-const viewport = vi.hoisted(() => ({ mobile: false, lines: [] as any[] }));
+const viewport = vi.hoisted(() => ({ mobile: false, lines: [] as any[], fitToData: true }));
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => viewport.mobile }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#12abcd", logoSquareUrl: "/logo.png" }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
-vi.mock("./mapbox-map", () => ({ MapboxMap: (p: any) => { viewport.lines = p.lines; return <div data-testid="map">{p.bottomControls}{p.topControls}{p.points.map((point: any) => <button key={point.id} onClick={point.onClick}>{point.title}</button>)}{p.anchoredPopup?.content}</div>; } }));
+vi.mock("./mapbox-map", () => ({ MapboxMap: (p: any) => { viewport.lines = p.lines; viewport.fitToData = p.fitToData; return <div data-testid="map">{p.bottomControls}{p.topControls}{p.points.map((point: any) => <button key={point.id} onClick={point.onClick}>{point.title}</button>)}{p.anchoredPopup?.content}</div>; } }));
 afterEach(() => { cleanup(); viewport.mobile = false; });
 const data: SiteVisitSummary = { ticketId: 1, trackingNumber: "V-1", status: "completed", lifecycleState: "off_site", finished: true, finishedAt: "2026-11-12T18:00:00Z",
   site: { name: "Warwick San Roman Completions", latitude: 27, longitude: -99, siteCode: "S", siteRadiusMeters: 100 },
@@ -20,6 +20,7 @@ it("opens a branded ticket flyout and settings without route point controls", ()
   render(<TicketVisitMap data={data} />);
   fireEvent.click(screen.getByText("Warwick San Roman Completions"));
   expect(screen.getByText("MidCon")).toBeTruthy();
+  expect(viewport.fitToData).toBe(false);
   expect(screen.getByText("24h 0m")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Map settings" }));
   fireEvent.click(screen.getByRole("switch", { name: "Map / Satellite" }));

@@ -73,7 +73,7 @@ export function TicketVisitMap({ data }: { data: SiteVisitSummary }) {
     {expanded && <header className="ticket-map-expanded-heading"><strong>{data.trackingNumber} · {data.site?.name}</strong><button autoFocus type="button" className="vendor-mini-card-button" onClick={() => setExpanded(false)} aria-label={c("Close expanded map", "Cerrar mapa ampliado")}><X /></button></header>}
     <MapboxMap key={`${expanded}:${fit}`} className={`gate-map-canvas ticket-visit-map ${dark ? "is-dark-mode" : ""}`} customZoomControls enhancedStreetContrast
       points={points} lines={data.roadRoute?.coordinates.length ? [{ id: "company-to-ticket-road-route", coordinates: data.roadRoute.coordinates.map(([longitude, latitude]): [number, number] => [latitude, longitude]), color: brand.primary, width: 4, opacity: 0.9 }] : []} height={expanded ? "100%" : "clamp(360px, 56vh, 560px)"} styleKind={satellite ? "satellite" : dark ? "dark" : "street"}
-      selectedPointId={selected} panToSelectedPoint fitToData={!me} fitPadding={{top:90,left:40,right:40,bottom:50}} center={me} zoom={15}
+      selectedPointId={selected} panToSelectedPoint fitToData={!me && !selected} fitPadding={{top:90,left:40,right:40,bottom:50}} center={me} zoom={15}
       anchoredPopup={!mobile && selected && points.some(p => p.id === selected) ? { pointId: selected, content: flyout, onClose: () => setSelected(null), className: "gate-map-activity-popup ticket-map-popup", maxWidth: "344px" } : undefined}
       bottomControls={<>
         <div className="gate-map-control-group gate-map-settings-control">
