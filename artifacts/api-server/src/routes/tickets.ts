@@ -5,6 +5,7 @@ import { ticketAfeSql } from "../lib/ticket-afe";
 import { freezeTicketSubmission, reviewedSubmission, TicketSubmissionError } from "../lib/ticket-submissions";
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { Router, type IRouter } from "express";
+import type {} from "pino-http";
 import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable } from "drizzle-orm";
 import { decodeSession, getSessionFromRequest } from "../lib/session";
 import { z } from "zod";
