@@ -15,7 +15,6 @@
     "paid": "Paid",
     "partial": "Partially paid · balance still open",
     "pending": "Awaiting completion",
-    "recorded": "Recorded",
     "notRecorded": "No recorded event",
     "system": "System",
     "noSeparateReview": "No separate partner verification recorded",
@@ -586,11 +585,9 @@
     "vendors": "Vendors",
     "vendor": "Vendor Profile",
     "employees": "Employees",
-    "siteLocations": "Site Locations",
     "gateLocations": "Gate Locations",
     "tracking": "Ticket Tracking",
     "flagged": "Flagged",
-    "crewMap": "Crew Map",
     "siteMap": "Site Map",
     "gateLog": "Gate Log",
     "visitors": "Visitors",
@@ -2150,7 +2147,6 @@
     "revoked": "Revoked {{when}}"
   },
   "crewReplay": {
-    "backToCrewMap": "Crew Map",
     "dayReplayTitle": "{{name}} — Day Replay",
     "employeeFallback": "Employee",
     "subtitle": "All recorded GPS pings across this employee's tickets for the chosen day.",

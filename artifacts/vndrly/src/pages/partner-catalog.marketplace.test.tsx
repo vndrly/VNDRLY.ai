@@ -348,7 +348,7 @@ describe("partner marketplace", () => {
       screen
         .getByRole("link", { name: "Manage site coordinates" })
         .getAttribute("href"),
-    ).toBe("/site-locations/102");
+    ).toBe("/mapping/sites/102");
     expect(
       requests.some((r) => r.url.searchParams.get("siteId") === "102"),
     ).toBe(false);

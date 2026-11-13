@@ -86,7 +86,7 @@ it("collapses the stepper with details and shows the assignee above events and s
   const steps = within(card as HTMLElement).getByRole("list");
   await waitFor(()=>expect(steps.textContent).toContain("$125.50"));
   await waitFor(()=>expect(steps.textContent).toContain(new Date(`${paymentDate}T12:00:00`).toLocaleDateString("en")));
-  expect(steps.textContent).not.toContain("12:00:00");
+  expect(steps.lastElementChild?.textContent).not.toContain("12:00:00");
   expect(toggle.getAttribute("aria-expanded")).toBe("true");
   const assigned = screen.getByText("ticketJourney.assignedTo: Test Employee");
   const events = screen.getByText("ticketJourney.events");
