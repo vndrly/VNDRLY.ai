@@ -11,7 +11,7 @@ export default function SiteTicketList({ siteId }: { siteId: number }) {
   const { user } = useAuth();
   const { t } = useTranslation();
   const query = useInfiniteQuery({
-    queryKey: ["site-ticket-history", user?.id, user?.vendorId, siteId],
+    queryKey: ["site-ticket-history", user?.userId, user?.vendorId, siteId],
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       const response = await fetch(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/tickets?siteLocationId=${siteId}&siteHistory=true&limit=50&offset=${pageParam}`, { credentials: "include", signal });
@@ -42,3 +42,4 @@ export default function SiteTicketList({ siteId }: { siteId: number }) {
     {query.hasNextPage && <button type="button" disabled={query.isFetchingNextPage} onClick={() => query.fetchNextPage()}>{t("siteLocations.ticketRows.more")}</button>}
   </div>;
 }
+
