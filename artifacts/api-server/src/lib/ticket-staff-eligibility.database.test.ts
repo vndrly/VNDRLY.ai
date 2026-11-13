@@ -37,7 +37,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE==='fresh-local')('managed ticket 
  const sponsorship=(await pool.query("insert into managed_subcontractor_worker_sponsorships(worker_user_id,sponsor_vendor_id,managed_organization_id,invited_by_user_id) values($1,$2,$3,$1) returning id",[user,vendor,org])).rows[0].id;
  await pool.query("insert into managed_subcontractor_role_grants(sponsorship_id,role,site_id,granted_by_user_id) values($1,'gatekeeper',$2,$3)",[sponsorship,site,user]);
  expect(await eligibleManagedGateEmployees(vendor,site)).toEqual([{userId:user,name:'Managed Gatekeeper'}]);
- const workType=(await pool.query("insert into work_types(name,category) values('Gatekeeping','Gate Operations') returning id")).rows[0].id;
+ const workType=(await pool.query("select id from work_types where lower(name)='gatekeeping' limit 1")).rows[0]?.id ?? (await pool.query("insert into work_types(name,category) values('Gatekeeping','Gate Operations') returning id")).rows[0].id;
  const ticket=(await pool.query("insert into tickets(site_location_id,vendor_id,work_type_id,description) values($1,$2,$3,'TEST ONLY managed assignment') returning id",[site,vendor,workType])).rows[0].id;
  const app=express().use(express.json()).use(cookieParser()).use(ticketsRouter);
  const cookie=buildTestCookie({userId:user,role:'admin'},SESSION_SECRET);
