@@ -40,11 +40,16 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE==='fresh-local')('managed ticket 
  const workType=(await pool.query("select id from work_types where lower(name)='gatekeeping' limit 1")).rows[0]?.id ?? (await pool.query("insert into work_types(name,category) values('Gatekeeping','Gate Operations') returning id")).rows[0].id;
  const ticket=(await pool.query("insert into tickets(site_location_id,vendor_id,work_type_id,description) values($1,$2,$3,'TEST ONLY managed assignment') returning id",[site,vendor,workType])).rows[0].id;
  const app=express().use(express.json()).use(cookieParser()).use(ticketsRouter);
- const cookie=buildTestCookie({userId:user,role:'admin'},SESSION_SECRET);
+ const cookie=buildTestCookie({userId:user,role:'admin'},{secret:SESSION_SECRET});
  const saved=await request(app).patch('/tickets/'+ticket).set('Cookie',cookie).send({gateEmployeeUserId:user,fieldEmployeeId:null});
  expect(saved.status,JSON.stringify(saved.body)).toBe(200);
  expect(saved.body.gateEmployeeUserId).toBe(user);
  expect(saved.body.fieldEmployeeName).toBe('Managed Gatekeeper');
+ const managedCookie=buildTestCookie({userId:user,role:'field_employee',vendorId:vendor,managedSubcontractor:{siteGrants:[{siteId:site,role:'gatekeeper'}]}},{secret:SESSION_SECRET});
+ const listed=await request(app).get('/tickets?siteLocationId='+site).set('Cookie',managedCookie);
+ expect(listed.status,JSON.stringify(listed.body)).toBe(200);
+ expect(listed.body.items.map((row:{id:number})=>row.id)).toContain(ticket);
+
  expect(await canReadTicket({userId:user,role:'field_employee',vendorId:vendor,managedSubcontractor:{siteGrants:[{siteId:site,role:'gatekeeper'}]}},ticket)).toBe(true);
  expect(await canReadTicket({userId:user,role:'field_employee',vendorId:vendor+10000000,managedSubcontractor:{siteGrants:[{siteId:site,role:'gatekeeper'}]}},ticket)).toBe(false);
  expect((await pool.query('select gate_employee_user_id,field_employee_id from tickets where id=$1',[ticket])).rows[0]).toEqual({gate_employee_user_id:user,field_employee_id:null});

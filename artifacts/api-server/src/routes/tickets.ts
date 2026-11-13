@@ -25,12 +25,6 @@ const COOKIE_NAME = "vndrly_session";
 type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null };
 async function ensurePartnerReviewer(session: Session, res: any): Promise<boolean> {
   if (session.role === "admin") return true;
-  const fullSession = getSessionFromRequest(req);
-  if (fullSession?.managedSubcontractor) {
-    const {canReadTicket} = await import("../lib/field-ticket-access");
-    if (await canReadTicket(fullSession,ticketId)) return true;
-    res.status(403).json({message:"You do not have access to this ticket",code:"ticket.no_access"}); return false;
-  }
   const member = (await db.execute(sql`SELECT role FROM user_org_memberships
     WHERE user_id=${session.userId} AND org_type='partner' AND partner_id=${session.partnerId}`)).rows[0];
   if (session.role === "partner" && ["admin", "member"].includes(String(member?.role))) return true;
@@ -95,6 +89,13 @@ async function ensureFieldOwnership(req: any, res: any, ticketId: number): Promi
     return false;
   }
   if (session.role === "admin") return true;
+  const fullSession = getSessionFromRequest(req);
+  if (fullSession?.managedSubcontractor) {
+    const {canReadTicket} = await import("../lib/field-ticket-access");
+    if (await canReadTicket(fullSession,ticketId)) return true;
+    res.status(403).json({message:"You do not have access to this ticket",code:"ticket.no_access"}); return false;
+  }
+
 
   const { loadFieldTicketAccessRow, fieldEmployeeCanAccessTicket } = await import(
     "../lib/field-ticket-access"
@@ -1034,7 +1035,10 @@ router.get("/tickets", async (req, res): Promise<void> => {
   }
 
   // Enforce tenant scope based on role.
-  if (session.role === "vendor" && session.vendorId != null) {
+  const fullListSession = getSessionFromRequest(req);
+  if (fullListSession?.managedSubcontractor && fullListSession.vendorId) {
+    conditions.push(managedGateTicketCondition(fullListSession.userId!,fullListSession.vendorId));
+  } else if (session.role === "vendor" && session.vendorId != null) {
     conditions.push(eq(ticketsTable.vendorId, session.vendorId));
   } else if (session.role === "partner" && session.partnerId != null) {
     conditions.push(eq(siteLocationsTable.partnerId, session.partnerId));
