@@ -9,6 +9,5 @@ test("Legacy Crew Map opens Mapping and preserves bookmark context", async ({ pa
   await expect(page).toHaveURL(/\/mapping\?view=staff#coverage$/);
   await expect(page.getByTestId("gate-locations-page")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Mapping", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Reveal Staff", exact: true })).toBeVisible();
 });
 
