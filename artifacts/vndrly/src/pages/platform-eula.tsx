@@ -23,6 +23,7 @@ export default function PlatformEulaPage() {
     <a className="underline underline-offset-2" href={`${prefix}/sms/`}>{spanish ? "Inscripción a SMS" : "SMS Enrollment"}</a>
     <a className="underline underline-offset-2" href={`${prefix}/legal/privacy/`}>{spanish ? "Política de privacidad" : "Privacy Policy"}</a>
     <a className="underline underline-offset-2" href={`${prefix}/legal/terms/`}>{spanish ? "Términos y condiciones" : "Terms & Conditions"}</a>
+    <a className="underline underline-offset-2" href="/legal/accessibility">{spanish ? "Accesibilidad" : "Accessibility"}</a>
   </nav>;
 
 

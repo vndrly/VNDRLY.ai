@@ -461,6 +461,8 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
                 <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/legal/privacy/`} className="hover:underline" data-testid="link-privacy-policy">{t("login.privacyPolicyLink")}</a>
                 <span aria-hidden="true">·</span>
                 <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`} className="hover:underline" data-testid="link-terms-conditions">{t("login.termsConditionsLink")}</a>
+                <span aria-hidden="true">·</span>
+                <a href="/legal/accessibility" className="hover:underline" onClick={(e) => { e.preventDefault(); navigate("/legal/accessibility"); }} data-testid="link-accessibility">{i18n.language.startsWith("es") ? "Accesibilidad" : "Accessibility"}</a>
               </div>
             </div>
           </div>
