@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TicketStatusBadge from "@/components/ticket-status-badge";
+import "./dashboard-ticket-journeys.css";
 
 type DashboardTicket = {
   id: number;
@@ -79,7 +80,7 @@ export function DashboardTicketPanels({ query, enabled }: { query: ReturnType<ty
         ) : !query.data ? (
           <p role="status">Loading tickets…</p>
         ) : panels.map(panel => {
-          if (panel.href) return <Link key={panel.label} href={panel.href} className="flex items-center gap-2 border-t border-border py-3 font-medium">
+          if (panel.href) return <Link key={panel.label} href={panel.href} className="flex items-center gap-2 border-t border-border dashboard-ticket-category-row">
             <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
             <span className="min-w-0 flex-1">{panel.label}</span>
             <span className="tabular-nums">{panel.tickets.length}</span>
@@ -93,7 +94,7 @@ export function DashboardTicketPanels({ query, enabled }: { query: ReturnType<ty
           }
           return (
             <details key={panel.label} className="group/panel border-t border-border">
-              <summary className="flex cursor-pointer list-none items-center gap-2 py-3 font-medium [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center gap-2 dashboard-ticket-category-row [&::-webkit-details-marker]:hidden">
                 <ChevronRight aria-hidden="true" className="size-4 shrink-0 group-open/panel:rotate-90" />
                 <span className="min-w-0 flex-1">{panel.label}</span>
                 <span className="tabular-nums">{panel.tickets.length}</span>

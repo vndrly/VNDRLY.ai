@@ -32,3 +32,20 @@
 .journey-payment label { display:grid; gap:4px; min-width:0; }
 .journey-payment :is(input,select,textarea) { width:100%; min-width:0; max-width:100%; box-sizing:border-box; background:#303237; color:#fff; border:1px solid #888; border-radius:6px; padding:8px; min-height:44px; font-size:16px; }
 .journey-payment :is(button,input,select,textarea):focus-visible,.journey-ticket-toggle:focus-visible,.journey-category summary:focus-visible { outline:2px solid var(--brand-primary); outline-offset:2px; }
+
+/* Match Gate Dashboard row density while retaining phone-sized touch targets. */
+.dashboard-ticket-category-row,
+.journey-category > summary {
+  min-height: 44px;
+  padding-block: 10px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+@media (min-width: 768px) {
+  .dashboard-ticket-category-row,
+  .journey-category > summary {
+    min-height: 36px;
+    padding-block: 6px;
+  }
+}
