@@ -1,3 +1,4 @@
+import { DashboardTicketJourneys } from "@/components/dashboard-ticket-journeys";
 import { DashboardTicketPanels, useDashboardTicketPanels } from "@/components/dashboard-ticket-panels";
 import { DashboardSetup } from "@/components/finish-setup-widget";
 import "./dashboard-condensed.css";
@@ -644,15 +645,7 @@ export default function Dashboard() {
   const ticketPanels = useDashboardTicketPanels(
     `${user?.role}:${user?.vendorId ?? user?.partnerId}`, ticketPanelsEnabled,
   );
-  const gateLocationCount = ticketPanels.data?.gateLocationCount;
-  const displayedStats = gateLocationCount != null ? [{
-    ...firstStatCard,
-    key: "gate-locations",
-    label: t("nav.gateLocations"),
-    value: gateLocationCount,
-    definition: "Standalone gates and linked gate groups.",
-    destination: "/gate-locations",
-  }] : showTicketPanels ? statCards.slice(0, -4) : statCards;
+  const displayedStats = isVendor ? [] : showTicketPanels ? statCards.slice(0, -4) : statCards;
 
   return (
     <div
@@ -831,7 +824,7 @@ export default function Dashboard() {
 
       {isAdmin && <AssistantMetricsCard />}
 
-      <div className={cn("grid grid-cols-2 gap-3 md:grid-cols-4", isVendor ? "lg:grid-cols-5" : "lg:grid-cols-7")}>
+      {displayedStats.length > 0 && <div className={cn("grid grid-cols-2 gap-3 md:grid-cols-4", isVendor ? "lg:grid-cols-5" : "lg:grid-cols-7")}>
         {summaryLoading
           ? displayedStats.map((stat) => <Skeleton key={stat.key} className="h-[82px] w-full" />)
           : displayedStats.map((stat) => (
@@ -847,7 +840,7 @@ export default function Dashboard() {
                 valueTestId={`text-stat-${stat.key}`}
               />
             ))}
-      </div>
+      </div>}
 
       <div className={cn("grid grid-cols-1 gap-6", showTicketPanels && "md:grid-cols-2")}>
         {showTicketPanels && (
@@ -856,7 +849,7 @@ export default function Dashboard() {
             enabled={ticketPanelsEnabled}
           />
         )}
-        <Card className="min-w-0" data-testid="card-ticket-stats">
+        {showTicketPanels ? <DashboardTicketJourneys scope={`${user?.role}:${user?.vendorId ?? user?.partnerId}`} enabled={ticketPanelsEnabled} /> : <Card className="min-w-0" data-testid="card-ticket-stats">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2"><BarChart3 className={CARD_TITLE_ICON_CLASS} style={iconStyle} />{t("dashboard.trackingStatus")}</CardTitle>
           </CardHeader>
@@ -891,7 +884,7 @@ export default function Dashboard() {
               <p className="text-muted-foreground text-sm text-center py-8">{t("dashboard.noTrackingData")}</p>
             )}
           </CardContent>
-        </Card>
+        </Card>}
       </div>
 
       {isVendor && user?.vendorId ? (

@@ -1,4 +1,5 @@
 import {effectiveFinancialAmountSql} from "../lib/effective-financial-line";
+import { dashboardTicketJourneysRouter } from "./dashboard-ticket-journeys";
 import { Router, type IRouter } from "express";
 import { sql, eq, desc, and } from "drizzle-orm";
 import crypto from "crypto";
@@ -58,6 +59,7 @@ function getSession(req: any): Session | null {
 }
 
 const router: IRouter = Router();
+router.use(dashboardTicketJourneysRouter);
 
 router.get("/dashboard/summary", requireSession, async (req, res): Promise<void> => {
   const session = getSession(req);
