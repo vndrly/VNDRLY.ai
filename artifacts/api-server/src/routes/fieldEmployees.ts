@@ -1,3 +1,4 @@
+import {serviceCredentialAdvisories} from "../lib/service-credential-matching";
 import { ticketStaffContext, eligibleGateEmployeeCondition } from "../lib/ticket-staff-eligibility";
 import { Router, type IRouter } from "express";
 import { eq, and, inArray, isNull, sql } from "drizzle-orm";
@@ -132,7 +133,14 @@ router.get("/field-employees", async (req, res): Promise<void> => {
   if (ticketId !== null && (!ticketStaff || (session.role !== "admin" && ticketStaff.vendorId !== session.vendorId))) {
     res.status(404).json({error:"Ticket unavailable"}); return;
   }
-  const conds = [ticketStaff?.isGate
+  const requestedWorkTypes = String(req.query.workTypeIds ?? "").split(",").filter(Boolean).map(Number);
+  if(requestedWorkTypes.some(id=>!Number.isSafeInteger(id)||id<=0)||requestedWorkTypes.length>30){res.status(400).json({error:"Invalid services"});return;}
+  const serviceIds = ticketId ? ((await db.execute(sql`SELECT work_type_id FROM tickets WHERE id=${ticketId}`)).rows.map(r=>Number(r.work_type_id))) : requestedWorkTypes;
+  const serviceRows=serviceIds.length?(await db.execute(sql`SELECT id,name,category FROM work_types WHERE id IN (${sql.join(serviceIds.map(id=>sql`${id}`),sql`,`)})`)).rows:[];
+  const gateService=serviceRows.length>0&&serviceRows.every(w=>String(w.name).toLowerCase()==='gatekeeping'||String(w.category).toLowerCase()==='gate');
+  const siteId=Number(req.query.siteId);
+  const createGate=gateService&&Number.isSafeInteger(siteId)&&siteId>0;
+  const conds = [createGate && session.vendorId ? eligibleGateEmployeeCondition(session.vendorId,siteId) : ticketStaff?.isGate
     ? eligibleGateEmployeeCondition(ticketStaff.vendorId, ticketStaff.siteId)
     : inArray(fieldEmployeesTable.vendorRole, fieldRoles)];
   if (!includeDeleted) conds.push(isNull(fieldEmployeesTable.deletedAt));
@@ -165,7 +173,12 @@ router.get("/field-employees", async (req, res): Promise<void> => {
     .where(and(...conds))
     .orderBy(fieldEmployeesTable.createdAt);
 
-  sendResponse(res, ListFieldEmployeesResponse, results.map(shapeEmployee));
+  const shaped=results.map(shapeEmployee);
+  if(serviceIds.length){
+    const advisories=await serviceCredentialAdvisories(serviceIds,results.map(p=>({...p,pecExpirationDate:p.pecExpirationDate??null})));
+    res.json(shaped.map(person=>({...person,credentialMatch:advisories.get(person.id)})));return;
+  }
+  sendResponse(res, ListFieldEmployeesResponse, shaped);
 });
 
 router.post("/field-employees", async (req, res): Promise<void> => {

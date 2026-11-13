@@ -7,6 +7,17 @@ import {
 } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 
+export type ServiceEmployee = FieldEmployee & {credentialMatch?:{status:string;missing:string[];expired:string[];required:string[];assignmentAllowed:boolean}};
+export function useServiceEmployees(vendorId:number|undefined,workTypeIds:number[],siteId:number|undefined){
+ return useQuery<ServiceEmployee[]>({queryKey:["service-employees",vendorId,workTypeIds,siteId],enabled:!!vendorId&&workTypeIds.length>0&&!!siteId,
+ queryFn:async({signal})=>{const response=await fetch(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/field-employees?vendorId=${vendorId}&workTypeIds=${workTypeIds.join(',')}&siteId=${siteId}`,{credentials:'include',signal});if(!response.ok)throw new Error('Unable to load service employees');return response.json();}});
+}
+export function credentialMatchText(person:ServiceEmployee,es=false){
+ const m=person.credentialMatch;if(!m)return '';
+ if(m.status==='not_configured')return es?'Requisitos sin configurar':'Requirements not configured';
+ if(m.status==='recorded_match')return es?'Credenciales registradas coinciden':'Recorded credentials match';
+ return [m.missing.length?`${es?'Faltan':'Missing'}: ${m.missing.join(', ')}`:'',m.expired.length?`${es?'Vencidas':'Expired'}: ${m.expired.join(', ')}`:''].filter(Boolean).join(' · ');
+}
 // Task #516: shared source of truth for "which vendor_people may a vendor
 // operator legally pick in an employee picker". Centralizes the eligibility
 // rule that backs the phone-intake foreman dropdown and the Create New Job
@@ -23,9 +34,9 @@ import { useAuth } from "@/hooks/use-auth";
 // slips through (the dialog could have been opened before the deactivation
 // landed in the cache).
 function filterEligible(
-  fieldEmployees: FieldEmployee[] | undefined,
+  fieldEmployees: ServiceEmployee[] | undefined,
   vendorId: number | null,
-): FieldEmployee[] {
+): ServiceEmployee[] {
   if (!fieldEmployees || vendorId == null) return [];
   return fieldEmployees.filter(
     (fe) => fe.vendorId === vendorId && fe.isActive !== false,
@@ -33,7 +44,7 @@ function filterEligible(
 }
 
 export function useEligibleVendorFieldEmployees(): {
-  eligibleForemen: FieldEmployee[];
+  eligibleForemen: ServiceEmployee[];
   fieldEmployees: FieldEmployee[] | undefined;
 } {
   const { user } = useAuth();
@@ -62,7 +73,7 @@ export function useEligibleVendorFieldEmployeesByVendorId(
   enabled = true,
   ticketId?: number,
 ): {
-  eligibleForemen: FieldEmployee[];
+  eligibleForemen: ServiceEmployee[];
   fieldEmployees: FieldEmployee[] | undefined;
 } {
   const normalizedId = vendorId ?? null;
@@ -70,7 +81,7 @@ export function useEligibleVendorFieldEmployeesByVendorId(
     normalizedId != null ? { vendorId: normalizedId } : undefined,
     { query: { enabled: enabled && !ticketId, queryKey: getListFieldEmployeesQueryKey(normalizedId != null ? { vendorId: normalizedId } : undefined) } },
   );
-  const {data: ticketEmployees} = useQuery<FieldEmployee[]>({
+  const {data: ticketEmployees} = useQuery<ServiceEmployee[]>({
     queryKey:["ticket-eligible-employees",normalizedId,ticketId],enabled:enabled && !!ticketId && !!normalizedId,
     queryFn:async ({signal})=>{
       const response=await fetch(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/field-employees?vendorId=${normalizedId}&ticketId=${ticketId}`,{credentials:"include",signal});
@@ -104,7 +115,7 @@ export function useEligibleVendorFieldEmployeesByVendorId(
 // reuse the same cleanup contract. Defaults to `String(fe.id)`.
 export function useClearStaleFieldEmployeeSelection(args: {
   selectedId: string;
-  eligibleForemen: FieldEmployee[];
+  eligibleForemen: ServiceEmployee[];
   fieldEmployees: FieldEmployee[] | undefined;
   onClear: () => void;
   getId?: (fe: FieldEmployee) => string | null;

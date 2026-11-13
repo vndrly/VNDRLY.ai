@@ -1,3 +1,4 @@
+import {credentialMatchText} from "@/hooks/use-eligible-vendor-field-employees";
 import TicketGateProof from "@/components/ticket-gate-proof";
 import PageHistoryLink from "@/components/page-history-link";
 import { ContentCardHeader } from "@/components/ui/card";
@@ -168,7 +169,7 @@ type CrewTrackerData = {
 };
 
 function CrewTrackerSection({ ticketId, canSee }: { ticketId: number; canSee: boolean }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [data, setData] = useState<CrewTrackerData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -333,7 +334,7 @@ function deriveTransitionKind(
 
 export default function TicketDetail({ id }: { id: number }) {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { nudgeFlashingTicketIds } = useTicketNudgeFlash({
     enabled: !!user,
     ticketId: id,
@@ -1765,7 +1766,7 @@ export default function TicketDetail({ id }: { id: number }) {
                       <SelectItem value="none">{t("tickets.unassigned", { defaultValue: "Unassigned" })}</SelectItem>
                       {vendorFieldEmployees.length > 0 ? (
                         vendorFieldEmployees.map((fe) => (
-                          <SelectItem key={fe.id} value={String(fe.id)}>{fe.firstName} {fe.lastName}</SelectItem>
+                          <SelectItem key={fe.id} value={String(fe.id)}>{fe.firstName} {fe.lastName}{credentialMatchText(fe, i18n.language.startsWith("es")) && ` — ${credentialMatchText(fe, i18n.language.startsWith("es"))}`}</SelectItem>
                         ))
                       ) : (
                         <div
@@ -3362,7 +3363,7 @@ function FindAnotherVendorSheet({
   onReinvite: (vendorId: number) => void;
   isPending: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // Only fetch when the sheet is opened so we don't slam /nearby-vendors on every render.
   const { data, isLoading } = useGetNearbyVendors(ticketId, {
     query: {

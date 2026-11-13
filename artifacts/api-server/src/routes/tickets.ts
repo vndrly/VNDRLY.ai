@@ -1224,10 +1224,12 @@ router.post("/tickets", async (req, res): Promise<void> => {
   }
 
   if (parsed.data.fieldEmployeeId != null) {
+    const [service] = await db.select({name:workTypesTable.name,category:workTypesTable.category}).from(workTypesTable).where(eq(workTypesTable.id,parsed.data.workTypeId));
+    const gateService=service?.name.toLowerCase()==='gatekeeping'||service?.category.toLowerCase()==='gate';
     const [target] = await db.select({id:vendorPeopleTable.id}).from(vendorPeopleTable).where(and(
       eq(vendorPeopleTable.id,parsed.data.fieldEmployeeId),eq(vendorPeopleTable.vendorId,parsed.data.vendorId),
       eq(vendorPeopleTable.isActive,true),isNull(vendorPeopleTable.deletedAt),
-      sql`${vendorPeopleTable.vendorRole} in ('field','foreman','both')`
+      gateService ? eligibleGateEmployeeCondition(parsed.data.vendorId,parsed.data.siteLocationId) : sql`${vendorPeopleTable.vendorRole} in ('field','foreman','both')`
     ));
     if (!target) {res.status(400).json({code:"ticket.employee_vendor_mismatch",message:"Employee must be active in this company"});return;}
   }

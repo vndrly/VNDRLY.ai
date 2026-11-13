@@ -1,3 +1,7 @@
+import {QueryClient,QueryClientProvider} from "@tanstack/react-query";
+import type {ReactNode} from "react";
+const queryClient=new QueryClient();
+const queryWrapper=({children}:{children:ReactNode})=><QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import type { FieldEmployee } from "@workspace/api-client-react";
@@ -188,6 +192,7 @@ describe("useEligibleVendorFieldEmployeesByVendorId", () => {
 
     const { result } = renderHook(() =>
       useEligibleVendorFieldEmployeesByVendorId(100),
+      {wrapper:queryWrapper},
     );
 
     // The list call was scoped to the explicit vendorId, regardless of
@@ -209,7 +214,7 @@ describe("useEligibleVendorFieldEmployeesByVendorId", () => {
     const { result, rerender } = renderHook(
       (props: { vendorId: number | undefined }) =>
         useEligibleVendorFieldEmployeesByVendorId(props.vendorId),
-      { initialProps: { vendorId: undefined } },
+      { initialProps: { vendorId: undefined },wrapper:queryWrapper },
     );
 
     // Missing vendorId mirrors the portal pre-selection state — must

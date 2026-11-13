@@ -1,3 +1,4 @@
+import {useServiceEmployees,credentialMatchText} from "@/hooks/use-eligible-vendor-field-employees";
 import "./vendor-profile.css";
 import "@/components/work-hub/calendar-create-cards.css";
 import { ContentCardHeader } from "@/components/ui/card";
@@ -114,7 +115,7 @@ type TicketLike = {
 };
 
 function TicketMapPreview({ ticket }: { ticket: TicketLike }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: gpsLogs } = useGetTicketGpsLogs(ticket.id, {
     query: { enabled: !!ticket.id, queryKey: getGetTicketGpsLogsQueryKey(ticket.id) },
   });
@@ -165,7 +166,7 @@ function TicketMapPreview({ ticket }: { ticket: TicketLike }) {
 
 export default function Tickets() {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const brand = useBrand();
   // Task #648: stable refs for the long-lived SSE handler. The
@@ -1039,6 +1040,9 @@ export default function Tickets() {
   // Task #507 server tenancy guard) stays in sync without copy-pasting the
   // filter + effect each time.
   const { eligibleForemen, fieldEmployees } = useEligibleVendorFieldEmployees();
+  const createEmployees = useServiceEmployees(isVendor ? user.vendorId! : Number(form.vendorId)||undefined,form.workTypeIds,Number(form.siteLocationId)||undefined);
+  const serviceEmployees=createEmployees.data??[];
+  const creatingGate=form.workTypeIds.length>0&&form.workTypeIds.every(id=>workTypes?.some(w=>w.id===id&&(w.name.toLowerCase()==='gatekeeping'||w.category?.toLowerCase()==='gate')));
   // Task #510: if the phone-intake foreman pick is no longer in the eligible
   // set (the operator switched their active vendor membership, or the foreman
   // was soft-deleted / deactivated since the dialog was opened), drop the
@@ -1057,8 +1061,8 @@ export default function Tickets() {
   // a stale selection.
   useClearStaleFieldEmployeeSelection({
     selectedId: form.fieldEmployeeId,
-    eligibleForemen,
-    fieldEmployees,
+    eligibleForemen:serviceEmployees,
+    fieldEmployees:createEmployees.data,
     onClear: () => setForm((prev) => ({ ...prev, fieldEmployeeId: "" })),
   });
   // Partners can only invite vendors they have a relationship with — the
@@ -1085,16 +1089,14 @@ export default function Tickets() {
   }, [isPartner, selectedSiteDetail]);
   const partnerVendorOptions = useMemo(() => {
     if (!isPartner || !partnerVendors) return [] as NonNullable<typeof partnerVendors>;
-    return partnerVendors.filter((v: any) => siteScopedVendorIds.has(v.id));
-  }, [isPartner, partnerVendors, siteScopedVendorIds]);
+    return partnerVendors.filter((v: any) => siteScopedVendorIds.has(v.id) && form.workTypeIds.every(id=>selectedSiteDetail?.assignments?.some((a:any)=>a.vendorId===v.id&&a.workTypeId===id)));
+  }, [isPartner, partnerVendors, siteScopedVendorIds,form.workTypeIds,selectedSiteDetail]);
   const siteScopedWorkTypes = useMemo(() => {
     if (!form.siteLocationId || !workTypes) return [] as typeof workTypes;
     if (!selectedSiteDetail?.assignments) return [];
     const filterVendorId = isVendor
       ? user.vendorId
-      : isPartner && form.vendorId
-        ? Number(form.vendorId)
-        : null;
+      : null;
     const allowed = new Set(
       (selectedSiteDetail.assignments as any[])
         .filter((a) => filterVendorId == null ? true : a.vendorId === filterVendorId)
@@ -2463,44 +2465,6 @@ export default function Tickets() {
                       already have a work-type assignment at that site —
                       keeps partners from inviting a vendor the site can't
                       actually receive yet. */}
-                  {isPartner && (
-                    <div>
-                      <Label>{t("tickets.vendor", { defaultValue: "Vendor" })}</Label>
-                      <Select
-                        value={form.vendorId}
-                        onValueChange={(v) => {
-                          setForm((prev) => ({ ...prev, vendorId: v, workTypeIds: [] }));
-                          // Task #871: changing the vendor reshapes
-                          // the work-type list (siteScopedWorkTypes is
-                          // filtered by vendor for partners), so a
-                          // prior "work type no longer approved"
-                          // banner is no longer relevant.
-                          if (addWorkTypeUnavailableNotice) {
-                            setAddWorkTypeUnavailableNotice(false);
-                          }
-                        }}
-                        disabled={!form.siteLocationId}
-                      >
-                        <SelectTrigger data-testid="select-vendor">
-                          <SelectValue placeholder={!form.siteLocationId
-                            ? t("tickets.pickSiteFirst", { defaultValue: "Pick a site first." })
-                            : t("tickets.selectVendor", { defaultValue: "Select vendor" })} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {partnerVendorOptions.length > 0 ? (
-                            partnerVendorOptions.map((v: any) => (
-                              <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>
-                            ))
-                          ) : null}
-                        </SelectContent>
-                      </Select>
-                      {form.siteLocationId && partnerVendorOptions.length === 0 && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {t("tickets.noVendorsApproved", { defaultValue: "No vendors are approved for work at this site yet." })}
-                        </p>
-                      )}
-                    </div>
-                  )}
                   <div>
                     <Label>{t("tickets.workTypes", { defaultValue: "Work Types" })}</Label>
                     <p className="text-xs text-muted-foreground mb-2">
@@ -2509,8 +2473,6 @@ export default function Tickets() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto rounded-md border p-3" data-testid="work-types-multi">
                       {!form.siteLocationId ? (
                         <p className="text-sm text-muted-foreground col-span-full">{t("tickets.pickSiteFirst", { defaultValue: "Pick a site first." })}</p>
-                      ) : isPartner && !form.vendorId ? (
-                        <p className="text-sm text-muted-foreground col-span-full">{t("tickets.pickVendorFirst", { defaultValue: "Pick a vendor first." })}</p>
                       ) : siteScopedWorkTypes && siteScopedWorkTypes.length > 0 ? (
                         siteScopedWorkTypes.map((w) => {
                           const checked = form.workTypeIds.includes(w.id);
@@ -2523,6 +2485,7 @@ export default function Tickets() {
                                 onCheckedChange={(v) => {
                                   setForm((prev) => ({
                                     ...prev,
+                                    vendorId: "", fieldEmployeeId: "",
                                     workTypeIds: v
                                       ? [...prev.workTypeIds, w.id]
                                       : prev.workTypeIds.filter((x) => x !== w.id),
@@ -2550,22 +2513,60 @@ export default function Tickets() {
                       <p className="text-xs text-muted-foreground mt-1">{t("tickets.selectedCount", { count: form.workTypeIds.length, defaultValue: "{{count}} selected" })}</p>
                     )}
                   </div>
+                  {isPartner && (
+                    <div>
+                      <Label>{t("tickets.vendor", { defaultValue: "Vendor" })}</Label>
+                      <Select
+                        value={form.vendorId}
+                        onValueChange={(v) => {
+                          setForm((prev) => ({ ...prev, vendorId: v, fieldEmployeeId: "" }));
+                          // Task #871: changing the vendor reshapes
+                          // the work-type list (siteScopedWorkTypes is
+                          // filtered by vendor for partners), so a
+                          // prior "work type no longer approved"
+                          // banner is no longer relevant.
+                          if (addWorkTypeUnavailableNotice) {
+                            setAddWorkTypeUnavailableNotice(false);
+                          }
+                        }}
+                        disabled={!form.siteLocationId || !form.workTypeIds.length}
+                      >
+                        <SelectTrigger data-testid="select-vendor">
+                          <SelectValue placeholder={!form.siteLocationId
+                            ? t("tickets.pickSiteFirst", { defaultValue: "Pick a site first." })
+                            : t("tickets.selectVendor", { defaultValue: "Select vendor" })} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {partnerVendorOptions.length > 0 ? (
+                            partnerVendorOptions.map((v: any) => (
+                              <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>
+                            ))
+                          ) : null}
+                        </SelectContent>
+                      </Select>
+                      {form.siteLocationId && partnerVendorOptions.length === 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t("tickets.noVendorsApproved", { defaultValue: "No vendors are approved for work at this site yet." })}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {/* Vendors only — partners can't see other vendors' field
                       employees, and the assigned vendor will pick the crew
                       after they accept the invite. */}
                   {isVendor && (
                     <div>
-                      <Label>{t("tickets.fieldEmployeeOptional", { defaultValue: "Field Employee (optional)" })}</Label>
+                      <Label>{creatingGate ? t("ticketDetail.gateEmployee") : t("tickets.fieldEmployeeOptional", { defaultValue: "Field Employee (optional)" })}</Label>
                       <Select value={form.fieldEmployeeId} onValueChange={(v) => setForm({ ...form, fieldEmployeeId: v })}>
                         <SelectTrigger data-testid="select-field-employee"><SelectValue placeholder={t("tickets.selectEmployee", { defaultValue: "Select employee" })} /></SelectTrigger>
                         <SelectContent>
-                          {/* Task #511: source from eligibleForemen so the picker
+                          {/* Task #511: source from serviceEmployees so the picker
                               never lists inactive vendor_people or rows from a
                               previously-cached vendor membership. Mirrors the
                               phone-intake foreman dropdown's empty state. */}
-                          {eligibleForemen.length > 0 ? (
-                            eligibleForemen.map((fe) => (
-                              <SelectItem key={fe.id} value={String(fe.id)}>{fe.firstName} {fe.lastName}</SelectItem>
+                          {serviceEmployees.length > 0 ? (
+                            serviceEmployees.map((fe) => (
+                              <SelectItem key={fe.id} value={String(fe.id)}>{fe.firstName} {fe.lastName}{credentialMatchText(fe, i18n.language.startsWith("es")) && ` — ${credentialMatchText(fe, i18n.language.startsWith("es"))}`}</SelectItem>
                             ))
                           ) : (
                             <div
